@@ -1,24 +1,18 @@
-import { Comp, ConfigSchema } from "@/components/comps/comp-renderer";
-import { z } from "zod";
+import { Comp, ConfigValuesRef } from "@/components/comps/comp-renderer";
 import { create } from "zustand";
 
-interface CompData<TConfig extends ConfigSchema> {
+interface CompData {
   id: string;
-  comp: Comp<TConfig>;
-  valuesRef: React.MutableRefObject<z.infer<TConfig>> | null;
+  comp: Comp;
+  valuesRef: ConfigValuesRef | null;
 }
 
 interface CompStore {
-  comps: CompData<ConfigSchema>[];
-  getComp: <TConfig extends ConfigSchema>(
-    id: string
-  ) => CompData<TConfig> | undefined;
-  addComp: <TConfig extends ConfigSchema>(comp: Comp<TConfig>) => void;
+  comps: CompData[];
+  getComp: (id: string) => CompData | undefined;
+  addComp: (comp: Comp) => void;
   removeComp: (id: string) => void;
-  registerCompValuesRef: <TConfig extends ConfigSchema>(
-    id: string,
-    ref: React.MutableRefObject<z.infer<TConfig>>
-  ) => void;
+  registerCompValuesRef: (id: string, ref: ConfigValuesRef) => void;
   unregisterCompValuesRef: (id: string) => void;
 }
 

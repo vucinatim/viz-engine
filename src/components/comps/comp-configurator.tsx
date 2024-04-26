@@ -4,22 +4,20 @@ import { Separator } from "../ui/separator";
 import { Comp, ConfigSchema } from "./comp-renderer";
 import useCompStore from "@/lib/stores/comps-store";
 
-interface CompConfiguratorProps<TConfig extends ConfigSchema> {
-  comp: Comp<TConfig>;
+interface CompConfiguratorProps {
+  comp: Comp;
 }
 
-function CompConfigurator<TConfig extends ConfigSchema>({
-  comp,
-}: CompConfiguratorProps<ConfigSchema>) {
-  const { registerComp, unregisterComp } = useCompStore();
-  const valuesRef = useRef<TConfig>({} as TConfig);
+function CompConfigurator({ comp }: CompConfiguratorProps) {
+  const { registerCompValuesRef, unregisterCompValuesRef } = useCompStore();
+  const valuesRef = useRef<ConfigSchema>({} as ConfigSchema);
 
   useEffect(() => {
-    const id = registerComp(comp, valuesRef);
+    registerCompValuesRef(comp.name, valuesRef);
     return () => {
-      unregisterComp(id);
+      unregisterCompValuesRef(comp.name);
     };
-  }, [comp, registerComp, unregisterComp]);
+  }, [comp.name, registerCompValuesRef, unregisterCompValuesRef]);
 
   return (
     <div className="p-4 bg-black/20 rounded-2xl flex flex-col gap-y-4">

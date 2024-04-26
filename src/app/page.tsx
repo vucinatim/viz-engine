@@ -15,6 +15,10 @@ export default function Home() {
   // Initialize the SpectrumComp in the CompStore
   useEffect(() => {
     useCompStore.getState().addComp(SpectrumComp);
+
+    return () => {
+      useCompStore.getState().removeComp(SpectrumComp.name);
+    };
   }, []);
 
   return (
@@ -38,7 +42,9 @@ export default function Home() {
         topRightChildren={
           <EditorPanel>
             <div className="absolute inset-0 flex items-center justify-center">
-              <CompRenderer comp={SpectrumComp} />
+              {comps.map((compData) => (
+                <CompRenderer key={compData.id} comp={compData.comp} />
+              ))}
             </div>
           </EditorPanel>
         }

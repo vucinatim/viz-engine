@@ -11,7 +11,6 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
-import { ConfigSchema } from "../comps/comp-renderer";
 
 interface DynamicFormProps {
   schema: ZodObject<any>;
@@ -19,8 +18,10 @@ interface DynamicFormProps {
 }
 
 const DynamicForm = ({ schema, valuesRef }: DynamicFormProps) => {
+  const defaultValues = getDefaults(schema);
   const form = useForm({
     resolver: zodResolver(schema),
+    defaultValues,
   });
 
   // Watch all fields in the form
@@ -54,5 +55,15 @@ const DynamicForm = ({ schema, valuesRef }: DynamicFormProps) => {
     </Form>
   );
 };
+
+function getDefaults<Schema extends z.AnyZodObject>(schema: Schema) {
+  return Object.fromEntries(
+    Object.entries(schema.shape).map(([key, value]) => {
+      if (value instanceof z.ZodDefault)
+        return [key, value._def.defaultValue()];
+      return [key, undefined];
+    })
+  );
+}
 
 export default DynamicForm;
