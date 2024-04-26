@@ -6,6 +6,7 @@ const SpectrumComp = createComponent({
   description: "Visualize the audio spectrum",
   config: z.object({
     color: z.string().min(1).default("#2392f5"),
+    opacity: z.number().min(0).max(1).default(1),
   }),
   draw: (ctx, analyzer, config) => {
     const dataArray = new Uint8Array(analyzer.frequencyBinCount);
@@ -16,6 +17,7 @@ const SpectrumComp = createComponent({
       const x = index * 4;
       const height = value;
       ctx.fillStyle = config.color;
+      ctx.globalAlpha = config.opacity;
       ctx.fillRect(x, ctx.canvas.height - height, 3, height);
     });
   },
