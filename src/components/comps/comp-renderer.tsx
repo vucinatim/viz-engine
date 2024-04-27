@@ -7,10 +7,16 @@ export type ConfigValuesRef = React.MutableRefObject<ConfigSchema>;
 
 export type ConfigSchema = z.ZodObject<any>;
 
+export type Preset<TConfig extends ConfigSchema> = {
+  name: string;
+  values: z.infer<TConfig>;
+};
+
 export interface Comp {
   name: string;
   description: string;
   config: ConfigSchema;
+  presets?: Preset<ConfigSchema>[];
   draw: (
     ctx: CanvasRenderingContext2D,
     analyzer: AnalyserNode,
@@ -22,6 +28,7 @@ export function createComponent<TConfig extends ConfigSchema>(definition: {
   name: string;
   description: string;
   config: TConfig;
+  presets?: Preset<TConfig>[];
   draw: (
     ctx: CanvasRenderingContext2D,
     analyzer: AnalyserNode,

@@ -1,11 +1,30 @@
 import { z } from "zod";
 import { createComponent } from "./comp-renderer";
 
+const presets = [
+  {
+    name: "Default",
+    values: {
+      neki: "Boo",
+      color: "#ffff00",
+      opacity: 0.7,
+    },
+  },
+  {
+    name: "Red",
+    values: {
+      neki: "Neki",
+      color: "#ff0000",
+      opacity: 1,
+    },
+  },
+];
+
 const SpectrumComp = createComponent({
   name: "Spectrum",
   description: "Visualize the audio spectrum",
+  presets: presets,
   config: z.object({
-    presets: z.enum(["Prvi", "Drugi"]).default("Prvi"),
     neki: z.string().default("Neki"),
     color: z.string().min(1).describe("color"),
     opacity: z.number().min(0).max(10).step(0.1).default(1),

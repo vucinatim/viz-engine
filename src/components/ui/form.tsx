@@ -72,13 +72,26 @@ const FormItemContext = React.createContext<FormItemContextValue>(
 
 const FormItem = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => {
+  React.HTMLAttributes<HTMLDivElement> & {
+    orientation?: "horizontal" | "vertical";
+  }
+>(({ orientation = "horizontal", className, ...props }, ref) => {
   const id = React.useId();
 
   return (
     <FormItemContext.Provider value={{ id }}>
-      <div ref={ref} className={cn("space-y-0.5", className)} {...props} />
+      <div
+        ref={ref}
+        style={{
+          gridTemplateColumns: orientation === "vertical" ? "1fr" : "15% 85%",
+        }}
+        className={cn(
+          "relative grid grid-cols-2 items-center gap-y-0.5 gap-x-2",
+          orientation === "vertical" && "grid-cols-1",
+          className
+        )}
+        {...props}
+      />
     </FormItemContext.Provider>
   );
 });
@@ -93,7 +106,7 @@ const FormLabel = React.forwardRef<
   return (
     <Label
       ref={ref}
-      className={cn("text-xs", error && "text-destructive", className)}
+      className={cn("text-2xs", error && "text-destructive", className)}
       htmlFor={formItemId}
       {...props}
     />

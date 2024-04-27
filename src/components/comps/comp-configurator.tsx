@@ -3,6 +3,7 @@ import DynamicForm from "../dynamic-form/dynamic-form";
 import { Separator } from "../ui/separator";
 import { Comp, ConfigSchema } from "./comp-renderer";
 import useCompStore from "@/lib/stores/comps-store";
+import LayerSettings from "./layer-settings";
 
 interface CompConfiguratorProps {
   comp: Comp;
@@ -28,7 +29,28 @@ function CompConfigurator({ comp }: CompConfiguratorProps) {
         <p className="text-xs">{comp.description}</p>
       </div>
       <Separator />
-      <DynamicForm schema={comp.config} valuesRef={valuesRef} />
+      <div className="flex flex-col gap-y-3">
+        <LayerSettings layerId={comp.name} />
+        {comp.presets && comp.presets.length > 1 && (
+          <div className="flex gap-x-2">
+            {comp.presets.map((preset) => (
+              <button
+                key={preset.name}
+                className="btn btn-sm"
+                onClick={() => {
+                  valuesRef.current = preset.values as ConfigSchema;
+                }}
+              >
+                {preset.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <Separator />
+      <div className="flex flex-col gap-y-2">
+        <DynamicForm schema={comp.config} valuesRef={valuesRef} />
+      </div>
     </div>
   );
 }

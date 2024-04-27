@@ -26,7 +26,7 @@ const ColorPickerPopover = forwardRef<
         <Button
           ref={ref} // Apply the forwarded ref to the Button component
           variant="outline"
-          className="flex w-full items-center justify-between gap-x-4"
+          className="flex h-8 text-xs w-full items-center justify-between gap-x-4"
         >
           <div className="truncate">{value}</div>
           <div

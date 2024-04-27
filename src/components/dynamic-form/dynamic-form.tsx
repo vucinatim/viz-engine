@@ -21,6 +21,7 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
+  SimpleSelect,
 } from "../ui/select";
 import { AlertCircle } from "lucide-react";
 
@@ -100,21 +101,12 @@ const DynamicForm = ({ schema, valuesRef }: DynamicFormProps) => {
       // If the schema is a ZodEnum, render a select input
       if (type instanceof z.ZodEnum) {
         return (
-          <Select value={field.value} onValueChange={handleOnChange}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder={`Select ${field.name}`} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>{field.name}</SelectLabel>
-                {type._def.values.map((value: any) => (
-                  <SelectItem key={value} value={value}>
-                    {value}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          <SimpleSelect
+            name={field.name}
+            value={field.value}
+            onChange={handleOnChange}
+            options={type._def.values}
+          />
         );
       }
 
