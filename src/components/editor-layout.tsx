@@ -53,7 +53,7 @@ interface EditorPanelProps {
 export const EditorPanel = ({ children }: EditorPanelProps) => {
   return (
     <div className="absolute inset-0">
-      <div className="absolute inset-2 bg-gray-500/30 border overflow-hidden border-gray-600/20 backdrop-blur-sm rounded-3xl">
+      <div className="absolute inset-1 bg-zinc-800 border overflow-hidden border-gray-600/20 backdrop-blur-sm rounded-md">
         {children}
       </div>
     </div>

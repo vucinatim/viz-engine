@@ -59,7 +59,7 @@ const EditorLayerSearch = ({}: EditorLayerSearchProps) => {
             className="justify-center gap-x-2 w-full"
           >
             <Plus className="h-4 w-4 shrink-0 opacity-50" />
-            Add New Component
+            Add New Layer
           </Button>
         </PopoverTrigger>
       </div>

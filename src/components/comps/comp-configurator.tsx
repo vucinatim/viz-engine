@@ -19,10 +19,14 @@ function CompConfigurator({ comp }: CompConfiguratorProps) {
     };
   }, [comp.name, registerCompValuesRef, unregisterCompValuesRef]);
 
+  console.log("[CompConfigurator] Rerendering");
+
   return (
-    <div className="p-4 bg-black/20 rounded-2xl flex flex-col gap-y-4">
-      <h2>{comp.name}</h2>
-      <p>{comp.description}</p>
+    <div className="p-4 bg-zinc-900 shadow-inner rounded-md flex flex-col gap-y-4">
+      <div className="flex flex-col gap-y-2">
+        <h2 className="font-semibold text-sm">{comp.name}</h2>
+        <p className="text-xs">{comp.description}</p>
+      </div>
       <Separator />
       <DynamicForm schema={comp.config} valuesRef={valuesRef} />
     </div>

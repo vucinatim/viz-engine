@@ -5,8 +5,10 @@ const SpectrumComp = createComponent({
   name: "Spectrum",
   description: "Visualize the audio spectrum",
   config: z.object({
-    color: z.string().min(1).default("#2392f5"),
-    opacity: z.number().min(0).max(1).default(1),
+    presets: z.enum(["Prvi", "Drugi"]).default("Prvi"),
+    neki: z.string().default("Neki"),
+    color: z.string().min(1).describe("color"),
+    opacity: z.number().min(0).max(10).step(0.1).default(1),
   }),
   draw: (ctx, analyzer, config) => {
     const dataArray = new Uint8Array(analyzer.frequencyBinCount);
