@@ -1,5 +1,5 @@
 {
-  "name": "music-visualizer",
+  "name": "viz-engine",
   "version": "0.1.0",
   "private": true,
   "scripts": {
