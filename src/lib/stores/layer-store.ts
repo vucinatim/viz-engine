@@ -2,8 +2,8 @@ import {
   Comp,
   ConfigSchema,
   ConfigValuesRef,
-} from "@/components/comps/layer-renderer";
-import { LayerSettings } from "@/components/comps/layer-settings";
+} from "@/components/editor/layer-renderer";
+import { LayerSettings } from "@/components/editor/layer-settings";
 import { createRef, RefObject } from "react";
 import { create } from "zustand";
 

@@ -1,7 +1,7 @@
 import useCompStore from "@/lib/stores/comp-store";
 import { use, useEffect } from "react";
-import SpectrumComp from "./spectrum-comp";
-import EditorLayerSearch from "../editor-layer-search";
+import SpectrumComp from "../comps/spectrum-comp";
+import EditorLayerSearch from "./editor-layer-search";
 import LayerConfigCard from "./layer-config-card";
 import useLayerStore from "@/lib/stores/layer-store";
 

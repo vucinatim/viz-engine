@@ -1,4 +1,4 @@
-import { Comp } from "@/components/comps/layer-renderer";
+import { Comp } from "@/components/editor/layer-renderer";
 import { create } from "zustand";
 
 interface CompStore {

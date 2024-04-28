@@ -2,10 +2,10 @@
 
 import AudioFileLoader from "@/components/audio/audio-file-loader";
 import AudioPlayer from "@/components/audio/audio-player";
-import LayersConfigPanel from "@/components/comps/layers-config-panel";
-import Renderer from "@/components/comps/renderer";
-import EditorLayout, { EditorPanel } from "@/components/editor-layout";
-import EditorToolbar from "@/components/editor-toolbar";
+import LayersConfigPanel from "@/components/editor/layers-config-panel";
+import Renderer from "@/components/editor/renderer";
+import EditorLayout, { EditorPanel } from "@/components/editor/editor-layout";
+import EditorToolbar from "@/components/editor/editor-toolbar";
 
 import Image from "next/image";
 

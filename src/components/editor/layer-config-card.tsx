@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import DynamicForm from "../dynamic-form/dynamic-form";
+import DynamicForm from "./dynamic-form";
 import { Separator } from "../ui/separator";
 import { ConfigSchema } from "./layer-renderer";
 import LayerSettings from "./layer-settings";

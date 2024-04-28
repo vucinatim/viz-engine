@@ -3,7 +3,7 @@ import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from "./ui/resizable";
+} from "../ui/resizable";
 
 interface EditorLayoutProps {
   leftChildren: ReactNode;
