@@ -123,8 +123,6 @@ const DynamicForm = ({ schema, valuesRef }: DynamicFormProps) => {
     [valuesRef]
   );
 
-  console.log("[Dynamic Form] Rerendering");
-
   return (
     <Form {...form}>
       {Object.entries(schema.shape).map(([key, value]) => {

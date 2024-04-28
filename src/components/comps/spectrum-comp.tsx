@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createComponent } from "./comp-renderer";
+import { createComponent } from "./layer-renderer";
 
 const presets = [
   {

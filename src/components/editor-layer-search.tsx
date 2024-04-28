@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -16,36 +15,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
+import useLayerStore from "@/lib/stores/layer-store";
+import useCompStore from "@/lib/stores/comp-store";
 
-const frameworks = [
-  {
-    value: "next.js",
-    label: "Next.js",
-  },
-  {
-    value: "sveltekit",
-    label: "SvelteKit",
-  },
-  {
-    value: "nuxt.js",
-    label: "Nuxt.js",
-  },
-  {
-    value: "remix",
-    label: "Remix",
-  },
-  {
-    value: "astro",
-    label: "Astro",
-  },
-];
+const EditorLayerSearch = () => {
+  const { comps } = useCompStore();
+  const { addLayer } = useLayerStore();
 
-interface EditorLayerSearchProps {}
-
-const EditorLayerSearch = ({}: EditorLayerSearchProps) => {
   const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState("");
   const layoutRef = React.useRef<HTMLDivElement>(null);
 
   return (
@@ -71,27 +49,19 @@ const EditorLayerSearch = ({}: EditorLayerSearchProps) => {
       >
         <Command>
           <CommandInput placeholder="Search framework..." className="h-9" />
-          <CommandEmpty>No framework found.</CommandEmpty>
+          <CommandEmpty>No Comps Avaliable.</CommandEmpty>
           <CommandList>
             <CommandGroup heading="Suggestions">
-              {frameworks.map((framework) => (
+              {comps.map((comp) => (
                 <CommandItem
-                  key={framework.value}
-                  value={framework.value}
-                  onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue);
+                  key={comp.id}
+                  value={comp.id}
+                  onSelect={() => {
+                    addLayer(comp);
                     setOpen(false);
                   }}
                 >
-                  {framework.label}
-                  <div className="bg-red-500 h-20"></div>
-
-                  <Check
-                    className={cn(
-                      "ml-auto h-4 w-4",
-                      value === framework.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
+                  {comp.name}
                 </CommandItem>
               ))}
             </CommandGroup>

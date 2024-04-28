@@ -1,5 +1,5 @@
 import useAudioStore from "@/lib/stores/audio-store";
-import useCompStore from "@/lib/stores/comps-store";
+import { LayerData } from "@/lib/stores/layer-store";
 import { useEffect, useRef } from "react";
 import { z } from "zod";
 
@@ -13,6 +13,7 @@ export type Preset<TConfig extends ConfigSchema> = {
 };
 
 export interface Comp {
+  id: string;
   name: string;
   description: string;
   config: ConfigSchema;
@@ -35,17 +36,19 @@ export function createComponent<TConfig extends ConfigSchema>(definition: {
     config: z.infer<TConfig>
   ) => void;
 }) {
-  return definition as Comp;
+  return {
+    id: `${definition.name}-${new Date().getTime()}`,
+    ...definition,
+  } as Comp;
 }
 
-interface CompRendererProps {
-  comp: Comp;
+interface LayerRendererProps {
+  layer: LayerData;
 }
 
-const CompRenderer = ({ comp }: CompRendererProps) => {
+const LayerRenderer = ({ layer }: LayerRendererProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { audioAnalyzer } = useAudioStore();
-  const compData = useCompStore().getComp(comp.name);
 
   useEffect(() => {
     if (!audioAnalyzer || !canvasRef.current) return;
@@ -54,23 +57,29 @@ const CompRenderer = ({ comp }: CompRendererProps) => {
     if (!ctx) return;
 
     const renderFrame = () => {
-      if (!compData?.valuesRef?.current) return;
+      if (!layer?.valuesRef?.current) return;
 
-      comp.draw(ctx, audioAnalyzer, compData?.valuesRef.current);
+      layer.comp.draw(ctx, audioAnalyzer, layer?.valuesRef.current);
       requestAnimationFrame(renderFrame);
     };
 
     renderFrame();
-  }, [audioAnalyzer, comp, compData?.valuesRef]);
+  }, [audioAnalyzer, layer.comp, layer?.valuesRef]);
 
   return (
     <canvas
       ref={canvasRef}
-      width={canvasRef.current?.clientWidth ?? 1000}
-      height={canvasRef.current?.clientHeight ?? 500}
-      className="absolute inset-0"
+      // width={canvasRef.current?.clientWidth ?? 1000}
+      // height={canvasRef.current?.clientHeight ?? 500}
+      className="absolute m-auto w-full aspect-video"
+      style={{
+        opacity: layer.layerSettings.opacity,
+        background: `${layer.layerSettings.background}`,
+        display: layer.layerSettings.visible ? "block" : "none",
+        mixBlendMode: layer.layerSettings.blendingMode,
+      }}
     />
   );
 };
 
-export default CompRenderer;
+export default LayerRenderer;

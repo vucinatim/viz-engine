@@ -15,7 +15,6 @@ const ColorPickerPopover = forwardRef<
 >(({ value, onChange }, ref) => {
   const debouncedOnChange = useRef(
     debounce(async (value) => {
-      console.log("Debounced value:", value);
       onChange(value);
     }, 500)
   ).current;
@@ -26,13 +25,15 @@ const ColorPickerPopover = forwardRef<
         <Button
           ref={ref} // Apply the forwarded ref to the Button component
           variant="outline"
-          className="flex h-8 text-xs w-full items-center justify-between gap-x-4"
+          className="relative h-8 text-xs w-full"
         >
-          <div className="truncate">{value}</div>
-          <div
-            className="w-5 h-5 shrink-0 rounded-md border border-input"
-            style={{ backgroundColor: value }}
-          />
+          <div className="absolute inset-0 flex items-center justify-between gap-x-4 px-2">
+            <div className="truncate grow">{value}</div>
+            <div
+              className="w-5 h-5 shrink-0 rounded-md border border-input"
+              style={{ backgroundColor: value }}
+            />
+          </div>
         </Button>
       </PopoverTrigger>
       <PopoverContent side="right" className="w-80">

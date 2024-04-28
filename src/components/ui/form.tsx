@@ -86,7 +86,7 @@ const FormItem = React.forwardRef<
           gridTemplateColumns: orientation === "vertical" ? "1fr" : "15% 85%",
         }}
         className={cn(
-          "relative grid grid-cols-2 items-center gap-y-0.5 gap-x-2",
+          "relative grid grid-cols-2 items-center gap-y-0.5",
           orientation === "vertical" && "grid-cols-1",
           className
         )}
@@ -106,7 +106,7 @@ const FormLabel = React.forwardRef<
   return (
     <Label
       ref={ref}
-      className={cn("text-2xs", error && "text-destructive", className)}
+      className={cn("text-2xs mr-1", error && "text-destructive", className)}
       htmlFor={formItemId}
       {...props}
     />

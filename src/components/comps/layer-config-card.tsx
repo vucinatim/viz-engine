@@ -1,26 +1,17 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import DynamicForm from "../dynamic-form/dynamic-form";
 import { Separator } from "../ui/separator";
-import { Comp, ConfigSchema } from "./comp-renderer";
-import useCompStore from "@/lib/stores/comps-store";
+import { ConfigSchema } from "./layer-renderer";
 import LayerSettings from "./layer-settings";
+import { LayerData } from "@/lib/stores/layer-store";
 
-interface CompConfiguratorProps {
-  comp: Comp;
+interface LayerConfigCardProps {
+  layer: LayerData;
 }
 
-function CompConfigurator({ comp }: CompConfiguratorProps) {
-  const { registerCompValuesRef, unregisterCompValuesRef } = useCompStore();
+function LayerConfigCard({ layer }: LayerConfigCardProps) {
   const valuesRef = useRef<ConfigSchema>({} as ConfigSchema);
-
-  useEffect(() => {
-    registerCompValuesRef(comp.name, valuesRef);
-    return () => {
-      unregisterCompValuesRef(comp.name);
-    };
-  }, [comp.name, registerCompValuesRef, unregisterCompValuesRef]);
-
-  console.log("[CompConfigurator] Rerendering");
+  const comp = layer.comp;
 
   return (
     <div className="p-4 bg-zinc-900 shadow-inner rounded-md flex flex-col gap-y-4">
@@ -30,7 +21,7 @@ function CompConfigurator({ comp }: CompConfiguratorProps) {
       </div>
       <Separator />
       <div className="flex flex-col gap-y-3">
-        <LayerSettings layerId={comp.name} />
+        <LayerSettings layer={layer} />
         {comp.presets && comp.presets.length > 1 && (
           <div className="flex gap-x-2">
             {comp.presets.map((preset) => (
@@ -48,11 +39,11 @@ function CompConfigurator({ comp }: CompConfiguratorProps) {
         )}
       </div>
       <Separator />
-      <div className="flex flex-col gap-y-2">
+      <div className="relative flex flex-col gap-y-2">
         <DynamicForm schema={comp.config} valuesRef={valuesRef} />
       </div>
     </div>
   );
 }
 
-export default CompConfigurator;
+export default LayerConfigCard;

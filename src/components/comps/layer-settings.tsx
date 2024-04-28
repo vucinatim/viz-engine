@@ -7,29 +7,48 @@ import { Eye, EyeOff } from "lucide-react";
 import { ColorPickerPopover } from "../ui/color-picker";
 import { Slider } from "../ui/slider";
 import { SimpleSelect } from "../ui/select";
+import useLayerStore, { LayerData } from "@/lib/stores/layer-store";
+import { useEffect } from "react";
 
 const blendingModes = ["normal", "multiply", "screen", "overlay"] as const;
 
 const layerSettingsSchema = z.object({
   visible: z.boolean().default(true),
-  backgroundColor: z.string().default("#ffffff"),
+  background: z.string().default("rgba(255, 255, 255, 1)"),
   opacity: z.number().min(0).max(1).default(1),
   blendingMode: z.enum(blendingModes).default("normal"),
 });
 
+export type LayerSettings = z.infer<typeof layerSettingsSchema>;
+
+export type BlendingMode = LayerSettings["blendingMode"];
+
 interface LayerSettingsProps {
-  layerId: string;
+  layer: LayerData;
 }
 
-const LayerSettings = ({ layerId }: LayerSettingsProps) => {
+const LayerSettings = ({ layer }: LayerSettingsProps) => {
+  const { updateLayerSettings } = useLayerStore();
   const form = useForm({
     resolver: zodResolver(layerSettingsSchema),
     defaultValues: layerSettingsSchema.parse({}),
   });
 
+  // Update layer settings on first render to ensure the form is in sync
+  useEffect(() => {
+    updateLayerSettings(layer.id, form.getValues());
+  }, [layer.id, form, updateLayerSettings]);
+
+  // Define handleOnChange as a higher-order function
+  const createOnChangeHandler =
+    (originalOnChange: (value: any) => void) => (value: any) => {
+      originalOnChange(value);
+      updateLayerSettings(layer.id, form.getValues());
+    };
+
   return (
     <Form {...form}>
-      <div className="flex items-center gap-x-1">
+      <div className="flex items-center gap-x-3">
         <FormField
           name="visible"
           control={form.control}
@@ -38,7 +57,11 @@ const LayerSettings = ({ layerId }: LayerSettingsProps) => {
               <FormControl>
                 <Toggle
                   aria-label="Toggle visibility"
-                  onClick={() => field.onChange(!field.value)}
+                  onClick={() =>
+                    createOnChangeHandler(() => field.onChange(!field.value))(
+                      null
+                    )
+                  }
                 >
                   {field.value ? <Eye /> : <EyeOff />}
                 </Toggle>
@@ -55,7 +78,7 @@ const LayerSettings = ({ layerId }: LayerSettingsProps) => {
               <FormControl className="-mt-2">
                 <Slider
                   value={field.value}
-                  onChange={field.onChange}
+                  onChange={createOnChangeHandler(field.onChange)}
                   min={0}
                   max={1}
                   step={0.01}
@@ -70,13 +93,13 @@ const LayerSettings = ({ layerId }: LayerSettingsProps) => {
           name="blendingMode"
           control={form.control}
           render={({ field }) => (
-            <FormItem className="grow" orientation="vertical">
+            <FormItem className="min-w-32" orientation="vertical">
               <FormLabel>Blending Mode</FormLabel>
               <FormControl>
                 <SimpleSelect
                   name={field.name}
                   value={field.value}
-                  onChange={field.onChange}
+                  onChange={createOnChangeHandler(field.onChange)}
                   options={[...blendingModes]}
                 />
               </FormControl>
@@ -84,15 +107,15 @@ const LayerSettings = ({ layerId }: LayerSettingsProps) => {
           )}
         />
         <FormField
-          name="backgroundColor"
+          name="background"
           control={form.control}
           render={({ field }) => (
             <FormItem className="grow" orientation="vertical">
-              <FormLabel>Background Color</FormLabel>
+              <FormLabel>Background</FormLabel>
               <FormControl>
                 <ColorPickerPopover
                   value={field.value}
-                  onChange={field.onChange}
+                  onChange={createOnChangeHandler(field.onChange)}
                 />
               </FormControl>
             </FormItem>
