@@ -49,6 +49,7 @@ interface LayerRendererProps {
 const LayerRenderer = ({ layer }: LayerRendererProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { audioAnalyzer } = useAudioStore();
+  console.log("Rendering layer", layer.comp.name);
 
   useEffect(() => {
     if (!audioAnalyzer || !canvasRef.current) return;
@@ -57,9 +58,10 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     if (!ctx) return;
 
     const renderFrame = () => {
-      if (!layer?.valuesRef?.current) return;
+      if (layer?.valuesRef?.current) {
+        layer.comp.draw(ctx, audioAnalyzer, layer?.valuesRef.current);
+      }
 
-      layer.comp.draw(ctx, audioAnalyzer, layer?.valuesRef.current);
       requestAnimationFrame(renderFrame);
     };
 

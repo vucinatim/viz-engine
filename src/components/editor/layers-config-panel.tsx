@@ -1,20 +1,25 @@
 import useCompStore from "@/lib/stores/comp-store";
-import { use, useEffect } from "react";
-import SpectrumComp from "../comps/spectrum-comp";
+import { useEffect } from "react";
 import EditorLayerSearch from "./editor-layer-search";
 import LayerConfigCard from "./layer-config-card";
 import useLayerStore from "@/lib/stores/layer-store";
+import * as allComps from "@/components/comps";
 
 const LayersConfigPanel = () => {
   const { layers } = useLayerStore();
 
   // Initialize the Comps in the CompStore
-  // TODO: Add a way to automatically add all comps in the comps folder
   useEffect(() => {
-    useCompStore.getState().addComp(SpectrumComp);
+    // Add all components to the store
+    Object.values(allComps).forEach((comp) =>
+      useCompStore.getState().addComp(comp)
+    );
 
+    // Cleanup function to remove components from the store
     return () => {
-      useCompStore.getState().removeComp(SpectrumComp.name);
+      Object.values(allComps).forEach((comp) =>
+        useCompStore.getState().removeComp(comp.name)
+      );
     };
   }, []);
 

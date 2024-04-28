@@ -10,7 +10,6 @@ interface LayerConfigCardProps {
 }
 
 function LayerConfigCard({ layer }: LayerConfigCardProps) {
-  const valuesRef = useRef<ConfigSchema>({} as ConfigSchema);
   const comp = layer.comp;
 
   return (
@@ -29,7 +28,7 @@ function LayerConfigCard({ layer }: LayerConfigCardProps) {
                 key={preset.name}
                 className="btn btn-sm"
                 onClick={() => {
-                  valuesRef.current = preset.values as ConfigSchema;
+                  layer.valuesRef.current = preset.values as ConfigSchema;
                 }}
               >
                 {preset.name}
@@ -40,7 +39,7 @@ function LayerConfigCard({ layer }: LayerConfigCardProps) {
       </div>
       <Separator />
       <div className="relative flex flex-col gap-y-2">
-        <DynamicForm schema={comp.config} valuesRef={valuesRef} />
+        <DynamicForm schema={comp.config} valuesRef={layer.valuesRef} />
       </div>
     </div>
   );

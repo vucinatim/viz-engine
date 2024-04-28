@@ -1,16 +1,14 @@
-import {
-  Comp,
-  ConfigSchema,
-  ConfigValuesRef,
-} from "@/components/editor/layer-renderer";
+import { Comp, ConfigSchema } from "@/components/editor/layer-renderer";
 import { LayerSettings } from "@/components/editor/layer-settings";
-import { createRef, RefObject } from "react";
 import { create } from "zustand";
+import { getDefaults } from "../schema-utils";
 
 export interface LayerData {
   id: string;
   comp: Comp;
-  valuesRef: RefObject<ConfigSchema>;
+  valuesRef: {
+    current: ConfigSchema;
+  };
   layerSettings: LayerSettings;
 }
 
@@ -30,7 +28,7 @@ const useLayerStore = create<LayerStore>((set) => ({
         {
           id: `layer-${comp.name}-${new Date().getTime()}`,
           comp,
-          valuesRef: createRef<ConfigSchema>(),
+          valuesRef: { current: getDefaults(comp.config) as ConfigSchema },
           layerSettings: {
             visible: true,
             opacity: 1,

@@ -1,4 +1,4 @@
-import React, { use, useCallback, useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { ControllerRenderProps, useForm, useWatch } from "react-hook-form";
 import { z, ZodObject } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,39 +13,11 @@ import {
 import { Input } from "../ui/input";
 import { Slider } from "../ui/slider";
 import { ColorPickerPopover } from "../ui/color-picker";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-  SimpleSelect,
-} from "../ui/select";
+import { SimpleSelect } from "../ui/select";
 import { AlertCircle } from "lucide-react";
+import { getDefaults, getNumberConstraints } from "@/lib/schema-utils";
 
 type FieldProps = ControllerRenderProps<{ [k: string]: any }, string>;
-
-// Utility function to extract constraints
-function getNumberConstraints(schema: z.ZodNumber) {
-  let min: number | undefined = undefined;
-  let max: number | undefined = undefined;
-  let step: number | undefined = undefined;
-
-  // Zod stores constraints in checks array
-  schema._def.checks.forEach((check) => {
-    if (check.kind === "min") {
-      min = check.value;
-    } else if (check.kind === "max") {
-      max = check.value;
-    } else if (check.kind === "multipleOf") {
-      step = check.value;
-    }
-  });
-
-  return { min, max, step };
-}
 
 interface DynamicFormProps {
   schema: ZodObject<any>;
@@ -146,15 +118,5 @@ const DynamicForm = ({ schema, valuesRef }: DynamicFormProps) => {
     </Form>
   );
 };
-
-function getDefaults<Schema extends z.AnyZodObject>(schema: Schema) {
-  return Object.fromEntries(
-    Object.entries(schema.shape).map(([key, value]) => {
-      if (value instanceof z.ZodDefault)
-        return [key, value._def.defaultValue()];
-      return [key, undefined];
-    })
-  );
-}
 
 export default DynamicForm;
