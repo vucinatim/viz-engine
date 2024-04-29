@@ -75,7 +75,7 @@ const FormItem = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement> & {
     orientation?: "horizontal" | "vertical";
   }
->(({ orientation = "horizontal", className, ...props }, ref) => {
+>(({ orientation = "vertical", className, ...props }, ref) => {
   const id = React.useId();
 
   return (

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createComponent } from "../editor/layer-renderer";
+import { InputType, meta } from "@/lib/types/field-metadata";
 
 const presets = [
   {
@@ -15,11 +16,87 @@ const presets = [
 const SpectrumComp = createComponent({
   name: "Spectrum",
   description: "Visualize the audio spectrum",
-  presets: presets,
+  presets: [],
   config: z.object({
-    color: z.string().min(1).describe("color"),
-    heightScale: z.number().int().positive().default(100),
-    opacity: z.number().min(0).max(1).step(0.01).default(1),
+    color: z
+      .string()
+      .min(1)
+      .describe(
+        meta({
+          label: "Color",
+          description: "The color of the spectrum bars",
+          inputType: InputType.Color,
+        })
+      ),
+    heightScale: z
+      .number()
+      .int()
+      .positive()
+      .default(100)
+      .describe(
+        meta({
+          label: "Height Scale",
+          description: "The scale of the spectrum bars",
+          inputType: InputType.Slider,
+        })
+      ),
+    opacity: z
+      .number()
+      .min(0)
+      .max(1)
+      .step(0.01)
+      .default(1)
+      .describe(
+        meta({
+          label: "Opacity",
+          description: "The opacity of the spectrum bars",
+          inputType: InputType.Slider,
+        })
+      ),
+    group: z
+      .object({
+        color: z
+          .string()
+          .min(1)
+          .describe(
+            meta({
+              label: "Color",
+              description: "The color of the spectrum bars",
+              inputType: InputType.Color,
+            })
+          ),
+        heightScale: z
+          .number()
+          .int()
+          .positive()
+          .default(100)
+          .describe(
+            meta({
+              label: "Height Scale",
+              description: "The scale of the spectrum bars",
+              inputType: InputType.Slider,
+            })
+          ),
+        opacity: z
+          .number()
+          .min(0)
+          .max(1)
+          .step(0.01)
+          .default(1)
+          .describe(
+            meta({
+              label: "Opacity",
+              description: "The opacity of the spectrum bars",
+              inputType: InputType.Slider,
+            })
+          ),
+      })
+      .describe(
+        meta({
+          label: "Group",
+          description: "Group configuration",
+        })
+      ),
   }),
   draw: (ctx, analyzer, config) => {
     const dataArray = new Uint8Array(analyzer.frequencyBinCount);

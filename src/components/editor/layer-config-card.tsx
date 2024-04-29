@@ -13,13 +13,13 @@ function LayerConfigCard({ layer }: LayerConfigCardProps) {
   const comp = layer.comp;
 
   return (
-    <div className="p-4 bg-zinc-900 shadow-inner rounded-md flex flex-col gap-y-4">
-      <div className="flex flex-col gap-y-2">
+    <div className="py-4 bg-zinc-900 shadow-inner rounded-md flex flex-col gap-y-4">
+      <div className="flex flex-col gap-y-2 px-4">
         <h2 className="font-semibold text-sm">{comp.name}</h2>
         <p className="text-xs">{comp.description}</p>
       </div>
       <Separator />
-      <div className="flex flex-col gap-y-3">
+      <div className="flex flex-col gap-y-3 px-4 select-none">
         <LayerSettings layer={layer} />
         {comp.presets && comp.presets.length > 1 && (
           <div className="flex gap-x-2">
@@ -38,7 +38,7 @@ function LayerConfigCard({ layer }: LayerConfigCardProps) {
         )}
       </div>
       <Separator />
-      <div className="relative flex flex-col gap-y-2">
+      <div className="relative flex flex-col gap-y-4 select-none">
         <DynamicForm schema={comp.config} valuesRef={layer.valuesRef} />
       </div>
     </div>
