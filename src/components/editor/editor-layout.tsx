@@ -35,7 +35,7 @@ export function EditorLayout({
             </div>
           </ResizablePanel>
           <ResizableHandle />
-          <ResizablePanel defaultSize={20} minSize={10}>
+          <ResizablePanel defaultSize={20} minSize={20}>
             <div className="relative h-full w-full flex flex-col items-stretch justify-stretch">
               {bottomRightChildren}
             </div>

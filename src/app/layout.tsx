@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "zod-metadata/register";
 import "./globals.css";
+import useBodyProps from "@/lib/stores/body-props-store";
 
 const inter = Inter({ subsets: ["latin"] });
 
