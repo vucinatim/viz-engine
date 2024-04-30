@@ -10,6 +10,7 @@ const LayersConfigPanel = () => {
 
   // Initialize the Comps in the CompStore
   useEffect(() => {
+    console.log("Comps have been updated");
     // Add all components to the store
     Object.values(allComps).forEach((comp) =>
       useCompStore.getState().addComp(comp)
@@ -21,7 +22,10 @@ const LayersConfigPanel = () => {
         useCompStore.getState().removeComp(comp.name)
       );
     };
-  }, []);
+
+    // This makes it reactive to changes to any of the comp files
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allComps]);
 
   return (
     <div className="absolute inset-0 flex flex-col items-stretch justify-start">

@@ -16,6 +16,7 @@ interface LayerStore {
   layers: LayerData[];
   addLayer: (comp: Comp) => void;
   removeLayer: (id: string) => void;
+  updateComps: (comp: Comp[]) => void;
   updateLayerSettings: (id: string, settings: LayerSettings) => void;
 }
 
@@ -42,6 +43,17 @@ const useLayerStore = create<LayerStore>((set) => ({
     set((state) => ({
       layers: state.layers.filter((comp) => comp.id !== id),
     })),
+  updateComps: (comps) =>
+    set((state) => {
+      console.log("The new comps", comps);
+      return {
+        layers: state.layers.map((layer) => ({
+          ...layer,
+          comp:
+            comps.find((comp) => comp.name === layer.comp.name) ?? layer.comp,
+        })),
+      };
+    }),
   updateLayerSettings: (id, settings) =>
     set((state) => ({
       layers: state.layers.map((comp) =>

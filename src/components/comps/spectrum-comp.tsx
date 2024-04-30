@@ -94,7 +94,7 @@ const SpectrumComp = createComponent({
       .describe(
         meta({
           label: "Group",
-          description: "Group configuration",
+          description: "Group configuration yyee",
         })
       ),
   }),

@@ -8,7 +8,12 @@ import SearchSelect from "../ui/search-select";
 
 const EditorLayerSearch = () => {
   const { comps } = useCompStore();
-  const { addLayer } = useLayerStore();
+  const { addLayer, updateComps } = useLayerStore();
+
+  React.useEffect(() => {
+    console.log("Updating comps: ", comps);
+    updateComps(comps);
+  }, [comps, updateComps]);
 
   return (
     <SearchSelect
