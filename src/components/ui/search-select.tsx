@@ -67,7 +67,10 @@ const SearchSelect = ({
                 <CommandItem
                   key={`${extractKey(option)}-${index}`}
                   value={extractKey(option)}
-                  onSelect={onSelect}
+                  onSelect={() => {
+                    onSelect(option);
+                    setOpen(false);
+                  }}
                 >
                   {renderOption(option)}
                 </CommandItem>

@@ -55,29 +55,29 @@ const SpectrumComp = createComponent({
       ),
     group: z
       .object({
-        color: z
+        yuhuuu: z
           .string()
           .min(1)
           .describe(
             meta({
-              label: "Color",
+              label: "Yuhuuu",
               description: "The color of the spectrum bars",
               inputType: InputType.Color,
             })
           ),
-        heightScale: z
+        somethingElse: z
           .number()
           .int()
           .positive()
           .default(100)
           .describe(
             meta({
-              label: "Height Scale",
+              label: "Something else",
               description: "The scale of the spectrum bars",
               inputType: InputType.Slider,
             })
           ),
-        opacity: z
+        opacity2: z
           .number()
           .min(0)
           .max(1)
@@ -85,7 +85,7 @@ const SpectrumComp = createComponent({
           .default(1)
           .describe(
             meta({
-              label: "Opacity",
+              label: "Opacity2",
               description: "The opacity of the spectrum bars",
               inputType: InputType.Slider,
             })

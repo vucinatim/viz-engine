@@ -1,11 +1,15 @@
 import { z } from "zod";
 
 // Utility function to extract default values from a Zod schema
-export function getDefaults<Schema extends z.AnyZodObject>(schema: Schema) {
+export function getDefaults<Schema extends z.AnyZodObject>(
+  schema: Schema
+): Object {
   return Object.fromEntries(
     Object.entries(schema.shape).map(([key, value]) => {
       if (value instanceof z.ZodDefault)
         return [key, value._def.defaultValue()];
+      if (value instanceof z.ZodObject)
+        return [key, getDefaults(value as Schema)];
       return [key, undefined];
     })
   );

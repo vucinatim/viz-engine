@@ -71,8 +71,8 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   return (
     <canvas
       ref={canvasRef}
-      // width={canvasRef.current?.clientWidth ?? 1000}
-      // height={canvasRef.current?.clientHeight ?? 500}
+      width={canvasRef.current?.clientWidth ?? 1000}
+      height={canvasRef.current?.clientHeight ?? 500}
       className="absolute m-auto w-full aspect-video"
       style={{
         opacity: layer.layerSettings.opacity,

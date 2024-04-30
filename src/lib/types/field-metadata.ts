@@ -4,6 +4,7 @@ export enum InputType {
   Color = "color",
   Slider = "slider",
   Select = "select",
+  Toggle = "toggle",
 }
 
 interface FieldMetadata {

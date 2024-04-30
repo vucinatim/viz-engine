@@ -33,6 +33,7 @@ const AudioFileLoader = () => {
     onDrop,
     accept: DROPZONE_ACCEPTED_TYPES,
     noClick: true,
+    noKeyboard: true,
     maxFiles: 1,
   });
   useSetBodyProps(getRootProps());

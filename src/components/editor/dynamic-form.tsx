@@ -19,6 +19,7 @@ import { getDefaults, getNumberConstraints } from "@/lib/schema-utils";
 import { getMetadata, InputType } from "@/lib/types/field-metadata";
 import CollapsibleGroup from "../ui/collapsible-group";
 import SimpleTooltip from "../ui/simple-tooltip";
+import { Switch } from "../ui/switch";
 
 type FieldProps = ControllerRenderProps<{ [k: string]: any }, string>;
 
@@ -36,7 +37,7 @@ const DynamicForm = ({ schema, valuesRef }: DynamicFormProps) => {
 
   return (
     <Form {...form}>
-      {Object.entries(schema.shape).map(([key, value]) => {
+      {Object.entries(schema.shape).map(([outerKey, value]) => {
         const fieldSchema = value;
         const metadata = getMetadata(value);
 
@@ -44,16 +45,16 @@ const DynamicForm = ({ schema, valuesRef }: DynamicFormProps) => {
         if (fieldSchema instanceof z.ZodObject) {
           return (
             <CollapsibleGroup
-              key={key}
+              key={outerKey}
               label={metadata?.label || "Group"}
               description={metadata?.description}
             >
-              {Object.entries(fieldSchema.shape).map(([key, value]) => (
+              {Object.entries(fieldSchema.shape).map(([innerKey, value]) => (
                 <DynamicFormField
-                  key={key}
-                  name={key}
+                  key={`${outerKey}.${innerKey}`}
+                  name={`${outerKey}.${innerKey}`}
                   form={form}
-                  valuesRef={valuesRef}
+                  valuesRef={valuesRef.current[outerKey]}
                   fieldSchema={value as z.ZodType<any>}
                 />
               ))}
@@ -63,11 +64,11 @@ const DynamicForm = ({ schema, valuesRef }: DynamicFormProps) => {
 
         // Handle other types with a regular form field
         return (
-          <div key={key} className="px-4">
+          <div key={outerKey} className="px-4">
             <DynamicFormField
-              name={key}
+              name={outerKey}
               form={form}
-              valuesRef={valuesRef}
+              valuesRef={valuesRef.current}
               fieldSchema={fieldSchema as z.ZodType<any>}
             />
           </div>
@@ -122,14 +123,11 @@ const DynamicFormField = ({
   );
 };
 
-const getInputComponent = (
-  schema: unknown,
-  field: FieldProps,
-  valuesRef: MutableRefObject<any>
-) => {
+const getInputComponent = (schema: unknown, field: FieldProps, values: any) => {
   const handleOnChange = (value: any) => {
     field.onChange(value);
-    valuesRef.current[field.name] = value;
+    const objectKey = field.name.split(".").pop() || field.name;
+    values[objectKey] = value;
   };
 
   // If the schema is a ZodDefault, get the inner type
@@ -147,6 +145,13 @@ const getInputComponent = (
         onChange={handleOnChange}
         {...getNumberConstraints(type)}
       />
+    );
+  }
+
+  // Handle ZodBoolean with a Toggle
+  if (type instanceof z.ZodBoolean) {
+    return (
+      <Switch value={field.value} onChange={handleOnChange} name={field.name} />
     );
   }
 
