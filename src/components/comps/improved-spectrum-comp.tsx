@@ -76,14 +76,11 @@ const ImprovedSpectrumComp = createComponent({
         ),
     }),
   }),
-  draw: (ctx, analyzer, config) => {
+  draw: (ctx, dataArray, analyzer, config) => {
     const { display } = config;
     const width = ctx.canvas.width;
     const height = ctx.canvas.height;
     const numBars = 300; // You can adjust this for more or fewer bars
-
-    let dataArray = new Uint8Array(analyzer.frequencyBinCount);
-    analyzer.getByteFrequencyData(dataArray);
 
     // Apply smoothing
     dataArray = smoothData(dataArray, 0.9);

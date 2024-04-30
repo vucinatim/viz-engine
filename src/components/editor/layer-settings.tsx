@@ -12,11 +12,13 @@ import { useEffect } from "react";
 
 const blendingModes = ["normal", "multiply", "screen", "overlay"] as const;
 
-const layerSettingsSchema = z.object({
+export const layerSettingsSchema = z.object({
   visible: z.boolean().default(true),
   background: z.string().default("rgba(255, 255, 255, 1)"),
   opacity: z.number().min(0).max(1).default(1),
   blendingMode: z.enum(blendingModes).default("normal"),
+  freeze: z.boolean().default(true),
+  showDebug: z.boolean().default(false),
 });
 
 export type LayerSettings = z.infer<typeof layerSettingsSchema>;

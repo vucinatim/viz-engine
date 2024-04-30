@@ -98,9 +98,7 @@ const SpectrumComp = createComponent({
         })
       ),
   }),
-  draw: (ctx, analyzer, config) => {
-    const dataArray = new Uint8Array(analyzer.frequencyBinCount);
-    analyzer.getByteFrequencyData(dataArray);
+  draw: (ctx, dataArray, analyzer, config) => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
     dataArray.forEach((value, index) => {

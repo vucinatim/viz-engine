@@ -10,8 +10,8 @@ const EditorLayerSearch = () => {
   const { comps } = useCompStore();
   const { addLayer, updateComps } = useLayerStore();
 
+  // This is needed for instant changes on save when editing comp files
   React.useEffect(() => {
-    console.log("Updating comps: ", comps);
     updateComps(comps);
   }, [comps, updateComps]);
 

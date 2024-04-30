@@ -1,6 +1,6 @@
 import useAudioStore from "@/lib/stores/audio-store";
 import { LayerData } from "@/lib/stores/layer-store";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, forwardRef } from "react";
 import { z } from "zod";
 
 export type ConfigValuesRef = React.MutableRefObject<ConfigSchema>;
@@ -20,6 +20,7 @@ export interface Comp {
   presets?: Preset<ConfigSchema>[];
   draw: (
     ctx: CanvasRenderingContext2D,
+    dataArray: Uint8Array,
     analyzer: AnalyserNode,
     config: ConfigSchema
   ) => void;
@@ -32,6 +33,7 @@ export function createComponent<TConfig extends ConfigSchema>(definition: {
   presets?: Preset<TConfig>[];
   draw: (
     ctx: CanvasRenderingContext2D,
+    dataArray: Uint8Array,
     analyzer: AnalyserNode,
     config: z.infer<TConfig>
   ) => void;
@@ -48,7 +50,7 @@ interface LayerRendererProps {
 
 const LayerRenderer = ({ layer }: LayerRendererProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { audioAnalyzer } = useAudioStore();
+  const { audioAnalyzer, wavesurfer } = useAudioStore();
   console.log("Rendering layer", layer.comp.name);
 
   useEffect(() => {
@@ -57,22 +59,83 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    let dataArray = new Uint8Array();
+    let lastDataArray = new Uint8Array();
+
     const renderFrame = () => {
-      if (layer?.valuesRef?.current) {
-        layer.comp.draw(ctx, audioAnalyzer, layer?.valuesRef.current);
+      // If freeze is disabled treat the layer as playing
+      const isPlaying = !layer.layerSettings.freeze || wavesurfer?.isPlaying();
+
+      // Fetch new data only if isPlaying is true
+      if (isPlaying) {
+        dataArray = new Uint8Array(audioAnalyzer.frequencyBinCount);
+        audioAnalyzer.getByteFrequencyData(dataArray);
+        lastDataArray = new Uint8Array(dataArray);
       }
+
+      if (layer?.valuesRef?.current) {
+        layer.comp.draw(
+          ctx,
+          isPlaying ? dataArray : lastDataArray,
+          audioAnalyzer,
+          layer?.valuesRef.current
+        );
+      }
+
+      // Mirror the rendered canvas to other canvases
+      layer.mirrorCanvases?.forEach((mirrorCanvas) => {
+        if (!mirrorCanvas.current) return;
+        const width = mirrorCanvas.current.width;
+        const height = mirrorCanvas.current.height;
+        const mirrorCtx = mirrorCanvas.current.getContext("2d");
+        if (mirrorCtx) {
+          mirrorCtx.clearRect(0, 0, width, height);
+          // Scale the canvas to fit the mirror canvas and draw the image
+          mirrorCtx.drawImage(
+            canvas,
+            0,
+            0,
+            canvas.width,
+            canvas.height,
+            0,
+            0,
+            width,
+            height
+          );
+        }
+      });
 
       requestAnimationFrame(renderFrame);
     };
 
     renderFrame();
-  }, [audioAnalyzer, layer.comp, layer?.valuesRef]);
+  }, [
+    audioAnalyzer,
+    layer.comp,
+    layer.layerSettings.freeze,
+    layer.mirrorCanvases,
+    layer?.valuesRef,
+    wavesurfer,
+  ]);
 
+  return <ControlledCanvas layer={layer} ref={canvasRef} />;
+};
+
+interface ControlledCanvasProps {
+  layer: LayerData;
+}
+
+export const ControlledCanvas = forwardRef<
+  HTMLCanvasElement,
+  ControlledCanvasProps
+>(({ layer }, ref) => {
+  const refCurrent = (ref as React.MutableRefObject<HTMLCanvasElement> | null)
+    ?.current;
   return (
     <canvas
-      ref={canvasRef}
-      width={canvasRef.current?.clientWidth ?? 1000}
-      height={canvasRef.current?.clientHeight ?? 500}
+      ref={ref}
+      width={refCurrent?.clientWidth ?? 1000}
+      height={refCurrent?.clientHeight ?? 500}
       className="absolute m-auto w-full aspect-video"
       style={{
         opacity: layer.layerSettings.opacity,
@@ -82,6 +145,8 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       }}
     />
   );
-};
+});
+
+ControlledCanvas.displayName = "ControlledCanvas";
 
 export default LayerRenderer;
