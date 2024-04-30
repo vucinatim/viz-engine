@@ -1,4 +1,4 @@
-import React, { MutableRefObject } from "react";
+import React, { MutableRefObject, useEffect } from "react";
 import { ControllerRenderProps, useForm, UseFormReturn } from "react-hook-form";
 import { z, ZodObject } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,14 +26,25 @@ type FieldProps = ControllerRenderProps<{ [k: string]: any }, string>;
 interface DynamicFormProps {
   schema: ZodObject<any>;
   valuesRef: React.MutableRefObject<any>;
+  defaultValues?: any;
 }
 
-const DynamicForm = ({ schema, valuesRef }: DynamicFormProps) => {
-  const defaultValues = getDefaults(schema);
+const DynamicForm = ({
+  schema,
+  valuesRef,
+  defaultValues,
+}: DynamicFormProps) => {
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues,
+    defaultValues: defaultValues,
   });
+
+  // Rerender when default values change
+  useEffect(() => {
+    if (!defaultValues) return;
+    console.log("Resetting form with default values", defaultValues);
+    form.reset(defaultValues);
+  }, [defaultValues, form]);
 
   return (
     <Form {...form}>

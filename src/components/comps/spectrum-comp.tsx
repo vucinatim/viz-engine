@@ -9,6 +9,24 @@ const presets = [
       color: "#fff",
       heightScale: 100,
       opacity: 1,
+      group: {
+        yuhuuu: "#000",
+        somethingElse: 100,
+        opacity2: 1,
+      },
+    },
+  },
+  {
+    name: "Dark",
+    values: {
+      color: "#000",
+      heightScale: 200,
+      opacity: 0.5,
+      group: {
+        yuhuuu: "#fff",
+        somethingElse: 50,
+        opacity2: 0.5,
+      },
     },
   },
 ];
@@ -16,7 +34,7 @@ const presets = [
 const SpectrumComp = createComponent({
   name: "Spectrum",
   description: "Visualize the audio spectrum",
-  presets: [],
+  presets: presets,
   config: z.object({
     color: z
       .string()

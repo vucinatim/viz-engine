@@ -1,9 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import DynamicForm from "./dynamic-form";
 import { Separator } from "../ui/separator";
 import { ConfigSchema, ControlledCanvas } from "./layer-renderer";
 import LayerSettings from "./layer-settings";
 import useLayerStore, { LayerData } from "@/lib/stores/layer-store";
+import SearchSelect from "../ui/search-select";
 
 interface LayerConfigCardProps {
   layer: LayerData;
@@ -11,8 +12,10 @@ interface LayerConfigCardProps {
 
 function LayerConfigCard({ layer }: LayerConfigCardProps) {
   const comp = layer.comp;
-  const { registerMirrorCanvas, unregisterMirrorCanvas } = useLayerStore();
+  const { registerMirrorCanvas, unregisterMirrorCanvas, updateLayerComp } =
+    useLayerStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [selectedPreset, setSelectedPreset] = useState<any | null>();
 
   useEffect(() => {
     console.log("Registering mirror canvas", layer.id);
@@ -23,6 +26,8 @@ function LayerConfigCard({ layer }: LayerConfigCardProps) {
       unregisterMirrorCanvas(layer.id, canvasRef);
     };
   }, [canvasRef, registerMirrorCanvas, unregisterMirrorCanvas, layer.id]);
+
+  console.log("Rendering layer config", comp.name);
 
   return (
     <div className="py-4 bg-zinc-900 shadow-inner rounded-md flex flex-col gap-y-4">
@@ -38,25 +43,31 @@ function LayerConfigCard({ layer }: LayerConfigCardProps) {
       <Separator />
       <div className="flex flex-col gap-y-3 px-4 select-none">
         <LayerSettings layer={layer} />
-        {comp.presets && comp.presets.length > 1 && (
-          <div className="flex gap-x-2">
-            {comp.presets.map((preset) => (
-              <button
-                key={preset.name}
-                className="btn btn-sm"
-                onClick={() => {
-                  layer.valuesRef.current = preset.values as ConfigSchema;
-                }}
-              >
-                {preset.name}
-              </button>
-            ))}
-          </div>
+        {comp.presets && comp.presets.length > 0 && (
+          <SearchSelect
+            trigger={<p>{selectedPreset?.name ?? "Presets"}</p>}
+            options={comp.presets}
+            extractKey={(preset) => preset.name}
+            renderOption={(preset) => <div>{preset.name}</div>}
+            noItemsMessage="No presets available."
+            onSelect={(preset) => {
+              layer.valuesRef.current = preset.values as ConfigSchema;
+              setSelectedPreset(preset);
+              updateLayerComp(layer.id, {
+                ...layer.comp,
+                defaultValues: preset.values,
+              });
+            }}
+          />
         )}
       </div>
       <Separator />
       <div className="relative flex flex-col gap-y-4 select-none">
-        <DynamicForm schema={comp.config} valuesRef={layer.valuesRef} />
+        <DynamicForm
+          schema={comp.config}
+          valuesRef={layer.valuesRef}
+          defaultValues={layer.comp.defaultValues}
+        />
       </div>
     </div>
   );

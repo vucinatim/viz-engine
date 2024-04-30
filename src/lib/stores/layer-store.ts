@@ -23,6 +23,7 @@ interface LayerStore {
   removeLayer: (id: string) => void;
   updateComps: (comp: Comp[]) => void;
   updateLayerSettings: (id: string, settings: LayerSettings) => void;
+  updateLayerComp: (id: string, comp: Comp) => void;
   registerMirrorCanvas: (
     id: string,
     canvasRef: RefObject<HTMLCanvasElement>
@@ -50,6 +51,12 @@ const useLayerStore = create<LayerStore>((set) => ({
   removeLayer: (id) =>
     set((state) => ({
       layers: state.layers.filter((layer) => layer.id !== id),
+    })),
+  updateLayerComp: (id, comp) =>
+    set((state) => ({
+      layers: state.layers.map((layer) =>
+        layer.id === id ? { ...layer, comp } : layer
+      ),
     })),
   updateComps: (comps) =>
     set((state) => {

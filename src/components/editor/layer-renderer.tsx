@@ -1,3 +1,4 @@
+import { getDefaults } from "@/lib/schema-utils";
 import useAudioStore from "@/lib/stores/audio-store";
 import { LayerData } from "@/lib/stores/layer-store";
 import { useEffect, useRef, forwardRef } from "react";
@@ -17,6 +18,7 @@ export interface Comp {
   name: string;
   description: string;
   config: ConfigSchema;
+  defaultValues: z.infer<ConfigSchema>;
   presets?: Preset<ConfigSchema>[];
   draw: (
     ctx: CanvasRenderingContext2D,
@@ -40,6 +42,7 @@ export function createComponent<TConfig extends ConfigSchema>(definition: {
 }) {
   return {
     id: `${definition.name}-${new Date().getTime()}`,
+    defaultValues: getDefaults(definition.config),
     ...definition,
   } as Comp;
 }
