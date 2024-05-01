@@ -47,52 +47,48 @@ const DynamicForm = ({
   }, [defaultValues, form]);
 
   return (
-    <CollapsibleGroup label={"Config"}>
-      <Form {...form}>
-        {Object.entries(schema.shape).map(([outerKey, value]) => {
-          const fieldSchema = value;
-          const metadata = getMetadata(value);
+    <Form {...form}>
+      {Object.entries(schema.shape).map(([outerKey, value]) => {
+        const fieldSchema = value;
+        const metadata = getMetadata(value);
 
-          // Handle ZodObject by creating a collapsible group
-          if (fieldSchema instanceof z.ZodObject) {
-            return (
-              <CollapsibleGroup
-                key={outerKey}
-                label={metadata?.label || "Group"}
-                description={metadata?.description}
-                className="pt-4"
-              >
-                <div className="pb-6 flex flex-col gap-y-2">
-                  {Object.entries(fieldSchema.shape).map(
-                    ([innerKey, value]) => (
-                      <DynamicFormField
-                        key={`${outerKey}.${innerKey}`}
-                        name={`${outerKey}.${innerKey}`}
-                        form={form}
-                        valuesRef={valuesRef.current[outerKey]}
-                        fieldSchema={value as z.ZodType<any>}
-                      />
-                    )
-                  )}
-                </div>
-              </CollapsibleGroup>
-            );
-          }
-
-          // Handle other types with a regular form field
+        // Handle ZodObject by creating a collapsible group
+        if (fieldSchema instanceof z.ZodObject) {
           return (
-            <div key={outerKey}>
-              <DynamicFormField
-                name={outerKey}
-                form={form}
-                valuesRef={valuesRef.current}
-                fieldSchema={fieldSchema as z.ZodType<any>}
-              />
-            </div>
+            <CollapsibleGroup
+              key={outerKey}
+              label={metadata?.label || "Group"}
+              description={metadata?.description}
+              className="pt-4"
+            >
+              <div className="pb-6 flex flex-col gap-y-2">
+                {Object.entries(fieldSchema.shape).map(([innerKey, value]) => (
+                  <DynamicFormField
+                    key={`${outerKey}.${innerKey}`}
+                    name={`${outerKey}.${innerKey}`}
+                    form={form}
+                    valuesRef={valuesRef.current[outerKey]}
+                    fieldSchema={value as z.ZodType<any>}
+                  />
+                ))}
+              </div>
+            </CollapsibleGroup>
           );
-        })}
-      </Form>
-    </CollapsibleGroup>
+        }
+
+        // Handle other types with a regular form field
+        return (
+          <div key={outerKey}>
+            <DynamicFormField
+              name={outerKey}
+              form={form}
+              valuesRef={valuesRef.current}
+              fieldSchema={fieldSchema as z.ZodType<any>}
+            />
+          </div>
+        );
+      })}
+    </Form>
   );
 };
 

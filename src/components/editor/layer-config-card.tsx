@@ -5,15 +5,29 @@ import { ConfigSchema, ControlledCanvas } from "./layer-renderer";
 import LayerSettings from "./layer-settings";
 import useLayerStore, { LayerData } from "@/lib/stores/layer-store";
 import SearchSelect from "../ui/search-select";
+import { Button } from "../ui/button";
+import { ChevronDown, ChevronUp, Layers2, Trash } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../ui/collapsible";
 
 interface LayerConfigCardProps {
+  index: number;
   layer: LayerData;
 }
 
-function LayerConfigCard({ layer }: LayerConfigCardProps) {
+function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
   const comp = layer.comp;
-  const { registerMirrorCanvas, unregisterMirrorCanvas, updateLayerComp } =
-    useLayerStore();
+  const {
+    registerMirrorCanvas,
+    unregisterMirrorCanvas,
+    updateLayerComp,
+    removeLayer,
+    duplicateLayer,
+    setIsLayerExpanded,
+  } = useLayerStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [selectedPreset, setSelectedPreset] = useState<any | null>();
 
@@ -30,49 +44,102 @@ function LayerConfigCard({ layer }: LayerConfigCardProps) {
   console.log("Rendering layer config", comp.name);
 
   return (
-    <div className="relative flex flex-col gap-y-4">
-      <div className="absolute inset-x-0 bottom-0 top-4 rounded-md bg-zinc-900" />
-      <div className="sticky top-0 z-20">
-        <div className="h-5 bg-[#27272a]" />
-        <div className=" flex -mt-1 items-center rounded-md overflow-hidden bg-zinc-900 backdrop-blur-sm px-4 py-4">
-          <div className="flex grow flex-col gap-y-2">
-            <h2 className="font-semibold text-sm">{comp.name}</h2>
-            <p className="text-xs">{comp.description}</p>
-          </div>
-          <div className="relative w-32 aspect-video rounded-md overflow-hidden">
-            <ControlledCanvas layer={layer} ref={canvasRef} />
+    <Collapsible
+      open={layer.isExpanded}
+      onOpenChange={(open) => setIsLayerExpanded(layer.id, open)}
+      className="w-full"
+    >
+      <div className="relative">
+        <div className="sticky top-0 z-20 border-b border-zinc-600">
+          <div className="flex flex-col gap-y-4 overflow-hidden bg-gradient-to-tl from-zinc-900/90 to-zinc-900/80 backdrop-blur-sm px-4 py-4">
+            <div className="flex gap-x-4 h-16">
+              <div className="flex grow flex-col gap-y-2 overflow-y-auto">
+                <h2 className="flex items-center font-semibold text-sm">
+                  <div className="bg-gradient-to-br from-zinc-200 to-zinc-500 opacity-20 text-center w-5 h-5 rounded-md mr-2 text-black font-bold">
+                    {index + 1}
+                  </div>
+                  {comp.name}
+                </h2>
+                <p className="text-xs">{comp.description}</p>
+              </div>
+              <div className="relative shrink-0 w-32 aspect-video rounded-md overflow-hidden">
+                <ControlledCanvas layer={layer} ref={canvasRef} />
+              </div>
+            </div>
+
+            <div className="flex gap-x-2 items-center">
+              <Button
+                size="iconMini"
+                variant="defaultLighter"
+                tooltip="Delete layer"
+                onClick={() => removeLayer(layer.id)}
+              >
+                <Trash className="w-6 h-6" />
+              </Button>
+              <Button
+                size="iconMini"
+                variant="defaultLighter"
+                tooltip="Duplicate layer"
+                onClick={() => duplicateLayer(layer.id)}
+              >
+                <Layers2 className="w-6 h-6" />
+              </Button>
+              <div className="grow" />
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="defaultLighter"
+                  className="h-7 px-2"
+                  tooltip="Open/Close layer settings"
+                >
+                  <div className="flex items-center gap-x-2 cursor-pointer">
+                    <p className="text-xs grow">Settings</p>
+                    {layer.isExpanded ? (
+                      <ChevronUp className="w-5 h-5" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5" />
+                    )}
+                  </div>
+                </Button>
+              </CollapsibleTrigger>
+            </div>
           </div>
         </div>
-        {/* <Separator /> */}
+
+        <CollapsibleContent className="space-y-2">
+          <div className="flex flex-col gap-y-4">
+            <div className="flex z-10 flex-col pt-4 gap-y-3 px-4 select-none bg-gradient-to-b from-zinc-900 to-transparent">
+              <LayerSettings layer={layer} />
+              {comp.presets && comp.presets.length > 0 && (
+                <SearchSelect
+                  trigger={<p>{selectedPreset?.name ?? "Presets"}</p>}
+                  options={comp.presets}
+                  extractKey={(preset) => preset.name}
+                  renderOption={(preset) => <div>{preset.name}</div>}
+                  noItemsMessage="No presets available."
+                  onSelect={(preset) => {
+                    layer.valuesRef.current = preset.values as ConfigSchema;
+                    setSelectedPreset(preset);
+                    updateLayerComp(layer.id, {
+                      ...layer.comp,
+                      defaultValues: preset.values,
+                    });
+                  }}
+                />
+              )}
+            </div>
+            <div className="relative flex flex-col gap-y-2 select-none border-b border-zinc-600">
+              <DynamicForm
+                schema={comp.config}
+                valuesRef={layer.valuesRef}
+                defaultValues={
+                  layer.valuesRef.current ?? layer.comp.defaultValues
+                }
+              />
+            </div>
+          </div>
+        </CollapsibleContent>
       </div>
-      <div className="flex z-10 flex-col gap-y-3 px-4 select-none">
-        <LayerSettings layer={layer} />
-        {comp.presets && comp.presets.length > 0 && (
-          <SearchSelect
-            trigger={<p>{selectedPreset?.name ?? "Presets"}</p>}
-            options={comp.presets}
-            extractKey={(preset) => preset.name}
-            renderOption={(preset) => <div>{preset.name}</div>}
-            noItemsMessage="No presets available."
-            onSelect={(preset) => {
-              layer.valuesRef.current = preset.values as ConfigSchema;
-              setSelectedPreset(preset);
-              updateLayerComp(layer.id, {
-                ...layer.comp,
-                defaultValues: preset.values,
-              });
-            }}
-          />
-        )}
-      </div>
-      <div className="relative flex flex-col select-none">
-        <DynamicForm
-          schema={comp.config}
-          valuesRef={layer.valuesRef}
-          defaultValues={layer.comp.defaultValues}
-        />
-      </div>
-    </div>
+    </Collapsible>
   );
 }
 

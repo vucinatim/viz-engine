@@ -71,9 +71,8 @@ const AudioFileLoader = () => {
       </div>
       <Button
         size="icon"
-        variant="outline"
-        className="p-2 bg-black/10 hover:bg-black/20"
         onClick={() => fileInputRef?.current?.click()}
+        tooltip="Load audio file"
       >
         <Folder className="w-6 h-6" />
       </Button>

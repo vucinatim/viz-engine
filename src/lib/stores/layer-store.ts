@@ -13,6 +13,7 @@ export interface LayerData {
   valuesRef: {
     current: ConfigSchema;
   };
+  isExpanded: boolean;
   layerSettings: LayerSettings;
   mirrorCanvases?: RefObject<HTMLCanvasElement>[];
 }
@@ -21,9 +22,12 @@ interface LayerStore {
   layers: LayerData[];
   addLayer: (comp: Comp) => void;
   removeLayer: (id: string) => void;
+  setIsLayerExpanded: (id: string, isExpanded: boolean) => void;
+  setAllLayersExpanded: (isExpanded: boolean) => void;
   updateComps: (comp: Comp[]) => void;
   updateLayerSettings: (id: string, settings: LayerSettings) => void;
   updateLayerComp: (id: string, comp: Comp) => void;
+  duplicateLayer: (id: string) => void;
   registerMirrorCanvas: (
     id: string,
     canvasRef: RefObject<HTMLCanvasElement>
@@ -43,6 +47,7 @@ const useLayerStore = create<LayerStore>((set) => ({
         {
           id: `layer-${comp.name}-${new Date().getTime()}`,
           comp,
+          isExpanded: true,
           valuesRef: { current: getDefaults(comp.config) as ConfigSchema },
           layerSettings: getDefaults(layerSettingsSchema) as LayerSettings,
         },
@@ -51,6 +56,16 @@ const useLayerStore = create<LayerStore>((set) => ({
   removeLayer: (id) =>
     set((state) => ({
       layers: state.layers.filter((layer) => layer.id !== id),
+    })),
+  setIsLayerExpanded: (id, isExpanded) =>
+    set((state) => ({
+      layers: state.layers.map((layer) =>
+        layer.id === id ? { ...layer, isExpanded } : layer
+      ),
+    })),
+  setAllLayersExpanded: (isExpanded) =>
+    set((state) => ({
+      layers: state.layers.map((layer) => ({ ...layer, isExpanded })),
     })),
   updateLayerComp: (id, comp) =>
     set((state) => ({
@@ -75,6 +90,24 @@ const useLayerStore = create<LayerStore>((set) => ({
         layer.id === id ? { ...layer, layerSettings: settings } : layer
       ),
     })),
+  duplicateLayer: (id) =>
+    set((state) => {
+      const layer = state.layers.find((layer) => layer.id === id);
+      if (!layer) return state;
+
+      // Duplicate the layer and place it after the original
+      const index = state.layers.indexOf(layer);
+      const newLayer = {
+        ...layer,
+        id: `layer-${layer.comp.name}-${new Date().getTime()}`,
+      };
+      const newLayers = [...state.layers];
+      newLayers.splice(index + 1, 0, newLayer);
+
+      return {
+        layers: newLayers,
+      };
+    }),
   registerMirrorCanvas: (id, ctx) =>
     set((state) => ({
       layers: state.layers.map((layer) =>

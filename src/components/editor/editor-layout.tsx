@@ -35,7 +35,11 @@ export function EditorLayout({
             </div>
           </ResizablePanel>
           <ResizableHandle />
-          <ResizablePanel defaultSize={20} minSize={20}>
+          <ResizablePanel
+            className="min-h-[227px]"
+            defaultSize={20}
+            minSize={20}
+          >
             <div className="relative h-full w-full flex flex-col items-stretch justify-stretch">
               {bottomRightChildren}
             </div>
@@ -53,7 +57,7 @@ interface EditorPanelProps {
 export const EditorPanel = ({ children }: EditorPanelProps) => {
   return (
     <div className="absolute inset-0">
-      <div className="absolute inset-1 bg-zinc-800 border overflow-hidden border-gray-600/20 backdrop-blur-sm rounded-md">
+      <div className="absolute inset-1 bg-zinc-800/70 border overflow-hidden border-gray-600/20 backdrop-blur-sm rounded-md">
         {children}
       </div>
     </div>

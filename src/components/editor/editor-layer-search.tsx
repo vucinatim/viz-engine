@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Plus } from "lucide-react";
+import { AudioLines, Plus, Search } from "lucide-react";
 import useLayerStore from "@/lib/stores/layer-store";
 import useCompStore from "@/lib/stores/comp-store";
 import SearchSelect from "../ui/search-select";
@@ -18,8 +18,8 @@ const EditorLayerSearch = () => {
   return (
     <SearchSelect
       trigger={
-        <div className="flex items-center gap-x-4">
-          <Plus className="h-4 w-4 shrink-0 opacity-50" />
+        <div className="flex items-center justify-start w-full gap-x-4">
+          <AudioLines className="h-4 w-4 shrink-0 opacity-50" />
           <p>Add New Layer</p>
         </div>
       }

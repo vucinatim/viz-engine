@@ -24,7 +24,8 @@ const AudioPanel = () => {
           <AudioFileLoader />
           <div className="place-self-center">
             <Toggle
-              aria-label="Toggle visibility"
+              aria-label="Play/Pause"
+              tooltip="Play/Pause (Space)"
               onClick={() => wavesurfer?.playPause()}
             >
               {isPlaying ? <Pause /> : <Play />}

@@ -41,7 +41,7 @@ const SearchSelect = ({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="justify-center bg-black/10 hover:bg-black/20 gap-x-2 w-full"
+            className="justify-center bg-black/20 hover:bg-black/30 gap-x-2 w-full"
           >
             {trigger}
           </Button>

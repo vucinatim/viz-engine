@@ -14,10 +14,15 @@ export default function Home() {
 
   return (
     <main
-      className="relative flex flex-col h-screen w-screen bg-zinc-900"
+      // className="relative flex flex-col h-screen w-screen bg-zinc-900"
+      className="relative flex flex-col h-screen w-screen"
       {...props}
     >
-      <div className="bg-zinc-800 mt-3 mx-3 flex items-center -mb-1 border overflow-hidden border-gray-600/20 backdrop-blur-sm rounded-md">
+      <div className="absolute inset-0 bg-zinc-900">
+        <Image src="/logo.png" alt={"bg"} layout="fill" objectFit="cover" />
+        <div className="absolute inset-0 backdrop-blur-2xl bg-zinc-900/60" />
+      </div>
+      <div className="bg-zinc-800/70 mt-3 mx-3 flex items-center -mb-1 border overflow-hidden border-gray-600/20 backdrop-blur-sm rounded-md">
         <Image
           src="/logo.png"
           alt="VizEngineLogo"

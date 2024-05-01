@@ -88,6 +88,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       // Mirror the rendered canvas to other canvases
       layer.mirrorCanvases?.forEach((mirrorCanvas) => {
         if (!mirrorCanvas.current) return;
+        if (canvas.width === 0 || canvas.height === 0) return;
         const width = mirrorCanvas.current.width;
         const height = mirrorCanvas.current.height;
         const mirrorCtx = mirrorCanvas.current.getContext("2d");

@@ -33,7 +33,7 @@ const LayerSettings = ({ layer }: LayerSettingsProps) => {
   const { updateLayerSettings } = useLayerStore();
   const form = useForm({
     resolver: zodResolver(layerSettingsSchema),
-    defaultValues: layerSettingsSchema.parse({}),
+    defaultValues: layer.layerSettings ?? layerSettingsSchema.parse({}),
   });
 
   // Update layer settings on first render to ensure the form is in sync
@@ -59,6 +59,7 @@ const LayerSettings = ({ layer }: LayerSettingsProps) => {
               <FormControl>
                 <Toggle
                   aria-label="Toggle visibility"
+                  tooltip="Toggle visibility"
                   onClick={() =>
                     createOnChangeHandler(() => field.onChange(!field.value))(
                       null
