@@ -30,18 +30,22 @@ function LayerConfigCard({ layer }: LayerConfigCardProps) {
   console.log("Rendering layer config", comp.name);
 
   return (
-    <div className="py-4 bg-zinc-900 shadow-inner rounded-md flex flex-col gap-y-4">
-      <div className="flex items-stretch px-4">
-        <div className="flex grow flex-col gap-y-2">
-          <h2 className="font-semibold text-sm">{comp.name}</h2>
-          <p className="text-xs">{comp.description}</p>
+    <div className="relative flex flex-col gap-y-4">
+      <div className="absolute inset-x-0 bottom-0 top-4 rounded-md bg-zinc-900" />
+      <div className="sticky top-0 z-20">
+        <div className="h-5 bg-[#27272a]" />
+        <div className=" flex -mt-1 items-center rounded-md overflow-hidden bg-zinc-900 backdrop-blur-sm px-4 py-4">
+          <div className="flex grow flex-col gap-y-2">
+            <h2 className="font-semibold text-sm">{comp.name}</h2>
+            <p className="text-xs">{comp.description}</p>
+          </div>
+          <div className="relative w-32 aspect-video rounded-md overflow-hidden">
+            <ControlledCanvas layer={layer} ref={canvasRef} />
+          </div>
         </div>
-        <div className="relative w-32 aspect-video rounded-md overflow-hidden">
-          <ControlledCanvas layer={layer} ref={canvasRef} />
-        </div>
+        {/* <Separator /> */}
       </div>
-      <Separator />
-      <div className="flex flex-col gap-y-3 px-4 select-none">
+      <div className="flex z-10 flex-col gap-y-3 px-4 select-none">
         <LayerSettings layer={layer} />
         {comp.presets && comp.presets.length > 0 && (
           <SearchSelect
@@ -61,8 +65,7 @@ function LayerConfigCard({ layer }: LayerConfigCardProps) {
           />
         )}
       </div>
-      <Separator />
-      <div className="relative flex flex-col gap-y-4 select-none">
+      <div className="relative flex flex-col select-none">
         <DynamicForm
           schema={comp.config}
           valuesRef={layer.valuesRef}

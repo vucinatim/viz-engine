@@ -47,45 +47,52 @@ const DynamicForm = ({
   }, [defaultValues, form]);
 
   return (
-    <Form {...form}>
-      {Object.entries(schema.shape).map(([outerKey, value]) => {
-        const fieldSchema = value;
-        const metadata = getMetadata(value);
+    <CollapsibleGroup label={"Config"}>
+      <Form {...form}>
+        {Object.entries(schema.shape).map(([outerKey, value]) => {
+          const fieldSchema = value;
+          const metadata = getMetadata(value);
 
-        // Handle ZodObject by creating a collapsible group
-        if (fieldSchema instanceof z.ZodObject) {
+          // Handle ZodObject by creating a collapsible group
+          if (fieldSchema instanceof z.ZodObject) {
+            return (
+              <CollapsibleGroup
+                key={outerKey}
+                label={metadata?.label || "Group"}
+                description={metadata?.description}
+                className="pt-4"
+              >
+                <div className="pb-6 flex flex-col gap-y-2">
+                  {Object.entries(fieldSchema.shape).map(
+                    ([innerKey, value]) => (
+                      <DynamicFormField
+                        key={`${outerKey}.${innerKey}`}
+                        name={`${outerKey}.${innerKey}`}
+                        form={form}
+                        valuesRef={valuesRef.current[outerKey]}
+                        fieldSchema={value as z.ZodType<any>}
+                      />
+                    )
+                  )}
+                </div>
+              </CollapsibleGroup>
+            );
+          }
+
+          // Handle other types with a regular form field
           return (
-            <CollapsibleGroup
-              key={outerKey}
-              label={metadata?.label || "Group"}
-              description={metadata?.description}
-            >
-              {Object.entries(fieldSchema.shape).map(([innerKey, value]) => (
-                <DynamicFormField
-                  key={`${outerKey}.${innerKey}`}
-                  name={`${outerKey}.${innerKey}`}
-                  form={form}
-                  valuesRef={valuesRef.current[outerKey]}
-                  fieldSchema={value as z.ZodType<any>}
-                />
-              ))}
-            </CollapsibleGroup>
+            <div key={outerKey}>
+              <DynamicFormField
+                name={outerKey}
+                form={form}
+                valuesRef={valuesRef.current}
+                fieldSchema={fieldSchema as z.ZodType<any>}
+              />
+            </div>
           );
-        }
-
-        // Handle other types with a regular form field
-        return (
-          <div key={outerKey} className="px-4">
-            <DynamicFormField
-              name={outerKey}
-              form={form}
-              valuesRef={valuesRef.current}
-              fieldSchema={fieldSchema as z.ZodType<any>}
-            />
-          </div>
-        );
-      })}
-    </Form>
+        })}
+      </Form>
+    </CollapsibleGroup>
   );
 };
 
@@ -109,7 +116,7 @@ const DynamicFormField = ({
       render={({ field, fieldState }) => {
         const metadata = getMetadata(fieldSchema);
         return (
-          <FormItem>
+          <FormItem className="px-4">
             <SimpleTooltip
               text={metadata?.description}
               trigger={
@@ -137,6 +144,7 @@ const DynamicFormField = ({
 const getInputComponent = (schema: unknown, field: FieldProps, values: any) => {
   const handleOnChange = (value: any) => {
     field.onChange(value);
+    // Since grouped fields are stored in an object, we need to update the correct key
     const objectKey = field.name.split(".").pop() || field.name;
     values[objectKey] = value;
   };

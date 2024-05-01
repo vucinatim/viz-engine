@@ -32,7 +32,7 @@ const LayersConfigPanel = () => {
       <div className="border-b border-white/30 px-2 py-4 flex flex-col items-stretch gap-y-4">
         <EditorLayerSearch />
       </div>
-      <div className="flex flex-col grow px-2 py-4 gap-y-3 overflow-y-auto">
+      <div className="flex flex-col grow px-2 overflow-y-auto">
         {layers.map((layer) => (
           <LayerConfigCard key={layer.id} layer={layer} />
         ))}
