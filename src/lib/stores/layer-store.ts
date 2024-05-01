@@ -6,6 +6,7 @@ import {
 import { create } from "zustand";
 import { getDefaults } from "../schema-utils";
 import { RefObject } from "react";
+import { arrayMove } from "@dnd-kit/sortable";
 
 export interface LayerData {
   id: string;
@@ -28,6 +29,7 @@ interface LayerStore {
   updateLayerSettings: (id: string, settings: LayerSettings) => void;
   updateLayerComp: (id: string, comp: Comp) => void;
   duplicateLayer: (id: string) => void;
+  reorderLayers: (activeId: string, overId: string) => void;
   registerMirrorCanvas: (
     id: string,
     canvasRef: RefObject<HTMLCanvasElement>
@@ -95,17 +97,29 @@ const useLayerStore = create<LayerStore>((set) => ({
       const layer = state.layers.find((layer) => layer.id === id);
       if (!layer) return state;
 
-      // Duplicate the layer and place it after the original
-      const index = state.layers.indexOf(layer);
-      const newLayer = {
-        ...layer,
-        id: `layer-${layer.comp.name}-${new Date().getTime()}`,
+      return {
+        layers: [
+          ...state.layers,
+          {
+            id: `layer-${layer.comp.name}-${new Date().getTime()}`,
+            comp: layer.comp,
+            isExpanded: true,
+            valuesRef: {
+              // Deep clone the valuesRef
+              current: JSON.parse(JSON.stringify(layer.valuesRef.current)),
+            },
+            layerSettings: { ...layer.layerSettings },
+          },
+        ],
       };
-      const newLayers = [...state.layers];
-      newLayers.splice(index + 1, 0, newLayer);
+    }),
+  reorderLayers: (activeId, overId) =>
+    set((state) => {
+      const oldIndex = state.layers.findIndex((layer) => layer.id === activeId);
+      const newIndex = state.layers.findIndex((layer) => layer.id === overId);
 
       return {
-        layers: newLayers,
+        layers: arrayMove(state.layers, oldIndex, newIndex),
       };
     }),
   registerMirrorCanvas: (id, ctx) =>

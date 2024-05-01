@@ -2,15 +2,30 @@ import useCompStore from "@/lib/stores/comp-store";
 import { useEffect, useMemo } from "react";
 import EditorLayerSearch from "./editor-layer-search";
 import LayerConfigCard from "./layer-config-card";
-import useLayerStore from "@/lib/stores/layer-store";
+import useLayerStore, { LayerData } from "@/lib/stores/layer-store";
 import * as allComps from "@/components/comps";
 import { Button } from "../ui/button";
 import { ChevronsDown, ChevronsUp } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 const LayersConfigPanel = () => {
   const { layers, setAllLayersExpanded } = useLayerStore();
-  const areAllLayersExpanded = useMemo(
-    () => layers.every((layer) => layer.isExpanded),
+  const areSomeLayersExpanded = useMemo(
+    () => layers.some((layer) => layer.isExpanded),
     [layers]
   );
 
@@ -41,22 +56,65 @@ const LayersConfigPanel = () => {
           size="icon"
           tooltip="Expand/Collapse All Layers"
           onClick={() => {
-            setAllLayersExpanded(!areAllLayersExpanded);
+            setAllLayersExpanded(areSomeLayersExpanded ? false : true);
           }}
         >
-          {areAllLayersExpanded ? (
+          {areSomeLayersExpanded ? (
             <ChevronsUp className="scale-y-90" />
           ) : (
             <ChevronsDown className="scale-y-90" />
           )}
         </Button>
       </div>
-      <div className="flex flex-col grow overflow-y-auto">
-        {layers.toReversed().map((layer, index) => (
-          <LayerConfigCard key={layer.id} index={index} layer={layer} />
-        ))}
+      <div className="flex flex-col grow overflow-y-auto pb-[200px]">
+        <SortableLayers layers={layers} />
       </div>
     </div>
+  );
+};
+
+interface SortableLayersProps {
+  layers: LayerData[];
+}
+
+const SortableLayers = ({ layers }: SortableLayersProps) => {
+  const { reorderLayers, setAllLayersExpanded } = useLayerStore();
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  function handleDragStart(event: DragStartEvent) {
+    setAllLayersExpanded(false);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!active || !over) {
+      return;
+    }
+
+    if (active.id !== over?.id) {
+      console.log("Reordering layers");
+      reorderLayers(active.id.toString(), over.id.toString());
+    }
+  }
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={layers} strategy={verticalListSortingStrategy}>
+        {layers.map((layer, index) => (
+          <LayerConfigCard key={layer.id} index={index} layer={layer} />
+        ))}
+      </SortableContext>
+    </DndContext>
   );
 };
 

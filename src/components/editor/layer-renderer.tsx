@@ -54,7 +54,7 @@ interface LayerRendererProps {
 const LayerRenderer = ({ layer }: LayerRendererProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { audioAnalyzer, wavesurfer } = useAudioStore();
-  console.log("Rendering layer", layer.comp.name);
+  // console.log("Rendering layer", layer.comp.name);
 
   useEffect(() => {
     if (!audioAnalyzer || !canvasRef.current) return;

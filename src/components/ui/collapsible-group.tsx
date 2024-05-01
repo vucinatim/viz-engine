@@ -30,7 +30,7 @@ const CollapsibleGroup = ({
     <div className={className}>
       <Separator />
       <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
-        <div className="flex py-4 items-center justify-between space-x-4">
+        <div className="flex py-3 items-center justify-between space-x-4">
           <CollapsibleTrigger asChild>
             <div className="flex items-center justify-between w-full cursor-pointer">
               <SimpleTooltip
