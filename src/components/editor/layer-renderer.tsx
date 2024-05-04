@@ -1,8 +1,13 @@
+import { mirrorToCanvases } from "@/lib/comp-utils/mirror-to-canvases";
+import useDebug from "@/lib/hooks/use-debug";
 import { getDefaults } from "@/lib/schema-utils";
 import useAudioStore from "@/lib/stores/audio-store";
 import { LayerData } from "@/lib/stores/layer-store";
-import { useEffect, useRef, forwardRef } from "react";
+import { useEffect, useRef, forwardRef, useCallback } from "react";
 import { z } from "zod";
+import * as THREE from "three";
+import useFrozenAudioData from "@/lib/hooks/use-frozen-audio-data";
+import useOnResize from "@/lib/hooks/use-on-resize";
 
 export type ConfigValuesRef = React.MutableRefObject<ConfigSchema>;
 
@@ -13,6 +18,43 @@ export type Preset<TConfig extends ConfigSchema> = {
   values: z.infer<TConfig>;
 };
 
+type AudioDrawData = {
+  dataArray: Uint8Array;
+  analyzer: AnalyserNode;
+};
+
+type ThreeContext = {
+  renderer: THREE.WebGLRenderer;
+  scene: THREE.Scene;
+  camera: THREE.Camera;
+};
+
+type DrawFunction<T> = ({
+  canvasCtx,
+  audioData,
+  config,
+  dt,
+}: {
+  canvasCtx: CanvasRenderingContext2D;
+  audioData: AudioDrawData;
+  config: T;
+  dt: number;
+}) => void;
+
+type init3DFunction = (threeCtx: ThreeContext) => void;
+
+type Draw3DFunction<T> = ({
+  threeCtx,
+  audioData,
+  config,
+  dt,
+}: {
+  threeCtx: ThreeContext;
+  audioData: AudioDrawData;
+  config: T;
+  dt: number;
+}) => void;
+
 export interface Comp {
   id: string;
   name: string;
@@ -20,12 +62,9 @@ export interface Comp {
   config: ConfigSchema;
   defaultValues: z.infer<ConfigSchema>;
   presets?: Preset<ConfigSchema>[];
-  draw: (
-    ctx: CanvasRenderingContext2D,
-    dataArray: Uint8Array,
-    analyzer: AnalyserNode,
-    config: ConfigSchema
-  ) => void;
+  draw?: DrawFunction<z.infer<ConfigSchema>>;
+  init3D?: init3DFunction;
+  draw3D?: Draw3DFunction<z.infer<ConfigSchema>>;
 }
 
 export function createComponent<TConfig extends ConfigSchema>(definition: {
@@ -33,12 +72,9 @@ export function createComponent<TConfig extends ConfigSchema>(definition: {
   description: string;
   config: TConfig;
   presets?: Preset<TConfig>[];
-  draw: (
-    ctx: CanvasRenderingContext2D,
-    dataArray: Uint8Array,
-    analyzer: AnalyserNode,
-    config: z.infer<TConfig>
-  ) => void;
+  draw?: DrawFunction<z.infer<TConfig>>;
+  init3D?: init3DFunction;
+  draw3D?: Draw3DFunction<z.infer<TConfig>>;
 }) {
   return {
     id: `${definition.name}-${new Date().getTime()}`,
@@ -52,200 +88,214 @@ interface LayerRendererProps {
 }
 
 const LayerRenderer = ({ layer }: LayerRendererProps) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
+
+  const layerCanvasRef = useRef<HTMLCanvasElement>(null);
+  const debugCanvasRef = useRef<HTMLCanvasElement>(null);
   const { audioAnalyzer, wavesurfer } = useAudioStore();
 
-  // Store the last data array to prevent flickering when the audio is paused
-  const dataArrayRef = useRef<Uint8Array>(new Uint8Array());
-  const lastDataArrayRef = useRef<Uint8Array>(new Uint8Array());
-
-  // Stats for debugging
+  // Time tracking
   const lastFrameTimeRef = useRef(Date.now());
-  const frameCountRef = useRef(0);
-  const fpsRef = useRef(0);
-  const lastDrawDurationRef = useRef(0);
+
+  // 3D refs
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const cameraRef = useRef<THREE.Camera | null>(null);
+
+  // on panel resize, update canvas size
+  useOnResize(canvasContainerRef, (entries, element) => {
+    // If the canvas is not available, return
+    if (!layerCanvasRef.current) return;
+    const newestEntry = entries[entries.length - 1];
+
+    const { width, height } = newestEntry.contentRect;
+    layerCanvasRef.current.width = width;
+    layerCanvasRef.current.height = height;
+    if (debugCanvasRef.current) {
+      debugCanvasRef.current.width = width;
+      debugCanvasRef.current.height = height;
+    }
+
+    if (sceneRef.current && cameraRef.current && rendererRef.current) {
+      const camera = sceneRef.current.userData.camera;
+      if (camera) {
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      }
+      rendererRef.current.setSize(width, height);
+    }
+  });
+
+  // Get the debug function
+  const withDebug = useDebug(debugCanvasRef);
+
+  // Get the function to get the next data array
+  const getNextDataArray = useFrozenAudioData({
+    isFrozen: layer.layerSettings.freeze,
+    analyzer: audioAnalyzer,
+    wavesurfer: wavesurfer,
+  });
+
+  const setup3D = useCallback(() => {
+    if (rendererRef.current && sceneRef.current && cameraRef.current) {
+      return; // Skip reinitialization if already initialized
+    }
+    if (!layer.comp.draw3D || !layerCanvasRef.current) return;
+
+    console.log(`Setting up 3D renderer [${layer.comp.name}_${layer.id}]`);
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas: layerCanvasRef.current,
+      antialias: true,
+    });
+    renderer.setSize(
+      layerCanvasRef.current.clientWidth,
+      layerCanvasRef.current.clientHeight
+    ); // Ensure renderer size matches the canvas size
+
+    const scene = new THREE.Scene();
+    if (layer.isDebugEnabled) {
+      const gridHelper = new THREE.GridHelper(10, 10);
+      scene.add(gridHelper);
+      const axesHelper = new THREE.AxesHelper(5);
+      scene.add(axesHelper);
+    }
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      layerCanvasRef.current.clientWidth / layerCanvasRef.current.clientHeight,
+      0.1,
+      1000
+    );
+    camera.position.set(0, 0, 0);
+    camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+    layer.comp.init3D?.({
+      renderer,
+      scene,
+      camera,
+    });
+
+    // Store the renderer, scene and camera for later use
+    cameraRef.current = camera;
+    sceneRef.current = scene;
+    rendererRef.current = renderer;
+  }, [layer.comp, layer.id, layer.isDebugEnabled]);
 
   useEffect(() => {
-    if (!audioAnalyzer || !canvasRef.current) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!audioAnalyzer || !layerCanvasRef.current) return;
+
+    let renderFunction = null;
+
+    if (layer.comp.draw3D) {
+      // Setup the 3D renderer and the 3D draw function
+      setup3D();
+
+      renderFunction = (dataArray: Uint8Array, deltaTime: number) => {
+        if (!rendererRef.current || !sceneRef.current || !cameraRef.current) {
+          return;
+        }
+        layer.comp.draw3D?.({
+          threeCtx: {
+            renderer: rendererRef.current,
+            scene: sceneRef.current,
+            camera: cameraRef.current,
+          },
+          audioData: { dataArray, analyzer: audioAnalyzer },
+          config: layer.valuesRef.current,
+          dt: deltaTime,
+        });
+        rendererRef.current.render(sceneRef.current, cameraRef.current);
+      };
+    } else {
+      // Setup the 2D draw function
+      const ctx = layerCanvasRef.current.getContext("2d");
+      if (!ctx) return;
+      renderFunction = (dataArray: Uint8Array, deltaTime: number) => {
+        layer.comp.draw?.({
+          canvasCtx: ctx,
+          audioData: { dataArray, analyzer: audioAnalyzer },
+          config: layer.valuesRef.current,
+          dt: deltaTime,
+        });
+      };
+    }
 
     const renderFrame = () => {
-      // If freeze is disabled treat the layer as playing
-      const isPlaying = !layer.layerSettings.freeze || wavesurfer?.isPlaying();
+      const now = Date.now();
+      const dt = (now - lastFrameTimeRef.current) / 1000.0; // time in seconds
+      lastFrameTimeRef.current = now; // update last frame time
 
-      // Fetch new data only if isPlaying is true
-      if (isPlaying) {
-        dataArrayRef.current = new Uint8Array(audioAnalyzer.frequencyBinCount);
-        audioAnalyzer.getByteFrequencyData(dataArrayRef.current);
-        lastDataArrayRef.current = new Uint8Array(dataArrayRef.current);
-      }
+      const dataArray = getNextDataArray();
 
-      // Timing the draw operation
-      let drawStart, drawEnd;
       if (layer?.valuesRef?.current) {
-        drawStart = performance.now(); // More precise than Date.now()
-        layer.comp.draw(
-          ctx,
-          isPlaying ? dataArrayRef.current : lastDataArrayRef.current,
-          audioAnalyzer,
-          layer.valuesRef.current
-        );
-        drawEnd = performance.now();
-        lastDrawDurationRef.current = drawEnd - drawStart; // Time taken for the draw operation
-      }
-
-      if (layer.isDebugEnabled) {
-        const now = Date.now();
-        const deltaTime = now - lastFrameTimeRef.current;
-        frameCountRef.current++;
-        if (deltaTime >= 1000) {
-          fpsRef.current = frameCountRef.current / (deltaTime / 1000);
-          frameCountRef.current = 0;
-          lastFrameTimeRef.current = now;
-        }
-        renderDebugOverlay(ctx, layer.valuesRef.current, {
-          fps: fpsRef.current,
-          currentTime: wavesurfer?.getCurrentTime() || 0,
-          currentLevel: calculateAudioLevel(dataArrayRef.current),
-          lastFrameTime: lastDrawDurationRef.current,
+        withDebug(() => renderFunction(dataArray, dt), {
+          dataArray: dataArray,
+          wavesurfer: wavesurfer,
+          config: layer.valuesRef.current,
         });
       }
 
       // Mirror the rendered canvas to other canvases
-      layer.mirrorCanvases?.forEach((mirrorCanvas) => {
-        if (!mirrorCanvas.current) return;
-        if (canvas.width === 0 || canvas.height === 0) return;
-        const width = mirrorCanvas.current.width;
-        const height = mirrorCanvas.current.height;
-        const mirrorCtx = mirrorCanvas.current.getContext("2d");
-        if (mirrorCtx) {
-          mirrorCtx.clearRect(0, 0, width, height);
-          // Scale the canvas to fit the mirror canvas and draw the image
-          mirrorCtx.drawImage(
-            canvas,
-            0,
-            0,
-            canvas.width,
-            canvas.height,
-            0,
-            0,
-            width,
-            height
-          );
-        }
-      });
+      mirrorToCanvases(layerCanvasRef.current, layer.mirrorCanvases);
 
       requestAnimationFrame(renderFrame);
     };
 
     renderFrame();
+
+    return () => {
+      // Cleanup renderer and other three.js resources when component unmounts or before reinitializing
+      if (rendererRef.current) {
+        rendererRef.current.dispose();
+      }
+    };
   }, [
     audioAnalyzer,
+    getNextDataArray,
     layer.comp,
-    layer.isDebugEnabled,
-    layer.layerSettings.freeze,
     layer.mirrorCanvases,
     layer.valuesRef,
+    setup3D,
     wavesurfer,
+    withDebug,
   ]);
 
-  return <ControlledCanvas layer={layer} ref={canvasRef} />;
+  return (
+    <div
+      ref={canvasContainerRef}
+      className="absolute m-auto w-full aspect-video"
+    >
+      <LayerCanvas layer={layer} ref={layerCanvasRef} />
+      {layer.isDebugEnabled && (
+        <canvas ref={debugCanvasRef} className="absolute w-full h-full" />
+      )}
+    </div>
+  );
 };
 
-interface ControlledCanvasProps {
+interface LayerCanvasProps {
   layer: LayerData;
 }
 
-export const ControlledCanvas = forwardRef<
-  HTMLCanvasElement,
-  ControlledCanvasProps
->(({ layer }, ref) => {
-  const refCurrent = (ref as React.MutableRefObject<HTMLCanvasElement> | null)
-    ?.current;
-  return (
-    <canvas
-      ref={ref}
-      width={refCurrent?.clientWidth ?? 1000}
-      height={refCurrent?.clientHeight ?? 500}
-      className="absolute m-auto w-full aspect-video"
-      style={{
-        opacity: layer.layerSettings.opacity,
-        background: `${layer.layerSettings.background}`,
-        display: layer.layerSettings.visible ? "block" : "none",
-        mixBlendMode: layer.layerSettings.blendingMode,
-      }}
-    />
-  );
-});
-
-ControlledCanvas.displayName = "ControlledCanvas";
-
-function renderDebugOverlay(
-  ctx: CanvasRenderingContext2D,
-  config: ConfigSchema,
-  debugInfo: {
-    fps: number;
-    currentTime: number;
-    currentLevel: number;
-    lastFrameTime: number;
+export const LayerCanvas = forwardRef<HTMLCanvasElement, LayerCanvasProps>(
+  ({ layer }, ref) => {
+    const refCurrent = (ref as React.MutableRefObject<HTMLCanvasElement> | null)
+      ?.current;
+    return (
+      <canvas
+        ref={ref}
+        className="absolute w-full h-full"
+        style={{
+          opacity: layer.layerSettings.opacity,
+          background: `${layer.layerSettings.background}`,
+          display: layer.layerSettings.visible ? "block" : "none",
+          mixBlendMode: layer.layerSettings.blendingMode,
+        }}
+      />
+    );
   }
-) {
-  const { width, height } = ctx.canvas;
-  const debugWidth = width / 3; // Width of the debug panel
+);
 
-  ctx.save(); // Save current state to restore after drawing debug info
-  ctx.fillStyle = "rgba(0, 0, 0, 0.5)"; // Semi-transparent black
-  ctx.fillRect(0, 0, debugWidth, height); // Background for debug text for visibility
-
-  ctx.font = "14px Arial";
-  ctx.textAlign = "left";
-  ctx.textBaseline = "top";
-
-  // Set labels in green
-  ctx.fillStyle = "#00FF00"; // Vibrant green color for text
-  ctx.fillText("Debug Info:", 10, 10);
-  ctx.fillStyle = "white"; // White color for values
-  ctx.fillText(`FPS: ${debugInfo.fps.toFixed(1)}`, 10, 30);
-  ctx.fillText(`Time: ${debugInfo.currentTime.toFixed(2)}s`, 10, 50);
-  ctx.fillText(`Level: ${debugInfo.currentLevel.toFixed(2)}`, 10, 70);
-  ctx.fillText(
-    `Last Frame Time: ${debugInfo.lastFrameTime.toFixed(2)}ms`,
-    10,
-    90
-  );
-
-  // Display configuration data
-  ctx.fillStyle = "#00FF00"; // Green color for "Config Values" label
-  ctx.fillText("Config Values:", 10, 130);
-  const configEntries = Object.entries(config);
-  ctx.fillStyle = "white"; // White color for config values
-  let yOffset = 150;
-
-  // Function to render nested JSON objects with proper indentations
-  function drawConfigText(key: string, value: any, indent: string) {
-    const lines = JSON.stringify(value, null, 2).split("\n");
-    lines.forEach((line, index) => {
-      ctx.fillText(
-        `${indent}${index === 0 ? key + ": " : ""}${line}`,
-        10,
-        yOffset
-      );
-      yOffset += 20;
-    });
-  }
-
-  configEntries.forEach(([key, value]) => {
-    drawConfigText(key, value, "");
-  });
-
-  ctx.restore(); // Restore the previous state
-}
-
-function calculateAudioLevel(dataArray: Uint8Array) {
-  let sum = dataArray.reduce((acc, val) => acc + val, 0);
-  return sum / dataArray.length;
-}
+LayerCanvas.displayName = "LayerCanvas";
 
 export default LayerRenderer;

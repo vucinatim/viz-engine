@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import DynamicForm from "./dynamic-form";
 import { Separator } from "../ui/separator";
-import { ConfigSchema, ControlledCanvas } from "./layer-renderer";
+import { ConfigSchema, LayerCanvas } from "./layer-renderer";
 import LayerSettings from "./layer-settings";
 import useLayerStore, { LayerData } from "@/lib/stores/layer-store";
 import SearchSelect from "../ui/search-select";
@@ -52,12 +52,15 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
   };
 
   useEffect(() => {
+    const canvas = canvasRef.current;
     console.log("Registering mirror canvas", layer.id);
-    registerMirrorCanvas(layer.id, canvasRef);
+    if (!canvas) return;
+    registerMirrorCanvas(layer.id, canvas);
 
     return () => {
       console.log("Unregistering mirror canvas", layer.id);
-      unregisterMirrorCanvas(layer.id, canvasRef);
+      if (!canvas) return;
+      unregisterMirrorCanvas(layer.id, canvas);
     };
   }, [canvasRef, registerMirrorCanvas, unregisterMirrorCanvas, layer.id]);
 
@@ -99,7 +102,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                   <p className="text-xs">{comp.description}</p>
                 </div>
                 <div className="relative shrink-0 h-full aspect-video rounded-md overflow-hidden">
-                  <ControlledCanvas layer={layer} ref={canvasRef} />
+                  <LayerCanvas layer={layer} ref={canvasRef} />
                 </div>
               </div>
 

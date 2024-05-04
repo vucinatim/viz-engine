@@ -65,12 +65,11 @@ const CurveSpectrum = createComponent({
         })
       ),
   }),
-  draw: (ctx, dataArray, analyzer, config) => {
-    const {
-      color,
-      scaleY,
-      pointSettings: { pointColor, pointSize },
-    } = config;
+  draw: ({
+    canvasCtx: ctx,
+    audioData: { dataArray, analyzer },
+    config: { color, scaleY, pointSettings },
+  }) => {
     const width = ctx.canvas.width;
     const height = ctx.canvas.height;
 
@@ -112,8 +111,8 @@ const CurveSpectrum = createComponent({
       ctx.quadraticCurveTo(
         points[i].x,
         points[i].y,
-        points[i + 1].x,
-        points[i + 1].y
+        points[i + 1]?.x || points[i].x,
+        points[i + 1]?.y || points[i].y
       );
 
       ctx.strokeStyle = color;
@@ -124,9 +123,9 @@ const CurveSpectrum = createComponent({
     // Draw points for visualization
     points.forEach((point) => {
       ctx.save();
-      ctx.fillStyle = pointColor;
+      ctx.fillStyle = pointSettings.pointColor;
       ctx.beginPath();
-      ctx.arc(point.x, point.y, pointSize, 0, 2 * Math.PI);
+      ctx.arc(point.x, point.y, pointSettings.pointSize, 0, 2 * Math.PI);
       ctx.fill();
       ctx.restore();
     });

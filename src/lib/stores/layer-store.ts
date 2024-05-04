@@ -17,7 +17,7 @@ export interface LayerData {
   isExpanded: boolean;
   isDebugEnabled: boolean;
   layerSettings: LayerSettings;
-  mirrorCanvases?: RefObject<HTMLCanvasElement>[];
+  mirrorCanvases?: HTMLCanvasElement[];
 }
 
 interface LayerStore {
@@ -32,14 +32,8 @@ interface LayerStore {
   updateLayerComp: (id: string, comp: Comp) => void;
   duplicateLayer: (id: string) => void;
   reorderLayers: (activeId: string, overId: string) => void;
-  registerMirrorCanvas: (
-    id: string,
-    canvasRef: RefObject<HTMLCanvasElement>
-  ) => void;
-  unregisterMirrorCanvas: (
-    id: string,
-    canvasRef: RefObject<HTMLCanvasElement>
-  ) => void;
+  registerMirrorCanvas: (id: string, canvasRef: HTMLCanvasElement) => void;
+  unregisterMirrorCanvas: (id: string, canvasRef: HTMLCanvasElement) => void;
 }
 
 const useLayerStore = create<LayerStore>((set) => ({
@@ -132,25 +126,25 @@ const useLayerStore = create<LayerStore>((set) => ({
         layers: arrayMove(state.layers, oldIndex, newIndex),
       };
     }),
-  registerMirrorCanvas: (id, ctx) =>
+  registerMirrorCanvas: (id, canvas) =>
     set((state) => ({
       layers: state.layers.map((layer) =>
         layer.id === id
           ? {
               ...layer,
-              mirrorCanvases: [...(layer.mirrorCanvases ?? []), ctx],
+              mirrorCanvases: [...(layer.mirrorCanvases ?? []), canvas],
             }
           : layer
       ),
     })),
-  unregisterMirrorCanvas: (id, ctx) =>
+  unregisterMirrorCanvas: (id, canvas) =>
     set((state) => ({
       layers: state.layers.map((layer) =>
         layer.id === id
           ? {
               ...layer,
               mirrorCanvases: layer.mirrorCanvases?.filter(
-                (canvas) => canvas !== ctx
+                (canvas) => canvas !== canvas
               ),
             }
           : layer

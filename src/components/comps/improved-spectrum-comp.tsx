@@ -76,8 +76,11 @@ const ImprovedSpectrumComp = createComponent({
         ),
     }),
   }),
-  draw: (ctx, dataArray, analyzer, config) => {
-    const { display } = config;
+  draw: ({
+    canvasCtx: ctx,
+    audioData: { dataArray, analyzer },
+    config: { display },
+  }) => {
     const width = ctx.canvas.width;
     const height = ctx.canvas.height;
     const numBars = 300; // You can adjust this for more or fewer bars

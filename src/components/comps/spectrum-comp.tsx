@@ -116,7 +116,7 @@ const SpectrumComp = createComponent({
         })
       ),
   }),
-  draw: (ctx, dataArray, analyzer, config) => {
+  draw: ({ canvasCtx: ctx, audioData: { dataArray }, config }) => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
     dataArray.forEach((value, index) => {

@@ -14,7 +14,7 @@ const blendingModes = ["normal", "multiply", "screen", "overlay"] as const;
 
 export const layerSettingsSchema = z.object({
   visible: z.boolean().default(true),
-  background: z.string().default("rgba(255, 255, 255, 1)"),
+  background: z.string().default("rgba(10, 10, 10, 1)"),
   opacity: z.number().min(0).max(1).default(1),
   blendingMode: z.enum(blendingModes).default("normal"),
   freeze: z.boolean().default(true),
