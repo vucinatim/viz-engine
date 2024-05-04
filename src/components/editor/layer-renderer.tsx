@@ -54,7 +54,16 @@ interface LayerRendererProps {
 const LayerRenderer = ({ layer }: LayerRendererProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { audioAnalyzer, wavesurfer } = useAudioStore();
-  // console.log("Rendering layer", layer.comp.name);
+
+  // Store the last data array to prevent flickering when the audio is paused
+  const dataArrayRef = useRef<Uint8Array>(new Uint8Array());
+  const lastDataArrayRef = useRef<Uint8Array>(new Uint8Array());
+
+  // Stats for debugging
+  const lastFrameTimeRef = useRef(Date.now());
+  const frameCountRef = useRef(0);
+  const fpsRef = useRef(0);
+  const lastDrawDurationRef = useRef(0);
 
   useEffect(() => {
     if (!audioAnalyzer || !canvasRef.current) return;
@@ -62,27 +71,46 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let dataArray = new Uint8Array();
-    let lastDataArray = new Uint8Array();
-
     const renderFrame = () => {
       // If freeze is disabled treat the layer as playing
       const isPlaying = !layer.layerSettings.freeze || wavesurfer?.isPlaying();
 
       // Fetch new data only if isPlaying is true
       if (isPlaying) {
-        dataArray = new Uint8Array(audioAnalyzer.frequencyBinCount);
-        audioAnalyzer.getByteFrequencyData(dataArray);
-        lastDataArray = new Uint8Array(dataArray);
+        dataArrayRef.current = new Uint8Array(audioAnalyzer.frequencyBinCount);
+        audioAnalyzer.getByteFrequencyData(dataArrayRef.current);
+        lastDataArrayRef.current = new Uint8Array(dataArrayRef.current);
       }
 
+      // Timing the draw operation
+      let drawStart, drawEnd;
       if (layer?.valuesRef?.current) {
+        drawStart = performance.now(); // More precise than Date.now()
         layer.comp.draw(
           ctx,
-          isPlaying ? dataArray : lastDataArray,
+          isPlaying ? dataArrayRef.current : lastDataArrayRef.current,
           audioAnalyzer,
-          layer?.valuesRef.current
+          layer.valuesRef.current
         );
+        drawEnd = performance.now();
+        lastDrawDurationRef.current = drawEnd - drawStart; // Time taken for the draw operation
+      }
+
+      if (layer.isDebugEnabled) {
+        const now = Date.now();
+        const deltaTime = now - lastFrameTimeRef.current;
+        frameCountRef.current++;
+        if (deltaTime >= 1000) {
+          fpsRef.current = frameCountRef.current / (deltaTime / 1000);
+          frameCountRef.current = 0;
+          lastFrameTimeRef.current = now;
+        }
+        renderDebugOverlay(ctx, layer.valuesRef.current, {
+          fps: fpsRef.current,
+          currentTime: wavesurfer?.getCurrentTime() || 0,
+          currentLevel: calculateAudioLevel(dataArrayRef.current),
+          lastFrameTime: lastDrawDurationRef.current,
+        });
       }
 
       // Mirror the rendered canvas to other canvases
@@ -116,9 +144,10 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   }, [
     audioAnalyzer,
     layer.comp,
+    layer.isDebugEnabled,
     layer.layerSettings.freeze,
     layer.mirrorCanvases,
-    layer?.valuesRef,
+    layer.valuesRef,
     wavesurfer,
   ]);
 
@@ -152,5 +181,71 @@ export const ControlledCanvas = forwardRef<
 });
 
 ControlledCanvas.displayName = "ControlledCanvas";
+
+function renderDebugOverlay(
+  ctx: CanvasRenderingContext2D,
+  config: ConfigSchema,
+  debugInfo: {
+    fps: number;
+    currentTime: number;
+    currentLevel: number;
+    lastFrameTime: number;
+  }
+) {
+  const { width, height } = ctx.canvas;
+  const debugWidth = width / 3; // Width of the debug panel
+
+  ctx.save(); // Save current state to restore after drawing debug info
+  ctx.fillStyle = "rgba(0, 0, 0, 0.5)"; // Semi-transparent black
+  ctx.fillRect(0, 0, debugWidth, height); // Background for debug text for visibility
+
+  ctx.font = "14px Arial";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+
+  // Set labels in green
+  ctx.fillStyle = "#00FF00"; // Vibrant green color for text
+  ctx.fillText("Debug Info:", 10, 10);
+  ctx.fillStyle = "white"; // White color for values
+  ctx.fillText(`FPS: ${debugInfo.fps.toFixed(1)}`, 10, 30);
+  ctx.fillText(`Time: ${debugInfo.currentTime.toFixed(2)}s`, 10, 50);
+  ctx.fillText(`Level: ${debugInfo.currentLevel.toFixed(2)}`, 10, 70);
+  ctx.fillText(
+    `Last Frame Time: ${debugInfo.lastFrameTime.toFixed(2)}ms`,
+    10,
+    90
+  );
+
+  // Display configuration data
+  ctx.fillStyle = "#00FF00"; // Green color for "Config Values" label
+  ctx.fillText("Config Values:", 10, 130);
+  const configEntries = Object.entries(config);
+  ctx.fillStyle = "white"; // White color for config values
+  let yOffset = 150;
+
+  // Function to render nested JSON objects with proper indentations
+  function drawConfigText(key: string, value: any, indent: string) {
+    const lines = JSON.stringify(value, null, 2).split("\n");
+    lines.forEach((line, index) => {
+      ctx.fillText(
+        `${indent}${index === 0 ? key + ": " : ""}${line}`,
+        10,
+        yOffset
+      );
+      yOffset += 20;
+    });
+  }
+
+  configEntries.forEach(([key, value]) => {
+    drawConfigText(key, value, "");
+  });
+
+  ctx.restore(); // Restore the previous state
+}
+
+function calculateAudioLevel(dataArray: Uint8Array) {
+  let sum = dataArray.reduce((acc, val) => acc + val, 0);
+  return sum / dataArray.length;
+}
 
 export default LayerRenderer;

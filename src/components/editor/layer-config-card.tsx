@@ -7,6 +7,7 @@ import useLayerStore, { LayerData } from "@/lib/stores/layer-store";
 import SearchSelect from "../ui/search-select";
 import { Button } from "../ui/button";
 import {
+  Bug,
   ChevronDown,
   ChevronUp,
   GripVertical,
@@ -21,6 +22,7 @@ import {
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
+import { Toggle } from "../ui/toggle";
 
 interface LayerConfigCardProps {
   index: number;
@@ -36,6 +38,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
     removeLayer,
     duplicateLayer,
     setIsLayerExpanded,
+    setDebugEnabled,
   } = useLayerStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [selectedPreset, setSelectedPreset] = useState<any | null>();
@@ -95,7 +98,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                   </h2>
                   <p className="text-xs">{comp.description}</p>
                 </div>
-                <div className="relative shrink-0 w-32 aspect-video rounded-md overflow-hidden">
+                <div className="relative shrink-0 h-full aspect-video rounded-md overflow-hidden">
                   <ControlledCanvas layer={layer} ref={canvasRef} />
                 </div>
               </div>
@@ -117,6 +120,18 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                 >
                   <Layers2 className="w-6 h-6" />
                 </Button>
+                <Button
+                  size="iconMini"
+                  variant="defaultLighter"
+                  tooltip="Enable/Disable debug overlay"
+                  className={layer.isDebugEnabled ? "border border-white" : ""}
+                  onClick={() =>
+                    setDebugEnabled(layer.id, !layer.isDebugEnabled)
+                  }
+                >
+                  <Bug className="w-6 h-6" />
+                </Button>
+
                 <div className="grow" />
                 <CollapsibleTrigger asChild>
                   <Button

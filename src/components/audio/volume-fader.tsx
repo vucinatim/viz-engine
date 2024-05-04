@@ -5,7 +5,7 @@ import * as SliderPrimitive from "@radix-ui/react-slider";
 const VolumeFader = () => {
   const { gainNode, audioAnalyzer } = useAudioStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const MAX_VOLUME = 80; // Maximum expected volume for normalization
+  const MAX_VOLUME = 120; // Maximum expected volume for normalization
 
   useEffect(() => {
     if (!canvasRef.current || !audioAnalyzer || !gainNode) return;
@@ -32,9 +32,9 @@ const VolumeFader = () => {
       }
 
       const volume = Math.sqrt(sum / dataArray.length);
-      // gainNode.gain.value is between -1 and 1
-      // scale it to 0 and 1
-      const gain = (gainNode.gain.value + 1) / 2;
+      // gainNode.gain.value is between -1 and 0
+      // move it to between 0 and 1
+      const gain = gainNode.gain.value + 1;
       const normalizedVolume = Math.min(volume / MAX_VOLUME, 1) * height * gain; // Normalize and scale the volume
 
       ctx.clearRect(0, 0, width, height); // Clear the canvas
@@ -58,6 +58,11 @@ const VolumeFader = () => {
     draw();
   }, [audioAnalyzer, gainNode]);
 
+  useEffect(() => {
+    if (!gainNode) return;
+    gainNode.gain.value = 0; // Set the initial gain value
+  }, [gainNode]);
+
   const handleVolumeChange = (value: number[]) => {
     if (!gainNode) return;
     gainNode.gain.value = value[0]; // Set gain based on slider input
@@ -77,7 +82,7 @@ const VolumeFader = () => {
         defaultValue={[0]} // Default value as the middle of the slider
         onValueChange={handleVolumeChange}
         min={-1}
-        max={1}
+        max={0}
         step={0.01}
       >
         <SliderPrimitive.Track className="relative w-2 h-full overflow-hidden rounded-full">

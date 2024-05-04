@@ -31,7 +31,7 @@ const AudioPanel = () => {
               {isPlaying ? <Pause /> : <Play />}
             </Toggle>
           </div>
-          <div className="flex items-center justify-end">
+          <div className="flex items-center mr-3 justify-end">
             <p className="text-white text-xs font-mono">
               {
                 // Format the currentTime in float seconds to a human readable format

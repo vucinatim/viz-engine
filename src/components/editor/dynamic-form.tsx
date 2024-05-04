@@ -56,7 +56,7 @@ const DynamicForm = ({
   return (
     <Form {...form}>
       {fields.length > 0 && (
-        <div className="pb-4 flex flex-col gap-y-2">
+        <div className="pb-4 flex flex-col gap-y-4">
           {fields.map(([key, value]) => (
             <div key={key}>
               <DynamicFormField
@@ -80,7 +80,7 @@ const DynamicForm = ({
             label={metadata?.label || "Group"}
             description={metadata?.description}
           >
-            <div className="pb-6 flex flex-col gap-y-2">
+            <div className="pb-6 flex flex-col gap-y-4">
               {Object.entries(fieldSchema.shape).map(([innerKey, value]) => (
                 <DynamicFormField
                   key={`${key}.${innerKey}`}

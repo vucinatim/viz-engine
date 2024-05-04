@@ -15,6 +15,7 @@ export interface LayerData {
     current: ConfigSchema;
   };
   isExpanded: boolean;
+  isDebugEnabled: boolean;
   layerSettings: LayerSettings;
   mirrorCanvases?: RefObject<HTMLCanvasElement>[];
 }
@@ -25,6 +26,7 @@ interface LayerStore {
   removeLayer: (id: string) => void;
   setIsLayerExpanded: (id: string, isExpanded: boolean) => void;
   setAllLayersExpanded: (isExpanded: boolean) => void;
+  setDebugEnabled: (id: string, isDebugEnabled: boolean) => void;
   updateComps: (comp: Comp[]) => void;
   updateLayerSettings: (id: string, settings: LayerSettings) => void;
   updateLayerComp: (id: string, comp: Comp) => void;
@@ -50,6 +52,7 @@ const useLayerStore = create<LayerStore>((set) => ({
           id: `layer-${comp.name}-${new Date().getTime()}`,
           comp,
           isExpanded: true,
+          isDebugEnabled: false,
           valuesRef: { current: getDefaults(comp.config) as ConfigSchema },
           layerSettings: getDefaults(layerSettingsSchema) as LayerSettings,
         },
@@ -68,6 +71,12 @@ const useLayerStore = create<LayerStore>((set) => ({
   setAllLayersExpanded: (isExpanded) =>
     set((state) => ({
       layers: state.layers.map((layer) => ({ ...layer, isExpanded })),
+    })),
+  setDebugEnabled: (id, isDebugEnabled) =>
+    set((state) => ({
+      layers: state.layers.map((layer) =>
+        layer.id === id ? { ...layer, isDebugEnabled } : layer
+      ),
     })),
   updateLayerComp: (id, comp) =>
     set((state) => ({
@@ -101,9 +110,10 @@ const useLayerStore = create<LayerStore>((set) => ({
         layers: [
           ...state.layers,
           {
+            ...layer,
             id: `layer-${layer.comp.name}-${new Date().getTime()}`,
-            comp: layer.comp,
             isExpanded: true,
+            isDebugEnabled: false,
             valuesRef: {
               // Deep clone the valuesRef
               current: JSON.parse(JSON.stringify(layer.valuesRef.current)),
