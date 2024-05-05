@@ -31,7 +31,7 @@ const SimpleCube = createComponent({
         })
       ),
   }),
-  init3D: ({ scene, camera, renderer }) => {
+  init3D: ({ threeCtx: { scene, camera, renderer } }) => {
     camera.position.set(0, 1, 5); // Position the camera
     camera.lookAt(new THREE.Vector3(0, 0, 0)); // Make the camera look at the origin
     // scene.background = new THREE.Color("#00ff00"); // Set background color

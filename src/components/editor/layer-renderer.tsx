@@ -29,30 +29,29 @@ type ThreeContext = {
   camera: THREE.Camera;
 };
 
-type DrawFunction<T> = ({
-  canvasCtx,
-  audioData,
-  config,
-  dt,
-}: {
+type DrawFunction<T, UT> = (params: {
   canvasCtx: CanvasRenderingContext2D;
   audioData: AudioDrawData;
   config: T;
   dt: number;
+  state: UT;
+  debugEnabled: boolean;
 }) => void;
 
-type init3DFunction = (threeCtx: ThreeContext) => void;
+type init3DFunction<T, UT> = (params: {
+  threeCtx: ThreeContext;
+  config: T;
+  state: UT;
+  debugEnabled: boolean;
+}) => void;
 
-type Draw3DFunction<T> = ({
-  threeCtx,
-  audioData,
-  config,
-  dt,
-}: {
+type Draw3DFunction<T, UT> = (params: {
   threeCtx: ThreeContext;
   audioData: AudioDrawData;
   config: T;
   dt: number;
+  state: UT;
+  debugEnabled: boolean;
 }) => void;
 
 export interface Comp {
@@ -62,19 +61,21 @@ export interface Comp {
   config: ConfigSchema;
   defaultValues: z.infer<ConfigSchema>;
   presets?: Preset<ConfigSchema>[];
-  draw?: DrawFunction<z.infer<ConfigSchema>>;
-  init3D?: init3DFunction;
-  draw3D?: Draw3DFunction<z.infer<ConfigSchema>>;
+  state?: any;
+  draw?: DrawFunction<z.infer<ConfigSchema>, any>;
+  init3D?: init3DFunction<z.infer<ConfigSchema>, any>;
+  draw3D?: Draw3DFunction<z.infer<ConfigSchema>, any>;
 }
 
-export function createComponent<TConfig extends ConfigSchema>(definition: {
+export function createComponent<TConfig extends ConfigSchema, UT>(definition: {
   name: string;
   description: string;
   config: TConfig;
   presets?: Preset<TConfig>[];
-  draw?: DrawFunction<z.infer<TConfig>>;
-  init3D?: init3DFunction;
-  draw3D?: Draw3DFunction<z.infer<TConfig>>;
+  state?: UT;
+  draw?: DrawFunction<z.infer<TConfig>, UT>;
+  init3D?: init3DFunction<z.infer<TConfig>, UT>;
+  draw3D?: Draw3DFunction<z.infer<TConfig>, UT>;
 }) {
   return {
     id: `${definition.name}-${new Date().getTime()}`,
@@ -137,9 +138,18 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   });
 
   const setup3D = useCallback(() => {
-    if (rendererRef.current && sceneRef.current && cameraRef.current) {
-      return; // Skip reinitialization if already initialized
-    }
+    // NOTE: This is commented out for development purposes so that it reloads the 3D renderer on file save
+    // if (rendererRef.current && sceneRef.current && cameraRef.current) {
+    //   layer.comp.init3D?.({
+    //     state: layer.comp.state,
+    //     threeCtx: {
+    //       renderer: rendererRef.current,
+    //       scene: sceneRef.current,
+    //       camera: cameraRef.current,
+    //     },
+    //   });
+    //   return; // Skip reinitialization if already initialized
+    // }
     if (!layer.comp.draw3D || !layerCanvasRef.current) return;
 
     console.log(`Setting up 3D renderer [${layer.comp.name}_${layer.id}]`);
@@ -170,16 +180,21 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     camera.lookAt(new THREE.Vector3(0, 0, 0));
 
     layer.comp.init3D?.({
-      renderer,
-      scene,
-      camera,
+      state: layer.comp.state,
+      threeCtx: {
+        renderer,
+        scene,
+        camera,
+      },
+      config: layer.valuesRef.current,
+      debugEnabled: layer.isDebugEnabled,
     });
 
     // Store the renderer, scene and camera for later use
     cameraRef.current = camera;
     sceneRef.current = scene;
     rendererRef.current = renderer;
-  }, [layer.comp, layer.id, layer.isDebugEnabled]);
+  }, [layer.comp, layer.id, layer.isDebugEnabled, layer.valuesRef]);
 
   useEffect(() => {
     if (!audioAnalyzer || !layerCanvasRef.current) return;
@@ -203,6 +218,8 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
           audioData: { dataArray, analyzer: audioAnalyzer },
           config: layer.valuesRef.current,
           dt: deltaTime,
+          state: layer.comp.state,
+          debugEnabled: layer.isDebugEnabled,
         });
         rendererRef.current.render(sceneRef.current, cameraRef.current);
       };
@@ -216,6 +233,8 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
           audioData: { dataArray, analyzer: audioAnalyzer },
           config: layer.valuesRef.current,
           dt: deltaTime,
+          state: layer.comp.state,
+          debugEnabled: layer.isDebugEnabled,
         });
       };
     }
@@ -253,6 +272,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     audioAnalyzer,
     getNextDataArray,
     layer.comp,
+    layer.isDebugEnabled,
     layer.mirrorCanvases,
     layer.valuesRef,
     setup3D,
