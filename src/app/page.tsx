@@ -8,9 +8,14 @@ import EditorToolbar from "@/components/editor/editor-toolbar";
 import Image from "next/image";
 import AudioPanel from "@/components/audio/audio-panel";
 import useBodyProps from "@/lib/stores/body-props-store";
+import EditorHeader from "@/components/editor/editor-header";
+import useEditorStore from "@/lib/stores/editor-store";
+import { cn } from "@/lib/utils";
+import AmbientBackground from "@/components/editor/ambient-background";
 
 export default function Home() {
   const { props } = useBodyProps();
+  const { ambientMode } = useEditorStore();
 
   return (
     <main
@@ -19,23 +24,15 @@ export default function Home() {
       {...props}
     >
       <div className="absolute inset-0 bg-zinc-900">
-        <Image src="/logo.png" alt={"bg"} layout="fill" objectFit="cover" />
-        <div className="absolute inset-0 backdrop-blur-2xl bg-zinc-900/60" />
+        {ambientMode && <AmbientBackground />}
       </div>
-      <div className="bg-zinc-800/70 mt-3 mx-3 flex items-center -mb-1 border overflow-hidden border-gray-600/20 backdrop-blur-sm rounded-md">
-        <Image
-          src="/logo.png"
-          alt="VizEngineLogo"
-          className="ml-4 mr-2"
-          priority
-          width={25}
-          height={25}
-          style={{
-            width: "auto",
-            height: "auto",
-          }}
-        />
-        <EditorToolbar />
+      <div
+        className={cn(
+          "bg-zinc-800/70 z-10 mt-3 mx-3 -mb-1 border overflow-hidden border-gray-600/20 rounded-md",
+          ambientMode && "backdrop-blur-sm"
+        )}
+      >
+        <EditorHeader />
       </div>
       <EditorLayout
         leftChildren={

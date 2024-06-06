@@ -23,6 +23,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 import { Toggle } from "../ui/toggle";
+import LayerMirrorCanvas from "./layer-mirror-canvas";
 
 interface LayerConfigCardProps {
   index: number;
@@ -32,15 +33,12 @@ interface LayerConfigCardProps {
 function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
   const comp = layer.comp;
   const {
-    registerMirrorCanvas,
-    unregisterMirrorCanvas,
     updateLayerComp,
     removeLayer,
     duplicateLayer,
     setIsLayerExpanded,
     setDebugEnabled,
   } = useLayerStore();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [selectedPreset, setSelectedPreset] = useState<any | null>();
 
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -50,19 +48,6 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
     transform: CSS.Transform.toString(transform),
     transition,
   };
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    console.log("Registering mirror canvas", layer.id);
-    if (!canvas) return;
-    registerMirrorCanvas(layer.id, canvas);
-
-    return () => {
-      console.log("Unregistering mirror canvas", layer.id);
-      if (!canvas) return;
-      unregisterMirrorCanvas(layer.id, canvas);
-    };
-  }, [canvasRef, registerMirrorCanvas, unregisterMirrorCanvas, layer.id]);
 
   return (
     <Collapsible
@@ -102,7 +87,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                   <p className="text-xs">{comp.description}</p>
                 </div>
                 <div className="relative shrink-0 h-full aspect-video rounded-md overflow-hidden">
-                  <LayerCanvas layer={layer} ref={canvasRef} />
+                  <LayerMirrorCanvas layer={layer} />
                 </div>
               </div>
 

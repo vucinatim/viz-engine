@@ -4,6 +4,8 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "../ui/resizable";
+import useEditorStore from "@/lib/stores/editor-store";
+import { cn } from "@/lib/utils";
 
 interface EditorLayoutProps {
   leftChildren: ReactNode;
@@ -55,9 +57,15 @@ interface EditorPanelProps {
 }
 
 export const EditorPanel = ({ children }: EditorPanelProps) => {
+  const { ambientMode } = useEditorStore();
   return (
     <div className="absolute inset-0">
-      <div className="absolute inset-1 bg-zinc-800/70 border overflow-hidden border-gray-600/20 backdrop-blur-sm rounded-md">
+      <div
+        className={cn(
+          "absolute inset-1 bg-zinc-800/70 border overflow-hidden border-gray-600/20 rounded-md",
+          ambientMode && "backdrop-blur-sm"
+        )}
+      >
         {children}
       </div>
     </div>
