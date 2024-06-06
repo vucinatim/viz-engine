@@ -118,7 +118,7 @@ const DynamicFormField = ({
       render={({ field, fieldState }) => {
         const metadata = getMetadata(fieldSchema);
         return (
-          <FormItem className="px-4">
+          <FormItem className="px-4 flex justify-between flex-wrap">
             <SimpleTooltip
               text={metadata?.description}
               trigger={
@@ -164,6 +164,7 @@ const getInputComponent = (schema: unknown, field: FieldProps, values: any) => {
     return (
       <Slider
         value={field.value}
+        className="w-full"
         onChange={handleOnChange}
         {...getNumberConstraints(type)}
       />
@@ -173,7 +174,11 @@ const getInputComponent = (schema: unknown, field: FieldProps, values: any) => {
   // Handle ZodBoolean with a Toggle
   if (type instanceof z.ZodBoolean) {
     return (
-      <Switch value={field.value} onChange={handleOnChange} name={field.name} />
+      <Switch
+        value={field.value}
+        onClick={() => handleOnChange(!field.value)}
+        name={field.name}
+      />
     );
   }
 

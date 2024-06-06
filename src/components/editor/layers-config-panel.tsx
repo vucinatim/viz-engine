@@ -110,7 +110,7 @@ const SortableLayers = ({ layers }: SortableLayersProps) => {
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={layers} strategy={verticalListSortingStrategy}>
-        {layers.map((layer, index) => (
+        {layers.toReversed().map((layer, index) => (
           <LayerConfigCard key={layer.id} index={index} layer={layer} />
         ))}
       </SortableContext>

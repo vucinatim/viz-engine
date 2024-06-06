@@ -157,6 +157,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     const renderer = new THREE.WebGLRenderer({
       canvas: layerCanvasRef.current,
       antialias: true,
+      alpha: true,
     });
     renderer.setSize(
       layerCanvasRef.current.clientWidth,

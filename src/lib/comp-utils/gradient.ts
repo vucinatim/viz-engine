@@ -18,7 +18,10 @@ const defaultProps = {
   ],
 };
 
-const gradient = (ctx: CanvasRenderingContext2D, props?: GradientProps) => {
+export const gradient = (
+  ctx: CanvasRenderingContext2D,
+  props?: GradientProps
+) => {
   const { x0, y0, x1, y1, stops } = props || defaultProps;
 
   const grad = ctx.createLinearGradient(x0, y0, x1, y1);
@@ -26,7 +29,7 @@ const gradient = (ctx: CanvasRenderingContext2D, props?: GradientProps) => {
   return grad;
 };
 
-const convertCssGradientToCanvasGradient = (
+export const convertCssGradientToCanvasGradient = (
   ctx: CanvasRenderingContext2D,
   cssGradient: string,
   width: number,

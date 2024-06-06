@@ -31,7 +31,7 @@ const MovingObjects = createComponent({
       ),
     spawningAreaOffset: z
       .number()
-      .min(-50)
+      .min(-100)
       .max(50)
       .default(-50)
       .describe(
@@ -99,6 +99,13 @@ const MovingObjects = createComponent({
     currentSpeed: 0,
   },
   init3D: ({ threeCtx: { scene, camera }, state, config, debugEnabled }) => {
+    if (state.cubes.length > 0) {
+      state.cubes.forEach((cube) => {
+        scene.remove(cube);
+      });
+      state.cubes = [];
+    }
+
     camera.position.set(0, 1, 5);
     camera.lookAt(new THREE.Vector3(0, 0, 0));
 
@@ -212,6 +219,12 @@ const MovingObjects = createComponent({
 
     // Update cube positions
     state.cubes.forEach((cube, index) => {
+      // Increase opacity until it is fully opaque
+      if (cube.material.opacity < 1) {
+        cube.material.opacity += dt; // Adjust the rate of fade-in by changing the multiplier
+        if (cube.material.opacity > 1) cube.material.opacity = 1;
+      }
+
       // Move cubes based on the current amplitude exceeding the threshold
       cube.position.z += speed * dt;
 
@@ -245,11 +258,12 @@ function createCube(
   velocity: THREE.Vector3
 ): MovingCube {
   const geometry = new THREE.BoxGeometry(size, size, size);
-  const randomColor = new THREE.Color(`hsl(${Math.random() * 360}, 100%, 50%)`); // Generate a random vibrant color
   const material = new THREE.MeshStandardMaterial({
-    color: randomColor,
+    color: color,
     metalness: 0.5,
     roughness: 0.2,
+    transparent: true, // Enable transparency
+    opacity: 0, // Start fully transparent
   });
   const cube = new THREE.Mesh(geometry, material) as MovingCube;
   cube.position.copy(position);
