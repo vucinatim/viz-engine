@@ -36,6 +36,11 @@ const LayerSettings = ({ layer }: LayerSettingsProps) => {
     defaultValues: layer.layerSettings ?? layerSettingsSchema.parse({}),
   });
 
+  // If Layer settings change outside of the form, update the form values
+  useEffect(() => {
+    form.reset(layer.layerSettings ?? layerSettingsSchema.parse({}));
+  }, [layer.layerSettings, form]);
+
   // Update layer settings on first render to ensure the form is in sync
   useEffect(() => {
     updateLayerSettings(layer.id, form.getValues());
@@ -54,19 +59,18 @@ const LayerSettings = ({ layer }: LayerSettingsProps) => {
         <FormField
           name="visible"
           control={form.control}
-          render={({ field }) => (
+          render={({ field: { value, onChange } }) => (
             <FormItem>
               <FormControl>
                 <Toggle
                   aria-label="Toggle visibility"
                   tooltip="Toggle visibility"
-                  onClick={() =>
-                    createOnChangeHandler(() => field.onChange(!field.value))(
-                      null
-                    )
+                  pressed={value}
+                  onPressedChange={(newValue) =>
+                    createOnChangeHandler(() => onChange(newValue))(null)
                   }
                 >
-                  {field.value ? <Eye /> : <EyeOff />}
+                  {value ? <Eye /> : <EyeOff />}
                 </Toggle>
               </FormControl>
             </FormItem>

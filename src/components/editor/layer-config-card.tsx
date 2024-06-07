@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import DynamicForm from "./dynamic-form";
-import { Separator } from "../ui/separator";
-import { ConfigSchema, LayerCanvas } from "./layer-renderer";
+import { ConfigSchema } from "./layer-renderer";
 import LayerSettings from "./layer-settings";
 import useLayerStore, { LayerData } from "@/lib/stores/layer-store";
 import SearchSelect from "../ui/search-select";
@@ -22,8 +21,7 @@ import {
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
-import { Toggle } from "../ui/toggle";
-import LayerMirrorCanvas from "./layer-mirror-canvas";
+import LayerPreview from "./layer-preview";
 
 interface LayerConfigCardProps {
   index: number;
@@ -86,12 +84,10 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                   </h2>
                   <p className="text-xs">{comp.description}</p>
                 </div>
-                <div className="relative shrink-0 h-full aspect-video rounded-md overflow-hidden">
-                  <LayerMirrorCanvas layer={layer} />
-                </div>
+                <LayerPreview layer={layer} />
               </div>
 
-              <div className="flex gap-x-2 items-center">
+              <div className="flex gap-x-2 items-center select-none">
                 <Button
                   size="iconMini"
                   variant="defaultLighter"
