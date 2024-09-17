@@ -1,18 +1,31 @@
 "use client";
 
-import useAudioStore from "@/lib/stores/audio-store";
 import { Toggle } from "../ui/toggle";
 import AudioFileLoader from "./audio-file-loader";
 import { Pause, Play } from "lucide-react";
 import VolumeFader from "./volume-fader";
 import useWavesurferSetup from "@/lib/hooks/use-wavesurfer-setup";
 import useKeypress from "@/lib/hooks/use-keypress";
+import useEditorStore from "@/lib/stores/editor-store";
 
 const AudioPanel = () => {
-  const { wavesurfer } = useAudioStore();
+  const { playerRef } = useEditorStore();
   const { waveformDisplayRef, audioElementRef, isPlaying, currentTime } =
     useWavesurferSetup();
-  useKeypress("Space", () => wavesurfer?.playPause());
+
+  const playPause = () => {
+    // wavesurfer?.playPause();
+    console.log("playPause");
+    const player = playerRef.current;
+    if (player) {
+      if (player.isPlaying()) {
+        player.pause();
+      } else {
+        player.play();
+      }
+    }
+  };
+  useKeypress("Space", playPause);
 
   return (
     <div className="absolute inset-0 flex items-stretch justify-stretch">
@@ -26,7 +39,7 @@ const AudioPanel = () => {
             <Toggle
               aria-label="Play/Pause"
               tooltip="Play/Pause (Space)"
-              onClick={() => wavesurfer?.playPause()}
+              onClick={playPause}
             >
               {isPlaying ? <Pause /> : <Play />}
             </Toggle>

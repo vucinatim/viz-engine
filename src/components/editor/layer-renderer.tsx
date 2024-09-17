@@ -101,15 +101,17 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   // 3D refs
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
-  const cameraRef = useRef<THREE.Camera | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
 
   // on panel resize, update canvas size
   useOnResize(canvasContainerRef, (entries, element) => {
     // If the canvas is not available, return
+    console.log("Resizing canvas");
     if (!layerCanvasRef.current) return;
     const newestEntry = entries[entries.length - 1];
 
     const { width, height } = newestEntry.contentRect;
+    console.log(`Setting canvas size to ${width}x${height}`);
     layerCanvasRef.current.width = width;
     layerCanvasRef.current.height = height;
     if (debugCanvasRef.current) {
@@ -118,12 +120,12 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     }
 
     if (sceneRef.current && cameraRef.current && rendererRef.current) {
-      const camera = sceneRef.current.userData.camera;
+      rendererRef.current.setSize(width, height);
+      const camera = cameraRef.current;
       if (camera) {
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
       }
-      rendererRef.current.setSize(width, height);
     }
   });
 
@@ -138,18 +140,6 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   });
 
   const setup3D = useCallback(() => {
-    // NOTE: This is commented out for development purposes so that it reloads the 3D renderer on file save
-    // if (rendererRef.current && sceneRef.current && cameraRef.current) {
-    //   layer.comp.init3D?.({
-    //     state: layer.comp.state,
-    //     threeCtx: {
-    //       renderer: rendererRef.current,
-    //       scene: sceneRef.current,
-    //       camera: cameraRef.current,
-    //     },
-    //   });
-    //   return; // Skip reinitialization if already initialized
-    // }
     if (!layer.comp.draw3D || !layerCanvasRef.current) return;
 
     console.log(`Setting up 3D renderer [${layer.comp.name}_${layer.id}]`);
@@ -282,10 +272,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   ]);
 
   return (
-    <div
-      ref={canvasContainerRef}
-      className="absolute m-auto w-full aspect-video"
-    >
+    <div ref={canvasContainerRef} className="absolute inset-0">
       <LayerCanvas layer={layer} ref={layerCanvasRef} />
       {layer.isDebugEnabled && (
         <canvas ref={debugCanvasRef} className="absolute w-full h-full" />
@@ -300,8 +287,6 @@ interface LayerCanvasProps {
 
 export const LayerCanvas = forwardRef<HTMLCanvasElement, LayerCanvasProps>(
   ({ layer }, ref) => {
-    const refCurrent = (ref as React.MutableRefObject<HTMLCanvasElement> | null)
-      ?.current;
     return (
       <canvas
         ref={ref}

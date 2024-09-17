@@ -112,4 +112,8 @@
     padding-left: 100%; /* Start the text off-screen */
     animation: ticker 10s linear infinite;
   }
+
+  button:focus {
+    outline: none;
+  }
 }

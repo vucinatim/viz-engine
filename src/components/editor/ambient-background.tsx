@@ -1,7 +1,6 @@
-import useLayerStore from "@/lib/stores/layer-store";
-import Image from "next/image";
-import LayerMirrorCanvas from "./layer-mirror-canvas";
-import useEditorStore from "@/lib/stores/editor-store";
+import useEditorStore from '@/lib/stores/editor-store';
+import useLayerStore from '@/lib/stores/layer-store';
+import LayerMirrorCanvas from './layer-mirror-canvas';
 
 const AmbientBackground = () => {
   const { layers } = useLayerStore();
@@ -17,7 +16,7 @@ const AmbientBackground = () => {
           ))}
         </div>
       )}
-      <div className="absolute inset-0 backdrop-blur-2xl bg-zinc-900/60" />
+      <div className="absolute inset-0 bg-zinc-900/60 backdrop-blur-xl" />
     </div>
   );
 };

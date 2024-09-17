@@ -2,6 +2,7 @@ import { useWavesurfer } from "@wavesurfer/react";
 import { useEffect, useMemo, useRef } from "react";
 import useCanvasGradient from "./use-canvas-gradient";
 import useAudioStore from "../stores/audio-store";
+import useEditorStore from "../stores/editor-store";
 
 function useWavesurferSetup() {
   const {
@@ -14,8 +15,10 @@ function useWavesurferSetup() {
     setAnalyzer,
     setGainNode,
   } = useAudioStore();
-  const waveformDisplayRef = useRef<HTMLDivElement>(null);
-  const audioElementRef = useRef<HTMLAudioElement>(null);
+  // const waveformDisplayRef = useRef<HTMLDivElement>(null);
+  // const audioElementRef = useRef<HTMLAudioElement>(null);
+  const { playerRef, playerFPS } = useEditorStore();
+  const { waveformDisplayRef, audioElementRef } = useAudioStore();
   const gradient = useCanvasGradient();
 
   const { wavesurfer, isPlaying, currentTime } = useWavesurfer({
@@ -99,7 +102,21 @@ function useWavesurferSetup() {
         gainNode.connect(audioContext.destination);
       }
     });
-  }, [audioContext, audioAnalyzer, audioSource, gainNode, wavesurfer]);
+  }, [
+    audioAnalyzer,
+    audioContext,
+    audioElementRef,
+    audioSource,
+    gainNode,
+    wavesurfer,
+  ]);
+
+  useEffect(() => {
+    if (!wavesurfer || !playerRef.current) return;
+    wavesurfer.on("seeking", () => {
+      playerRef.current?.seekTo(wavesurfer.getCurrentTime() * playerFPS);
+    });
+  }, [playerFPS, playerRef, wavesurfer]);
 
   return {
     waveformDisplayRef,

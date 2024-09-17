@@ -1,21 +1,33 @@
-import { useMemo } from "react";
+import { useCallback, useState, useEffect } from "react";
+import useOnResize from "./use-on-resize";
 
-const useDimensions = (ref: React.RefObject<HTMLElement>) => {
-  return useMemo(() => {
-    if (!ref.current) {
-      return {
-        width: 0,
-        height: 0,
-      };
-    }
-
-    const { width, height } = ref.current.getBoundingClientRect();
-
-    return {
-      width,
-      height,
-    };
-  }, [ref]);
+type Size = {
+  width: number | undefined;
+  height: number | undefined;
 };
+
+// Use generics for more flexible ref types
+function useDimensions<T extends HTMLElement>(ref: React.RefObject<T>): Size {
+  // Initial state
+  const [size, setSize] = useState<Size>({
+    width: undefined,
+    height: undefined,
+  });
+
+  // Use useCallback to create a stable function
+  const handleResize = useCallback(() => {
+    console.log("handleResize");
+    if (ref.current) {
+      setSize({
+        width: ref.current.offsetWidth,
+        height: ref.current.offsetHeight,
+      });
+    }
+  }, [ref]);
+
+  useOnResize(ref, handleResize);
+
+  return size;
+}
 
 export default useDimensions;
