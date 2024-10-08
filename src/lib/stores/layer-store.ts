@@ -1,19 +1,16 @@
-import { Comp, ConfigSchema } from "@/components/editor/layer-renderer";
+import { Comp, UnknownConfig } from '@/components/config/create-component';
 import {
   LayerSettings,
   layerSettingsSchema,
-} from "@/components/editor/layer-settings";
-import { create } from "zustand";
-import { getDefaults } from "../schema-utils";
-import { RefObject } from "react";
-import { arrayMove } from "@dnd-kit/sortable";
+} from '@/components/editor/layer-settings';
+import { arrayMove } from '@dnd-kit/sortable';
+import { create } from 'zustand';
+import { getDefaults } from '../schema-utils';
 
 export interface LayerData {
   id: string;
   comp: Comp;
-  valuesRef: {
-    current: ConfigSchema;
-  };
+  config: UnknownConfig;
   isExpanded: boolean;
   isDebugEnabled: boolean;
   layerSettings: LayerSettings;
@@ -45,9 +42,9 @@ const useLayerStore = create<LayerStore>((set) => ({
         {
           id: `layer-${comp.name}-${new Date().getTime()}`,
           comp,
+          config: comp.config.clone(),
           isExpanded: true,
           isDebugEnabled: false,
-          valuesRef: { current: getDefaults(comp.config) as ConfigSchema },
           layerSettings: getDefaults(layerSettingsSchema) as LayerSettings,
         },
       ],
@@ -59,7 +56,7 @@ const useLayerStore = create<LayerStore>((set) => ({
   setIsLayerExpanded: (id, isExpanded) =>
     set((state) => ({
       layers: state.layers.map((layer) =>
-        layer.id === id ? { ...layer, isExpanded } : layer
+        layer.id === id ? { ...layer, isExpanded } : layer,
       ),
     })),
   setAllLayersExpanded: (isExpanded) =>
@@ -69,18 +66,18 @@ const useLayerStore = create<LayerStore>((set) => ({
   setDebugEnabled: (id, isDebugEnabled) =>
     set((state) => ({
       layers: state.layers.map((layer) =>
-        layer.id === id ? { ...layer, isDebugEnabled } : layer
+        layer.id === id ? { ...layer, isDebugEnabled } : layer,
       ),
     })),
   updateLayerComp: (id, comp) =>
     set((state) => ({
       layers: state.layers.map((layer) =>
-        layer.id === id ? { ...layer, comp } : layer
+        layer.id === id ? { ...layer, comp } : layer,
       ),
     })),
   updateComps: (comps) =>
     set((state) => {
-      console.log("The new comps", comps);
+      console.log('The new comps', comps);
       return {
         layers: state.layers.map((layer) => ({
           ...layer,
@@ -92,7 +89,7 @@ const useLayerStore = create<LayerStore>((set) => ({
   updateLayerSettings: (id, settings) =>
     set((state) => ({
       layers: state.layers.map((layer) =>
-        layer.id === id ? { ...layer, layerSettings: settings } : layer
+        layer.id === id ? { ...layer, layerSettings: settings } : layer,
       ),
     })),
   duplicateLayer: (id) =>
@@ -106,12 +103,9 @@ const useLayerStore = create<LayerStore>((set) => ({
           {
             ...layer,
             id: `layer-${layer.comp.name}-${new Date().getTime()}`,
+            config: layer.config.clone(),
             isExpanded: true,
             isDebugEnabled: false,
-            valuesRef: {
-              // Deep clone the valuesRef
-              current: JSON.parse(JSON.stringify(layer.valuesRef.current)),
-            },
             layerSettings: { ...layer.layerSettings },
           },
         ],
@@ -134,7 +128,7 @@ const useLayerStore = create<LayerStore>((set) => ({
               ...layer,
               mirrorCanvases: [...(layer.mirrorCanvases ?? []), canvas],
             }
-          : layer
+          : layer,
       ),
     })),
   unregisterMirrorCanvas: (id, canvas) =>
@@ -144,10 +138,10 @@ const useLayerStore = create<LayerStore>((set) => ({
           ? {
               ...layer,
               mirrorCanvases: layer.mirrorCanvases?.filter(
-                (canvas) => canvas !== canvas
+                (canvas) => canvas !== canvas,
               ),
             }
-          : layer
+          : layer,
       ),
     })),
 }));

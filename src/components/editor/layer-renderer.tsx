@@ -1,88 +1,11 @@
-import { mirrorToCanvases } from "@/lib/comp-utils/mirror-to-canvases";
-import useDebug from "@/lib/hooks/use-debug";
-import { getDefaults } from "@/lib/schema-utils";
-import useAudioStore from "@/lib/stores/audio-store";
-import { LayerData } from "@/lib/stores/layer-store";
-import { useEffect, useRef, forwardRef, useCallback } from "react";
-import { z } from "zod";
-import * as THREE from "three";
-import useFrozenAudioData from "@/lib/hooks/use-frozen-audio-data";
-import useOnResize from "@/lib/hooks/use-on-resize";
-
-export type ConfigValuesRef = React.MutableRefObject<ConfigSchema>;
-
-export type ConfigSchema = z.ZodObject<any>;
-
-export type Preset<TConfig extends ConfigSchema> = {
-  name: string;
-  values: z.infer<TConfig>;
-};
-
-type AudioDrawData = {
-  dataArray: Uint8Array;
-  analyzer: AnalyserNode;
-};
-
-type ThreeContext = {
-  renderer: THREE.WebGLRenderer;
-  scene: THREE.Scene;
-  camera: THREE.Camera;
-};
-
-type DrawFunction<T, UT> = (params: {
-  canvasCtx: CanvasRenderingContext2D;
-  audioData: AudioDrawData;
-  config: T;
-  dt: number;
-  state: UT;
-  debugEnabled: boolean;
-}) => void;
-
-type init3DFunction<T, UT> = (params: {
-  threeCtx: ThreeContext;
-  config: T;
-  state: UT;
-  debugEnabled: boolean;
-}) => void;
-
-type Draw3DFunction<T, UT> = (params: {
-  threeCtx: ThreeContext;
-  audioData: AudioDrawData;
-  config: T;
-  dt: number;
-  state: UT;
-  debugEnabled: boolean;
-}) => void;
-
-export interface Comp {
-  id: string;
-  name: string;
-  description: string;
-  config: ConfigSchema;
-  defaultValues: z.infer<ConfigSchema>;
-  presets?: Preset<ConfigSchema>[];
-  state?: any;
-  draw?: DrawFunction<z.infer<ConfigSchema>, any>;
-  init3D?: init3DFunction<z.infer<ConfigSchema>, any>;
-  draw3D?: Draw3DFunction<z.infer<ConfigSchema>, any>;
-}
-
-export function createComponent<TConfig extends ConfigSchema, UT>(definition: {
-  name: string;
-  description: string;
-  config: TConfig;
-  presets?: Preset<TConfig>[];
-  state?: UT;
-  draw?: DrawFunction<z.infer<TConfig>, UT>;
-  init3D?: init3DFunction<z.infer<TConfig>, UT>;
-  draw3D?: Draw3DFunction<z.infer<TConfig>, UT>;
-}) {
-  return {
-    id: `${definition.name}-${new Date().getTime()}`,
-    defaultValues: getDefaults(definition.config),
-    ...definition,
-  } as Comp;
-}
+import { mirrorToCanvases } from '@/lib/comp-utils/mirror-to-canvases';
+import useDebug from '@/lib/hooks/use-debug';
+import useFrozenAudioData from '@/lib/hooks/use-frozen-audio-data';
+import useOnResize from '@/lib/hooks/use-on-resize';
+import useAudioStore from '@/lib/stores/audio-store';
+import { LayerData } from '@/lib/stores/layer-store';
+import { forwardRef, useCallback, useEffect, useRef } from 'react';
+import * as THREE from 'three';
 
 interface LayerRendererProps {
   layer: LayerData;
@@ -106,7 +29,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   // on panel resize, update canvas size
   useOnResize(canvasContainerRef, (entries, element) => {
     // If the canvas is not available, return
-    console.log("Resizing canvas");
+    console.log('Resizing canvas');
     if (!layerCanvasRef.current) return;
     const newestEntry = entries[entries.length - 1];
 
@@ -151,7 +74,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     });
     renderer.setSize(
       layerCanvasRef.current.clientWidth,
-      layerCanvasRef.current.clientHeight
+      layerCanvasRef.current.clientHeight,
     ); // Ensure renderer size matches the canvas size
 
     const scene = new THREE.Scene();
@@ -165,7 +88,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       75,
       layerCanvasRef.current.clientWidth / layerCanvasRef.current.clientHeight,
       0.1,
-      1000
+      1000,
     );
     camera.position.set(0, 0, 0);
     camera.lookAt(new THREE.Vector3(0, 0, 0));
@@ -177,7 +100,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
         scene,
         camera,
       },
-      config: layer.valuesRef.current,
+      config: layer.config.getValues(),
       debugEnabled: layer.isDebugEnabled,
     });
 
@@ -185,7 +108,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     cameraRef.current = camera;
     sceneRef.current = scene;
     rendererRef.current = renderer;
-  }, [layer.comp, layer.id, layer.isDebugEnabled, layer.valuesRef]);
+  }, [layer.comp, layer.config, layer.id, layer.isDebugEnabled]);
 
   useEffect(() => {
     if (!audioAnalyzer || !layerCanvasRef.current) return;
@@ -207,7 +130,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
             camera: cameraRef.current,
           },
           audioData: { dataArray, analyzer: audioAnalyzer },
-          config: layer.valuesRef.current,
+          config: layer.config.getValues(),
           dt: deltaTime,
           state: layer.comp.state,
           debugEnabled: layer.isDebugEnabled,
@@ -216,13 +139,13 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       };
     } else {
       // Setup the 2D draw function
-      const ctx = layerCanvasRef.current.getContext("2d");
+      const ctx = layerCanvasRef.current.getContext('2d');
       if (!ctx) return;
       renderFunction = (dataArray: Uint8Array, deltaTime: number) => {
         layer.comp.draw?.({
           canvasCtx: ctx,
           audioData: { dataArray, analyzer: audioAnalyzer },
-          config: layer.valuesRef.current,
+          config: layer.config.getValues(),
           dt: deltaTime,
           state: layer.comp.state,
           debugEnabled: layer.isDebugEnabled,
@@ -237,13 +160,11 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
 
       const dataArray = getNextDataArray();
 
-      if (layer?.valuesRef?.current) {
-        withDebug(() => renderFunction(dataArray, dt), {
-          dataArray: dataArray,
-          wavesurfer: wavesurfer,
-          config: layer.valuesRef.current,
-        });
-      }
+      withDebug(() => renderFunction(dataArray, dt), {
+        dataArray: dataArray,
+        wavesurfer: wavesurfer,
+        config: layer.config.getValues(),
+      });
 
       // Mirror the rendered canvas to other canvases
       mirrorToCanvases(layerCanvasRef.current, layer.mirrorCanvases);
@@ -263,9 +184,9 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     audioAnalyzer,
     getNextDataArray,
     layer.comp,
+    layer.config,
     layer.isDebugEnabled,
     layer.mirrorCanvases,
-    layer.valuesRef,
     setup3D,
     wavesurfer,
     withDebug,
@@ -275,7 +196,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     <div ref={canvasContainerRef} className="absolute inset-0">
       <LayerCanvas layer={layer} ref={layerCanvasRef} />
       {layer.isDebugEnabled && (
-        <canvas ref={debugCanvasRef} className="absolute w-full h-full" />
+        <canvas ref={debugCanvasRef} className="absolute h-full w-full" />
       )}
     </div>
   );
@@ -290,18 +211,18 @@ export const LayerCanvas = forwardRef<HTMLCanvasElement, LayerCanvasProps>(
     return (
       <canvas
         ref={ref}
-        className="absolute w-full h-full"
+        className="absolute h-full w-full"
         style={{
           opacity: layer.layerSettings.opacity,
           background: `${layer.layerSettings.background}`,
-          display: layer.layerSettings.visible ? "block" : "none",
+          display: layer.layerSettings.visible ? 'block' : 'none',
           mixBlendMode: layer.layerSettings.blendingMode,
         }}
       />
     );
-  }
+  },
 );
 
-LayerCanvas.displayName = "LayerCanvas";
+LayerCanvas.displayName = 'LayerCanvas';
 
 export default LayerRenderer;
