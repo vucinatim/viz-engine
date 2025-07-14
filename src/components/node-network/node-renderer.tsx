@@ -34,7 +34,7 @@ const NodeRenderer = ({
         return (
           <Input
             type="number"
-            className="nodrag nopan w-16 bg-zinc-800 text-xs"
+            className="nodrag nopan h-6 w-16 bg-zinc-800 text-xs"
             value={inputValues[input.id] ?? ''}
             onChange={(e) =>
               updateInputValue(

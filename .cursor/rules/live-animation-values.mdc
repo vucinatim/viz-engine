@@ -1,0 +1,7 @@
+# Live Animation Value Display
+
+To provide immediate user feedback, the application displays the live, calculated value of any animated parameter. A `useAnimationLiveValuesStore` holds these real-time outputs. The `[src/components/config/dynamic-form.tsx](mdc:src/components/config/dynamic-form.tsx)` component subscribes to this store and shows the current value next to the corresponding parameter control, which greatly improves the user experience when building animations.
+description:
+globs:
+alwaysApply: false
+---

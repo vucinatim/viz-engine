@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef } from "react";
-import WaveSurfer from "wavesurfer.js";
+import { useCallback, useEffect, useRef } from 'react';
+import WaveSurfer from 'wavesurfer.js';
 
 interface UseFrozenAudioDataProps {
   isFrozen: boolean;
@@ -28,13 +28,13 @@ const useFrozenAudioData = ({
       };
 
       // Listen to the 'ready' event to fetch the initial data
-      wavesurfer.on("ready", handleWaveSurferReady);
+      wavesurfer.on('ready', handleWaveSurferReady);
 
       // Trigger the event manually if the wavesurfer is already ready
       handleWaveSurferReady();
 
       return () => {
-        wavesurfer.un("ready", handleWaveSurferReady);
+        wavesurfer.un('ready', handleWaveSurferReady);
       };
     }
   }, [analyzer, wavesurfer]);
@@ -47,7 +47,9 @@ const useFrozenAudioData = ({
     // Fetch new data only if isPlaying is true
     if (isPlaying) {
       dataArrayRef.current = new Uint8Array(analyzer.frequencyBinCount);
-      analyzer.getByteFrequencyData(dataArrayRef.current);
+      analyzer.getByteFrequencyData(
+        dataArrayRef.current as Uint8Array<ArrayBuffer>,
+      );
       lastDataArrayRef.current = new Uint8Array(dataArrayRef.current);
     }
 

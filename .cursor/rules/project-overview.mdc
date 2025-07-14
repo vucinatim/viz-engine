@@ -1,0 +1,7 @@
+# Project Overview
+
+This project is a web-based, layer-based audio visualization engine. The core concept is to build visualizations by stacking 'VizComponents' (visual layers). Each property of a VizComponent (e.g., size, color, opacity) can be animated using a powerful node-based editor, allowing for complex and dynamic audio-reactive and time-based effects.
+description:
+globs:
+alwaysApply: false
+---

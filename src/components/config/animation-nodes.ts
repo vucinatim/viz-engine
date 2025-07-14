@@ -85,4 +85,58 @@ const SineNode: AnimNode = {
   },
 };
 
-export const nodes: AnimNode[] = [SineNode, MultiplyNode];
+const AverageVolumeNode: AnimNode = {
+  label: 'Average Volume',
+  inputs: [
+    {
+      id: 'audioSignal',
+      label: 'Audio Signal',
+      type: 'Uint8Array',
+    },
+  ],
+  outputs: [{ id: 'average', label: 'Average', type: 'number' }],
+  computeSignal: ({ audioSignal }: { audioSignal: Uint8Array }) => {
+    if (!audioSignal || audioSignal.length === 0) {
+      return { average: 0 };
+    }
+    const sum = audioSignal.reduce((a, b) => a + b, 0);
+    const average = sum / audioSignal.length;
+    return { average };
+  },
+};
+
+const NormalizeNode: AnimNode = {
+  label: 'Normalize',
+  inputs: [
+    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
+    { id: 'inputMin', label: 'Input Min', type: 'number', defaultValue: 0 },
+    { id: 'inputMax', label: 'Input Max', type: 'number', defaultValue: 255 },
+    { id: 'outputMin', label: 'Output Min', type: 'number', defaultValue: 0 },
+    { id: 'outputMax', label: 'Output Max', type: 'number', defaultValue: 1 },
+  ],
+  outputs: [{ id: 'result', label: 'Result', type: 'number' }],
+  computeSignal: ({
+    value = 0,
+    inputMin = 0,
+    inputMax = 255,
+    outputMin = 0,
+    outputMax = 1,
+  }) => {
+    if (inputMax - inputMin === 0) {
+      return { result: outputMin }; // Avoid division by zero
+    }
+    const normalizedValue = (value - inputMin) / (inputMax - inputMin);
+    const result = outputMin + (outputMax - outputMin) * normalizedValue;
+    const min = Math.min(outputMin, outputMax);
+    const max = Math.max(outputMin, outputMax);
+    const clampedResult = Math.max(min, Math.min(max, result));
+    return { result: clampedResult };
+  },
+};
+
+export const nodes: AnimNode[] = [
+  SineNode,
+  MultiplyNode,
+  AverageVolumeNode,
+  NormalizeNode,
+];
