@@ -1,4 +1,4 @@
-import * as allComps from '@/components/comps';
+import { AllComps } from '@/components/comps';
 import useCompStore from '@/lib/stores/comp-store';
 import useLayerStore, { LayerData } from '@/lib/stores/layer-store';
 import {
@@ -33,22 +33,16 @@ const LayersConfigPanel = () => {
 
   // Initialize the Comps in the CompStore
   useEffect(() => {
-    console.log('Comps have been updated');
     // Add all components to the store
-    Object.values(allComps).forEach((comp) =>
-      useCompStore.getState().addComp(comp as Comp),
-    );
+    AllComps.forEach((comp) => useCompStore.getState().addComp(comp as Comp));
 
     // Cleanup function to remove components from the store
     return () => {
-      Object.values(allComps).forEach((comp) =>
-        useCompStore.getState().removeComp(comp.name),
-      );
+      AllComps.forEach((comp) => useCompStore.getState().removeComp(comp.name));
     };
 
     // This makes it reactive to changes to any of the comp files
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allComps]);
+  }, []);
 
   return (
     <div className="absolute inset-0 flex flex-col items-stretch justify-start">

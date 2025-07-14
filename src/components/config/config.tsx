@@ -318,6 +318,26 @@ export class GroupConfigOption<
     return new GroupConfigOption(this, clonedOptions as T);
   }
 
+  rehydrate(persistedConfig: GroupConfigOption<T>): GroupConfigOption<T> {
+    for (const key in this.options) {
+      const option = this.options[key];
+      const persistedOption = persistedConfig.options[key];
+
+      if (
+        option instanceof GroupConfigOption &&
+        persistedOption instanceof GroupConfigOption
+      ) {
+        option.rehydrate(persistedOption);
+      } else if (
+        option instanceof ConfigParam &&
+        persistedOption instanceof ConfigParam
+      ) {
+        option.setValue((persistedOption as ConfigParam<any>).value);
+      }
+    }
+    return this;
+  }
+
   toFormElement() {
     return null;
   }
@@ -341,6 +361,26 @@ export class VConfig<T extends Record<string, BaseConfigOption<any>>> {
       }
     }
     return new VConfig(clonedOptions as T);
+  }
+
+  rehydrate(persistedConfig: VConfig<T>): VConfig<T> {
+    for (const key in this.options) {
+      const option = this.options[key];
+      const persistedOption = persistedConfig.options[key];
+
+      if (
+        option instanceof GroupConfigOption &&
+        persistedOption instanceof GroupConfigOption
+      ) {
+        option.rehydrate(persistedOption);
+      } else if (
+        option instanceof ConfigParam &&
+        persistedOption instanceof ConfigParam
+      ) {
+        option.setValue((persistedOption as ConfigParam<any>).value);
+      }
+    }
+    return this;
   }
 
   getValues(inputData: AnimInputData): InferValues<VConfig<T>> {
