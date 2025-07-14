@@ -4,9 +4,14 @@ import {
   LayerSettings,
   layerSettingsSchema,
 } from '@/components/editor/layer-settings';
+import useNodeNetworkStore from '@/components/node-network/node-network-store';
 import { arrayMove } from '@dnd-kit/sortable';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import {
+  assignDeterministicIdsToConfig,
+  getParameterIdsFromConfig,
+} from '../comp-utils/config-utils';
 import { generateLayerId } from '../id-utils';
 import { getDefaults } from '../schema-utils';
 import useLayerValuesStore from './layer-values-store';
@@ -52,7 +57,10 @@ const useLayerStore = create<LayerStore>()(
             {
               id: newLayerId,
               comp,
-              config: comp.config.clone(),
+              config: assignDeterministicIdsToConfig(
+                newLayerId,
+                comp.config.clone(),
+              ),
               isExpanded: true,
               isDebugEnabled: false,
               layerSettings: getDefaults(layerSettingsSchema) as LayerSettings,
@@ -60,12 +68,21 @@ const useLayerStore = create<LayerStore>()(
           ],
         }));
       },
-      removeLayer: (id) => {
-        useLayerValuesStore.getState().removeLayerValues(id);
-        set((state) => ({
-          layers: state.layers.filter((layer) => layer.id !== id),
-        }));
-      },
+      removeLayer: (id) =>
+        set((state) => {
+          const layerToRemove = state.layers.find((l) => l.id === id);
+          if (layerToRemove) {
+            const paramIds = getParameterIdsFromConfig(layerToRemove.config);
+            paramIds.forEach((paramId) => {
+              useNodeNetworkStore.getState().removeNetworkForParameter(paramId);
+            });
+          }
+
+          useLayerValuesStore.getState().removeLayerValues(id);
+          return {
+            layers: state.layers.filter((layer) => layer.id !== id),
+          };
+        }),
       setIsLayerExpanded: (id, isExpanded) =>
         set((state) => ({
           layers: state.layers.map((layer) =>
@@ -124,7 +141,10 @@ const useLayerStore = create<LayerStore>()(
               {
                 ...layer,
                 id: newLayerId,
-                config: layer.config.clone(),
+                config: assignDeterministicIdsToConfig(
+                  newLayerId,
+                  layer.config.clone(),
+                ),
                 isExpanded: true,
                 isDebugEnabled: false,
                 layerSettings: { ...layer.layerSettings },
@@ -190,7 +210,10 @@ const useLayerStore = create<LayerStore>()(
             return {
               ...layer,
               comp,
-              config: comp.config.clone(),
+              config: assignDeterministicIdsToConfig(
+                layer.id,
+                comp.config.clone(),
+              ),
             };
           }),
         };

@@ -31,7 +31,7 @@ export abstract class BaseConfigOption<T> {
   description?: string;
 
   constructor({ label, description }: ConfigMeta) {
-    this.id = label.toLowerCase().replace(/\s/g, '-') + '-' + Date.now();
+    this.id = ''; // This will be set deterministically
     this.label = label;
     this.description = description;
   }

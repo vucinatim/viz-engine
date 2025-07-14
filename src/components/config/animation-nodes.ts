@@ -140,3 +140,8 @@ export const nodes: AnimNode[] = [
   AverageVolumeNode,
   NormalizeNode,
 ];
+
+export const NodeDefinitionMap = new Map<string, AnimNode>();
+nodes.forEach((node) => NodeDefinitionMap.set(node.label, node));
+NodeDefinitionMap.set(InputNode.label, InputNode);
+NodeDefinitionMap.set(OutputNode.label, OutputNode);
