@@ -4,11 +4,13 @@ import {
   applyEdgeChanges,
   applyNodeChanges,
   Background,
+  Connection,
   Controls,
+  Edge,
   ReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import '../../lib/css/xyflow.css';
 import {
   ContextMenu,
@@ -22,6 +24,18 @@ import NodesSearch from './nodes-search';
 const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
   // Get nodes, edges, and actions from zustand store
   const { nodes, edges, setEdges, setNodes } = useNodeNetwork(nodeNetworkId);
+
+  const isValidConnection = useCallback(
+    (connection: Connection | Edge) => {
+      // We are using find because we only want one connection per target handle.
+      return !edges.find(
+        (edge) =>
+          edge.target === connection.target &&
+          edge.targetHandle === connection.targetHandle,
+      );
+    },
+    [edges],
+  );
 
   const nodeTypes = useMemo(
     () => ({
@@ -45,10 +59,15 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
       <ContextMenuTrigger>
         <ReactFlow
           fitView
+          panOnScroll
+          zoomOnPinch
+          selectionOnDrag
+          panOnDrag={false}
           colorMode="dark"
           nodeTypes={nodeTypes}
           nodes={nodes}
           edges={edges}
+          isValidConnection={isValidConnection}
           onNodesChange={(changes) =>
             setNodes(applyNodeChanges(changes, nodes))
           }
