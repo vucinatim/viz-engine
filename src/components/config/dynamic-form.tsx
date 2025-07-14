@@ -1,7 +1,8 @@
 import { cn } from '@/lib/utils';
 import { AudioLines, Info, Target } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { UseFormReturn, useForm } from 'react-hook-form';
+import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
 import useNodeNetworkStore from '../node-network/node-network-store';
 import CollapsibleGroup from '../ui/collapsible-group';
 import {
@@ -79,7 +80,13 @@ interface DynamicFormFieldProps {
 }
 
 const DynamicFormField = ({ name, option, form }: DynamicFormFieldProps) => {
-  const [isAnimated, setIsAnimated] = useState(false);
+  const isAnimated = useNodeNetworkStore(
+    (state) => state.networks[option.id]?.isEnabled,
+  );
+  const liveValue = useAnimationLiveValuesStore(
+    (state) => state.values[option.id],
+  );
+
   const openNetwork = useNodeNetworkStore((state) => state.openNetwork);
   const setOpenNetwork = useNodeNetworkStore((state) => state.setOpenNetwork);
   const setNetworkEnabled = useNodeNetworkStore(
@@ -87,6 +94,16 @@ const DynamicFormField = ({ name, option, form }: DynamicFormFieldProps) => {
   );
 
   const isHighlighted = openNetwork === option.id;
+
+  const getFormattedValue = () => {
+    if (typeof liveValue === 'number') {
+      return liveValue.toFixed(2);
+    }
+    if (typeof liveValue === 'string') {
+      return liveValue;
+    }
+    return JSON.stringify(liveValue);
+  };
 
   return (
     <FormField
@@ -103,6 +120,9 @@ const DynamicFormField = ({ name, option, form }: DynamicFormFieldProps) => {
                     <Info className="h-3 w-3 opacity-50" />
                   )}
                   {option.label || name.charAt(0).toUpperCase() + name.slice(1)}
+                  {isAnimated && (
+                    <div className="text-zinc-300">{getFormattedValue()}</div>
+                  )}
                 </FormLabel>
               }
             />
@@ -120,23 +140,20 @@ const DynamicFormField = ({ name, option, form }: DynamicFormFieldProps) => {
                 <Toggle
                   aria-label="Toggle Animation"
                   tooltip="Toggle parameter animation"
-                  pressed={isAnimated}
+                  pressed={!!isAnimated}
                   variant={
                     isAnimated && isHighlighted ? 'highlighted' : 'outline'
                   }
                   onPressedChange={(newValue) => {
+                    // If the toggle is already active but for a different network,
+                    // clicking it again should open the corresponding network editor
                     if (isAnimated && !isHighlighted) {
                       setOpenNetwork(option.id);
                       return;
                     }
 
-                    if (newValue) {
-                      setNetworkEnabled(option.id, true);
-                      setIsAnimated(true);
-                    } else {
-                      setNetworkEnabled(option.id, false);
-                      setIsAnimated(false);
-                    }
+                    // Otherwise, just toggle the animation on/off
+                    setNetworkEnabled(option.id, newValue);
                   }}>
                   {isAnimated ? <AudioLines /> : <Target />}
                 </Toggle>

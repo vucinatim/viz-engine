@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { nodes } from '../config/animation-nodes';
+import { AnimNode, nodes } from '../config/animation-nodes';
 import {
   Command,
   CommandEmpty,
@@ -43,7 +43,7 @@ const NodesSearch = ({ networkId }: NodeSearchProps) => {
                   id: nodeId,
                   type: 'NodeRenderer',
                   position: { x: 0, y: 0 },
-                  data: node,
+                  data: node as AnimNode,
                 });
               }}>
               <p>{node.label}</p>

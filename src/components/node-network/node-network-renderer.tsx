@@ -9,7 +9,6 @@ import {
   ReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useState } from 'react';
 import '../../lib/css/xyflow.css';
 import {
   ContextMenu,
@@ -36,27 +35,10 @@ const nodeTypes: Record<string, React.ComponentType<NodeProps>> = {
 
 const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
   // Get nodes, edges, and actions from zustand store
-  const { nodes, edges, setEdges, setNodes, addNode, computeOutput } =
-    useNodeNetwork(nodeNetworkId);
-
-  const [output, setOutput] = useState<any>(null);
+  const { nodes, edges, setEdges, setNodes } = useNodeNetwork(nodeNetworkId);
 
   return (
     <ContextMenu>
-      <div className="absolute right-0 top-0 z-[99999999]">
-        <button
-          onClick={() => {
-            const output = computeOutput({
-              audioSignal: new Uint8Array(0),
-              time: 2.5,
-            });
-            console.log('Output:', output);
-            setOutput(output);
-          }}
-          className="rounded-md bg-blue-500 px-4 py-2 text-sm font-bold text-white">
-          OUTPUT: {output}
-        </button>
-      </div>
       <ContextMenuTrigger>
         <ReactFlow
           colorMode="dark"

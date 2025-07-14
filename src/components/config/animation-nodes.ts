@@ -57,6 +57,22 @@ export const OutputNode: AnimNode = {
   },
 };
 
+// Define a MultiplyNode
+const MultiplyNode: AnimNode = {
+  label: 'Multiply',
+  inputs: [
+    { id: 'a', label: 'A', type: 'number' },
+    { id: 'b', label: 'B', type: 'number' },
+  ],
+  outputs: [{ id: 'result', label: 'Result', type: 'number' }],
+  computeSignal: ({ a, b }: { a: number; b: number }) => {
+    // Ensure inputs are numbers, provide defaults if not
+    const valA = typeof a === 'number' ? a : 0;
+    const valB = typeof b === 'number' ? b : 0;
+    return { result: valA * valB };
+  },
+};
+
 // Define the SineNode
 const SineNode: AnimNodeG<(inputs: { time: number }) => { sineValue: number }> =
   {
@@ -71,4 +87,4 @@ const SineNode: AnimNodeG<(inputs: { time: number }) => { sineValue: number }> =
 
 console.log('SineNode:', SineNode);
 
-export const nodes = [SineNode];
+export const nodes = [SineNode, MultiplyNode];

@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
 import useNodeNetworkStore from '../node-network/node-network-store';
 import { ColorPickerPopover } from '../ui/color-picker';
 import { Input } from '../ui/input';
@@ -47,10 +48,42 @@ export abstract class BaseConfigOption<T> {
 
 export abstract class ConfigParam<T> extends BaseConfigOption<T> {
   isAnimatable: boolean;
+  value: T; // All config params have a value
 
-  constructor(options: ConfigMeta, isAnimatable = true) {
+  constructor(
+    options: ConfigMeta & { defaultValue: T },
+    isAnimatable: boolean = true,
+  ) {
     super(options);
     this.isAnimatable = isAnimatable;
+    this.value = options.defaultValue;
+  }
+
+  getValue(inputData: AnimInputData): T {
+    const isAnimated =
+      useNodeNetworkStore.getState().networks[this.id]?.isEnabled;
+    if (!isAnimated) {
+      return this.value;
+    }
+
+    try {
+      const animatedValue = useNodeNetworkStore
+        .getState()
+        .computeNetworkOutput(this.id, inputData);
+      useAnimationLiveValuesStore.getState().setValue(this.id, animatedValue);
+      return animatedValue;
+    } catch (error) {
+      // console.error(`Error computing network for ${this.id}:`, error);
+      return this.value; // Fallback to static value on error
+    }
+  }
+
+  setValue(value: T): void {
+    this.value = value;
+  }
+
+  getDefaultValue(): T {
+    return this.value;
   }
 }
 
@@ -63,34 +96,11 @@ type NumberConfigOptions = ConfigMeta & {
 };
 
 export class NumberConfigOption extends ConfigParam<number> {
-  value: number;
   options: NumberConfigOptions;
 
   constructor(options: NumberConfigOptions) {
     super(options);
     this.options = options;
-    this.value = options.defaultValue;
-  }
-
-  getValue(inputData: AnimInputData) {
-    // return this.value;
-    try {
-      const animatedValue = useNodeNetworkStore
-        .getState()
-        .computeNetworkOutput(this.id, inputData);
-      return animatedValue;
-    } catch (error) {
-      // console.error(error);
-      return this.value;
-    }
-  }
-
-  setValue(value: number) {
-    this.value = value;
-  }
-
-  getDefaultValue() {
-    return this.options.defaultValue;
   }
 
   clone() {
@@ -124,25 +134,11 @@ type ColorConfigOptions = ConfigMeta & {
 };
 
 export class ColorConfigOption extends ConfigParam<string> {
-  value: string;
   options: ColorConfigOptions;
 
   constructor(options: ColorConfigOptions) {
     super(options);
     this.options = options;
-    this.value = options.defaultValue;
-  }
-
-  getValue() {
-    return this.value;
-  }
-
-  setValue(value: string) {
-    this.value = value;
-  }
-
-  getDefaultValue(): string {
-    return this.options.defaultValue;
   }
 
   clone() {
@@ -173,25 +169,11 @@ type StringConfigOptions = ConfigMeta & {
 };
 
 export class StringConfigOption extends ConfigParam<string> {
-  value: string;
   options: StringConfigOptions;
 
   constructor(options: StringConfigOptions) {
     super(options);
     this.options = options;
-    this.value = options.defaultValue;
-  }
-
-  getValue() {
-    return this.value;
-  }
-
-  setValue(value: string) {
-    this.value = value;
-  }
-
-  getDefaultValue(): string {
-    return this.options.defaultValue;
   }
 
   clone() {
@@ -222,24 +204,10 @@ type BooleanConfigOptions = ConfigMeta & {
 
 export class BooleanConfigOption extends ConfigParam<boolean> {
   options: BooleanConfigOptions;
-  value: boolean;
 
   constructor(options: BooleanConfigOptions) {
     super(options);
     this.options = options;
-    this.value = options.defaultValue;
-  }
-
-  getValue() {
-    return this.value;
-  }
-
-  setValue(value: boolean) {
-    this.value = value;
-  }
-
-  getDefaultValue(): boolean {
-    return this.options.defaultValue;
   }
 
   clone() {
@@ -267,24 +235,10 @@ type SelectConfigOptions = ConfigMeta & {
 
 export class SelectConfigOption extends ConfigParam<string> {
   options: SelectConfigOptions;
-  value: string;
 
   constructor(options: SelectConfigOptions) {
     super(options);
     this.options = options;
-    this.value = options.defaultValue;
-  }
-
-  getValue() {
-    return this.value;
-  }
-
-  setValue(value: string) {
-    this.value = value;
-  }
-
-  getDefaultValue(): string {
-    return this.options.defaultValue;
   }
 
   clone() {
