@@ -1,9 +1,11 @@
 import { ReactNode } from 'react';
+import useNodeNetworkStore from '../node-network/node-network-store';
 import { ColorPickerPopover } from '../ui/color-picker';
 import { Input } from '../ui/input';
 import { SimpleSelect } from '../ui/select'; // Assuming you have a Select component
 import { Slider } from '../ui/slider'; // Assuming this is your custom slider component
 import { Switch } from '../ui/switch';
+import { AnimInputData } from './animation-nodes';
 
 // Enum for the different config types
 export enum VType {
@@ -23,15 +25,17 @@ interface ConfigMeta {
 
 // Base class for all config options
 export abstract class BaseConfigOption<T> {
+  id: string;
   label: string;
   description?: string;
 
   constructor({ label, description }: ConfigMeta) {
+    this.id = label.toLowerCase().replace(/\s/g, '-') + '-' + Date.now();
     this.label = label;
     this.description = description;
   }
 
-  abstract getValue(): T;
+  abstract getValue(inputData: AnimInputData): T;
   abstract setValue(value: T): void;
   abstract getDefaultValue(): T;
   abstract clone(): BaseConfigOption<T>;
@@ -39,6 +43,15 @@ export abstract class BaseConfigOption<T> {
     value: T | null,
     onChange: (value: T) => void,
   ): ReactNode;
+}
+
+export abstract class ConfigParam<T> extends BaseConfigOption<T> {
+  isAnimatable: boolean;
+
+  constructor(options: ConfigMeta, isAnimatable = true) {
+    super(options);
+    this.isAnimatable = isAnimatable;
+  }
 }
 
 // Number Config Option
@@ -49,7 +62,7 @@ type NumberConfigOptions = ConfigMeta & {
   step?: number;
 };
 
-export class NumberConfigOption extends BaseConfigOption<number> {
+export class NumberConfigOption extends ConfigParam<number> {
   value: number;
   options: NumberConfigOptions;
 
@@ -59,8 +72,17 @@ export class NumberConfigOption extends BaseConfigOption<number> {
     this.value = options.defaultValue;
   }
 
-  getValue() {
-    return this.value;
+  getValue(inputData: AnimInputData) {
+    // return this.value;
+    try {
+      const animatedValue = useNodeNetworkStore
+        .getState()
+        .computeNetworkOutput(this.id, inputData);
+      return animatedValue;
+    } catch (error) {
+      // console.error(error);
+      return this.value;
+    }
   }
 
   setValue(value: number) {
@@ -101,7 +123,7 @@ type ColorConfigOptions = ConfigMeta & {
   defaultValue: string;
 };
 
-export class ColorConfigOption extends BaseConfigOption<string> {
+export class ColorConfigOption extends ConfigParam<string> {
   value: string;
   options: ColorConfigOptions;
 
@@ -150,7 +172,7 @@ type StringConfigOptions = ConfigMeta & {
   defaultValue: string;
 };
 
-export class StringConfigOption extends BaseConfigOption<string> {
+export class StringConfigOption extends ConfigParam<string> {
   value: string;
   options: StringConfigOptions;
 
@@ -198,7 +220,7 @@ type BooleanConfigOptions = ConfigMeta & {
   defaultValue: boolean;
 };
 
-export class BooleanConfigOption extends BaseConfigOption<boolean> {
+export class BooleanConfigOption extends ConfigParam<boolean> {
   options: BooleanConfigOptions;
   value: boolean;
 
@@ -243,7 +265,7 @@ type SelectConfigOptions = ConfigMeta & {
   options: string[];
 };
 
-export class SelectConfigOption extends BaseConfigOption<string> {
+export class SelectConfigOption extends ConfigParam<string> {
   options: SelectConfigOptions;
   value: string;
 
@@ -302,11 +324,11 @@ export class GroupConfigOption<
     return this.options;
   }
 
-  getValue() {
+  getValue(inputData: AnimInputData) {
     const values: Partial<{ [K in keyof T]: any }> = {};
     for (const key in this.options) {
       if (this.options.hasOwnProperty(key)) {
-        values[key] = this.options[key].getValue();
+        values[key] = this.options[key].getValue(inputData);
       }
     }
     return values as T;
@@ -367,11 +389,11 @@ export class VConfig<T extends Record<string, BaseConfigOption<any>>> {
     return new VConfig(clonedOptions as T);
   }
 
-  getValues(): InferValues<VConfig<T>> {
+  getValues(inputData: AnimInputData): InferValues<VConfig<T>> {
     const values: Partial<InferValues<VConfig<T>>> = {};
     for (const key in this.options) {
       if (this.options.hasOwnProperty(key)) {
-        values[key] = this.options[key].getValue();
+        values[key] = this.options[key].getValue(inputData);
       }
     }
     return values as InferValues<VConfig<T>>;

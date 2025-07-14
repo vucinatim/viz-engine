@@ -7,6 +7,12 @@ import { LayerData } from '@/lib/stores/layer-store';
 import { forwardRef, useCallback, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
+type RenderFunction = (data: {
+  dt: number;
+  audioData: { dataArray: Uint8Array; analyzer: AnalyserNode };
+  config: Record<string, any>;
+}) => void;
+
 interface LayerRendererProps {
   layer: LayerData;
 }
@@ -92,6 +98,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     );
     camera.position.set(0, 0, 0);
     camera.lookAt(new THREE.Vector3(0, 0, 0));
+    const time = wavesurfer?.getCurrentTime() || 0;
 
     layer.comp.init3D?.({
       state: layer.comp.state,
@@ -100,7 +107,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
         scene,
         camera,
       },
-      config: layer.config.getValues(),
+      config: layer.config.getValues({ audioSignal: new Uint8Array(), time }),
       debugEnabled: layer.isDebugEnabled,
     });
 
@@ -108,18 +115,18 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     cameraRef.current = camera;
     sceneRef.current = scene;
     rendererRef.current = renderer;
-  }, [layer.comp, layer.config, layer.id, layer.isDebugEnabled]);
+  }, [layer.comp, layer.config, layer.id, layer.isDebugEnabled, wavesurfer]);
 
   useEffect(() => {
     if (!audioAnalyzer || !layerCanvasRef.current) return;
 
-    let renderFunction = null;
+    let renderFunction: RenderFunction | null = null;
 
     if (layer.comp.draw3D) {
       // Setup the 3D renderer and the 3D draw function
       setup3D();
 
-      renderFunction = (dataArray: Uint8Array, deltaTime: number) => {
+      renderFunction = (data) => {
         if (!rendererRef.current || !sceneRef.current || !cameraRef.current) {
           return;
         }
@@ -129,11 +136,9 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
             scene: sceneRef.current,
             camera: cameraRef.current,
           },
-          audioData: { dataArray, analyzer: audioAnalyzer },
-          config: layer.config.getValues(),
-          dt: deltaTime,
           state: layer.comp.state,
           debugEnabled: layer.isDebugEnabled,
+          ...data,
         });
         rendererRef.current.render(sceneRef.current, cameraRef.current);
       };
@@ -141,14 +146,12 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       // Setup the 2D draw function
       const ctx = layerCanvasRef.current.getContext('2d');
       if (!ctx) return;
-      renderFunction = (dataArray: Uint8Array, deltaTime: number) => {
+      renderFunction = (data) => {
         layer.comp.draw?.({
           canvasCtx: ctx,
-          audioData: { dataArray, analyzer: audioAnalyzer },
-          config: layer.config.getValues(),
-          dt: deltaTime,
           state: layer.comp.state,
           debugEnabled: layer.isDebugEnabled,
+          ...data,
         });
       };
     }
@@ -160,11 +163,25 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
 
       const dataArray = getNextDataArray();
 
-      withDebug(() => renderFunction(dataArray, dt), {
-        dataArray: dataArray,
-        wavesurfer: wavesurfer,
-        config: layer.config.getValues(),
-      });
+      withDebug(
+        () =>
+          renderFunction({
+            dt,
+            audioData: { dataArray, analyzer: audioAnalyzer },
+            config: layer.config.getValues({
+              audioSignal: dataArray,
+              time: wavesurfer?.getCurrentTime() || 0,
+            }),
+          }),
+        {
+          dataArray: dataArray,
+          wavesurfer: wavesurfer,
+          config: layer.config.getValues({
+            audioSignal: dataArray,
+            time: wavesurfer?.getCurrentTime() || 0,
+          }),
+        },
+      );
 
       // Mirror the rendered canvas to other canvases
       mirrorToCanvases(layerCanvasRef.current, layer.mirrorCanvases);

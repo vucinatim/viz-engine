@@ -1,12 +1,14 @@
 // Zustand store for editor settings
-import { PlayerRef } from "@remotion/player";
-import { create } from "zustand";
+import { PlayerRef } from '@remotion/player';
+import { create } from 'zustand';
 
 interface EditorStore {
+  isPlaying: boolean;
   playerRef: { current: PlayerRef | null };
   playerFPS: number;
   ambientMode: boolean;
   dominantColor: string;
+  setIsPlaying: (isPlaying: boolean) => void;
   setPlayerRef: (playerRef: { current: PlayerRef | null }) => void;
   setPlayerFPS: (fps: number) => void;
   setAmbientMode: (ambientMode: boolean) => void;
@@ -14,10 +16,12 @@ interface EditorStore {
 }
 
 const useEditorStore = create<EditorStore>((set) => ({
+  isPlaying: false,
   playerRef: { current: null },
   playerFPS: 60,
   ambientMode: false,
-  dominantColor: "#fff",
+  dominantColor: '#fff',
+  setIsPlaying: (isPlaying) => set({ isPlaying }),
   setPlayerRef: (playerRef) => set({ playerRef }),
   setPlayerFPS: (fps) => set({ playerFPS: fps }),
   setAmbientMode: (ambientMode) => set({ ambientMode }),

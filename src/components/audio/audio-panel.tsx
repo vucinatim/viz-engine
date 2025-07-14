@@ -1,74 +1,76 @@
-"use client";
+'use client';
 
-import { Toggle } from "../ui/toggle";
-import AudioFileLoader from "./audio-file-loader";
-import { Pause, Play } from "lucide-react";
-import VolumeFader from "./volume-fader";
-import useWavesurferSetup from "@/lib/hooks/use-wavesurfer-setup";
-import useKeypress from "@/lib/hooks/use-keypress";
-import useEditorStore from "@/lib/stores/editor-store";
+import useKeypress from '@/lib/hooks/use-keypress';
+import useWavesurferSetup from '@/lib/hooks/use-wavesurfer-setup';
+import useEditorStore from '@/lib/stores/editor-store';
+import { Pause, Play } from 'lucide-react';
+import { Toggle } from '../ui/toggle';
+import AudioFileLoader from './audio-file-loader';
+import VolumeFader from './volume-fader';
 
 const AudioPanel = () => {
-  const { playerRef } = useEditorStore();
+  const playerRef = useEditorStore((state) => state.playerRef);
+  const setIsPlaying = useEditorStore((state) => state.setIsPlaying);
   const { waveformDisplayRef, audioElementRef, isPlaying, currentTime } =
     useWavesurferSetup();
 
   const playPause = () => {
     // wavesurfer?.playPause();
-    console.log("playPause");
+    console.log('playPause');
     const player = playerRef.current;
     if (player) {
       if (player.isPlaying()) {
         player.pause();
+        setIsPlaying(false);
       } else {
         player.play();
+        setIsPlaying(true);
       }
     }
   };
-  useKeypress("Space", playPause);
+  useKeypress('Space', playPause);
 
   return (
     <div className="absolute inset-0 flex items-stretch justify-stretch">
       <div className="w-20 border-r border-white/20">
         <VolumeFader />
       </div>
-      <div className="grow flex flex-col items-stretch">
-        <div className="grid grid-cols-3 content-center p-2 h-14">
+      <div className="flex grow flex-col items-stretch">
+        <div className="grid h-14 grid-cols-3 content-center p-2">
           <AudioFileLoader />
           <div className="place-self-center">
             <Toggle
               aria-label="Play/Pause"
               tooltip="Play/Pause (Space)"
-              onClick={playPause}
-            >
+              onClick={playPause}>
               {isPlaying ? <Pause /> : <Play />}
             </Toggle>
           </div>
-          <div className="flex items-center mr-3 justify-end">
-            <p className="text-white text-xs font-mono">
+          <div className="mr-3 flex items-center justify-end">
+            <p className="font-mono text-xs text-white">
               {
                 // Format the currentTime in float seconds to a human readable format
                 Math.floor(currentTime / 60)
                   .toString()
-                  .padStart(2, "0") +
-                  ":" +
+                  .padStart(2, '0') +
+                  ':' +
                   Math.floor(currentTime % 60)
                     .toString()
-                    .padStart(2, "0") +
-                  "." +
+                    .padStart(2, '0') +
+                  '.' +
                   // Only show two numbers for milliseconds
                   Math.floor((currentTime % 1) * 1000)
                     .toString()
                     .slice(0, 2)
-                    .padStart(2, "0")
+                    .padStart(2, '0')
               }
             </p>
           </div>
         </div>
-        <div className="grow relative">
+        <div className="relative grow">
           <div className="absolute inset-0">
             <audio ref={audioElementRef} />
-            <div ref={waveformDisplayRef} className="w-full my-auto" />
+            <div ref={waveformDisplayRef} className="my-auto w-full" />
           </div>
         </div>
       </div>

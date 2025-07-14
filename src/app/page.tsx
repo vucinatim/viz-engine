@@ -5,6 +5,7 @@ import LayersConfigPanel from '@/components/editor/layers-config-panel';
 
 import AudioPanel from '@/components/audio/audio-panel';
 import AmbientBackground from '@/components/editor/ambient-background';
+import AnimationBuilder from '@/components/editor/animation-builder';
 import EditorHeader from '@/components/editor/editor-header';
 import RemotionPlayer from '@/components/editor/remotion-player';
 import useBodyProps from '@/lib/stores/body-props-store';
@@ -34,6 +35,7 @@ export default function Home() {
         topRightChildren={
           <EditorPanel>
             <RemotionPlayer />
+            <AnimationBuilder />
             {/* <Renderer /> */}
           </EditorPanel>
         }

@@ -52,17 +52,19 @@ const SimpleCube = createComponent({
     const cube = scene.userData.cube;
 
     // Calculate the average volume of low frequencies
-    let lowFreqRange = dataArray.slice(0, Math.floor(dataArray.length * 0.25)); // Adjust range as needed
-    let averageLowFreq =
-      lowFreqRange.reduce((acc, val) => acc + val, 0) / lowFreqRange.length;
+    // let lowFreqRange = dataArray.slice(0, Math.floor(dataArray.length * 0.25)); // Adjust range as needed
+    // let averageLowFreq =
+    //   lowFreqRange.reduce((acc, val) => acc + val, 0) / lowFreqRange.length;
 
-    // Normalize and use this to scale the cube
-    let scale = Math.max(0.1, averageLowFreq / 128); // Normalize based on your data's range and desired effect
-    cube.scale.set(
-      scale * config.size,
-      scale * config.size,
-      scale * config.size,
-    );
+    // // Normalize and use this to scale the cube
+    // let scale = Math.max(0.1, averageLowFreq / 128); // Normalize based on your data's range and desired effect
+    // cube.scale.set(
+    //   scale * config.size,
+    //   scale * config.size,
+    //   scale * config.size,
+    // );
+
+    cube.scale.set(config.size, config.size, config.size);
 
     cube.material.color.set(config.color);
     cube.rotation.x += 1 * dt;

@@ -1,6 +1,8 @@
-import { Info } from 'lucide-react';
-import { useEffect } from 'react';
+import { cn } from '@/lib/utils';
+import { AudioLines, Info, Target } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { UseFormReturn, useForm } from 'react-hook-form';
+import useNodeNetworkStore from '../node-network/node-network-store';
 import CollapsibleGroup from '../ui/collapsible-group';
 import {
   Form,
@@ -11,7 +13,8 @@ import {
   FormMessage,
 } from '../ui/form';
 import SimpleTooltip from '../ui/simple-tooltip';
-import { BaseConfigOption, GroupConfigOption, VConfigType } from './config';
+import { Toggle } from '../ui/toggle';
+import { ConfigParam, GroupConfigOption, VConfigType } from './config';
 
 interface DynamicFormProps {
   config: VConfigType;
@@ -47,7 +50,7 @@ const DynamicForm = ({ config, defaultValues }: DynamicFormProps) => {
                         key={`${key}.${innerKey}`}
                         name={`${key}.${innerKey}`}
                         form={form}
-                        option={innerOption as BaseConfigOption<any>}
+                        option={innerOption as ConfigParam<any>}
                       />
                     ),
                   )}
@@ -55,7 +58,11 @@ const DynamicForm = ({ config, defaultValues }: DynamicFormProps) => {
               </CollapsibleGroup>
             ) : (
               <div className="pb-6">
-                <DynamicFormField name={key} form={form} option={option} />
+                <DynamicFormField
+                  name={key}
+                  form={form}
+                  option={option as ConfigParam<any>}
+                />
               </div>
             )}
           </div>
@@ -67,18 +74,27 @@ const DynamicForm = ({ config, defaultValues }: DynamicFormProps) => {
 
 interface DynamicFormFieldProps {
   name: string;
-  option: BaseConfigOption<any>;
+  option: ConfigParam<any>;
   form: UseFormReturn;
 }
 
 const DynamicFormField = ({ name, option, form }: DynamicFormFieldProps) => {
+  const [isAnimated, setIsAnimated] = useState(false);
+  const openNetwork = useNodeNetworkStore((state) => state.openNetwork);
+  const setOpenNetwork = useNodeNetworkStore((state) => state.setOpenNetwork);
+  const setNetworkEnabled = useNodeNetworkStore(
+    (state) => state.setNetworkEnabled,
+  );
+
+  const isHighlighted = openNetwork === option.id;
+
   return (
     <FormField
       name={name}
       control={form.control}
       render={({ field, fieldState }) => {
         return (
-          <FormItem className="flex flex-wrap justify-between px-4">
+          <FormItem className="flex grow flex-wrap justify-between px-4">
             <SimpleTooltip
               text={option.description}
               trigger={
@@ -90,10 +106,42 @@ const DynamicFormField = ({ name, option, form }: DynamicFormFieldProps) => {
                 </FormLabel>
               }
             />
+            <div className="flex w-full items-center gap-x-2">
+              <div
+                className={cn(
+                  'relative grow',
+                  isAnimated && 'pointer-events-none opacity-50',
+                )}>
+                <FormControl>
+                  {option.toFormElement(field.value, field.onChange)}
+                </FormControl>
+              </div>
+              {option.isAnimatable && (
+                <Toggle
+                  aria-label="Toggle Animation"
+                  tooltip="Toggle parameter animation"
+                  pressed={isAnimated}
+                  variant={
+                    isAnimated && isHighlighted ? 'highlighted' : 'outline'
+                  }
+                  onPressedChange={(newValue) => {
+                    if (isAnimated && !isHighlighted) {
+                      setOpenNetwork(option.id);
+                      return;
+                    }
 
-            <FormControl>
-              {option.toFormElement(field.value, field.onChange)}
-            </FormControl>
+                    if (newValue) {
+                      setNetworkEnabled(option.id, true);
+                      setIsAnimated(true);
+                    } else {
+                      setNetworkEnabled(option.id, false);
+                      setIsAnimated(false);
+                    }
+                  }}>
+                  {isAnimated ? <AudioLines /> : <Target />}
+                </Toggle>
+              )}
+            </div>
             <FormMessage>{fieldState.error?.message}</FormMessage>
           </FormItem>
         );

@@ -10,12 +10,14 @@ import {
 interface EditorLayoutProps {
   leftChildren: ReactNode;
   topRightChildren: ReactNode;
+  midRightChildren?: ReactNode;
   bottomRightChildren: ReactNode;
 }
 
 export function EditorLayout({
   leftChildren,
   topRightChildren,
+  midRightChildren,
   bottomRightChildren,
 }: EditorLayoutProps) {
   // const { setDominantColor } = useEditorStore();
@@ -39,23 +41,39 @@ export function EditorLayout({
     <ResizablePanelGroup
       direction="horizontal"
       className="flex h-full w-full items-stretch justify-stretch p-2">
-      <ResizablePanel minSize={20} defaultSize={30}>
+      <ResizablePanel id="left-panel" order={0} minSize={20} defaultSize={30}>
         <div className="relative flex h-full w-full flex-col items-stretch justify-stretch">
           {leftChildren}
         </div>
       </ResizablePanel>
       <ResizableHandle />
-      <ResizablePanel defaultSize={70}>
+      <ResizablePanel id="right-panel" order={1} defaultSize={70}>
         <ResizablePanelGroup direction="vertical">
-          <ResizablePanel defaultSize={80} minSize={50}>
+          <ResizablePanel
+            id="top-right-panel"
+            order={2}
+            defaultSize={74}
+            minSize={20}>
             <div className="relative flex h-full w-full flex-col items-stretch justify-stretch">
               {topRightChildren}
             </div>
           </ResizablePanel>
           <ResizableHandle />
+          {midRightChildren && (
+            <>
+              <ResizablePanel id="mid-right-panel" order={3} defaultSize={50}>
+                <div className="relative flex h-full w-full">
+                  {midRightChildren}
+                </div>
+              </ResizablePanel>
+            </>
+          )}
+          <ResizableHandle />
           <ResizablePanel
-            className="min-h-[227px]"
-            defaultSize={20}
+            order={4}
+            id="bottom-right-panel"
+            // className="min-h-[227px]"
+            defaultSize={26}
             minSize={20}>
             <div className="relative flex h-full w-full flex-col items-stretch justify-stretch">
               {bottomRightChildren}
