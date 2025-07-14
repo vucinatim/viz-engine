@@ -45,7 +45,7 @@ const AnimationBuilder = () => {
           </div>
           <div
             className={cn(
-              'absolute left-4 top-4 rounded-lg bg-zinc-600/30 px-6 py-4 transition-opacity',
+              'pointer-events-none absolute left-4 top-4 rounded-lg bg-zinc-600/30 px-6 py-4 transition-opacity',
               isHovering && 'opacity-0',
             )}>
             <p className="flex items-center justify-center text-sm font-semibold text-white">

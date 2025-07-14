@@ -5,37 +5,40 @@ import {
   applyNodeChanges,
   Background,
   Controls,
-  NodeProps,
   ReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import { useMemo } from 'react';
 import '../../lib/css/xyflow.css';
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
 } from '../ui/context-menu';
-import { GraphNode, useNodeNetwork } from './node-network-store';
+import { useNodeNetwork } from './node-network-store';
 import NodeRenderer from './node-renderer';
 import NodesSearch from './nodes-search';
-
-const nodeTypes: Record<string, React.ComponentType<NodeProps>> = {
-  NodeRenderer: (props) => (
-    <ContextMenu>
-      <ContextMenuTrigger>
-        <NodeRenderer {...(props as unknown as GraphNode)} />
-      </ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem inset>Copy</ContextMenuItem>
-        <ContextMenuItem inset>Delete</ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
-  ),
-};
 
 const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
   // Get nodes, edges, and actions from zustand store
   const { nodes, edges, setEdges, setNodes } = useNodeNetwork(nodeNetworkId);
+
+  const nodeTypes = useMemo(
+    () => ({
+      NodeRenderer: (props: any) => (
+        <ContextMenu>
+          <ContextMenuTrigger>
+            <NodeRenderer {...props} nodeNetworkId={nodeNetworkId} />
+          </ContextMenuTrigger>
+          <ContextMenuContent>
+            <ContextMenuItem inset>Copy</ContextMenuItem>
+            <ContextMenuItem inset>Delete</ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
+      ),
+    }),
+    [nodeNetworkId],
+  );
 
   return (
     <ContextMenu>

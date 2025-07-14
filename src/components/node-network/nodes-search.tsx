@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { AnimNode, nodes } from '../config/animation-nodes';
+import { nodes } from '../config/animation-nodes';
 import {
   Command,
   CommandEmpty,
@@ -39,11 +39,21 @@ const NodesSearch = ({ networkId }: NodeSearchProps) => {
               value={node.label}
               onSelect={() => {
                 const nodeId = `${networkId}-node-${Date.now()}`;
+                const initialInputValues = node.inputs.reduce(
+                  (acc, input) => {
+                    acc[input.id] = input.defaultValue;
+                    return acc;
+                  },
+                  {} as { [key: string]: any },
+                );
                 addNode({
                   id: nodeId,
                   type: 'NodeRenderer',
                   position: { x: 0, y: 0 },
-                  data: node as AnimNode,
+                  data: {
+                    definition: node,
+                    inputValues: initialInputValues,
+                  },
                 });
               }}>
               <p>{node.label}</p>

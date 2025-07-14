@@ -7,6 +7,27 @@ import {
   OutputNode,
 } from '../config/animation-nodes';
 
+// A simple throttle utility per key
+const throttledLoggers = new Map<
+  string,
+  (message: string, data: any) => void
+>();
+
+function getThrottledLogger(key: string, interval: number) {
+  if (!throttledLoggers.has(key)) {
+    let lastLogTime = 0;
+    const logger = (message: string, data: any) => {
+      const now = Date.now();
+      if (now - lastLogTime > interval) {
+        console.log(message, JSON.parse(JSON.stringify(data)));
+        lastLogTime = now;
+      }
+    };
+    throttledLoggers.set(key, logger);
+  }
+  return throttledLoggers.get(key)!;
+}
+
 // Define the shape of a node network
 type NodeNetwork = {
   name: string;
@@ -15,9 +36,12 @@ type NodeNetwork = {
   edges: Edge[];
 };
 
-export type GraphNode = Node & {
-  data: AnimNode;
+export type GraphNodeData = {
+  definition: AnimNode;
+  inputValues: { [inputId: string]: any };
 };
+
+export type GraphNode = Node<GraphNodeData>;
 
 // Define the zustand store
 interface NodeNetworkStore {
@@ -31,6 +55,12 @@ interface NodeNetworkStore {
   setEdgesInNetwork: (parameterId: string, edges: Edge[]) => void;
   createNetworkForParameter: (parameterId: string) => void; // Initialize a new network for a parameter
   removeNetworkForParameter: (parameterId: string) => void; // Remove network if parameter is not animated anymore
+  updateNodeInputValue: (
+    parameterId: string,
+    nodeId: string,
+    inputId: string,
+    value: any,
+  ) => void;
   computeNetworkOutput: (parameterId: string, inputData: AnimInputData) => any; // Compute the output of the network
 }
 
@@ -79,13 +109,19 @@ const useNodeNetworkStore = create<NodeNetworkStore>((set, get) => ({
               id: `${parameterId}-input-node`,
               type: 'NodeRenderer',
               position: { x: 0, y: 0 },
-              data: InputNode, // Add InputNode
+              data: {
+                definition: InputNode,
+                inputValues: {},
+              },
             },
             {
               id: `${parameterId}-output-node`,
               type: 'NodeRenderer',
               position: { x: 300, y: 0 },
-              data: OutputNode, // Add OutputNode
+              data: {
+                definition: OutputNode,
+                inputValues: {},
+              },
             },
           ],
           edges: [],
@@ -159,6 +195,39 @@ const useNodeNetworkStore = create<NodeNetworkStore>((set, get) => ({
       };
     }),
 
+  updateNodeInputValue: (parameterId, nodeId, inputId, value) => {
+    set((state) => {
+      const network = state.networks[parameterId];
+      if (!network) return state;
+
+      const newNodes = network.nodes.map((node) => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              inputValues: {
+                ...node.data.inputValues,
+                [inputId]: value,
+              },
+            },
+          };
+        }
+        return node;
+      });
+
+      return {
+        networks: {
+          ...state.networks,
+          [parameterId]: {
+            ...network,
+            nodes: newNodes,
+          },
+        },
+      };
+    });
+  },
+
   // Compute the output of the network
   computeNetworkOutput: (parameterId: string, inputData: AnimInputData) => {
     const network = get().networks[parameterId];
@@ -177,33 +246,39 @@ const useNodeNetworkStore = create<NodeNetworkStore>((set, get) => ({
       if (nodeOutputs[node.id]) return nodeOutputs[node.id]; // Return cached output if already computed
 
       // Special handling for InputNode: Provide external input data
-      if (node.data.label === 'Input') {
-        nodeOutputs[node.id] = node.data.computeSignal(inputData); // InputNode directly uses input data
+      if (node.data.definition.label === 'Input') {
+        nodeOutputs[node.id] = node.data.definition.computeSignal(inputData); // InputNode directly uses input data
         return nodeOutputs[node.id];
       }
 
       // Construct the inputs object for the node
-      const inputs = node.data.inputs.reduce(
+      const inputs = node.data.definition.inputs.reduce(
         (acc, input) => {
           const edge = edges.find(
             (edge) => edge.target === node.id && edge.targetHandle === input.id,
           );
 
-          if (!edge) {
-            return acc; // No edge found for this input, continue to next input
-          }
-
-          const sourceNode = nodes.find((n) => n.id === edge.source);
-          if (!sourceNode) {
-            return acc; // No source node found for this edge, continue to next input
-          }
-
-          // Recursively compute the source node output
-          const sourceOutput = computeNodeOutput(sourceNode);
-          const sourceHandle = edge.sourceHandle;
-
-          if (sourceHandle && sourceOutput[sourceHandle] !== undefined) {
-            acc[input.id] = sourceOutput[sourceHandle]; // Add the output to the inputs object
+          if (edge) {
+            // Input is connected, compute the source node's output
+            const sourceNode = nodes.find((n) => n.id === edge.source);
+            if (sourceNode) {
+              const sourceOutput = computeNodeOutput(sourceNode);
+              const sourceHandle = edge.sourceHandle;
+              if (sourceHandle && sourceOutput[sourceHandle] !== undefined) {
+                acc[input.id] = sourceOutput[sourceHandle];
+              } else if (
+                !sourceHandle &&
+                typeof sourceOutput === 'object' &&
+                sourceOutput !== null
+              ) {
+                // If there's no handle, but the output is an object,
+                // assume the first property is the output
+                acc[input.id] = Object.values(sourceOutput)[0];
+              }
+            }
+          } else {
+            // Input is not connected, use the stored default value
+            acc[input.id] = node.data.inputValues[input.id];
           }
 
           return acc;
@@ -212,7 +287,7 @@ const useNodeNetworkStore = create<NodeNetworkStore>((set, get) => ({
       ); // Initialize the accumulator as an object
 
       // 3. Compute the node's output using the computeSignal function
-      const output = node.data.computeSignal(inputs);
+      const output = node.data.definition.computeSignal(inputs);
 
       // 4. Cache the output for this node
       nodeOutputs[node.id] = output;
@@ -221,11 +296,14 @@ const useNodeNetworkStore = create<NodeNetworkStore>((set, get) => ({
     };
 
     // 3. Identify the OutputNode and compute the network's final output
-    const outputNode = nodes.find((node) => node.data.label === 'Output');
+    const outputNode = nodes.find(
+      (node) => node.data.definition.label === 'Output',
+    );
     if (!outputNode) throw new Error('Output node not found in network');
 
     const finalOutput = computeNodeOutput(outputNode); // Compute the final output of the network
 
+    // The output node itself just returns its input, so we need to get that specific input value
     return finalOutput;
   },
 }));
@@ -246,12 +324,17 @@ export const useNodeNetwork = (parameterId: string) => {
   const computeNetworkOutput = useNodeNetworkStore(
     (state) => state.computeNetworkOutput,
   );
+  const updateNodeInputValue = useNodeNetworkStore(
+    (state) => state.updateNodeInputValue,
+  );
 
   return {
     ...network,
     setNodes: (nodes: GraphNode[]) => setNodesInNetwork(parameterId, nodes),
     setEdges: (edges: Edge[]) => setEdgesInNetwork(parameterId, edges),
     addNode: (node: GraphNode) => addNodeToNetwork(parameterId, node),
+    updateInputValue: (nodeId: string, inputId: string, value: any) =>
+      updateNodeInputValue(parameterId, nodeId, inputId, value),
     computeOutput: (inputData: AnimInputData) =>
       computeNetworkOutput(parameterId, inputData),
   };

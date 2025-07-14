@@ -2,6 +2,7 @@ type NodeIO = {
   id: string;
   label: string;
   type: string;
+  defaultValue?: any;
 };
 
 type ComputeFunction<IT, OT> = (inputs: IT) => OT;
@@ -61,8 +62,8 @@ export const OutputNode: AnimNode = {
 const MultiplyNode: AnimNode = {
   label: 'Multiply',
   inputs: [
-    { id: 'a', label: 'A', type: 'number' },
-    { id: 'b', label: 'B', type: 'number' },
+    { id: 'a', label: 'A', type: 'number', defaultValue: 1 },
+    { id: 'b', label: 'B', type: 'number', defaultValue: 1 },
   ],
   outputs: [{ id: 'result', label: 'Result', type: 'number' }],
   computeSignal: ({ a, b }: { a: number; b: number }) => {
@@ -74,17 +75,14 @@ const MultiplyNode: AnimNode = {
 };
 
 // Define the SineNode
-const SineNode: AnimNodeG<(inputs: { time: number }) => { sineValue: number }> =
-  {
-    label: 'Sine',
-    inputs: [{ id: 'time', label: 'Time' }],
-    outputs: [{ id: 'sineValue', label: 'Sine Value' }],
-    computeSignal: ({ time }) => {
-      return { sineValue: Math.sin(time) };
-    },
-    // Inputs and Outputs will be automatically inferred
-  };
+const SineNode: AnimNode = {
+  label: 'Sine',
+  inputs: [{ id: 'time', label: 'Time (s)', type: 'number', defaultValue: 0 }],
+  outputs: [{ id: 'value', label: 'Value', type: 'number' }],
+  computeSignal: ({ time }: { time: number }) => {
+    const valTime = typeof time === 'number' ? time : 0;
+    return { value: (Math.sin(valTime * Math.PI) + 1) / 2 };
+  },
+};
 
-console.log('SineNode:', SineNode);
-
-export const nodes = [SineNode, MultiplyNode];
+export const nodes: AnimNode[] = [SineNode, MultiplyNode];
