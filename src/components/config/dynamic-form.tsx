@@ -1,6 +1,6 @@
+import useLayerValuesStore from '@/lib/stores/layer-values-store';
 import { cn } from '@/lib/utils';
 import { AudioLines, Info, Target } from 'lucide-react';
-import { useEffect } from 'react';
 import { UseFormReturn, useForm } from 'react-hook-form';
 import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
 import useNodeNetworkStore from '../node-network/node-network-store';
@@ -18,22 +18,15 @@ import { Toggle } from '../ui/toggle';
 import { ConfigParam, GroupConfigOption, VConfigType } from './config';
 
 interface DynamicFormProps {
+  layerId: string;
   config: VConfigType;
   defaultValues?: any;
 }
 
-const DynamicForm = ({ config, defaultValues }: DynamicFormProps) => {
+const DynamicForm = ({ layerId, config, defaultValues }: DynamicFormProps) => {
   const form = useForm({
-    defaultValues: defaultValues,
+    values: defaultValues,
   });
-
-  // Update form when default values change
-  useEffect(() => {
-    if (defaultValues) {
-      console.log('Resetting form with default values', defaultValues);
-      form.reset(defaultValues);
-    }
-  }, [defaultValues, form]);
 
   return (
     <Form {...form}>
@@ -48,6 +41,7 @@ const DynamicForm = ({ config, defaultValues }: DynamicFormProps) => {
                   {Object.entries(option.options).map(
                     ([innerKey, innerOption]) => (
                       <DynamicFormField
+                        layerId={layerId}
                         key={`${key}.${innerKey}`}
                         name={`${key}.${innerKey}`}
                         form={form}
@@ -60,6 +54,7 @@ const DynamicForm = ({ config, defaultValues }: DynamicFormProps) => {
             ) : (
               <div className="pb-6">
                 <DynamicFormField
+                  layerId={layerId}
                   name={key}
                   form={form}
                   option={option as ConfigParam<any>}
@@ -74,12 +69,18 @@ const DynamicForm = ({ config, defaultValues }: DynamicFormProps) => {
 };
 
 interface DynamicFormFieldProps {
+  layerId: string;
   name: string;
   option: ConfigParam<any>;
   form: UseFormReturn;
 }
 
-const DynamicFormField = ({ name, option, form }: DynamicFormFieldProps) => {
+const DynamicFormField = ({
+  layerId,
+  name,
+  option,
+  form,
+}: DynamicFormFieldProps) => {
   const isAnimated = useNodeNetworkStore(
     (state) => state.networks[option.id]?.isEnabled,
   );
@@ -91,6 +92,9 @@ const DynamicFormField = ({ name, option, form }: DynamicFormFieldProps) => {
   const setOpenNetwork = useNodeNetworkStore((state) => state.setOpenNetwork);
   const setNetworkEnabled = useNodeNetworkStore(
     (state) => state.setNetworkEnabled,
+  );
+  const updateLayerValue = useLayerValuesStore(
+    (state) => state.updateLayerValue,
   );
 
   const isHighlighted = openNetwork === option.id;
@@ -133,7 +137,10 @@ const DynamicFormField = ({ name, option, form }: DynamicFormFieldProps) => {
                   isAnimated && 'pointer-events-none opacity-50',
                 )}>
                 <FormControl>
-                  {option.toFormElement(field.value, field.onChange)}
+                  {option.toFormElement(field.value, (newValue) => {
+                    field.onChange(newValue);
+                    updateLayerValue(layerId, name.split('.'), newValue);
+                  })}
                 </FormControl>
               </div>
               {option.isAnimatable && (

@@ -9,6 +9,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { generateLayerId } from '../id-utils';
 import { getDefaults } from '../schema-utils';
+import useLayerValuesStore from './layer-values-store';
 
 export interface LayerData {
   id: string;
@@ -40,12 +41,16 @@ const useLayerStore = create<LayerStore>()(
   persist(
     (set) => ({
       layers: [],
-      addLayer: (comp) =>
+      addLayer: (comp) => {
+        const newLayerId = generateLayerId(comp.name);
+        useLayerValuesStore
+          .getState()
+          .initLayerValues(newLayerId, comp.defaultValues);
         set((state) => ({
           layers: [
             ...state.layers,
             {
-              id: generateLayerId(comp.name),
+              id: newLayerId,
               comp,
               config: comp.config.clone(),
               isExpanded: true,
@@ -53,11 +58,14 @@ const useLayerStore = create<LayerStore>()(
               layerSettings: getDefaults(layerSettingsSchema) as LayerSettings,
             },
           ],
-        })),
-      removeLayer: (id) =>
+        }));
+      },
+      removeLayer: (id) => {
+        useLayerValuesStore.getState().removeLayerValues(id);
         set((state) => ({
           layers: state.layers.filter((layer) => layer.id !== id),
-        })),
+        }));
+      },
       setIsLayerExpanded: (id, isExpanded) =>
         set((state) => ({
           layers: state.layers.map((layer) =>
@@ -102,12 +110,20 @@ const useLayerStore = create<LayerStore>()(
           const layer = state.layers.find((layer) => layer.id === id);
           if (!layer) return state;
 
+          const newLayerId = generateLayerId(layer.comp.name);
+          const layerValues =
+            useLayerValuesStore.getState().values[layer.id] ??
+            layer.comp.defaultValues;
+          useLayerValuesStore
+            .getState()
+            .initLayerValues(newLayerId, layerValues);
+
           return {
             layers: [
               ...state.layers,
               {
                 ...layer,
-                id: generateLayerId(layer.comp.name),
+                id: newLayerId,
                 config: layer.config.clone(),
                 isExpanded: true,
                 isDebugEnabled: false,
@@ -158,7 +174,10 @@ const useLayerStore = create<LayerStore>()(
       name: 'layer-store',
       partialize: (state) => ({
         ...state,
-        layers: state.layers.map(({ mirrorCanvases, ...rest }) => rest),
+        layers: state.layers.map(({ config, mirrorCanvases, ...rest }) => ({
+          ...rest,
+          comp: { name: rest.comp.name },
+        })),
       }),
       merge: (persistedState, currentState) => {
         const persisted = persistedState as LayerStore;
@@ -171,7 +190,7 @@ const useLayerStore = create<LayerStore>()(
             return {
               ...layer,
               comp,
-              config: comp.config.rehydrate(layer.config),
+              config: comp.config.clone(),
             };
           }),
         };
