@@ -1,3 +1,16 @@
 .react-flow__attribution {
   display: none !important;
 }
+
+.xyflow-node-renderer {
+  @apply rounded-lg border-2 border-zinc-700 bg-zinc-800 text-sm;
+}
+
+.xyflow-node-renderer .xyflow-handle {
+  @apply h-3 w-3 border-2 border-zinc-600 bg-zinc-400;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #9333ea !important; /* purple-400 */
+  stroke-width: 3 !important;
+}

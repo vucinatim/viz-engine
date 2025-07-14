@@ -44,22 +44,18 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
     <ContextMenu>
       <ContextMenuTrigger>
         <ReactFlow
+          fitView
           colorMode="dark"
           nodeTypes={nodeTypes}
           nodes={nodes}
           edges={edges}
-          onNodesChange={(changes) => {
-            const newNodes = applyNodeChanges(changes, nodes);
-            setNodes(newNodes);
-          }}
-          onEdgesChange={(changes) => {
-            const newEdges = applyEdgeChanges(changes, edges);
-            setEdges(newEdges);
-          }}
-          onConnect={(params) => {
-            const newEdges = addEdge(params, edges);
-            setEdges(newEdges);
-          }}
+          onNodesChange={(changes) =>
+            setNodes(applyNodeChanges(changes, nodes))
+          }
+          onEdgesChange={(changes) =>
+            setEdges(applyEdgeChanges(changes, edges))
+          }
+          onConnect={(params) => setEdges(addEdge(params, edges))}
           defaultEdgeOptions={{
             animated: true,
             style: {
