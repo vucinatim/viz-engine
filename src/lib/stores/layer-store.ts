@@ -20,6 +20,7 @@ export interface LayerData {
   id: string;
   comp: Comp;
   config: UnknownConfig;
+  state: unknown;
   isExpanded: boolean;
   isDebugEnabled: boolean;
   layerSettings: LayerSettings;
@@ -51,6 +52,7 @@ const useLayerStore = create<LayerStore>()(
         useLayerValuesStore
           .getState()
           .initLayerValues(newLayerId, comp.defaultValues);
+
         set((state) => ({
           layers: [
             ...state.layers,
@@ -61,6 +63,7 @@ const useLayerStore = create<LayerStore>()(
                 newLayerId,
                 comp.config.clone(),
               ),
+              state: comp.createState ? comp.createState() : undefined,
               isExpanded: true,
               isDebugEnabled: false,
               layerSettings: getDefaults(layerSettingsSchema) as LayerSettings,
@@ -145,9 +148,10 @@ const useLayerStore = create<LayerStore>()(
                   newLayerId,
                   layer.config.clone(),
                 ),
+                state: layer.comp.createState
+                  ? layer.comp.createState()
+                  : undefined,
                 isExpanded: true,
-                isDebugEnabled: false,
-                layerSettings: { ...layer.layerSettings },
               },
             ],
           };

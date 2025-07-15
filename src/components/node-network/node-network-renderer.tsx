@@ -10,7 +10,12 @@ import {
   ReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useCallback, useMemo } from 'react';
+import {
+  MouseEvent as ReactMouseEvent,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
 import '../../lib/css/xyflow.css';
 import {
   ContextMenu,
@@ -24,6 +29,17 @@ import NodesSearch from './nodes-search';
 const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
   // Get nodes, edges, and actions from zustand store
   const { nodes, edges, setEdges, setNodes } = useNodeNetwork(nodeNetworkId);
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const mousePosition = useRef({ x: 0, y: 0 });
+
+  const onPaneContextMenu = (event: ReactMouseEvent) => {
+    if (!reactFlowWrapper.current) return;
+    const bounds = reactFlowWrapper.current.getBoundingClientRect();
+    mousePosition.current = {
+      x: event.clientX - bounds.left,
+      y: event.clientY - bounds.top,
+    };
+  };
 
   const isValidConnection = useCallback(
     (connection: Connection | Edge) => {
@@ -55,40 +71,48 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
   );
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger>
-        <ReactFlow
-          fitView
-          panOnScroll
-          zoomOnPinch
-          selectionOnDrag
-          panOnDrag={false}
-          colorMode="dark"
-          nodeTypes={nodeTypes}
-          nodes={nodes}
-          edges={edges}
-          isValidConnection={isValidConnection}
-          onNodesChange={(changes) =>
-            setNodes(applyNodeChanges(changes, nodes))
-          }
-          onEdgesChange={(changes) =>
-            setEdges(applyEdgeChanges(changes, edges))
-          }
-          onConnect={(params) => setEdges(addEdge(params, edges))}
-          defaultEdgeOptions={{
-            animated: true,
-            style: {
-              stroke: 'white',
-            },
-          }}>
-          <Background />
-          <Controls className="overflow-hidden rounded-md bg-black" />
-          <ContextMenuContent className="w-64">
-            <NodesSearch networkId={nodeNetworkId} />
-          </ContextMenuContent>
-        </ReactFlow>
-      </ContextMenuTrigger>
-    </ContextMenu>
+    <div
+      ref={reactFlowWrapper}
+      className="h-full w-full"
+      onContextMenu={onPaneContextMenu}>
+      <ContextMenu>
+        <ContextMenuTrigger>
+          <ReactFlow
+            fitView
+            panOnScroll
+            zoomOnPinch
+            selectionOnDrag
+            panOnDrag={false}
+            colorMode="dark"
+            nodeTypes={nodeTypes}
+            nodes={nodes}
+            edges={edges}
+            isValidConnection={isValidConnection}
+            onNodesChange={(changes) =>
+              setNodes(applyNodeChanges(changes, nodes))
+            }
+            onEdgesChange={(changes) =>
+              setEdges(applyEdgeChanges(changes, edges))
+            }
+            onConnect={(params) => setEdges(addEdge(params, edges))}
+            defaultEdgeOptions={{
+              animated: true,
+              style: {
+                stroke: 'white',
+              },
+            }}>
+            <Background />
+            <Controls className="overflow-hidden rounded-md bg-black" />
+            <ContextMenuContent className="w-64">
+              <NodesSearch
+                networkId={nodeNetworkId}
+                mousePosition={mousePosition.current}
+              />
+            </ContextMenuContent>
+          </ReactFlow>
+        </ContextMenuTrigger>
+      </ContextMenu>
+    </div>
   );
 };
 

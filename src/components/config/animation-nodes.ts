@@ -1,5 +1,5 @@
 import FrequencyBandSelector from '../node-network/frequency-band-selector';
-import { GraphNodeData } from '../node-network/node-network-store';
+import { GraphNode, GraphNodeData } from '../node-network/node-network-store';
 
 type NodeIO = {
   id: string;
@@ -8,11 +8,10 @@ type NodeIO = {
   defaultValue?: any;
 };
 
-type ComputeFunction<IT, OT> = (inputs: IT) => OT;
+type ComputeFunction<T, K> = (inputs: T, node?: GraphNode) => K;
 
-type InferInputs<T extends ComputeFunction<any, any>> = {
-  [K in keyof Parameters<T>[0]]: { id: K; label: string };
-}[keyof Parameters<T>[0]];
+type InferInputs<T extends ComputeFunction<any, any>> =
+  T extends ComputeFunction<infer IT, any> ? IT : never;
 
 type InferOutputs<T extends ComputeFunction<any, any>> = {
   [K in keyof ReturnType<T>]: { id: K; label: string };
@@ -68,7 +67,7 @@ export const createOutputNode = (type: string): AnimNode => ({
   label: 'Output',
   inputs: [{ id: 'output', label: 'Output Value', type }],
   outputs: [],
-  computeSignal: ({ output }: { output: any }) => {
+  computeSignal: ({ output }) => {
     return output;
   },
 });
@@ -98,6 +97,67 @@ const SubtractNode: AnimNode = {
   outputs: [{ id: 'result', label: 'Result', type: 'number' }],
   computeSignal: ({ a, b }: { a: number; b: number }) => {
     return { result: a - b };
+  },
+};
+
+const AddNode: AnimNode = {
+  label: 'Add',
+  inputs: [
+    { id: 'a', label: 'A', type: 'number', defaultValue: 0 },
+    { id: 'b', label: 'B', type: 'number', defaultValue: 0 },
+  ],
+  outputs: [{ id: 'result', label: 'Result', type: 'number' }],
+  computeSignal: ({ a, b }: { a: number; b: number }) => {
+    return { result: a + b };
+  },
+};
+
+export const SpikeNode: AnimNode = {
+  label: 'Spike',
+  inputs: [
+    { id: 'value', type: 'number', label: 'Value', defaultValue: 0 },
+    { id: 'threshold', type: 'number', label: 'Threshold', defaultValue: 50 },
+    { id: 'attack', type: 'number', label: 'Attack (ms)', defaultValue: 10 },
+    { id: 'release', type: 'number', label: 'Release (ms)', defaultValue: 250 },
+  ],
+  outputs: [{ id: 'result', type: 'number', label: 'Result' }],
+  computeSignal: ({ value, threshold, attack, release }, node) => {
+    if (!node) return { result: 0 };
+
+    const state = node.data.state;
+
+    // Initialize state if it's not already there
+    if (state.peak === undefined) state.peak = 0;
+    if (state.timeSincePeak === undefined) state.timeSincePeak = Infinity;
+
+    const msPerFrame = 1000 / 60; // Assuming 60 FPS
+    state.timeSincePeak += msPerFrame;
+
+    const isIdle = state.timeSincePeak >= attack + release;
+
+    // 1. Trigger a new spike if idle and threshold is met
+    if (isIdle && value > threshold) {
+      state.timeSincePeak = 0;
+      state.peak = value;
+    }
+
+    let result = 0;
+    // 2. Calculate output based on the phase (attack, release, or idle)
+    if (state.timeSincePeak < attack) {
+      // Attack phase: continue seeking a new peak
+      state.peak = Math.max(state.peak, value);
+      result = (state.timeSincePeak / attack) * state.peak;
+    } else if (state.timeSincePeak < attack + release) {
+      // Release phase: peak is locked, just decay
+      const timeInRelease = state.timeSincePeak - attack;
+      result = (1 - timeInRelease / release) * state.peak;
+    } else {
+      // Idle phase
+      result = 0;
+      state.peak = 0; // Reset peak for the next event
+    }
+
+    return { result: Math.max(0, result) };
   },
 };
 
@@ -220,9 +280,11 @@ export const nodes: AnimNode[] = [
   SineNode,
   MultiplyNode,
   SubtractNode,
+  AddNode,
   AverageVolumeNode,
   NormalizeNode,
   FrequencyBandNode,
+  SpikeNode,
 ];
 
 export const NodeDefinitionMap = new Map<string, AnimNode>();

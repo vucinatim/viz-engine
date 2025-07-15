@@ -54,7 +54,7 @@ export interface Comp {
   config: UnknownConfig;
   defaultValues: UnknownConfigValues;
   presets?: Preset<UnknownConfigValues>[];
-  state?: unknown;
+  createState?: () => unknown;
   draw?: DrawFunction<UnknownConfigValues, unknown>;
   init3D?: Init3DFunction<UnknownConfigValues, unknown>;
   draw3D?: Draw3DFunction<UnknownConfigValues, unknown>;
@@ -66,7 +66,7 @@ export function createComponent<TConfig extends VConfig<any>, UT>(definition: {
   description: string;
   config: TConfig; // VConfig with options
   presets?: Preset<InferValues<TConfig>>[]; // Optional array of presets
-  state?: UT; // Optional state
+  createState?: () => UT; // Optional state factory
   draw?: DrawFunction<InferValues<TConfig>, UT>; // Draw function using inferred config values
   init3D?: Init3DFunction<InferValues<TConfig>, UT>; // Optional init3D function
   draw3D?: Draw3DFunction<InferValues<TConfig>, UT>; // Optional draw3D function

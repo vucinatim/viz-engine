@@ -60,14 +60,14 @@ const MovingObjects = createComponent({
       step: 0.1,
     }),
   }),
-  state: {
+  createState: () => ({
     cubes: [] as MovingCube[],
     lastSpawnTime: 0,
     spawnPlane: null as THREE.Mesh | null,
     spawnHole: null as THREE.Mesh | null,
     spawningAreaSize: 50,
     currentSpeed: 0,
-  },
+  }),
   init3D: ({ threeCtx: { scene, camera }, state, config, debugEnabled }) => {
     if (state.cubes.length > 0) {
       state.cubes.forEach((cube) => {

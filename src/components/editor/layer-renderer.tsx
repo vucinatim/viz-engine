@@ -101,7 +101,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     const time = wavesurfer?.getCurrentTime() || 0;
 
     layer.comp.init3D?.({
-      state: layer.comp.state,
+      state: layer.state,
       threeCtx: {
         renderer,
         scene,
@@ -128,6 +128,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     layer.config,
     layer.id,
     layer.isDebugEnabled,
+    layer.state,
     wavesurfer,
   ]);
 
@@ -150,7 +151,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
             scene: sceneRef.current,
             camera: cameraRef.current,
           },
-          state: layer.comp.state,
+          state: layer.state,
           debugEnabled: layer.isDebugEnabled,
           ...data,
         });
@@ -163,7 +164,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       renderFunction = (data) => {
         layer.comp.draw?.({
           canvasCtx: ctx,
-          state: layer.comp.state,
+          state: layer.state,
           debugEnabled: layer.isDebugEnabled,
           ...data,
         });
@@ -209,23 +210,14 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
 
     renderFrame();
 
+    console.log('Rendering frame USE EFFECT');
     return () => {
       // Cleanup renderer and other three.js resources when component unmounts or before reinitializing
       if (rendererRef.current) {
         rendererRef.current.dispose();
       }
     };
-  }, [
-    audioAnalyzer,
-    getNextAudioFrame,
-    layer.comp,
-    layer.config,
-    layer.isDebugEnabled,
-    layer.mirrorCanvases,
-    setup3D,
-    wavesurfer,
-    withDebug,
-  ]);
+  }, [audioAnalyzer, getNextAudioFrame, layer, setup3D, wavesurfer, withDebug]);
 
   return (
     <div ref={canvasContainerRef} className="absolute inset-0">

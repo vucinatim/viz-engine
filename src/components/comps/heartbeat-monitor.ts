@@ -25,9 +25,9 @@ const HeartbeatMonitor = createComponent({
       step: 1,
     }),
   }),
-  state: {
+  createState: () => ({
     history: [] as number[],
-  },
+  }),
   draw: ({ canvasCtx: ctx, config, state }) => {
     const { width, height } = ctx.canvas;
     const { yPosition, lineColor, lineWidth } = config;

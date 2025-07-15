@@ -12,9 +12,10 @@ import { useNodeNetwork } from './node-network-store';
 
 interface NodeSearchProps {
   networkId: string;
+  mousePosition: { x: number; y: number };
 }
 
-const NodesSearch = ({ networkId }: NodeSearchProps) => {
+const NodesSearch = ({ networkId, mousePosition }: NodeSearchProps) => {
   const { addNode } = useNodeNetwork(networkId);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -49,10 +50,11 @@ const NodesSearch = ({ networkId }: NodeSearchProps) => {
                 addNode({
                   id: nodeId,
                   type: 'NodeRenderer',
-                  position: { x: 0, y: 0 },
+                  position: mousePosition,
                   data: {
                     definition: node,
                     inputValues: initialInputValues,
+                    state: {},
                   },
                 });
               }}>

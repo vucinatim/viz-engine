@@ -43,6 +43,7 @@ type NodeNetwork = {
 export type GraphNodeData = {
   definition: AnimNode;
   inputValues: { [inputId: string]: any };
+  state: { [key: string]: any };
 };
 
 export type GraphNode = Node<GraphNodeData>;
@@ -126,6 +127,7 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
                   data: {
                     definition: InputNode,
                     inputValues: {},
+                    state: {},
                   },
                 },
                 {
@@ -135,6 +137,7 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
                   data: {
                     definition: createOutputNode(type),
                     inputValues: {},
+                    state: {},
                   },
                 },
               ],
@@ -316,6 +319,11 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
                 resolvedValue = node.data.inputValues[input.id];
               }
 
+              if (typeof resolvedValue === 'string') {
+                const parsed = parseFloat(resolvedValue);
+                acc[input.id] = isNaN(parsed) ? 0 : parsed;
+              }
+
               if (resolvedValue !== undefined) {
                 setNodeInputValue(node.id, input.id, resolvedValue);
               }
@@ -325,7 +333,7 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
           ); // Initialize the accumulator as an object
 
           // 3. Compute the node's output using the computeSignal function
-          const output = node.data.definition.computeSignal(inputs);
+          const output = node.data.definition.computeSignal(inputs, node);
 
           // 4. Cache the output for this node
           nodeOutputs[node.id] = output;

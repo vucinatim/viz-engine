@@ -39,16 +39,10 @@ const NodeRenderer = ({
       case 'number':
         return (
           <Input
-            type="number"
+            type="text"
             className="nodrag nopan h-6 w-16 bg-zinc-800 text-xs"
             value={inputValues[input.id] ?? ''}
-            onChange={(e) =>
-              updateInputValue(
-                nodeId,
-                input.id,
-                parseFloat(e.target.value) || 0,
-              )
-            }
+            onChange={(e) => updateInputValue(nodeId, input.id, e.target.value)}
           />
         );
       default:
