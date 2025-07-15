@@ -89,6 +89,18 @@ const MultiplyNode: AnimNode = {
   },
 };
 
+const SubtractNode: AnimNode = {
+  label: 'Subtract',
+  inputs: [
+    { id: 'a', label: 'A', type: 'number' },
+    { id: 'b', label: 'B', type: 'number' },
+  ],
+  outputs: [{ id: 'result', label: 'Result', type: 'number' }],
+  computeSignal: ({ a, b }: { a: number; b: number }) => {
+    return { result: a - b };
+  },
+};
+
 // Define the SineNode
 const SineNode: AnimNode = {
   label: 'Sine',
@@ -207,6 +219,7 @@ const FrequencyBandNode: AnimNode = {
 export const nodes: AnimNode[] = [
   SineNode,
   MultiplyNode,
+  SubtractNode,
   AverageVolumeNode,
   NormalizeNode,
   FrequencyBandNode,

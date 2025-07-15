@@ -106,6 +106,7 @@ const RemotionPlayer = () => {
         durationInFrames={durationInFrames}
         fps={FPS}
         clickToPlay={false}
+        loop
         showPlaybackRateControl
         showVolumeControls={false}
         allowFullscreen
