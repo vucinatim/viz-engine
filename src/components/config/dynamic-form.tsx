@@ -160,7 +160,7 @@ const DynamicFormField = ({
                     }
 
                     // Otherwise, just toggle the animation on/off
-                    setNetworkEnabled(option.id, newValue);
+                    setNetworkEnabled(option.id, newValue, option.type);
                   }}>
                   {isAnimated ? <AudioLines /> : <Target />}
                 </Toggle>

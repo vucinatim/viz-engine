@@ -1,6 +1,7 @@
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { Handle, Position } from '@xyflow/react';
+import LiveValue from './live-value';
 import { GraphNodeData, useNodeNetwork } from './node-network-store';
 
 // Manually defining props instead of relying on NodeProps to avoid TS issues
@@ -18,7 +19,7 @@ const NodeRenderer = ({
   nodeNetworkId,
 }: NodeRendererProps) => {
   const { definition, inputValues } = data;
-  const { label, inputs, outputs } = definition;
+  const { label, inputs, outputs, customBody: CustomBody } = definition;
 
   const { edges, updateInputValue } = useNodeNetwork(nodeNetworkId);
 
@@ -26,7 +27,12 @@ const NodeRenderer = ({
     const isConnected = edges.some(
       (edge) => edge.target === nodeId && edge.targetHandle === input.id,
     );
-    if (isConnected) return null;
+    if (isConnected)
+      return (
+        <div className="flex h-6 w-16 items-center justify-center rounded-md bg-zinc-800 text-xs">
+          <LiveValue nodeId={nodeId} inputId={input.id} type={input.type} />
+        </div>
+      );
 
     // TODO: Handle other types
     switch (input.type) {
@@ -97,6 +103,16 @@ const NodeRenderer = ({
             ))}
           </div>
         </div>
+        {CustomBody && (
+          <div className="p-2">
+            <CustomBody
+              id={nodeId}
+              data={data}
+              selected={selected}
+              nodeNetworkId={nodeNetworkId}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

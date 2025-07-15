@@ -1,3 +1,6 @@
+import FrequencyBandSelector from '../node-network/frequency-band-selector';
+import { GraphNodeData } from '../node-network/node-network-store';
+
 type NodeIO = {
   id: string;
   label: string;
@@ -28,6 +31,12 @@ export type AnimNode = {
   inputs: NodeIO[];
   outputs: NodeIO[];
   computeSignal: ComputeFunction<any, any>;
+  customBody?: React.ComponentType<{
+    id: string;
+    data: GraphNodeData;
+    selected: boolean;
+    nodeNetworkId: string;
+  }>;
 };
 
 // Special handling for InputNode: Provide external input data
@@ -55,14 +64,14 @@ export const InputNode: AnimNode = {
 };
 
 // Special handling for OutputNode: Return the output value
-export const OutputNode: AnimNode = {
+export const createOutputNode = (type: string): AnimNode => ({
   label: 'Output',
-  inputs: [{ id: 'output', label: 'Output Value', type: 'any' }],
+  inputs: [{ id: 'output', label: 'Output Value', type }],
   outputs: [],
   computeSignal: ({ output }: { output: any }) => {
     return output;
   },
-};
+});
 
 // Define a MultiplyNode
 const MultiplyNode: AnimNode = {
@@ -142,21 +151,22 @@ const NormalizeNode: AnimNode = {
 
 const FrequencyBandNode: AnimNode = {
   label: 'Frequency Band',
+  customBody: FrequencyBandSelector,
   inputs: [
     { id: 'frequencyData', label: 'Frequency Data', type: 'Uint8Array' },
     { id: 'sampleRate', label: 'Sample Rate', type: 'number' },
     { id: 'fftSize', label: 'FFT Size', type: 'number' },
     {
-      id: 'targetFrequency',
-      label: 'Target Frequency (Hz)',
+      id: 'startFrequency',
+      label: 'Start Frequency (Hz)',
       type: 'number',
-      defaultValue: 100,
+      defaultValue: 0,
     },
     {
-      id: 'bandwidth',
-      label: 'Bandwidth (Hz)',
+      id: 'endFrequency',
+      label: 'End Frequency (Hz)',
       type: 'number',
-      defaultValue: 50,
+      defaultValue: 200,
     },
   ],
   outputs: [{ id: 'bandData', label: 'Band Data', type: 'Uint8Array' }],
@@ -164,8 +174,8 @@ const FrequencyBandNode: AnimNode = {
     frequencyData,
     sampleRate,
     fftSize,
-    targetFrequency = 100,
-    bandwidth = 50,
+    startFrequency = 0,
+    endFrequency = 200,
   }) => {
     if (
       !frequencyData ||
@@ -179,13 +189,10 @@ const FrequencyBandNode: AnimNode = {
     const nyquist = sampleRate / 2;
     const frequencyPerBin = nyquist / (fftSize / 2);
 
-    const startFreq = Math.max(0, targetFrequency - bandwidth / 2);
-    const endFreq = Math.min(nyquist, targetFrequency + bandwidth / 2);
-
-    const startBin = Math.floor(startFreq / frequencyPerBin);
+    const startBin = Math.floor(startFrequency / frequencyPerBin);
     const endBin = Math.min(
       frequencyData.length - 1,
-      Math.ceil(endFreq / frequencyPerBin),
+      Math.ceil(endFrequency / frequencyPerBin),
     );
 
     if (startBin > endBin) {
@@ -208,4 +215,3 @@ export const nodes: AnimNode[] = [
 export const NodeDefinitionMap = new Map<string, AnimNode>();
 nodes.forEach((node) => NodeDefinitionMap.set(node.label, node));
 NodeDefinitionMap.set(InputNode.label, InputNode);
-NodeDefinitionMap.set(OutputNode.label, OutputNode);

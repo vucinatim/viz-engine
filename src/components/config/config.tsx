@@ -49,14 +49,17 @@ export abstract class BaseConfigOption<T> {
 export abstract class ConfigParam<T> extends BaseConfigOption<T> {
   isAnimatable: boolean;
   value: T; // All config params have a value
+  type: VType;
 
   constructor(
     options: ConfigMeta & { defaultValue: T },
+    type: VType,
     isAnimatable: boolean = true,
   ) {
     super(options);
     this.isAnimatable = isAnimatable;
     this.value = options.defaultValue;
+    this.type = type;
   }
 
   getValue(inputData: AnimInputData): T {
@@ -99,7 +102,7 @@ export class NumberConfigOption extends ConfigParam<number> {
   options: NumberConfigOptions;
 
   constructor(options: NumberConfigOptions) {
-    super(options);
+    super(options, VType.Number);
     this.options = options;
   }
 
@@ -137,7 +140,7 @@ export class ColorConfigOption extends ConfigParam<string> {
   options: ColorConfigOptions;
 
   constructor(options: ColorConfigOptions) {
-    super(options);
+    super(options, VType.Color);
     this.options = options;
   }
 
@@ -172,7 +175,7 @@ export class StringConfigOption extends ConfigParam<string> {
   options: StringConfigOptions;
 
   constructor(options: StringConfigOptions) {
-    super(options);
+    super(options, VType.String);
     this.options = options;
   }
 
@@ -206,7 +209,7 @@ export class BooleanConfigOption extends ConfigParam<boolean> {
   options: BooleanConfigOptions;
 
   constructor(options: BooleanConfigOptions) {
-    super(options);
+    super(options, VType.Boolean);
     this.options = options;
   }
 
@@ -237,7 +240,7 @@ export class SelectConfigOption extends ConfigParam<string> {
   options: SelectConfigOptions;
 
   constructor(options: SelectConfigOptions) {
-    super(options);
+    super(options, VType.Select);
     this.options = options;
   }
 

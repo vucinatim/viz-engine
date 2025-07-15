@@ -1,3 +1,5 @@
+import { useNodeLiveValuesStore } from '@/lib/stores/node-live-values-store';
+import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
 import { Edge, Node } from '@xyflow/react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
@@ -6,7 +8,7 @@ import {
   AnimNode,
   InputNode,
   NodeDefinitionMap,
-  OutputNode,
+  createOutputNode,
 } from '../config/animation-nodes';
 
 // A simple throttle utility per key
@@ -51,11 +53,15 @@ interface NodeNetworkStore {
   setOpenNetwork: (parameterId: string | null) => void;
   networks: { [parameterId: string]: NodeNetwork }; // Each parameter has its own network
   setNetwork: (parameterId: string, network: NodeNetwork) => void;
-  setNetworkEnabled: (parameterId: string, isEnabled: boolean) => void;
+  setNetworkEnabled: (
+    parameterId: string,
+    isEnabled: boolean,
+    type: string,
+  ) => void;
   addNodeToNetwork: (parameterId: string, node: GraphNode) => void;
   setNodesInNetwork: (parameterId: string, nodes: GraphNode[]) => void;
   setEdgesInNetwork: (parameterId: string, edges: Edge[]) => void;
-  createNetworkForParameter: (parameterId: string) => void; // Initialize a new network for a parameter
+  createNetworkForParameter: (parameterId: string, type: string) => void; // Initialize a new network for a parameter
   removeNetworkForParameter: (parameterId: string) => void; // Remove network if parameter is not animated anymore
   updateNodeInputValue: (
     parameterId: string,
@@ -66,7 +72,7 @@ interface NodeNetworkStore {
   computeNetworkOutput: (parameterId: string, inputData: AnimInputData) => any; // Compute the output of the network
 }
 
-const useNodeNetworkStore = create<NodeNetworkStore>()(
+export const useNodeNetworkStore = create<NodeNetworkStore>()(
   persist(
     (set, get) => ({
       networks: {}, // Store networks by parameterId
@@ -77,9 +83,13 @@ const useNodeNetworkStore = create<NodeNetworkStore>()(
         set({ openNetwork: parameterId }),
 
       // Enable/disable a network
-      setNetworkEnabled: (parameterId: string, isEnabled: boolean) => {
+      setNetworkEnabled: (
+        parameterId: string,
+        isEnabled: boolean,
+        type: string,
+      ) => {
         if (!get().networks[parameterId]) {
-          get().createNetworkForParameter(parameterId);
+          get().createNetworkForParameter(parameterId, type);
         } else {
           set((state) => ({
             networks: {
@@ -101,7 +111,7 @@ const useNodeNetworkStore = create<NodeNetworkStore>()(
       },
 
       // Create an empty network for a parameter
-      createNetworkForParameter: (parameterId: string) => {
+      createNetworkForParameter: (parameterId: string, type: string) => {
         set((state) => ({
           networks: {
             ...state.networks,
@@ -123,7 +133,7 @@ const useNodeNetworkStore = create<NodeNetworkStore>()(
                   type: 'NodeRenderer',
                   position: { x: 300, y: 0 },
                   data: {
-                    definition: OutputNode,
+                    definition: createOutputNode(type),
                     inputValues: {},
                   },
                 },
@@ -241,6 +251,10 @@ const useNodeNetworkStore = create<NodeNetworkStore>()(
 
         const nodes = network.nodes;
         const edges = network.edges;
+        const { setNodeOutput, setGlobalAnimData } =
+          useNodeOutputCache.getState();
+        setGlobalAnimData(inputData);
+        const { setNodeInputValue } = useNodeLiveValuesStore.getState();
 
         // 1. Initialize a map to store node outputs
         const nodeOutputs: { [nodeId: string]: any } = {};
@@ -248,6 +262,14 @@ const useNodeNetworkStore = create<NodeNetworkStore>()(
         // 2. Create a function to traverse and compute node output
         const computeNodeOutput = (node: GraphNode): any => {
           if (nodeOutputs[node.id]) return nodeOutputs[node.id]; // Return cached output if already computed
+
+          // For the global input node, the output is the raw inputData
+          if (node.data.definition.label === 'Input') {
+            const output = inputData;
+            nodeOutputs[node.id] = output;
+            setNodeOutput(node.id, output);
+            return output;
+          }
 
           // Special handling for InputNode: Provide external input data
           if (node.data.definition.label === 'Input') {
@@ -264,6 +286,7 @@ const useNodeNetworkStore = create<NodeNetworkStore>()(
                   edge.target === node.id && edge.targetHandle === input.id,
               );
 
+              let resolvedValue;
               if (edge) {
                 // Input is connected, compute the source node's output
                 const sourceNode = nodes.find((n) => n.id === edge.source);
@@ -275,6 +298,7 @@ const useNodeNetworkStore = create<NodeNetworkStore>()(
                     sourceOutput[sourceHandle] !== undefined
                   ) {
                     acc[input.id] = sourceOutput[sourceHandle];
+                    resolvedValue = sourceOutput[sourceHandle];
                   } else if (
                     !sourceHandle &&
                     typeof sourceOutput === 'object' &&
@@ -283,13 +307,18 @@ const useNodeNetworkStore = create<NodeNetworkStore>()(
                     // If there's no handle, but the output is an object,
                     // assume the first property is the output
                     acc[input.id] = Object.values(sourceOutput)[0];
+                    resolvedValue = Object.values(sourceOutput)[0];
                   }
                 }
               } else {
                 // Input is not connected, use the stored default value
                 acc[input.id] = node.data.inputValues[input.id];
+                resolvedValue = node.data.inputValues[input.id];
               }
 
+              if (resolvedValue !== undefined) {
+                setNodeInputValue(node.id, input.id, resolvedValue);
+              }
               return acc;
             },
             {} as { [key: string]: any },
@@ -300,7 +329,7 @@ const useNodeNetworkStore = create<NodeNetworkStore>()(
 
           // 4. Cache the output for this node
           nodeOutputs[node.id] = output;
-
+          setNodeOutput(node.id, output); // Also update the cache
           return output;
         };
 
@@ -325,13 +354,26 @@ const useNodeNetworkStore = create<NodeNetworkStore>()(
             id,
             {
               ...network,
-              nodes: network.nodes.map((node) => ({
-                ...node,
-                data: {
-                  ...node.data,
-                  definition: node.data.definition.label,
-                },
-              })),
+              nodes: network.nodes.map((node) => {
+                const def = node.data.definition;
+                if (def.label === 'Output') {
+                  const type = def.inputs[0].type;
+                  return {
+                    ...node,
+                    data: {
+                      ...node.data,
+                      definition: { label: 'Output', type },
+                    },
+                  };
+                }
+                return {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    definition: def.label,
+                  },
+                };
+              }),
             },
           ]),
         ),
@@ -346,15 +388,27 @@ const useNodeNetworkStore = create<NodeNetworkStore>()(
               id,
               {
                 ...network,
-                nodes: network.nodes.map((node) => ({
-                  ...node,
-                  data: {
-                    ...node.data,
-                    definition: NodeDefinitionMap.get(
-                      node.data.definition as unknown as string,
-                    )!,
-                  },
-                })),
+                nodes: network.nodes.map((node) => {
+                  const def = node.data.definition as unknown as
+                    | string
+                    | { label: string; type: string };
+                  if (typeof def === 'object' && def.label === 'Output') {
+                    return {
+                      ...node,
+                      data: {
+                        ...node.data,
+                        definition: createOutputNode(def.type),
+                      },
+                    };
+                  }
+                  return {
+                    ...node,
+                    data: {
+                      ...node.data,
+                      definition: NodeDefinitionMap.get(def as string)!,
+                    },
+                  };
+                }),
               },
             ]),
           ),
