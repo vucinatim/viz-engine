@@ -1,6 +1,6 @@
 import { mirrorToCanvases } from '@/lib/comp-utils/mirror-to-canvases';
+import useAudioFrameData from '@/lib/hooks/use-audio-frame-data';
 import useDebug from '@/lib/hooks/use-debug';
-import useFrozenAudioData from '@/lib/hooks/use-frozen-audio-data';
 import useOnResize from '@/lib/hooks/use-on-resize';
 import useAudioStore from '@/lib/stores/audio-store';
 import { LayerData } from '@/lib/stores/layer-store';
@@ -62,7 +62,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   const withDebug = useDebug(debugCanvasRef);
 
   // Get the function to get the next data array
-  const getNextDataArray = useFrozenAudioData({
+  const getNextAudioFrame = useAudioFrameData({
     isFrozen: layer.layerSettings.freeze,
     analyzer: audioAnalyzer,
     wavesurfer: wavesurfer,
@@ -107,7 +107,13 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
         scene,
         camera,
       },
-      config: layer.config.getValues({ audioSignal: new Uint8Array(), time }),
+      config: layer.config.getValues({
+        audioSignal: new Uint8Array(),
+        frequencyData: new Uint8Array(),
+        time,
+        sampleRate: audioAnalyzer?.context.sampleRate || 44100,
+        fftSize: audioAnalyzer?.fftSize || 2048,
+      }),
       debugEnabled: layer.isDebugEnabled,
     });
 
@@ -115,7 +121,15 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     cameraRef.current = camera;
     sceneRef.current = scene;
     rendererRef.current = renderer;
-  }, [layer.comp, layer.config, layer.id, layer.isDebugEnabled, wavesurfer]);
+  }, [
+    audioAnalyzer?.context.sampleRate,
+    audioAnalyzer?.fftSize,
+    layer.comp,
+    layer.config,
+    layer.id,
+    layer.isDebugEnabled,
+    wavesurfer,
+  ]);
 
   useEffect(() => {
     if (!audioAnalyzer || !layerCanvasRef.current) return;
@@ -161,25 +175,29 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       const dt = (now - lastFrameTimeRef.current) / 1000.0; // time in seconds
       lastFrameTimeRef.current = now; // update last frame time
 
-      const dataArray = getNextDataArray();
+      const { frequencyData, timeDomainData, sampleRate, fftSize } =
+        getNextAudioFrame();
+      const time = wavesurfer?.getCurrentTime() || 0;
+
+      const animInputData = {
+        audioSignal: timeDomainData,
+        frequencyData,
+        time,
+        sampleRate,
+        fftSize,
+      };
 
       withDebug(
         () =>
           renderFunction({
             dt,
-            audioData: { dataArray, analyzer: audioAnalyzer },
-            config: layer.config.getValues({
-              audioSignal: dataArray,
-              time: wavesurfer?.getCurrentTime() || 0,
-            }),
+            audioData: { dataArray: timeDomainData, analyzer: audioAnalyzer },
+            config: layer.config.getValues(animInputData),
           }),
         {
-          dataArray: dataArray,
+          dataArray: timeDomainData,
           wavesurfer: wavesurfer,
-          config: layer.config.getValues({
-            audioSignal: dataArray,
-            time: wavesurfer?.getCurrentTime() || 0,
-          }),
+          config: layer.config.getValues(animInputData),
         },
       );
 
@@ -199,7 +217,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     };
   }, [
     audioAnalyzer,
-    getNextDataArray,
+    getNextAudioFrame,
     layer.comp,
     layer.config,
     layer.isDebugEnabled,

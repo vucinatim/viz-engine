@@ -39,7 +39,7 @@ const AnimationBuilder = () => {
           <div
             className={cn(
               'h-full w-full opacity-0 transition-opacity',
-              isHovering && (isPlaying ? 'opacity-70' : 'opacity-100'),
+              isHovering && (isPlaying ? 'opacity-80' : 'opacity-100'),
             )}>
             <NodeNetworkRenderer nodeNetworkId={nodeNetworkId} />
           </div>

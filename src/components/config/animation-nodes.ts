@@ -32,8 +32,11 @@ export type AnimNode = {
 
 // Special handling for InputNode: Provide external input data
 export type AnimInputData = {
-  audioSignal: Uint8Array<ArrayBufferLike>;
+  audioSignal: Uint8Array;
+  frequencyData: Uint8Array;
   time: number;
+  sampleRate: number;
+  fftSize: number;
 };
 
 export const InputNode: AnimNode = {
@@ -41,7 +44,10 @@ export const InputNode: AnimNode = {
   inputs: [],
   outputs: [
     { id: 'audioSignal', label: 'Audio Signal', type: 'Uint8Array' },
+    { id: 'frequencyData', label: 'Frequency Data', type: 'Uint8Array' },
     { id: 'time', label: 'Time', type: 'number' },
+    { id: 'sampleRate', label: 'Sample Rate', type: 'number' },
+    { id: 'fftSize', label: 'FFT Size', type: 'number' },
   ],
   computeSignal: (inputData: AnimInputData) => {
     return inputData;
@@ -89,18 +95,18 @@ const AverageVolumeNode: AnimNode = {
   label: 'Average Volume',
   inputs: [
     {
-      id: 'audioSignal',
-      label: 'Audio Signal',
+      id: 'data',
+      label: 'Data',
       type: 'Uint8Array',
     },
   ],
   outputs: [{ id: 'average', label: 'Average', type: 'number' }],
-  computeSignal: ({ audioSignal }: { audioSignal: Uint8Array }) => {
-    if (!audioSignal || audioSignal.length === 0) {
+  computeSignal: ({ data }: { data: Uint8Array }) => {
+    if (!data || data.length === 0) {
       return { average: 0 };
     }
-    const sum = audioSignal.reduce((a, b) => a + b, 0);
-    const average = sum / audioSignal.length;
+    const sum = data.reduce((a, b) => a + b, 0);
+    const average = sum / data.length;
     return { average };
   },
 };
@@ -134,11 +140,69 @@ const NormalizeNode: AnimNode = {
   },
 };
 
+const FrequencyBandNode: AnimNode = {
+  label: 'Frequency Band',
+  inputs: [
+    { id: 'frequencyData', label: 'Frequency Data', type: 'Uint8Array' },
+    { id: 'sampleRate', label: 'Sample Rate', type: 'number' },
+    { id: 'fftSize', label: 'FFT Size', type: 'number' },
+    {
+      id: 'targetFrequency',
+      label: 'Target Frequency (Hz)',
+      type: 'number',
+      defaultValue: 100,
+    },
+    {
+      id: 'bandwidth',
+      label: 'Bandwidth (Hz)',
+      type: 'number',
+      defaultValue: 50,
+    },
+  ],
+  outputs: [{ id: 'bandData', label: 'Band Data', type: 'Uint8Array' }],
+  computeSignal: ({
+    frequencyData,
+    sampleRate,
+    fftSize,
+    targetFrequency = 100,
+    bandwidth = 50,
+  }) => {
+    if (
+      !frequencyData ||
+      frequencyData.length === 0 ||
+      !sampleRate ||
+      !fftSize
+    ) {
+      return { bandData: new Uint8Array() };
+    }
+
+    const nyquist = sampleRate / 2;
+    const frequencyPerBin = nyquist / (fftSize / 2);
+
+    const startFreq = Math.max(0, targetFrequency - bandwidth / 2);
+    const endFreq = Math.min(nyquist, targetFrequency + bandwidth / 2);
+
+    const startBin = Math.floor(startFreq / frequencyPerBin);
+    const endBin = Math.min(
+      frequencyData.length - 1,
+      Math.ceil(endFreq / frequencyPerBin),
+    );
+
+    if (startBin > endBin) {
+      return { bandData: new Uint8Array() };
+    }
+
+    const bandData = frequencyData.slice(startBin, endBin + 1);
+    return { bandData };
+  },
+};
+
 export const nodes: AnimNode[] = [
   SineNode,
   MultiplyNode,
   AverageVolumeNode,
   NormalizeNode,
+  FrequencyBandNode,
 ];
 
 export const NodeDefinitionMap = new Map<string, AnimNode>();
