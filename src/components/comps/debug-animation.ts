@@ -13,10 +13,23 @@ const DebugAnimation = createComponent({
       max: 100,
       step: 1,
     }),
+    midi: v.number({
+      label: 'MIDI',
+      description: 'MIDI note number to display.',
+      defaultValue: 60,
+      min: 0,
+      max: 127,
+      step: 1,
+    }),
+    text: v.text({
+      label: 'Text',
+      description: 'Text to display (e.g. note name)',
+      defaultValue: '',
+    }),
   }),
   draw: ({ canvasCtx: ctx, config }) => {
     const { width, height } = ctx.canvas;
-    const { value } = config;
+    const { value, midi, text } = config;
 
     // Clear canvas with a dark background
     ctx.clearRect(0, 0, width, height);
@@ -31,7 +44,19 @@ const DebugAnimation = createComponent({
 
     const textValue =
       typeof value === 'number' ? value.toFixed(2) : String(value);
-    ctx.fillText(`Value: ${textValue}`, width / 2, height / 2 - 40);
+    ctx.fillText(`Value: ${textValue}`, width / 2, height / 2 - 60);
+
+    // Draw MIDI value
+    ctx.font = '24px sans-serif';
+    ctx.fillText(
+      `MIDI: ${typeof midi === 'number' ? midi : ''}`,
+      width / 2,
+      height / 2 - 20,
+    );
+
+    // Draw custom text
+    ctx.font = '24px sans-serif';
+    ctx.fillText(`Text: ${text || ''}`, width / 2, height / 2 + 20);
 
     // --- Draw Visual Bar ---
     const barHeight = 40;
@@ -39,7 +64,7 @@ const DebugAnimation = createComponent({
     const normalizedValue = Math.max(0, Math.min(100, value || 0));
     const barWidth = (width - 80) * (normalizedValue / 100);
     const barX = 40;
-    const barY = height / 2 + 20;
+    const barY = height / 2 + 60;
 
     // Background of the bar
     ctx.fillStyle = '#3f3f46'; // zinc-700

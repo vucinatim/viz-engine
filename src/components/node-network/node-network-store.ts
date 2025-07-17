@@ -300,7 +300,6 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
                     sourceHandle &&
                     sourceOutput[sourceHandle] !== undefined
                   ) {
-                    acc[input.id] = sourceOutput[sourceHandle];
                     resolvedValue = sourceOutput[sourceHandle];
                   } else if (
                     !sourceHandle &&
@@ -309,23 +308,29 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
                   ) {
                     // If there's no handle, but the output is an object,
                     // assume the first property is the output
-                    acc[input.id] = Object.values(sourceOutput)[0];
                     resolvedValue = Object.values(sourceOutput)[0];
                   }
                 }
               } else {
                 // Input is not connected, use the stored default value
-                acc[input.id] = node.data.inputValues[input.id];
                 resolvedValue = node.data.inputValues[input.id];
               }
 
-              if (typeof resolvedValue === 'string') {
+              // Type-aware parsing
+              if (
+                input.type === 'number' &&
+                typeof resolvedValue === 'string'
+              ) {
                 const parsed = parseFloat(resolvedValue);
                 acc[input.id] = isNaN(parsed) ? 0 : parsed;
+              } else if (input.type === 'string') {
+                acc[input.id] = String(resolvedValue);
+              } else {
+                acc[input.id] = resolvedValue;
               }
 
               if (resolvedValue !== undefined) {
-                setNodeInputValue(node.id, input.id, resolvedValue);
+                setNodeInputValue(node.id, input.id, acc[input.id]);
               }
               return acc;
             },

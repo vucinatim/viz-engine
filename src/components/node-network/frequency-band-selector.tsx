@@ -38,6 +38,7 @@ const FrequencyBandSelector = ({
 
   const { startFrequency, endFrequency } = data.inputValues;
 
+  // Update getInputValue to handle frequencyAnalysis
   const getInputValue = useCallback(
     (inputId: string) => {
       const edge = edges.find(
@@ -91,21 +92,22 @@ const FrequencyBandSelector = ({
     setupDrag(endHandleRef, 'endFrequency');
   }, [nodeId, updateInputValue, xToLogFreq]);
 
+  // Update sourceNodeId to use frequencyAnalysis
   const sourceNodeId = useMemo(
     () =>
       edges.find(
         (edge) =>
-          edge.target === nodeId && edge.targetHandle === 'frequencyData',
+          edge.target === nodeId && edge.targetHandle === 'frequencyAnalysis',
       )?.source,
     [edges, nodeId],
   );
 
   useRafLoop(() => {
     // Get latest values on every frame
-    const sampleRate = getInputValue('sampleRate');
-    const sourceNodeOutput = sourceNodeId
-      ? getNodeOutput(sourceNodeId)
-      : undefined;
+    const frequencyAnalysis = getInputValue('frequencyAnalysis');
+    const sampleRate = frequencyAnalysis?.sampleRate;
+    const fullSpectrum = frequencyAnalysis?.frequencyData;
+    const fftSize = frequencyAnalysis?.fftSize;
     const startFrequency =
       getLiveNodeValue(nodeId, 'startFrequency') ??
       data.inputValues.startFrequency;
@@ -127,13 +129,10 @@ const FrequencyBandSelector = ({
     const { width, height } = canvas;
     ctx.clearRect(0, 0, width, height);
 
-    const fullSpectrum = (sourceNodeOutput?.frequencyData ??
-      sourceNodeOutput) as Uint8Array;
-
     if (fullSpectrum && sampleRate) {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
       const nyquist = sampleRate / 2;
-      const frequencyPerBin = nyquist / fullSpectrum.length;
+      const frequencyPerBin = nyquist / (fftSize / 2);
 
       for (let i = 0; i < fullSpectrum.length; i++) {
         const freq = i * frequencyPerBin;

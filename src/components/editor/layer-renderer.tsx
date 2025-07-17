@@ -109,10 +109,12 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       },
       config: layer.config.getValues({
         audioSignal: new Uint8Array(),
-        frequencyData: new Uint8Array(),
+        frequencyAnalysis: {
+          frequencyData: new Uint8Array(),
+          sampleRate: audioAnalyzer?.context.sampleRate || 44100,
+          fftSize: audioAnalyzer?.fftSize || 2048,
+        },
         time,
-        sampleRate: audioAnalyzer?.context.sampleRate || 44100,
-        fftSize: audioAnalyzer?.fftSize || 2048,
       }),
       debugEnabled: layer.isDebugEnabled,
     });
@@ -184,8 +186,11 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
         audioSignal: timeDomainData,
         frequencyData,
         time,
-        sampleRate,
-        fftSize,
+        frequencyAnalysis: {
+          frequencyData,
+          sampleRate,
+          fftSize,
+        },
       };
 
       withDebug(

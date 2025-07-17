@@ -73,6 +73,7 @@ export abstract class ConfigParam<T> extends BaseConfigOption<T> {
       const animatedValue = useNodeNetworkStore
         .getState()
         .computeNetworkOutput(this.id, inputData);
+      console.log('Animated', this.id, animatedValue);
       useAnimationLiveValuesStore.getState().setValue(this.id, animatedValue);
       return animatedValue;
     } catch (error) {

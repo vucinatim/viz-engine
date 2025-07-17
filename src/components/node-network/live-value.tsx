@@ -24,6 +24,9 @@ const LiveValue = ({ nodeId, inputId, type }: LiveValueProps) => {
         case 'Uint8Array':
           ref.current.innerText = '[Data]';
           break;
+        case 'FrequencyAnalysis':
+          ref.current.innerText = '[Freq]';
+          break;
         default:
           ref.current.innerText = String(value);
       }

@@ -38,13 +38,18 @@ export type AnimNode = {
   }>;
 };
 
-// Special handling for InputNode: Provide external input data
-export type AnimInputData = {
-  audioSignal: Uint8Array;
+// 1. Add FrequencyAnalysis type
+type FrequencyAnalysis = {
   frequencyData: Uint8Array;
-  time: number;
   sampleRate: number;
   fftSize: number;
+};
+
+// 2. Update AnimInputData to include frequencyAnalysis for InputNode
+export type AnimInputData = {
+  audioSignal: Uint8Array;
+  frequencyAnalysis?: FrequencyAnalysis;
+  time: number;
 };
 
 export const InputNode: AnimNode = {
@@ -52,10 +57,12 @@ export const InputNode: AnimNode = {
   inputs: [],
   outputs: [
     { id: 'audioSignal', label: 'Audio Signal', type: 'Uint8Array' },
-    { id: 'frequencyData', label: 'Frequency Data', type: 'Uint8Array' },
+    {
+      id: 'frequencyAnalysis',
+      label: 'Frequency Analysis',
+      type: 'FrequencyAnalysis',
+    },
     { id: 'time', label: 'Time', type: 'number' },
-    { id: 'sampleRate', label: 'Sample Rate', type: 'number' },
-    { id: 'fftSize', label: 'FFT Size', type: 'number' },
   ],
   computeSignal: (inputData: AnimInputData) => {
     return inputData;
@@ -221,13 +228,16 @@ const NormalizeNode: AnimNode = {
   },
 };
 
+// 4. Update FrequencyBandNode to use frequencyAnalysis input
 const FrequencyBandNode: AnimNode = {
   label: 'Frequency Band',
   customBody: FrequencyBandSelector,
   inputs: [
-    { id: 'frequencyData', label: 'Frequency Data', type: 'Uint8Array' },
-    { id: 'sampleRate', label: 'Sample Rate', type: 'number' },
-    { id: 'fftSize', label: 'FFT Size', type: 'number' },
+    {
+      id: 'frequencyAnalysis',
+      label: 'Frequency Analysis',
+      type: 'FrequencyAnalysis',
+    },
     {
       id: 'startFrequency',
       label: 'Start Frequency (Hz)',
@@ -243,36 +253,95 @@ const FrequencyBandNode: AnimNode = {
   ],
   outputs: [{ id: 'bandData', label: 'Band Data', type: 'Uint8Array' }],
   computeSignal: ({
-    frequencyData,
-    sampleRate,
-    fftSize,
+    frequencyAnalysis,
     startFrequency = 0,
     endFrequency = 200,
   }) => {
     if (
-      !frequencyData ||
-      frequencyData.length === 0 ||
-      !sampleRate ||
-      !fftSize
+      !frequencyAnalysis ||
+      !frequencyAnalysis.frequencyData ||
+      frequencyAnalysis.frequencyData.length === 0 ||
+      !frequencyAnalysis.sampleRate ||
+      !frequencyAnalysis.fftSize
     ) {
       return { bandData: new Uint8Array() };
     }
-
+    const { frequencyData, sampleRate, fftSize } = frequencyAnalysis;
     const nyquist = sampleRate / 2;
     const frequencyPerBin = nyquist / (fftSize / 2);
-
     const startBin = Math.floor(startFrequency / frequencyPerBin);
     const endBin = Math.min(
       frequencyData.length - 1,
       Math.ceil(endFrequency / frequencyPerBin),
     );
-
     if (startBin > endBin) {
       return { bandData: new Uint8Array() };
     }
-
     const bandData = frequencyData.slice(startBin, endBin + 1);
     return { bandData };
+  },
+};
+
+// --- Pitch Detection Node ---
+const PitchDetectionNode: AnimNode = {
+  label: 'Pitch Detection',
+  inputs: [
+    {
+      id: 'frequencyAnalysis',
+      label: 'Frequency Analysis',
+      type: 'FrequencyAnalysis',
+    },
+  ],
+  outputs: [
+    { id: 'note', label: 'Note', type: 'string' },
+    { id: 'frequency', label: 'Frequency (Hz)', type: 'number' },
+    { id: 'midi', label: 'MIDI', type: 'number' },
+    { id: 'octave', label: 'Octave', type: 'number' },
+  ],
+  computeSignal: ({ frequencyAnalysis }) => {
+    if (
+      !frequencyAnalysis ||
+      !frequencyAnalysis.frequencyData ||
+      !frequencyAnalysis.sampleRate ||
+      !frequencyAnalysis.fftSize
+    ) {
+      return { note: '', frequency: 0, midi: 0, octave: 0 };
+    }
+    const { frequencyData, sampleRate, fftSize } = frequencyAnalysis;
+    // Find the index of the max bin
+    let maxIdx = 0;
+    let maxVal = 0;
+    for (let i = 0; i < frequencyData.length; i++) {
+      if (frequencyData[i] > maxVal) {
+        maxVal = frequencyData[i];
+        maxIdx = i;
+      }
+    }
+    // Convert bin index to frequency
+    const nyquist = sampleRate / 2;
+    const frequencyPerBin = nyquist / (fftSize / 2);
+    const freq = maxIdx * frequencyPerBin;
+    // Map frequency to MIDI note
+    const midi = freq > 0 ? Math.round(69 + 12 * Math.log2(freq / 440)) : 0;
+    // Map MIDI to note name
+    const noteNames = [
+      'C',
+      'C#',
+      'D',
+      'D#',
+      'E',
+      'F',
+      'F#',
+      'G',
+      'G#',
+      'A',
+      'A#',
+      'B',
+    ];
+    const noteIdx = midi % 12;
+    const octave = Math.floor(midi / 12) - 1;
+    const note = freq > 0 ? `${noteNames[noteIdx]}${octave}` : '';
+    return { note, frequency: freq, midi, octave };
   },
 };
 
@@ -285,6 +354,7 @@ export const nodes: AnimNode[] = [
   NormalizeNode,
   FrequencyBandNode,
   SpikeNode,
+  PitchDetectionNode,
 ];
 
 export const NodeDefinitionMap = new Map<string, AnimNode>();
