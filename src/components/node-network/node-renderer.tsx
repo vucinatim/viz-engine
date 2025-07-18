@@ -1,6 +1,11 @@
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { Handle, Position } from '@xyflow/react';
+import {
+  NodeHandleType,
+  getTypeColor,
+  getTypeLabel,
+} from '../config/node-types';
 import LiveValue from './live-value';
 import { GraphNodeData, useNodeNetwork } from './node-network-store';
 
@@ -22,6 +27,16 @@ const NodeRenderer = ({
   const { label, inputs, outputs, customBody: CustomBody } = definition;
 
   const { edges, updateInputValue } = useNodeNetwork(nodeNetworkId);
+
+  // Get the output type for display in header
+  const getNodeHeaderText = () => {
+    if (label === 'Output' && inputs.length > 0) {
+      const outputType = inputs[0].type as NodeHandleType;
+      const typeLabel = getTypeLabel(outputType);
+      return `${label} (${typeLabel})`;
+    }
+    return label;
+  };
 
   const renderInput = (input: any) => {
     const isConnected = edges.some(
@@ -57,7 +72,7 @@ const NodeRenderer = ({
         selected && 'border-purple-500 shadow-lg',
       )}>
       <p className="w-full select-none rounded-t-lg bg-zinc-800 px-2 py-1 text-xs font-bold">
-        {label}
+        {getNodeHeaderText()}
       </p>
       <div className="relative flex min-w-[150px] flex-col p-2">
         <div className="flex justify-between gap-x-4">
@@ -65,12 +80,11 @@ const NodeRenderer = ({
           <div className="flex flex-col gap-y-2">
             {inputs.map((input: any, index: number) => (
               <div key={input.id} className="flex h-8 items-center gap-x-2">
-                <Handle
-                  type="target"
-                  id={input.id}
+                <ConnectionHandle
+                  io={input}
                   position={Position.Left}
-                  className="!h-3 !w-3 !bg-zinc-400"
-                  style={{ top: `${24 + index * 40}px` }}
+                  type="target"
+                  index={index}
                 />
                 <p className="pointer-events-none pl-1 text-xs">
                   {input.label}
@@ -86,12 +100,11 @@ const NodeRenderer = ({
                 <p className="pointer-events-none pr-1 text-xs">
                   {output.label}
                 </p>
-                <Handle
-                  type="source"
-                  id={output.id}
+                <ConnectionHandle
+                  io={output}
                   position={Position.Right}
-                  className="!h-3 !w-3 !bg-zinc-400"
-                  style={{ top: `${24 + index * 40}px` }}
+                  type="source"
+                  index={index}
                 />
               </div>
             ))}
@@ -109,6 +122,31 @@ const NodeRenderer = ({
         )}
       </div>
     </div>
+  );
+};
+
+interface RenderHandleProps {
+  io: any;
+  position: Position;
+  type: 'source' | 'target';
+  index: number;
+}
+
+const ConnectionHandle = ({ io, position, type, index }: RenderHandleProps) => {
+  const handleColor = getTypeColor(io.type as NodeHandleType);
+  return (
+    <Handle
+      type={type}
+      id={io.id}
+      position={position}
+      className="!h-3 !w-3"
+      style={{
+        top: `${24 + index * 40}px`,
+        backgroundColor: handleColor,
+        border: `2px solid ${handleColor}`,
+        boxShadow: '0 0 0 2px rgba(0,0,0,0.1)',
+      }}
+    />
   );
 };
 

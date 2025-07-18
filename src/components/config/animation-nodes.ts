@@ -1,29 +1,16 @@
 import FrequencyBandSelector from '../node-network/frequency-band-selector';
 import { GraphNode, GraphNodeData } from '../node-network/node-network-store';
 import ValueMapperBody from '../node-network/value-mapper-body';
+import { NodeHandleType } from './node-types';
 
 type NodeIO = {
   id: string;
   label: string;
-  type: string;
+  type: NodeHandleType;
   defaultValue?: any;
 };
 
 type ComputeFunction<T, K> = (inputs: T, node?: GraphNode) => K;
-
-type InferInputs<T extends ComputeFunction<any, any>> =
-  T extends ComputeFunction<infer IT, any> ? IT : never;
-
-type InferOutputs<T extends ComputeFunction<any, any>> = {
-  [K in keyof ReturnType<T>]: { id: K; label: string };
-}[keyof ReturnType<T>];
-
-type AnimNodeG<T extends ComputeFunction<any, any>> = {
-  label: string;
-  inputs: InferInputs<T>[];
-  outputs: InferOutputs<T>[];
-  computeSignal: T;
-};
 
 // Define AnimNode interface for input/output representation
 export type AnimNode = {
@@ -71,7 +58,7 @@ export const InputNode: AnimNode = {
 };
 
 // Special handling for OutputNode: Return the output value
-export const createOutputNode = (type: string): AnimNode => ({
+export const createOutputNode = (type: NodeHandleType): AnimNode => ({
   label: 'Output',
   inputs: [{ id: 'output', label: 'Output Value', type }],
   outputs: [],
@@ -124,9 +111,24 @@ export const SpikeNode: AnimNode = {
   label: 'Spike',
   inputs: [
     { id: 'value', type: 'number', label: 'Value', defaultValue: 0 },
-    { id: 'threshold', type: 'number', label: 'Threshold', defaultValue: 50 },
-    { id: 'attack', type: 'number', label: 'Attack (ms)', defaultValue: 10 },
-    { id: 'release', type: 'number', label: 'Release (ms)', defaultValue: 250 },
+    {
+      id: 'threshold',
+      type: 'number',
+      label: 'Threshold',
+      defaultValue: 50,
+    },
+    {
+      id: 'attack',
+      type: 'number',
+      label: 'Attack (ms)',
+      defaultValue: 10,
+    },
+    {
+      id: 'release',
+      type: 'number',
+      label: 'Release (ms)',
+      defaultValue: 250,
+    },
   ],
   outputs: [{ id: 'result', type: 'number', label: 'Result' }],
   computeSignal: ({ value, threshold, attack, release }, node) => {
@@ -204,10 +206,30 @@ const NormalizeNode: AnimNode = {
   label: 'Normalize',
   inputs: [
     { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
-    { id: 'inputMin', label: 'Input Min', type: 'number', defaultValue: 0 },
-    { id: 'inputMax', label: 'Input Max', type: 'number', defaultValue: 255 },
-    { id: 'outputMin', label: 'Output Min', type: 'number', defaultValue: 0 },
-    { id: 'outputMax', label: 'Output Max', type: 'number', defaultValue: 1 },
+    {
+      id: 'inputMin',
+      label: 'Input Min',
+      type: 'number',
+      defaultValue: 0,
+    },
+    {
+      id: 'inputMax',
+      label: 'Input Max',
+      type: 'number',
+      defaultValue: 255,
+    },
+    {
+      id: 'outputMin',
+      label: 'Output Min',
+      type: 'number',
+      defaultValue: 0,
+    },
+    {
+      id: 'outputMax',
+      label: 'Output Max',
+      type: 'number',
+      defaultValue: 1,
+    },
   ],
   outputs: [{ id: 'result', label: 'Result', type: 'number' }],
   computeSignal: ({
@@ -351,8 +373,18 @@ const ValueMapperNode: AnimNode = {
   customBody: ValueMapperBody,
   inputs: [
     { id: 'input', label: 'Input', type: 'string' },
-    { id: 'mapping', label: 'Mapping', type: 'object', defaultValue: {} },
-    { id: 'default', label: 'Default', type: 'string', defaultValue: '' },
+    {
+      id: 'mapping',
+      label: 'Mapping',
+      type: 'object',
+      defaultValue: {},
+    },
+    {
+      id: 'default',
+      label: 'Default',
+      type: 'string',
+      defaultValue: '',
+    },
   ],
   outputs: [{ id: 'output', label: 'Output', type: 'string' }],
   computeSignal: ({ input, mapping, default: def }) => {

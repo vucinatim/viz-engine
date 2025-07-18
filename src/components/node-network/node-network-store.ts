@@ -10,6 +10,15 @@ import {
   NodeDefinitionMap,
   createOutputNode,
 } from '../config/animation-nodes';
+import {
+  NodeHandleType,
+  canConnectTypes,
+  getTypeColor,
+  getTypeLabel,
+  isValidNodeHandleType,
+  safeVTypeToNodeHandleType,
+} from '../config/node-types';
+import { VType } from '../config/types';
 
 // A simple throttle utility per key
 const throttledLoggers = new Map<
@@ -57,12 +66,12 @@ interface NodeNetworkStore {
   setNetworkEnabled: (
     parameterId: string,
     isEnabled: boolean,
-    type: string,
+    type: VType,
   ) => void;
   addNodeToNetwork: (parameterId: string, node: GraphNode) => void;
   setNodesInNetwork: (parameterId: string, nodes: GraphNode[]) => void;
   setEdgesInNetwork: (parameterId: string, edges: Edge[]) => void;
-  createNetworkForParameter: (parameterId: string, type: string) => void; // Initialize a new network for a parameter
+  createNetworkForParameter: (parameterId: string, type: VType) => void; // Initialize a new network for a parameter
   removeNetworkForParameter: (parameterId: string) => void; // Remove network if parameter is not animated anymore
   updateNodeInputValue: (
     parameterId: string,
@@ -87,7 +96,7 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
       setNetworkEnabled: (
         parameterId: string,
         isEnabled: boolean,
-        type: string,
+        type: VType,
       ) => {
         if (!get().networks[parameterId]) {
           get().createNetworkForParameter(parameterId, type);
@@ -112,7 +121,7 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
       },
 
       // Create an empty network for a parameter
-      createNetworkForParameter: (parameterId: string, type: string) => {
+      createNetworkForParameter: (parameterId: string, type: VType) => {
         set((state) => ({
           networks: {
             ...state.networks,
@@ -135,7 +144,9 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
                   type: 'NodeRenderer',
                   position: { x: 300, y: 0 },
                   data: {
-                    definition: createOutputNode(type),
+                    definition: createOutputNode(
+                      safeVTypeToNodeHandleType(type),
+                    ),
                     inputValues: {},
                     state: {},
                   },
@@ -410,7 +421,9 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
                       ...node,
                       data: {
                         ...node.data,
-                        definition: createOutputNode(def.type),
+                        definition: createOutputNode(
+                          safeStringToNodeHandleType(def.type),
+                        ),
                       },
                     };
                   }
@@ -461,4 +474,58 @@ export const useNodeNetwork = (parameterId: string) => {
     computeOutput: (inputData: AnimInputData) =>
       computeNetworkOutput(parameterId, inputData),
   };
+};
+
+// Helper function to get the output type of a node
+const getNodeOutputType = (
+  node: GraphNode,
+  outputId: string,
+): NodeHandleType | null => {
+  const output = node.data.definition.outputs.find((o) => o.id === outputId);
+  return output ? (output.type as NodeHandleType) : null;
+};
+
+// Helper function to get the input type of a node
+const getNodeInputType = (
+  node: GraphNode,
+  inputId: string,
+): NodeHandleType | null => {
+  const input = node.data.definition.inputs.find((i) => i.id === inputId);
+  return input ? (input.type as NodeHandleType) : null;
+};
+
+// Connection validation function
+export const validateConnection = (
+  sourceNode: GraphNode,
+  sourceHandle: string,
+  targetNode: GraphNode,
+  targetHandle: string,
+): boolean => {
+  const sourceType = getNodeOutputType(sourceNode, sourceHandle);
+  const targetType = getNodeInputType(targetNode, targetHandle);
+
+  if (!sourceType || !targetType) {
+    return false;
+  }
+
+  return canConnectTypes(sourceType, targetType);
+};
+
+// Hook for connection validation
+export const useConnectionValidation = () => {
+  return {
+    validateConnection,
+    canConnectTypes,
+    getTypeColor,
+    getTypeLabel,
+  };
+};
+
+// Safe conversion from string to NodeHandleType
+const safeStringToNodeHandleType = (type: string): NodeHandleType => {
+  if (isValidNodeHandleType(type)) {
+    return type as NodeHandleType;
+  }
+  // Default to number if type is invalid
+  return 'number';
 };

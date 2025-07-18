@@ -22,6 +22,7 @@ import {
   ContextMenuContent,
   ContextMenuItem,
 } from '../ui/context-menu';
+import { isConnectionValid } from './connection-validator';
 import { useNodeNetwork } from './node-network-store';
 import NodeRenderer from './node-renderer';
 import NodesSearch from './nodes-search';
@@ -43,14 +44,9 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
 
   const isValidConnection = useCallback(
     (connection: Connection | Edge) => {
-      // We are using find because we only want one connection per target handle.
-      return !edges.find(
-        (edge) =>
-          edge.target === connection.target &&
-          edge.targetHandle === connection.targetHandle,
-      );
+      return isConnectionValid(connection as Connection, nodes, edges);
     },
-    [edges],
+    [nodes, edges],
   );
 
   const nodeTypes = useMemo(

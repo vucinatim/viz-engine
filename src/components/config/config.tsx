@@ -7,16 +7,7 @@ import { SimpleSelect } from '../ui/select'; // Assuming you have a Select compo
 import { Slider } from '../ui/slider'; // Assuming this is your custom slider component
 import { Switch } from '../ui/switch';
 import { AnimInputData } from './animation-nodes';
-
-// Enum for the different config types
-export enum VType {
-  Number = 'number',
-  Color = 'color',
-  Select = 'select',
-  Boolean = 'boolean',
-  String = 'string',
-  Group = 'group',
-}
+import { VType } from './types';
 
 // Base interface for config metadata
 interface ConfigMeta {
