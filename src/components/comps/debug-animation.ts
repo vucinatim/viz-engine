@@ -26,10 +26,15 @@ const DebugAnimation = createComponent({
       description: 'Text to display (e.g. note name)',
       defaultValue: '',
     }),
+    color: v.color({
+      label: 'Bar Color',
+      description: 'Color of the filled bar.',
+      defaultValue: '#60a5fa',
+    }),
   }),
   draw: ({ canvasCtx: ctx, config }) => {
     const { width, height } = ctx.canvas;
-    const { value, midi, text } = config;
+    const { value, midi, text, color } = config;
 
     // Clear canvas with a dark background
     ctx.clearRect(0, 0, width, height);
@@ -71,7 +76,7 @@ const DebugAnimation = createComponent({
     ctx.fillRect(barX, barY, width - 80, barHeight);
 
     // Filled part of the bar
-    ctx.fillStyle = '#60a5fa'; // blue-400
+    ctx.fillStyle = color || '#60a5fa';
     ctx.fillRect(barX, barY, barWidth, barHeight);
 
     // Border of the bar

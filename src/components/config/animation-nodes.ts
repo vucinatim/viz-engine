@@ -1,5 +1,6 @@
 import FrequencyBandSelector from '../node-network/frequency-band-selector';
 import { GraphNode, GraphNodeData } from '../node-network/node-network-store';
+import ValueMapperBody from '../node-network/value-mapper-body';
 
 type NodeIO = {
   id: string;
@@ -345,6 +346,23 @@ const PitchDetectionNode: AnimNode = {
   },
 };
 
+const ValueMapperNode: AnimNode = {
+  label: 'Value Mapper',
+  customBody: ValueMapperBody,
+  inputs: [
+    { id: 'input', label: 'Input', type: 'string' },
+    { id: 'mapping', label: 'Mapping', type: 'object', defaultValue: {} },
+    { id: 'default', label: 'Default', type: 'string', defaultValue: '' },
+  ],
+  outputs: [{ id: 'output', label: 'Output', type: 'string' }],
+  computeSignal: ({ input, mapping, default: def }) => {
+    if (mapping && input in mapping) {
+      return { output: mapping[input] };
+    }
+    return { output: def };
+  },
+};
+
 export const nodes: AnimNode[] = [
   SineNode,
   MultiplyNode,
@@ -355,6 +373,7 @@ export const nodes: AnimNode[] = [
   FrequencyBandNode,
   SpikeNode,
   PitchDetectionNode,
+  ValueMapperNode,
 ];
 
 export const NodeDefinitionMap = new Map<string, AnimNode>();
