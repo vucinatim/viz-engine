@@ -64,11 +64,10 @@ export abstract class ConfigParam<T> extends BaseConfigOption<T> {
       const animatedValue = useNodeNetworkStore
         .getState()
         .computeNetworkOutput(this.id, inputData);
-      console.log('Animated', this.id, animatedValue);
       useAnimationLiveValuesStore.getState().setValue(this.id, animatedValue);
       return animatedValue;
     } catch (error) {
-      // console.error(`Error computing network for ${this.id}:`, error);
+      console.error(`Error computing network for ${this.id}:`, error);
       return this.value; // Fallback to static value on error
     }
   }

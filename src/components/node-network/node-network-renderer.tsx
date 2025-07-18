@@ -15,6 +15,7 @@ import {
   useCallback,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 import '../../lib/css/xyflow.css';
 import {
@@ -31,16 +32,35 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
   // Get nodes, edges, and actions from zustand store
   const { nodes, edges, setEdges, setNodes } = useNodeNetwork(nodeNetworkId);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const mousePosition = useRef({ x: 0, y: 0 });
+  const reactFlowInstance = useRef<any>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   const onPaneContextMenu = (event: ReactMouseEvent) => {
-    if (!reactFlowWrapper.current) return;
-    const bounds = reactFlowWrapper.current.getBoundingClientRect();
-    mousePosition.current = {
-      x: event.clientX - bounds.left,
-      y: event.clientY - bounds.top,
+    // Store the raw client coordinates for screenToFlowPosition
+    const newMousePosition = {
+      x: event.clientX,
+      y: event.clientY,
     };
+    setMousePosition(newMousePosition);
   };
+
+  // Convert screen coordinates to canvas coordinates
+  const getCanvasPosition = useCallback(
+    (screenPosition: { x: number; y: number }) => {
+      if (!reactFlowInstance.current) {
+        return { x: 0, y: 0 };
+      }
+
+      // Use XYFlow's built-in method to convert screen coordinates to canvas coordinates
+      const canvasPosition = reactFlowInstance.current.screenToFlowPosition({
+        x: screenPosition.x,
+        y: screenPosition.y,
+      });
+
+      return canvasPosition;
+    },
+    [],
+  );
 
   const isValidConnection = useCallback(
     (connection: Connection | Edge) => {
@@ -74,6 +94,9 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
       <ContextMenu>
         <ContextMenuTrigger>
           <ReactFlow
+            onInit={(instance) => {
+              reactFlowInstance.current = instance;
+            }}
             fitView
             panOnScroll
             zoomOnPinch
@@ -102,7 +125,8 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
             <ContextMenuContent className="w-64">
               <NodesSearch
                 networkId={nodeNetworkId}
-                mousePosition={mousePosition.current}
+                mousePosition={mousePosition}
+                getCanvasPosition={getCanvasPosition}
               />
             </ContextMenuContent>
           </ReactFlow>

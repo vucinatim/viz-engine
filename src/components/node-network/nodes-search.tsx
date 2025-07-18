@@ -13,9 +13,17 @@ import { useNodeNetwork } from './node-network-store';
 interface NodeSearchProps {
   networkId: string;
   mousePosition: { x: number; y: number };
+  getCanvasPosition: (screenPosition: { x: number; y: number }) => {
+    x: number;
+    y: number;
+  };
 }
 
-const NodesSearch = ({ networkId, mousePosition }: NodeSearchProps) => {
+const NodesSearch = ({
+  networkId,
+  mousePosition,
+  getCanvasPosition,
+}: NodeSearchProps) => {
   const { addNode } = useNodeNetwork(networkId);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -47,10 +55,20 @@ const NodesSearch = ({ networkId, mousePosition }: NodeSearchProps) => {
                   },
                   {} as { [key: string]: any },
                 );
+
+                // Convert screen coordinates to canvas coordinates
+                const canvasPosition = getCanvasPosition(mousePosition);
+
+                // Offset the position to the left to avoid spawning under the context menu
+                const offsetPosition = {
+                  x: canvasPosition.x - 200,
+                  y: canvasPosition.y,
+                };
+
                 addNode({
                   id: nodeId,
                   type: 'NodeRenderer',
-                  position: mousePosition,
+                  position: offsetPosition,
                   data: {
                     definition: node,
                     inputValues: initialInputValues,

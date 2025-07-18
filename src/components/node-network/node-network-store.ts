@@ -20,26 +20,15 @@ import {
 } from '../config/node-types';
 import { VType } from '../config/types';
 
-// A simple throttle utility per key
-const throttledLoggers = new Map<
-  string,
-  (message: string, data: any) => void
->();
-
-function getThrottledLogger(key: string, interval: number) {
-  if (!throttledLoggers.has(key)) {
-    let lastLogTime = 0;
-    const logger = (message: string, data: any) => {
-      const now = Date.now();
-      if (now - lastLogTime > interval) {
-        console.log(message, JSON.parse(JSON.stringify(data)));
-        lastLogTime = now;
-      }
-    };
-    throttledLoggers.set(key, logger);
+// Safe conversion from string to NodeHandleType
+// IMPORTANT: This needs to be defined at the top of the file, otherwise it will be undefined in the merge function (hoisting issue)
+const safeStringToNodeHandleType = (type: string): NodeHandleType => {
+  if (isValidNodeHandleType(type)) {
+    return type as NodeHandleType;
   }
-  return throttledLoggers.get(key)!;
-}
+  // Default to number if type is invalid
+  return 'number';
+};
 
 // Define the shape of a node network
 type NodeNetwork = {
@@ -403,42 +392,73 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
         ),
       }),
       merge: (persistedState, currentState) => {
-        const persisted = persistedState as NodeNetworkStore;
-        return {
-          ...currentState,
-          ...persisted,
-          networks: Object.fromEntries(
-            Object.entries(persisted.networks).map(([id, network]) => [
-              id,
-              {
-                ...network,
-                nodes: network.nodes.map((node) => {
-                  const def = node.data.definition as unknown as
-                    | string
-                    | { label: string; type: string };
-                  if (typeof def === 'object' && def.label === 'Output') {
+        try {
+          const persisted = persistedState as NodeNetworkStore;
+
+          const result = {
+            ...currentState,
+            ...persisted,
+            networks: Object.fromEntries(
+              Object.entries(persisted.networks).map(([id, network]) => {
+                const processedNetwork = {
+                  ...network,
+                  nodes: network.nodes.map((node) => {
+                    const def = node.data.definition as unknown as
+                      | string
+                      | { label: string; type: string };
+
+                    if (typeof def === 'object' && def.label === 'Output') {
+                      try {
+                        const outputNode = createOutputNode(
+                          safeStringToNodeHandleType(def.type),
+                        );
+                        return {
+                          ...node,
+                          data: {
+                            ...node.data,
+                            definition: outputNode,
+                          },
+                        };
+                      } catch (error) {
+                        console.error('Error creating output node:', error);
+                        throw error;
+                      }
+                    }
+
+                    const nodeDef = NodeDefinitionMap.get(def as string);
+                    if (!nodeDef) {
+                      console.error(`Node definition not found for: ${def}`);
+                      console.error(
+                        'Available definitions:',
+                        Array.from(NodeDefinitionMap.keys()),
+                      );
+                      throw new Error(`Node definition not found for: ${def}`);
+                    }
+
                     return {
                       ...node,
                       data: {
                         ...node.data,
-                        definition: createOutputNode(
-                          safeStringToNodeHandleType(def.type),
-                        ),
+                        definition: nodeDef,
                       },
                     };
-                  }
-                  return {
-                    ...node,
-                    data: {
-                      ...node.data,
-                      definition: NodeDefinitionMap.get(def as string)!,
-                    },
-                  };
-                }),
-              },
-            ]),
-          ),
-        };
+                  }),
+                };
+
+                return [id, processedNetwork];
+              }),
+            ),
+          };
+
+          return result;
+        } catch (error) {
+          console.error('Error in node network store merge function:', error);
+          if (error instanceof Error) {
+            console.error('Stack trace:', error.stack);
+          }
+          console.warn('Falling back to current state due to merge error');
+          return currentState;
+        }
       },
     },
   ),
@@ -519,13 +539,4 @@ export const useConnectionValidation = () => {
     getTypeColor,
     getTypeLabel,
   };
-};
-
-// Safe conversion from string to NodeHandleType
-const safeStringToNodeHandleType = (type: string): NodeHandleType => {
-  if (isValidNodeHandleType(type)) {
-    return type as NodeHandleType;
-  }
-  // Default to number if type is invalid
-  return 'number';
 };
