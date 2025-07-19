@@ -18,24 +18,46 @@ import {
   useState,
 } from 'react';
 import '../../lib/css/xyflow.css';
+import { useKeyboardShortcuts } from '../../lib/hooks/use-keyboard-shortcuts';
 import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
+import { useNodeNetworkHistory } from '../../lib/hooks/use-node-network-history';
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
 } from '../ui/context-menu';
 import { isConnectionValid } from './connection-validator';
-import { useNodeNetwork } from './node-network-store';
 import NodeRenderer from './node-renderer';
 import NodesSearch from './nodes-search';
 
 const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
-  // Get nodes, edges, and actions from zustand store
-  const { nodes, edges, setEdges, setNodes } = useNodeNetwork(nodeNetworkId);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const reactFlowInstance = useRef<any>(null);
+  const isDraggingRef = useRef(false);
 
-  // Use the new clipboard hook
+  // Use history hook for undo/redo functionality
+  const {
+    nodes,
+    edges,
+    setNodes,
+    setEdges,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    startDrag,
+    endDrag,
+  } = useNodeNetworkHistory(nodeNetworkId);
+
+  // Use keyboard shortcuts hook for undo/redo shortcuts
+  useKeyboardShortcuts({
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  });
+
+  // Use the clipboard hook for copy/paste functionality
   const {
     copySelectedNodes,
     pasteNodesAtPosition,
@@ -108,6 +130,12 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
                 }}>
                 Paste
               </ContextMenuItem>
+              <ContextMenuItem inset onClick={undo} disabled={!canUndo}>
+                Undo
+              </ContextMenuItem>
+              <ContextMenuItem inset onClick={redo} disabled={!canRedo}>
+                Redo
+              </ContextMenuItem>
               <ContextMenuItem
                 inset
                 onClick={() => {
@@ -157,6 +185,24 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
             edges={edges}
             isValidConnection={isValidConnection}
             onNodesChange={(changes) => {
+              // Check if this is a drag operation
+              const isDragStart = changes.some(
+                (change) =>
+                  change.type === 'position' && change.dragging === true,
+              );
+              const isDragEnd = changes.some(
+                (change) =>
+                  change.type === 'position' && change.dragging === false,
+              );
+
+              if (isDragStart) {
+                startDrag();
+              }
+
+              if (isDragEnd) {
+                endDrag();
+              }
+
               // Filter out deletion changes for protected nodes (input/output)
               const filteredChanges = changes.filter((change) => {
                 if (change.type === 'remove') {
@@ -172,15 +218,17 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
 
               // Only apply changes if there are any non-filtered changes
               if (filteredChanges.length > 0) {
-                setNodes(applyNodeChanges(filteredChanges, nodes));
+                const newNodes = applyNodeChanges(filteredChanges, nodes);
+                setNodes(newNodes);
               }
             }}
             onSelectionChange={(elements) => {
               // This handler is no longer needed as selection state is removed
             }}
-            onEdgesChange={(changes) =>
-              setEdges(applyEdgeChanges(changes, edges))
-            }
+            onEdgesChange={(changes) => {
+              const newEdges = applyEdgeChanges(changes, edges);
+              setEdges(newEdges);
+            }}
             onConnect={(params) => setEdges(addEdge(params, edges))}
             defaultEdgeOptions={{
               animated: true,

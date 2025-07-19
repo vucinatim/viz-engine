@@ -231,7 +231,12 @@ export const useNodeGraphClipboard = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown, true);
     };
-  }, [enabled, copySelectedNodes, pasteNodesAtPosition]);
+  }, [
+    enabled,
+    copySelectedNodes,
+    pasteNodesAtPosition,
+    duplicateSelectedNodes,
+  ]);
 
   return {
     copySelectedNodes,
