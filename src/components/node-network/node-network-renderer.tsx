@@ -51,10 +51,27 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
 
   // Use keyboard shortcuts hook for undo/redo shortcuts
   useKeyboardShortcuts({
-    undo,
-    redo,
-    canUndo,
-    canRedo,
+    shortcuts: [
+      {
+        key: 'z',
+        ctrl: true,
+        callback: undo,
+        enabled: canUndo,
+      },
+      {
+        key: 'z',
+        ctrl: true,
+        shift: true,
+        callback: redo,
+        enabled: canRedo,
+      },
+      {
+        key: 'y',
+        ctrl: true,
+        callback: redo,
+        enabled: canRedo,
+      },
+    ],
   });
 
   // Use the clipboard hook for copy/paste functionality

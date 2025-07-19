@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { useNodeNetworkStore } from '../../components/node-network/node-network-store';
+import { useKeyboardShortcuts } from '../hooks/use-keyboard-shortcuts';
 import { useNodeGraphClipboardStore } from '../stores/node-graph-clipboard-store';
 
 interface UseNodeGraphClipboardOptions {
@@ -25,13 +26,11 @@ export const useNodeGraphClipboard = ({
     const selectedNodes = reactFlowInstance.current
       .getNodes()
       .filter((node: any) => node.selected);
-    console.log('Copy triggered, selected nodes:', selectedNodes);
 
     if (selectedNodes.length > 0) {
       const selectedNodeIds = selectedNodes.map((node: any) => node.id);
       // Store the copied node IDs for later use
       copiedNodeIdsRef.current = selectedNodeIds;
-      console.log('Storing copied node IDs:', selectedNodeIds);
 
       // Get edges that connect selected nodes to each other
       const allEdges = reactFlowInstance.current.getEdges();
@@ -47,12 +46,6 @@ export const useNodeGraphClipboard = ({
 
   const pasteNodesAtPosition = useCallback(
     (position: { x: number; y: number }) => {
-      console.log(
-        'Paste triggered, stored node IDs:',
-        copiedNodeIdsRef.current,
-      );
-      console.log('Pasting at position:', position);
-
       const newNodes = pasteNodes(position, parameterId);
 
       // Add the new nodes and edges to the network through the store
@@ -99,9 +92,6 @@ export const useNodeGraphClipboard = ({
             useNodeNetworkStore
               .getState()
               .setNetwork(parameterId, updatedNetwork);
-            console.log(
-              'Network updated through store with cleared selections',
-            );
 
             // Now select the newly pasted nodes and edges
             const allNodes = updatedNetwork.nodes;
@@ -127,7 +117,6 @@ export const useNodeGraphClipboard = ({
             useNodeNetworkStore
               .getState()
               .setEdgesInNetwork(parameterId, newlySelectedEdges);
-            console.log('Newly pasted nodes and edges selected');
           }
         }
       }
@@ -141,7 +130,6 @@ export const useNodeGraphClipboard = ({
     const selectedNodes = reactFlowInstance.current
       .getNodes()
       .filter((node: any) => node.selected);
-    console.log('Duplicate triggered, selected nodes:', selectedNodes);
 
     if (selectedNodes.length > 0) {
       const selectedNodeIds = selectedNodes.map((node: any) => node.id);
@@ -177,7 +165,6 @@ export const useNodeGraphClipboard = ({
         y: center.y + 20,
       };
 
-      console.log('Duplicating at offset position:', offsetPosition);
       pasteNodesAtPosition(offsetPosition);
 
       // Note: Selection is now handled within pasteNodesAtPosition
@@ -189,54 +176,37 @@ export const useNodeGraphClipboard = ({
     return hasClipboardData();
   }, [hasClipboardData]);
 
-  // Keyboard shortcuts using manual event listeners
-  useEffect(() => {
-    if (!enabled) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Only handle shortcuts when the node editor is mounted and ReactFlow is ready
-      if (!reactFlowInstance.current) return;
-
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-      const modifierKey = isMac ? event.metaKey : event.ctrlKey;
-
-      if (modifierKey && event.key === 'c') {
-        event.preventDefault();
-        event.stopPropagation();
-        console.log('Copy keyboard shortcut triggered');
-        copySelectedNodes();
-      } else if (modifierKey && event.key === 'v') {
-        event.preventDefault();
-        event.stopPropagation();
-        console.log('Paste keyboard shortcut triggered');
-
-        // Paste at mouse position or center of view
-        const position = reactFlowInstance.current?.getViewport()?.center || {
-          x: 0,
-          y: 0,
-        };
-        console.log('Pasting at position:', position);
-        pasteNodesAtPosition(position);
-      } else if (modifierKey && event.key === 'd') {
-        event.preventDefault();
-        event.stopPropagation();
-        console.log('Duplicate keyboard shortcut triggered');
-        duplicateSelectedNodes();
-      }
-    };
-
-    // Use capture phase to ensure our handler runs before others
-    window.addEventListener('keydown', handleKeyDown, true);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown, true);
-    };
-  }, [
+  // Use the generic keyboard shortcuts hook
+  useKeyboardShortcuts({
     enabled,
-    copySelectedNodes,
-    pasteNodesAtPosition,
-    duplicateSelectedNodes,
-  ]);
+    shortcuts: [
+      {
+        key: 'c',
+        ctrl: true,
+        callback: copySelectedNodes,
+        enabled: enabled && !!reactFlowInstance.current,
+      },
+      {
+        key: 'v',
+        ctrl: true,
+        callback: () => {
+          // Paste at mouse position or center of view
+          const position = reactFlowInstance.current?.getViewport()?.center || {
+            x: 0,
+            y: 0,
+          };
+          pasteNodesAtPosition(position);
+        },
+        enabled: enabled && !!reactFlowInstance.current && canPaste(),
+      },
+      {
+        key: 'd',
+        ctrl: true,
+        callback: duplicateSelectedNodes,
+        enabled: enabled && !!reactFlowInstance.current,
+      },
+    ],
+  });
 
   return {
     copySelectedNodes,

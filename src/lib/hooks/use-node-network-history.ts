@@ -51,7 +51,6 @@ export const useNodeNetworkHistory = (networkId: string) => {
       const lastState = history.present;
 
       if (JSON.stringify(newState) === JSON.stringify(lastState)) {
-        console.log('Skipping history save - state unchanged');
         return;
       }
 
@@ -63,11 +62,6 @@ export const useNodeNetworkHistory = (networkId: string) => {
 
       // Clear future (new action destroys redo stack)
       history.future = [];
-
-      console.log('Pushed to history:', {
-        nodes: newNodes.length,
-        edges: newEdges.length,
-      });
     },
     [networkId],
   );
@@ -77,7 +71,6 @@ export const useNodeNetworkHistory = (networkId: string) => {
     const history = historyRef.current[networkId];
 
     if (history.past.length === 0) {
-      console.log('Nothing to undo');
       return;
     }
 
@@ -91,8 +84,6 @@ export const useNodeNetworkHistory = (networkId: string) => {
     // Apply to network (let ReactFlow handle selection)
     setNodes(previous.nodes);
     setEdges(previous.edges);
-
-    console.log('Undo applied');
   }, [networkId, setNodes, setEdges]);
 
   // Redo function
@@ -100,7 +91,6 @@ export const useNodeNetworkHistory = (networkId: string) => {
     const history = historyRef.current[networkId];
 
     if (history.future.length === 0) {
-      console.log('Nothing to redo');
       return;
     }
 
@@ -114,8 +104,6 @@ export const useNodeNetworkHistory = (networkId: string) => {
     // Apply to network (let ReactFlow handle selection)
     setNodes(next.nodes);
     setEdges(next.edges);
-
-    console.log('Redo applied');
   }, [networkId, setNodes, setEdges]);
 
   // Check if undo/redo are available

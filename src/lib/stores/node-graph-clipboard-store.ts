@@ -23,18 +23,13 @@ export const useNodeGraphClipboardStore = create<NodeGraphClipboardStore>(
     clipboard: null,
 
     copyNodes: (nodes: Node[], edges: Edge[]) => {
-      console.log('Copying nodes:', nodes);
-      console.log('Copying edges:', edges);
       set({ clipboard: { nodes, edges } });
     },
 
     pasteNodes: (position: { x: number; y: number }, parameterId: string) => {
       const clipboard = get().clipboard;
-      console.log('Pasting nodes at position:', position);
-      console.log('Current clipboard:', clipboard);
 
       if (!clipboard || clipboard.nodes.length === 0) {
-        console.log('No clipboard data or empty clipboard');
         return [];
       }
 
@@ -48,14 +43,10 @@ export const useNodeGraphClipboardStore = create<NodeGraphClipboardStore>(
           clipboard.nodes.length,
       };
 
-      console.log('Original center:', originalCenter);
-
       const offset = {
         x: position.x - originalCenter.x,
         y: position.y - originalCenter.y,
       };
-
-      console.log('Offset:', offset);
 
       // Create new nodes with new IDs and offset positions
       const newNodeIdMap = new Map<string, string>();
@@ -73,8 +64,6 @@ export const useNodeGraphClipboardStore = create<NodeGraphClipboardStore>(
         };
       });
 
-      console.log('New nodes created:', newNodes);
-
       // Create new edges with updated node IDs
       const newEdges = clipboard.edges.map((edge) => ({
         ...edge,
@@ -82,9 +71,6 @@ export const useNodeGraphClipboardStore = create<NodeGraphClipboardStore>(
         source: newNodeIdMap.get(edge.source) || edge.source,
         target: newNodeIdMap.get(edge.target) || edge.target,
       }));
-
-      console.log('New edges created:', newEdges);
-      console.log('Paste completed successfully');
 
       return newNodes;
     },

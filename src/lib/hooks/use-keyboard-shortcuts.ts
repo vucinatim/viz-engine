@@ -1,52 +1,81 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+
+// Shortcut definition interface
+interface ShortcutDefinition {
+  key: string;
+  ctrl?: boolean;
+  cmd?: boolean;
+  shift?: boolean;
+  alt?: boolean;
+  meta?: boolean;
+  callback: () => void;
+  enabled?: boolean;
+}
 
 interface UseKeyboardShortcutsOptions {
   enabled?: boolean;
-  undo?: () => void;
-  redo?: () => void;
-  canUndo?: boolean;
-  canRedo?: boolean;
+  shortcuts: ShortcutDefinition[];
 }
 
 export const useKeyboardShortcuts = ({
   enabled = true,
-  undo,
-  redo,
-  canUndo = false,
-  canRedo = false,
+  shortcuts,
 }: UseKeyboardShortcutsOptions) => {
+  // Use ref to prevent multiple registrations
+  const isRegisteredRef = useRef(false);
+
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
-      if (!enabled) return;
+      if (!enabled) {
+        return;
+      }
 
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-      const modifierKey = isMac ? event.metaKey : event.ctrlKey;
 
-      if (modifierKey && event.key === 'z' && !event.shiftKey) {
-        event.preventDefault();
-        event.stopPropagation();
-        console.log('Undo keyboard shortcut triggered');
-        undo?.();
-      } else if (
-        modifierKey &&
-        (event.key === 'y' || (event.key === 'z' && event.shiftKey))
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-        console.log('Redo keyboard shortcut triggered');
-        redo?.();
+      // Check each shortcut
+      for (const shortcut of shortcuts) {
+        if (!shortcut.enabled) {
+          continue;
+        }
+
+        // Check if the key matches
+        if (event.key.toLowerCase() !== shortcut.key.toLowerCase()) {
+          continue;
+        }
+
+        // For cross-platform support, treat ctrl/cmd as the same
+        const modifierMatch =
+          (shortcut.ctrl && (isMac ? event.metaKey : event.ctrlKey)) ||
+          (shortcut.cmd && event.metaKey) ||
+          (shortcut.meta && event.metaKey) ||
+          (!shortcut.ctrl && !shortcut.cmd && !shortcut.meta);
+
+        const shiftMatch = !shortcut.shift || event.shiftKey === shortcut.shift;
+        const altMatch = !shortcut.alt || event.altKey === shortcut.alt;
+
+        if (modifierMatch && shiftMatch && altMatch) {
+          event.preventDefault();
+          event.stopPropagation();
+          shortcut.callback();
+          break; // Only trigger the first matching shortcut
+        }
       }
     },
-    [enabled, undo, redo],
+    [enabled, shortcuts],
   );
 
   useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown, true);
-    return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [handleKeyDown]);
+    if (isRegisteredRef.current) {
+      return;
+    }
 
-  return {
-    canUndo,
-    canRedo,
-  };
+    isRegisteredRef.current = true;
+
+    window.addEventListener('keydown', handleKeyDown, true);
+
+    return () => {
+      isRegisteredRef.current = false;
+      window.removeEventListener('keydown', handleKeyDown, true);
+    };
+  }, [handleKeyDown]);
 };
