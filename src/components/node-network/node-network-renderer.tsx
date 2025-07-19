@@ -18,6 +18,7 @@ import {
   useState,
 } from 'react';
 import '../../lib/css/xyflow.css';
+import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -33,7 +34,32 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
   const { nodes, edges, setEdges, setNodes } = useNodeNetwork(nodeNetworkId);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const reactFlowInstance = useRef<any>(null);
+
+  // Use the new clipboard hook
+  const {
+    copySelectedNodes,
+    pasteNodesAtPosition,
+    duplicateSelectedNodes,
+    canPaste,
+  } = useNodeGraphClipboard({
+    parameterId: nodeNetworkId,
+    reactFlowInstance,
+  });
+
+  // Mouse position tracking for context menu
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  // Get canvas position from mouse position
+  const getCanvasPosition = useCallback(
+    (mousePos: { x: number; y: number }) => {
+      if (!reactFlowInstance.current) return { x: 0, y: 0 };
+      return reactFlowInstance.current.screenToFlowPosition({
+        x: mousePos.x,
+        y: mousePos.y,
+      });
+    },
+    [reactFlowInstance],
+  );
 
   const onPaneContextMenu = (event: ReactMouseEvent) => {
     // Store the raw client coordinates for screenToFlowPosition
@@ -44,24 +70,6 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
     setMousePosition(newMousePosition);
   };
 
-  // Convert screen coordinates to canvas coordinates
-  const getCanvasPosition = useCallback(
-    (screenPosition: { x: number; y: number }) => {
-      if (!reactFlowInstance.current) {
-        return { x: 0, y: 0 };
-      }
-
-      // Use XYFlow's built-in method to convert screen coordinates to canvas coordinates
-      const canvasPosition = reactFlowInstance.current.screenToFlowPosition({
-        x: screenPosition.x,
-        y: screenPosition.y,
-      });
-
-      return canvasPosition;
-    },
-    [],
-  );
-
   const isValidConnection = useCallback(
     (connection: Connection | Edge) => {
       return isConnectionValid(connection as Connection, nodes, edges);
@@ -71,26 +79,67 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
 
   const nodeTypes = useMemo(
     () => ({
-      NodeRenderer: (props: any) => (
-        <ContextMenu>
-          <ContextMenuTrigger>
-            <NodeRenderer {...props} nodeNetworkId={nodeNetworkId} />
-          </ContextMenuTrigger>
-          <ContextMenuContent>
-            <ContextMenuItem inset>Copy</ContextMenuItem>
-            <ContextMenuItem inset>Delete</ContextMenuItem>
-          </ContextMenuContent>
-        </ContextMenu>
-      ),
+      NodeRenderer: (props: any) => {
+        return (
+          <ContextMenu>
+            <ContextMenuTrigger>
+              <NodeRenderer {...props} nodeNetworkId={nodeNetworkId} />
+            </ContextMenuTrigger>
+            <ContextMenuContent>
+              <ContextMenuItem
+                inset
+                onClick={() => {
+                  copySelectedNodes();
+                }}>
+                Copy
+              </ContextMenuItem>
+              <ContextMenuItem
+                inset
+                onClick={() => {
+                  duplicateSelectedNodes();
+                }}>
+                Duplicate
+              </ContextMenuItem>
+              <ContextMenuItem
+                inset
+                onClick={() => {
+                  const canvasPosition = getCanvasPosition(mousePosition);
+                  pasteNodesAtPosition(canvasPosition);
+                }}>
+                Paste
+              </ContextMenuItem>
+              <ContextMenuItem
+                inset
+                onClick={() => {
+                  // Check if this is a protected node
+                  const node = nodes.find((n) => n.id === props.id);
+                  const isProtected =
+                    node &&
+                    (node.data.definition.label === 'Input' ||
+                      node.data.definition.label === 'Output');
+
+                  if (!isProtected) {
+                    // Handle delete - this would need to be implemented
+                    console.log('Delete node:', props.id);
+                  }
+                }}>
+                Delete
+              </ContextMenuItem>
+            </ContextMenuContent>
+          </ContextMenu>
+        );
+      },
     }),
-    [nodeNetworkId],
+    [nodeNetworkId], // Only depend on nodeNetworkId
   );
 
   return (
     <div
       ref={reactFlowWrapper}
-      className="h-full w-full"
+      className="relative h-full w-full"
       onContextMenu={onPaneContextMenu}>
+      {/* Selection indicator */}
+      {/* The selection indicator is removed as per the edit hint */}
       <ContextMenu>
         <ContextMenuTrigger>
           <ReactFlow
@@ -107,9 +156,28 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
             nodes={nodes}
             edges={edges}
             isValidConnection={isValidConnection}
-            onNodesChange={(changes) =>
-              setNodes(applyNodeChanges(changes, nodes))
-            }
+            onNodesChange={(changes) => {
+              // Filter out deletion changes for protected nodes (input/output)
+              const filteredChanges = changes.filter((change) => {
+                if (change.type === 'remove') {
+                  // Check if the node being removed is a protected node
+                  // We can identify protected nodes by their ID pattern
+                  const isProtected =
+                    change.id.includes('-input-node') ||
+                    change.id.includes('-output-node');
+                  return !isProtected;
+                }
+                return true;
+              });
+
+              // Only apply changes if there are any non-filtered changes
+              if (filteredChanges.length > 0) {
+                setNodes(applyNodeChanges(filteredChanges, nodes));
+              }
+            }}
+            onSelectionChange={(elements) => {
+              // This handler is no longer needed as selection state is removed
+            }}
             onEdgesChange={(changes) =>
               setEdges(applyEdgeChanges(changes, edges))
             }
@@ -128,6 +196,14 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
                 mousePosition={mousePosition}
                 getCanvasPosition={getCanvasPosition}
               />
+              <ContextMenuItem
+                inset
+                onClick={() => {
+                  const canvasPosition = getCanvasPosition(mousePosition);
+                  pasteNodesAtPosition(canvasPosition);
+                }}>
+                Paste
+              </ContextMenuItem>
             </ContextMenuContent>
           </ReactFlow>
         </ContextMenuTrigger>

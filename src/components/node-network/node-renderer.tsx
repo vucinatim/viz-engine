@@ -28,6 +28,9 @@ const NodeRenderer = ({
 
   const { edges, updateInputValue } = useNodeNetwork(nodeNetworkId);
 
+  // Check if this is a protected node (input/output)
+  const isProtectedNode = label === 'Input' || label === 'Output';
+
   // Get the output type for display in header
   const getNodeHeaderText = () => {
     if (label === 'Output' && inputs.length > 0) {
@@ -68,7 +71,10 @@ const NodeRenderer = ({
   return (
     <div
       className={cn(
-        'rounded-lg border border-zinc-700 bg-zinc-900 shadow-md',
+        'rounded-lg border shadow-md',
+        isProtectedNode
+          ? 'border-blue-500 bg-zinc-900/50'
+          : 'border-zinc-700 bg-zinc-900',
         selected && 'border-purple-500 shadow-lg',
       )}>
       <p className="w-full select-none rounded-t-lg bg-zinc-800 px-2 py-1 text-xs font-bold">
