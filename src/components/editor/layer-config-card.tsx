@@ -38,21 +38,22 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
     setDebugEnabled,
   } = useLayerStore();
   const [selectedPreset, setSelectedPreset] = useState<any | null>();
-  const layerValues = useLayerValuesStore((state) => state.values[layer.id]);
-  const setLayerValues = useLayerValuesStore((state) => state.setLayerValues);
   const hasInitialized = useRef(false);
+  const [initialValues, setInitialValues] = useState<any | null>(null);
 
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: layer.id });
 
   // When the persisted values are loaded, sync them with the config instance
   useEffect(() => {
-    if (layerValues && !hasInitialized.current) {
-      console.log('Setting layer values', layerValues);
-      layer.config.setValues(layerValues);
-      hasInitialized.current = true;
-    }
-  }, [layer.config, layerValues]);
+    if (hasInitialized.current) return;
+    const storeValues = useLayerValuesStore.getState().values[layer.id];
+    const valuesToUse = storeValues ?? layer.comp.defaultValues;
+    layer.config.setValues(valuesToUse);
+    setInitialValues(valuesToUse);
+    hasInitialized.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layer.id]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -157,7 +158,9 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                   onSelect={(preset) => {
                     layer.config.setValues(preset.values);
                     setSelectedPreset(preset);
-                    setLayerValues(layer.id, preset.values);
+                    useLayerValuesStore
+                      .getState()
+                      .setLayerValues(layer.id, preset.values);
                     updateLayerComp(layer.id, {
                       ...layer.comp,
                       defaultValues: preset.values,
@@ -170,7 +173,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
               <DynamicForm
                 layerId={layer.id}
                 config={layer.config}
-                defaultValues={layerValues}
+                defaultValues={initialValues ?? layer.comp.defaultValues}
               />
             </div>
           </div>

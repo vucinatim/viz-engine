@@ -2,7 +2,7 @@ import useEditorStore from '@/lib/stores/editor-store';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { Label } from '../ui/label';
-import { Slider } from '../ui/slider';
+import { NumberScrubInput } from '../ui/number-scrub-input';
 import { Switch } from '../ui/switch';
 import EditorToolbar from './editor-toolbar';
 
@@ -34,11 +34,12 @@ const EditorHeader = () => {
         <div className="flex items-center gap-x-2">
           <Label
             htmlFor="resolution-multiplier"
-            className="text-xs text-white/20">
+            className="text-xs text-white/30">
             Quality
           </Label>
-          <div className="w-40">
-            <Slider
+          <div className="flex items-center gap-x-2">
+            <NumberScrubInput
+              inputClassName="focus-visible:ring-0 focus-visible:outline-none"
               min={0.5}
               max={3}
               step={0.1}
@@ -46,14 +47,14 @@ const EditorHeader = () => {
               onChange={setResolutionMultiplier}
             />
           </div>
-          <span className="w-8 text-xs text-white/20">
+          <span className="w-8 text-xs text-white/30">
             {resolutionMultiplier.toFixed(1)}x
           </span>
         </div>
         <Label
           htmlFor="airplane-mode"
           className={cn(
-            'text-white/20 transition-colors',
+            'text-white/30 transition-colors',
             ambientMode && 'text-white',
           )}>
           Ambient Mode

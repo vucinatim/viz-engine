@@ -117,18 +117,11 @@ export const useNodeNetworkHistory = (networkId: string) => {
 
   // Undo function
   const undo = useCallback(() => {
-    console.log('History hook - undo called');
     const history = globalHistory[networkId];
 
     if (history.past.length === 0) {
-      console.log('History hook - undo: no past to undo');
       return;
     }
-
-    console.log(
-      'History hook - undo: past length before:',
-      history.past.length,
-    );
 
     // Move current state to future
     history.future.unshift(history.present);
@@ -136,13 +129,6 @@ export const useNodeNetworkHistory = (networkId: string) => {
     // Restore previous state
     const previous = history.past.pop()!;
     history.present = previous;
-
-    console.log(
-      'History hook - undo: applying previous state, nodes:',
-      previous.nodes.length,
-      'edges:',
-      previous.edges.length,
-    );
 
     // Apply to network (let ReactFlow handle selection)
     setNodes(previous.nodes);
@@ -154,13 +140,6 @@ export const useNodeNetworkHistory = (networkId: string) => {
 
     // Update the global history
     setHistory(networkId, history);
-
-    console.log(
-      'History hook - undo: completed, new past length:',
-      history.past.length,
-      'future length:',
-      history.future.length,
-    );
   }, [
     networkId,
     setNodes,
@@ -173,18 +152,11 @@ export const useNodeNetworkHistory = (networkId: string) => {
 
   // Redo function
   const redo = useCallback(() => {
-    console.log('History hook - redo called');
     const history = globalHistory[networkId];
 
     if (history.future.length === 0) {
-      console.log('History hook - redo: no future to redo');
       return;
     }
-
-    console.log(
-      'History hook - redo: future length before:',
-      history.future.length,
-    );
 
     // Move current state to past
     history.past.push(history.present);
@@ -192,13 +164,6 @@ export const useNodeNetworkHistory = (networkId: string) => {
     // Restore future state
     const next = history.future.shift()!;
     history.present = next;
-
-    console.log(
-      'History hook - redo: applying next state, nodes:',
-      next.nodes.length,
-      'edges:',
-      next.edges.length,
-    );
 
     // Apply to network (let ReactFlow handle selection)
     setNodes(next.nodes);
@@ -210,13 +175,6 @@ export const useNodeNetworkHistory = (networkId: string) => {
 
     // Update the global history
     setHistory(networkId, history);
-
-    console.log(
-      'History hook - redo: completed, new past length:',
-      history.past.length,
-      'future length:',
-      history.future.length,
-    );
   }, [
     networkId,
     setNodes,
@@ -231,24 +189,12 @@ export const useNodeNetworkHistory = (networkId: string) => {
   const checkCanUndo = useCallback(() => {
     const history = globalHistory[networkId];
     const result = history.past.length > 0;
-    console.log(
-      'History hook - checkCanUndo called, past length:',
-      history.past.length,
-      'result:',
-      result,
-    );
     return result;
   }, [networkId, globalHistory]);
 
   const checkCanRedo = useCallback(() => {
     const history = globalHistory[networkId];
     const result = history.future.length > 0;
-    console.log(
-      'History hook - checkCanRedo called, future length:',
-      history.future.length,
-      'result:',
-      result,
-    );
     return result;
   }, [networkId, globalHistory]);
 

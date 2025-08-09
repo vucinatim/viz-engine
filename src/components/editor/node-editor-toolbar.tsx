@@ -21,9 +21,6 @@ const NodeEditorToolbar = ({
   // Use history hook for undo/redo functionality
   const { undo, redo, canUndo, canRedo } = useNodeNetworkHistory(nodeNetworkId);
 
-  // Debug logging
-  console.log('Toolbar - canUndo:', canUndo, 'canRedo:', canRedo);
-
   // Use node network store for delete functionality
   const { nodes, edges, setNodes, setEdges } = useNodeNetwork(nodeNetworkId);
 

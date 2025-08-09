@@ -266,19 +266,13 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
         const computeNodeOutput = (node: GraphNode): any => {
           if (nodeOutputs[node.id]) return nodeOutputs[node.id]; // Return cached output if already computed
 
-          // For the global input node, the output is the raw inputData
-          if (node.data.definition.label === 'Input') {
-            const output = inputData;
-            nodeOutputs[node.id] = output;
-            setNodeOutput(node.id, output);
-            return output;
-          }
-
           // Special handling for InputNode: Provide external input data
           if (node.data.definition.label === 'Input') {
-            nodeOutputs[node.id] =
-              node.data.definition.computeSignal(inputData); // InputNode directly uses input data
-            return nodeOutputs[node.id];
+            const inputOutput = node.data.definition.computeSignal(inputData); // InputNode directly uses input data
+            nodeOutputs[node.id] = inputOutput;
+            setNodeOutput(node.id, inputOutput);
+
+            return inputOutput;
           }
 
           // Construct the inputs object for the node

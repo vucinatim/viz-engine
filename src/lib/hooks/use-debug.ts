@@ -1,12 +1,13 @@
 import { UnknownConfigValues } from '@/components/config/create-component';
+import { debugStringify } from '@/lib/utils';
 import React, { useCallback, useRef } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import { calculateAudioLevel } from '../comp-utils/audio-utils';
 
 function useDebug(debugCanvasRef: React.RefObject<HTMLCanvasElement>) {
-  const lastFrameTimeRef = useRef(Date.now());
-  const frameCountRef = useRef(0);
-  const fpsRef = useRef(0);
+  // High-precision timing for FPS estimation
+  const prevTsRef = useRef<number | null>(null);
+  const smoothedFpsRef = useRef(0);
 
   // Enhances the given draw function with debugging
   const withDebug = useCallback(
@@ -26,19 +27,21 @@ function useDebug(debugCanvasRef: React.RefObject<HTMLCanvasElement>) {
       drawFunction(); // Execute the original draw function
       const drawEnd = performance.now();
 
-      const now = Date.now();
-      const deltaTime = now - lastFrameTimeRef.current;
-      frameCountRef.current++;
-
-      if (deltaTime >= 1000) {
-        fpsRef.current = frameCountRef.current / (deltaTime / 1000);
-        frameCountRef.current = 0;
-        lastFrameTimeRef.current = now;
+      // Instantaneous FPS from consecutive calls; smooth with EMA
+      const nowTs = performance.now();
+      if (prevTsRef.current !== null) {
+        const instFps = 1000 / Math.max(0.0001, nowTs - prevTsRef.current);
+        const alpha = 0.15; // smoothing factor
+        smoothedFpsRef.current =
+          smoothedFpsRef.current === 0
+            ? instFps
+            : smoothedFpsRef.current * (1 - alpha) + instFps * alpha;
       }
+      prevTsRef.current = nowTs;
 
       // Prepare debug information
       const debugInfo = {
-        fps: fpsRef.current,
+        fps: smoothedFpsRef.current,
         currentTime: wavesurfer?.getCurrentTime() || 0,
         currentLevel: calculateAudioLevel(dataArray),
         lastFrameTime: drawEnd - drawStart,
@@ -105,9 +108,10 @@ function renderDebugOverlay(
   ctx.fillStyle = 'white'; // White color for config values
   let yOffset = 180;
 
-  // Function to render nested JSON objects with proper indentations
+  // Function to render nested JSON objects with robust stringification
   function drawConfigText(key: string, value: any, indent: string) {
-    const lines = JSON.stringify(value, null, 2).split('\n');
+    const text = debugStringify(value);
+    const lines = text.split('\n');
     lines.forEach((line, index) => {
       ctx?.fillText(
         `${indent}${index === 0 ? key + ': ' : ''}${line}`,

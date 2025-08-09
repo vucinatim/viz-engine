@@ -59,11 +59,22 @@ const InstancedSupercube = createComponent({
   createState: () => ({
     instancedMesh: null as THREE.InstancedMesh | null,
     material: null as THREE.MeshStandardMaterial | null,
+    // Targets for animation
     implodedMatrices: [] as THREE.Matrix4[],
     explodedMatrices: [] as THREE.Matrix4[],
     instanceCount: 0,
+    // Capacity and config snapshot
+    maxGridSize: 8,
+    maxCapacity: 0,
+    prevGridSize: undefined as number | undefined,
+    prevSpacing: undefined as number | undefined,
+    prevExplosionFactor: undefined as number | undefined,
+    // Shader/time
     customUniforms: null as { uTime: { value: number } } | null,
     clock: null as THREE.Clock | null,
+    // Accumulated rotations for smooth, dt-based rotation updates
+    rotationX: 0,
+    rotationY: 0,
   }),
   init3D: ({ threeCtx: { scene, camera, renderer }, state, config }) => {
     // Store clock for timing
@@ -87,7 +98,7 @@ const InstancedSupercube = createComponent({
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
     scene.add(ambientLight);
 
-    // Create the instanced mesh
+    // Create the instanced mesh once with fixed capacity and reuse it
     createInstancedMesh(scene, state, config);
 
     // Add shadow plane
@@ -107,11 +118,22 @@ const InstancedSupercube = createComponent({
     // Update shader time uniform
     state.customUniforms.uTime.value = time;
 
-    // Rotate the entire mesh
-    state.instancedMesh.rotation.x = time * config.rotationSpeed;
-    state.instancedMesh.rotation.y = time * config.rotationSpeed;
+    // Rotate the entire mesh (dt-based to avoid snapping when speed changes)
+    state.rotationX += config.rotationSpeed * dt;
+    state.rotationY += config.rotationSpeed * dt;
+    state.instancedMesh.rotation.x = state.rotationX;
+    state.instancedMesh.rotation.y = state.rotationY;
 
-    // Animate the explosion/implosion
+    // If structural parameters changed, rebuild targets and adjust count
+    if (
+      state.prevGridSize !== config.gridSize ||
+      state.prevSpacing !== config.spacing ||
+      state.prevExplosionFactor !== config.explosionFactor
+    ) {
+      updateTargetsAndLayout(state, config);
+    }
+
+    // Animate the explosion/implosion towards target matrices
     const currentMatrix = new THREE.Matrix4();
     const implodedMatrices = state.implodedMatrices;
     const explodedMatrices = state.explodedMatrices;
@@ -213,15 +235,40 @@ function createInstancedMesh(scene: THREE.Scene, state: any, config: any) {
     );
   };
 
-  // Calculate matrices for all instances
-  const gridSize = config.gridSize;
-  const spacing = config.spacing;
-  const explosionFactor = config.explosionFactor;
-  let instanceCount = 0;
+  // Compute maximum capacity once
+  const maxGridSize: number = state.maxGridSize ?? 8;
+  const maxPerHollow = 12 * maxGridSize - 16; // edges + corners for grid S
+  const maxCapacity = 8 * Math.max(0, maxPerHollow);
+  state.maxGridSize = maxGridSize;
+  state.maxCapacity = maxCapacity;
+
+  const instancedMesh = new THREE.InstancedMesh(
+    subCubeGeometry,
+    material,
+    maxCapacity,
+  );
+  instancedMesh.castShadow = true;
+  instancedMesh.count = 0; // start empty until we build targets
+
+  scene.add(instancedMesh);
+
+  // Store references
+  state.instancedMesh = instancedMesh;
+  state.material = material;
+
+  // Initialize targets and layout
+  updateTargetsAndLayout(state, config);
+}
+
+function updateTargetsAndLayout(state: any, config: any) {
+  const gridSize = config.gridSize as number;
+  const spacing = config.spacing as number;
+  const explosionFactor = config.explosionFactor as number;
 
   const implodedMatrices: THREE.Matrix4[] = [];
   const explodedMatrices: THREE.Matrix4[] = [];
 
+  const subCubeSize = 3 / 5;
   const dummy = new THREE.Object3D();
 
   for (let hx = -1; hx <= 1; hx += 2) {
@@ -242,7 +289,6 @@ function createInstancedMesh(scene: THREE.Scene, state: any, config: any) {
               if (k === 0 || k === gridSize - 1) boundaryCount++;
 
               if (boundaryCount >= 2) {
-                instanceCount++;
                 const centerOffset = (gridSize - 1) / 2;
                 const initialX = (i - centerOffset) * subCubeSize;
                 const initialY = (j - centerOffset) * subCubeSize;
@@ -273,26 +319,23 @@ function createInstancedMesh(scene: THREE.Scene, state: any, config: any) {
     }
   }
 
-  const instancedMesh = new THREE.InstancedMesh(
-    subCubeGeometry,
-    material,
-    instanceCount,
-  );
-  instancedMesh.castShadow = true;
-
-  // Set initial matrices
-  for (let i = 0; i < instanceCount; i++) {
-    instancedMesh.setMatrixAt(i, implodedMatrices[i]);
-  }
-
-  scene.add(instancedMesh);
-
-  // Store references
-  state.instancedMesh = instancedMesh;
-  state.material = material;
+  // Update state targets
   state.implodedMatrices = implodedMatrices;
   state.explodedMatrices = explodedMatrices;
-  state.instanceCount = instanceCount;
+  state.instanceCount = Math.min(implodedMatrices.length, state.maxCapacity);
+  state.prevGridSize = gridSize;
+  state.prevSpacing = spacing;
+  state.prevExplosionFactor = explosionFactor;
+
+  // Ensure new instances have an initial matrix
+  const currentMatrix = new THREE.Matrix4();
+  const mesh: THREE.InstancedMesh = state.instancedMesh;
+  const previousCount = Math.min(mesh.count, state.instanceCount);
+  for (let i = previousCount; i < state.instanceCount; i++) {
+    mesh.setMatrixAt(i, implodedMatrices[i]);
+  }
+  mesh.count = state.instanceCount;
+  mesh.instanceMatrix.needsUpdate = true;
 }
 
 export default InstancedSupercube;

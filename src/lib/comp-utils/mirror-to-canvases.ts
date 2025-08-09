@@ -1,6 +1,6 @@
 export function mirrorToCanvases(
   original: HTMLCanvasElement | null,
-  copies?: HTMLCanvasElement[]
+  copies?: HTMLCanvasElement[],
 ) {
   if (!original) return;
   copies?.forEach((copyCanvas) => {
@@ -9,7 +9,7 @@ export function mirrorToCanvases(
 
     const width = copyCanvas.width;
     const height = copyCanvas.height;
-    const mirrorCtx = copyCanvas.getContext("2d");
+    const mirrorCtx = copyCanvas.getContext('2d');
     if (mirrorCtx) {
       mirrorCtx.clearRect(0, 0, width, height);
       // Scale the canvas to fit the mirror canvas and draw the image
@@ -22,7 +22,7 @@ export function mirrorToCanvases(
         0,
         0,
         width,
-        height
+        height,
       );
     }
   });

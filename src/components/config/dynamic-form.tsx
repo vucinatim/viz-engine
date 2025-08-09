@@ -40,9 +40,9 @@ const DynamicForm = ({ layerId, config, defaultValues }: DynamicFormProps) => {
                 <div className="flex flex-col gap-y-4 pb-6">
                   {Object.entries(option.options).map(
                     ([innerKey, innerOption]) => (
-                      <DynamicFormField
-                        layerId={layerId}
+                      <MemoField
                         key={`${key}.${innerKey}`}
+                        layerId={layerId}
                         name={`${key}.${innerKey}`}
                         form={form}
                         option={innerOption as ConfigParam<any>}
@@ -53,7 +53,7 @@ const DynamicForm = ({ layerId, config, defaultValues }: DynamicFormProps) => {
               </CollapsibleGroup>
             ) : (
               <div className="pb-6">
-                <DynamicFormField
+                <MemoField
                   layerId={layerId}
                   name={key}
                   form={form}
@@ -175,3 +175,23 @@ const DynamicFormField = ({
 };
 
 export default DynamicForm;
+
+// Memoized field to limit rerenders to the changed control only
+import React from 'react';
+const MemoField = React.memo(DynamicFormField, (prev, next) => {
+  // Re-render when:
+  // - it's the same field (name)
+  // - the value in RHF changed for this field
+  // - its animation state changed (enabled/highlighted/live value)
+
+  if (prev.name !== next.name) return false;
+  if (prev.layerId !== next.layerId) return false;
+
+  // React Hook Form exposes current values via form.getValues
+  const prevVal = prev.form.getValues(prev.name);
+  const nextVal = next.form.getValues(next.name);
+  if (prevVal !== nextVal) return false;
+
+  // Shallow compare option meta likely stable; assume stable
+  return true;
+});

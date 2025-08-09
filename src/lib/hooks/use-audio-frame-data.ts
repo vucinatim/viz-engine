@@ -16,19 +16,30 @@ const useAudioFrameData = ({
   const timeDomainDataRef = useRef<Uint8Array>(new Uint8Array());
   const lastFrequencyDataRef = useRef<Uint8Array>(new Uint8Array());
   const lastTimeDomainDataRef = useRef<Uint8Array>(new Uint8Array());
+  const lastLogRef = useRef<number>(0);
 
   useEffect(() => {
     if (analyzer && wavesurfer) {
       const initData = () => {
-        const freqData = new Uint8Array(analyzer.frequencyBinCount);
-        analyzer.getByteFrequencyData(freqData);
-        frequencyDataRef.current = freqData;
-        lastFrequencyDataRef.current = new Uint8Array(freqData);
+        // Preallocate and reuse buffers to avoid per-frame allocations
+        const size = analyzer.frequencyBinCount;
+        if (frequencyDataRef.current.length !== size) {
+          frequencyDataRef.current = new Uint8Array(size);
+          lastFrequencyDataRef.current = new Uint8Array(size);
+        }
+        if (timeDomainDataRef.current.length !== size) {
+          timeDomainDataRef.current = new Uint8Array(size);
+          lastTimeDomainDataRef.current = new Uint8Array(size);
+        }
 
-        const timeData = new Uint8Array(analyzer.frequencyBinCount);
-        analyzer.getByteTimeDomainData(timeData);
-        timeDomainDataRef.current = timeData;
-        lastTimeDomainDataRef.current = new Uint8Array(timeData);
+        analyzer.getByteFrequencyData(frequencyDataRef.current as any);
+        lastFrequencyDataRef.current.set(frequencyDataRef.current);
+
+        analyzer.getByteTimeDomainData(timeDomainDataRef.current as any);
+        lastTimeDomainDataRef.current.set(timeDomainDataRef.current);
+
+        // eslint-disable-next-line no-console
+        console.debug(`[AudioFrameData] Preallocated buffers size=${size}`);
       };
 
       wavesurfer.on('ready', initData);
@@ -53,15 +64,33 @@ const useAudioFrameData = ({
     const isPlaying = !isFrozen || wavesurfer?.isPlaying?.();
 
     if (isPlaying) {
-      const freqData = new Uint8Array(analyzer.frequencyBinCount);
-      analyzer.getByteFrequencyData(freqData);
-      frequencyDataRef.current = freqData;
-      lastFrequencyDataRef.current = new Uint8Array(freqData);
+      // Reuse preallocated buffers
+      const size = analyzer.frequencyBinCount;
+      if (frequencyDataRef.current.length !== size) {
+        frequencyDataRef.current = new Uint8Array(size);
+        lastFrequencyDataRef.current = new Uint8Array(size);
+      }
+      if (timeDomainDataRef.current.length !== size) {
+        timeDomainDataRef.current = new Uint8Array(size);
+        lastTimeDomainDataRef.current = new Uint8Array(size);
+      }
 
-      const timeData = new Uint8Array(analyzer.frequencyBinCount);
-      analyzer.getByteTimeDomainData(timeData);
-      timeDomainDataRef.current = timeData;
-      lastTimeDomainDataRef.current = new Uint8Array(timeData);
+      analyzer.getByteFrequencyData(frequencyDataRef.current as any);
+      lastFrequencyDataRef.current.set(frequencyDataRef.current);
+
+      analyzer.getByteTimeDomainData(timeDomainDataRef.current as any);
+      lastTimeDomainDataRef.current.set(timeDomainDataRef.current);
+
+      // Throttled debug log
+      const now =
+        typeof performance !== 'undefined' ? performance.now() : Date.now();
+      if (now - lastLogRef.current > 2000) {
+        // eslint-disable-next-line no-console
+        console.debug(
+          `[AudioFrameData] Updated frame buffers (sr=${analyzer.context.sampleRate}, fft=${analyzer.fftSize})`,
+        );
+        lastLogRef.current = now;
+      }
     }
 
     return {

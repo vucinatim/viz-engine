@@ -1,6 +1,6 @@
 import useEditorStore from '@/lib/stores/editor-store';
 import { cn } from '@/lib/utils';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -20,22 +20,31 @@ export function EditorLayout({
   midRightChildren,
   bottomRightChildren,
 }: EditorLayoutProps) {
-  // const { setDominantColor } = useEditorStore();
+  const { setResolutionMultiplier } = useEditorStore();
   // const {layers} = useLayerStore();
 
-  // useEffect(() => {
-  //   console.log("EditorLayout rerendering");
-  //   const colors = [];
-  //   for (const layer of layers) {
-  //     const config = layer.valuesRef.current;
-  //     Object.entries(config).forEach(([key, value]) => {
-  //       if (key === "color") {
-  //         colors.push(value);
-  //       }
-  //     });
-  //   }
-
-  // }, [layers]);
+  // Set resolution multiplier to devicePixelRatio on mount and when DPR changes
+  useEffect(() => {
+    const update = () => {
+      const dpr =
+        typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+      setResolutionMultiplier(dpr);
+    };
+    update();
+    // Some browsers support 'change' event on matchMedia for DPR changes
+    const mq =
+      typeof window !== 'undefined'
+        ? window.matchMedia(
+            `(resolution: ${typeof window !== 'undefined' ? window.devicePixelRatio : 1}dppx)`,
+          )
+        : null;
+    mq?.addEventListener?.('change', update);
+    window.addEventListener('resize', update);
+    return () => {
+      mq?.removeEventListener?.('change', update);
+      window.removeEventListener('resize', update);
+    };
+  }, [setResolutionMultiplier]);
 
   return (
     <ResizablePanelGroup
@@ -49,19 +58,15 @@ export function EditorLayout({
       <ResizableHandle />
       <ResizablePanel id="right-panel" order={1} defaultSize={70}>
         <ResizablePanelGroup direction="vertical">
-          <ResizablePanel
-            id="top-right-panel"
-            order={2}
-            defaultSize={74}
-            minSize={20}>
+          <ResizablePanel id="top-right-panel" defaultSize={72} minSize={20}>
             <div className="relative flex h-full w-full flex-col items-stretch justify-stretch">
               {topRightChildren}
             </div>
           </ResizablePanel>
-          <ResizableHandle />
           {midRightChildren && (
             <>
-              <ResizablePanel id="mid-right-panel" order={3} defaultSize={50}>
+              <ResizableHandle />
+              <ResizablePanel id="mid-right-panel" defaultSize={50}>
                 <div className="relative flex h-full w-full">
                   {midRightChildren}
                 </div>
@@ -69,12 +74,7 @@ export function EditorLayout({
             </>
           )}
           <ResizableHandle />
-          <ResizablePanel
-            order={4}
-            id="bottom-right-panel"
-            // className="min-h-[227px]"
-            defaultSize={26}
-            minSize={20}>
+          <ResizablePanel id="bottom-right-panel" defaultSize={28} minSize={20}>
             <div className="relative flex h-full w-full flex-col items-stretch justify-stretch">
               {bottomRightChildren}
             </div>

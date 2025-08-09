@@ -1,10 +1,11 @@
+import { mirrorToCanvases } from '@/lib/comp-utils/mirror-to-canvases';
 import useAudioFrameData from '@/lib/hooks/use-audio-frame-data';
 import useDebug from '@/lib/hooks/use-debug';
 import useOnResize from '@/lib/hooks/use-on-resize';
 import useAudioStore from '@/lib/stores/audio-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { LayerData } from '@/lib/stores/layer-store';
-import { forwardRef, useCallback, useEffect, useRef } from 'react';
+import { forwardRef, memo, useCallback, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
 type RenderFunction = (data: {
@@ -26,7 +27,10 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   const { resolutionMultiplier } = useEditorStore();
 
   // Time tracking
-  const lastFrameTimeRef = useRef(Date.now());
+  const lastFrameTimeRef = useRef(
+    typeof performance !== 'undefined' ? performance.now() : Date.now(),
+  );
+  const rafIdRef = useRef<number | null>(null);
 
   // 3D refs
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -197,7 +201,8 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     }
 
     const renderFrame = () => {
-      const now = Date.now();
+      const now =
+        typeof performance !== 'undefined' ? performance.now() : Date.now();
       const dt = (now - lastFrameTimeRef.current) / 1000.0; // time in seconds
       lastFrameTimeRef.current = now; // update last frame time
 
@@ -230,17 +235,21 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
         },
       );
 
-      // Mirror the rendered canvas to other canvases
-      // mirrorToCanvases(layerCanvasRef.current, layer.mirrorCanvases);
+      // Mirror the rendered canvas to preview canvases
+      if (layer.mirrorCanvases && layer.mirrorCanvases.length > 0) {
+        mirrorToCanvases(layerCanvasRef.current, layer.mirrorCanvases);
+      }
 
-      requestAnimationFrame(renderFrame);
+      rafIdRef.current = requestAnimationFrame(renderFrame);
     };
 
-    renderFrame();
-
-    console.log('Rendering frame USE EFFECT');
+    rafIdRef.current = requestAnimationFrame(renderFrame);
     return () => {
       // Cleanup renderer and other three.js resources when component unmounts or before reinitializing
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
       if (rendererRef.current) {
         rendererRef.current.dispose();
       }
@@ -280,4 +289,6 @@ export const LayerCanvas = forwardRef<HTMLCanvasElement, LayerCanvasProps>(
 
 LayerCanvas.displayName = 'LayerCanvas';
 
-export default LayerRenderer;
+LayerRenderer.displayName = 'LayerRenderer';
+
+export default memo(LayerRenderer);

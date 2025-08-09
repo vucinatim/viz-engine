@@ -1,19 +1,24 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from 'react';
+import { AUDIO_THEME } from '../theme/audio-theme';
 
-function useCanvasGradient() {
+function useCanvasGradient(height: number = AUDIO_THEME.waveform.height) {
   const [gradient, setGradient] = useState<CanvasGradient | null>(null);
 
   useEffect(() => {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const grad = ctx.createLinearGradient(0, 0, 0, 100);
-    grad.addColorStop(0, "rgb(242, 56, 180)");
-    grad.addColorStop(1, "rgb(22, 44, 168)");
+    // Build gradient from theme stops
+    const dpr =
+      typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+    const grad = ctx.createLinearGradient(0, 0, 0, height * dpr);
+    for (const stop of AUDIO_THEME.waveform.gradientStops) {
+      grad.addColorStop(stop.offset, stop.color);
+    }
 
     setGradient(grad);
-  }, []);
+  }, [height]);
 
   return gradient;
 }
