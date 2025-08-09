@@ -1,8 +1,8 @@
-import { mirrorToCanvases } from '@/lib/comp-utils/mirror-to-canvases';
 import useAudioFrameData from '@/lib/hooks/use-audio-frame-data';
 import useDebug from '@/lib/hooks/use-debug';
 import useOnResize from '@/lib/hooks/use-on-resize';
 import useAudioStore from '@/lib/stores/audio-store';
+import useEditorStore from '@/lib/stores/editor-store';
 import { LayerData } from '@/lib/stores/layer-store';
 import { forwardRef, useCallback, useEffect, useRef } from 'react';
 import * as THREE from 'three';
@@ -23,6 +23,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   const layerCanvasRef = useRef<HTMLCanvasElement>(null);
   const debugCanvasRef = useRef<HTMLCanvasElement>(null);
   const { audioAnalyzer, wavesurfer } = useAudioStore();
+  const { resolutionMultiplier } = useEditorStore();
 
   // Time tracking
   const lastFrameTimeRef = useRef(Date.now());
@@ -34,24 +35,38 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
 
   // on panel resize, update canvas size
   useOnResize(canvasContainerRef, (entries, element) => {
-    // If the canvas is not available, return
     console.log('Resizing canvas');
     if (!layerCanvasRef.current) return;
     const newestEntry = entries[entries.length - 1];
 
     const { width, height } = newestEntry.contentRect;
-    console.log(`Setting canvas size to ${width}x${height}`);
-    layerCanvasRef.current.width = width;
-    layerCanvasRef.current.height = height;
+
+    // Calculate the new internal resolution based on the multiplier
+    const newWidth = Math.round(width * resolutionMultiplier);
+    const newHeight = Math.round(height * resolutionMultiplier);
+
+    console.log(
+      `Display: ${width}x${height}, Resolution: ${newWidth}x${newHeight} (${resolutionMultiplier}x)`,
+    );
+
+    // Set the canvas internal bitmap size (this is what changes with multiplier)
+    layerCanvasRef.current.width = newWidth;
+    layerCanvasRef.current.height = newHeight;
+
     if (debugCanvasRef.current) {
-      debugCanvasRef.current.width = width;
-      debugCanvasRef.current.height = height;
+      debugCanvasRef.current.width = newWidth;
+      debugCanvasRef.current.height = newHeight;
     }
 
     if (sceneRef.current && cameraRef.current && rendererRef.current) {
-      rendererRef.current.setSize(width, height);
+      // *** THE FIX ***
+      // The third parameter 'false' tells setSize NOT to update the canvas's CSS style.
+      // This allows our CSS classes ('h-full', 'w-full') to control the display size.
+      rendererRef.current.setSize(newWidth, newHeight, false);
+
       const camera = cameraRef.current;
       if (camera) {
+        // The camera's aspect ratio should always be based on the DISPLAY size.
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
       }
@@ -70,18 +85,26 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
 
   const setup3D = useCallback(() => {
     if (!layer.comp.draw3D || !layerCanvasRef.current) return;
-
-    console.log(`Setting up 3D renderer [${layer.comp.name}_${layer.id}]`);
-
     const renderer = new THREE.WebGLRenderer({
       canvas: layerCanvasRef.current,
       antialias: true,
       alpha: true,
     });
-    renderer.setSize(
-      layerCanvasRef.current.clientWidth,
-      layerCanvasRef.current.clientHeight,
-    ); // Ensure renderer size matches the canvas size
+
+    const containerWidth = layerCanvasRef.current.clientWidth;
+    const containerHeight = layerCanvasRef.current.clientHeight;
+
+    // Calculate the initial internal resolution based on the multiplier
+    const newWidth = Math.round(containerWidth * resolutionMultiplier);
+    const newHeight = Math.round(containerHeight * resolutionMultiplier);
+
+    // Set the canvas internal bitmap size
+    layerCanvasRef.current.width = newWidth;
+    layerCanvasRef.current.height = newHeight;
+
+    // *** THE FIX ***
+    // The third parameter 'false' tells setSize NOT to update the canvas's CSS style.
+    renderer.setSize(newWidth, newHeight, false);
 
     const scene = new THREE.Scene();
     if (layer.isDebugEnabled) {
@@ -92,7 +115,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     }
     const camera = new THREE.PerspectiveCamera(
       75,
-      layerCanvasRef.current.clientWidth / layerCanvasRef.current.clientHeight,
+      containerWidth / containerHeight, // Aspect ratio uses display size
       0.1,
       1000,
     );
@@ -128,9 +151,9 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     audioAnalyzer?.fftSize,
     layer.comp,
     layer.config,
-    layer.id,
     layer.isDebugEnabled,
     layer.state,
+    resolutionMultiplier,
     wavesurfer,
   ]);
 
@@ -195,20 +218,20 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
 
       withDebug(
         () =>
-          renderFunction({
+          renderFunction?.({
             dt,
-            audioData: { dataArray: timeDomainData, analyzer: audioAnalyzer },
+            audioData: { dataArray: frequencyData, analyzer: audioAnalyzer },
             config: layer.config.getValues(animInputData),
           }),
         {
-          dataArray: timeDomainData,
+          dataArray: frequencyData,
           wavesurfer: wavesurfer,
           config: layer.config.getValues(animInputData),
         },
       );
 
       // Mirror the rendered canvas to other canvases
-      mirrorToCanvases(layerCanvasRef.current, layer.mirrorCanvases);
+      // mirrorToCanvases(layerCanvasRef.current, layer.mirrorCanvases);
 
       requestAnimationFrame(renderFrame);
     };
@@ -248,7 +271,7 @@ export const LayerCanvas = forwardRef<HTMLCanvasElement, LayerCanvasProps>(
           opacity: layer.layerSettings.opacity,
           background: `${layer.layerSettings.background}`,
           display: layer.layerSettings.visible ? 'block' : 'none',
-          mixBlendMode: layer.layerSettings.blendingMode,
+          mixBlendMode: layer.layerSettings.blendingMode, // Cast to any to support non-standard values
         }}
       />
     );

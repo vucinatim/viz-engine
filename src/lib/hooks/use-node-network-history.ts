@@ -1,4 +1,5 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
+import { create } from 'zustand';
 import { useNodeNetwork } from '../../components/node-network/node-network-store';
 
 // History state for a single network
@@ -22,35 +23,76 @@ interface HistoryStore {
   [networkId: string]: NetworkHistory;
 }
 
+// Global Zustand store for history state
+interface HistoryStateStore {
+  history: HistoryStore;
+  canUndo: { [networkId: string]: boolean };
+  canRedo: { [networkId: string]: boolean };
+  setHistory: (networkId: string, history: NetworkHistory) => void;
+  setCanUndo: (networkId: string, canUndo: boolean) => void;
+  setCanRedo: (networkId: string, canRedo: boolean) => void;
+}
+
+const useHistoryStateStore = create<HistoryStateStore>((set, get) => ({
+  history: {},
+  canUndo: {},
+  canRedo: {},
+  setHistory: (networkId: string, history: NetworkHistory) =>
+    set((state) => ({
+      history: { ...state.history, [networkId]: history },
+    })),
+  setCanUndo: (networkId: string, canUndo: boolean) =>
+    set((state) => ({
+      canUndo: { ...state.canUndo, [networkId]: canUndo },
+    })),
+  setCanRedo: (networkId: string, canRedo: boolean) =>
+    set((state) => ({
+      canRedo: { ...state.canRedo, [networkId]: canRedo },
+    })),
+}));
+
 export const useNodeNetworkHistory = (networkId: string) => {
   // Get the existing network operations
   const { nodes, edges, setNodes, setEdges } = useNodeNetwork(networkId);
 
-  // Store history in a ref to avoid re-renders
-  const historyRef = useRef<HistoryStore>({});
-
   // Simple flag to bypass history during drag
   const bypassHistoryRef = useRef(false);
 
+  // Use global Zustand store for reactive state
+  const {
+    history: globalHistory,
+    canUndo,
+    canRedo,
+    setHistory,
+    setCanUndo,
+    setCanRedo,
+  } = useHistoryStateStore();
+
   // Initialize history for this network if it doesn't exist
-  if (!historyRef.current[networkId]) {
-    historyRef.current[networkId] = {
+  if (!globalHistory[networkId]) {
+    const initialHistory = {
       past: [],
       present: { nodes, edges },
       future: [],
     };
+    setHistory(networkId, initialHistory);
   }
 
   // Push current state to history
   const pushToHistory = useCallback(
     (newNodes: any[], newEdges: any[]) => {
-      const history = historyRef.current[networkId];
+      const history = globalHistory[networkId];
 
       // Check if this would be identical to the last saved state
       const newState = { nodes: newNodes, edges: newEdges };
       const lastState = history.present;
 
       if (JSON.stringify(newState) === JSON.stringify(lastState)) {
+        return;
+      }
+
+      // Only save to history if not bypassing
+      if (bypassHistoryRef.current) {
         return;
       }
 
@@ -62,17 +104,31 @@ export const useNodeNetworkHistory = (networkId: string) => {
 
       // Clear future (new action destroys redo stack)
       history.future = [];
+
+      // Update global state directly
+      setCanUndo(networkId, history.past.length > 0);
+      setCanRedo(networkId, history.future.length > 0);
+
+      // Update the global history
+      setHistory(networkId, history);
     },
-    [networkId],
+    [networkId, setCanUndo, setCanRedo, globalHistory, setHistory],
   );
 
   // Undo function
   const undo = useCallback(() => {
-    const history = historyRef.current[networkId];
+    console.log('History hook - undo called');
+    const history = globalHistory[networkId];
 
     if (history.past.length === 0) {
+      console.log('History hook - undo: no past to undo');
       return;
     }
+
+    console.log(
+      'History hook - undo: past length before:',
+      history.past.length,
+    );
 
     // Move current state to future
     history.future.unshift(history.present);
@@ -81,18 +137,54 @@ export const useNodeNetworkHistory = (networkId: string) => {
     const previous = history.past.pop()!;
     history.present = previous;
 
+    console.log(
+      'History hook - undo: applying previous state, nodes:',
+      previous.nodes.length,
+      'edges:',
+      previous.edges.length,
+    );
+
     // Apply to network (let ReactFlow handle selection)
     setNodes(previous.nodes);
     setEdges(previous.edges);
-  }, [networkId, setNodes, setEdges]);
+
+    // Update global state directly
+    setCanUndo(networkId, history.past.length > 0);
+    setCanRedo(networkId, history.future.length > 0);
+
+    // Update the global history
+    setHistory(networkId, history);
+
+    console.log(
+      'History hook - undo: completed, new past length:',
+      history.past.length,
+      'future length:',
+      history.future.length,
+    );
+  }, [
+    networkId,
+    setNodes,
+    setEdges,
+    setCanUndo,
+    setCanRedo,
+    globalHistory,
+    setHistory,
+  ]);
 
   // Redo function
   const redo = useCallback(() => {
-    const history = historyRef.current[networkId];
+    console.log('History hook - redo called');
+    const history = globalHistory[networkId];
 
     if (history.future.length === 0) {
+      console.log('History hook - redo: no future to redo');
       return;
     }
+
+    console.log(
+      'History hook - redo: future length before:',
+      history.future.length,
+    );
 
     // Move current state to past
     history.past.push(history.present);
@@ -101,21 +193,73 @@ export const useNodeNetworkHistory = (networkId: string) => {
     const next = history.future.shift()!;
     history.present = next;
 
+    console.log(
+      'History hook - redo: applying next state, nodes:',
+      next.nodes.length,
+      'edges:',
+      next.edges.length,
+    );
+
     // Apply to network (let ReactFlow handle selection)
     setNodes(next.nodes);
     setEdges(next.edges);
-  }, [networkId, setNodes, setEdges]);
+
+    // Update global state directly
+    setCanUndo(networkId, history.past.length > 0);
+    setCanRedo(networkId, history.future.length > 0);
+
+    // Update the global history
+    setHistory(networkId, history);
+
+    console.log(
+      'History hook - redo: completed, new past length:',
+      history.past.length,
+      'future length:',
+      history.future.length,
+    );
+  }, [
+    networkId,
+    setNodes,
+    setEdges,
+    setCanUndo,
+    setCanRedo,
+    globalHistory,
+    setHistory,
+  ]);
 
   // Check if undo/redo are available
-  const canUndo = useCallback(() => {
-    const history = historyRef.current[networkId];
-    return history.past.length > 0;
-  }, [networkId]);
+  const checkCanUndo = useCallback(() => {
+    const history = globalHistory[networkId];
+    const result = history.past.length > 0;
+    console.log(
+      'History hook - checkCanUndo called, past length:',
+      history.past.length,
+      'result:',
+      result,
+    );
+    return result;
+  }, [networkId, globalHistory]);
 
-  const canRedo = useCallback(() => {
-    const history = historyRef.current[networkId];
-    return history.future.length > 0;
-  }, [networkId]);
+  const checkCanRedo = useCallback(() => {
+    const history = globalHistory[networkId];
+    const result = history.future.length > 0;
+    console.log(
+      'History hook - checkCanRedo called, future length:',
+      history.future.length,
+      'result:',
+      result,
+    );
+    return result;
+  }, [networkId, globalHistory]);
+
+  // Reactive canUndo/canRedo values
+  const reactiveCanUndo = useMemo(() => {
+    return canUndo[networkId] || false;
+  }, [canUndo, networkId]);
+
+  const reactiveCanRedo = useMemo(() => {
+    return canRedo[networkId] || false;
+  }, [canRedo, networkId]);
 
   // Wrapped setNodes that pushes to history (only when not bypassing)
   const setNodesWithHistory = useCallback(
@@ -125,9 +269,12 @@ export const useNodeNetworkHistory = (networkId: string) => {
       // Only save to history if not bypassing
       if (!bypassHistoryRef.current) {
         pushToHistory(newNodes, edges);
+        // Update reactive state
+        checkCanUndo();
+        checkCanRedo();
       }
     },
-    [setNodes, pushToHistory, edges],
+    [setNodes, pushToHistory, edges, checkCanUndo, checkCanRedo],
   );
 
   // Wrapped setEdges that pushes to history (only when not bypassing)
@@ -138,9 +285,12 @@ export const useNodeNetworkHistory = (networkId: string) => {
       // Only save to history if not bypassing
       if (!bypassHistoryRef.current) {
         pushToHistory(nodes, newEdges);
+        // Update reactive state
+        checkCanUndo();
+        checkCanRedo();
       }
     },
-    [setEdges, pushToHistory, nodes],
+    [setEdges, pushToHistory, nodes, checkCanUndo, checkCanRedo],
   );
 
   // Functions to control history bypass
@@ -162,8 +312,8 @@ export const useNodeNetworkHistory = (networkId: string) => {
     // History functions
     undo,
     redo,
-    canUndo: canUndo(),
-    canRedo: canRedo(),
+    canUndo: reactiveCanUndo,
+    canRedo: reactiveCanRedo,
 
     // Drag functions
     startDrag,

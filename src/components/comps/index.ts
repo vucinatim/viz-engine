@@ -1,6 +1,7 @@
 import CurveSpectrum from './curve-spectrum';
 import DebugAnimation from './debug-animation';
 import HeartbeatMonitor from './heartbeat-monitor';
+import InstancedSupercube from './instanced-supercube';
 import MovingObjects from './moving-objects';
 import SimpleCube from './simple-cube';
 
@@ -10,6 +11,7 @@ export const AllComps = [
   MovingObjects,
   SimpleCube,
   HeartbeatMonitor,
+  InstancedSupercube,
 ];
 
 export const CompDefinitionMap = new Map();

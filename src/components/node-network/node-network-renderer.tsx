@@ -30,10 +30,21 @@ import { isConnectionValid } from './connection-validator';
 import NodeRenderer from './node-renderer';
 import NodesSearch from './nodes-search';
 
-const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
+const NodeNetworkRenderer = ({
+  nodeNetworkId,
+  onReactFlowInit,
+  reactFlowInstance,
+}: {
+  nodeNetworkId: string;
+  onReactFlowInit?: (instance: any) => void;
+  reactFlowInstance?: React.MutableRefObject<any>;
+}) => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const reactFlowInstance = useRef<any>(null);
   const isDraggingRef = useRef(false);
+
+  // Use the passed instance or create our own if not provided
+  const localReactFlowInstance = useRef<any>(null);
+  const finalReactFlowInstance = reactFlowInstance || localReactFlowInstance;
 
   // Use history hook for undo/redo functionality
   const {
@@ -82,7 +93,7 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
     canPaste,
   } = useNodeGraphClipboard({
     parameterId: nodeNetworkId,
-    reactFlowInstance,
+    reactFlowInstance: finalReactFlowInstance,
   });
 
   // Mouse position tracking for context menu
@@ -91,13 +102,13 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
   // Get canvas position from mouse position
   const getCanvasPosition = useCallback(
     (mousePos: { x: number; y: number }) => {
-      if (!reactFlowInstance.current) return { x: 0, y: 0 };
-      return reactFlowInstance.current.screenToFlowPosition({
+      if (!finalReactFlowInstance.current) return { x: 0, y: 0 };
+      return finalReactFlowInstance.current.screenToFlowPosition({
         x: mousePos.x,
         y: mousePos.y,
       });
     },
-    [reactFlowInstance],
+    [finalReactFlowInstance],
   );
 
   const onPaneContextMenu = (event: ReactMouseEvent) => {
@@ -175,6 +186,7 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
         );
       },
     }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [nodeNetworkId], // Only depend on nodeNetworkId
   );
 
@@ -189,7 +201,8 @@ const NodeNetworkRenderer = ({ nodeNetworkId }: { nodeNetworkId: string }) => {
         <ContextMenuTrigger>
           <ReactFlow
             onInit={(instance) => {
-              reactFlowInstance.current = instance;
+              finalReactFlowInstance.current = instance;
+              onReactFlowInit?.(instance);
             }}
             fitView
             panOnScroll

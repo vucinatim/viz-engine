@@ -1,9 +1,10 @@
 import useEditorStore from '@/lib/stores/editor-store';
 import { cn } from '@/lib/utils';
 import { AudioLines } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import NodeNetworkRenderer from '../node-network/node-network-renderer';
 import useNodeNetworkStore from '../node-network/node-network-store';
+import NodeEditorToolbar from './node-editor-toolbar';
 
 const AnimationBuilder = () => {
   const isPlaying = useEditorStore((state) => state.isPlaying);
@@ -12,6 +13,7 @@ const AnimationBuilder = () => {
   const nodeNetwork = nodeNetworkId && networks[nodeNetworkId];
 
   const [isHovering, setIsHovering] = useState(false);
+  const reactFlowInstance = useRef<any>(null);
 
   return (
     <div
@@ -41,7 +43,17 @@ const AnimationBuilder = () => {
               'h-full w-full opacity-0 transition-opacity',
               isHovering && (isPlaying ? 'opacity-80' : 'opacity-100'),
             )}>
-            <NodeNetworkRenderer nodeNetworkId={nodeNetworkId} />
+            <NodeNetworkRenderer
+              nodeNetworkId={nodeNetworkId}
+              onReactFlowInit={(instance) => {
+                reactFlowInstance.current = instance;
+              }}
+              reactFlowInstance={reactFlowInstance}
+            />
+            <NodeEditorToolbar
+              nodeNetworkId={nodeNetworkId}
+              reactFlowInstance={reactFlowInstance}
+            />
           </div>
           <div
             className={cn(
