@@ -4,9 +4,10 @@ import * as SliderPrimitive from '@radix-ui/react-slider';
 import { useEffect, useRef } from 'react';
 
 const VolumeFader = () => {
-  const { gainNode, audioAnalyzer, audioContext, audioSource } =
+  const { gainNode, audioAnalyzer, audioContext, audioSource, isCapturingTab } =
     useAudioStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const rafRef = useRef<number | null>(null);
   // Toggle meter scale rendering on the left edge
   const SHOW_METER_SCALE = true;
   // RMS is in [0..1]. Full-scale sine RMS ≈ 0.707. Use 0.9 as clamp headroom.
@@ -15,6 +16,22 @@ const VolumeFader = () => {
   const splitterRef = useRef<ChannelSplitterNode | null>(null);
   const leftAnalyzerRef = useRef<AnalyserNode | null>(null);
   const rightAnalyzerRef = useRef<AnalyserNode | null>(null);
+  const attachedSourceRef = useRef<
+    MediaElementAudioSourceNode | MediaStreamAudioSourceNode | null
+  >(null);
+
+  // When capture mode toggles, force a rebuild of the split/analyzers
+  useEffect(() => {
+    try {
+      if (splitterRef.current) splitterRef.current.disconnect();
+      if (leftAnalyzerRef.current) leftAnalyzerRef.current.disconnect();
+      if (rightAnalyzerRef.current) rightAnalyzerRef.current.disconnect();
+    } catch {}
+    splitterRef.current = null;
+    leftAnalyzerRef.current = null;
+    rightAnalyzerRef.current = null;
+    attachedSourceRef.current = null;
+  }, [isCapturingTab]);
 
   useEffect(() => {
     if (!canvasRef.current || !audioAnalyzer || !gainNode) return;
@@ -38,8 +55,21 @@ const VolumeFader = () => {
 
     const draw = () => {
       if (!ctx) {
-        requestAnimationFrame(draw);
+        rafRef.current = requestAnimationFrame(draw);
         return;
+      }
+
+      // If the source node identity changed (e.g., leaving capture), rebuild split/analyzers
+      if (attachedSourceRef.current !== audioSource.current) {
+        try {
+          if (splitterRef.current) splitterRef.current.disconnect();
+          if (leftAnalyzerRef.current) leftAnalyzerRef.current.disconnect();
+          if (rightAnalyzerRef.current) rightAnalyzerRef.current.disconnect();
+        } catch {}
+        splitterRef.current = null;
+        leftAnalyzerRef.current = null;
+        rightAnalyzerRef.current = null;
+        attachedSourceRef.current = audioSource.current;
       }
 
       // Lazily set up per-channel analyzers once the source exists (no extra taps to destination)
@@ -106,7 +136,12 @@ const VolumeFader = () => {
         instR = Math.sqrt(sumR / tdRight.length);
       } else {
         // Mono fallback using global analyzer
-        audioAnalyzer.getByteTimeDomainData(tdMono);
+        if (audioAnalyzer) {
+          if (tdMono.length !== audioAnalyzer.fftSize) {
+            tdMono = new Uint8Array(audioAnalyzer.fftSize);
+          }
+          audioAnalyzer.getByteTimeDomainData(tdMono);
+        }
         let sum = 0;
         for (let i = 0; i < tdMono.length; i++) {
           const v = (tdMono[i] - 128) / 128;
@@ -115,6 +150,29 @@ const VolumeFader = () => {
         const rms = Math.sqrt(sum / tdMono.length);
         instL = rms;
         instR = rms;
+      }
+
+      // If stereo analyzers exist but both channels look like silence,
+      // and the global analyzer reports non-silence, fall back to mono
+      if (
+        leftAnalyzerRef.current &&
+        rightAnalyzerRef.current &&
+        audioAnalyzer
+      ) {
+        const monoTmp = new Uint8Array(audioAnalyzer.fftSize);
+        audioAnalyzer.getByteTimeDomainData(monoTmp);
+        let monoSum = 0;
+        for (let i = 0; i < monoTmp.length; i++) {
+          const v = (monoTmp[i] - 128) / 128;
+          monoSum += v * v;
+        }
+        const monoRms = Math.sqrt(monoSum / monoTmp.length);
+        const isStereoSilent = instL < 1e-4 && instR < 1e-4;
+        const isMonoActive = monoRms > 1e-3;
+        if (isStereoSilent && isMonoActive) {
+          instL = monoRms;
+          instR = monoRms;
+        }
       }
 
       // Exponential moving average toward inst RMS with 300ms time constant
@@ -132,7 +190,7 @@ const VolumeFader = () => {
         Math.max(0, peakHoldR - peakDecayPerSec * dt),
       );
 
-      const gain = Math.max(0, Math.min(1, gainNode.gain.value + 1));
+      const gain = Math.max(0, Math.min(1, gainNode?.gain?.value ?? 1));
       // Map to dB for visual alignment with the scale
       const DB_MIN = -30; // visible floor
       const ampL = Math.min(smoothedL / MAX_RMS, 1) * gain;
@@ -265,11 +323,15 @@ const VolumeFader = () => {
         }
       }
 
-      requestAnimationFrame(draw);
+      rafRef.current = requestAnimationFrame(draw);
     };
 
     draw();
     return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
       try {
         if (splitterRef.current) splitterRef.current.disconnect();
         if (leftAnalyzerRef.current) leftAnalyzerRef.current.disconnect();
@@ -283,7 +345,7 @@ const VolumeFader = () => {
 
   useEffect(() => {
     if (!gainNode) return;
-    gainNode.gain.value = 0; // Set the initial gain value
+    gainNode.gain.value = 1; // Default to unity gain for audible playback
   }, [gainNode]);
 
   const handleVolumeChange = (value: number[]) => {
@@ -302,10 +364,10 @@ const VolumeFader = () => {
       <SliderPrimitive.Root
         orientation="vertical"
         className="absolute inset-x-0 inset-y-4 flex cursor-pointer touch-none select-none items-center justify-center"
-        defaultValue={[0]} // Default value as the middle of the slider
+        defaultValue={[1]}
         onValueChange={handleVolumeChange}
-        min={-1}
-        max={0}
+        min={0}
+        max={1}
         step={0.01}>
         <SliderPrimitive.Track className="relative h-full w-2 overflow-hidden rounded-full">
           <div className="absolute inset-0 bg-zinc-700">

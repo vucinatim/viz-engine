@@ -101,8 +101,9 @@ function useWavesurferSetup() {
         audioSource.current = audioContext.createMediaElementSource(
           audioElementRef.current,
         );
+        // Tap the analyzer but do NOT route analyzer to destination to avoid double audio
         audioSource.current.connect(audioAnalyzer);
-        audioAnalyzer.connect(audioContext.destination);
+        // Playback path is controlled via gain node only
         audioSource.current.connect(gainNode);
         gainNode.connect(audioContext.destination);
       }

@@ -2,31 +2,29 @@
 
 import useKeypress from '@/lib/hooks/use-keypress';
 import useWavesurferSetup from '@/lib/hooks/use-wavesurfer-setup';
+import useAudioStore from '@/lib/stores/audio-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { Pause, Play } from 'lucide-react';
 import { Toggle } from '../ui/toggle';
 import AudioFileLoader from './audio-file-loader';
+import CaptureAudio from './capture-audio';
+import LiveWaveform from './live-waveform';
 import VolumeFader from './volume-fader';
 
 const AudioPanel = () => {
-  const playerRef = useEditorStore((state) => state.playerRef);
   const setIsPlaying = useEditorStore((state) => state.setIsPlaying);
-  const { waveformDisplayRef, audioElementRef, isPlaying, currentTime } =
-    useWavesurferSetup();
+  const {
+    waveformDisplayRef,
+    audioElementRef,
+    isPlaying: _wsPlaying,
+    currentTime,
+  } = useWavesurferSetup();
+  const isPlaying = useEditorStore((state) => state.isPlaying);
+  const isCapturingTab = useAudioStore((s) => s.isCapturingTab);
 
   const playPause = () => {
-    // wavesurfer?.playPause();
-    console.log('playPause');
-    const player = playerRef.current;
-    if (player) {
-      if (player.isPlaying()) {
-        player.pause();
-        setIsPlaying(false);
-      } else {
-        player.play();
-        setIsPlaying(true);
-      }
-    }
+    // Toggle global play state; RemotionPlayer syncs the actual Player via effect
+    setIsPlaying(!isPlaying);
   };
   useKeypress('Space', playPause);
 
@@ -41,12 +39,13 @@ const AudioPanel = () => {
           <div className="place-self-center">
             <Toggle
               aria-label="Play/Pause"
-              tooltip="Play/Pause (Space)"
+              tooltip={'Play/Pause (Space)'}
               onClick={playPause}>
               {isPlaying ? <Pause /> : <Play />}
             </Toggle>
           </div>
-          <div className="mr-3 flex items-center justify-end">
+          <div className="mr-3 flex items-center justify-end gap-3">
+            <CaptureAudio />
             <p className="font-mono text-xs text-white">
               {
                 // Format the currentTime in float seconds to a human readable format
@@ -70,7 +69,21 @@ const AudioPanel = () => {
         <div className="relative grow">
           <div className="absolute inset-0">
             <audio ref={audioElementRef} />
-            <div ref={waveformDisplayRef} className="my-auto w-full" />
+            {/* Live waveform shown only while capturing */}
+            {isCapturingTab && (
+              <div className="absolute inset-0">
+                <LiveWaveform />
+              </div>
+            )}
+            {/* WaveSurfer view hidden during capture */}
+            <div
+              ref={waveformDisplayRef}
+              className={
+                isCapturingTab
+                  ? 'pointer-events-none my-auto w-full opacity-0'
+                  : 'my-auto w-full opacity-100'
+              }
+            />
           </div>
         </div>
       </div>

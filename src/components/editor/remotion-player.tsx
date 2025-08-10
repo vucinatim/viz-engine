@@ -11,7 +11,10 @@ const ASPECT_RATIO = 'free' as AspectRatio;
 
 const RemotionPlayer = () => {
   const { setPlayerRef, setPlayerFPS } = useEditorStore();
+  const isPlayingStore = useEditorStore((s) => s.isPlaying);
+  const setIsPlaying = useEditorStore((s) => s.setIsPlaying);
   const { audioElementRef } = useAudioStore();
+  const isCapturingTab = useAudioStore((s) => s.isCapturingTab);
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<PlayerRef>(null);
   const { width: containerWidth, height: containerHeight } =
@@ -31,17 +34,18 @@ const RemotionPlayer = () => {
     if (!audioElement) return;
 
     const updateDuration = () => {
-      if (audioElement.duration) {
-        console.log(
-          `Duration of the loaded audio is: ${audioElement.duration} seconds.`,
-        );
-        setDurationInFrames(
-          Math.max(1, Math.ceil(audioElement.duration * FPS)),
-        );
-      }
+      const dur = audioElement.duration;
+      if (Number.isFinite(dur) && dur > 0) {
+        setDurationInFrames(Math.max(1, Math.ceil(dur * FPS)));
+      } else if (isCapturingTab) {
+        // MediaStreams often report Infinity
+        const fallbackSeconds = 60 * 30; // 30 min
+        setDurationInFrames(Math.max(1, Math.ceil(fallbackSeconds * FPS)));
+      } // else keep previous duration
     };
 
     audioElement.addEventListener('loadedmetadata', updateDuration);
+    audioElement.addEventListener('durationchange', updateDuration);
 
     // Call manually in case the audio is already loaded
     if (audioElement.readyState >= 1) {
@@ -50,8 +54,18 @@ const RemotionPlayer = () => {
 
     return () => {
       audioElement.removeEventListener('loadedmetadata', updateDuration);
+      audioElement.removeEventListener('durationchange', updateDuration);
     };
-  }, [audioElementRef, src]);
+  }, [audioElementRef, src, isCapturingTab]);
+
+  // While capturing tab audio, MediaStream duration is Infinity.
+  // Provide a large finite duration so <Player/> remains happy.
+  useEffect(() => {
+    if (isCapturingTab) {
+      const fallbackSeconds = 60 * 30; // 30 minutes
+      setDurationInFrames(Math.max(1, Math.ceil(fallbackSeconds * FPS)));
+    }
+  }, [isCapturingTab]);
 
   const isFullscreen = playerRef.current?.isFullscreen();
 
@@ -88,6 +102,34 @@ const RemotionPlayer = () => {
       };
     }
   }, [containerWidth, containerHeight, isFullscreen]);
+
+  // Drive Player from store state
+  useEffect(() => {
+    const p = playerRef.current;
+    if (!p) return;
+    const currently = p.isPlaying();
+    if (isPlayingStore && !currently) p.play();
+    if (!isPlayingStore && currently) p.pause();
+  }, [isPlayingStore]);
+
+  // Poll Player state to keep store in sync with built-in controls
+  useEffect(() => {
+    let raf = 0;
+    let last = playerRef.current?.isPlaying() ?? false;
+    const tick = () => {
+      const p = playerRef.current;
+      if (p) {
+        const now = p.isPlaying();
+        if (now !== last) {
+          setIsPlaying(now);
+          last = now;
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [setIsPlaying]);
 
   return (
     <div

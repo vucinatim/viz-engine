@@ -34,6 +34,7 @@ const safeStringToNodeHandleType = (type: string): NodeHandleType => {
 type NodeNetwork = {
   name: string;
   isEnabled: boolean;
+  isMinimized?: boolean;
   nodes: GraphNode[];
   edges: Edge[];
 };
@@ -52,6 +53,9 @@ interface NodeNetworkStore {
   setOpenNetwork: (parameterId: string | null) => void;
   networks: { [parameterId: string]: NodeNetwork }; // Each parameter has its own network
   setNetwork: (parameterId: string, network: NodeNetwork) => void;
+  // Global minimize for all node-network editors
+  areNetworksMinimized: boolean;
+  setNetworksMinimized: (isMinimized: boolean) => void;
   setNetworkEnabled: (
     parameterId: string,
     isEnabled: boolean,
@@ -76,6 +80,7 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
     (set, get) => ({
       networks: {}, // Store networks by parameterId
       openNetwork: null, // The parameterId of the network that is currently open
+      areNetworksMinimized: false,
 
       // Set the network that is currently open
       setOpenNetwork: (parameterId: string | null) =>
@@ -117,6 +122,7 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
             [parameterId]: {
               name: parameterId,
               isEnabled: true,
+              isMinimized: false,
               nodes: [
                 {
                   id: `${parameterId}-input-node`,
@@ -147,6 +153,10 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
         }));
         get().setOpenNetwork(parameterId);
       },
+
+      // Minimize / restore a specific network UI
+      setNetworksMinimized: (isMinimized: boolean) =>
+        set(() => ({ areNetworksMinimized: isMinimized })),
 
       // Remove a network (e.g., when a parameter is no longer animated)
       removeNetworkForParameter: (parameterId: string) => {

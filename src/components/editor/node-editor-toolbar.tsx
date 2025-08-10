@@ -1,4 +1,4 @@
-import { Redo2, Trash2, Undo2 } from 'lucide-react';
+import { MinusSquare, Redo2, Trash2, Undo2 } from 'lucide-react';
 import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
 import { useNodeNetworkHistory } from '../../lib/hooks/use-node-network-history';
 import { destructureParameterId } from '../../lib/id-utils';
@@ -139,7 +139,7 @@ const NodeEditorToolbar = ({
         </div>
 
         {/* Right Section - Live Output Display */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           <div className="flex flex-col items-end">
             <span className="text-xs text-white/60">Live Output</span>
             <span className="font-mono text-sm text-white">
@@ -150,6 +150,15 @@ const NodeEditorToolbar = ({
                   : '0.00'}
             </span>
           </div>
+          {/* Minimize pinned at far left */}
+          <Button
+            variant="ghostly"
+            size="icon"
+            onClick={() =>
+              useNodeNetworkStore.getState().setNetworksMinimized(true)
+            }>
+            <MinusSquare size={20} />
+          </Button>
         </div>
       </div>
     </div>

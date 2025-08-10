@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import WaveSurfer from 'wavesurfer.js';
+import useEditorStore from '../stores/editor-store';
 
 interface UseAudioFrameDataProps {
   isFrozen: boolean;
@@ -51,6 +52,8 @@ const useAudioFrameData = ({
     }
   }, [analyzer, wavesurfer]);
 
+  const isPlayingStore = useEditorStore((s) => s.isPlaying);
+
   const getAudioFrameData = useCallback(() => {
     if (!analyzer) {
       return {
@@ -61,7 +64,8 @@ const useAudioFrameData = ({
       };
     }
 
-    const isPlaying = !isFrozen || wavesurfer?.isPlaying?.();
+    // Drive update gating from global play state to match Remotion controls
+    const isPlaying = !isFrozen || isPlayingStore;
 
     if (isPlaying) {
       // Reuse preallocated buffers
@@ -103,7 +107,7 @@ const useAudioFrameData = ({
       sampleRate: analyzer.context.sampleRate,
       fftSize: analyzer.fftSize,
     };
-  }, [analyzer, isFrozen, wavesurfer]);
+  }, [analyzer, isFrozen, isPlayingStore, wavesurfer]);
 
   return getAudioFrameData;
 };

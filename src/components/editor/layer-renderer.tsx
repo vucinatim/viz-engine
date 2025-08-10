@@ -24,7 +24,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   const layerCanvasRef = useRef<HTMLCanvasElement>(null);
   const debugCanvasRef = useRef<HTMLCanvasElement>(null);
   const { audioAnalyzer, wavesurfer } = useAudioStore();
-  const { resolutionMultiplier } = useEditorStore();
+  const { resolutionMultiplier, playerRef, playerFPS } = useEditorStore();
 
   // Time tracking
   const lastFrameTimeRef = useRef(
@@ -208,7 +208,12 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
 
       const { frequencyData, timeDomainData, sampleRate, fftSize } =
         getNextAudioFrame();
-      const time = wavesurfer?.getCurrentTime() || 0;
+      // Prefer Remotion Player's clock to drive animation time; fallback to WaveSurfer
+      const frame = playerRef?.current?.getCurrentFrame?.() ?? null;
+      const time =
+        frame !== null && typeof frame === 'number' && playerFPS > 0
+          ? frame / playerFPS
+          : wavesurfer?.getCurrentTime() || 0;
 
       const animInputData = {
         audioSignal: timeDomainData,
@@ -254,7 +259,16 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
         rendererRef.current.dispose();
       }
     };
-  }, [audioAnalyzer, getNextAudioFrame, layer, setup3D, wavesurfer, withDebug]);
+  }, [
+    audioAnalyzer,
+    getNextAudioFrame,
+    layer,
+    setup3D,
+    wavesurfer,
+    withDebug,
+    playerRef,
+    playerFPS,
+  ]);
 
   return (
     <div ref={canvasContainerRef} className="absolute inset-0">
