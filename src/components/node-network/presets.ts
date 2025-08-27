@@ -135,7 +135,7 @@ registerPreset({
       id: 'sine',
       label: 'Sine',
       position: { x: 150, y: 0 },
-      inputValues: {},
+      inputValues: { frequency: 1, phase: 0, amplitude: 1 },
     },
   ],
   edges: [
@@ -184,6 +184,78 @@ registerPreset({
     },
     {
       source: 'norm',
+      sourceHandle: 'result',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// Kick drum focused, time-smoothed amplitude
+registerPreset({
+  id: 'number-kick-band-smoothed',
+  name: 'Kick Band (40–120Hz) → Avg → Normalize → Smooth',
+  description:
+    'Input.frequencyAnalysis → Frequency Band (40–120Hz) → Average → Normalize(30..200→0..4) → Smoothing(time) → Output',
+  outputType: 'number',
+  nodes: [
+    {
+      id: 'band',
+      label: 'Frequency Band',
+      position: { x: -300, y: 0 },
+      inputValues: { startFrequency: 40, endFrequency: 120 },
+    },
+    {
+      id: 'avg',
+      label: 'Average Volume',
+      position: { x: 0, y: -80 },
+    },
+    {
+      id: 'norm',
+      label: 'Normalize',
+      position: { x: 260, y: -80 },
+      inputValues: { inputMin: 30, inputMax: 200, outputMin: 0, outputMax: 4 },
+    },
+    {
+      id: 'smooth',
+      label: 'Smoothing',
+      position: { x: 520, y: 0 },
+      inputValues: { smoothing: 0.8, timeConstantMs: 100 },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'band',
+      sourceHandle: 'bandData',
+      target: 'avg',
+      targetHandle: 'data',
+    },
+    {
+      source: 'avg',
+      sourceHandle: 'average',
+      target: 'norm',
+      targetHandle: 'value',
+    },
+    {
+      source: 'norm',
+      sourceHandle: 'result',
+      target: 'smooth',
+      targetHandle: 'value',
+    },
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'time',
+      target: 'smooth',
+      targetHandle: 'time',
+    },
+    {
+      source: 'smooth',
       sourceHandle: 'result',
       target: OUTPUT_ALIAS,
       targetHandle: 'output',

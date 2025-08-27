@@ -1,8 +1,7 @@
-import { MinusSquare, Redo2, Trash2, Undo2 } from 'lucide-react';
+import { Copy, MinusSquare, Redo2, Trash2, Undo2 } from 'lucide-react';
 import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
 import { useNodeNetworkHistory } from '../../lib/hooks/use-node-network-history';
 import { destructureParameterId } from '../../lib/id-utils';
-import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
 import { NodeHandleType } from '../config/node-types';
 import {
   useNodeNetwork,
@@ -34,9 +33,9 @@ const NodeEditorToolbar = ({
   const { nodes, edges, setNodes, setEdges } = useNodeNetwork(nodeNetworkId);
 
   // Get live output value using existing architecture
-  const liveOutput = useAnimationLiveValuesStore(
-    (state) => state.values[nodeNetworkId],
-  );
+  // const liveOutput = useAnimationLiveValuesStore(
+  //   (state) => state.values[nodeNetworkId],
+  // );
 
   // Get parameter info using the generic function
   const parameterInfo = useNodeNetworkStore((state) => {
@@ -119,6 +118,45 @@ const NodeEditorToolbar = ({
     );
   };
 
+  const handleCopyGraphJson = async () => {
+    const store = useNodeNetworkStore.getState();
+    const network = store.networks[nodeNetworkId];
+    if (!network) return;
+
+    const safeNodes = network.nodes.map((node) => {
+      const def: any = node.data.definition as any;
+      let serializedDefinition: any = def;
+      if (def && def.label === 'Output') {
+        const type = def.inputs?.[0]?.type;
+        serializedDefinition = { label: 'Output', type };
+      } else if (def && typeof def.label === 'string') {
+        serializedDefinition = def.label;
+      }
+      return {
+        ...node,
+        data: {
+          ...node.data,
+          definition: serializedDefinition,
+        },
+      } as any;
+    });
+
+    const payload = {
+      name: network.name,
+      isEnabled: network.isEnabled,
+      isMinimized: network.isMinimized ?? false,
+      nodes: safeNodes,
+      edges: network.edges,
+    };
+
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+      // Optional: add your preferred toast/notification here
+    } catch (e) {
+      console.error('Failed to copy graph JSON', e);
+    }
+  };
+
   return (
     <div className="absolute left-4 right-4 top-4 z-10">
       <div className="flex items-center justify-between rounded-lg border border-white/10 bg-black/20 px-4 py-2 backdrop-blur-md">
@@ -163,7 +201,7 @@ const NodeEditorToolbar = ({
 
         {/* Right Section - Live Output Display */}
         <div className="flex items-center gap-4">
-          <div className="flex flex-col items-end">
+          {/* <div className="flex flex-col items-end">
             <span className="text-xs text-white/60">Live Output</span>
             <span className="font-mono text-sm text-white">
               {typeof liveOutput === 'number'
@@ -172,7 +210,7 @@ const NodeEditorToolbar = ({
                   ? String(liveOutput)
                   : '0.00'}
             </span>
-          </div>
+          </div> */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="sm">
@@ -207,6 +245,14 @@ const NodeEditorToolbar = ({
               })()}
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 text-white/80 hover:bg-white/10 hover:text-white"
+            onClick={handleCopyGraphJson}
+            tooltip="Copy graph JSON">
+            <Copy size={14} />
+          </Button>
           {/* Minimize pinned at far left */}
           <Button
             variant="ghostly"

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { v } from '../config/config';
 import { createComponent } from '../config/create-component';
+import { INPUT_ALIAS, OUTPUT_ALIAS } from '../node-network/presets';
 
 const SimpleCube = createComponent({
   name: 'Simple Cube',
@@ -20,6 +21,50 @@ const SimpleCube = createComponent({
       step: 0.1,
     }),
   }),
+  defaultNetworks: {
+    // Animate size from audio: Input.audioSignal -> Average Volume -> Normalize(0..3) -> Output
+    size: {
+      id: 'cube-size-audio',
+      name: 'Cube Size From Audio',
+      description:
+        'Input.audioSignal -> Average Volume -> Normalize(0..3) -> Output',
+      outputType: 'number',
+      nodes: [
+        { id: 'avg', label: 'Average Volume', position: { x: 0, y: -80 } },
+        {
+          id: 'norm',
+          label: 'Normalize',
+          position: { x: 250, y: -80 },
+          inputValues: {
+            inputMin: 0,
+            inputMax: 255,
+            outputMin: 0,
+            outputMax: 3,
+          },
+        },
+      ],
+      edges: [
+        {
+          source: INPUT_ALIAS,
+          sourceHandle: 'audioSignal',
+          target: 'avg',
+          targetHandle: 'data',
+        },
+        {
+          source: 'avg',
+          sourceHandle: 'average',
+          target: 'norm',
+          targetHandle: 'value',
+        },
+        {
+          source: 'norm',
+          sourceHandle: 'result',
+          target: OUTPUT_ALIAS,
+          targetHandle: 'output',
+        },
+      ],
+    },
+  },
   init3D: ({ threeCtx: { scene, camera, renderer } }) => {
     camera.position.set(0, 1, 5); // Position the camera
     camera.lookAt(new THREE.Vector3(0, 0, 0)); // Make the camera look at the origin

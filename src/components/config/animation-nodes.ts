@@ -174,11 +174,35 @@ export const SpikeNode: AnimNode = {
 // Define the SineNode
 const SineNode: AnimNode = {
   label: 'Sine',
-  inputs: [{ id: 'time', label: 'Time (s)', type: 'number', defaultValue: 0 }],
+  inputs: [
+    { id: 'time', label: 'Time (s)', type: 'number', defaultValue: 0 },
+    {
+      id: 'frequency',
+      label: 'Frequency (Hz)',
+      type: 'number',
+      defaultValue: 1,
+    },
+    { id: 'phase', label: 'Phase (rad)', type: 'number', defaultValue: 0 },
+    { id: 'amplitude', label: 'Amplitude', type: 'number', defaultValue: 1 },
+  ],
   outputs: [{ id: 'value', label: 'Value', type: 'number' }],
-  computeSignal: ({ time }: { time: number }) => {
+  computeSignal: ({
+    time,
+    frequency,
+    phase,
+    amplitude,
+  }: {
+    time: number;
+    frequency: number;
+    phase: number;
+    amplitude: number;
+  }) => {
     const valTime = typeof time === 'number' ? time : 0;
-    return { value: (Math.sin(valTime * Math.PI) + 1) / 2 };
+    const freq = typeof frequency === 'number' ? frequency : 1;
+    const ph = typeof phase === 'number' ? phase : 0;
+    const amp = typeof amplitude === 'number' ? amplitude : 1;
+    const value = Math.sin(2 * Math.PI * freq * valTime + ph) * amp;
+    return { value };
   },
 };
 
@@ -395,6 +419,83 @@ const ValueMapperNode: AnimNode = {
   },
 };
 
+// --- Smoothing (Exponential Moving Average) Node ---
+const SmoothingNode: AnimNode = {
+  label: 'Smoothing',
+  inputs: [
+    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
+    {
+      id: 'smoothing',
+      label: 'Smoothing (0..1)',
+      type: 'number',
+      defaultValue: 0.5,
+    },
+    {
+      id: 'time',
+      label: 'Time (s)',
+      type: 'number',
+      defaultValue: 0,
+    },
+    {
+      id: 'timeConstantMs',
+      label: 'Time Constant (ms)',
+      type: 'number',
+      defaultValue: 200,
+    },
+  ],
+  outputs: [{ id: 'result', label: 'Result', type: 'number' }],
+  computeSignal: (
+    {
+      value,
+      smoothing,
+      time,
+      timeConstantMs,
+    }: {
+      value: number;
+      smoothing: number;
+      time?: number;
+      timeConstantMs?: number;
+    },
+    node,
+  ) => {
+    if (!node) return { result: typeof value === 'number' ? value : 0 };
+    const state = node.data.state;
+    const current = typeof value === 'number' ? value : 0;
+    const smoothingRaw = typeof smoothing === 'number' ? smoothing : 0.5;
+    const smoothingClamped = Math.max(0, Math.min(1, smoothingRaw));
+
+    let alpha: number | null = null;
+
+    // Time-domain smoothing when time and timeConstantMs are provided
+    const hasTime = typeof time === 'number' && !Number.isNaN(time);
+    const tauMs =
+      typeof timeConstantMs === 'number' && timeConstantMs > 0
+        ? timeConstantMs
+        : 0;
+    if (hasTime && tauMs > 0) {
+      const prevTime =
+        typeof state.prevTime === 'number' ? state.prevTime : time;
+      const dt = Math.max(0, (time as number) - prevTime);
+      state.prevTime = time;
+      const tau = tauMs / 1000; // seconds
+      alpha = 1 - Math.exp(-dt / tau);
+    }
+
+    // Fallback to factor-based smoothing (frame-domain) if no time provided
+    if (alpha === null || !isFinite(alpha)) {
+      // Map smoothing: 0 -> no smoothing (alpha=1), 1 -> max smoothing (alpha=0)
+      alpha = 1 - smoothingClamped;
+    }
+
+    if (state.prev === undefined || Number.isNaN(state.prev)) {
+      state.prev = current;
+    }
+    const smoothed = state.prev + alpha * (current - state.prev);
+    state.prev = smoothed;
+    return { result: smoothed };
+  },
+};
+
 export const nodes: AnimNode[] = [
   SineNode,
   MultiplyNode,
@@ -406,6 +507,7 @@ export const nodes: AnimNode[] = [
   SpikeNode,
   PitchDetectionNode,
   ValueMapperNode,
+  SmoothingNode,
 ];
 
 export const NodeDefinitionMap = new Map<string, AnimNode>();

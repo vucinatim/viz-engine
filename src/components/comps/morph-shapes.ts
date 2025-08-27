@@ -57,6 +57,8 @@ type MorphState = {
   prevModelUrlB?: string;
   prevModelATransformKey?: string;
   prevModelBTransformKey?: string;
+  prevModelPointCount?: number;
+  prevModelEvenness?: number;
   prevSphereSize?: number;
   prevGlowMode?: boolean;
   prevTextKeyA?: string;
@@ -366,6 +368,20 @@ const MorphShapes = createComponent({
     state.prevShapeB = config.shapeBSettings.shape;
     state.prevModelUrlA = config.shapeASettings.modelUrl;
     state.prevModelUrlB = config.shapeBSettings.modelUrl;
+    state.prevModelPointCount = config.modelPointCount;
+    state.prevModelEvenness = config.modelEvenness;
+    state.prevTextKeyA = computeTextKey(
+      config.shapeASettings.text,
+      config.shapeASettings.textSize,
+      config.shapeASettings.textDepth,
+      config.shapeASettings.textFontUrl,
+    );
+    state.prevTextKeyB = computeTextKey(
+      config.shapeBSettings.text,
+      config.shapeBSettings.textSize,
+      config.shapeBSettings.textDepth,
+      config.shapeBSettings.textFontUrl,
+    );
     void rebuildTargets(state, config, state.instanceCount);
 
     // Initial color
@@ -385,18 +401,39 @@ const MorphShapes = createComponent({
     const speed = config.animationSpeed;
 
     // Live-rebuild targets when shape or grid changes
+    const textKeyA = computeTextKey(
+      config.shapeASettings.text,
+      config.shapeASettings.textSize,
+      config.shapeASettings.textDepth,
+      config.shapeASettings.textFontUrl,
+    );
+    const textKeyB = computeTextKey(
+      config.shapeBSettings.text,
+      config.shapeBSettings.textSize,
+      config.shapeBSettings.textDepth,
+      config.shapeBSettings.textFontUrl,
+    );
+
     if (
       state.prevGridSize !== config.gridSize ||
       state.prevShapeA !== config.shapeASettings.shape ||
       state.prevShapeB !== config.shapeBSettings.shape ||
       state.prevModelUrlA !== config.shapeASettings.modelUrl ||
-      state.prevModelUrlB !== config.shapeBSettings.modelUrl
+      state.prevModelUrlB !== config.shapeBSettings.modelUrl ||
+      state.prevModelPointCount !== config.modelPointCount ||
+      state.prevModelEvenness !== config.modelEvenness ||
+      state.prevTextKeyA !== textKeyA ||
+      state.prevTextKeyB !== textKeyB
     ) {
       state.prevGridSize = config.gridSize;
       state.prevShapeA = config.shapeASettings.shape;
       state.prevShapeB = config.shapeBSettings.shape;
       state.prevModelUrlA = config.shapeASettings.modelUrl;
       state.prevModelUrlB = config.shapeBSettings.modelUrl;
+      state.prevModelPointCount = config.modelPointCount;
+      state.prevModelEvenness = config.modelEvenness;
+      state.prevTextKeyA = textKeyA;
+      state.prevTextKeyB = textKeyB;
       void rebuildTargets(state, config, state.instanceCount);
     }
 
@@ -459,6 +496,14 @@ const MorphShapes = createComponent({
 export default MorphShapes;
 
 // Helpers
+function computeTextKey(
+  text?: string,
+  size?: number,
+  depth?: number,
+  fontUrl?: string,
+): string {
+  return `${text ?? ''}|${size ?? 1}|${depth ?? 0.2}|${fontUrl ?? ''}`;
+}
 async function rebuildTargets(
   state: MorphState,
   config: MorphConfigValues,

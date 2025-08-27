@@ -98,9 +98,6 @@ const DynamicFormField = ({
   const isAnimated = useNodeNetworkStore(
     (state) => state.networks[option.id]?.isEnabled,
   );
-  const liveValue = useAnimationLiveValuesStore(
-    (state) => state.values[option.id],
-  );
 
   const openNetwork = useNodeNetworkStore((state) => state.openNetwork);
   const setOpenNetwork = useNodeNetworkStore((state) => state.setOpenNetwork);
@@ -113,15 +110,8 @@ const DynamicFormField = ({
 
   const isHighlighted = openNetwork === option.id;
 
-  const getFormattedValue = () => {
-    if (typeof liveValue === 'number') {
-      return liveValue.toFixed(2);
-    }
-    if (typeof liveValue === 'string') {
-      return liveValue;
-    }
-    return JSON.stringify(liveValue);
-  };
+  // Live animated value is rendered in a separate component to avoid
+  // re-rendering the entire field when the value updates.
 
   return (
     <FormField
@@ -138,9 +128,7 @@ const DynamicFormField = ({
                     <Info className="h-3 w-3 opacity-50" />
                   )}
                   {option.label || name.charAt(0).toUpperCase() + name.slice(1)}
-                  {isAnimated && (
-                    <div className="text-zinc-300">{getFormattedValue()}</div>
-                  )}
+                  {isAnimated && <AnimatedLiveValue parameterId={option.id} />}
                 </FormLabel>
               }
             />
@@ -209,3 +197,26 @@ const MemoField = React.memo(DynamicFormField, (prev, next) => {
   // Shallow compare option meta likely stable; assume stable
   return true;
 });
+
+// Separate component that subscribes to the live values store.
+// Only this small element re-renders as the animated value changes.
+const AnimatedLiveValue = ({ parameterId }: { parameterId: string }) => {
+  const value = useAnimationLiveValuesStore(
+    (state) => state.values[parameterId],
+  );
+  let text: string;
+  if (typeof value === 'number') {
+    text = value.toFixed(2);
+  } else if (typeof value === 'string') {
+    text = value;
+  } else if (value === undefined) {
+    text = '';
+  } else {
+    try {
+      text = JSON.stringify(value);
+    } catch {
+      text = String(value);
+    }
+  }
+  return <div className="text-zinc-300">{text}</div>;
+};

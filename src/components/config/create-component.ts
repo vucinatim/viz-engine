@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { NodeNetworkPreset } from '../node-network/presets';
 import { InferValues, v, VConfig } from './config';
 
 export type UnknownConfig = VConfig<Record<string, any>>;
@@ -54,6 +55,8 @@ export interface Comp {
   config: UnknownConfig;
   defaultValues: UnknownConfigValues;
   presets?: Preset<UnknownConfigValues>[];
+  // Map of config parameter path (e.g., "size" or "groupA.height") to a default node network preset
+  defaultNetworks?: Record<string, NodeNetworkPreset>;
   createState?: () => unknown;
   draw?: DrawFunction<UnknownConfigValues, unknown>;
   init3D?: Init3DFunction<UnknownConfigValues, unknown>;
@@ -66,6 +69,7 @@ export function createComponent<TConfig extends VConfig<any>, UT>(definition: {
   description: string;
   config: TConfig; // VConfig with options
   presets?: Preset<InferValues<TConfig>>[]; // Optional array of presets
+  defaultNetworks?: Record<string, NodeNetworkPreset>; // Optional default node networks per parameter path
   createState?: () => UT; // Optional state factory
   draw?: DrawFunction<InferValues<TConfig>, UT>; // Draw function using inferred config values
   init3D?: Init3DFunction<InferValues<TConfig>, UT>; // Optional init3D function

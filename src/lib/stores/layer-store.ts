@@ -1,10 +1,13 @@
 import { CompDefinitionMap } from '@/components/comps';
+import { ConfigParam, GroupConfigOption } from '@/components/config/config';
 import { Comp, UnknownConfig } from '@/components/config/create-component';
+import { safeVTypeToNodeHandleType } from '@/components/config/node-types';
 import {
   LayerSettings,
   layerSettingsSchema,
 } from '@/components/editor/layer-settings';
 import useNodeNetworkStore from '@/components/node-network/node-network-store';
+import { instantiatePreset } from '@/components/node-network/presets';
 import { arrayMove } from '@dnd-kit/sortable';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -97,16 +100,62 @@ const useLayerStore = create<LayerStore>()(
           .getState()
           .initLayerValues(newLayerId, comp.defaultValues);
 
+        // Prepare config with deterministic IDs so we can resolve parameter IDs
+        const layerConfigWithIds = assignDeterministicIdsToConfig(
+          newLayerId,
+          comp.config.clone(),
+        );
+
+        // Helper to resolve an option by a dot-separated path (e.g., "appearance.height" or "size")
+        const resolveOptionByPath = (path: string): ConfigParam<any> | null => {
+          const segments = path.split('.');
+          let current: any = layerConfigWithIds.options;
+          for (let i = 0; i < segments.length; i++) {
+            const key = segments[i];
+            if (!current || !current[key]) return null;
+            const option = current[key];
+            const isLast = i === segments.length - 1;
+            if (option instanceof GroupConfigOption) {
+              current = option.options;
+              continue;
+            }
+            if (isLast && option instanceof ConfigParam) {
+              return option as ConfigParam<any>;
+            }
+            return null;
+          }
+          return null;
+        };
+
+        // Initialize default node networks, if defined on the component
+        if (comp.defaultNetworks) {
+          for (const [path, preset] of Object.entries(comp.defaultNetworks)) {
+            const option = resolveOptionByPath(path);
+            if (!option) continue;
+            const parameterId = option.id;
+            const outputType = safeVTypeToNodeHandleType(option.type);
+            const { nodes, edges } = instantiatePreset(
+              preset as any,
+              parameterId,
+              outputType,
+            );
+            useNodeNetworkStore.getState().setNetwork(parameterId, {
+              name: parameterId,
+              isEnabled: true,
+              isMinimized: false,
+              nodes,
+              edges,
+            } as any);
+          }
+        }
+
         set((state) => ({
           layers: [
             ...state.layers,
             {
               id: newLayerId,
               comp,
-              config: assignDeterministicIdsToConfig(
-                newLayerId,
-                comp.config.clone(),
-              ),
+              config: layerConfigWithIds,
               state: comp.createState ? comp.createState() : undefined,
               isExpanded: true,
               isDebugEnabled: false,

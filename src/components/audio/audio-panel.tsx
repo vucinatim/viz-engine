@@ -5,6 +5,7 @@ import useWavesurferSetup from '@/lib/hooks/use-wavesurfer-setup';
 import useAudioStore from '@/lib/stores/audio-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { Pause, Play } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import { Toggle } from '../ui/toggle';
 import AudioFileLoader from './audio-file-loader';
 import CaptureAudio from './capture-audio';
@@ -13,12 +14,7 @@ import VolumeFader from './volume-fader';
 
 const AudioPanel = () => {
   const setIsPlaying = useEditorStore((state) => state.setIsPlaying);
-  const {
-    waveformDisplayRef,
-    audioElementRef,
-    isPlaying: _wsPlaying,
-    currentTime,
-  } = useWavesurferSetup();
+  const { waveformDisplayRef, audioElementRef } = useAudioStore();
   const isPlaying = useEditorStore((state) => state.isPlaying);
   const isCapturingTab = useAudioStore((s) => s.isCapturingTab);
 
@@ -46,24 +42,7 @@ const AudioPanel = () => {
           </div>
           <div className="mr-3 flex items-center justify-end gap-3">
             <CaptureAudio />
-            <p className="font-mono text-xs text-white">
-              {
-                // Format the currentTime in float seconds to a human readable format
-                Math.floor(currentTime / 60)
-                  .toString()
-                  .padStart(2, '0') +
-                  ':' +
-                  Math.floor(currentTime % 60)
-                    .toString()
-                    .padStart(2, '0') +
-                  '.' +
-                  // Only show two numbers for milliseconds
-                  Math.floor((currentTime % 1) * 1000)
-                    .toString()
-                    .slice(0, 2)
-                    .padStart(2, '0')
-              }
-            </p>
+            <TimecodeText />
           </div>
         </div>
         <div className="relative grow">
@@ -84,6 +63,7 @@ const AudioPanel = () => {
                   : 'my-auto w-full opacity-100'
               }
             />
+            <WavesurferController />
           </div>
         </div>
       </div>
@@ -92,3 +72,40 @@ const AudioPanel = () => {
 };
 
 export default AudioPanel;
+
+// Child component to isolate WaveSurfer hook updates from the parent tree
+const WavesurferController = () => {
+  useWavesurferSetup();
+  return null;
+};
+
+const TimecodeText = () => {
+  const { wavesurfer } = useAudioStore();
+  const spanRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    let raf: number | null = null;
+    const update = () => {
+      if (!spanRef.current || !wavesurfer) {
+        raf = requestAnimationFrame(update);
+        return;
+      }
+      const t = wavesurfer.getCurrentTime ? wavesurfer.getCurrentTime() : 0;
+      const mm = Math.floor(t / 60)
+        .toString()
+        .padStart(2, '0');
+      const ss = Math.floor(t % 60)
+        .toString()
+        .padStart(2, '0');
+      const cs = Math.floor((t % 1) * 100)
+        .toString()
+        .padStart(2, '0');
+      spanRef.current.textContent = `${mm}:${ss}.${cs}`;
+      raf = requestAnimationFrame(update);
+    };
+    raf = requestAnimationFrame(update);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [wavesurfer]);
+  return <p ref={spanRef} className="font-mono text-xs text-white" />;
+};
