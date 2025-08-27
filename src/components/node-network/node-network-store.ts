@@ -80,6 +80,111 @@ interface NodeNetworkStore {
   computeNetworkOutput: (parameterId: string, inputData: AnimInputData) => any; // Compute the output of the network
 }
 
+export const nodeNetworkStorePartialize = (state: NodeNetworkStore) => ({
+  ...state,
+  networks: Object.fromEntries(
+    Object.entries(state.networks).map(([id, network]) => [
+      id,
+      {
+        ...network,
+        nodes: network.nodes.map((node) => {
+          const def = node.data.definition;
+          if (def.label === 'Output') {
+            const type = def.inputs[0].type;
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                definition: { label: 'Output', type },
+              },
+            };
+          }
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              definition: def.label,
+            },
+          };
+        }),
+      },
+    ]),
+  ),
+});
+
+export const nodeNetworkStoreMerge = (
+  persistedState: any,
+  currentState: NodeNetworkStore,
+) => {
+  try {
+    const persisted = persistedState as NodeNetworkStore;
+
+    const result = {
+      ...currentState,
+      ...persisted,
+      networks: Object.fromEntries(
+        Object.entries(persisted.networks).map(([id, network]) => {
+          const processedNetwork = {
+            ...network,
+            nodes: network.nodes.map((node) => {
+              const def = node.data.definition as unknown as
+                | string
+                | { label: string; type: string };
+
+              if (typeof def === 'object' && def.label === 'Output') {
+                try {
+                  const outputNode = createOutputNode(
+                    safeStringToNodeHandleType(def.type),
+                  );
+                  return {
+                    ...node,
+                    data: {
+                      ...node.data,
+                      definition: outputNode,
+                    },
+                  };
+                } catch (error) {
+                  console.error('Error creating output node:', error);
+                  throw error;
+                }
+              }
+
+              const nodeDef = NodeDefinitionMap.get(def as string);
+              if (!nodeDef) {
+                console.error(`Node definition not found for: ${def}`);
+                console.error(
+                  'Available definitions:',
+                  Array.from(NodeDefinitionMap.keys()),
+                );
+                throw new Error(`Node definition not found for: ${def}`);
+              }
+
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  definition: nodeDef,
+                },
+              };
+            }),
+          };
+
+          return [id, processedNetwork];
+        }),
+      ),
+    };
+
+    return result;
+  } catch (error) {
+    console.error('Error in node network store merge function:', error);
+    if (error instanceof Error) {
+      console.error('Stack trace:', error.stack);
+    }
+    console.warn('Falling back to current state due to merge error');
+    return currentState;
+  }
+};
+
 export const useNodeNetworkStore = create<NodeNetworkStore>()(
   persist(
     (set, get) => ({
@@ -395,106 +500,8 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
     }),
     {
       name: 'node-network-store',
-      partialize: (state) => ({
-        ...state,
-        networks: Object.fromEntries(
-          Object.entries(state.networks).map(([id, network]) => [
-            id,
-            {
-              ...network,
-              nodes: network.nodes.map((node) => {
-                const def = node.data.definition;
-                if (def.label === 'Output') {
-                  const type = def.inputs[0].type;
-                  return {
-                    ...node,
-                    data: {
-                      ...node.data,
-                      definition: { label: 'Output', type },
-                    },
-                  };
-                }
-                return {
-                  ...node,
-                  data: {
-                    ...node.data,
-                    definition: def.label,
-                  },
-                };
-              }),
-            },
-          ]),
-        ),
-      }),
-      merge: (persistedState, currentState) => {
-        try {
-          const persisted = persistedState as NodeNetworkStore;
-
-          const result = {
-            ...currentState,
-            ...persisted,
-            networks: Object.fromEntries(
-              Object.entries(persisted.networks).map(([id, network]) => {
-                const processedNetwork = {
-                  ...network,
-                  nodes: network.nodes.map((node) => {
-                    const def = node.data.definition as unknown as
-                      | string
-                      | { label: string; type: string };
-
-                    if (typeof def === 'object' && def.label === 'Output') {
-                      try {
-                        const outputNode = createOutputNode(
-                          safeStringToNodeHandleType(def.type),
-                        );
-                        return {
-                          ...node,
-                          data: {
-                            ...node.data,
-                            definition: outputNode,
-                          },
-                        };
-                      } catch (error) {
-                        console.error('Error creating output node:', error);
-                        throw error;
-                      }
-                    }
-
-                    const nodeDef = NodeDefinitionMap.get(def as string);
-                    if (!nodeDef) {
-                      console.error(`Node definition not found for: ${def}`);
-                      console.error(
-                        'Available definitions:',
-                        Array.from(NodeDefinitionMap.keys()),
-                      );
-                      throw new Error(`Node definition not found for: ${def}`);
-                    }
-
-                    return {
-                      ...node,
-                      data: {
-                        ...node.data,
-                        definition: nodeDef,
-                      },
-                    };
-                  }),
-                };
-
-                return [id, processedNetwork];
-              }),
-            ),
-          };
-
-          return result;
-        } catch (error) {
-          console.error('Error in node network store merge function:', error);
-          if (error instanceof Error) {
-            console.error('Stack trace:', error.stack);
-          }
-          console.warn('Falling back to current state due to merge error');
-          return currentState;
-        }
-      },
+      partialize: nodeNetworkStorePartialize,
+      merge: nodeNetworkStoreMerge,
     },
   ),
 );

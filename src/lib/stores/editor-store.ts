@@ -15,6 +15,7 @@ interface EditorStore {
   setAmbientMode: (ambientMode: boolean) => void;
   setDominantColor: (color: string) => void;
   setResolutionMultiplier: (multiplier: number) => void;
+  rehydrate: (state: Partial<EditorStore>) => void;
 }
 
 const useEditorStore = create<EditorStore>((set) => ({
@@ -31,6 +32,7 @@ const useEditorStore = create<EditorStore>((set) => ({
   setDominantColor: (color) => set({ dominantColor: color }),
   setResolutionMultiplier: (resolutionMultiplier) =>
     set({ resolutionMultiplier }),
+  rehydrate: (state) => set(state),
 }));
 
 export default useEditorStore;

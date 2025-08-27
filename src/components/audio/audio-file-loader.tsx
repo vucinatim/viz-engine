@@ -3,7 +3,7 @@ import useSetBodyProps from '@/lib/hooks/use-set-body-props';
 import useAudioStore from '@/lib/stores/audio-store';
 import { cn } from '@/lib/utils';
 import { AlertCircle, Folder, Music } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '../ui/button';
 import SearchSelect from '../ui/search-select';
@@ -37,13 +37,15 @@ const AudioFileLoader = () => {
     },
     [audioElementRef, setAudioFile, setCurrentTrackUrl, wavesurfer],
   );
-  const { getRootProps, isDragActive, isDragReject } = useDropzone({
-    onDrop,
-    accept: DROPZONE_ACCEPTED_TYPES,
-    noClick: true,
-    noKeyboard: true,
-    maxFiles: 1,
-  });
+  const { getRootProps, isDragActive, isDragReject, fileRejections } =
+    useDropzone({
+      onDrop,
+      accept: DROPZONE_ACCEPTED_TYPES,
+      noClick: true,
+      noKeyboard: true,
+      maxFiles: 1,
+      useFsAccessApi: false,
+    });
   useSetBodyProps(getRootProps());
 
   useEffect(() => {
@@ -80,16 +82,22 @@ const AudioFileLoader = () => {
     }
   };
 
+  const isAudioReject = useMemo(
+    () => fileRejections.some((rejection) => rejection.file.type === 'audio/*'),
+    [fileRejections],
+  );
+
   return (
     <div className="flex items-center gap-x-2">
       <div
         className={cn(
           'pointer-events-none absolute inset-0 z-50 flex flex-col items-center justify-center gap-y-2 bg-white/20 opacity-0 backdrop-blur-sm transition-opacity',
           isDragActive && 'opacity-1',
-          isDragReject && 'opacity-1 bg-rose-500/20',
+          isDragReject && !isAudioReject && 'opacity-0',
+          isAudioReject && 'opacity-1 bg-rose-500/20',
         )}>
-        <div>{isDragReject ? <AlertCircle /> : <Music />}</div>
-        <p>{isDragReject ? 'File type not supported' : 'Load audio file'}</p>
+        <div>{isAudioReject ? <AlertCircle /> : <Music />}</div>
+        <p>{isAudioReject ? 'File type not supported' : 'Load audio file'}</p>
       </div>
       <Button
         size="icon"

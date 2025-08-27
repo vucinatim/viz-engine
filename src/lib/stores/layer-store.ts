@@ -17,6 +17,49 @@ import { createIdbJsonStorage } from '../idb-json-storage';
 import { getDefaults } from '../schema-utils';
 import useLayerValuesStore from './layer-values-store';
 
+export const layerStorePartialize = (state: LayerStore) => ({
+  ...state,
+  layers: state.layers.map(({ config, mirrorCanvases, ...rest }) => ({
+    ...rest,
+    comp: { name: rest.comp.name },
+  })),
+});
+
+export const layerStoreMerge = (
+  persistedState: any,
+  currentState: LayerStore,
+) => {
+  const persisted = persistedState as LayerStore;
+  const currentLayersMap = new Map(
+    currentState.layers.map((layer) => [layer.id, layer]),
+  );
+
+  const mergedLayers = persisted.layers.map((persistedLayer) => {
+    const currentLayer = currentLayersMap.get(persistedLayer.id);
+    const comp = CompDefinitionMap.get(persistedLayer.comp.name);
+    if (!comp) return persistedLayer; // Should not happen in valid project file
+
+    const rehydratedLayer = {
+      ...persistedLayer,
+      comp,
+      config: assignDeterministicIdsToConfig(
+        persistedLayer.id,
+        comp.config.clone(),
+      ),
+      // Preserve runtime properties from the current state
+      mirrorCanvases: currentLayer ? currentLayer.mirrorCanvases : [],
+    };
+
+    return rehydratedLayer;
+  });
+
+  return {
+    ...currentState,
+    ...persisted,
+    layers: mergedLayers,
+  };
+};
+
 export interface LayerData {
   id: string;
   comp: Comp;
@@ -204,32 +247,8 @@ const useLayerStore = create<LayerStore>()(
           throttleMs: 100,
         }),
       ),
-      partialize: (state) => ({
-        ...state,
-        layers: state.layers.map(({ config, mirrorCanvases, ...rest }) => ({
-          ...rest,
-          comp: { name: rest.comp.name },
-        })),
-      }),
-      merge: (persistedState, currentState) => {
-        const persisted = persistedState as LayerStore;
-        return {
-          ...currentState,
-          ...persisted,
-          layers: persisted.layers.map((layer) => {
-            const comp = CompDefinitionMap.get(layer.comp.name);
-            if (!comp) return layer;
-            return {
-              ...layer,
-              comp,
-              config: assignDeterministicIdsToConfig(
-                layer.id,
-                comp.config.clone(),
-              ),
-            };
-          }),
-        };
-      },
+      partialize: layerStorePartialize,
+      merge: layerStoreMerge,
     },
   ),
 );
