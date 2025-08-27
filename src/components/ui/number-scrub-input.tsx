@@ -1,5 +1,3 @@
-'use client';
-
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import React, { useCallback, useEffect, useRef } from 'react';
@@ -67,51 +65,48 @@ const NumberScrubInput = React.forwardRef<
       }
     };
 
-    const endDrag = useCallback(() => {
-      // Always clean up listeners and cursor, even if no movement happened
+    // Keep latest props/values in refs so global handlers can read them
+    const minRef = useRef(min);
+    const maxRef = useRef(max);
+    const stepRef = useRef(step);
+    const onChangeRef = useRef(onChange);
+    const pxPerStepRef = useRef(pixelsPerStep);
+    useEffect(() => {
+      minRef.current = min;
+      maxRef.current = max;
+      stepRef.current = step;
+      onChangeRef.current = onChange;
+      pxPerStepRef.current = pixelsPerStep;
+    }, [min, max, step, onChange, pixelsPerStep]);
+
+    // Listener references to enable precise cleanup
+    const moveListenerRef = useRef<((e: MouseEvent) => void) | null>(null);
+    const upListenerRef = useRef<((e: MouseEvent) => void) | null>(null);
+    const blurListenerRef = useRef<((e: Event) => void) | null>(null);
+
+    const cleanupGlobalListeners = useCallback(() => {
+      if (moveListenerRef.current) {
+        window.removeEventListener('mousemove', moveListenerRef.current);
+        moveListenerRef.current = null;
+      }
+      if (upListenerRef.current) {
+        window.removeEventListener('mouseup', upListenerRef.current);
+        upListenerRef.current = null;
+      }
+      if (blurListenerRef.current) {
+        window.removeEventListener('blur', blurListenerRef.current as any);
+        blurListenerRef.current = null;
+      }
       isDraggingRef.current = false;
       hasMovedRef.current = false;
       setDragCursor(false);
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    const onMouseMove = useCallback(
-      (e: MouseEvent) => {
-        const deltaY = e.clientY - startYRef.current;
-        // Require a larger threshold before entering drag to avoid accidental drags
-        if (!hasMovedRef.current && Math.abs(deltaY) < 6) {
-          return;
-        }
-        if (!isDraggingRef.current) {
-          isDraggingRef.current = true;
-          setDragCursor(true);
-        }
-
-        const direction = -deltaY; // up increases
-        const baseSteps = direction / pixelsPerStep;
-        const modifier = e.shiftKey ? 10 : e.altKey ? 0.1 : 1;
-        const next = startValueRef.current + baseSteps * step * modifier;
-        const clamped = clamp(next, min, max);
-        onChange(Number(clamped.toFixed(6))); // avoid float drift
-
-        hasMovedRef.current = true;
-      },
-      [max, min, onChange, pixelsPerStep, step],
-    );
-
-    const onMouseUp = useCallback(() => {
-      endDrag();
-      // Refocus the input for convenience after drag
-      inputRef.current?.focus();
-    }, [endDrag]);
 
     useEffect(() => {
       return () => {
-        endDrag();
+        cleanupGlobalListeners();
       };
-    }, [endDrag]);
+    }, [cleanupGlobalListeners]);
 
     const handleHandleMouseDown: React.MouseEventHandler<HTMLDivElement> = (
       e,
@@ -121,8 +116,39 @@ const NumberScrubInput = React.forwardRef<
       startValueRef.current = value;
       isDraggingRef.current = false;
       hasMovedRef.current = false;
-      window.addEventListener('mousemove', onMouseMove);
-      window.addEventListener('mouseup', onMouseUp);
+
+      const onMove = (ev: MouseEvent) => {
+        const deltaY = ev.clientY - startYRef.current;
+        if (!hasMovedRef.current && Math.abs(deltaY) < 6) {
+          return;
+        }
+        if (!isDraggingRef.current) {
+          isDraggingRef.current = true;
+          setDragCursor(true);
+        }
+        const direction = -deltaY;
+        const baseSteps = direction / (pxPerStepRef.current || 10);
+        const modifier = ev.shiftKey ? 10 : ev.altKey ? 0.1 : 1;
+        const next =
+          startValueRef.current +
+          baseSteps * (stepRef.current || 0.1) * modifier;
+        const clamped = clamp(next, minRef.current, maxRef.current);
+        onChangeRef.current?.(Number(clamped.toFixed(6)));
+        hasMovedRef.current = true;
+      };
+      const onUp = (_ev: MouseEvent) => {
+        cleanupGlobalListeners();
+        inputRef.current?.focus();
+      };
+      const onBlur = (_ev: Event) => {
+        cleanupGlobalListeners();
+      };
+      moveListenerRef.current = onMove;
+      upListenerRef.current = onUp;
+      blurListenerRef.current = onBlur;
+      window.addEventListener('mousemove', onMove, { passive: true });
+      window.addEventListener('mouseup', onUp, { passive: true });
+      window.addEventListener('blur', onBlur);
     };
 
     const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {

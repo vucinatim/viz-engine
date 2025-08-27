@@ -95,6 +95,15 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       alpha: true,
     });
 
+    // Improve color fidelity and contrast
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
+    // three@0.164+ defaults to physically correct; keep legacy off
+    (renderer as any).useLegacyLights = false;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
     const containerWidth = layerCanvasRef.current.clientWidth;
     const containerHeight = layerCanvasRef.current.clientHeight;
 

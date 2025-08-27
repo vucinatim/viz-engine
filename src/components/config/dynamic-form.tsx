@@ -31,38 +31,52 @@ const DynamicForm = ({ layerId, config, defaultValues }: DynamicFormProps) => {
   return (
     <Form {...form}>
       <div className="flex flex-col">
-        {Object.entries(config.options).map(([key, option]) => (
-          <div key={key}>
-            {option instanceof GroupConfigOption ? (
-              <CollapsibleGroup
-                label={option.label}
-                description={option.description}>
-                <div className="flex flex-col gap-y-4 pb-6">
-                  {Object.entries(option.options).map(
-                    ([innerKey, innerOption]) => (
-                      <MemoField
-                        key={`${key}.${innerKey}`}
-                        layerId={layerId}
-                        name={`${key}.${innerKey}`}
-                        form={form}
-                        option={innerOption as ConfigParam<any>}
-                      />
-                    ),
-                  )}
+        {Object.entries(config.options).map(([key, option]) => {
+          const isHidden =
+            typeof option.visibleIf === 'function' &&
+            !option.visibleIf(form.getValues());
+          if (isHidden) return null;
+          return (
+            <div key={key}>
+              {option instanceof GroupConfigOption ? (
+                <CollapsibleGroup
+                  label={option.label}
+                  description={option.description}>
+                  <div className="flex flex-col gap-y-4 pb-6">
+                    {Object.entries(option.options).map(
+                      ([innerKey, innerOption]) => {
+                        const opt = innerOption as ConfigParam<any>;
+                        const isHidden =
+                          typeof opt.visibleIf === 'function' &&
+                          !opt.visibleIf(form.getValues());
+                        if (isHidden) return null;
+                        return (
+                          <div key={innerKey} className="pb-6">
+                            <MemoField
+                              layerId={layerId}
+                              name={`${key}.${innerKey}`}
+                              form={form}
+                              option={opt}
+                            />
+                          </div>
+                        );
+                      },
+                    )}
+                  </div>
+                </CollapsibleGroup>
+              ) : (
+                <div className="pb-6">
+                  <MemoField
+                    layerId={layerId}
+                    name={key}
+                    form={form}
+                    option={option as ConfigParam<any>}
+                  />
                 </div>
-              </CollapsibleGroup>
-            ) : (
-              <div className="pb-6">
-                <MemoField
-                  layerId={layerId}
-                  name={key}
-                  form={form}
-                  option={option as ConfigParam<any>}
-                />
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+            </div>
+          );
+        })}
       </div>
     </Form>
   );

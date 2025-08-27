@@ -1,11 +1,14 @@
+import Color from 'color';
 import { ReactNode } from 'react';
 import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
 import useNodeNetworkStore from '../node-network/node-network-store';
 import { ColorPickerPopover } from '../ui/color-picker';
+import FileInput from '../ui/file-input';
 import { Input } from '../ui/input';
 import { SimpleSelect } from '../ui/select'; // Assuming you have a Select component
 import { Slider } from '../ui/slider'; // Assuming this is your custom slider component
 import { Switch } from '../ui/switch';
+import Vector3Input from '../ui/vector3-input';
 import { AnimInputData } from './animation-nodes';
 import { VType } from './types';
 
@@ -13,6 +16,7 @@ import { VType } from './types';
 interface ConfigMeta {
   label: string;
   description?: string;
+  visibleIf?: (allValues: any) => boolean;
 }
 
 // Base class for all config options
@@ -20,11 +24,13 @@ export abstract class BaseConfigOption<T> {
   id: string;
   label: string;
   description?: string;
+  visibleIf?: (allValues: any) => boolean;
 
-  constructor({ label, description }: ConfigMeta) {
+  constructor({ label, description, visibleIf }: ConfigMeta) {
     this.id = ''; // This will be set deterministically
     this.label = label;
     this.description = description;
+    this.visibleIf = visibleIf;
   }
 
   abstract getValue(inputData: AnimInputData): T;
@@ -78,6 +84,49 @@ export abstract class ConfigParam<T> extends BaseConfigOption<T> {
 
   getDefaultValue(): T {
     return this.value;
+  }
+}
+
+// Vector3 Config Option
+type Vector3 = { x: number; y: number; z: number };
+type Vector3ConfigOptions = ConfigMeta & {
+  defaultValue: Vector3;
+  min?: number;
+  max?: number;
+  step?: number;
+};
+
+export class Vector3ConfigOption extends ConfigParam<Vector3> {
+  options: Vector3ConfigOptions;
+
+  constructor(options: Vector3ConfigOptions) {
+    super(options, VType.Vector3);
+    this.options = options;
+  }
+
+  clone() {
+    return new Vector3ConfigOption({
+      ...this.options,
+      defaultValue: { ...this.options.defaultValue },
+    });
+  }
+
+  toFormElement(value: Vector3, onChange: (value: Vector3) => void) {
+    return (
+      <Vector3Input
+        value={value}
+        onChange={(v) => {
+          this.value = v;
+          onChange(v);
+        }}
+        min={this.options.min}
+        max={this.options.max}
+        step={this.options.step}
+        labelSuffix={
+          this.label?.toLowerCase().includes('rotation') ? '°' : undefined
+        }
+      />
+    );
   }
 }
 
@@ -140,8 +189,14 @@ export class ColorConfigOption extends ConfigParam<string> {
   }
 
   validate(value: string): boolean {
-    // Simple hex color validation
-    return /^#[0-9A-F]{6}$/i.test(value);
+    // Accept any CSS color string supported by `color` lib (hex, hexa, rgb(a), hsl(a), named)
+    try {
+      // Will throw if invalid
+      Color(value);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   toFormElement(value: string, onChange: (value: string) => void) {
@@ -185,6 +240,53 @@ export class StringConfigOption extends ConfigParam<string> {
         onChange={(e) => {
           this.value = e.target.value;
           onChange(e.target.value);
+        }}
+      />
+    );
+  }
+}
+
+// Generic File (path/URL) Config Option with extension validation
+type FileConfigOptions = ConfigMeta & {
+  defaultValue: string; // file path or URL
+  allowedExtensions?: string[]; // e.g., ['.glb', '.gltf']
+};
+
+export class FileConfigOption extends ConfigParam<string> {
+  options: FileConfigOptions;
+
+  constructor(options: FileConfigOptions) {
+    super(options, VType.File, false);
+    this.options = options;
+  }
+
+  clone() {
+    return new FileConfigOption(this.options);
+  }
+
+  validate(value: string): boolean {
+    if (!value) return true; // empty allowed
+    const allowed = this.options.allowedExtensions || [];
+    if (allowed.length === 0) return true;
+    try {
+      const url = new URL(value, 'http://local');
+      const pathname = url.pathname || value;
+      const lower = pathname.toLowerCase();
+      return allowed.some((ext) => lower.endsWith(ext));
+    } catch {
+      const lower = value.toLowerCase();
+      return allowed.some((ext) => lower.endsWith(ext));
+    }
+  }
+
+  toFormElement(value: string, onChange: (value: string) => void) {
+    return (
+      <FileInput
+        value={value}
+        acceptExtensions={this.options.allowedExtensions}
+        onChange={(val) => {
+          this.value = val;
+          onChange(val);
         }}
       />
     );
@@ -427,6 +529,8 @@ export const v = {
   text: (options: StringConfigOptions) => new StringConfigOption(options),
   toggle: (options: BooleanConfigOptions) => new BooleanConfigOption(options),
   select: (options: SelectConfigOptions) => new SelectConfigOption(options),
+  file: (options: FileConfigOptions) => new FileConfigOption(options),
+  vector3: (options: Vector3ConfigOptions) => new Vector3ConfigOption(options),
   group: <T extends Record<string, BaseConfigOption<any>>>(
     meta: ConfigMeta,
     options: T,

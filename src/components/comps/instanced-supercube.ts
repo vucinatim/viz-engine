@@ -1,3 +1,4 @@
+import { cssColorToLinearRGB } from '@/lib/color-utils';
 import * as THREE from 'three';
 import { v } from '../config/config';
 import { createComponent } from '../config/create-component';
@@ -6,6 +7,11 @@ const InstancedSupercube = createComponent({
   name: 'Instanced Supercube',
   description: 'Interactive 3D instanced cubes with explosion animation',
   config: v.config({
+    color: v.color({
+      label: 'Color',
+      description: 'Cube color (CSS)',
+      defaultValue: 'rgb(255, 0, 0)',
+    }),
     explosionFactor: v.number({
       label: 'Explosion Factor',
       description: 'How far the cubes explode from the center',
@@ -117,6 +123,16 @@ const InstancedSupercube = createComponent({
 
     // Update shader time uniform
     state.customUniforms.uTime.value = time;
+    // Update color uniform from config every frame for live edits
+    try {
+      const css = (config as any)?.color ?? 'rgb(255, 0, 0)';
+      const lin = cssColorToLinearRGB(css);
+      (state.customUniforms as any).uColor?.value?.setRGB?.(
+        lin.r,
+        lin.g,
+        lin.b,
+      );
+    } catch {}
 
     // Rotate the entire mesh (dt-based to avoid snapping when speed changes)
     state.rotationX += config.rotationSpeed * dt;
@@ -192,9 +208,19 @@ function createInstancedMesh(scene: THREE.Scene, state: any, config: any) {
     color: 0xffffff,
   });
 
+  // Initialize color uniform from current config
+  const initialCss = (config as any)?.color ?? 'rgb(255, 0, 0)';
+  const initialLin = cssColorToLinearRGB(initialCss);
+  const initialThreeColor = new THREE.Color(
+    initialLin.r,
+    initialLin.g,
+    initialLin.b,
+  );
+
   const customUniforms = {
     uTime: { value: 0.0 },
-  };
+    uColor: { value: initialThreeColor },
+  } as const;
   state.customUniforms = customUniforms;
 
   // Use onBeforeCompile to inject custom shader code
@@ -214,23 +240,18 @@ function createInstancedMesh(scene: THREE.Scene, state: any, config: any) {
       `,
     );
 
-    // Inject the color logic into the fragment shader
+    // Inject color from config via a uniform (live-updatable)
     shader.fragmentShader =
-      'uniform float uTime;\nvarying vec3 vInstanceWorldPosition;\n' +
+      'uniform float uTime;\nuniform vec3 uColor;\nvarying vec3 vInstanceWorldPosition;\n' +
       shader.fragmentShader;
+    // Bind uniforms
+    (shader.uniforms as any).uColor = customUniforms.uColor;
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <color_fragment>',
       `
       #include <color_fragment>
-      
-      // Custom color logic based on the instance's world position
-      vec3 colorA = vec3(0.1, 0.5, 0.9);
-      vec3 colorB = vec3(0.9, 0.2, 0.5);
-      float mixFactor = sin(vInstanceWorldPosition.y * 0.2 + uTime) * 0.5 + 0.5;
-      vec3 finalColor = mix(colorA, colorB, mixFactor);
-
-      // Apply this color to the material's diffuse color
-      diffuseColor.rgb = finalColor;
+      // Color from config (uniform is already linear RGB)
+      diffuseColor.rgb = uColor;
       `,
     );
   };

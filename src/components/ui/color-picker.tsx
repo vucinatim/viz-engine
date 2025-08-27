@@ -1,7 +1,6 @@
 import Color from 'color';
-import { debounce } from 'lodash';
 import { Clipboard } from 'lucide-react';
-import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { Button } from './button';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 
@@ -75,14 +74,6 @@ const ColorPickerPopover = forwardRef<
   useEffect(() => {
     if (!isEditing) setInputValue(localValue);
   }, [localValue, isEditing]);
-
-  const debouncedOnChange = useMemo(
-    () =>
-      debounce((next: string) => {
-        onChange(next);
-      }, 120),
-    [onChange],
-  );
 
   // Canvas drawing helpers (devicePixelRatio aware)
   const withCanvas = (
@@ -250,7 +241,7 @@ const ColorPickerPopover = forwardRef<
       roundedAlpha,
     );
     setLocalValue(rgba);
-    debouncedOnChange(rgba);
+    onChange(rgba);
     // Ensure the alpha thumb remains visible after any commit
     requestAnimationFrame(() => {
       drawAlphaThumb(alphaCanvasRef.current, alphaRef.current);
@@ -275,7 +266,7 @@ const ColorPickerPopover = forwardRef<
         drawAlphaCanvas(alphaCanvasRef.current, parsed.h, parsed.s, parsed.v);
         drawAlphaThumb(alphaCanvasRef.current, parsed.a);
       });
-      debouncedOnChange(rgba);
+      onChange(rgba);
     } catch {
       setInputError('Invalid color');
     }

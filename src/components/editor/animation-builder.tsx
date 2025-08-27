@@ -68,12 +68,12 @@ const AnimationBuilder = () => {
           </div>
           <div
             className={cn(
-              'pointer-events-none absolute left-4 top-4 rounded-lg bg-zinc-600/30 px-6 py-4 transition-opacity',
+              'pointer-events-none absolute right-4 top-4 rounded-lg bg-zinc-600/30 px-4 py-2 transition-opacity',
               isHovering && 'opacity-0',
               areNetworksMinimized && 'opacity-0',
             )}>
-            <p className="flex items-center justify-center text-sm font-semibold text-white">
-              <AudioLines size={24} className="mr-4 text-purple-400" />
+            <p className="flex items-center justify-center text-xs font-semibold text-white">
+              <AudioLines size={20} className="mr-4 text-purple-400" />
               {nodeNetwork.name}
             </p>
           </div>

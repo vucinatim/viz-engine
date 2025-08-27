@@ -8,4 +8,6 @@ export enum VType {
   Boolean = 'boolean',
   String = 'string',
   Group = 'group',
+  File = 'file',
+  Vector3 = 'vector3',
 }

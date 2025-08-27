@@ -5,6 +5,8 @@ export type NodeHandleType =
   | 'number'
   | 'string'
   | 'color'
+  | 'file'
+  | 'vector3'
   | 'Uint8Array'
   | 'FrequencyAnalysis'
   | 'object';
@@ -33,6 +35,16 @@ export const TYPE_METADATA: Record<
     label: 'Color',
     canConnectTo: ['string', 'color'],
   },
+  file: {
+    color: '#10b981', // emerald
+    label: 'File',
+    canConnectTo: ['file', 'string'],
+  },
+  vector3: {
+    color: '#06b6d4', // cyan
+    label: 'Vector3',
+    canConnectTo: ['vector3'],
+  },
   Uint8Array: {
     color: '#8b5cf6', // purple
     label: 'Data',
@@ -58,12 +70,16 @@ export const VTypeToNodeHandleType: Record<VType, NodeHandleType> = {
   [VType.Boolean]: 'number', // Boolean becomes 0/1 in nodes
   [VType.Select]: 'string',
   [VType.Group]: 'object', // Groups become objects
+  [VType.File]: 'file',
+  [VType.Vector3]: 'vector3',
 };
 
 export const NodeHandleTypeToVType: Record<NodeHandleType, VType> = {
   number: VType.Number,
   string: VType.String,
   color: VType.Color,
+  file: VType.File,
+  vector3: VType.Vector3,
   Uint8Array: VType.Number, // Data becomes number
   FrequencyAnalysis: VType.Number, // Complex types become number
   object: VType.Group,
