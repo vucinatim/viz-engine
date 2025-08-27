@@ -7,12 +7,13 @@ import {
 import useNodeNetworkStore from '@/components/node-network/node-network-store';
 import { arrayMove } from '@dnd-kit/sortable';
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import {
   assignDeterministicIdsToConfig,
   getParameterIdsFromConfig,
 } from '../comp-utils/config-utils';
 import { generateLayerId } from '../id-utils';
+import { createIdbJsonStorage } from '../idb-json-storage';
 import { getDefaults } from '../schema-utils';
 import useLayerValuesStore from './layer-values-store';
 
@@ -196,6 +197,13 @@ const useLayerStore = create<LayerStore>()(
     }),
     {
       name: 'layer-store',
+      storage: createJSONStorage(() =>
+        createIdbJsonStorage({
+          dbName: 'viz-engine',
+          storeName: 'layer-store',
+          throttleMs: 100,
+        }),
+      ),
       partialize: (state) => ({
         ...state,
         layers: state.layers.map(({ config, mirrorCanvases, ...rest }) => ({

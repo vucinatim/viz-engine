@@ -24,7 +24,17 @@ const NodeRenderer = ({
   nodeNetworkId,
 }: NodeRendererProps) => {
   const { definition, inputValues } = data;
-  const { label, inputs, outputs, customBody: CustomBody } = definition;
+  const {
+    label,
+    inputs,
+    outputs,
+    customBody: CustomBody,
+  } = definition ||
+  ({
+    label: 'Unknown',
+    inputs: [],
+    outputs: [],
+  } as any);
 
   const { edges, updateInputValue } = useNodeNetwork(nodeNetworkId);
 
@@ -84,7 +94,7 @@ const NodeRenderer = ({
         <div className="flex justify-between gap-x-4">
           {/* Inputs */}
           <div className="flex flex-col gap-y-2">
-            {inputs.map((input: any, index: number) => (
+            {(inputs || []).map((input: any, index: number) => (
               <div key={input.id} className="flex h-8 items-center gap-x-2">
                 <ConnectionHandle
                   io={input}
@@ -101,7 +111,7 @@ const NodeRenderer = ({
           </div>
           {/* Outputs */}
           <div className="flex flex-col items-end gap-y-2">
-            {outputs.map((output: any, index: number) => (
+            {(outputs || []).map((output: any, index: number) => (
               <div key={output.id} className="flex h-8 items-center gap-x-2">
                 <p className="pointer-events-none pr-1 text-xs">
                   {output.label}

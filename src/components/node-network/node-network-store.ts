@@ -66,6 +66,11 @@ interface NodeNetworkStore {
   setEdgesInNetwork: (parameterId: string, edges: Edge[]) => void;
   createNetworkForParameter: (parameterId: string, type: VType) => void; // Initialize a new network for a parameter
   removeNetworkForParameter: (parameterId: string) => void; // Remove network if parameter is not animated anymore
+  applyPresetToNetwork: (
+    parameterId: string,
+    presetId: string,
+    outputType: NodeHandleType,
+  ) => void;
   updateNodeInputValue: (
     parameterId: string,
     nodeId: string,
@@ -148,6 +153,32 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
                 },
               ],
               edges: [],
+            },
+          },
+        }));
+        get().setOpenNetwork(parameterId);
+      },
+
+      // Apply a preset by id to a network
+      applyPresetToNetwork: (parameterId, presetId, outputType) => {
+        const { instantiatePreset, getPresetsForType } = require('./presets');
+        const presets = getPresetsForType(outputType);
+        const preset = presets.find((p: any) => p.id === presetId);
+        if (!preset) return;
+        const { nodes, edges } = instantiatePreset(
+          preset,
+          parameterId,
+          outputType,
+        );
+        set((state) => ({
+          networks: {
+            ...state.networks,
+            [parameterId]: {
+              name: parameterId,
+              isEnabled: true,
+              isMinimized: false,
+              nodes,
+              edges,
             },
           },
         }));

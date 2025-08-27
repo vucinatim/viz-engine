@@ -3,11 +3,20 @@ import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard'
 import { useNodeNetworkHistory } from '../../lib/hooks/use-node-network-history';
 import { destructureParameterId } from '../../lib/id-utils';
 import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
+import { NodeHandleType } from '../config/node-types';
 import {
   useNodeNetwork,
   useNodeNetworkStore,
 } from '../node-network/node-network-store';
+import { getPresetsForType } from '../node-network/presets';
 import { Button } from '../ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 
 interface NodeEditorToolbarProps {
   nodeNetworkId: string;
@@ -40,6 +49,20 @@ const NodeEditorToolbar = ({
       isEnabled: network.isEnabled,
     };
   });
+
+  const applyPreset = (presetId: string) => {
+    const store = useNodeNetworkStore.getState();
+    // Derive output type from current Output node definition if present; fallback to number
+    const network = store.networks[nodeNetworkId];
+    let outputType: NodeHandleType = 'number';
+    const outputNode = network?.nodes.find((n) =>
+      n.id.includes('-output-node'),
+    );
+    const typeFromNode = (outputNode?.data as any)?.definition?.inputs?.[0]
+      ?.type as NodeHandleType | undefined;
+    if (typeFromNode) outputType = typeFromNode;
+    store.applyPresetToNetwork(nodeNetworkId, presetId, outputType);
+  };
 
   // Use clipboard hook for copy functionality
   const { copySelectedNodes } = useNodeGraphClipboard({
@@ -150,6 +173,40 @@ const NodeEditorToolbar = ({
                   : '0.00'}
             </span>
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="sm">
+                Presets
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-64">
+              <DropdownMenuLabel>Select preset</DropdownMenuLabel>
+              {(() => {
+                const store = useNodeNetworkStore.getState();
+                const network = store.networks[nodeNetworkId];
+                const outType = (
+                  network?.nodes.find((n) => n.id.includes('-output-node'))
+                    ?.data as any
+                )?.definition?.inputs?.[0]?.type as NodeHandleType | undefined;
+                const type: NodeHandleType = outType || 'number';
+                const presets = getPresetsForType(type);
+                if (presets.length === 0) {
+                  return (
+                    <DropdownMenuItem disabled>
+                      No presets for {type}
+                    </DropdownMenuItem>
+                  ) as any;
+                }
+                return presets.map((p) => (
+                  <DropdownMenuItem
+                    key={p.id}
+                    onClick={() => applyPreset(p.id)}>
+                    {p.name}
+                  </DropdownMenuItem>
+                ));
+              })()}
+            </DropdownMenuContent>
+          </DropdownMenu>
           {/* Minimize pinned at far left */}
           <Button
             variant="ghostly"
