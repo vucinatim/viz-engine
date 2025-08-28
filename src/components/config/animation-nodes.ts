@@ -1,6 +1,11 @@
-import FrequencyBandSelector from '../node-network/frequency-band-selector';
+import AdaptiveNormalizeQuantileBody from '../node-network/bodies/adaptive-normalize-quantile-body';
+import EnvelopeFollowerBody from '../node-network/bodies/envelope-follower-body';
+import frequencyBandBody from '../node-network/bodies/frequency-band-body';
+import HysteresisGateBody from '../node-network/bodies/hysteresis-gate-body';
+import NormalizeBody from '../node-network/bodies/normalize-body';
+import SpectralFluxBody from '../node-network/bodies/spectral-flux-body';
+import ValueMapperBody from '../node-network/bodies/value-mapper-body';
 import { GraphNode, GraphNodeData } from '../node-network/node-network-store';
-import ValueMapperBody from '../node-network/value-mapper-body';
 import { NodeHandleType } from './node-types';
 
 type NodeIO = {
@@ -24,6 +29,7 @@ export type AnimNode = {
     selected: boolean;
     nodeNetworkId: string;
   }>;
+  description?: string;
 };
 
 // 1. Add FrequencyAnalysis type
@@ -42,6 +48,8 @@ export type AnimInputData = {
 
 export const InputNode: AnimNode = {
   label: 'Input',
+  description:
+    'Graph inputs: audioSignal (Uint8Array waveform), frequencyAnalysis (spectrum + metadata), and time (seconds). Start connections here.',
   inputs: [],
   outputs: [
     { id: 'audioSignal', label: 'Audio Signal', type: 'Uint8Array' },
@@ -60,6 +68,8 @@ export const InputNode: AnimNode = {
 // Special handling for OutputNode: Return the output value
 export const createOutputNode = (type: NodeHandleType): AnimNode => ({
   label: 'Output',
+  description:
+    "Graph output: pass the final value to this node's input. Its type defines the network's output type.",
   inputs: [{ id: 'output', label: 'Output Value', type }],
   outputs: [],
   computeSignal: ({ output }) => {
@@ -70,6 +80,8 @@ export const createOutputNode = (type: NodeHandleType): AnimNode => ({
 // Define a MultiplyNode
 const MultiplyNode: AnimNode = {
   label: 'Multiply',
+  description:
+    'Multiplies A and B. Use to scale or modulate one signal by another.',
   inputs: [
     { id: 'a', label: 'A', type: 'number', defaultValue: 1 },
     { id: 'b', label: 'B', type: 'number', defaultValue: 1 },
@@ -85,6 +97,8 @@ const MultiplyNode: AnimNode = {
 
 const SubtractNode: AnimNode = {
   label: 'Subtract',
+  description:
+    'Subtracts B from A. Useful for offsets or differential signals.',
   inputs: [
     { id: 'a', label: 'A', type: 'number' },
     { id: 'b', label: 'B', type: 'number' },
@@ -97,6 +111,7 @@ const SubtractNode: AnimNode = {
 
 const AddNode: AnimNode = {
   label: 'Add',
+  description: 'Adds A and B. Useful for mixing signals or adding offsets.',
   inputs: [
     { id: 'a', label: 'A', type: 'number', defaultValue: 0 },
     { id: 'b', label: 'B', type: 'number', defaultValue: 0 },
@@ -109,6 +124,8 @@ const AddNode: AnimNode = {
 
 export const SpikeNode: AnimNode = {
   label: 'Spike',
+  description:
+    'Detect transient spikes over a threshold with attack/release shaping. Good for percussive triggers.',
   inputs: [
     { id: 'value', type: 'number', label: 'Value', defaultValue: 0 },
     {
@@ -171,9 +188,102 @@ export const SpikeNode: AnimNode = {
   },
 };
 
+// --- Adaptive Normalize (Quantile) ---
+const AdaptiveNormalizeQuantileNode: AnimNode = {
+  label: 'Adaptive Normalize (Quantile)',
+  description:
+    'Continuously normalizes a signal using rolling quantiles over a time window. Robust to outliers and mix changes.',
+  customBody: AdaptiveNormalizeQuantileBody,
+  inputs: [
+    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
+    { id: 'time', label: 'Time (s)', type: 'number', defaultValue: 0 },
+    {
+      id: 'windowMs',
+      label: 'Window (ms)',
+      type: 'number',
+      defaultValue: 4000,
+    },
+    {
+      id: 'qLow',
+      label: 'Low Quantile (0..1)',
+      type: 'number',
+      defaultValue: 0.5,
+    },
+    {
+      id: 'qHigh',
+      label: 'High Quantile (0..1)',
+      type: 'number',
+      defaultValue: 0.95,
+    },
+  ],
+  outputs: [
+    { id: 'result', label: 'Result', type: 'number' },
+    { id: 'low', label: 'Low', type: 'number' },
+    { id: 'high', label: 'High', type: 'number' },
+  ],
+  computeSignal: (
+    {
+      value,
+      time,
+      windowMs,
+      qLow,
+      qHigh,
+    }: {
+      value: number;
+      time?: number;
+      windowMs?: number;
+      qLow?: number;
+      qHigh?: number;
+    },
+    node,
+  ) => {
+    if (!node) return { result: 0, low: 0, high: 1 };
+    const v = typeof value === 'number' && isFinite(value) ? value : 0;
+    const t = typeof time === 'number' && isFinite(time) ? time : 0;
+    const wSec = Math.max(
+      0.001,
+      (typeof windowMs === 'number' && isFinite(windowMs) ? windowMs : 4000) /
+        1000,
+    );
+    const qL = Math.max(0, Math.min(1, typeof qLow === 'number' ? qLow : 0.5));
+    const qH = Math.max(
+      qL,
+      Math.min(1, typeof qHigh === 'number' ? qHigh : 0.95),
+    );
+
+    const state = node.data.state;
+    if (!state.samples) state.samples = [] as { t: number; v: number }[];
+
+    state.samples.push({ t, v });
+    // Drop old samples
+    while (state.samples.length > 0 && t - state.samples[0].t > wSec) {
+      state.samples.shift();
+    }
+
+    const n = state.samples.length;
+    if (n === 0) return { result: 0, low: 0, high: 1 };
+
+    // Build sorted copy for percentile extraction (n is typically small)
+    const values: number[] = new Array(n);
+    for (let i = 0; i < n; i++) values[i] = state.samples[i].v;
+    values.sort((a, b) => a - b);
+
+    const lowIdx = Math.max(0, Math.min(n - 1, Math.floor(qL * (n - 1))));
+    const highIdx = Math.max(0, Math.min(n - 1, Math.floor(qH * (n - 1))));
+    const lowVal = values[lowIdx];
+    const highVal = values[highIdx];
+    const range = highVal - lowVal;
+    const result = range > 1e-9 ? (v - lowVal) / range : 0;
+    const clamped = Math.max(0, Math.min(1, result));
+    return { result: clamped, low: lowVal, high: highVal };
+  },
+};
+
 // Define the SineNode
 const SineNode: AnimNode = {
   label: 'Sine',
+  description:
+    'Sine oscillator controlled by time with frequency, phase, amplitude. Outputs raw -A..+A.',
   inputs: [
     { id: 'time', label: 'Time (s)', type: 'number', defaultValue: 0 },
     {
@@ -208,6 +318,8 @@ const SineNode: AnimNode = {
 
 const AverageVolumeNode: AnimNode = {
   label: 'Average Volume',
+  description:
+    'Averages a Uint8Array (e.g., waveform or band data) to estimate energy level.',
   inputs: [
     {
       id: 'data',
@@ -228,6 +340,9 @@ const AverageVolumeNode: AnimNode = {
 
 const NormalizeNode: AnimNode = {
   label: 'Normalize',
+  description:
+    'Maps value from [inputMin..inputMax] to [outputMin..outputMax] with clamping.',
+  customBody: NormalizeBody,
   inputs: [
     { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
     {
@@ -278,7 +393,9 @@ const NormalizeNode: AnimNode = {
 // 4. Update FrequencyBandNode to use frequencyAnalysis input
 const FrequencyBandNode: AnimNode = {
   label: 'Frequency Band',
-  customBody: FrequencyBandSelector,
+  description:
+    "Select a frequency range from FrequencyAnalysis and output just that band's Uint8Array.",
+  customBody: frequencyBandBody,
   inputs: [
     {
       id: 'frequencyAnalysis',
@@ -332,6 +449,8 @@ const FrequencyBandNode: AnimNode = {
 // --- Pitch Detection Node ---
 const PitchDetectionNode: AnimNode = {
   label: 'Pitch Detection',
+  description:
+    'Simple peak-bin pitch from FrequencyAnalysis. Returns note string, Hz, MIDI, octave.',
   inputs: [
     {
       id: 'frequencyAnalysis',
@@ -394,6 +513,8 @@ const PitchDetectionNode: AnimNode = {
 
 const ValueMapperNode: AnimNode = {
   label: 'Value Mapper',
+  description:
+    'Map string inputs through a key/value object with a default fallback.',
   customBody: ValueMapperBody,
   inputs: [
     { id: 'input', label: 'Input', type: 'string' },
@@ -422,6 +543,8 @@ const ValueMapperNode: AnimNode = {
 // --- Smoothing (Exponential Moving Average) Node ---
 const SmoothingNode: AnimNode = {
   label: 'Smoothing',
+  description:
+    'Exponential smoothing. If time + timeConstantMs provided, applies time-domain smoothing; else frame-based.',
   inputs: [
     { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
     {
@@ -496,6 +619,300 @@ const SmoothingNode: AnimNode = {
   },
 };
 
+// --- Envelope Follower (attack/release, time-aware) ---
+const EnvelopeFollowerNode: AnimNode = {
+  label: 'Envelope Follower',
+  description:
+    'Rectifies and smooths a signal with separate attack/release using time-aware coefficients.',
+  customBody: EnvelopeFollowerBody,
+  inputs: [
+    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
+    { id: 'attackMs', label: 'Attack (ms)', type: 'number', defaultValue: 10 },
+    {
+      id: 'releaseMs',
+      label: 'Release (ms)',
+      type: 'number',
+      defaultValue: 150,
+    },
+    { id: 'time', label: 'Time (s)', type: 'number', defaultValue: 0 },
+  ],
+  outputs: [{ id: 'env', label: 'Envelope', type: 'number' }],
+  computeSignal: ({ value, attackMs, releaseMs, time }, node) => {
+    if (!node) return { env: typeof value === 'number' ? Math.abs(value) : 0 };
+    const v = Math.abs(typeof value === 'number' ? value : 0);
+    const t = typeof time === 'number' ? time : 0;
+    const state = node.data.state;
+    const prevEnv = typeof state.prevEnv === 'number' ? state.prevEnv : v;
+    const prevTime = typeof state.prevTime === 'number' ? state.prevTime : t;
+    const dt = Math.max(0, t - prevTime);
+    const aMs = Math.max(1, typeof attackMs === 'number' ? attackMs : 10);
+    const rMs = Math.max(1, typeof releaseMs === 'number' ? releaseMs : 150);
+    const a = 1 - Math.exp(-dt / (aMs / 1000));
+    const r = 1 - Math.exp(-dt / (rMs / 1000));
+    const alpha = v > prevEnv ? a : r;
+    const env = prevEnv + alpha * (v - prevEnv);
+    state.prevEnv = env;
+    state.prevTime = t;
+    return { env };
+  },
+};
+
+// --- Spectral Flux (onset strength) ---
+const SpectralFluxNode: AnimNode = {
+  label: 'Spectral Flux',
+  description:
+    'Measures onset strength as positive frame-to-frame spectral increases. Feed a spectrum (Uint8Array).',
+  customBody: SpectralFluxBody,
+  inputs: [{ id: 'data', label: 'Spectrum', type: 'Uint8Array' }],
+  outputs: [{ id: 'flux', label: 'Flux', type: 'number' }],
+  computeSignal: ({ data }, node) => {
+    if (!node || !data || !(data instanceof Uint8Array)) {
+      return { flux: 0 };
+    }
+    const state = node.data.state;
+    const prev: Uint8Array | undefined = state.prevData;
+    let flux = 0;
+    if (prev && prev.length === data.length) {
+      for (let i = 0; i < data.length; i++) {
+        const diff = data[i] - prev[i];
+        if (diff > 0) flux += diff;
+      }
+    }
+    // store copy for next frame
+    state.prevData = new Uint8Array(data);
+    return { flux };
+  },
+};
+
+// --- Spectral Flatness (tonal vs noise) ---
+const SpectralFlatnessNode: AnimNode = {
+  label: 'Spectral Flatness',
+  description:
+    'Geometric mean / arithmetic mean of spectrum. 0=tonal/peaky, 1=noise-like/flat. Feed a spectrum (Uint8Array).',
+  inputs: [{ id: 'data', label: 'Spectrum', type: 'Uint8Array' }],
+  outputs: [{ id: 'flatness', label: 'Flatness', type: 'number' }],
+  computeSignal: ({ data }) => {
+    if (!data || !(data instanceof Uint8Array) || data.length === 0) {
+      return { flatness: 1 };
+    }
+    const eps = 1e-6;
+    let logSum = 0;
+    let arith = 0;
+    for (let i = 0; i < data.length; i++) {
+      const v = data[i] / 255; // normalize to 0..1
+      const x = v + eps;
+      logSum += Math.log(x);
+      arith += x;
+    }
+    const gm = Math.exp(logSum / data.length);
+    const am = arith / data.length;
+    const flat = Math.max(0, Math.min(1, gm / am));
+    return { flatness: flat };
+  },
+};
+
+// --- Pitched Presence (banded peak tonality heuristic) ---
+const PitchedPresenceNode: AnimNode = {
+  label: 'Pitched Presence',
+  description:
+    'Heuristic for voiced/synth presence in a band: combines peak level with (1 - flatness).',
+  inputs: [
+    {
+      id: 'frequencyAnalysis',
+      label: 'Frequency Analysis',
+      type: 'FrequencyAnalysis',
+    },
+    {
+      id: 'startFrequency',
+      label: 'Start Frequency (Hz)',
+      type: 'number',
+      defaultValue: 300,
+    },
+    {
+      id: 'endFrequency',
+      label: 'End Frequency (Hz)',
+      type: 'number',
+      defaultValue: 5000,
+    },
+    {
+      id: 'flatnessCutoff',
+      label: 'Flatness Cutoff',
+      type: 'number',
+      defaultValue: 0.6,
+    },
+  ],
+  outputs: [
+    { id: 'presence', label: 'Presence', type: 'number' },
+    { id: 'peak', label: 'Peak', type: 'number' },
+    { id: 'flatness', label: 'Flatness', type: 'number' },
+  ],
+  computeSignal: ({
+    frequencyAnalysis,
+    startFrequency = 300,
+    endFrequency = 5000,
+    flatnessCutoff = 0.6,
+  }) => {
+    if (
+      !frequencyAnalysis ||
+      !frequencyAnalysis.frequencyData ||
+      !frequencyAnalysis.sampleRate ||
+      !frequencyAnalysis.fftSize
+    ) {
+      return { presence: 0, peak: 0, flatness: 1 };
+    }
+    const { frequencyData, sampleRate, fftSize } = frequencyAnalysis;
+    const nyquist = sampleRate / 2;
+    const frequencyPerBin = nyquist / (fftSize / 2);
+    const startBin = Math.max(0, Math.floor(startFrequency / frequencyPerBin));
+    const endBin = Math.min(
+      frequencyData.length - 1,
+      Math.max(startBin, Math.ceil(endFrequency / frequencyPerBin)),
+    );
+    const length = endBin - startBin + 1;
+    if (length <= 0) return { presence: 0, peak: 0, flatness: 1 };
+
+    let peak = 0;
+    const eps = 1e-6;
+    let logSum = 0;
+    let arith = 0;
+    for (let i = startBin; i <= endBin; i++) {
+      const v = frequencyData[i];
+      if (v > peak) peak = v;
+      const x = v / 255 + eps;
+      logSum += Math.log(x);
+      arith += x;
+    }
+    const gm = Math.exp(logSum / length);
+    const am = arith / length;
+    const flatness = Math.max(0, Math.min(1, gm / am));
+    const peakNorm = peak / 255;
+    const tonalBoost = Math.max(
+      0,
+      (flatnessCutoff - flatness) / Math.max(1e-6, flatnessCutoff),
+    );
+    const presence = Math.max(0, Math.min(1, peakNorm * tonalBoost));
+    return { presence, peak: peakNorm, flatness };
+  },
+};
+
+// --- Moving Mean (time-windowed) ---
+const MovingMeanNode: AnimNode = {
+  label: 'Moving Mean',
+  description:
+    'Time-windowed mean. Provide window (ms) and time (s) to track baseline in real time.',
+  inputs: [
+    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
+    { id: 'windowMs', label: 'Window (ms)', type: 'number', defaultValue: 200 },
+    { id: 'time', label: 'Time (s)', type: 'number', defaultValue: 0 },
+  ],
+  outputs: [{ id: 'mean', label: 'Mean', type: 'number' }],
+  computeSignal: ({ value, windowMs, time }, node) => {
+    if (!node) return { mean: typeof value === 'number' ? value : 0 };
+    const v = typeof value === 'number' ? value : 0;
+    const t = typeof time === 'number' ? time : 0;
+    const w = Math.max(1, typeof windowMs === 'number' ? windowMs : 200) / 1000;
+    const state = node.data.state;
+    if (!state.samples) {
+      state.samples = [];
+      state.sum = 0;
+    }
+    state.samples.push({ t, v });
+    state.sum += v;
+    while (state.samples.length > 0 && t - state.samples[0].t > w) {
+      const old = state.samples.shift();
+      state.sum -= old ? old.v : 0;
+    }
+    const mean =
+      state.samples.length > 0 ? state.sum / state.samples.length : 0;
+    return { mean };
+  },
+};
+
+// --- Adaptive Threshold ---
+const AdaptiveThresholdNode: AnimNode = {
+  label: 'Adaptive Threshold',
+  description:
+    'Outputs how much value exceeds baseline + offset. Useful before gates.',
+  inputs: [
+    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
+    { id: 'baseline', label: 'Baseline', type: 'number', defaultValue: 0 },
+    { id: 'offset', label: 'Offset', type: 'number', defaultValue: 0.05 },
+  ],
+  outputs: [{ id: 'amount', label: 'Amount', type: 'number' }],
+  computeSignal: ({ value, baseline, offset }) => {
+    const v = typeof value === 'number' ? value : 0;
+    const b = typeof baseline === 'number' ? baseline : 0;
+    const o = typeof offset === 'number' ? offset : 0;
+    const amount = Math.max(0, v - (b + o));
+    return { amount };
+  },
+};
+
+// --- Hysteresis Gate ---
+const HysteresisGateNode: AnimNode = {
+  label: 'Hysteresis Gate',
+  description:
+    'Binary gate with separate open/close thresholds (high/low) to avoid chatter.',
+  customBody: HysteresisGateBody,
+  inputs: [
+    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
+    { id: 'low', label: 'Low', type: 'number', defaultValue: 0.02 },
+    { id: 'high', label: 'High', type: 'number', defaultValue: 0.08 },
+  ],
+  outputs: [{ id: 'gated', label: 'Gated', type: 'number' }],
+  computeSignal: ({ value, low, high }, node) => {
+    if (!node) return { gated: 0 };
+    const v = typeof value === 'number' ? value : 0;
+    const lo = typeof low === 'number' ? low : 0.02;
+    const hi = typeof high === 'number' ? high : 0.08;
+    const state = node.data.state;
+    const open = !!state.open;
+    let nextOpen = open;
+    if (open) {
+      if (v < lo) nextOpen = false;
+    } else {
+      if (v > hi) nextOpen = true;
+    }
+    state.open = nextOpen;
+    return { gated: nextOpen ? v : 0 };
+  },
+};
+
+// --- Refractory Gate ---
+const RefractoryGateNode: AnimNode = {
+  label: 'Refractory Gate',
+  description:
+    'Allows a pulse only if a minimum interval since last pulse has passed. Feed time (s).',
+  inputs: [
+    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
+    {
+      id: 'minIntervalMs',
+      label: 'Min Interval (ms)',
+      type: 'number',
+      defaultValue: 120,
+    },
+    { id: 'time', label: 'Time (s)', type: 'number', defaultValue: 0 },
+  ],
+  outputs: [{ id: 'gated', label: 'Gated', type: 'number' }],
+  computeSignal: ({ value, minIntervalMs, time }, node) => {
+    if (!node) return { gated: 0 };
+    const v = typeof value === 'number' ? value : 0;
+    const t = typeof time === 'number' ? time : 0;
+    const interval =
+      Math.max(1, typeof minIntervalMs === 'number' ? minIntervalMs : 120) /
+      1000;
+    const state = node.data.state;
+    const last =
+      typeof state.lastFire === 'number' ? state.lastFire : -Infinity;
+    let out = 0;
+    if (v > 0 && t - last >= interval) {
+      out = v;
+      state.lastFire = t;
+    }
+    return { gated: out };
+  },
+};
+
 export const nodes: AnimNode[] = [
   SineNode,
   MultiplyNode,
@@ -503,10 +920,19 @@ export const nodes: AnimNode[] = [
   AddNode,
   AverageVolumeNode,
   NormalizeNode,
+  AdaptiveNormalizeQuantileNode,
   FrequencyBandNode,
   SpikeNode,
   PitchDetectionNode,
   ValueMapperNode,
+  EnvelopeFollowerNode,
+  SpectralFluxNode,
+  SpectralFlatnessNode,
+  PitchedPresenceNode,
+  MovingMeanNode,
+  AdaptiveThresholdNode,
+  HysteresisGateNode,
+  RefractoryGateNode,
   SmoothingNode,
 ];
 

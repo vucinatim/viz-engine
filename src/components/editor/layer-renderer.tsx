@@ -235,17 +235,18 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
         },
       };
 
+      const configValues = layer.config.getValues(animInputData);
       withDebug(
         () =>
           renderFunction?.({
             dt,
             audioData: { dataArray: frequencyData, analyzer: audioAnalyzer },
-            config: layer.config.getValues(animInputData),
+            config: configValues,
           }),
         {
           dataArray: frequencyData,
           wavesurfer: wavesurfer,
-          config: layer.config.getValues(animInputData),
+          config: configValues,
         },
       );
 

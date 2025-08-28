@@ -1,5 +1,6 @@
 import CurveSpectrum from './curve-spectrum';
 import DebugAnimation from './debug-animation';
+import FeatureExtractionBars from './feature-extraction-bars';
 import HeartbeatMonitor from './heartbeat-monitor';
 import InstancedSupercube from './instanced-supercube';
 import MorphShapes from './morph-shapes';
@@ -14,6 +15,7 @@ export const AllComps = [
   HeartbeatMonitor,
   InstancedSupercube,
   MorphShapes,
+  FeatureExtractionBars,
 ];
 
 export const CompDefinitionMap = new Map();

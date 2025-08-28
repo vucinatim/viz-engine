@@ -76,7 +76,9 @@ function useWavesurferSetup() {
   useEffect(() => {
     const ac = new AudioContext();
     const an = ac.createAnalyser();
-    an.fftSize = 2048; // Default is 2048, try adjusting if needed
+    // Tighter time resolution and no internal smoothing for onset detection
+    an.fftSize = 2048;
+    an.smoothingTimeConstant = 0;
     an.minDecibels = -90; // Default is -100 dB
     an.maxDecibels = -10; // Default is -30 dB
     const gn = ac.createGain();

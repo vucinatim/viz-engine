@@ -5,7 +5,7 @@ import { D3DragEvent, drag } from 'd3-drag';
 import { select } from 'd3-selection';
 import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
-import { GraphNodeData, useNodeNetwork } from './node-network-store';
+import { GraphNodeData, useNodeNetwork } from '../node-network-store';
 
 type DragEvent = D3DragEvent<HTMLDivElement, unknown, unknown>;
 
@@ -14,18 +14,18 @@ const MAX_FREQ = 20000;
 const MIN_LOG_FREQ = Math.log(MIN_FREQ);
 const MAX_LOG_FREQ = Math.log(MAX_FREQ);
 
-interface FrequencyBandSelectorProps {
+interface FrequencyBandBodyProps {
   id: string;
   data: GraphNodeData;
   selected: boolean;
   nodeNetworkId: string;
 }
 
-const FrequencyBandSelector = ({
+const FrequencyBandBody = ({
   id: nodeId,
   data,
   nodeNetworkId,
-}: FrequencyBandSelectorProps) => {
+}: FrequencyBandBodyProps) => {
   const { getNodeOutput } = useNodeOutputCache.getState();
   const { getNodeInputValue: getLiveNodeValue } =
     useNodeLiveValuesStore.getState();
@@ -184,4 +184,4 @@ const FrequencyBandSelector = ({
   );
 };
 
-export default memo(FrequencyBandSelector);
+export default memo(FrequencyBandBody);

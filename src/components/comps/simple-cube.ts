@@ -29,6 +29,7 @@ const SimpleCube = createComponent({
       description:
         'Input.audioSignal -> Average Volume -> Normalize(0..3) -> Output',
       outputType: 'number',
+      autoPlace: true,
       nodes: [
         { id: 'avg', label: 'Average Volume', position: { x: 0, y: -80 } },
         {

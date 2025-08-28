@@ -94,16 +94,20 @@ export const nodeNetworkStorePartialize = (state: NodeNetworkStore) => ({
             return {
               ...node,
               data: {
+                // Persist only serializable, static pieces. Drop runtime state.
                 ...node.data,
                 definition: { label: 'Output', type },
+                state: {},
               },
             };
           }
           return {
             ...node,
             data: {
+              // Persist only serializable, static pieces. Drop runtime state.
               ...node.data,
               definition: def.label,
+              state: {},
             },
           };
         }),
@@ -454,6 +458,16 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
               } else {
                 // Input is not connected, use the stored default value
                 resolvedValue = node.data.inputValues[input.id];
+                // If still undefined, inject from global animation input data by convention
+                if (resolvedValue === undefined) {
+                  if (input.id === 'time') {
+                    resolvedValue = (inputData as any)?.time;
+                  } else if (input.id === 'frequencyAnalysis') {
+                    resolvedValue = (inputData as any)?.frequencyAnalysis;
+                  } else if (input.id === 'audioSignal') {
+                    resolvedValue = (inputData as any)?.audioSignal;
+                  }
+                }
               }
 
               // Type-aware parsing

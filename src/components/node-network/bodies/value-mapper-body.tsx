@@ -3,7 +3,7 @@ import { ColorPickerPopover } from '@/components/ui/color-picker';
 import { Input } from '@/components/ui/input';
 import { X } from 'lucide-react';
 import { useRef } from 'react';
-import { GraphNodeData, useNodeNetwork } from './node-network-store';
+import { GraphNodeData, useNodeNetwork } from '../node-network-store';
 
 interface ValueMapperBodyProps {
   id: string;

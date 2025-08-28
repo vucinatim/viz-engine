@@ -1,11 +1,13 @@
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { Handle, Position } from '@xyflow/react';
+import { Info } from 'lucide-react';
 import {
   NodeHandleType,
   getTypeColor,
   getTypeLabel,
 } from '../config/node-types';
+import SimpleTooltip from '../ui/simple-tooltip';
 import LiveValue from './live-value';
 import { GraphNodeData, useNodeNetwork } from './node-network-store';
 
@@ -73,6 +75,17 @@ const NodeRenderer = ({
             onChange={(e) => updateInputValue(nodeId, input.id, e.target.value)}
           />
         );
+      case 'boolean':
+        return (
+          <input
+            type="checkbox"
+            className="nodrag nopan h-3 w-3"
+            checked={!!inputValues[input.id]}
+            onChange={(e) =>
+              updateInputValue(nodeId, input.id, e.target.checked)
+            }
+          />
+        );
       default:
         return null;
     }
@@ -87,9 +100,15 @@ const NodeRenderer = ({
           : 'border-zinc-700 bg-zinc-900',
         selected && 'border-purple-500 shadow-lg',
       )}>
-      <p className="w-full select-none rounded-t-lg bg-zinc-800 px-2 py-1 text-xs font-bold">
-        {getNodeHeaderText()}
-      </p>
+      <div className="flex w-full items-center justify-between gap-2 rounded-t-lg bg-zinc-800 px-2 py-1">
+        <p className="select-none text-xs font-bold">{getNodeHeaderText()}</p>
+        {definition?.description && (
+          <SimpleTooltip
+            text={definition.description}
+            trigger={<Info className="h-3 w-3 opacity-70" />}
+          />
+        )}
+      </div>
       <div className="relative flex min-w-[150px] flex-col p-2">
         <div className="flex justify-between gap-x-4">
           {/* Inputs */}

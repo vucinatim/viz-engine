@@ -32,6 +32,7 @@ export type NodeNetworkPreset = {
   name: string;
   description?: string;
   outputType: NodeHandleType;
+  autoPlace?: boolean;
   nodes: PresetNodeSpec[];
   edges: PresetEdgeSpec[];
 };
@@ -40,6 +41,7 @@ export type NodeNetworkPreset = {
 const presetRegistry: Record<NodeHandleType, NodeNetworkPreset[]> = {
   number: [],
   string: [],
+  boolean: [],
   color: [],
   file: [],
   vector3: [],
@@ -101,7 +103,7 @@ export const instantiatePreset = (
     nodes.push({
       id,
       type: 'NodeRenderer',
-      position: spec.position,
+      position: spec.position, // will be replaced by auto layout
       data: {
         definition: nodeDef,
         inputValues: spec.inputValues || {},
@@ -130,6 +132,7 @@ registerPreset({
   name: 'Sine Oscillator (time)',
   description: 'Maps Input.time -> Sine -> Output',
   outputType: 'number',
+  autoPlace: true,
   nodes: [
     {
       id: 'sine',
@@ -160,6 +163,7 @@ registerPreset({
   description:
     'Input.audioSignal -> Average Volume -> Normalize(0..1) -> Output',
   outputType: 'number',
+  autoPlace: true,
   nodes: [
     { id: 'avg', label: 'Average Volume', position: { x: 0, y: -80 } },
     {
@@ -198,6 +202,7 @@ registerPreset({
   description:
     'Input.frequencyAnalysis → Frequency Band (40–120Hz) → Average → Normalize(30..200→0..4) → Smoothing(time) → Output',
   outputType: 'number',
+  autoPlace: true,
   nodes: [
     {
       id: 'band',

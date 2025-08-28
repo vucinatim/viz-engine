@@ -4,6 +4,7 @@ import { VType } from './types';
 export type NodeHandleType =
   | 'number'
   | 'string'
+  | 'boolean'
   | 'color'
   | 'file'
   | 'vector3'
@@ -29,6 +30,11 @@ export const TYPE_METADATA: Record<
     color: '#34d399', // green
     label: 'String',
     canConnectTo: ['string', 'color'],
+  },
+  boolean: {
+    color: '#f97316', // orange
+    label: 'Boolean',
+    canConnectTo: ['number', 'boolean'],
   },
   color: {
     color: '#f59e0b', // amber
@@ -77,6 +83,7 @@ export const VTypeToNodeHandleType: Record<VType, NodeHandleType> = {
 export const NodeHandleTypeToVType: Record<NodeHandleType, VType> = {
   number: VType.Number,
   string: VType.String,
+  boolean: VType.Boolean,
   color: VType.Color,
   file: VType.File,
   vector3: VType.Vector3,

@@ -6,6 +6,7 @@ import {
   LayerSettings,
   layerSettingsSchema,
 } from '@/components/editor/layer-settings';
+import { autoLayoutNodes } from '@/components/node-network/auto-layout';
 import useNodeNetworkStore from '@/components/node-network/node-network-store';
 import { instantiatePreset } from '@/components/node-network/presets';
 import { arrayMove } from '@dnd-kit/sortable';
@@ -134,18 +135,26 @@ const useLayerStore = create<LayerStore>()(
             if (!option) continue;
             const parameterId = option.id;
             const outputType = safeVTypeToNodeHandleType(option.type);
-            const { nodes, edges } = instantiatePreset(
+            let { nodes, edges } = instantiatePreset(
               preset as any,
               parameterId,
               outputType,
             );
+            if (preset.autoPlace) {
+              nodes = autoLayoutNodes(nodes, edges, {
+                startX: -300,
+                startY: 0,
+                xGap: 280,
+                yGap: 120,
+              });
+            }
             useNodeNetworkStore.getState().setNetwork(parameterId, {
               name: parameterId,
               isEnabled: true,
               isMinimized: false,
               nodes,
               edges,
-            } as any);
+            });
           }
         }
 

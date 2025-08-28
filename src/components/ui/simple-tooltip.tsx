@@ -3,7 +3,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "./tooltip";
+} from './tooltip';
 
 interface SimpleTooltipProps {
   trigger: React.ReactNode;
@@ -16,7 +16,7 @@ const SimpleTooltip = ({ trigger, text }: SimpleTooltipProps) => {
       <Tooltip>
         <TooltipTrigger asChild>{trigger}</TooltipTrigger>
         {text && (
-          <TooltipContent align="start" className="text-xs">
+          <TooltipContent align="start" className="max-w-[300px] text-xs">
             {text}
           </TooltipContent>
         )}
