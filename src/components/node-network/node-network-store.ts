@@ -418,7 +418,10 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
 
           // Special handling for InputNode: Provide external input data
           if (node.data.definition.label === 'Input') {
-            const inputOutput = node.data.definition.computeSignal(inputData); // InputNode directly uses input data
+            const inputOutput = node.data.definition.computeSignal(
+              inputData,
+              inputData,
+            ); // InputNode directly uses input data
             nodeOutputs[node.id] = inputOutput;
             setNodeOutput(node.id, inputOutput);
 
@@ -460,12 +463,10 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
                 resolvedValue = node.data.inputValues[input.id];
                 // If still undefined, inject from global animation input data by convention
                 if (resolvedValue === undefined) {
-                  if (input.id === 'time') {
-                    resolvedValue = (inputData as any)?.time;
+                  if (input.id === 'audioSignal') {
+                    resolvedValue = (inputData as any)?.audioSignal;
                   } else if (input.id === 'frequencyAnalysis') {
                     resolvedValue = (inputData as any)?.frequencyAnalysis;
-                  } else if (input.id === 'audioSignal') {
-                    resolvedValue = (inputData as any)?.audioSignal;
                   }
                 }
               }
@@ -492,7 +493,11 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
           ); // Initialize the accumulator as an object
 
           // 3. Compute the node's output using the computeSignal function
-          const output = node.data.definition.computeSignal(inputs, node);
+          const output = node.data.definition.computeSignal(
+            inputs,
+            inputData,
+            node,
+          );
 
           // 4. Cache the output for this node
           nodeOutputs[node.id] = output;

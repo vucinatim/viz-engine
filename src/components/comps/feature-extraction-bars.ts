@@ -73,39 +73,34 @@ const FeatureExtractionBars = createComponent<
     // Kick: start simple (3 nodes) and iterate later
     kick: {
       id: 'bars-kick-adaptive',
-      name: 'Kick (Band→Avg→Env→Adaptive Normalize→Gate)',
+      name: 'Kick (Band→Info→Smooth→Adaptive Normalize→Gate)',
       description:
-        'Kick energy: Frequency Band(80-150Hz) → Average Volume → Envelope Follower → Adaptive Normalize (Quantile) → Hysteresis Gate → Output',
+        'Kick energy: Frequency Band(80-150Hz) → Band Info → Smoothing → Adaptive Normalize (Quantile) → Hysteresis Gate → Output',
       outputType: 'number',
       autoPlace: true,
       nodes: [
         {
           id: 'band',
           label: 'Frequency Band',
-          position: { x: -200, y: -20 },
           inputValues: { startFrequency: 80, endFrequency: 150 },
         },
         {
-          id: 'avg',
-          label: 'Average Volume',
-          position: { x: 80, y: -20 },
+          id: 'info',
+          label: 'Band Info',
         },
         {
           id: 'env',
           label: 'Envelope Follower',
-          position: { x: 220, y: -20 },
           inputValues: { attackMs: 6, releaseMs: 120 },
         },
         {
           id: 'adapt',
           label: 'Adaptive Normalize (Quantile)',
-          position: { x: 340, y: -20 },
           inputValues: { windowMs: 4000, qLow: 0.5, qHigh: 0.98 },
         },
         {
           id: 'gate',
           label: 'Hysteresis Gate',
-          position: { x: 480, y: -20 },
           inputValues: { low: 0.33, high: 0.45 },
         },
       ],
@@ -117,19 +112,13 @@ const FeatureExtractionBars = createComponent<
           targetHandle: 'frequencyAnalysis',
         },
         {
-          source: INPUT_ALIAS,
-          sourceHandle: 'time',
-          target: 'env',
-          targetHandle: 'time',
-        },
-        {
           source: 'band',
           sourceHandle: 'bandData',
-          target: 'avg',
+          target: 'info',
           targetHandle: 'data',
         },
         {
-          source: 'avg',
+          source: 'info',
           sourceHandle: 'average',
           target: 'env',
           targetHandle: 'value',
@@ -139,12 +128,6 @@ const FeatureExtractionBars = createComponent<
           sourceHandle: 'env',
           target: 'adapt',
           targetHandle: 'value',
-        },
-        {
-          source: INPUT_ALIAS,
-          sourceHandle: 'time',
-          target: 'adapt',
-          targetHandle: 'time',
         },
         {
           source: 'adapt',
@@ -162,39 +145,34 @@ const FeatureExtractionBars = createComponent<
     },
     snare: {
       id: 'bars-snare-adaptive',
-      name: 'Snare (Band→Avg→Env→Adaptive Normalize→Gate)',
+      name: 'Snare (Band→Info→Smooth→Adaptive Normalize→Gate)',
       description:
-        'Snare/Clap energy: Frequency Band(180-4000Hz) → Average Volume → Envelope Follower → Adaptive Normalize (Quantile) → Hysteresis Gate → Output',
+        'Snare/Clap energy: Frequency Band(180-4000Hz) → Band Info → Smoothing → Adaptive Normalize (Quantile) → Hysteresis Gate → Output',
       outputType: 'number',
       autoPlace: true,
       nodes: [
         {
           id: 'band',
           label: 'Frequency Band',
-          position: { x: -220, y: 0 },
           inputValues: { startFrequency: 180, endFrequency: 4000 },
         },
         {
-          id: 'avg',
-          label: 'Average Volume',
-          position: { x: 60, y: 0 },
+          id: 'info',
+          label: 'Band Info',
         },
         {
           id: 'env',
           label: 'Envelope Follower',
-          position: { x: 200, y: 0 },
           inputValues: { attackMs: 4, releaseMs: 140 },
         },
         {
           id: 'adapt',
           label: 'Adaptive Normalize (Quantile)',
-          position: { x: 320, y: 0 },
           inputValues: { windowMs: 4000, qLow: 0.5, qHigh: 0.95 },
         },
         {
           id: 'gate',
           label: 'Hysteresis Gate',
-          position: { x: 460, y: 0 },
           inputValues: { low: 0.06, high: 0.14 },
         },
       ],
@@ -206,19 +184,13 @@ const FeatureExtractionBars = createComponent<
           targetHandle: 'frequencyAnalysis',
         },
         {
-          source: INPUT_ALIAS,
-          sourceHandle: 'time',
-          target: 'env',
-          targetHandle: 'time',
-        },
-        {
           source: 'band',
           sourceHandle: 'bandData',
-          target: 'avg',
+          target: 'info',
           targetHandle: 'data',
         },
         {
-          source: 'avg',
+          source: 'info',
           sourceHandle: 'average',
           target: 'env',
           targetHandle: 'value',
@@ -228,12 +200,6 @@ const FeatureExtractionBars = createComponent<
           sourceHandle: 'env',
           target: 'adapt',
           targetHandle: 'value',
-        },
-        {
-          source: INPUT_ALIAS,
-          sourceHandle: 'time',
-          target: 'adapt',
-          targetHandle: 'time',
         },
         {
           source: 'adapt',
@@ -251,42 +217,32 @@ const FeatureExtractionBars = createComponent<
     },
     bass: {
       id: 'bars-bass-groove',
-      name: 'Bass Groove (Band→Avg→Env→MovingMean→Adaptive Normalize)',
+      name: 'Bass Groove (Band→Info→Smooth→Smooth→Adaptive Normalize)',
       description:
-        'Follow bassline groove: Frequency Band(≈20-120Hz) → Average Volume → Envelope Follower (time-aware) → Moving Mean (baseline groove) → Adaptive Normalize (Quantile) → Output',
+        'Follow bassline groove: Frequency Band(≈20-120Hz) → Band Info → Smoothing (envelope) → Smoothing (baseline) → Adaptive Normalize (Quantile) → Output',
       outputType: 'number',
       autoPlace: true,
       nodes: [
         {
           id: 'band',
           label: 'Frequency Band',
-          position: { x: -240, y: 40 },
           inputValues: {
-            startFrequency: 20.214571587652742,
+            startFrequency: 20,
             endFrequency: 120,
           },
         },
         {
-          id: 'avg',
-          label: 'Average Volume',
-          position: { x: 40, y: 40 },
+          id: 'info',
+          label: 'Band Info',
         },
         {
-          id: 'env',
+          id: 'env_follow',
           label: 'Envelope Follower',
-          position: { x: 180, y: 40 },
           inputValues: { attackMs: 0, releaseMs: 120 },
-        },
-        {
-          id: 'mean',
-          label: 'Moving Mean',
-          position: { x: 320, y: 40 },
-          inputValues: { windowMs: 120 },
         },
         {
           id: 'adapt',
           label: 'Adaptive Normalize (Quantile)',
-          position: { x: 460, y: 40 },
           inputValues: { windowMs: 8000, qLow: 0.3, qHigh: 0.9 },
         },
       ],
@@ -300,44 +256,20 @@ const FeatureExtractionBars = createComponent<
         {
           source: 'band',
           sourceHandle: 'bandData',
-          target: 'avg',
+          target: 'info',
           targetHandle: 'data',
         },
         {
-          source: 'avg',
+          source: 'info',
           sourceHandle: 'average',
-          target: 'env',
+          target: 'env_follow',
           targetHandle: 'value',
         },
         {
-          source: INPUT_ALIAS,
-          sourceHandle: 'time',
-          target: 'env',
-          targetHandle: 'time',
-        },
-        {
-          source: 'env',
+          source: 'env_follow',
           sourceHandle: 'env',
-          target: 'mean',
-          targetHandle: 'value',
-        },
-        {
-          source: INPUT_ALIAS,
-          sourceHandle: 'time',
-          target: 'mean',
-          targetHandle: 'time',
-        },
-        {
-          source: 'mean',
-          sourceHandle: 'mean',
           target: 'adapt',
           targetHandle: 'value',
-        },
-        {
-          source: INPUT_ALIAS,
-          sourceHandle: 'time',
-          target: 'adapt',
-          targetHandle: 'time',
         },
         {
           source: 'adapt',
@@ -348,60 +280,63 @@ const FeatureExtractionBars = createComponent<
       ],
     },
     melody: {
-      id: 'bars-melody-pitched',
-      name: 'Melody Pitched Presence (PP→Adaptive Normalize→Gate→Env)',
+      id: 'bars-melody-tonal',
+      name: 'Melody Presence (Band→Tonal Presence→Envelope→Adapt→Gate)',
       description:
-        'Detect pitched/voiced presence using banded peak × (1 − flatness), adaptively normalize, then gate and envelope.',
+        'Detect pitched/voiced presence using Tonal Presence (peak × (1-flatness)), adaptively normalize, then gate and smooth.',
       outputType: 'number',
       autoPlace: true,
       nodes: [
         {
-          id: 'pp',
-          label: 'Pitched Presence',
-          position: { x: -160, y: -40 },
-          inputValues: {
-            startFrequency: 400,
-            endFrequency: 5000,
-            flatnessCutoff: 2,
-          },
+          id: 'band',
+          label: 'Frequency Band',
+          inputValues: { startFrequency: 300, endFrequency: 5000 },
+        },
+        {
+          id: 'tonal',
+          label: 'Tonal Presence',
+          inputValues: { flatnessCutoff: 0.9, peakScale: 120 },
+        },
+        {
+          id: 'env',
+          label: 'Envelope Follower',
+          inputValues: { attackMs: 10, releaseMs: 150 },
         },
         {
           id: 'adapt',
           label: 'Adaptive Normalize (Quantile)',
-          position: { x: 140, y: -60 },
           inputValues: { windowMs: 6000, qLow: 0.4, qHigh: 0.9 },
         },
         {
           id: 'gate',
           label: 'Hysteresis Gate',
-          position: { x: 360, y: -80 },
           inputValues: { low: 0.21, high: 0.29 },
-        },
-        {
-          id: 'env',
-          label: 'Envelope Follower',
-          position: { x: 640, y: 0 },
-          inputValues: { attackMs: 10, releaseMs: 150 },
         },
       ],
       edges: [
         {
           source: INPUT_ALIAS,
           sourceHandle: 'frequencyAnalysis',
-          target: 'pp',
+          target: 'band',
           targetHandle: 'frequencyAnalysis',
         },
         {
-          source: 'pp',
+          source: 'band',
+          sourceHandle: 'bandData',
+          target: 'tonal',
+          targetHandle: 'data',
+        },
+        {
+          source: 'tonal',
           sourceHandle: 'presence',
-          target: 'adapt',
+          target: 'env',
           targetHandle: 'value',
         },
         {
-          source: INPUT_ALIAS,
-          sourceHandle: 'time',
+          source: 'env',
+          sourceHandle: 'env',
           target: 'adapt',
-          targetHandle: 'time',
+          targetHandle: 'value',
         },
         {
           source: 'adapt',
@@ -410,20 +345,8 @@ const FeatureExtractionBars = createComponent<
           targetHandle: 'value',
         },
         {
-          source: INPUT_ALIAS,
-          sourceHandle: 'time',
-          target: 'env',
-          targetHandle: 'time',
-        },
-        {
           source: 'gate',
           sourceHandle: 'gated',
-          target: 'env',
-          targetHandle: 'value',
-        },
-        {
-          source: 'env',
-          sourceHandle: 'env',
           target: OUTPUT_ALIAS,
           targetHandle: 'output',
         },
@@ -431,27 +354,24 @@ const FeatureExtractionBars = createComponent<
     },
     percussion: {
       id: 'bars-percussion-adaptive',
-      name: 'Percussion (Band→Avg→Adaptive Normalize→Gate)',
+      name: 'Percussion (Band→Info→Adaptive Normalize→Gate)',
       description:
-        'Percussive energy: Frequency Band (2–8k) → Average Volume → Adaptive Normalize (Quantile) → Hysteresis Gate → Output',
+        'Percussive energy: Frequency Band (2–8k) → Band Info → Adaptive Normalize (Quantile) → Hysteresis Gate → Output',
       outputType: 'number',
       autoPlace: true,
       nodes: [
         {
           id: 'band',
           label: 'Frequency Band',
-          position: { x: -240, y: 0 },
           inputValues: { startFrequency: 2000, endFrequency: 8000 },
         },
         {
-          id: 'avg',
-          label: 'Average Volume',
-          position: { x: 40, y: 0 },
+          id: 'info',
+          label: 'Band Info',
         },
         {
           id: 'adapt',
           label: 'Adaptive Normalize (Quantile)',
-          position: { x: 220, y: 0 },
           inputValues: {
             windowMs: 4000,
             qLow: 0.5,
@@ -461,7 +381,6 @@ const FeatureExtractionBars = createComponent<
         {
           id: 'gate',
           label: 'Hysteresis Gate',
-          position: { x: 400, y: 0 },
           inputValues: { low: 0.41, high: 0.56 },
         },
       ],
@@ -475,20 +394,14 @@ const FeatureExtractionBars = createComponent<
         {
           source: 'band',
           sourceHandle: 'bandData',
-          target: 'avg',
+          target: 'info',
           targetHandle: 'data',
         },
         {
-          source: 'avg',
+          source: 'info',
           sourceHandle: 'average',
           target: 'adapt',
           targetHandle: 'value',
-        },
-        {
-          source: INPUT_ALIAS,
-          sourceHandle: 'time',
-          target: 'adapt',
-          targetHandle: 'time',
         },
         {
           source: 'adapt',

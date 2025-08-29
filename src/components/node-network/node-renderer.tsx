@@ -1,7 +1,15 @@
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Handle, Position } from '@xyflow/react';
 import { Info } from 'lucide-react';
+import { MATH_OPERATIONS } from '../config/math-operations';
 import {
   NodeHandleType,
   getTypeColor,
@@ -66,6 +74,25 @@ const NodeRenderer = ({
 
     // TODO: Handle other types
     switch (input.type) {
+      case 'math-op':
+        return (
+          <Select
+            value={inputValues[input.id] ?? ''}
+            onValueChange={(value) =>
+              updateInputValue(nodeId, input.id, value)
+            }>
+            <SelectTrigger className="nodrag nopan h-6 w-24 bg-zinc-800 text-xs">
+              <SelectValue placeholder="Select op" />
+            </SelectTrigger>
+            <SelectContent>
+              {MATH_OPERATIONS.map((op) => (
+                <SelectItem key={op} value={op}>
+                  {op}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
       case 'number':
         return (
           <Input

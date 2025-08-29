@@ -10,7 +10,8 @@ export type NodeHandleType =
   | 'vector3'
   | 'Uint8Array'
   | 'FrequencyAnalysis'
-  | 'object';
+  | 'object'
+  | 'math-op';
 
 // Type metadata (colors, validation rules, etc.)
 export const TYPE_METADATA: Record<
@@ -66,6 +67,11 @@ export const TYPE_METADATA: Record<
     label: 'Object',
     canConnectTo: ['object'],
   },
+  'math-op': {
+    color: '#ec4899', // pink
+    label: 'Math Op',
+    canConnectTo: [],
+  },
 };
 
 // Safe mapping between VType and NodeHandleType
@@ -90,6 +96,7 @@ export const NodeHandleTypeToVType: Record<NodeHandleType, VType> = {
   Uint8Array: VType.Number, // Data becomes number
   FrequencyAnalysis: VType.Number, // Complex types become number
   object: VType.Group,
+  'math-op': VType.String,
 };
 
 // Safe conversion functions

@@ -15,7 +15,7 @@ export const OUTPUT_ALIAS = 'OUTPUT';
 export type PresetNodeSpec = {
   id: string;
   label: string; // AnimNode label
-  position: { x: number; y: number };
+  position?: { x: number; y: number };
   inputValues?: { [inputId: string]: any };
   state?: { [key: string]: any };
 };
@@ -48,6 +48,7 @@ const presetRegistry: Record<NodeHandleType, NodeNetworkPreset[]> = {
   Uint8Array: [],
   FrequencyAnalysis: [],
   object: [],
+  'math-op': [],
 };
 
 export const registerPreset = (preset: NodeNetworkPreset) => {
@@ -103,7 +104,7 @@ export const instantiatePreset = (
     nodes.push({
       id,
       type: 'NodeRenderer',
-      position: spec.position, // will be replaced by auto layout
+      position: { x: 0, y: 0 }, // will be replaced by auto layout
       data: {
         definition: nodeDef,
         inputValues: spec.inputValues || {},
@@ -137,7 +138,6 @@ registerPreset({
     {
       id: 'sine',
       label: 'Sine',
-      position: { x: 150, y: 0 },
       inputValues: { frequency: 1, phase: 0, amplitude: 1 },
     },
   ],
@@ -169,7 +169,6 @@ registerPreset({
     {
       id: 'norm',
       label: 'Normalize',
-      position: { x: 250, y: -80 },
       inputValues: { inputMin: 0, inputMax: 255, outputMin: 0, outputMax: 1 },
     },
   ],
@@ -198,7 +197,7 @@ registerPreset({
 // Kick drum focused, time-smoothed amplitude
 registerPreset({
   id: 'number-kick-band-smoothed',
-  name: 'Kick Band (40–120Hz) → Avg → Normalize → Smooth',
+  name: 'Kick Band (40–120Hz) → Avg → Normalize → Envelope',
   description:
     'Input.frequencyAnalysis → Frequency Band (40–120Hz) → Average → Normalize(30..200→0..4) → Smoothing(time) → Output',
   outputType: 'number',
@@ -207,25 +206,21 @@ registerPreset({
     {
       id: 'band',
       label: 'Frequency Band',
-      position: { x: -300, y: 0 },
       inputValues: { startFrequency: 40, endFrequency: 120 },
     },
     {
       id: 'avg',
       label: 'Average Volume',
-      position: { x: 0, y: -80 },
     },
     {
       id: 'norm',
       label: 'Normalize',
-      position: { x: 260, y: -80 },
       inputValues: { inputMin: 30, inputMax: 200, outputMin: 0, outputMax: 4 },
     },
     {
-      id: 'smooth',
-      label: 'Smoothing',
-      position: { x: 520, y: 0 },
-      inputValues: { smoothing: 0.8, timeConstantMs: 100 },
+      id: 'env',
+      label: 'Envelope Follower',
+      inputValues: { attackMs: 5, releaseMs: 120 },
     },
   ],
   edges: [
@@ -250,18 +245,18 @@ registerPreset({
     {
       source: 'norm',
       sourceHandle: 'result',
-      target: 'smooth',
+      target: 'env',
       targetHandle: 'value',
     },
     {
       source: INPUT_ALIAS,
       sourceHandle: 'time',
-      target: 'smooth',
+      target: 'env',
       targetHandle: 'time',
     },
     {
-      source: 'smooth',
-      sourceHandle: 'result',
+      source: 'env',
+      sourceHandle: 'env',
       target: OUTPUT_ALIAS,
       targetHandle: 'output',
     },
