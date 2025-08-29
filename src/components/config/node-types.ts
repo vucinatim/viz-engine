@@ -13,6 +13,26 @@ export type NodeHandleType =
   | 'object'
   | 'math-op';
 
+// Shared analysis payloads for node contexts
+export type FrequencyAnalysis = {
+  frequencyData: Uint8Array;
+  sampleRate: number;
+  fftSize: number;
+};
+
+export const EMPTY_FREQUENCY_ANALYSIS: FrequencyAnalysis = {
+  frequencyData: new Uint8Array(),
+  sampleRate: 0,
+  fftSize: 0,
+};
+
+// Global animation input available to all nodes
+export type AnimInputData = {
+  audioSignal: Uint8Array;
+  frequencyAnalysis?: FrequencyAnalysis;
+  time: number;
+};
+
 // Type metadata (colors, validation rules, etc.)
 export const TYPE_METADATA: Record<
   NodeHandleType,
@@ -73,6 +93,22 @@ export const TYPE_METADATA: Record<
     canConnectTo: [],
   },
 };
+
+// Runtime type mapping for node handle value types
+export type HandleTypeMap = {
+  number: number;
+  string: string;
+  boolean: boolean;
+  color: string;
+  file: unknown;
+  vector3: { x: number; y: number; z: number } | [number, number, number];
+  Uint8Array: Uint8Array;
+  FrequencyAnalysis: FrequencyAnalysis;
+  object: Record<string, unknown>;
+  'math-op': import('./math-operations').MathOperation;
+};
+
+export type TypeFromHandle<T extends NodeHandleType> = HandleTypeMap[T];
 
 // Safe mapping between VType and NodeHandleType
 export const VTypeToNodeHandleType: Record<VType, NodeHandleType> = {

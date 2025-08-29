@@ -19,6 +19,7 @@ const EnvelopeFollowerBody = ({ id: nodeId }: EnvelopeFollowerBodyProps) => {
   const inputRing = useRef<number[]>([]);
   const envRing = useRef<number[]>([]);
   const capacity = 160; // ~ last few seconds depending on frame rate
+  const peakRef = useRef<number>(1);
 
   const { getNodeInputValue } = useNodeLiveValuesStore.getState();
   const { getNodeOutput } = useNodeOutputCache.getState();
@@ -64,6 +65,17 @@ const EnvelopeFollowerBody = ({ id: nodeId }: EnvelopeFollowerBodyProps) => {
     ctx.lineTo(cssW, cssH - 0.5);
     ctx.stroke();
 
+    // Update dynamic peak (decays slowly so scale adapts without jumps)
+    const currentMax = Math.max(
+      1e-6,
+      ...inputRing.current,
+      ...envRing.current,
+      Math.abs(inputVal),
+      Math.abs(envVal),
+    );
+    const decay = 0.98; // per-frame decay of the held peak
+    peakRef.current = Math.max(currentMax, peakRef.current * decay);
+
     const drawSeries = (series: number[], color: string) => {
       if (series.length < 2) return;
       ctx.strokeStyle = color;
@@ -72,7 +84,8 @@ const EnvelopeFollowerBody = ({ id: nodeId }: EnvelopeFollowerBodyProps) => {
       const stepX = cssW / Math.max(1, capacity - 1);
       for (let i = 0; i < series.length; i++) {
         const x = i * stepX;
-        const v = Math.max(0, Math.min(1, series[i]));
+        const vRaw = series[i];
+        const v = Math.max(0, Math.min(1, vRaw / peakRef.current));
         const y = cssH - v * cssH;
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
