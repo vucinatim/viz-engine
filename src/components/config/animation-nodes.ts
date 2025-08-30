@@ -1,6 +1,7 @@
 import AdaptiveNormalizeQuantileBody from '../node-network/bodies/adaptive-normalize-quantile-body';
 import EnvelopeFollowerBody from '../node-network/bodies/envelope-follower-body';
 import frequencyBandBody from '../node-network/bodies/frequency-band-body';
+import HarmonicPresenceBody from '../node-network/bodies/harmonic-presence-body';
 import HysteresisGateBody from '../node-network/bodies/hysteresis-gate-body';
 import NormalizeBody from '../node-network/bodies/normalize-body';
 import TonalPresenceBody from '../node-network/bodies/tonal-presence-body';
@@ -139,7 +140,7 @@ export const SpikeNode = createNode({
 const AdaptiveNormalizeQuantileNode = createNode({
   label: 'Adaptive Normalize (Quantile)',
   description:
-    'Continuously normalizes a signal using rolling quantiles over a time window. Robust to outliers and mix changes.',
+    'Continuously normalizes a signal using rolling quantiles over a time window. Add freeze-below to stop adapting during breaks.',
   customBody: AdaptiveNormalizeQuantileBody,
   inputs: [
     { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
@@ -161,31 +162,58 @@ const AdaptiveNormalizeQuantileNode = createNode({
       type: 'number',
       defaultValue: 0.95,
     },
+    {
+      id: 'freezeBelow',
+      label: 'Freeze Below',
+      type: 'number',
+      defaultValue: 0,
+    },
   ],
   outputs: [
     { id: 'result', label: 'Result', type: 'number' },
     { id: 'low', label: 'Low', type: 'number' },
     { id: 'high', label: 'High', type: 'number' },
   ],
-  computeSignal: ({ value, windowMs, qLow, qHigh }, context, node) => {
+  computeSignal: (
+    { value, windowMs, qLow, qHigh, freezeBelow },
+    context,
+    node,
+  ) => {
     if (!node) return { result: 0, low: 0, high: 1 };
     const v = isFinite(value) ? value : 0;
     const t = isFinite(context.time) ? context.time : 0;
     const wSec = Math.max(0.001, windowMs / 1000);
     const qL = Math.max(0, Math.min(1, qLow));
     const qH = Math.max(qL, Math.min(1, qHigh));
+    const freezeThreshold =
+      typeof freezeBelow === 'number' && isFinite(freezeBelow)
+        ? Math.max(0, freezeBelow)
+        : 0;
+    const shouldFreeze = freezeThreshold > 0 && v <= freezeThreshold;
 
     const state = node.data.state;
     if (!state.samples) state.samples = [] as { t: number; v: number }[];
+    if (typeof state.prevLow !== 'number') state.prevLow = 0;
+    if (typeof state.prevHigh !== 'number') state.prevHigh = 1;
+    if (typeof state.prevResult !== 'number') state.prevResult = 0;
 
-    state.samples.push({ t, v });
-    // Drop old samples
-    while (state.samples.length > 0 && t - state.samples[0].t > wSec) {
-      state.samples.shift();
+    if (!shouldFreeze) {
+      state.samples.push({ t, v });
+      // Drop old samples while adapting
+      while (state.samples.length > 0 && t - state.samples[0].t > wSec) {
+        state.samples.shift();
+      }
     }
 
     const n = state.samples.length;
-    if (n === 0) return { result: 0, low: 0, high: 1 };
+    if (n === 0) {
+      // Nothing to compute; return previous snapshot (or safe defaults)
+      return {
+        result: state.prevResult ?? 0,
+        low: state.prevLow ?? 0,
+        high: state.prevHigh ?? 1,
+      };
+    }
 
     // Build sorted copy for percentile extraction (n is typically small)
     const values: number[] = new Array(n);
@@ -199,6 +227,10 @@ const AdaptiveNormalizeQuantileNode = createNode({
     const range = highVal - lowVal;
     const result = range > 1e-9 ? (v - lowVal) / range : 0;
     const clamped = Math.max(0, Math.min(1, result));
+    // Store snapshot so freeze can hold a stable mapping
+    state.prevLow = lowVal;
+    state.prevHigh = highVal;
+    state.prevResult = clamped;
     return { result: clamped, low: lowVal, high: highVal };
   },
 });
@@ -277,7 +309,11 @@ const FrequencyBandNode = createNode({
       defaultValue: 200,
     },
   ],
-  outputs: [{ id: 'bandData', label: 'Band Data', type: 'Uint8Array' }],
+  outputs: [
+    { id: 'bandData', label: 'Band Data', type: 'Uint8Array' },
+    { id: 'bandStartBin', label: 'Band Start Bin', type: 'number' },
+    { id: 'frequencyPerBin', label: 'Frequency/Bin (Hz)', type: 'number' },
+  ],
   computeSignal: (
     { frequencyAnalysis, startFrequency, endFrequency },
     context,
@@ -289,7 +325,11 @@ const FrequencyBandNode = createNode({
       !frequencyAnalysis.sampleRate ||
       !frequencyAnalysis.fftSize
     ) {
-      return { bandData: new Uint8Array() };
+      return {
+        bandData: new Uint8Array(),
+        bandStartBin: 0,
+        frequencyPerBin: 0,
+      };
     }
     const { frequencyData, sampleRate, fftSize } = frequencyAnalysis;
     const nyquist = sampleRate / 2;
@@ -300,10 +340,14 @@ const FrequencyBandNode = createNode({
       Math.ceil(endFrequency / frequencyPerBin),
     );
     if (startBin > endBin) {
-      return { bandData: new Uint8Array() };
+      return {
+        bandData: new Uint8Array(),
+        bandStartBin: startBin,
+        frequencyPerBin,
+      };
     }
     const bandData = frequencyData.slice(startBin, endBin + 1);
-    return { bandData };
+    return { bandData, bandStartBin: startBin, frequencyPerBin };
   },
 });
 
@@ -456,6 +500,313 @@ const BandInfoNode = createNode({
     state.prevData = new Uint8Array(data); // store copy for next frame
 
     return { average, peak, flatness, flux };
+  },
+});
+
+// --- Spectral Flux (wideband) ---
+const SpectralFluxNode = createNode({
+  label: 'Spectral Flux',
+  description:
+    'Frame-to-frame positive spectral change across the full spectrum. Good onset/transient detector.',
+  inputs: [
+    {
+      id: 'frequencyAnalysis',
+      label: 'Frequency Analysis',
+      type: 'FrequencyAnalysis',
+    },
+    { id: 'smoothMs', label: 'Smooth (ms)', type: 'number', defaultValue: 50 },
+  ],
+  outputs: [{ id: 'flux', label: 'Flux', type: 'number' }],
+  computeSignal: ({ frequencyAnalysis, smoothMs }, context, node) => {
+    if (!node || !frequencyAnalysis || !frequencyAnalysis.frequencyData) {
+      return { flux: 0 };
+    }
+    const data: Uint8Array = frequencyAnalysis.frequencyData;
+    const n = data.length;
+    if (n === 0) return { flux: 0 };
+
+    const state = node.data.state as any;
+    const prev: Uint8Array | undefined = state.prev;
+
+    let rawFlux = 0;
+    if (prev && prev.length === n) {
+      for (let i = 0; i < n; i++) {
+        const d = data[i] / 255 - prev[i] / 255;
+        if (d > 0) rawFlux += d;
+      }
+      rawFlux = rawFlux / n; // average positive change per bin
+      rawFlux = Math.max(0, Math.min(1, rawFlux * 4)); // gentle scale and clamp
+    }
+
+    // Store current spectrum for next frame
+    state.prev = new Uint8Array(data);
+
+    // Temporal smoothing (one-pole)
+    const t = context.time;
+    const prevTime = typeof state.prevTime === 'number' ? state.prevTime : t;
+    const dt = Math.max(0, t - prevTime);
+    const sMs = Math.max(1, typeof smoothMs === 'number' ? smoothMs : 50);
+    const alpha = 1 - Math.exp(-dt / (sMs / 1000));
+    const prevSmoothed =
+      typeof state.prevFlux === 'number' ? state.prevFlux : rawFlux;
+    const smoothed = prevSmoothed + alpha * (rawFlux - prevSmoothed);
+    state.prevFlux = smoothed;
+    state.prevTime = t;
+    return { flux: smoothed };
+  },
+});
+
+// --- Ducker ---
+const DuckerNode = createNode({
+  label: 'Ducker',
+  description:
+    'Attenuates a value briefly after a trigger (e.g., spectral flux) using exponential decay.',
+  inputs: [
+    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
+    {
+      id: 'duckTrigger',
+      label: 'Duck Trigger',
+      type: 'number',
+      defaultValue: 0,
+    },
+    {
+      id: 'threshold',
+      label: 'Trigger Threshold',
+      type: 'number',
+      defaultValue: 0.6,
+    },
+    { id: 'depth', label: 'Depth (0..1)', type: 'number', defaultValue: 0.5 },
+    {
+      id: 'duckMs',
+      label: 'Duck Time (ms)',
+      type: 'number',
+      defaultValue: 120,
+    },
+  ],
+  outputs: [{ id: 'out', label: 'Out', type: 'number' }],
+  computeSignal: (
+    { value, duckTrigger, threshold, depth, duckMs },
+    context,
+    node,
+  ) => {
+    if (!node) return { out: value } as any;
+    const state = node.data.state as any;
+    const t = context.time;
+    const prevTime = typeof state.prevTime === 'number' ? state.prevTime : t;
+    const dt = Math.max(0, t - prevTime);
+    const dMs = Math.max(1, typeof duckMs === 'number' ? duckMs : 120);
+    const decay = Math.exp(-dt / (dMs / 1000));
+
+    let duckLevel = typeof state.duckLevel === 'number' ? state.duckLevel : 0;
+    const trig = typeof duckTrigger === 'number' ? duckTrigger : 0;
+    const th = typeof threshold === 'number' ? threshold : 0.6;
+    const dp = Math.max(
+      0,
+      Math.min(1, typeof depth === 'number' ? depth : 0.5),
+    );
+    if (trig > th) duckLevel = 1; // retrigger
+    duckLevel *= decay; // exponential decay toward 0
+
+    const v = typeof value === 'number' ? value : 0;
+    const out = v * (1 - dp * Math.max(0, Math.min(1, duckLevel)));
+    state.duckLevel = duckLevel;
+    state.prevTime = t;
+    return { out };
+  },
+});
+
+// --- Harmonic Presence ---
+const HarmonicPresenceNode = createNode({
+  label: 'Harmonic Presence',
+  description:
+    'Detects melodic/voiced content by scoring harmonic series in a band-limited spectrum (Uint8Array).',
+  customBody: HarmonicPresenceBody,
+  inputs: [
+    { id: 'data', label: 'Data', type: 'Uint8Array' },
+    {
+      id: 'bandStartBin',
+      label: 'Band Start Bin',
+      type: 'number',
+      defaultValue: 0,
+    },
+    {
+      id: 'frequencyPerBin',
+      label: 'Frequency/Bin (Hz)',
+      type: 'number',
+      defaultValue: 0,
+    },
+    {
+      id: 'maxHarmonics',
+      label: 'Max Harmonics',
+      type: 'number',
+      defaultValue: 8,
+    },
+    {
+      id: 'toleranceCents',
+      label: 'Tolerance (cents)',
+      type: 'number',
+      defaultValue: 35,
+    },
+    { id: 'smoothMs', label: 'Smooth (ms)', type: 'number', defaultValue: 120 },
+    {
+      id: 'minSNR',
+      label: 'Min Peak Rel. (0..1)',
+      type: 'number',
+      defaultValue: 0.05,
+    },
+  ],
+  outputs: [
+    { id: 'presence', label: 'Presence', type: 'number' },
+    { id: 'fundamentalHz', label: 'Fundamental (Hz)', type: 'number' },
+    { id: 'midi', label: 'MIDI', type: 'number' },
+    { id: 'confidence', label: 'Confidence', type: 'number' },
+  ],
+  computeSignal: (
+    {
+      data,
+      bandStartBin,
+      frequencyPerBin,
+      maxHarmonics,
+      toleranceCents,
+      smoothMs,
+      minSNR,
+    },
+    context,
+    node,
+  ) => {
+    if (!node || !(data instanceof Uint8Array) || data.length === 0) {
+      return { presence: 0, fundamentalHz: 0, midi: 0, confidence: 0 };
+    }
+    const n = data.length;
+    if (n < 4) return { presence: 0, fundamentalHz: 0, midi: 0, confidence: 0 };
+
+    // Compute band energy and a simple local maxima list
+    let bandSum = 0;
+    for (let i = 0; i < n; i++) bandSum += data[i];
+    const bandAvg = bandSum / Math.max(1, n);
+    // Elevated spectrum above simple baseline
+    const elevated = new Array<number>(n);
+    let bandElevSum = 0;
+    for (let i = 0; i < n; i++) {
+      const e = Math.max(0, data[i] - bandAvg);
+      elevated[i] = e;
+      bandElevSum += e;
+    }
+    const eps = 1e-6;
+
+    type Peak = { idx: number; val: number };
+    const peaks: Peak[] = [];
+    for (let i = 1; i <= n - 2; i++) {
+      const v = data[i];
+      if (v > data[i - 1] && v >= data[i + 1]) {
+        peaks.push({ idx: i, val: v });
+      }
+    }
+    // Keep top 8 peaks by magnitude
+    peaks.sort((a, b) => b.val - a.val);
+    const topPeaks = peaks.slice(0, 8);
+    if (topPeaks.length === 0) {
+      return { presence: 0, fundamentalHz: 0, midi: 0, confidence: 0 };
+    }
+
+    const maxH = Math.max(
+      1,
+      Math.floor(typeof maxHarmonics === 'number' ? maxHarmonics : 8),
+    );
+    const tolCents = Math.max(
+      5,
+      Math.min(100, typeof toleranceCents === 'number' ? toleranceCents : 35),
+    );
+    const tolRatio = Math.pow(2, tolCents / 1200) - 1; // fractional width relative to frequency
+    const minRel = Math.max(
+      0,
+      Math.min(1, typeof minSNR === 'number' ? minSNR : 0.05),
+    );
+
+    // Evaluate candidates
+    let bestScore = 0;
+    let bestHz = 0;
+    for (const p of topPeaks) {
+      const baseIdx = p.idx;
+      let harmonicEnergy = 0;
+      let coverage = 0;
+      let totalConsidered = 0;
+      for (let k = 1; k <= maxH; k++) {
+        const center = Math.round(baseIdx * k);
+        if (center <= 0 || center >= n) break;
+        // Scale tolerance window with the actual harmonic center, not base index
+        const halfBins = Math.max(1, Math.ceil(center * tolRatio));
+        const lo = Math.max(0, center - halfBins);
+        const hi = Math.min(n - 1, center + halfBins);
+        let sum = 0;
+        let sumElev = 0;
+        for (let i = lo; i <= hi; i++) {
+          sum += data[i];
+          sumElev += elevated[i];
+        }
+        const width = hi - lo + 1;
+        const avgElev = sumElev / Math.max(1, width);
+        totalConsidered += sum;
+        // Basic presence criterion for this harmonic
+        const peakElev = Math.max(0, p.val - bandAvg);
+        if (avgElev > minRel * (peakElev + eps)) {
+          coverage += 1;
+          // Weight lower harmonics higher
+          harmonicEnergy += sumElev * (1 / k);
+        }
+      }
+      const coverageRatio =
+        coverage /
+        Math.max(1, Math.min(maxH, Math.floor((n - 1) / Math.max(1, baseIdx))));
+      const energyRatio = harmonicEnergy / Math.max(eps, bandElevSum);
+      // Expand dynamic range: emphasize small but real harmonic structure
+      const score = Math.max(
+        0,
+        Math.min(1, Math.sqrt(energyRatio) * (0.6 + 0.4 * coverageRatio)),
+      );
+      if (score > bestScore) {
+        bestScore = score;
+        // Compute absolute Hz if metadata is present
+        const startBin = Math.max(
+          0,
+          typeof bandStartBin === 'number' ? bandStartBin : 0,
+        );
+        const hzPerBin = Math.max(
+          0,
+          typeof frequencyPerBin === 'number' ? frequencyPerBin : 0,
+        );
+        bestHz = hzPerBin > 0 ? (startBin + baseIdx) * hzPerBin : 0;
+      }
+    }
+
+    // Temporal smoothing and simple f0 locking
+    const state = node.data.state as any;
+    const t = context.time;
+    const prevTime = typeof state.prevTime === 'number' ? state.prevTime : t;
+    const dt = Math.max(0, t - prevTime);
+    const sMs = Math.max(1, typeof smoothMs === 'number' ? smoothMs : 120);
+    const alpha = 1 - Math.exp(-dt / (sMs / 1000));
+
+    const prevPresence =
+      typeof state.prevPresence === 'number' ? state.prevPresence : 0;
+    const presence = prevPresence + alpha * (bestScore - prevPresence);
+
+    const prevF0 = typeof state.prevF0 === 'number' ? state.prevF0 : bestHz;
+    // If new estimate close to previous (within tolerance), blend; otherwise, allow jump when score is high
+    let f0Out = bestHz;
+    if (prevF0 > 0 && bestHz > 0) {
+      const centsDiff = 1200 * Math.log2(bestHz / prevF0);
+      const freqBlend = Math.abs(centsDiff) < tolCents * 1.5 ? 1 : 0;
+      f0Out = freqBlend ? prevF0 + alpha * (bestHz - prevF0) : bestHz;
+    }
+
+    state.prevPresence = presence;
+    state.prevF0 = f0Out;
+    state.prevTime = t;
+
+    const midi = f0Out > 0 ? 69 + 12 * Math.log2(f0Out / 440) : 0;
+    const confidence = presence;
+    return { presence, fundamentalHz: f0Out, midi, confidence };
   },
 });
 
@@ -637,6 +988,9 @@ export const nodes: AnimNode[] = [
   BandInfoNode,
   TonalPresenceNode,
   EnvelopeFollowerNode,
+  SpectralFluxNode,
+  DuckerNode,
+  HarmonicPresenceNode,
 ];
 
 export const NodeDefinitionMap = new Map<string, AnimNode>();

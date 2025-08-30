@@ -96,7 +96,12 @@ const FeatureExtractionBars = createComponent<
         {
           id: 'adapt',
           label: 'Adaptive Normalize (Quantile)',
-          inputValues: { windowMs: 4000, qLow: 0.5, qHigh: 0.98 },
+          inputValues: {
+            windowMs: 4000,
+            qLow: 0.5,
+            qHigh: 0.98,
+            freezeBelow: 140,
+          },
         },
         {
           id: 'gate',
@@ -168,7 +173,12 @@ const FeatureExtractionBars = createComponent<
         {
           id: 'adapt',
           label: 'Adaptive Normalize (Quantile)',
-          inputValues: { windowMs: 4000, qLow: 0.5, qHigh: 0.95 },
+          inputValues: {
+            windowMs: 4000,
+            qLow: 0.5,
+            qHigh: 0.95,
+            freezeBelow: 90,
+          },
         },
         {
           id: 'gate',
@@ -216,10 +226,10 @@ const FeatureExtractionBars = createComponent<
       ],
     },
     bass: {
-      id: 'bars-bass-groove',
-      name: 'Bass Groove (Band→Info→Smooth→Smooth→Adaptive Normalize)',
+      id: 'bars-bass-adapt-env',
+      name: 'Bass (Band→Info→Adaptive Normalize→Envelope)',
       description:
-        'Follow bassline groove: Frequency Band(≈20-120Hz) → Band Info → Smoothing (envelope) → Smoothing (baseline) → Adaptive Normalize (Quantile) → Output',
+        'Bass presence: Frequency Band(20–163Hz) → Band Info (average) → Adaptive Normalize (Quantile) → Envelope Follower → Output',
       outputType: 'number',
       autoPlace: true,
       nodes: [
@@ -228,7 +238,7 @@ const FeatureExtractionBars = createComponent<
           label: 'Frequency Band',
           inputValues: {
             startFrequency: 20,
-            endFrequency: 120,
+            endFrequency: 163,
           },
         },
         {
@@ -236,14 +246,19 @@ const FeatureExtractionBars = createComponent<
           label: 'Band Info',
         },
         {
-          id: 'env_follow',
-          label: 'Envelope Follower',
-          inputValues: { attackMs: 0, releaseMs: 120 },
-        },
-        {
           id: 'adapt',
           label: 'Adaptive Normalize (Quantile)',
-          inputValues: { windowMs: 8000, qLow: 0.3, qHigh: 0.9 },
+          inputValues: {
+            windowMs: 4000,
+            qLow: 0.3,
+            qHigh: 0.9,
+            freezeBelow: 130,
+          },
+        },
+        {
+          id: 'env_follow',
+          label: 'Envelope Follower',
+          inputValues: { attackMs: 100, releaseMs: 400 },
         },
       ],
       edges: [
@@ -262,55 +277,63 @@ const FeatureExtractionBars = createComponent<
         {
           source: 'info',
           sourceHandle: 'average',
-          target: 'env_follow',
-          targetHandle: 'value',
-        },
-        {
-          source: 'env_follow',
-          sourceHandle: 'env',
           target: 'adapt',
           targetHandle: 'value',
         },
         {
           source: 'adapt',
           sourceHandle: 'result',
+          target: 'env_follow',
+          targetHandle: 'value',
+        },
+        {
+          source: 'env_follow',
+          sourceHandle: 'env',
           target: OUTPUT_ALIAS,
           targetHandle: 'output',
         },
       ],
     },
     melody: {
-      id: 'bars-melody-tonal',
-      name: 'Melody Presence (Band→Tonal Presence→Envelope→Adapt→Gate)',
+      id: 'bars-melody-harmonic',
+      name: 'Melody (Band→Harmonic Presence→Envelope→Normalize)',
       description:
-        'Detect pitched/voiced presence using Tonal Presence (peak × (1-flatness)), adaptively normalize, then gate and smooth.',
+        'Melodic/voiced presence using harmonic series scoring, smoothed by an envelope follower and mapped to 0–1.',
       outputType: 'number',
       autoPlace: true,
       nodes: [
         {
           id: 'band',
           label: 'Frequency Band',
-          inputValues: { startFrequency: 300, endFrequency: 5000 },
+          inputValues: {
+            startFrequency: 212,
+            endFrequency: 3762,
+          },
         },
         {
-          id: 'tonal',
-          label: 'Tonal Presence',
-          inputValues: { flatnessCutoff: 0.9, peakScale: 120 },
+          id: 'harm',
+          label: 'Harmonic Presence',
+          inputValues: {
+            maxHarmonics: 3,
+            toleranceCents: 50,
+            smoothMs: 100,
+            minSNR: 0.6,
+          },
         },
         {
           id: 'env',
           label: 'Envelope Follower',
-          inputValues: { attackMs: 10, releaseMs: 150 },
+          inputValues: { attackMs: 6, releaseMs: 300 },
         },
         {
-          id: 'adapt',
-          label: 'Adaptive Normalize (Quantile)',
-          inputValues: { windowMs: 6000, qLow: 0.4, qHigh: 0.9 },
-        },
-        {
-          id: 'gate',
-          label: 'Hysteresis Gate',
-          inputValues: { low: 0.21, high: 0.29 },
+          id: 'norm',
+          label: 'Normalize',
+          inputValues: {
+            inputMin: 0.2,
+            inputMax: 0.4,
+            outputMin: 0,
+            outputMax: 1,
+          },
         },
       ],
       edges: [
@@ -323,11 +346,23 @@ const FeatureExtractionBars = createComponent<
         {
           source: 'band',
           sourceHandle: 'bandData',
-          target: 'tonal',
+          target: 'harm',
           targetHandle: 'data',
         },
         {
-          source: 'tonal',
+          source: 'band',
+          sourceHandle: 'bandStartBin',
+          target: 'harm',
+          targetHandle: 'bandStartBin',
+        },
+        {
+          source: 'band',
+          sourceHandle: 'frequencyPerBin',
+          target: 'harm',
+          targetHandle: 'frequencyPerBin',
+        },
+        {
+          source: 'harm',
           sourceHandle: 'presence',
           target: 'env',
           targetHandle: 'value',
@@ -335,18 +370,12 @@ const FeatureExtractionBars = createComponent<
         {
           source: 'env',
           sourceHandle: 'env',
-          target: 'adapt',
+          target: 'norm',
           targetHandle: 'value',
         },
         {
-          source: 'adapt',
+          source: 'norm',
           sourceHandle: 'result',
-          target: 'gate',
-          targetHandle: 'value',
-        },
-        {
-          source: 'gate',
-          sourceHandle: 'gated',
           target: OUTPUT_ALIAS,
           targetHandle: 'output',
         },
@@ -363,7 +392,10 @@ const FeatureExtractionBars = createComponent<
         {
           id: 'band',
           label: 'Frequency Band',
-          inputValues: { startFrequency: 2000, endFrequency: 8000 },
+          inputValues: {
+            startFrequency: 4000,
+            endFrequency: 10000,
+          },
         },
         {
           id: 'info',
@@ -375,13 +407,14 @@ const FeatureExtractionBars = createComponent<
           inputValues: {
             windowMs: 4000,
             qLow: 0.5,
-            qHigh: 0.95,
+            qHigh: 0.9,
+            freezeBelow: 40,
           },
         },
         {
           id: 'gate',
           label: 'Hysteresis Gate',
-          inputValues: { low: 0.41, high: 0.56 },
+          inputValues: { low: 0.4, high: 0.5 },
         },
       ],
       edges: [
