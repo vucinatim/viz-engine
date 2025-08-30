@@ -1,0 +1,71 @@
+/* Basic CSS to make the scene fullscreen */
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #000000; /* Darker background for concert feel */
+}
+canvas {
+  display: block; /* Removes a small gap below the canvas */
+}
+#instructions {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-family: sans-serif;
+  font-size: 24px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 20px;
+  border-radius: 10px;
+  pointer-events: none; /* Allows clicks to go through to the canvas */
+}
+#debug-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: white;
+  font-family: monospace;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 10px;
+  border-radius: 5px;
+  line-height: 1.5;
+  pointer-events: none;
+  z-index: 100; /* Ensure it's on top */
+}
+#controls-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: white;
+  font-family: monospace;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 10px;
+  border-radius: 5px;
+  line-height: 1.5;
+  z-index: 100; /* Ensure it's on top */
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.slider-group,
+.toggle-group {
+  display: flex;
+  flex-direction: column;
+}
+.slider-group label,
+.toggle-group label {
+  margin-bottom: 2px;
+}
+.slider-group input {
+  margin: 0;
+}
+.toggle-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

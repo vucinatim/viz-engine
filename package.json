@@ -55,7 +55,6 @@
     "sonner": "^1.4.41",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
-    "three": "^0.164.1",
     "wavesurfer.js": "^7.7.11",
     "zod": "^3.23.4",
     "zod-metadata": "^1.1.0",
@@ -69,7 +68,6 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "@types/three": "^0.164.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.3",
     "postcss": "^8",
@@ -78,6 +76,6 @@
     "prettier-plugin-tailwindcss": "^0.6.5",
     "tailwind-scrollbar": "^3.1.0",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5.4.5"
   }
 }

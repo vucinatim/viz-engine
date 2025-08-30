@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EDM Cube Stage Enhanced</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="instructions">
+      Click to enter the scene<br />
+      WASD to move<br />
+      Mouse to look around<br />
+      Space/Shift to fly up/down
+    </div>
+    <div id="debug-overlay"></div>
+    <div id="controls-overlay">
+      <div class="slider-group">
+        <label for="hemi-slider"
+          >Hemi Light: <span id="hemi-value">0.50</span></label
+        >
+        <input type="range" id="hemi-slider" min="0" max="100" value="50" />
+      </div>
+      <div class="slider-group">
+        <label for="ambient-slider"
+          >Ambient Light: <span id="ambient-value">0.50</span></label
+        >
+        <input type="range" id="ambient-slider" min="0" max="100" value="50" />
+      </div>
+      <hr />
+      <div class="slider-group">
+        <label>--- Bloom ---</label>
+      </div>
+      <div class="slider-group">
+        <label for="bloom-strength-slider"
+          >Strength: <span id="bloom-strength-value">0.20</span></label
+        >
+        <input
+          type="range"
+          id="bloom-strength-slider"
+          min="0"
+          max="300"
+          value="20" />
+      </div>
+      <div class="slider-group">
+        <label for="bloom-radius-slider"
+          >Radius: <span id="bloom-radius-value">0.40</span></label
+        >
+        <input
+          type="range"
+          id="bloom-radius-slider"
+          min="0"
+          max="100"
+          value="40" />
+      </div>
+      <div class="slider-group">
+        <label for="bloom-threshold-slider"
+          >Threshold: <span id="bloom-threshold-value">0.00</span></label
+        >
+        <input
+          type="range"
+          id="bloom-threshold-slider"
+          min="0"
+          max="100"
+          value="0" />
+      </div>
+      <hr />
+      <div class="slider-group">
+        <label>--- Scene Lights ---</label>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="moving-lights-toggle" checked />
+          Moving Heads
+        </label>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="lasers-toggle" checked />
+          Lasers
+        </label>
+      </div>
+      <div class="slider-group">
+        <label for="laser-mode-select">Laser Mode</label>
+        <select id="laser-mode-select">
+          <option value="auto">Auto</option>
+          <option value="0">Wave</option>
+          <option value="1">Wobble</option>
+          <option value="2">Sheet</option>
+        </select>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="stage-lights-toggle" checked />
+          Stage Outline
+        </label>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="stage-wash-toggle" checked />
+          Stage Wash
+        </label>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="strobes-toggle" checked />
+          Strobes
+        </label>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="blinders-toggle" checked />
+          Blinders
+        </label>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="beams-toggle" checked />
+          Beams
+        </label>
+      </div>
+      <hr />
+      <div class="slider-group">
+        <label>--- Scene Effects ---</label>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="shader-wall-toggle" checked />
+          Shader Wall
+        </label>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="bloom-toggle" checked />
+          Bloom
+        </label>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="debug-toggle" />
+          Debug
+        </label>
+      </div>
+      <div class="slider-group">
+        <label for="stage-wash-slider"
+          >Wash Intensity: <span id="stage-wash-value">5.00</span></label
+        >
+        <input
+          type="range"
+          id="stage-wash-slider"
+          min="0"
+          max="5000"
+          value="500" />
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
