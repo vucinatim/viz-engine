@@ -3,7 +3,10 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { setupControls } from './controls';
+import { createBeams } from './scene/beams';
 import { createBlinders } from './scene/blinders';
+import { createCrowd } from './scene/crowd';
+import { createDj } from './scene/dj';
 import { createDebugHelpers } from './scene/helpers';
 import { createLasers } from './scene/lasers';
 import { createMovingLights } from './scene/moving-lights';
@@ -14,7 +17,6 @@ import { createStageLights } from './scene/stage-lights';
 import { createStrobes } from './scene/strobes';
 import { createWashLights } from './scene/wash-lights';
 import { setupUI } from './ui';
-import { createBeams } from './scene/beams';
 
 const sceneConfig = {
   movingLights: true,
@@ -28,13 +30,15 @@ const sceneConfig = {
   bloom: true,
   debug: false,
   beams: true,
+  beamMode: 'auto' as 'auto' | 0 | 1 | 2 | 3 | 4,
+  bloomStrength: 0.2,
 };
 
 // --- SCENE SETUP ---
 const scene = new THREE.Scene();
 const clock = new THREE.Clock();
 // REDUCED FOG for better visibility
-scene.fog = new THREE.FogExp2(0x000000, 0.018);
+scene.fog = new THREE.FogExp2(0x000000, 0.008);
 
 // --- LIGHTING ---
 const hemisphereLight = new THREE.HemisphereLight(0x606080, 0x202020, 0.5);
@@ -95,7 +99,10 @@ const blinderGroup = new THREE.Group();
 blinders.forEach((blinder) => blinderGroup.add(blinder));
 scene.add(blinderGroup);
 const { helpersGroup } = createDebugHelpers(scene);
-const { beamGroup } = createBeams(scene);
+const { beamGroup, update: updateBeams } = createBeams(scene);
+const beamTargetRotations = beamGroup.children.map(() => new THREE.Euler());
+const { update: updateDj } = createDj(scene);
+const { update: updateCrowd } = createCrowd(scene, sceneConfig.debug);
 
 // --- UI & CONTROLS ---
 const { debugOverlay } = setupUI(
@@ -158,6 +165,9 @@ function animate() {
   if (keysPressed[' ']) camera.position.y += actualMoveSpeed;
   if (keysPressed['shift']) camera.position.y -= actualMoveSpeed;
 
+  updateDj(delta);
+  updateCrowd(delta);
+
   if (debugOverlay) {
     debugOverlay.innerHTML = `
       --- DEBUG INFO ---<br>
@@ -175,11 +185,100 @@ function animate() {
 
   beamGroup.visible = sceneConfig.beams;
   if (beamGroup.visible) {
+    updateBeams(elapsedTime);
+
+    const beamMode =
+      sceneConfig.beamMode === 'auto'
+        ? Math.floor(elapsedTime / 8) % 5
+        : sceneConfig.beamMode;
+
+    const numBeams = beamGroup.children.length;
+    const centerIndex = (numBeams - 1) / 2;
+
+    if (beamMode === 0) {
+      // Mirrored Wave
+      beamGroup.children.forEach((beam, i) => {
+        const target = beamTargetRotations[i];
+        const material = (beam as THREE.Mesh).material as THREE.ShaderMaterial;
+        const hue = (elapsedTime * 0.2 + i * 0.1) % 1;
+        material.uniforms.color.value.setHSL(hue, 1, 0.6);
+
+        const side = i <= centerIndex ? 1 : -1;
+        const distanceFromCenter = Math.abs(i - centerIndex);
+
+        target.y =
+          Math.sin(elapsedTime * 4 + distanceFromCenter * 0.5) * 0.6 * side;
+        target.x =
+          -Math.PI / 3 +
+          Math.cos(elapsedTime * 4 + distanceFromCenter * 0.5) * 0.4;
+      });
+    } else if (beamMode === 1) {
+      // Strobe
+      beamGroup.children.forEach((beam, i) => {
+        const target = beamTargetRotations[i];
+        const material = (beam as THREE.Mesh).material as THREE.ShaderMaterial;
+        const hue = (Math.floor(elapsedTime * 2) * 0.3) % 1;
+        material.uniforms.color.value.setHSL(hue, 1, 0.6);
+        target.y = (Math.sin(elapsedTime * 2 + i) * Math.PI) / 4;
+        target.x = -Math.PI / 3 + Math.sin(elapsedTime * 5 + i) * 0.2;
+      });
+    } else if (beamMode === 2) {
+      // Center Cross
+      beamGroup.children.forEach((beam, i) => {
+        const target = beamTargetRotations[i];
+        const material = (beam as THREE.Mesh).material as THREE.ShaderMaterial;
+        const hue = (elapsedTime * 0.2) % 1;
+        material.uniforms.color.value.setHSL(hue, 1, 0.6);
+
+        const side = i <= centerIndex ? -1 : 1;
+        const normalizedFromCenter = (i - centerIndex) / centerIndex;
+
+        const crossFactor = (Math.sin(elapsedTime * 4) + 1) / 2; // 0 to 1 cycle
+
+        target.y =
+          side * (Math.PI / 6) * (1 - crossFactor) +
+          normalizedFromCenter * (Math.PI / 4) * crossFactor;
+        target.x = -Math.PI / 3 + crossFactor * 0.6;
+      });
+    } else if (beamMode === 3) {
+      // Outward Fan
+      beamGroup.children.forEach((beam, i) => {
+        const target = beamTargetRotations[i];
+        const material = (beam as THREE.Mesh).material as THREE.ShaderMaterial;
+        const hue = (elapsedTime * 0.3 + i * 0.05) % 1;
+        material.uniforms.color.value.setHSL(hue, 1, 0.6);
+
+        const normalizedFromCenter = (i - centerIndex) / centerIndex;
+        const fanFactor = (Math.sin(elapsedTime * 3) + 1) / 2; // 0 to 1
+
+        target.y = (fanFactor * normalizedFromCenter * Math.PI) / 3;
+        target.x = -Math.PI / 3 + fanFactor * 0.6;
+      });
+    } else if (beamMode === 4) {
+      // Crowd Sweep
+      beamGroup.children.forEach((beam, i) => {
+        const target = beamTargetRotations[i];
+        const material = (beam as THREE.Mesh).material as THREE.ShaderMaterial;
+        const hue = (elapsedTime * 0.2) % 1;
+        material.uniforms.color.value.setHSL(hue, 1, 0.6);
+
+        const sweepSpeed = 1.5;
+        const sweepRange = Math.PI / 3; // 60 degree sweep range
+        const baseAngle = -Math.PI / 2.5; // Start high
+
+        target.x =
+          baseAngle +
+          ((Math.sin(elapsedTime * sweepSpeed) + 1) / 2) * sweepRange;
+        const normalizedFromCenter = (i - centerIndex) / centerIndex;
+        target.y = normalizedFromCenter * (Math.PI / 8);
+      });
+    }
+
     beamGroup.children.forEach((beam, i) => {
-      const material = (beam as THREE.Mesh).material as THREE.ShaderMaterial;
-      const hue = (elapsedTime * 0.1 + i * 0.2) % 1;
-      material.uniforms.color.value.setHSL(hue, 1, 0.6);
-      beam.rotation.y = Math.sin(elapsedTime * 0.3 + i * 0.5) * 0.2;
+      const targetRotation = beamTargetRotations[i];
+      beam.rotation.x += (targetRotation.x - beam.rotation.x) * 0.1;
+      beam.rotation.y += (targetRotation.y - beam.rotation.y) * 0.1;
+      beam.rotation.z += (targetRotation.z - beam.rotation.z) * 0.1;
     });
   }
 
@@ -342,6 +441,22 @@ function animate() {
   helpersGroup.visible = sceneConfig.debug;
 
   bloomPass.enabled = sceneConfig.bloom;
+  // Dynamic Bloom based on distance
+  const stageCenter = new THREE.Vector3(0, 1.5, 0);
+  const distance = camera.position.distanceTo(stageCenter);
+
+  const minDistance = 40;
+  const maxDistance = 150;
+  const maxStrength = 0.8;
+
+  const bloomFactor = THREE.MathUtils.smoothstep(
+    distance,
+    minDistance,
+    maxDistance,
+  );
+  bloomPass.strength =
+    sceneConfig.bloomStrength +
+    bloomFactor * (maxStrength - sceneConfig.bloomStrength);
   composer.render();
 }
 

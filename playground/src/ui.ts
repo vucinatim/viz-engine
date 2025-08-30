@@ -69,6 +69,9 @@ export function setupUI(
   const beamsToggle = document.getElementById(
     'beams-toggle',
   ) as HTMLInputElement;
+  const beamModeSelect = document.getElementById(
+    'beam-mode-select',
+  ) as HTMLSelectElement;
 
   if (debugOverlay) {
     debugOverlay.addEventListener('click', (event) => event.stopPropagation());
@@ -102,7 +105,7 @@ export function setupUI(
     bloomStrengthSlider.addEventListener('input', (event) => {
       const value =
         parseFloat((event.target as HTMLInputElement).value) / 100.0;
-      bloomPass.strength = value;
+      sceneConfig.bloomStrength = value;
       if (bloomStrengthValueSpan)
         bloomStrengthValueSpan.textContent = value.toFixed(2);
     });
@@ -190,6 +193,17 @@ export function setupUI(
   if (beamsToggle) {
     beamsToggle.addEventListener('change', (event) => {
       sceneConfig.beams = (event.target as HTMLInputElement).checked;
+    });
+  }
+
+  if (beamModeSelect) {
+    beamModeSelect.addEventListener('change', (event) => {
+      const value = (event.target as HTMLSelectElement).value;
+      if (value === 'auto') {
+        sceneConfig.beamMode = 'auto';
+      } else {
+        sceneConfig.beamMode = parseInt(value, 10) as 0 | 1 | 2 | 3 | 4;
+      }
     });
   }
 

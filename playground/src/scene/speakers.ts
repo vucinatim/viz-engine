@@ -9,7 +9,7 @@ export function createSpeakerStacks(
 ) {
   const speakerStacks = new THREE.Group();
   const speakerMaterial = new THREE.MeshStandardMaterial({
-    color: 0x2d2d2d,
+    color: 0x1a1a1a,
     roughness: 0.8,
   });
   const mainWallHalfWidthForSpeakers =
