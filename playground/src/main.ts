@@ -32,6 +32,7 @@ const sceneConfig = {
   beams: true,
   beamMode: 'auto' as 'auto' | 0 | 1 | 2 | 3 | 4,
   bloomStrength: 0.2,
+  cinematicCamera: false,
 };
 
 // --- SCENE SETUP ---
@@ -54,6 +55,23 @@ const camera = new THREE.PerspectiveCamera(
   1000,
 );
 camera.position.set(0, 8, 40);
+
+const cameraPath = new THREE.CatmullRomCurve3(
+  [
+    new THREE.Vector3(0, 65, 45), // 1. Start with a wider, less steep top-down view
+    new THREE.Vector3(-80, 40, 100), // 2. Sweep out for a wide panoramic view from the left
+    new THREE.Vector3(0, 30, 130), // 3. Go further back for a full panoramic shot
+    new THREE.Vector3(80, 40, 100), // 4. Sweep to the right side for another wide view
+    new THREE.Vector3(20, 15, 25), // 5. Fly in lower towards the stage
+    new THREE.Vector3(0, 18, 60), // 6. Move back above the crowd
+    new THREE.Vector3(-20, 20, 80), // 7. Circle around above the crowd
+    new THREE.Vector3(0, 65, 45), // 8. Return to the start for a smooth loop
+  ],
+  true, // Closed loop
+);
+const cameraLookAtTarget = new THREE.Vector3(0, 5, 0); // A fixed point to look at (the DJ)
+const cinematicLookAt = new THREE.Vector3(0, 5, 0); // Temp vector for lerping
+const cinematicPosition = new THREE.Vector3(); // Temp vector for lerping
 
 // --- RENDERER ---
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -158,12 +176,26 @@ function animate() {
   const elapsedTime = clock.getElapsedTime();
   const actualMoveSpeed = moveSpeed * delta;
 
-  if (keysPressed['w']) camera.translateZ(-actualMoveSpeed);
-  if (keysPressed['s']) camera.translateZ(actualMoveSpeed);
-  if (keysPressed['a']) camera.translateX(-actualMoveSpeed);
-  if (keysPressed['d']) camera.translateX(actualMoveSpeed);
-  if (keysPressed[' ']) camera.position.y += actualMoveSpeed;
-  if (keysPressed['shift']) camera.position.y -= actualMoveSpeed;
+  if (sceneConfig.cinematicCamera) {
+    const loopDuration = 60; // Duration of one camera loop in seconds
+    const progress = (elapsedTime % loopDuration) / loopDuration;
+
+    // Get the new camera position from our path
+    cinematicPosition.copy(cameraPath.getPointAt(progress));
+    camera.position.lerp(cinematicPosition, 0.05);
+
+    // Always look at the DJ booth
+    cinematicLookAt.copy(cameraLookAtTarget);
+    camera.lookAt(cinematicLookAt.lerp(camera.position, 0.95));
+  } else {
+    // Standard manual controls when cinematic mode is off
+    if (keysPressed['w']) camera.translateZ(-actualMoveSpeed);
+    if (keysPressed['s']) camera.translateZ(actualMoveSpeed);
+    if (keysPressed['a']) camera.translateX(-actualMoveSpeed);
+    if (keysPressed['d']) camera.translateX(actualMoveSpeed);
+    if (keysPressed[' ']) camera.position.y += actualMoveSpeed;
+    if (keysPressed['shift']) camera.position.y -= actualMoveSpeed;
+  }
 
   updateDj(delta);
   updateCrowd(delta);

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 export function createStage(scene: THREE.Scene) {
   // --- STAGE & ENVIRONMENT ---
-  const groundGeometry = new THREE.PlaneGeometry(200, 200);
+  const groundGeometry = new THREE.PlaneGeometry(400, 400);
   const groundMaterial = new THREE.MeshStandardMaterial({
     color: 0x2a2a2a,
     roughness: 0.9,

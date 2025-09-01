@@ -72,6 +72,9 @@ export function setupUI(
   const beamModeSelect = document.getElementById(
     'beam-mode-select',
   ) as HTMLSelectElement;
+  const cinematicCameraToggle = document.getElementById(
+    'cinematic-camera-toggle',
+  ) as HTMLInputElement;
 
   if (debugOverlay) {
     debugOverlay.addEventListener('click', (event) => event.stopPropagation());
@@ -204,6 +207,12 @@ export function setupUI(
       } else {
         sceneConfig.beamMode = parseInt(value, 10) as 0 | 1 | 2 | 3 | 4;
       }
+    });
+  }
+
+  if (cinematicCameraToggle) {
+    cinematicCameraToggle.addEventListener('change', (event) => {
+      sceneConfig.cinematicCamera = (event.target as HTMLInputElement).checked;
     });
   }
 
