@@ -1,6 +1,7 @@
 import * as THREE from 'three';
+import { WashLightConfig } from '../scene-config';
 
-export function createWashLights(scene: THREE.Scene) {
+export function createWashLights(scene: THREE.Scene, config: WashLightConfig) {
   // --- NEW: DYNAMIC COLOR WASH LIGHTS ---
   const colorWashLight1 = new THREE.SpotLight(
     0xffffff,
@@ -30,17 +31,36 @@ export function createWashLights(scene: THREE.Scene) {
 
   // --- NEW: SOFT STAGE WASH LIGHTS ---
   const stageWashLights = new THREE.Group();
-  const rectLight1 = new THREE.RectAreaLight(0x5566ff, 5, 50, 20); // color, intensity, width, height
+  const rectLight1 = new THREE.RectAreaLight(
+    0x5566ff,
+    config.intensity,
+    50,
+    20,
+  ); // color, intensity, width, height
   rectLight1.position.set(-30, 25, 10);
   rectLight1.lookAt(0, 0, 0);
   stageWashLights.add(rectLight1);
 
-  const rectLight2 = new THREE.RectAreaLight(0x5566ff, 5, 50, 20);
+  const rectLight2 = new THREE.RectAreaLight(
+    0x5566ff,
+    config.intensity,
+    50,
+    20,
+  );
   rectLight2.position.set(30, 25, 10);
   rectLight2.lookAt(0, 0, 0);
   stageWashLights.add(rectLight2);
 
   scene.add(stageWashLights);
 
-  return { stageWashLights, rectLight1, rectLight2 };
+  // Update function
+  const update = (currentConfig: WashLightConfig) => {
+    stageWashLights.visible = currentConfig.enabled;
+    if (!stageWashLights.visible) return;
+
+    rectLight1.intensity = currentConfig.intensity;
+    rectLight2.intensity = currentConfig.intensity;
+  };
+
+  return { stageWashLights, rectLight1, rectLight2, update };
 }

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
+import { StrobeConfig } from '../scene-config';
 
-export function createStrobes(scene: THREE.Scene) {
+export function createStrobes(scene: THREE.Scene, config: StrobeConfig) {
   const strobes = new THREE.Group();
   const numStrobes = 10;
   const strobeSpacing = 10;
@@ -40,5 +41,30 @@ export function createStrobes(scene: THREE.Scene) {
     strobes.add(strobeUnit);
   }
   scene.add(strobes);
-  return { strobes };
+
+  // Update function
+  const update = (currentConfig: StrobeConfig) => {
+    strobes.visible = currentConfig.enabled;
+    if (!strobes.visible) return;
+
+    // Random strobe effect
+    strobes.children.forEach((strobeUnit) => {
+      const lightPart = strobeUnit.getObjectByName(
+        'strobeLightPart',
+      ) as THREE.Mesh;
+      (lightPart.material as THREE.MeshStandardMaterial).emissiveIntensity = 0;
+    });
+
+    if (Math.random() > 0.7) {
+      const strobeIndex = Math.floor(Math.random() * strobes.children.length);
+      const activeStrobe = strobes.children[strobeIndex];
+      const lightPart = activeStrobe.getObjectByName(
+        'strobeLightPart',
+      ) as THREE.Mesh;
+      (lightPart.material as THREE.MeshStandardMaterial).emissiveIntensity =
+        currentConfig.intensity;
+    }
+  };
+
+  return { strobes, update };
 }

@@ -1,81 +1,15 @@
 import * as THREE from 'three';
+import { SceneConfig } from './scene-config';
 
 export function setupUI(
-  sceneConfig: any,
+  sceneConfig: SceneConfig,
   hemisphereLight: THREE.HemisphereLight,
   ambientLight: THREE.AmbientLight,
   bloomPass: any,
-  rectLight1: THREE.RectAreaLight,
-  rectLight2: THREE.RectAreaLight,
 ) {
   const debugOverlay = document.getElementById('debug-overlay');
-  // --- UI CONTROLS ---
-  const hemiSlider = document.getElementById('hemi-slider') as HTMLInputElement;
-  const hemiValueSpan = document.getElementById('hemi-value');
-  const ambientSlider = document.getElementById(
-    'ambient-slider',
-  ) as HTMLInputElement;
-  const ambientValueSpan = document.getElementById('ambient-value');
-  const bloomStrengthSlider = document.getElementById(
-    'bloom-strength-slider',
-  ) as HTMLInputElement;
-  const bloomStrengthValueSpan = document.getElementById(
-    'bloom-strength-value',
-  );
-  const bloomRadiusSlider = document.getElementById(
-    'bloom-radius-slider',
-  ) as HTMLInputElement;
-  const bloomRadiusValueSpan = document.getElementById('bloom-radius-value');
-  const bloomThresholdSlider = document.getElementById(
-    'bloom-threshold-slider',
-  ) as HTMLInputElement;
-  const bloomThresholdValueSpan = document.getElementById(
-    'bloom-threshold-value',
-  );
-  const movingLightsToggle = document.getElementById(
-    'moving-lights-toggle',
-  ) as HTMLInputElement;
-  const lasersToggle = document.getElementById(
-    'lasers-toggle',
-  ) as HTMLInputElement;
-  const laserModeSelect = document.getElementById(
-    'laser-mode-select',
-  ) as HTMLSelectElement;
-  const stageLightsToggle = document.getElementById(
-    'stage-lights-toggle',
-  ) as HTMLInputElement;
-  const stageWashToggle = document.getElementById(
-    'stage-wash-toggle',
-  ) as HTMLInputElement;
-  const stageWashSlider = document.getElementById(
-    'stage-wash-slider',
-  ) as HTMLInputElement;
-  const stageWashValueSpan = document.getElementById('stage-wash-value');
-  const strobesToggle = document.getElementById(
-    'strobes-toggle',
-  ) as HTMLInputElement;
-  const shaderWallToggle = document.getElementById(
-    'shader-wall-toggle',
-  ) as HTMLInputElement;
-  const bloomToggle = document.getElementById(
-    'bloom-toggle',
-  ) as HTMLInputElement;
-  const blindersToggle = document.getElementById(
-    'blinders-toggle',
-  ) as HTMLInputElement;
-  const debugToggle = document.getElementById(
-    'debug-toggle',
-  ) as HTMLInputElement;
-  const beamsToggle = document.getElementById(
-    'beams-toggle',
-  ) as HTMLInputElement;
-  const beamModeSelect = document.getElementById(
-    'beam-mode-select',
-  ) as HTMLSelectElement;
-  const cinematicCameraToggle = document.getElementById(
-    'cinematic-camera-toggle',
-  ) as HTMLInputElement;
 
+  // Stop click propagation on overlays
   if (debugOverlay) {
     debugOverlay.addEventListener('click', (event) => event.stopPropagation());
   }
@@ -86,150 +20,382 @@ export function setupUI(
     );
   }
 
+  // Hemisphere Light
+  const hemiSlider = document.getElementById('hemi-slider') as HTMLInputElement;
+  const hemiValueSpan = document.getElementById('hemi-value');
   if (hemiSlider) {
     hemiSlider.addEventListener('input', (event) => {
       const intensity =
         parseFloat((event.target as HTMLInputElement).value) / 100.0;
-      hemisphereLight.intensity = intensity;
+      sceneConfig.hemisphereIntensity = intensity;
       if (hemiValueSpan) hemiValueSpan.textContent = intensity.toFixed(2);
     });
   }
 
+  // Ambient Light
+  const ambientSlider = document.getElementById(
+    'ambient-slider',
+  ) as HTMLInputElement;
+  const ambientValueSpan = document.getElementById('ambient-value');
   if (ambientSlider) {
     ambientSlider.addEventListener('input', (event) => {
       const intensity =
         parseFloat((event.target as HTMLInputElement).value) / 100.0;
-      ambientLight.intensity = intensity;
+      sceneConfig.ambientIntensity = intensity;
       if (ambientValueSpan) ambientValueSpan.textContent = intensity.toFixed(2);
     });
   }
 
+  // Bloom Controls
+  const bloomStrengthSlider = document.getElementById(
+    'bloom-strength-slider',
+  ) as HTMLInputElement;
+  const bloomStrengthValueSpan = document.getElementById(
+    'bloom-strength-value',
+  );
   if (bloomStrengthSlider) {
     bloomStrengthSlider.addEventListener('input', (event) => {
       const value =
         parseFloat((event.target as HTMLInputElement).value) / 100.0;
-      sceneConfig.bloomStrength = value;
+      sceneConfig.postProcessing.bloomStrength = value;
       if (bloomStrengthValueSpan)
         bloomStrengthValueSpan.textContent = value.toFixed(2);
     });
   }
 
+  const bloomRadiusSlider = document.getElementById(
+    'bloom-radius-slider',
+  ) as HTMLInputElement;
+  const bloomRadiusValueSpan = document.getElementById('bloom-radius-value');
   if (bloomRadiusSlider) {
     bloomRadiusSlider.addEventListener('input', (event) => {
       const value =
         parseFloat((event.target as HTMLInputElement).value) / 100.0;
       bloomPass.radius = value;
+      sceneConfig.postProcessing.bloomRadius = value;
       if (bloomRadiusValueSpan)
         bloomRadiusValueSpan.textContent = value.toFixed(2);
     });
   }
 
+  const bloomThresholdSlider = document.getElementById(
+    'bloom-threshold-slider',
+  ) as HTMLInputElement;
+  const bloomThresholdValueSpan = document.getElementById(
+    'bloom-threshold-value',
+  );
   if (bloomThresholdSlider) {
     bloomThresholdSlider.addEventListener('input', (event) => {
       const value =
         parseFloat((event.target as HTMLInputElement).value) / 100.0;
       bloomPass.threshold = value;
+      sceneConfig.postProcessing.bloomThreshold = value;
       if (bloomThresholdValueSpan)
         bloomThresholdValueSpan.textContent = value.toFixed(2);
     });
   }
 
-  if (movingLightsToggle) {
-    movingLightsToggle.addEventListener('change', (event) => {
-      sceneConfig.movingLights = (event.target as HTMLInputElement).checked;
+  const bloomToggle = document.getElementById(
+    'bloom-toggle',
+  ) as HTMLInputElement;
+  if (bloomToggle) {
+    bloomToggle.addEventListener('change', (event) => {
+      sceneConfig.postProcessing.bloom = (
+        event.target as HTMLInputElement
+      ).checked;
     });
   }
 
+  // === LASERS ===
+  const lasersToggle = document.getElementById(
+    'lasers-toggle',
+  ) as HTMLInputElement;
   if (lasersToggle) {
     lasersToggle.addEventListener('change', (event) => {
-      sceneConfig.lasers = (event.target as HTMLInputElement).checked;
+      sceneConfig.lasers.enabled = (event.target as HTMLInputElement).checked;
     });
   }
 
+  const laserModeSelect = document.getElementById(
+    'laser-mode-select',
+  ) as HTMLSelectElement;
   if (laserModeSelect) {
     laserModeSelect.addEventListener('change', (event) => {
       const value = (event.target as HTMLSelectElement).value;
       if (value === 'auto') {
-        sceneConfig.laserMode = 'auto';
+        sceneConfig.lasers.mode = 'auto';
       } else {
-        sceneConfig.laserMode = parseInt(value, 10) as 0 | 1 | 2;
+        sceneConfig.lasers.mode = parseInt(value, 10) as 0 | 1 | 2;
       }
     });
   }
 
+  const laserColorModeSelect = document.getElementById(
+    'laser-color-mode-select',
+  ) as HTMLSelectElement;
+  if (laserColorModeSelect) {
+    laserColorModeSelect.addEventListener('change', (event) => {
+      sceneConfig.lasers.colorMode = (event.target as HTMLSelectElement)
+        .value as 'single' | 'multi';
+    });
+  }
+
+  const laserColorInput = document.getElementById(
+    'laser-color',
+  ) as HTMLInputElement;
+  if (laserColorInput) {
+    laserColorInput.addEventListener('input', (event) => {
+      sceneConfig.lasers.singleColor = (event.target as HTMLInputElement).value;
+    });
+  }
+
+  const laserSpeedSlider = document.getElementById(
+    'laser-speed-slider',
+  ) as HTMLInputElement;
+  const laserSpeedValueSpan = document.getElementById('laser-speed-value');
+  if (laserSpeedSlider) {
+    laserSpeedSlider.addEventListener('input', (event) => {
+      const value =
+        parseFloat((event.target as HTMLInputElement).value) / 100.0;
+      sceneConfig.lasers.rotationSpeed = value;
+      if (laserSpeedValueSpan)
+        laserSpeedValueSpan.textContent = value.toFixed(2);
+    });
+  }
+
+  // === MOVING LIGHTS ===
+  const movingLightsToggle = document.getElementById(
+    'moving-lights-toggle',
+  ) as HTMLInputElement;
+  if (movingLightsToggle) {
+    movingLightsToggle.addEventListener('change', (event) => {
+      sceneConfig.movingLights.enabled = (
+        event.target as HTMLInputElement
+      ).checked;
+    });
+  }
+
+  const movingLightColorModeSelect = document.getElementById(
+    'moving-light-color-mode-select',
+  ) as HTMLSelectElement;
+  if (movingLightColorModeSelect) {
+    movingLightColorModeSelect.addEventListener('change', (event) => {
+      sceneConfig.movingLights.colorMode = (event.target as HTMLSelectElement)
+        .value as 'single' | 'multi';
+    });
+  }
+
+  const movingLightColorInput = document.getElementById(
+    'moving-light-color',
+  ) as HTMLInputElement;
+  if (movingLightColorInput) {
+    movingLightColorInput.addEventListener('input', (event) => {
+      sceneConfig.movingLights.singleColor = (
+        event.target as HTMLInputElement
+      ).value;
+    });
+  }
+
+  const movingLightIntensitySlider = document.getElementById(
+    'moving-light-intensity-slider',
+  ) as HTMLInputElement;
+  const movingLightIntensityValueSpan = document.getElementById(
+    'moving-light-intensity-value',
+  );
+  if (movingLightIntensitySlider) {
+    movingLightIntensitySlider.addEventListener('input', (event) => {
+      const value =
+        parseFloat((event.target as HTMLInputElement).value) / 100.0;
+      sceneConfig.movingLights.intensity = value;
+      if (movingLightIntensityValueSpan)
+        movingLightIntensityValueSpan.textContent = value.toFixed(2);
+    });
+  }
+
+  const movingLightSpeedSlider = document.getElementById(
+    'moving-light-speed-slider',
+  ) as HTMLInputElement;
+  const movingLightSpeedValueSpan = document.getElementById(
+    'moving-light-speed-value',
+  );
+  if (movingLightSpeedSlider) {
+    movingLightSpeedSlider.addEventListener('input', (event) => {
+      const value =
+        parseFloat((event.target as HTMLInputElement).value) / 100.0;
+      sceneConfig.movingLights.speed = value;
+      if (movingLightSpeedValueSpan)
+        movingLightSpeedValueSpan.textContent = value.toFixed(2);
+    });
+  }
+
+  // === BEAMS ===
+  const beamsToggle = document.getElementById(
+    'beams-toggle',
+  ) as HTMLInputElement;
+  if (beamsToggle) {
+    beamsToggle.addEventListener('change', (event) => {
+      sceneConfig.beams.enabled = (event.target as HTMLInputElement).checked;
+    });
+  }
+
+  const beamModeSelect = document.getElementById(
+    'beam-mode-select',
+  ) as HTMLSelectElement;
+  if (beamModeSelect) {
+    beamModeSelect.addEventListener('change', (event) => {
+      const value = (event.target as HTMLSelectElement).value;
+      if (value === 'auto') {
+        sceneConfig.beams.mode = 'auto';
+      } else {
+        sceneConfig.beams.mode = parseInt(value, 10) as 0 | 1 | 2 | 3 | 4;
+      }
+    });
+  }
+
+  const beamColorModeSelect = document.getElementById(
+    'beam-color-mode-select',
+  ) as HTMLSelectElement;
+  if (beamColorModeSelect) {
+    beamColorModeSelect.addEventListener('change', (event) => {
+      sceneConfig.beams.colorMode = (event.target as HTMLSelectElement)
+        .value as 'single' | 'multi';
+    });
+  }
+
+  const beamColorInput = document.getElementById(
+    'beam-color',
+  ) as HTMLInputElement;
+  if (beamColorInput) {
+    beamColorInput.addEventListener('input', (event) => {
+      sceneConfig.beams.singleColor = (event.target as HTMLInputElement).value;
+    });
+  }
+
+  const beamIntensitySlider = document.getElementById(
+    'beam-intensity-slider',
+  ) as HTMLInputElement;
+  const beamIntensityValueSpan = document.getElementById(
+    'beam-intensity-value',
+  );
+  if (beamIntensitySlider) {
+    beamIntensitySlider.addEventListener('input', (event) => {
+      const value =
+        parseFloat((event.target as HTMLInputElement).value) / 100.0;
+      sceneConfig.beams.intensity = value;
+      if (beamIntensityValueSpan)
+        beamIntensityValueSpan.textContent = value.toFixed(2);
+    });
+  }
+
+  // === STAGE LIGHTS ===
+  const stageLightsToggle = document.getElementById(
+    'stage-lights-toggle',
+  ) as HTMLInputElement;
   if (stageLightsToggle) {
     stageLightsToggle.addEventListener('change', (event) => {
-      sceneConfig.stageLights = (event.target as HTMLInputElement).checked;
+      sceneConfig.stageLights.enabled = (
+        event.target as HTMLInputElement
+      ).checked;
     });
   }
 
+  const stageLightColorInput = document.getElementById(
+    'stage-light-color',
+  ) as HTMLInputElement;
+  if (stageLightColorInput) {
+    stageLightColorInput.addEventListener('input', (event) => {
+      sceneConfig.stageLights.color = (event.target as HTMLInputElement).value;
+    });
+  }
+
+  // === STAGE WASH ===
+  const stageWashToggle = document.getElementById(
+    'stage-wash-toggle',
+  ) as HTMLInputElement;
   if (stageWashToggle) {
     stageWashToggle.addEventListener('change', (event) => {
-      sceneConfig.stageWash = (event.target as HTMLInputElement).checked;
+      sceneConfig.stageWash.enabled = (
+        event.target as HTMLInputElement
+      ).checked;
     });
   }
 
+  const stageWashSlider = document.getElementById(
+    'stage-wash-slider',
+  ) as HTMLInputElement;
+  const stageWashValueSpan = document.getElementById('stage-wash-value');
+  if (stageWashSlider) {
+    stageWashSlider.addEventListener('input', (event) => {
+      const intensity =
+        parseFloat((event.target as HTMLInputElement).value) / 100.0;
+      sceneConfig.stageWash.intensity = intensity;
+      if (stageWashValueSpan)
+        stageWashValueSpan.textContent = intensity.toFixed(2);
+    });
+  }
+
+  // === STROBES ===
+  const strobesToggle = document.getElementById(
+    'strobes-toggle',
+  ) as HTMLInputElement;
   if (strobesToggle) {
     strobesToggle.addEventListener('change', (event) => {
-      sceneConfig.strobes = (event.target as HTMLInputElement).checked;
+      sceneConfig.strobes.enabled = (event.target as HTMLInputElement).checked;
     });
   }
 
+  const strobeIntensitySlider = document.getElementById(
+    'strobe-intensity-slider',
+  ) as HTMLInputElement;
+  const strobeIntensityValueSpan = document.getElementById(
+    'strobe-intensity-value',
+  );
+  if (strobeIntensitySlider) {
+    strobeIntensitySlider.addEventListener('input', (event) => {
+      const value = parseInt((event.target as HTMLInputElement).value, 10);
+      sceneConfig.strobes.intensity = value;
+      if (strobeIntensityValueSpan)
+        strobeIntensityValueSpan.textContent = value.toString();
+    });
+  }
+
+  // === BLINDERS ===
+  const blindersToggle = document.getElementById(
+    'blinders-toggle',
+  ) as HTMLInputElement;
+  if (blindersToggle) {
+    blindersToggle.addEventListener('change', (event) => {
+      sceneConfig.blinders.enabled = (event.target as HTMLInputElement).checked;
+    });
+  }
+
+  // === SCENE EFFECTS ===
+  const shaderWallToggle = document.getElementById(
+    'shader-wall-toggle',
+  ) as HTMLInputElement;
   if (shaderWallToggle) {
     shaderWallToggle.addEventListener('change', (event) => {
       sceneConfig.shaderWall = (event.target as HTMLInputElement).checked;
     });
   }
 
-  if (bloomToggle) {
-    bloomToggle.addEventListener('change', (event) => {
-      sceneConfig.bloom = (event.target as HTMLInputElement).checked;
-    });
-  }
-
-  if (blindersToggle) {
-    blindersToggle.addEventListener('change', (event) => {
-      sceneConfig.blinders = (event.target as HTMLInputElement).checked;
-    });
-  }
-
-  if (beamsToggle) {
-    beamsToggle.addEventListener('change', (event) => {
-      sceneConfig.beams = (event.target as HTMLInputElement).checked;
-    });
-  }
-
-  if (beamModeSelect) {
-    beamModeSelect.addEventListener('change', (event) => {
-      const value = (event.target as HTMLSelectElement).value;
-      if (value === 'auto') {
-        sceneConfig.beamMode = 'auto';
-      } else {
-        sceneConfig.beamMode = parseInt(value, 10) as 0 | 1 | 2 | 3 | 4;
-      }
-    });
-  }
-
+  const cinematicCameraToggle = document.getElementById(
+    'cinematic-camera-toggle',
+  ) as HTMLInputElement;
   if (cinematicCameraToggle) {
     cinematicCameraToggle.addEventListener('change', (event) => {
-      sceneConfig.cinematicCamera = (event.target as HTMLInputElement).checked;
+      sceneConfig.camera.cinematicMode = (
+        event.target as HTMLInputElement
+      ).checked;
     });
   }
 
+  const debugToggle = document.getElementById(
+    'debug-toggle',
+  ) as HTMLInputElement;
   if (debugToggle) {
     debugToggle.addEventListener('change', (event) => {
       sceneConfig.debug = (event.target as HTMLInputElement).checked;
-    });
-  }
-
-  if (stageWashSlider) {
-    stageWashSlider.addEventListener('input', (event) => {
-      const intensity =
-        parseFloat((event.target as HTMLInputElement).value) / 100.0;
-      rectLight1.intensity = intensity;
-      rectLight2.intensity = intensity;
-      if (stageWashValueSpan)
-        stageWashValueSpan.textContent = intensity.toFixed(2);
     });
   }
 

@@ -1,12 +1,14 @@
 import * as THREE from 'three';
+import { BeamConfig } from '../scene-config';
 
-export function createBeams(scene: THREE.Scene) {
+export function createBeams(scene: THREE.Scene, config: BeamConfig) {
   const beamGroup = new THREE.Group();
 
   const beamMaterial = new THREE.ShaderMaterial({
     uniforms: {
-      color: { value: new THREE.Color(0x88aaff) },
+      color: { value: new THREE.Color(config.singleColor) },
       time: { value: 0 },
+      intensity: { value: config.intensity },
     },
     vertexShader: `
       varying vec2 vUv;
@@ -28,6 +30,7 @@ export function createBeams(scene: THREE.Scene) {
 
       uniform vec3 color;
       uniform float time;
+      uniform float intensity;
       void main() {
         float yFalloff = pow(1.0 - vUv.y, 2.0);
         
@@ -39,7 +42,7 @@ export function createBeams(scene: THREE.Scene) {
         // Add some subtle flicker
         float flicker = (sin(time * 10.0 + vUv.y * 20.0) * 0.5 + 0.5) * 0.1 + 0.9;
 
-        gl_FragColor = vec4(color, falloff * 0.15 * flicker);
+        gl_FragColor = vec4(color, falloff * 0.15 * flicker * intensity);
       }
     `,
     blending: THREE.AdditiveBlending,
@@ -69,16 +72,47 @@ export function createBeams(scene: THREE.Scene) {
 
   scene.add(beamGroup);
 
-  const update = (time: number) => {
+  const update = (time: number, currentConfig: BeamConfig) => {
+    beamGroup.visible = currentConfig.enabled;
+    if (!beamGroup.visible) return;
+
     beamGroup.children.forEach((beam) => {
       if (
         beam instanceof THREE.Mesh &&
         beam.material instanceof THREE.ShaderMaterial
       ) {
         beam.material.uniforms.time.value = time;
+        beam.material.uniforms.intensity.value = currentConfig.intensity;
+
+        // Update color based on mode
+        if (currentConfig.colorMode === 'single') {
+          beam.material.uniforms.color.value.set(currentConfig.singleColor);
+        }
+        // Multi-color mode is handled by the animation loop in main.ts
       }
     });
   };
 
-  return { beamGroup, update };
+  // Function to update beam rotations (called from main animation loop)
+  const updateRotations = (targetRotations: THREE.Euler[]) => {
+    beamGroup.children.forEach((beam, i) => {
+      const targetRotation = targetRotations[i];
+      beam.rotation.x += (targetRotation.x - beam.rotation.x) * 0.1;
+      beam.rotation.y += (targetRotation.y - beam.rotation.y) * 0.1;
+      beam.rotation.z += (targetRotation.z - beam.rotation.z) * 0.1;
+    });
+  };
+
+  // Function to set beam colors (for multi-color mode)
+  const setBeamColor = (index: number, color: THREE.Color) => {
+    const beam = beamGroup.children[index];
+    if (
+      beam instanceof THREE.Mesh &&
+      beam.material instanceof THREE.ShaderMaterial
+    ) {
+      beam.material.uniforms.color.value.copy(color);
+    }
+  };
+
+  return { beamGroup, update, updateRotations, setBeamColor };
 }

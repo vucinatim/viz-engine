@@ -1,14 +1,19 @@
 import * as THREE from 'three';
+import { StageLightConfig } from '../scene-config';
 
 export function createStageLights(
   scene: THREE.Scene,
   stageGeometry: THREE.BoxGeometry,
   djBooth: THREE.Mesh,
+  config: StageLightConfig,
 ) {
   const stageLights = new THREE.Group();
+  const baseColor = new THREE.Color(config.color);
+  const emissiveColor = baseColor.clone().multiplyScalar(0.5);
+
   const stageOutlineMaterial = new THREE.MeshStandardMaterial({
-    color: 0x8888ff,
-    emissive: 0x4444ff,
+    color: baseColor,
+    emissive: emissiveColor,
     emissiveIntensity: 4,
   });
   const barGeo = new THREE.BoxGeometry(1, 1, 1); // We'll scale this
@@ -60,5 +65,17 @@ export function createStageLights(
 
   scene.add(stageLights);
 
-  return { stageLights };
+  // Update function
+  const update = (currentConfig: StageLightConfig) => {
+    stageLights.visible = currentConfig.enabled;
+    if (!stageLights.visible) return;
+
+    // Update colors if changed
+    const newColor = new THREE.Color(currentConfig.color);
+    const newEmissive = newColor.clone().multiplyScalar(0.5);
+    stageOutlineMaterial.color.copy(newColor);
+    stageOutlineMaterial.emissive.copy(newEmissive);
+  };
+
+  return { stageLights, update };
 }

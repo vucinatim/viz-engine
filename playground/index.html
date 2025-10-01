@@ -15,73 +15,83 @@
     </div>
     <div id="debug-overlay"></div>
     <div id="controls-overlay">
+      <div class="controls-header">
+        <h2>Scene Controls</h2>
+      </div>
+
+      <!-- Lighting Section -->
+      <div class="section-header">
+        <h3>Lighting</h3>
+      </div>
       <div class="slider-group">
         <label for="hemi-slider"
-          >Hemi Light: <span id="hemi-value">0.50</span></label
+          >Hemisphere Light: <span id="hemi-value">1.00</span></label
         >
-        <input type="range" id="hemi-slider" min="0" max="100" value="50" />
+        <input type="range" id="hemi-slider" min="0" max="500" value="100" />
       </div>
       <div class="slider-group">
         <label for="ambient-slider"
-          >Ambient Light: <span id="ambient-value">0.50</span></label
+          >Ambient Light: <span id="ambient-value">0.20</span></label
         >
-        <input type="range" id="ambient-slider" min="0" max="100" value="50" />
+        <input type="range" id="ambient-slider" min="0" max="500" value="20" />
       </div>
-      <hr />
-      <div class="slider-group">
-        <label>--- Bloom ---</label>
+
+      <!-- Post Processing Section -->
+      <div class="section-header">
+        <h3>Post Processing</h3>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="bloom-toggle" checked />
+          Bloom Enabled
+        </label>
       </div>
       <div class="slider-group">
         <label for="bloom-strength-slider"
-          >Strength: <span id="bloom-strength-value">0.20</span></label
+          >Bloom Strength: <span id="bloom-strength-value">0.50</span></label
         >
         <input
           type="range"
           id="bloom-strength-slider"
           min="0"
           max="300"
-          value="20" />
+          value="50" />
       </div>
       <div class="slider-group">
         <label for="bloom-radius-slider"
-          >Radius: <span id="bloom-radius-value">0.40</span></label
+          >Bloom Radius: <span id="bloom-radius-value">0.80</span></label
         >
         <input
           type="range"
           id="bloom-radius-slider"
           min="0"
           max="100"
-          value="40" />
+          value="80" />
       </div>
       <div class="slider-group">
         <label for="bloom-threshold-slider"
-          >Threshold: <span id="bloom-threshold-value">0.00</span></label
+          >Bloom Threshold: <span id="bloom-threshold-value">0.60</span></label
         >
         <input
           type="range"
           id="bloom-threshold-slider"
           min="0"
           max="100"
-          value="0" />
+          value="60" />
       </div>
-      <hr />
-      <div class="slider-group">
-        <label>--- Scene Lights ---</label>
-      </div>
-      <div class="toggle-group">
-        <label>
-          <input type="checkbox" id="moving-lights-toggle" checked />
-          Moving Heads
-        </label>
+
+      <!-- Lasers Section -->
+      <div class="section-header">
+        <h3>Lasers</h3>
       </div>
       <div class="toggle-group">
         <label>
           <input type="checkbox" id="lasers-toggle" checked />
-          Lasers
+          Enabled
         </label>
       </div>
       <div class="slider-group">
-        <label for="laser-mode-select">Laser Mode</label>
+        <label for="laser-mode-select">Mode</label>
         <select id="laser-mode-select">
           <option value="auto">Auto</option>
           <option value="0">Wave</option>
@@ -89,47 +99,190 @@
           <option value="2">Sheet</option>
         </select>
       </div>
-      <div class="toggle-group">
-        <label>
-          <input type="checkbox" id="stage-lights-toggle" checked />
-          Stage Outline
-        </label>
+      <div class="slider-group">
+        <label for="laser-color-mode-select">Color Mode</label>
+        <select id="laser-color-mode-select">
+          <option value="multi" selected>Multi</option>
+          <option value="single">Single</option>
+        </select>
+      </div>
+      <div class="slider-group">
+        <label for="laser-color">Color</label>
+        <input type="color" id="laser-color" value="#ff0000" />
+      </div>
+      <div class="slider-group">
+        <label for="laser-speed-slider"
+          >Speed: <span id="laser-speed-value">1.00</span></label
+        >
+        <input
+          type="range"
+          id="laser-speed-slider"
+          min="0"
+          max="300"
+          value="100" />
+      </div>
+
+      <!-- Moving Lights Section -->
+      <div class="section-header">
+        <h3>Moving Lights</h3>
       </div>
       <div class="toggle-group">
         <label>
-          <input type="checkbox" id="stage-wash-toggle" checked />
-          Stage Wash
+          <input type="checkbox" id="moving-lights-toggle" checked />
+          Enabled
         </label>
       </div>
-      <div class="toggle-group">
-        <label>
-          <input type="checkbox" id="strobes-toggle" checked />
-          Strobes
-        </label>
+      <div class="slider-group">
+        <label for="moving-light-color-mode-select">Color Mode</label>
+        <select id="moving-light-color-mode-select">
+          <option value="multi" selected>Multi</option>
+          <option value="single">Single</option>
+        </select>
       </div>
-      <div class="toggle-group">
-        <label>
-          <input type="checkbox" id="blinders-toggle" checked />
-          Blinders
-        </label>
+      <div class="slider-group">
+        <label for="moving-light-color">Color</label>
+        <input type="color" id="moving-light-color" value="#ffffff" />
+      </div>
+      <div class="slider-group">
+        <label for="moving-light-intensity-slider"
+          >Intensity: <span id="moving-light-intensity-value">5.00</span></label
+        >
+        <input
+          type="range"
+          id="moving-light-intensity-slider"
+          min="0"
+          max="2000"
+          value="500" />
+      </div>
+      <div class="slider-group">
+        <label for="moving-light-speed-slider"
+          >Speed: <span id="moving-light-speed-value">1.00</span></label
+        >
+        <input
+          type="range"
+          id="moving-light-speed-slider"
+          min="0"
+          max="300"
+          value="100" />
+      </div>
+
+      <!-- Beams Section -->
+      <div class="section-header">
+        <h3>Beams</h3>
       </div>
       <div class="toggle-group">
         <label>
           <input type="checkbox" id="beams-toggle" checked />
-          Beams
+          Enabled
         </label>
       </div>
-      <select id="beam-mode-select">
-        <option value="auto">Auto</option>
-        <option value="0">Mirrored Wave</option>
-        <option value="1">Strobe</option>
-        <option value="2">Center Cross</option>
-        <option value="3">Outward Fan</option>
-        <option value="4">Crowd Sweep</option>
-      </select>
-      <hr />
       <div class="slider-group">
-        <label>--- Scene Effects ---</label>
+        <label for="beam-mode-select">Mode</label>
+        <select id="beam-mode-select">
+          <option value="auto">Auto</option>
+          <option value="0">Mirrored Wave</option>
+          <option value="1">Strobe</option>
+          <option value="2">Center Cross</option>
+          <option value="3">Outward Fan</option>
+          <option value="4">Crowd Sweep</option>
+        </select>
+      </div>
+      <div class="slider-group">
+        <label for="beam-color-mode-select">Color Mode</label>
+        <select id="beam-color-mode-select">
+          <option value="multi" selected>Multi</option>
+          <option value="single">Single</option>
+        </select>
+      </div>
+      <div class="slider-group">
+        <label for="beam-color">Color</label>
+        <input type="color" id="beam-color" value="#88aaff" />
+      </div>
+      <div class="slider-group">
+        <label for="beam-intensity-slider"
+          >Intensity: <span id="beam-intensity-value">1.00</span></label
+        >
+        <input
+          type="range"
+          id="beam-intensity-slider"
+          min="0"
+          max="300"
+          value="100" />
+      </div>
+
+      <!-- Stage Lights Section -->
+      <div class="section-header">
+        <h3>Stage Lights</h3>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="stage-lights-toggle" checked />
+          Enabled
+        </label>
+      </div>
+      <div class="slider-group">
+        <label for="stage-light-color">Color</label>
+        <input type="color" id="stage-light-color" value="#8888ff" />
+      </div>
+
+      <!-- Stage Wash Section -->
+      <div class="section-header">
+        <h3>Stage Wash</h3>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="stage-wash-toggle" checked />
+          Enabled
+        </label>
+      </div>
+      <div class="slider-group">
+        <label for="stage-wash-slider"
+          >Intensity: <span id="stage-wash-value">5.00</span></label
+        >
+        <input
+          type="range"
+          id="stage-wash-slider"
+          min="0"
+          max="5000"
+          value="500" />
+      </div>
+
+      <!-- Strobes Section -->
+      <div class="section-header">
+        <h3>Strobes</h3>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="strobes-toggle" checked />
+          Enabled
+        </label>
+      </div>
+      <div class="slider-group">
+        <label for="strobe-intensity-slider"
+          >Intensity: <span id="strobe-intensity-value">500</span></label
+        >
+        <input
+          type="range"
+          id="strobe-intensity-slider"
+          min="0"
+          max="1000"
+          value="500" />
+      </div>
+
+      <!-- Blinders Section -->
+      <div class="section-header">
+        <h3>Blinders</h3>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="blinders-toggle" checked />
+          Enabled
+        </label>
+      </div>
+
+      <!-- Scene Effects Section -->
+      <div class="section-header">
+        <h3>Scene Effects</h3>
       </div>
       <div class="toggle-group">
         <label>
@@ -139,32 +292,20 @@
       </div>
       <div class="toggle-group">
         <label>
-          <input type="checkbox" id="bloom-toggle" checked />
-          Bloom
-        </label>
-      </div>
-      <div class="toggle-group">
-        <label>
           <input type="checkbox" id="cinematic-camera-toggle" />
           Cinematic Camera
         </label>
       </div>
+
+      <!-- Debug Section -->
+      <div class="section-header">
+        <h3>Debug</h3>
+      </div>
       <div class="toggle-group">
         <label>
           <input type="checkbox" id="debug-toggle" />
-          Debug
+          Debug Mode
         </label>
-      </div>
-      <div class="slider-group">
-        <label for="stage-wash-slider"
-          >Wash Intensity: <span id="stage-wash-value">5.00</span></label
-        >
-        <input
-          type="range"
-          id="stage-wash-slider"
-          min="0"
-          max="5000"
-          value="500" />
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
