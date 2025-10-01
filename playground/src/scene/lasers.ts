@@ -83,6 +83,10 @@ export function createLasers(scene: THREE.Scene) {
 
   // --- Geometry for the BEAM effects ---
   const laserBeamGeometry = new THREE.CylinderGeometry(0.03, 0.03, 300, 8);
+  // Translate geometry so the base is at the origin (not the center)
+  // This makes the rotation point at the base instead of the middle
+  laserBeamGeometry.translate(0, 150, 0);
+
   for (let i = 0; i < numLasers; i++) {
     // Give each beam its own material so we can color it individually
     const laser = new THREE.Mesh(
