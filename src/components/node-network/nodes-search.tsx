@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import { nodes } from '../config/animation-nodes';
 import {
   Command,
   CommandEmpty,
@@ -8,6 +7,7 @@ import {
   CommandItem,
   CommandList,
 } from '../ui/command';
+import { nodes } from './animation-nodes';
 import { useNodeNetwork } from './node-network-store';
 
 interface NodeSearchProps {

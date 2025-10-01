@@ -107,6 +107,7 @@ const useAudioFrameData = ({
       sampleRate: analyzer.context.sampleRate,
       fftSize: analyzer.fftSize,
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [analyzer, isFrozen, isPlayingStore, wavesurfer]);
 
   return getAudioFrameData;

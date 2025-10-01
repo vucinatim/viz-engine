@@ -1,4 +1,4 @@
-import { AnimInputData } from '@/components/config/animation-nodes';
+import { AnimInputData } from '@/components/node-network/animation-nodes';
 import { create } from 'zustand';
 
 type NodeOutputCacheState = {

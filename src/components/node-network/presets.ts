@@ -1,11 +1,11 @@
 import { Edge } from '@xyflow/react';
+import { NodeHandleType } from '../config/node-types';
 import {
   AnimNode,
   InputNode,
   NodeDefinitionMap,
   createOutputNode,
-} from '../config/animation-nodes';
-import { NodeHandleType } from '../config/node-types';
+} from './animation-nodes';
 import { GraphNode } from './node-network-store';
 
 // Aliases used inside presets to reference the network I/O nodes

@@ -1,16 +1,16 @@
-import AdaptiveNormalizeQuantileBody from '../node-network/bodies/adaptive-normalize-quantile-body';
-import EnvelopeFollowerBody from '../node-network/bodies/envelope-follower-body';
-import frequencyBandBody from '../node-network/bodies/frequency-band-body';
-import HarmonicPresenceBody from '../node-network/bodies/harmonic-presence-body';
-import HysteresisGateBody from '../node-network/bodies/hysteresis-gate-body';
-import NormalizeBody from '../node-network/bodies/normalize-body';
-import TonalPresenceBody from '../node-network/bodies/tonal-presence-body';
-import ValueMapperBody from '../node-network/bodies/value-mapper-body';
-import { AnimNode, createNode } from './create-node';
-import { MathOperation } from './math-operations';
-import { FrequencyAnalysis, NodeHandleType } from './node-types';
-export type { AnimNode } from './create-node';
-export type { AnimInputData } from './node-types';
+import { AnimNode, createNode } from '../config/create-node';
+import { MathOperation } from '../config/math-operations';
+import { FrequencyAnalysis, NodeHandleType } from '../config/node-types';
+import AdaptiveNormalizeQuantileBody from './bodies/adaptive-normalize-quantile-body';
+import EnvelopeFollowerBody from './bodies/envelope-follower-body';
+import frequencyBandBody from './bodies/frequency-band-body';
+import HarmonicPresenceBody from './bodies/harmonic-presence-body';
+import HysteresisGateBody from './bodies/hysteresis-gate-body';
+import NormalizeBody from './bodies/normalize-body';
+import TonalPresenceBody from './bodies/tonal-presence-body';
+import ValueMapperBody from './bodies/value-mapper-body';
+export type { AnimNode } from '../config/create-node';
+export type { AnimInputData } from '../config/node-types';
 
 // (legacy) ComputeFunction kept out; replaced by createNode's generics
 

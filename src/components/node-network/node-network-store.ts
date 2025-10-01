@@ -4,13 +4,6 @@ import { Edge, Node } from '@xyflow/react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import {
-  AnimInputData,
-  AnimNode,
-  InputNode,
-  NodeDefinitionMap,
-  createOutputNode,
-} from '../config/animation-nodes';
-import {
   NodeHandleType,
   canConnectTypes,
   getTypeColor,
@@ -19,6 +12,13 @@ import {
   safeVTypeToNodeHandleType,
 } from '../config/node-types';
 import { VType } from '../config/types';
+import {
+  AnimInputData,
+  AnimNode,
+  InputNode,
+  NodeDefinitionMap,
+  createOutputNode,
+} from './animation-nodes';
 
 // Safe conversion from string to NodeHandleType
 // IMPORTANT: This needs to be defined at the top of the file, otherwise it will be undefined in the merge function (hoisting issue)

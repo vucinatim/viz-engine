@@ -1,6 +1,7 @@
 import Color from 'color';
 import { ReactNode } from 'react';
 import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
+import { AnimInputData } from '../node-network/animation-nodes';
 import useNodeNetworkStore from '../node-network/node-network-store';
 import { ColorPickerPopover } from '../ui/color-picker';
 import FileInput from '../ui/file-input';
@@ -9,7 +10,6 @@ import { SimpleSelect } from '../ui/select'; // Assuming you have a Select compo
 import { Slider } from '../ui/slider'; // Assuming this is your custom slider component
 import { Switch } from '../ui/switch';
 import Vector3Input from '../ui/vector3-input';
-import { AnimInputData } from './animation-nodes';
 import { VType } from './types';
 
 // Base interface for config metadata
