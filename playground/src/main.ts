@@ -83,10 +83,13 @@ composer.addPass(bloomPass);
 // --- SCENE CREATION ---
 const { djBooth, stageGeometry } = createStage(scene);
 const speakerBoxGeometry = new THREE.BoxGeometry(5, 3, 3);
-const { shaderWall, panelSize, panelSpacing, gridWidth } = createShaderWall(
-  scene,
-  speakerBoxGeometry,
-);
+const {
+  shaderWall,
+  panelSize,
+  panelSpacing,
+  gridWidth,
+  update: updateShaderWall,
+} = createShaderWall(scene, speakerBoxGeometry);
 createSpeakerStacks(
   scene,
   panelSize,
@@ -128,13 +131,10 @@ const {
   update: updateBlinders,
 } = createBlinders(scene, sceneConfig.blinders);
 const { helpersGroup } = createDebugHelpers(scene);
-const {
-  beamGroup,
-  update: updateBeams,
-  updateRotations: updateBeamRotations,
-  setBeamColor,
-} = createBeams(scene, sceneConfig.beams);
-const beamTargetRotations = beamGroup.children.map(() => new THREE.Euler());
+const { beamGroup, update: updateBeams } = createBeams(
+  scene,
+  sceneConfig.beams,
+);
 const { update: updateDj } = createDj(scene);
 const { update: updateCrowd } = createCrowd(scene, sceneConfig.debug);
 
@@ -231,125 +231,11 @@ function animate() {
 
   // Update all scene elements with config
   updateBeams(elapsedTime, sceneConfig.beams);
-  if (sceneConfig.beams.enabled) {
-    const beamMode =
-      sceneConfig.beams.mode === 'auto'
-        ? Math.floor(elapsedTime / 8) % 5
-        : sceneConfig.beams.mode;
-
-    const numBeams = beamGroup.children.length;
-    const centerIndex = (numBeams - 1) / 2;
-
-    if (beamMode === 0) {
-      // Mirrored Wave
-      beamGroup.children.forEach((beam, i) => {
-        const target = beamTargetRotations[i];
-
-        if (sceneConfig.beams.colorMode === 'multi') {
-          const material = (beam as THREE.Mesh)
-            .material as THREE.ShaderMaterial;
-          const hue = (elapsedTime * 0.2 + i * 0.1) % 1;
-          material.uniforms.color.value.setHSL(hue, 1, 0.6);
-        }
-
-        const side = i <= centerIndex ? 1 : -1;
-        const distanceFromCenter = Math.abs(i - centerIndex);
-
-        target.y =
-          Math.sin(elapsedTime * 4 + distanceFromCenter * 0.5) * 0.6 * side;
-        target.x =
-          -Math.PI / 3 +
-          Math.cos(elapsedTime * 4 + distanceFromCenter * 0.5) * 0.4;
-      });
-    } else if (beamMode === 1) {
-      // Strobe
-      beamGroup.children.forEach((beam, i) => {
-        const target = beamTargetRotations[i];
-
-        if (sceneConfig.beams.colorMode === 'multi') {
-          const material = (beam as THREE.Mesh)
-            .material as THREE.ShaderMaterial;
-          const hue = (Math.floor(elapsedTime * 2) * 0.3) % 1;
-          material.uniforms.color.value.setHSL(hue, 1, 0.6);
-        }
-        target.y = (Math.sin(elapsedTime * 2 + i) * Math.PI) / 4;
-        target.x = -Math.PI / 3 + Math.sin(elapsedTime * 5 + i) * 0.2;
-      });
-    } else if (beamMode === 2) {
-      // Center Cross
-      beamGroup.children.forEach((beam, i) => {
-        const target = beamTargetRotations[i];
-
-        if (sceneConfig.beams.colorMode === 'multi') {
-          const material = (beam as THREE.Mesh)
-            .material as THREE.ShaderMaterial;
-          const hue = (elapsedTime * 0.2) % 1;
-          material.uniforms.color.value.setHSL(hue, 1, 0.6);
-        }
-
-        const side = i <= centerIndex ? -1 : 1;
-        const normalizedFromCenter = (i - centerIndex) / centerIndex;
-
-        const crossFactor = (Math.sin(elapsedTime * 4) + 1) / 2; // 0 to 1 cycle
-
-        target.y =
-          side * (Math.PI / 6) * (1 - crossFactor) +
-          normalizedFromCenter * (Math.PI / 4) * crossFactor;
-        target.x = -Math.PI / 3 + crossFactor * 0.6;
-      });
-    } else if (beamMode === 3) {
-      // Outward Fan
-      beamGroup.children.forEach((beam, i) => {
-        const target = beamTargetRotations[i];
-
-        if (sceneConfig.beams.colorMode === 'multi') {
-          const material = (beam as THREE.Mesh)
-            .material as THREE.ShaderMaterial;
-          const hue = (elapsedTime * 0.3 + i * 0.05) % 1;
-          material.uniforms.color.value.setHSL(hue, 1, 0.6);
-        }
-
-        const normalizedFromCenter = (i - centerIndex) / centerIndex;
-        const fanFactor = (Math.sin(elapsedTime * 3) + 1) / 2; // 0 to 1
-
-        target.y = (fanFactor * normalizedFromCenter * Math.PI) / 3;
-        target.x = -Math.PI / 3 + fanFactor * 0.6;
-      });
-    } else if (beamMode === 4) {
-      // Crowd Sweep
-      beamGroup.children.forEach((beam, i) => {
-        const target = beamTargetRotations[i];
-
-        if (sceneConfig.beams.colorMode === 'multi') {
-          const material = (beam as THREE.Mesh)
-            .material as THREE.ShaderMaterial;
-          const hue = (elapsedTime * 0.2) % 1;
-          material.uniforms.color.value.setHSL(hue, 1, 0.6);
-        }
-
-        const sweepSpeed = 1.5;
-        const sweepRange = Math.PI / 3; // 60 degree sweep range
-        const baseAngle = -Math.PI / 2.5; // Start high
-
-        target.x =
-          baseAngle +
-          ((Math.sin(elapsedTime * sweepSpeed) + 1) / 2) * sweepRange;
-        const normalizedFromCenter = (i - centerIndex) / centerIndex;
-        target.y = normalizedFromCenter * (Math.PI / 8);
-      });
-    }
-
-    updateBeamRotations(beamTargetRotations);
-  }
 
   // Update other scene elements
   updateStageLights(sceneConfig.stageLights);
   updateWashLights(sceneConfig.stageWash);
-
-  shaderWall.visible = sceneConfig.shaderWall;
-  if (sceneConfig.shaderWall) {
-    shaderWall.material.uniforms.u_time.value = elapsedTime;
-  }
+  updateShaderWall(elapsedTime, sceneConfig.shaderWall);
 
   light1.position.x = Math.sin(elapsedTime * 0.7) * 20;
   light1.position.z = Math.cos(elapsedTime * 0.7) * 10 - 5;

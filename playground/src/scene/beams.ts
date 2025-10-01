@@ -72,11 +72,69 @@ export function createBeams(scene: THREE.Scene, config: BeamConfig) {
 
   scene.add(beamGroup);
 
+  // Store target rotations internally
+  const beamTargetRotations = beamGroup.children.map(() => new THREE.Euler());
+  const centerIndex = (numBeams - 1) / 2;
+
   const update = (time: number, currentConfig: BeamConfig) => {
     beamGroup.visible = currentConfig.enabled;
     if (!beamGroup.visible) return;
 
-    beamGroup.children.forEach((beam) => {
+    // Determine which mode to use
+    const beamMode =
+      currentConfig.mode === 'auto'
+        ? Math.floor(time / 8) % 5
+        : currentConfig.mode;
+
+    // Calculate target rotations based on mode
+    beamGroup.children.forEach((beam, i) => {
+      const target = beamTargetRotations[i];
+
+      if (beamMode === 0) {
+        // Mirrored Wave
+        const side = i <= centerIndex ? 1 : -1;
+        const distanceFromCenter = Math.abs(i - centerIndex);
+        target.y = Math.sin(time * 4 + distanceFromCenter * 0.5) * 0.6 * side;
+        target.x =
+          -Math.PI / 3 + Math.cos(time * 4 + distanceFromCenter * 0.5) * 0.4;
+      } else if (beamMode === 1) {
+        // Strobe
+        target.y = (Math.sin(time * 2 + i) * Math.PI) / 4;
+        target.x = -Math.PI / 3 + Math.sin(time * 5 + i) * 0.2;
+      } else if (beamMode === 2) {
+        // Center Cross
+        const side = i <= centerIndex ? -1 : 1;
+        const normalizedFromCenter = (i - centerIndex) / centerIndex;
+        const crossFactor = (Math.sin(time * 4) + 1) / 2;
+        target.y =
+          side * (Math.PI / 6) * (1 - crossFactor) +
+          normalizedFromCenter * (Math.PI / 4) * crossFactor;
+        target.x = -Math.PI / 3 + crossFactor * 0.6;
+      } else if (beamMode === 3) {
+        // Outward Fan
+        const normalizedFromCenter = (i - centerIndex) / centerIndex;
+        const fanFactor = (Math.sin(time * 3) + 1) / 2;
+        target.y = (fanFactor * normalizedFromCenter * Math.PI) / 3;
+        target.x = -Math.PI / 3 + fanFactor * 0.6;
+      } else if (beamMode === 4) {
+        // Crowd Sweep
+        const sweepSpeed = 1.5;
+        const sweepRange = Math.PI / 3;
+        const baseAngle = -Math.PI / 2.5;
+        target.x =
+          baseAngle + ((Math.sin(time * sweepSpeed) + 1) / 2) * sweepRange;
+        const normalizedFromCenter = (i - centerIndex) / centerIndex;
+        target.y = normalizedFromCenter * (Math.PI / 8);
+      }
+
+      // Smoothly interpolate to target rotation
+      beam.rotation.x += (target.x - beam.rotation.x) * 0.1;
+      beam.rotation.y += (target.y - beam.rotation.y) * 0.1;
+      beam.rotation.z += (target.z - beam.rotation.z) * 0.1;
+    });
+
+    // Update materials
+    beamGroup.children.forEach((beam, i) => {
       if (
         beam instanceof THREE.Mesh &&
         beam.material instanceof THREE.ShaderMaterial
@@ -87,32 +145,23 @@ export function createBeams(scene: THREE.Scene, config: BeamConfig) {
         // Update color based on mode
         if (currentConfig.colorMode === 'single') {
           beam.material.uniforms.color.value.set(currentConfig.singleColor);
+        } else {
+          // Multi-color mode - different colors per mode
+          let hue = 0;
+          if (beamMode === 0) {
+            hue = (time * 0.2 + i * 0.1) % 1;
+          } else if (beamMode === 1) {
+            hue = (Math.floor(time * 2) * 0.3) % 1;
+          } else if (beamMode === 2 || beamMode === 4) {
+            hue = (time * 0.2) % 1;
+          } else if (beamMode === 3) {
+            hue = (time * 0.3 + i * 0.05) % 1;
+          }
+          beam.material.uniforms.color.value.setHSL(hue, 1, 0.6);
         }
-        // Multi-color mode is handled by the animation loop in main.ts
       }
     });
   };
 
-  // Function to update beam rotations (called from main animation loop)
-  const updateRotations = (targetRotations: THREE.Euler[]) => {
-    beamGroup.children.forEach((beam, i) => {
-      const targetRotation = targetRotations[i];
-      beam.rotation.x += (targetRotation.x - beam.rotation.x) * 0.1;
-      beam.rotation.y += (targetRotation.y - beam.rotation.y) * 0.1;
-      beam.rotation.z += (targetRotation.z - beam.rotation.z) * 0.1;
-    });
-  };
-
-  // Function to set beam colors (for multi-color mode)
-  const setBeamColor = (index: number, color: THREE.Color) => {
-    const beam = beamGroup.children[index];
-    if (
-      beam instanceof THREE.Mesh &&
-      beam.material instanceof THREE.ShaderMaterial
-    ) {
-      beam.material.uniforms.color.value.copy(color);
-    }
-  };
-
-  return { beamGroup, update, updateRotations, setBeamColor };
+  return { beamGroup, update };
 }

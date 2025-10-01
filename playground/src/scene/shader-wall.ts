@@ -211,6 +211,16 @@ export function createShaderWall(
   rightSidePanel.rotation.y = -Math.PI / 6; // Angle them inwards slightly
   scene.add(rightSidePanel);
 
+  const update = (time: number, enabled: boolean) => {
+    shaderWall.visible = enabled;
+    leftSidePanel.visible = enabled;
+    rightSidePanel.visible = enabled;
+
+    if (enabled) {
+      shaderWallMaterial.uniforms.u_time.value = time;
+    }
+  };
+
   return {
     shaderWall,
     leftSidePanel,
@@ -218,5 +228,6 @@ export function createShaderWall(
     panelSize,
     panelSpacing,
     gridWidth,
+    update,
   };
 }
