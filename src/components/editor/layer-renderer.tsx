@@ -235,7 +235,9 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
         });
 
         // Update post-processing parameters if bloom is enabled
-        const layerConfig = layer.config.getValues(data);
+        // Note: configValues is already computed above (line 296) with the correct animInputData,
+        // so we can reuse it here instead of recomputing
+        const layerConfig = data.config;
         if (bloomPassRef.current && layerConfig.postProcessing?.bloom) {
           bloomPassRef.current.enabled = layerConfig.postProcessing.bloom;
           bloomPassRef.current.strength =

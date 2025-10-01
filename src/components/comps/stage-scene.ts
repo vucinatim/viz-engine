@@ -4,6 +4,7 @@ import { v } from '../config/config';
 import { createComponent } from '../config/create-component';
 
 // Import scene creation functions from playground
+import { ShaderWallConfig } from '../../../playground/src/scene-config';
 import { createBeams } from '../../../playground/src/scene/beams';
 import { createBlinders } from '../../../playground/src/scene/blinders';
 import { createCrowd } from '../../../playground/src/scene/crowd';
@@ -85,7 +86,7 @@ type StageSceneState = {
   updateBeams: ((time: number, config: any) => void) | null;
   updateStrobes: ((config: any) => void) | null;
   updateBlinders: ((config: any) => void) | null;
-  updateShaderWall: ((time: number, enabled: boolean) => void) | null;
+  updateShaderWall: ((time: number, config: ShaderWallConfig) => void) | null;
   updateShaderWallResolution: ((width: number, height: number) => void) | null;
   updateDj: ((delta: number) => void) | null;
   updateCrowd: ((delta: number) => void) | null;
@@ -176,7 +177,7 @@ const StageScene = createComponent({
           label: 'Cinematic Mode',
           description:
             'Enable automated camera animation along a predefined path',
-          defaultValue: false,
+          defaultValue: true,
         }),
         cinematicPath: v.select({
           label: 'Cinematic Path',
@@ -208,11 +209,59 @@ const StageScene = createComponent({
         }),
       },
     ),
-    shaderWall: v.toggle({
-      label: 'Shader Wall',
-      description: 'Enable shader wall visualizer',
-      defaultValue: true,
-    }),
+    shaderWall: v.group(
+      {
+        label: 'Shader Wall',
+        description: 'Fractal visualizer wall',
+      },
+      {
+        enabled: v.toggle({
+          label: 'Enabled',
+          description: 'Enable shader wall',
+          defaultValue: true,
+        }),
+        scale: v.number({
+          label: 'Scale',
+          description: 'Fractal zoom/size (great for bass pulsing)',
+          defaultValue: 2.0,
+          min: 0.5,
+          max: 4.0,
+          step: 0.1,
+        }),
+        rotationSpeed: v.number({
+          label: 'Rotation Speed',
+          description: 'How fast it spins (great for hi-hats)',
+          defaultValue: 1.0,
+          min: 0,
+          max: 3,
+          step: 0.1,
+        }),
+        colorSpeed: v.number({
+          label: 'Color Speed',
+          description: 'How fast colors cycle',
+          defaultValue: 1.0,
+          min: 0,
+          max: 3,
+          step: 0.1,
+        }),
+        travelSpeed: v.number({
+          label: 'Travel Speed',
+          description: 'Tunnel movement speed',
+          defaultValue: 1.0,
+          min: 0,
+          max: 3,
+          step: 0.1,
+        }),
+        brightness: v.number({
+          label: 'Brightness',
+          description: 'Overall intensity (great for kick flashes)',
+          defaultValue: 2.0,
+          min: 0,
+          max: 5,
+          step: 0.1,
+        }),
+      },
+    ),
     lighting: v.group(
       {
         label: 'Lighting',
@@ -222,7 +271,7 @@ const StageScene = createComponent({
         hemisphereIntensity: v.number({
           label: 'Hemisphere Light',
           description: 'Hemisphere light intensity',
-          defaultValue: 1.0,
+          defaultValue: 2,
           min: 0,
           max: 5,
           step: 0.1,
@@ -230,7 +279,7 @@ const StageScene = createComponent({
         ambientIntensity: v.number({
           label: 'Ambient Light',
           description: 'Ambient light intensity',
-          defaultValue: 0.2,
+          defaultValue: 1,
           min: 0,
           max: 5,
           step: 0.1,
@@ -289,7 +338,7 @@ const StageScene = createComponent({
           label: 'Mode',
           description: 'Laser pattern mode',
           defaultValue: 'auto',
-          options: ['auto', '0', '1', '2'],
+          options: ['auto', '0', '1', '2', '3', '4'],
         }),
         colorMode: v.select({
           label: 'Color Mode',
@@ -310,6 +359,14 @@ const StageScene = createComponent({
           max: 3,
           step: 0.1,
         }),
+        maxConcurrentLasers: v.number({
+          label: 'Max Active Lasers',
+          description: 'Maximum number of lasers active at once',
+          defaultValue: 12,
+          min: 1,
+          max: 12,
+          step: 1,
+        }),
       },
     ),
     movingLights: v.group(
@@ -322,6 +379,12 @@ const StageScene = createComponent({
           label: 'Enabled',
           description: 'Enable moving lights',
           defaultValue: true,
+        }),
+        mode: v.select({
+          label: 'Mode',
+          description: 'Movement pattern mode',
+          defaultValue: 'auto',
+          options: ['auto', '0', '1', '2', '3', '4'],
         }),
         colorMode: v.select({
           label: 'Color Mode',
@@ -442,11 +505,19 @@ const StageScene = createComponent({
         }),
         intensity: v.number({
           label: 'Intensity',
-          description: 'Strobe intensity',
+          description: 'Strobe intensity (brightness)',
           defaultValue: 500,
           min: 0,
           max: 1000,
           step: 10,
+        }),
+        flashRate: v.number({
+          label: 'Flash Rate',
+          description: 'How often strobes flash (0 = never, 1 = constant)',
+          defaultValue: 0.3,
+          min: 0,
+          max: 1,
+          step: 0.01,
         }),
       },
     ),
@@ -460,6 +531,20 @@ const StageScene = createComponent({
           label: 'Enabled',
           description: 'Enable blinders',
           defaultValue: true,
+        }),
+        mode: v.select({
+          label: 'Mode',
+          description: 'Random flicker or controlled by intensity',
+          defaultValue: 'controlled',
+          options: ['controlled', 'random'],
+        }),
+        intensity: v.number({
+          label: 'Intensity',
+          description: 'Blinder intensity (0-1), triggers above 0.3',
+          defaultValue: 0,
+          min: 0,
+          max: 1,
+          step: 0.01,
         }),
       },
     ),
@@ -573,6 +658,17 @@ const StageScene = createComponent({
     prevCinematicPathName: null,
     elapsedTime: 0,
   }),
+  defaultNetworks: {
+    'blinders.intensity': 'hihat-adaptive',
+    'beams.mode': 'beam-mode-melody-cycle',
+    'beams.intensity': 'kick-bass-smooth-intensity',
+    'strobes.flashRate': 'strobe-buildup-detector',
+    'lasers.enabled': 'laser-high-energy-gate',
+    'lasers.mode': 'laser-mode-section-cycle',
+    'movingLights.mode': 'moving-lights-kick-cycle',
+    'shaderWall.scale': 'shader-wall-bass-pulse',
+    'shaderWall.brightness': 'shader-wall-kick-flash',
+  },
   init3D: ({ threeCtx: { scene, camera, renderer }, state, config }) => {
     // Initialize renderer size tracking
     state.lastRendererWidth = renderer.domElement.width;
@@ -671,6 +767,10 @@ const StageScene = createComponent({
 
     const { update: updateMovingLights } = createMovingLights(scene, {
       enabled: config.movingLights.enabled,
+      mode:
+        config.movingLights.mode === 'auto'
+          ? 'auto'
+          : (parseInt(config.movingLights.mode, 10) as 0 | 1 | 2 | 3 | 4),
       colorMode: config.movingLights.colorMode as 'single' | 'multi',
       singleColor: config.movingLights.singleColor,
       intensity: config.movingLights.intensity,
@@ -683,10 +783,11 @@ const StageScene = createComponent({
       mode:
         config.lasers.mode === 'auto'
           ? 'auto'
-          : (parseInt(config.lasers.mode, 10) as 0 | 1 | 2),
+          : (parseInt(config.lasers.mode, 10) as 0 | 1 | 2 | 3 | 4),
       colorMode: config.lasers.colorMode as 'single' | 'multi',
       singleColor: config.lasers.singleColor,
       rotationSpeed: config.lasers.rotationSpeed,
+      maxConcurrentLasers: config.lasers.maxConcurrentLasers,
     });
     state.updateLasers = updateLasers;
 
@@ -706,11 +807,14 @@ const StageScene = createComponent({
     const { update: updateStrobes } = createStrobes(scene, {
       enabled: config.strobes.enabled,
       intensity: config.strobes.intensity,
+      flashRate: config.strobes.flashRate,
     });
     state.updateStrobes = updateStrobes;
 
     const { update: updateBlinders } = createBlinders(scene, {
       enabled: config.blinders.enabled,
+      intensity: config.blinders.intensity,
+      mode: config.blinders.mode as 'random' | 'controlled',
     });
     state.updateBlinders = updateBlinders;
 
@@ -1022,16 +1126,21 @@ const StageScene = createComponent({
         mode:
           config.lasers.mode === 'auto'
             ? 'auto'
-            : (parseInt(config.lasers.mode, 10) as 0 | 1 | 2),
+            : (parseInt(config.lasers.mode, 10) as 0 | 1 | 2 | 3 | 4),
         colorMode: config.lasers.colorMode as 'single' | 'multi',
         singleColor: config.lasers.singleColor,
         rotationSpeed: config.lasers.rotationSpeed,
+        maxConcurrentLasers: config.lasers.maxConcurrentLasers,
       });
     }
 
     if (state.updateMovingLights) {
       state.updateMovingLights(elapsedTime, {
         enabled: config.movingLights.enabled,
+        mode:
+          config.movingLights.mode === 'auto'
+            ? 'auto'
+            : (parseInt(config.movingLights.mode, 10) as 0 | 1 | 2 | 3 | 4),
         colorMode: config.movingLights.colorMode as 'single' | 'multi',
         singleColor: config.movingLights.singleColor,
         intensity: config.movingLights.intensity,
@@ -1043,12 +1152,15 @@ const StageScene = createComponent({
       state.updateStrobes({
         enabled: config.strobes.enabled,
         intensity: config.strobes.intensity,
+        flashRate: config.strobes.flashRate,
       });
     }
 
     if (state.updateBlinders) {
       state.updateBlinders({
         enabled: config.blinders.enabled,
+        intensity: config.blinders.intensity,
+        mode: config.blinders.mode as 'random' | 'controlled',
       });
     }
 

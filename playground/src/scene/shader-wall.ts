@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { ShaderWallConfig } from '../scene-config';
 
 export function createShaderWall(
   scene: THREE.Scene,
@@ -14,6 +15,11 @@ export function createShaderWall(
   const shaderUniforms = {
     u_time: { value: 0.0 },
     u_resolution: { value: resolution },
+    u_scale: { value: 2.0 },
+    u_rotationSpeed: { value: 1.0 },
+    u_colorSpeed: { value: 1.0 },
+    u_travelSpeed: { value: 1.0 },
+    u_brightness: { value: 2.0 },
   };
 
   const vertexShader = `
@@ -30,6 +36,11 @@ export function createShaderWall(
   const fragmentShader = `
       uniform float u_time;
       uniform vec2 u_resolution;
+      uniform float u_scale;
+      uniform float u_rotationSpeed;
+      uniform float u_colorSpeed;
+      uniform float u_travelSpeed;
+      uniform float u_brightness;
       varying vec2 vUv;
       varying vec3 vWorldPosition; // ADD THIS LINE
 
@@ -71,7 +82,7 @@ export function createShaderWall(
           vec3 original_p = p;
 
           // Animate the parameters over time to make the fractal evolve
-          float scale = 2.0 + 0.2 * sin(u_time * 0.2);
+          float scale = u_scale + 0.2 * sin(u_time * 0.2);
           float minRadius = 0.5 + 0.1 * cos(u_time * 0.15);
           float fixedRadius = 1.0;
 
@@ -100,7 +111,7 @@ export function createShaderWall(
           p.z = mod(p.z + repetitionLength * 0.5, repetitionLength) - repetitionLength * 0.5;
 
           // Rotate the entire fractal over time
-          p = rotateY(u_time * 0.1) * p;
+          p = rotateY(u_time * 0.1 * u_rotationSpeed) * p;
           return sdfMandelbox(p);
       }
 
@@ -139,11 +150,11 @@ export function createShaderWall(
           // uv.x *= u_resolution.x / u_resolution.y; // Aspect ratio correction no longer needed this way
           
           // Animate Ray Origin to fly forward continuously. The space itself now repeats.
-          vec3 ro = vec3(0.0, 0.0, 2.5 - u_time * 0.5); 
+          vec3 ro = vec3(0.0, 0.0, 2.5 - u_time * 0.5 * u_travelSpeed); 
           
           // Animate Ray Direction to rotate
           vec3 rd = normalize(vec3(uv, -1.5));
-          rd = rotateZ(u_time * 0.1) * rd;
+          rd = rotateZ(u_time * 0.1 * u_rotationSpeed) * rd;
 
 
           float dist = rayMarch(ro, rd);
@@ -159,10 +170,10 @@ export function createShaderWall(
               float light = dot(normalize(vec3(1.0, 1.0, 1.0)), normal) * 0.5 + 0.5;
               
               // Get color from the palette based on position and time
-              vec3 surfaceColor = palette(p.y * 0.1 + u_time * 0.1);
+              vec3 surfaceColor = palette(p.y * 0.1 + u_time * 0.1 * u_colorSpeed);
               
               // Combine lighting and color, and make it glow for the bloom pass
-              color = surfaceColor * light * 2.0;
+              color = surfaceColor * light * u_brightness;
           }
 
           gl_FragColor = vec4(color, 1.0);
@@ -215,13 +226,18 @@ export function createShaderWall(
   rightSidePanel.rotation.y = -Math.PI / 6; // Angle them inwards slightly
   scene.add(rightSidePanel);
 
-  const update = (time: number, enabled: boolean) => {
-    shaderWall.visible = enabled;
-    leftSidePanel.visible = enabled;
-    rightSidePanel.visible = enabled;
+  const update = (time: number, config: ShaderWallConfig) => {
+    shaderWall.visible = config.enabled;
+    leftSidePanel.visible = config.enabled;
+    rightSidePanel.visible = config.enabled;
 
-    if (enabled) {
+    if (config.enabled) {
       shaderWallMaterial.uniforms.u_time.value = time;
+      shaderWallMaterial.uniforms.u_scale.value = config.scale;
+      shaderWallMaterial.uniforms.u_rotationSpeed.value = config.rotationSpeed;
+      shaderWallMaterial.uniforms.u_colorSpeed.value = config.colorSpeed;
+      shaderWallMaterial.uniforms.u_travelSpeed.value = config.travelSpeed;
+      shaderWallMaterial.uniforms.u_brightness.value = config.brightness;
     }
   };
 

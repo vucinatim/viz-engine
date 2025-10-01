@@ -2,10 +2,11 @@ export type ColorMode = 'single' | 'multi';
 
 export interface LaserConfig {
   enabled: boolean;
-  mode: 'auto' | 0 | 1 | 2;
+  mode: 'auto' | 0 | 1 | 2 | 3 | 4;
   colorMode: ColorMode;
   singleColor: string;
   rotationSpeed: number;
+  maxConcurrentLasers: number;
 }
 
 export interface BeamConfig {
@@ -18,6 +19,7 @@ export interface BeamConfig {
 
 export interface MovingLightConfig {
   enabled: boolean;
+  mode: 'auto' | 0 | 1 | 2 | 3 | 4;
   colorMode: ColorMode;
   singleColor: string;
   intensity: number;
@@ -37,10 +39,13 @@ export interface WashLightConfig {
 export interface StrobeConfig {
   enabled: boolean;
   intensity: number;
+  flashRate: number;
 }
 
 export interface BlinderConfig {
   enabled: boolean;
+  intensity: number; // 0-1 value for blink intensity
+  mode: 'random' | 'controlled'; // random flicker or controlled by intensity
 }
 
 export interface CrowdConfig {
@@ -58,6 +63,15 @@ export interface CameraConfig {
   cinematicMode: boolean;
 }
 
+export interface ShaderWallConfig {
+  enabled: boolean;
+  scale: number;
+  rotationSpeed: number;
+  colorSpeed: number;
+  travelSpeed: number;
+  brightness: number;
+}
+
 export interface SceneConfig {
   // Scene elements
   lasers: LaserConfig;
@@ -68,7 +82,7 @@ export interface SceneConfig {
   strobes: StrobeConfig;
   blinders: BlinderConfig;
   crowd: CrowdConfig;
-  shaderWall: boolean;
+  shaderWall: ShaderWallConfig;
 
   // Post processing
   postProcessing: PostProcessingConfig;
@@ -92,6 +106,7 @@ export function createDefaultSceneConfig(): SceneConfig {
       colorMode: 'multi',
       singleColor: '#ff0000',
       rotationSpeed: 1.0,
+      maxConcurrentLasers: 12,
     },
     beams: {
       enabled: true,
@@ -102,6 +117,7 @@ export function createDefaultSceneConfig(): SceneConfig {
     },
     movingLights: {
       enabled: true,
+      mode: 'auto',
       colorMode: 'multi',
       singleColor: '#ffffff',
       intensity: 5.0,
@@ -118,14 +134,24 @@ export function createDefaultSceneConfig(): SceneConfig {
     strobes: {
       enabled: true,
       intensity: 500,
+      flashRate: 0.3,
     },
     blinders: {
       enabled: true,
+      intensity: 0,
+      mode: 'controlled',
     },
     crowd: {
       count: 500,
     },
-    shaderWall: true,
+    shaderWall: {
+      enabled: true,
+      scale: 2.0,
+      rotationSpeed: 1.0,
+      colorSpeed: 1.0,
+      travelSpeed: 1.0,
+      brightness: 2.0,
+    },
     postProcessing: {
       bloom: true,
       bloomStrength: 0.5,

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { NodeNetworkPreset } from '../node-network/presets';
-import { InferValues, v, VConfig } from './config';
+import { InferValues, VConfig, v } from './config';
 
 export type UnknownConfig = VConfig<Record<string, any>>;
 
@@ -69,7 +69,7 @@ export function createComponent<TConfig extends VConfig<any>, UT>(definition: {
   description: string;
   config: TConfig; // VConfig with options
   presets?: Preset<InferValues<TConfig>>[]; // Optional array of presets
-  defaultNetworks?: Record<string, NodeNetworkPreset>; // Optional default node networks per parameter path
+  defaultNetworks?: Record<string, NodeNetworkPreset | string>; // Optional default node networks per parameter path (preset object or preset ID)
   createState?: () => UT; // Optional state factory
   draw?: DrawFunction<InferValues<TConfig>, UT>; // Draw function using inferred config values
   init3D?: Init3DFunction<InferValues<TConfig>, UT>; // Optional init3D function

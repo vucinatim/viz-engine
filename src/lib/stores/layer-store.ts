@@ -8,7 +8,10 @@ import {
 } from '@/components/editor/layer-settings';
 import { autoLayoutNodes } from '@/components/node-network/auto-layout';
 import useNodeNetworkStore from '@/components/node-network/node-network-store';
-import { instantiatePreset } from '@/components/node-network/presets';
+import {
+  getPresetById,
+  instantiatePreset,
+} from '@/components/node-network/presets';
 import { arrayMove } from '@dnd-kit/sortable';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -130,13 +133,30 @@ const useLayerStore = create<LayerStore>()(
 
         // Initialize default node networks, if defined on the component
         if (comp.defaultNetworks) {
-          for (const [path, preset] of Object.entries(comp.defaultNetworks)) {
+          for (const [path, presetOrId] of Object.entries(
+            comp.defaultNetworks,
+          )) {
             const option = resolveOptionByPath(path);
             if (!option) continue;
             const parameterId = option.id;
             const outputType = safeVTypeToNodeHandleType(option.type);
+
+            // Resolve preset: if string, look it up; otherwise use the object directly
+            const preset =
+              typeof presetOrId === 'string'
+                ? getPresetById(presetOrId)
+                : presetOrId;
+
+            if (!preset) {
+              console.warn(
+                `Preset not found for parameter "${path}":`,
+                presetOrId,
+              );
+              continue;
+            }
+
             let { nodes, edges } = instantiatePreset(
-              preset as any,
+              preset,
               parameterId,
               outputType,
             );

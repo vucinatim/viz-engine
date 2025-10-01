@@ -11,10 +11,38 @@ export function createLasers(scene: THREE.Scene, config: LaserConfig) {
   const numLasers = 12;
   const laserTrussWidth = 90;
 
-  // --- Material for the standard BEAM lasers ---
-  const laserBeamMaterial = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(config.singleColor),
+  // --- Material for the standard BEAM lasers (with fade toward tip) ---
+  const laserBeamMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      color: { value: new THREE.Color(config.singleColor) },
+    },
+    vertexShader: `
+      varying vec3 vPosition;
+      void main() {
+        vPosition = position;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vPosition;
+      uniform vec3 color;
+      void main() {
+        // Fade out toward the tip (y goes from 0 at base to 300 at tip)
+        // Normalize to 0-1 range
+        float fade = 1.0 - (vPosition.y / 300.0);
+        // Apply aggressive power curve for faster fade
+        fade = pow(fade, 4.5);
+        
+        // Bright core with glow
+        vec3 finalColor = color * (1.0 + fade * 2.0);
+        float finalOpacity = fade;
+        
+        gl_FragColor = vec4(finalColor, finalOpacity);
+      }
+    `,
     blending: THREE.AdditiveBlending,
+    transparent: true,
+    depthWrite: false,
   });
 
   // --- Material for the SHEET lasers (with custom shader for fading) ---
@@ -90,10 +118,11 @@ export function createLasers(scene: THREE.Scene, config: LaserConfig) {
 
   for (let i = 0; i < numLasers; i++) {
     // Give each beam its own material so we can color it individually
-    const laser = new THREE.Mesh(
-      laserBeamGeometry,
-      (laserBeamMaterial as THREE.MeshBasicMaterial).clone(),
+    const beamMaterialInstance = laserBeamMaterial.clone();
+    beamMaterialInstance.uniforms.color.value = new THREE.Color(
+      config.singleColor,
     );
+    const laser = new THREE.Mesh(laserBeamGeometry, beamMaterialInstance);
     const xPos = (i / (numLasers - 1) - 0.5) * laserTrussWidth;
     laser.position.set(xPos, 36, -18);
     laser.rotation.x = Math.PI / 2;
@@ -182,54 +211,81 @@ export function createLasers(scene: THREE.Scene, config: LaserConfig) {
     // Determine current mode
     let currentMode =
       currentConfig.mode === 'auto'
-        ? Math.floor(elapsedTime / 8.0) % 3
+        ? Math.floor(elapsedTime / 8.0) % 5
         : currentConfig.mode;
 
-    laserBeamGroup.visible = currentMode === 0 || currentMode === 1;
-    laserSheetGroup.visible = currentMode === 2;
+    // Mode visibility:
+    // 0: Wave (beams only)
+    // 1: Wobble (beams only)
+    // 2: Sheet (sheets only)
+    // 3: Hybrid Flash (both - beams flash, sheets rotate)
+    // 4: Hybrid Sweep (both - beams sweep, sheets rotate)
+    laserBeamGroup.visible =
+      currentMode === 0 ||
+      currentMode === 1 ||
+      currentMode === 3 ||
+      currentMode === 4;
+    laserSheetGroup.visible =
+      currentMode === 2 || currentMode === 3 || currentMode === 4;
 
     const timeScale = currentConfig.rotationSpeed;
+    const maxLasers = Math.min(
+      numLasers,
+      Math.max(1, currentConfig.maxConcurrentLasers || numLasers),
+    );
 
     if (currentMode === 0) {
       // Wave mode
       laserBeamGroup.children.forEach((laser, i) => {
-        const time = elapsedTime * 2 * timeScale;
-        laser.rotation.z = (Math.sin(time + i * 0.8) * Math.PI) / 6;
-        laser.rotation.y =
-          (Math.cos(elapsedTime * 0.2 * timeScale) * Math.PI) / 12;
+        laser.visible = i < maxLasers;
 
-        const material = (laser as THREE.Mesh)
-          .material as THREE.MeshBasicMaterial;
-        if (currentConfig.colorMode === 'single') {
-          material.color.set(currentConfig.singleColor);
-        } else {
-          material.color.setHSL((elapsedTime * 0.1 + i * 0.05) % 1, 1, 0.5);
+        if (i < maxLasers) {
+          const time = elapsedTime * 2 * timeScale;
+          laser.rotation.z = (Math.sin(time + i * 0.8) * Math.PI) / 6;
+          laser.rotation.y =
+            (Math.cos(elapsedTime * 0.2 * timeScale) * Math.PI) / 12;
+
+          const material = (laser as THREE.Mesh)
+            .material as THREE.ShaderMaterial;
+          if (currentConfig.colorMode === 'single') {
+            material.uniforms.color.value.set(currentConfig.singleColor);
+          } else {
+            material.uniforms.color.value.setHSL(
+              (elapsedTime * 0.1 + i * 0.05) % 1,
+              1,
+              0.5,
+            );
+          }
         }
       });
     } else if (currentMode === 1) {
       // Wobble mode
       laserBeamGroup.children.forEach((laser, i) => {
-        const time = elapsedTime * 40 * timeScale;
-        laser.rotation.y = (Math.sin(time + i * 0.2) * Math.PI) / 4;
-        laser.rotation.z = Math.PI / 16;
+        laser.visible = i < maxLasers;
 
-        const material = (laser as THREE.Mesh)
-          .material as THREE.MeshBasicMaterial;
-        if (currentConfig.colorMode === 'single') {
-          material.color.set(currentConfig.singleColor);
-        } else {
-          material.color.setHSL(
-            (Math.floor(elapsedTime * 2) * 0.3) % 1,
-            1,
-            0.5,
-          );
+        if (i < maxLasers) {
+          const time = elapsedTime * 40 * timeScale;
+          laser.rotation.y = (Math.sin(time + i * 0.2) * Math.PI) / 4;
+          laser.rotation.z = Math.PI / 16;
+
+          const material = (laser as THREE.Mesh)
+            .material as THREE.ShaderMaterial;
+          if (currentConfig.colorMode === 'single') {
+            material.uniforms.color.value.set(currentConfig.singleColor);
+          } else {
+            material.uniforms.color.value.setHSL(
+              (Math.floor(elapsedTime * 2) * 0.3) % 1,
+              1,
+              0.5,
+            );
+          }
         }
       });
-    } else {
+    } else if (currentMode === 2) {
       // Sheet mode
-      const activeSheetIndex1 = Math.floor(elapsedTime * 2) % numLasers;
+      const activeSheetIndex1 = Math.floor(elapsedTime * 2) % maxLasers;
       const activeSheetIndex2 =
-        numLasers - 1 - (Math.floor(elapsedTime * 2) % numLasers);
+        maxLasers - 1 - (Math.floor(elapsedTime * 2) % maxLasers);
 
       laserSheetGroup.children.forEach((laserSheet, i) => {
         const isMovingLaser =
@@ -240,9 +296,9 @@ export function createLasers(scene: THREE.Scene, config: LaserConfig) {
 
         let isActive = false;
         if (isMovingLaser) {
-          isActive = isActiveMoving;
+          isActive = isActiveMoving && i < maxLasers;
         } else {
-          isActive = true; // Static lasers are always "active"
+          isActive = i < maxLasers; // Static lasers shown if within limit
         }
 
         laserSheet.visible = isActive;
@@ -296,6 +352,179 @@ export function createLasers(scene: THREE.Scene, config: LaserConfig) {
               ? (Math.floor(elapsedTime) * 0.1) % 1
               : (Math.floor(elapsedTime) * 0.1 + 0.5) % 1;
             material.uniforms.color.value.setHSL(colorHue, 0.9, 0.5);
+          }
+        }
+      });
+    } else if (currentMode === 3) {
+      // Hybrid Flash Mode: Flashing line lasers + smooth rotating sheets
+
+      // Sheet lasers - show static lasers within limit
+      let sheetCount = 0;
+      const maxSheets = Math.min(2, maxLasers); // Max 2 static sheets, or less if maxLasers is lower
+
+      laserSheetGroup.children.forEach((laserSheet, i) => {
+        const isStatic =
+          laserSheet.name === 'staticLaser1' ||
+          laserSheet.name === 'staticLaser2';
+
+        const shouldShow = isStatic && sheetCount < maxSheets;
+        if (shouldShow && isStatic) sheetCount++;
+
+        laserSheet.visible = shouldShow;
+
+        if (shouldShow) {
+          const material = (laserSheet as THREE.Mesh)
+            .material as THREE.ShaderMaterial;
+
+          // Smooth rotation animation
+          const time = elapsedTime * 0.3 * timeScale;
+          const randomSeed = i * 1.23;
+          laserSheet.rotation.z = (Math.sin(time + randomSeed) * Math.PI) / 10;
+          laserSheet.rotation.y =
+            (Math.cos(time * 0.8 + randomSeed) * Math.PI) / 20;
+
+          // Gentle spread animation
+          const spreadCycle = (Math.sin(elapsedTime * 0.8 * timeScale) + 1) / 2;
+          const minSpread = 0.7;
+          const maxSpread = 2.5;
+          material.uniforms.spread.value =
+            minSpread + spreadCycle * (maxSpread - minSpread);
+
+          // Set color
+          if (currentConfig.colorMode === 'single') {
+            material.uniforms.color.value.set(currentConfig.singleColor);
+          } else {
+            const colorHue = (elapsedTime * 0.05 + i * 0.1) % 1;
+            material.uniforms.color.value.setHSL(colorHue, 0.9, 0.5);
+          }
+        }
+      });
+
+      // Line lasers - fast flashing, mirrored left/right
+      const maxBeams = Math.max(0, maxLasers - maxSheets); // Remaining capacity after sheets
+      const beamsToShow = Math.min(2, maxBeams); // Show up to 2 beams if capacity allows
+      const flashSpeed = 8; // Flashes per second
+      const availableBeams = Math.min(numLasers, Math.ceil(maxBeams / 2)); // Half of available slots
+      const flashIndex =
+        availableBeams > 0
+          ? Math.floor(elapsedTime * flashSpeed * timeScale) % availableBeams
+          : 0;
+      const leftLaserIndex = flashIndex;
+      const rightLaserIndex = numLasers - 1 - flashIndex;
+
+      laserBeamGroup.children.forEach((laser, i) => {
+        const isActive =
+          beamsToShow > 0 &&
+          ((beamsToShow >= 1 && i === leftLaserIndex) ||
+            (beamsToShow >= 2 && i === rightLaserIndex));
+        laser.visible = isActive;
+
+        if (isActive) {
+          // Alternate directions for left and right
+          const isLeft = i === leftLaserIndex;
+          const direction = isLeft ? 1 : -1;
+
+          laser.rotation.z = (direction * Math.PI) / 8;
+          laser.rotation.y = (direction * Math.PI) / 16;
+
+          const material = (laser as THREE.Mesh)
+            .material as THREE.ShaderMaterial;
+          if (currentConfig.colorMode === 'single') {
+            material.uniforms.color.value.set(currentConfig.singleColor);
+          } else {
+            material.uniforms.color.value.setHSL(
+              (elapsedTime * 0.2) % 1,
+              1,
+              0.5,
+            );
+          }
+        }
+      });
+    } else if (currentMode === 4) {
+      // Hybrid Sweep Mode: Sweeping line lasers + rotating sheets
+
+      // Sheet lasers - show static lasers within limit
+      let sheetCount4 = 0;
+      const maxSheets4 = Math.min(2, maxLasers); // Max 2 static sheets, or less if maxLasers is lower
+
+      laserSheetGroup.children.forEach((laserSheet, i) => {
+        const isStatic =
+          laserSheet.name === 'staticLaser1' ||
+          laserSheet.name === 'staticLaser2';
+
+        const shouldShow = isStatic && sheetCount4 < maxSheets4;
+        if (shouldShow && isStatic) sheetCount4++;
+
+        laserSheet.visible = shouldShow;
+
+        if (shouldShow) {
+          const material = (laserSheet as THREE.Mesh)
+            .material as THREE.ShaderMaterial;
+
+          // Continuous rotation
+          const time = elapsedTime * 0.4 * timeScale;
+          const randomSeed = i * 1.23;
+          laserSheet.rotation.z = (Math.sin(time + randomSeed) * Math.PI) / 8;
+          laserSheet.rotation.y =
+            (Math.cos(time * 0.6 + randomSeed) * Math.PI) / 18;
+
+          // Dynamic spread
+          const spreadCycle =
+            (Math.sin(elapsedTime * 1.0 * timeScale + i) + 1) / 2;
+          const minSpread = 0.8;
+          const maxSpread = 3.0;
+          material.uniforms.spread.value =
+            minSpread + spreadCycle * (maxSpread - minSpread);
+
+          // Set color
+          if (currentConfig.colorMode === 'single') {
+            material.uniforms.color.value.set(currentConfig.singleColor);
+          } else {
+            const colorHue = (elapsedTime * 0.08 + i * 0.15) % 1;
+            material.uniforms.color.value.setHSL(colorHue, 0.9, 0.5);
+          }
+        }
+      });
+
+      // Line lasers - sweeping pattern, mirrored
+      const maxBeams4 = Math.max(0, maxLasers - maxSheets4); // Remaining capacity after sheets
+      const beamsToShow4 = Math.min(2, maxBeams4); // Show up to 2 beams if capacity allows
+      const sweepSpeed = 2; // Sweeps per second
+      const availableBeams4 = Math.min(numLasers, Math.ceil(maxBeams4 / 2)); // Half of available slots
+      const sweepIndex =
+        availableBeams4 > 0
+          ? Math.floor(elapsedTime * sweepSpeed * timeScale) % availableBeams4
+          : 0;
+      const leftSweepIndex = sweepIndex;
+      const rightSweepIndex = numLasers - 1 - sweepIndex;
+
+      laserBeamGroup.children.forEach((laser, i) => {
+        const isActive =
+          beamsToShow4 > 0 &&
+          ((beamsToShow4 >= 1 && i === leftSweepIndex) ||
+            (beamsToShow4 >= 2 && i === rightSweepIndex));
+        laser.visible = isActive;
+
+        if (isActive) {
+          const time = elapsedTime * 1.5 * timeScale;
+          const centerIndex = numLasers / 2;
+          const distanceFromCenter = Math.abs(i - centerIndex);
+
+          // Create sweeping wave pattern
+          const phase = time + distanceFromCenter * 0.3;
+          laser.rotation.z = (Math.sin(phase) * Math.PI) / 5;
+          laser.rotation.y = (Math.cos(phase * 0.7) * Math.PI) / 10;
+
+          const material = (laser as THREE.Mesh)
+            .material as THREE.ShaderMaterial;
+          if (currentConfig.colorMode === 'single') {
+            material.uniforms.color.value.set(currentConfig.singleColor);
+          } else {
+            material.uniforms.color.value.setHSL(
+              (time * 0.1 + i * 0.08) % 1,
+              1,
+              0.5,
+            );
           }
         }
       });

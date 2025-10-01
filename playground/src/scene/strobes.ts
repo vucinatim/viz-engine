@@ -55,7 +55,9 @@ export function createStrobes(scene: THREE.Scene, config: StrobeConfig) {
       (lightPart.material as THREE.MeshStandardMaterial).emissiveIntensity = 0;
     });
 
-    if (Math.random() > 0.7) {
+    // Use flashRate parameter to control probability (0 = never flash, 1 = always flash)
+    const flashProbability = 1 - (currentConfig.flashRate || 0.3);
+    if (Math.random() > flashProbability) {
       const strobeIndex = Math.floor(Math.random() * strobes.children.length);
       const activeStrobe = strobes.children[strobeIndex];
       const lightPart = activeStrobe.getObjectByName(

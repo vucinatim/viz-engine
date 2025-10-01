@@ -307,6 +307,30 @@ export class BooleanConfigOption extends ConfigParam<boolean> {
     this.options = options;
   }
 
+  getValue(inputData: AnimInputData): boolean {
+    const isAnimated =
+      useNodeNetworkStore.getState().networks[this.id]?.isEnabled;
+    if (!isAnimated) {
+      return this.value;
+    }
+
+    try {
+      const animatedValue = useNodeNetworkStore
+        .getState()
+        .computeNetworkOutput(this.id, inputData);
+      useAnimationLiveValuesStore.getState().setValue(this.id, animatedValue);
+      // Convert number to boolean: any non-zero value is true
+      const boolValue =
+        typeof animatedValue === 'number'
+          ? animatedValue !== 0
+          : !!animatedValue;
+      return boolValue;
+    } catch (error) {
+      console.error(`Error computing network for ${this.id}:`, error);
+      return this.value; // Fallback to static value on error
+    }
+  }
+
   clone() {
     return new BooleanConfigOption(this.options);
   }

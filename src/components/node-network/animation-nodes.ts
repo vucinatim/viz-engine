@@ -6,7 +6,12 @@ import EnvelopeFollowerBody from './bodies/envelope-follower-body';
 import frequencyBandBody from './bodies/frequency-band-body';
 import HarmonicPresenceBody from './bodies/harmonic-presence-body';
 import HysteresisGateBody from './bodies/hysteresis-gate-body';
+import MultiBandAnalysisBody from './bodies/multi-band-analysis-body';
 import NormalizeBody from './bodies/normalize-body';
+import SectionChangeDetectorBody from './bodies/section-change-detector-body';
+import SpectralCentroidBody from './bodies/spectral-centroid-body';
+import ThresholdCounterBody from './bodies/threshold-counter-body';
+import TimeDomainSectionDetectorBody from './bodies/time-domain-section-detector-body';
 import TonalPresenceBody from './bodies/tonal-presence-body';
 import ValueMapperBody from './bodies/value-mapper-body';
 export type { AnimNode } from '../config/create-node';
@@ -419,10 +424,16 @@ const PitchDetectionNode = createNode({
 const ValueMapperNode = createNode({
   label: 'Value Mapper',
   description:
-    'Map string inputs through a key/value object with a default fallback.',
+    'Map number inputs to different output types (colors, strings, numbers). Useful for mapping beat counts to mode names or indices.',
   customBody: ValueMapperBody,
   inputs: [
-    { id: 'input', label: 'Input', type: 'string' },
+    { id: 'input', label: 'Input', type: 'number', defaultValue: 0 },
+    {
+      id: 'mode',
+      label: 'Mode',
+      type: 'string',
+      defaultValue: 'number',
+    },
     {
       id: 'mapping',
       label: 'Mapping',
@@ -433,14 +444,17 @@ const ValueMapperNode = createNode({
       id: 'default',
       label: 'Default',
       type: 'string',
-      defaultValue: '',
+      defaultValue: '0',
     },
   ],
   outputs: [{ id: 'output', label: 'Output', type: 'string' }],
-  computeSignal: ({ input, mapping, default: def }) => {
+  computeSignal: ({ input, mode, mapping, default: def }) => {
     const mapObj = mapping as Record<string, any>;
-    if (mapObj && input in mapObj) {
-      return { output: mapObj[input] };
+    // Convert number input to string key for lookup
+    const inputKey = String(Math.floor(typeof input === 'number' ? input : 0));
+
+    if (mapObj && inputKey in mapObj) {
+      return { output: mapObj[inputKey] };
     }
     return { output: def };
   },
@@ -531,11 +545,12 @@ const SpectralFluxNode = createNode({
     let rawFlux = 0;
     if (prev && prev.length === n) {
       for (let i = 0; i < n; i++) {
-        const d = data[i] / 255 - prev[i] / 255;
+        const d = data[i] - prev[i];
         if (d > 0) rawFlux += d;
       }
-      rawFlux = rawFlux / n; // average positive change per bin
-      rawFlux = Math.max(0, Math.min(1, rawFlux * 4)); // gentle scale and clamp
+      // Sum of positive changes across all bins (range ~0-255*numBins for full spectrum change)
+      // For typical 1024 FFT bins, heavy drops can reach 20-40+
+      rawFlux = rawFlux / 255; // Normalize to 0-numBins range
     }
 
     // Store current spectrum for next frame
@@ -883,9 +898,12 @@ const HysteresisGateNode = createNode({
     { id: 'low', label: 'Low', type: 'number', defaultValue: 0.02 },
     { id: 'high', label: 'High', type: 'number', defaultValue: 0.08 },
   ],
-  outputs: [{ id: 'gated', label: 'Gated', type: 'number' }],
+  outputs: [
+    { id: 'gated', label: 'Gated', type: 'number' },
+    { id: 'state', label: 'State (0/1)', type: 'number' },
+  ],
   computeSignal: ({ value, low, high }, context, node) => {
-    if (!node) return { gated: 0 };
+    if (!node) return { gated: 0, state: 0 };
     const state = node.data.state;
     const open = !!state.open;
     let nextOpen = open;
@@ -895,7 +913,10 @@ const HysteresisGateNode = createNode({
       if (value > high) nextOpen = true;
     }
     state.open = nextOpen;
-    return { gated: nextOpen ? value : 0 };
+    return {
+      gated: nextOpen ? value : 0,
+      state: nextOpen ? 1 : 0, // Boolean output: exactly 0 or 1
+    };
   },
 });
 
@@ -974,15 +995,541 @@ const EnvelopeFollowerNode = createNode({
   },
 });
 
+const ThresholdCounterNode = createNode({
+  label: 'Threshold Counter',
+  description:
+    'Increments a counter each time the input value crosses above the threshold. The counter wraps around using modulo (counter % maxValue). Perfect for cycling through modes based on audio triggers.',
+  customBody: ThresholdCounterBody,
+  inputs: [
+    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
+    {
+      id: 'threshold',
+      label: 'Threshold',
+      type: 'number',
+      defaultValue: 0.5,
+    },
+    {
+      id: 'maxValue',
+      label: 'Max Value',
+      type: 'number',
+      defaultValue: 5,
+    },
+  ],
+  outputs: [{ id: 'count', label: 'Count', type: 'number' }],
+  computeSignal: ({ value, threshold, maxValue }, context, node) => {
+    if (!node) return { count: 0 };
+
+    const state = node.data.state;
+    const currentValue = typeof value === 'number' ? value : 0;
+    const thresholdVal = typeof threshold === 'number' ? threshold : 0.5;
+    const max = Math.max(
+      1,
+      Math.floor(typeof maxValue === 'number' ? maxValue : 5),
+    );
+
+    // Initialize state
+    if (typeof state.counter !== 'number') {
+      state.counter = 0;
+    }
+    if (typeof state.wasAboveThreshold !== 'boolean') {
+      state.wasAboveThreshold = false;
+    }
+
+    const isAboveThreshold = currentValue >= thresholdVal;
+    const prevWasAbove = state.wasAboveThreshold as boolean;
+
+    // Detect rising edge (transition from below to above threshold)
+    if (isAboveThreshold && !prevWasAbove) {
+      state.counter = ((state.counter as number) + 1) % max;
+    }
+
+    state.wasAboveThreshold = isAboveThreshold;
+
+    return { count: state.counter as number };
+  },
+});
+
+const SectionChangeDetectorNode = createNode({
+  label: 'Section Change Detector',
+  description:
+    'Detects significant changes in any input signal. Monitors value changes and triggers ONCE per transition with cooldown. Perfect for section changes, laser modes, or triggering effects on big shifts!',
+  customBody: SectionChangeDetectorBody,
+  inputs: [
+    { id: 'flux', label: 'Value', type: 'number', defaultValue: 0 },
+    {
+      id: 'threshold',
+      label: 'Threshold',
+      type: 'number',
+      defaultValue: 0.5,
+    },
+    {
+      id: 'cooldownMs',
+      label: 'Cooldown (ms)',
+      type: 'number',
+      defaultValue: 2000,
+    },
+    {
+      id: 'holdMs',
+      label: 'Hold Time (ms)',
+      type: 'number',
+      defaultValue: 100,
+    },
+  ],
+  outputs: [
+    { id: 'trigger', label: 'Trigger', type: 'number' },
+    { id: 'cooldownActive', label: 'Cooldown Active', type: 'number' },
+    { id: 'change', label: 'Change', type: 'number' },
+  ],
+  computeSignal: ({ flux, threshold, cooldownMs, holdMs }, context, node) => {
+    if (!node) return { trigger: 0, cooldownActive: 0, change: 0 };
+
+    const state = node.data.state;
+    const currentFlux = typeof flux === 'number' ? flux : 0;
+    const thresholdVal = typeof threshold === 'number' ? threshold : 12;
+    const cooldown = Math.max(
+      100,
+      typeof cooldownMs === 'number' ? cooldownMs : 3000,
+    );
+    const hold = Math.max(10, typeof holdMs === 'number' ? holdMs : 100);
+    const currentTime = context.time * 1000; // Convert to milliseconds
+
+    // Initialize state
+    if (typeof state.lastTriggerTime !== 'number') {
+      state.lastTriggerTime = -999999; // Far in the past
+    }
+    if (typeof state.triggerTime !== 'number') {
+      state.triggerTime = -999999;
+    }
+    if (typeof state.prevValue !== 'number') {
+      state.prevValue = currentFlux;
+    }
+
+    // Calculate frame-to-frame change (absolute difference)
+    const prevValue = state.prevValue as number;
+    const change = Math.abs(currentFlux - prevValue);
+    state.prevValue = currentFlux;
+
+    const lastTriggerTime = state.lastTriggerTime as number;
+    const triggerTime = state.triggerTime as number;
+    let timeSinceLastTrigger = currentTime - lastTriggerTime;
+    let timeSinceTrigger = currentTime - triggerTime;
+
+    // Handle time reset (e.g., when audio loops) - reset state if time goes backwards
+    if (timeSinceLastTrigger < 0 || timeSinceTrigger < 0) {
+      state.lastTriggerTime = -999999;
+      state.triggerTime = -999999;
+      timeSinceLastTrigger = Infinity;
+      timeSinceTrigger = Infinity;
+    }
+
+    let trigger = 0;
+    let cooldownActive = 0;
+
+    // Check if we're in cooldown period
+    if (timeSinceLastTrigger < cooldown) {
+      cooldownActive = 1;
+      // Check if we should still be holding the trigger high
+      if (timeSinceTrigger < hold) {
+        trigger = 1;
+      }
+    } else {
+      // Not in cooldown - check if change exceeds threshold
+      if (change >= thresholdVal) {
+        // Big change detected! Trigger and start cooldown
+        state.lastTriggerTime = currentTime;
+        state.triggerTime = currentTime;
+        trigger = 1;
+        cooldownActive = 1;
+      }
+    }
+
+    return { trigger, cooldownActive, change };
+  },
+});
+
+const MultiBandAnalysisNode = createNode({
+  label: 'Multi-Band Analysis',
+  description:
+    'Splits spectrum into Bass/Mids/Highs with PERCEPTUAL WEIGHTING (mimics human hearing). Outputs both raw energy AND percentage. Balanced D&B drop = ~33% each band!',
+  customBody: MultiBandAnalysisBody,
+  inputs: [
+    {
+      id: 'frequencyAnalysis',
+      label: 'Frequency Analysis',
+      type: 'FrequencyAnalysis',
+    },
+    {
+      id: 'bassMax',
+      label: 'Bass Max (Hz)',
+      type: 'number',
+      defaultValue: 250,
+    },
+    {
+      id: 'midMax',
+      label: 'Mid Max (Hz)',
+      type: 'number',
+      defaultValue: 4000,
+    },
+  ],
+  outputs: [
+    { id: 'bassEnergy', label: 'Bass Energy', type: 'number' },
+    { id: 'midEnergy', label: 'Mid Energy', type: 'number' },
+    { id: 'highEnergy', label: 'High Energy', type: 'number' },
+    { id: 'bassPercent', label: 'Bass %', type: 'number' },
+    { id: 'midPercent', label: 'Mid %', type: 'number' },
+    { id: 'highPercent', label: 'High %', type: 'number' },
+  ],
+  computeSignal: ({ frequencyAnalysis, bassMax, midMax }, context, node) => {
+    if (!node || !frequencyAnalysis || !frequencyAnalysis.frequencyData) {
+      return {
+        bassEnergy: 0,
+        midEnergy: 0,
+        highEnergy: 0,
+        bassPercent: 0,
+        midPercent: 0,
+        highPercent: 0,
+      };
+    }
+
+    const data = frequencyAnalysis.frequencyData;
+    const sampleRate = frequencyAnalysis.sampleRate || 44100;
+    const fftSize = frequencyAnalysis.fftSize || 2048;
+    const n = data.length;
+
+    if (n === 0) {
+      return {
+        bassEnergy: 0,
+        midEnergy: 0,
+        highEnergy: 0,
+        bassPercent: 0,
+        midPercent: 0,
+        highPercent: 0,
+      };
+    }
+
+    const freqPerBin = sampleRate / fftSize;
+    const bassMaxFreq = typeof bassMax === 'number' ? bassMax : 250;
+    const midMaxFreq = typeof midMax === 'number' ? midMax : 4000;
+
+    let bassEnergy = 0;
+    let midEnergy = 0;
+    let highEnergy = 0;
+
+    // AGGRESSIVE perceptual weighting to compensate for FFT bin density
+    // Goal: balanced D&B drop should show ~33% each band
+    const getPerceptualWeight = (freq: number): number => {
+      if (freq < 20) return 0;
+      if (freq < 60) return 5.0; // Sub-bass (kick fundamentals)
+      if (freq < 150) return 4.0; // Bass fundamentals
+      if (freq < 300) return 3.0; // Bass harmonics
+      if (freq < 600) return 2.0; // Low-mids
+      if (freq < 1500) return 1.2; // Mids
+      if (freq < 4000) return 0.8; // Upper mids
+      if (freq < 8000) return 0.4; // Highs (compensate for bin density)
+      if (freq < 12000) return 0.2; // Very high (many bins, little importance)
+      return 0.1; // Extreme highs (mostly noise/artifacts)
+    };
+
+    // Sum energy in each band with perceptual weighting
+    for (let i = 0; i < n; i++) {
+      const freq = i * freqPerBin;
+      const magnitude = data[i];
+      const weight = getPerceptualWeight(freq);
+      const weightedMagnitude = magnitude * weight;
+
+      if (freq <= bassMaxFreq) {
+        bassEnergy += weightedMagnitude;
+      } else if (freq <= midMaxFreq) {
+        midEnergy += weightedMagnitude;
+      } else {
+        highEnergy += weightedMagnitude;
+      }
+    }
+
+    // Calculate percentages (0-1 range)
+    const totalEnergy = bassEnergy + midEnergy + highEnergy;
+    const bassPercent = totalEnergy > 0 ? bassEnergy / totalEnergy : 0;
+    const midPercent = totalEnergy > 0 ? midEnergy / totalEnergy : 0;
+    const highPercent = totalEnergy > 0 ? highEnergy / totalEnergy : 0;
+
+    return {
+      bassEnergy,
+      midEnergy,
+      highEnergy,
+      bassPercent,
+      midPercent,
+      highPercent,
+    };
+  },
+});
+
+const SpectralCentroidNode = createNode({
+  label: 'Spectral Centroid',
+  description:
+    'Calculates the "center of mass" of the frequency spectrum (in Hz). Low centroid = bass-heavy (drops), high centroid = treble-heavy (vocals/buildups). Perfect for detecting timbral/textural changes.',
+  customBody: SpectralCentroidBody,
+  inputs: [
+    {
+      id: 'frequencyAnalysis',
+      label: 'Frequency Analysis',
+      type: 'FrequencyAnalysis',
+    },
+    {
+      id: 'smoothMs',
+      label: 'Smooth (ms)',
+      type: 'number',
+      defaultValue: 50,
+    },
+  ],
+  outputs: [
+    { id: 'centroid', label: 'Centroid (Hz)', type: 'number' },
+    { id: 'normalized', label: 'Normalized', type: 'number' },
+  ],
+  computeSignal: ({ frequencyAnalysis, smoothMs }, context, node) => {
+    if (!node || !frequencyAnalysis || !frequencyAnalysis.frequencyData) {
+      return { centroid: 0, normalized: 0 };
+    }
+
+    const data = frequencyAnalysis.frequencyData;
+    const sampleRate = frequencyAnalysis.sampleRate || 44100;
+    const fftSize = frequencyAnalysis.fftSize || 2048;
+    const n = data.length;
+
+    if (n === 0) return { centroid: 0, normalized: 0 };
+
+    // Calculate frequency per bin
+    const freqPerBin = sampleRate / fftSize;
+
+    // Calculate spectral centroid: Σ(frequency * magnitude) / Σ(magnitude)
+    let weightedSum = 0;
+    let magnitudeSum = 0;
+
+    for (let i = 0; i < n; i++) {
+      const magnitude = data[i];
+      const frequency = i * freqPerBin;
+      weightedSum += frequency * magnitude;
+      magnitudeSum += magnitude;
+    }
+
+    const rawCentroid = magnitudeSum > 0 ? weightedSum / magnitudeSum : 0;
+
+    // Temporal smoothing
+    const state = node.data.state;
+    const t = context.time;
+    const prevTime = typeof state.prevTime === 'number' ? state.prevTime : t;
+    const dt = Math.max(0, t - prevTime);
+    const sMs = Math.max(1, typeof smoothMs === 'number' ? smoothMs : 50);
+    const alpha = 1 - Math.exp(-dt / (sMs / 1000));
+    const prevCentroid =
+      typeof state.prevCentroid === 'number' ? state.prevCentroid : rawCentroid;
+    const smoothedCentroid =
+      prevCentroid + alpha * (rawCentroid - prevCentroid);
+
+    state.prevCentroid = smoothedCentroid;
+    state.prevTime = t;
+
+    // Normalize to 0-1 range (typical range: 200Hz - 4000Hz)
+    const normalized = Math.max(
+      0,
+      Math.min(1, (smoothedCentroid - 200) / 3800),
+    );
+
+    return { centroid: smoothedCentroid, normalized };
+  },
+});
+
+const TimeDomainSectionDetectorNode = createNode({
+  label: 'Adaptive Section Detector',
+  description:
+    'Ultra-low latency adaptive section detector using statistical analysis. Tracks energy difference percentiles to detect significant changes. Auto-calibrates to each song!',
+  customBody: TimeDomainSectionDetectorBody,
+  inputs: [
+    {
+      id: 'audioSignal',
+      label: 'Audio Signal',
+      type: 'Uint8Array',
+    },
+    {
+      id: 'percentile',
+      label: 'Percentile',
+      type: 'number',
+      defaultValue: 0.95,
+    },
+    {
+      id: 'windowMs',
+      label: 'Window (ms)',
+      type: 'number',
+      defaultValue: 4000,
+    },
+    {
+      id: 'cooldownMs',
+      label: 'Cooldown (ms)',
+      type: 'number',
+      defaultValue: 2000,
+    },
+    {
+      id: 'holdMs',
+      label: 'Hold Time (ms)',
+      type: 'number',
+      defaultValue: 100,
+    },
+  ],
+  outputs: [
+    { id: 'trigger', label: 'Trigger', type: 'number' },
+    { id: 'difference', label: 'Difference', type: 'number' },
+    { id: 'threshold', label: 'Threshold', type: 'number' },
+  ],
+  computeSignal: (
+    { audioSignal, percentile, windowMs, cooldownMs, holdMs },
+    context,
+    node,
+  ) => {
+    if (!node || !audioSignal || !(audioSignal instanceof Uint8Array)) {
+      return { trigger: 0, difference: 0, threshold: 0 };
+    }
+
+    const state = node.data.state;
+    const p = Math.max(
+      0.5,
+      Math.min(0.999, typeof percentile === 'number' ? percentile : 0.95),
+    );
+    const windowDuration = Math.max(
+      1000,
+      typeof windowMs === 'number' ? windowMs : 4000,
+    );
+    const cooldown = Math.max(
+      100,
+      typeof cooldownMs === 'number' ? cooldownMs : 2000,
+    );
+    const hold = Math.max(10, typeof holdMs === 'number' ? holdMs : 100);
+    const currentTime = context.time * 1000;
+
+    // Calculate RMS energy of current frame
+    let sumSquares = 0;
+    const n = audioSignal.length;
+    for (let i = 0; i < n; i++) {
+      const normalized = (audioSignal[i] - 128) / 128; // Convert 0-255 to -1 to 1
+      sumSquares += normalized * normalized;
+    }
+    const rms = Math.sqrt(sumSquares / n);
+    const currentEnergy = rms * 100; // Scale to 0-100 range
+
+    // Initialize state
+    if (!Array.isArray(state.energyBuffer)) {
+      state.energyBuffer = [];
+    }
+    if (!Array.isArray(state.differenceHistory)) {
+      state.differenceHistory = [];
+    }
+    if (typeof state.lastTriggerTime !== 'number') {
+      state.lastTriggerTime = -999999;
+    }
+    if (typeof state.triggerTime !== 'number') {
+      state.triggerTime = -999999;
+    }
+
+    // Maintain energy buffer for short-term averaging (~150ms = 9 frames at 60fps)
+    const energyBuffer = state.energyBuffer as number[];
+    const bufferFrames = 9; // ~150ms at 60fps
+
+    energyBuffer.push(currentEnergy);
+    if (energyBuffer.length > bufferFrames * 2) {
+      energyBuffer.shift();
+    }
+
+    // Calculate current and previous window averages
+    let currentWindowAvg = 0;
+    let previousWindowAvg = 0;
+
+    if (energyBuffer.length >= bufferFrames * 2) {
+      // Current window: last N frames
+      const currentWindow = energyBuffer.slice(-bufferFrames);
+      currentWindowAvg =
+        currentWindow.reduce((sum, e) => sum + e, 0) / currentWindow.length;
+
+      // Previous window: N frames before that
+      const previousWindow = energyBuffer.slice(
+        -bufferFrames * 2,
+        -bufferFrames,
+      );
+      previousWindowAvg =
+        previousWindow.reduce((sum, e) => sum + e, 0) / previousWindow.length;
+    }
+
+    // Calculate absolute difference between windows (detects section-level changes)
+    const energyDiff = Math.abs(currentWindowAvg - previousWindowAvg);
+
+    // Maintain rolling window of differences for adaptive threshold
+    const differenceHistory = state.differenceHistory as number[];
+    // Estimate frames in window: assume ~60fps
+    const estimatedFrames = Math.ceil((windowDuration / 1000) * 60);
+
+    differenceHistory.push(energyDiff);
+    if (differenceHistory.length > estimatedFrames) {
+      differenceHistory.shift();
+    }
+
+    // Calculate adaptive threshold using percentile (like Adaptive Normalize Quantile)
+    let adaptiveThreshold = 0;
+    if (differenceHistory.length >= 30) {
+      const sorted = [...differenceHistory].sort((a, b) => a - b);
+      const idx = Math.floor(sorted.length * p);
+      adaptiveThreshold = sorted[idx] || 0;
+    }
+
+    // Trigger when current difference exceeds the adaptive percentile threshold
+    const isSignificantChange =
+      energyDiff > adaptiveThreshold && adaptiveThreshold > 0.1;
+
+    const lastTriggerTime = state.lastTriggerTime as number;
+    const triggerTime = state.triggerTime as number;
+    let timeSinceLastTrigger = currentTime - lastTriggerTime;
+    let timeSinceTrigger = currentTime - triggerTime;
+
+    // Handle time reset (e.g., when audio loops) - reset state if time goes backwards
+    if (timeSinceLastTrigger < 0 || timeSinceTrigger < 0) {
+      state.lastTriggerTime = -999999;
+      state.triggerTime = -999999;
+      timeSinceLastTrigger = Infinity;
+      timeSinceTrigger = Infinity;
+    }
+
+    let trigger = 0;
+
+    // Check if we're in cooldown period
+    if (timeSinceLastTrigger < cooldown) {
+      // In cooldown - check if we should hold trigger high
+      if (timeSinceTrigger < hold) {
+        trigger = 1;
+      }
+    } else {
+      // Not in cooldown - check for statistically significant change
+      if (isSignificantChange) {
+        // Statistically significant change detected! Trigger and start cooldown
+        state.lastTriggerTime = currentTime;
+        state.triggerTime = currentTime;
+        trigger = 1;
+      }
+    }
+
+    return { trigger, difference: energyDiff, threshold: adaptiveThreshold };
+  },
+});
+
 export const nodes: AnimNode[] = [
   SineNode,
   MathNode,
   NormalizeNode,
   AdaptiveNormalizeQuantileNode,
   FrequencyBandNode,
+  MultiBandAnalysisNode,
   SpikeNode,
   PitchDetectionNode,
   ValueMapperNode,
+  ThresholdCounterNode,
+  SectionChangeDetectorNode,
+  SpectralCentroidNode,
+  TimeDomainSectionDetectorNode,
   HysteresisGateNode,
   RefractoryGateNode,
   BandInfoNode,

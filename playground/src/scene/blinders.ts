@@ -56,15 +56,25 @@ export function createBlinders(scene: THREE.Scene, config: BlinderConfig) {
     blindersGroup.visible = currentConfig.enabled;
     if (!blindersGroup.visible) return;
 
-    // Random flash effect
-    if (Math.random() > 0.95) {
-      const onDuration = 0.05;
-      blinderLeft.intensity = blinderIntensity;
-      blinderRight.intensity = blinderIntensity;
-      setTimeout(() => {
-        blinderLeft.intensity = 0;
-        blinderRight.intensity = 0;
-      }, onDuration * 1000);
+    if (currentConfig.mode === 'random') {
+      // Random flash effect
+      if (Math.random() > 0.95) {
+        const onDuration = 0.05;
+        blinderLeft.intensity = blinderIntensity;
+        blinderRight.intensity = blinderIntensity;
+        setTimeout(() => {
+          blinderLeft.intensity = 0;
+          blinderRight.intensity = 0;
+        }, onDuration * 1000);
+      }
+    } else {
+      // Controlled mode: intensity directly controls the blinder brightness
+      // When intensity > threshold, turn on; otherwise off
+      const threshold = 0.3;
+      const targetIntensity =
+        currentConfig.intensity > threshold ? blinderIntensity : 0;
+      blinderLeft.intensity = targetIntensity;
+      blinderRight.intensity = targetIntensity;
     }
   };
 

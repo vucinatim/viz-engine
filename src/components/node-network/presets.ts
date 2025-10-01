@@ -61,6 +61,14 @@ export const getPresetsForType = (
   return presetRegistry[type] || [];
 };
 
+export const getPresetById = (id: string): NodeNetworkPreset | null => {
+  for (const presets of Object.values(presetRegistry)) {
+    const found = presets.find((p) => p.id === id);
+    if (found) return found;
+  }
+  return null;
+};
+
 // Instantiate a preset into concrete nodes/edges for a given parameter/network
 export const instantiatePreset = (
   preset: NodeNetworkPreset,
@@ -127,7 +135,8 @@ export const instantiatePreset = (
   return { nodes, edges };
 };
 
-// Example presets for number output
+// ===== SIMPLE STARTER PRESETS =====
+
 registerPreset({
   id: 'number-sine-osc',
   name: 'Sine Oscillator (time)',
@@ -165,7 +174,7 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    { id: 'avg', label: 'Average Volume', position: { x: 0, y: -80 } },
+    { id: 'avg', label: 'Average Volume' },
     {
       id: 'norm',
       label: 'Normalize',
@@ -194,33 +203,46 @@ registerPreset({
   ],
 });
 
-// Kick drum focused, time-smoothed amplitude
+// ===== FEATURE EXTRACTION PRESETS =====
+// High-quality, tuned networks for extracting musical features
+
+// Kick Drum Detection
 registerPreset({
-  id: 'number-kick-band-smoothed',
-  name: 'Kick Band (40–120Hz) → Avg → Normalize → Envelope',
+  id: 'kick-adaptive',
+  name: '🥁 Kick Drum (Adaptive)',
   description:
-    'Input.frequencyAnalysis → Frequency Band (40–120Hz) → Average → Normalize(30..200→0..4) → Smoothing(time) → Output',
+    'Kick energy: Frequency Band(80-150Hz) → Band Info → Smoothing → Adaptive Normalize (Quantile) → Hysteresis Gate → Output',
   outputType: 'number',
   autoPlace: true,
   nodes: [
     {
       id: 'band',
       label: 'Frequency Band',
-      inputValues: { startFrequency: 40, endFrequency: 120 },
+      inputValues: { startFrequency: 80, endFrequency: 150 },
     },
     {
-      id: 'avg',
-      label: 'Average Volume',
-    },
-    {
-      id: 'norm',
-      label: 'Normalize',
-      inputValues: { inputMin: 30, inputMax: 200, outputMin: 0, outputMax: 4 },
+      id: 'info',
+      label: 'Band Info',
     },
     {
       id: 'env',
       label: 'Envelope Follower',
-      inputValues: { attackMs: 5, releaseMs: 120 },
+      inputValues: { attackMs: 6, releaseMs: 120 },
+    },
+    {
+      id: 'adapt',
+      label: 'Adaptive Normalize (Quantile)',
+      inputValues: {
+        windowMs: 4000,
+        qLow: 0.5,
+        qHigh: 0.98,
+        freezeBelow: 140,
+      },
+    },
+    {
+      id: 'gate',
+      label: 'Hysteresis Gate',
+      inputValues: { low: 0.33, high: 0.45 },
     },
   ],
   edges: [
@@ -233,30 +255,1192 @@ registerPreset({
     {
       source: 'band',
       sourceHandle: 'bandData',
-      target: 'avg',
+      target: 'info',
       targetHandle: 'data',
     },
     {
-      source: 'avg',
+      source: 'info',
       sourceHandle: 'average',
+      target: 'env',
+      targetHandle: 'value',
+    },
+    {
+      source: 'env',
+      sourceHandle: 'env',
+      target: 'adapt',
+      targetHandle: 'value',
+    },
+    {
+      source: 'adapt',
+      sourceHandle: 'result',
+      target: 'gate',
+      targetHandle: 'value',
+    },
+    {
+      source: 'gate',
+      sourceHandle: 'gated',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// Snare/Clap Detection
+registerPreset({
+  id: 'snare-adaptive',
+  name: '🥁 Snare/Clap (Adaptive)',
+  description:
+    'Snare/Clap energy: Frequency Band(180-4000Hz) → Band Info → Smoothing → Adaptive Normalize (Quantile) → Hysteresis Gate → Output',
+  outputType: 'number',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'band',
+      label: 'Frequency Band',
+      inputValues: { startFrequency: 180, endFrequency: 4000 },
+    },
+    {
+      id: 'info',
+      label: 'Band Info',
+    },
+    {
+      id: 'env',
+      label: 'Envelope Follower',
+      inputValues: { attackMs: 4, releaseMs: 140 },
+    },
+    {
+      id: 'adapt',
+      label: 'Adaptive Normalize (Quantile)',
+      inputValues: {
+        windowMs: 4000,
+        qLow: 0.5,
+        qHigh: 0.95,
+        freezeBelow: 90,
+      },
+    },
+    {
+      id: 'gate',
+      label: 'Hysteresis Gate',
+      inputValues: { low: 0.06, high: 0.14 },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'band',
+      sourceHandle: 'bandData',
+      target: 'info',
+      targetHandle: 'data',
+    },
+    {
+      source: 'info',
+      sourceHandle: 'average',
+      target: 'env',
+      targetHandle: 'value',
+    },
+    {
+      source: 'env',
+      sourceHandle: 'env',
+      target: 'adapt',
+      targetHandle: 'value',
+    },
+    {
+      source: 'adapt',
+      sourceHandle: 'result',
+      target: 'gate',
+      targetHandle: 'value',
+    },
+    {
+      source: 'gate',
+      sourceHandle: 'gated',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// Bass Presence
+registerPreset({
+  id: 'bass-adaptive',
+  name: '🎸 Bass Presence',
+  description:
+    'Bass presence: Frequency Band(20–163Hz) → Band Info (average) → Adaptive Normalize (Quantile) → Envelope Follower → Output',
+  outputType: 'number',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'band',
+      label: 'Frequency Band',
+      inputValues: {
+        startFrequency: 20,
+        endFrequency: 163,
+      },
+    },
+    {
+      id: 'info',
+      label: 'Band Info',
+    },
+    {
+      id: 'adapt',
+      label: 'Adaptive Normalize (Quantile)',
+      inputValues: {
+        windowMs: 4000,
+        qLow: 0.3,
+        qHigh: 0.9,
+        freezeBelow: 130,
+      },
+    },
+    {
+      id: 'env_follow',
+      label: 'Envelope Follower',
+      inputValues: { attackMs: 100, releaseMs: 400 },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'band',
+      sourceHandle: 'bandData',
+      target: 'info',
+      targetHandle: 'data',
+    },
+    {
+      source: 'info',
+      sourceHandle: 'average',
+      target: 'adapt',
+      targetHandle: 'value',
+    },
+    {
+      source: 'adapt',
+      sourceHandle: 'result',
+      target: 'env_follow',
+      targetHandle: 'value',
+    },
+    {
+      source: 'env_follow',
+      sourceHandle: 'env',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// Melody/Vocal Detection
+registerPreset({
+  id: 'melody-harmonic',
+  name: '🎵 Melody/Vocal (Harmonic)',
+  description:
+    'Melodic/voiced presence using harmonic series scoring, smoothed by an envelope follower and mapped to 0–1.',
+  outputType: 'number',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'band',
+      label: 'Frequency Band',
+      inputValues: {
+        startFrequency: 212,
+        endFrequency: 3762,
+      },
+    },
+    {
+      id: 'harm',
+      label: 'Harmonic Presence',
+      inputValues: {
+        maxHarmonics: 3,
+        toleranceCents: 50,
+        smoothMs: 100,
+        minSNR: 0.6,
+      },
+    },
+    {
+      id: 'env',
+      label: 'Envelope Follower',
+      inputValues: { attackMs: 6, releaseMs: 300 },
+    },
+    {
+      id: 'norm',
+      label: 'Normalize',
+      inputValues: {
+        inputMin: 0.2,
+        inputMax: 0.4,
+        outputMin: 0,
+        outputMax: 1,
+      },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'band',
+      sourceHandle: 'bandData',
+      target: 'harm',
+      targetHandle: 'data',
+    },
+    {
+      source: 'band',
+      sourceHandle: 'bandStartBin',
+      target: 'harm',
+      targetHandle: 'bandStartBin',
+    },
+    {
+      source: 'band',
+      sourceHandle: 'frequencyPerBin',
+      target: 'harm',
+      targetHandle: 'frequencyPerBin',
+    },
+    {
+      source: 'harm',
+      sourceHandle: 'presence',
+      target: 'env',
+      targetHandle: 'value',
+    },
+    {
+      source: 'env',
+      sourceHandle: 'env',
       target: 'norm',
       targetHandle: 'value',
     },
     {
       source: 'norm',
       sourceHandle: 'result',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// Percussion Detection
+registerPreset({
+  id: 'percussion-adaptive',
+  name: '🥁 Percussion (Hi-Freq)',
+  description:
+    'Percussive energy: Frequency Band (4–10kHz) → Band Info → Adaptive Normalize (Quantile) → Hysteresis Gate → Output',
+  outputType: 'number',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'band',
+      label: 'Frequency Band',
+      inputValues: {
+        startFrequency: 4000,
+        endFrequency: 10000,
+      },
+    },
+    {
+      id: 'info',
+      label: 'Band Info',
+    },
+    {
+      id: 'adapt',
+      label: 'Adaptive Normalize (Quantile)',
+      inputValues: {
+        windowMs: 4000,
+        qLow: 0.5,
+        qHigh: 0.9,
+        freezeBelow: 40,
+      },
+    },
+    {
+      id: 'gate',
+      label: 'Hysteresis Gate',
+      inputValues: { low: 0.4, high: 0.5 },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'band',
+      sourceHandle: 'bandData',
+      target: 'info',
+      targetHandle: 'data',
+    },
+    {
+      source: 'info',
+      sourceHandle: 'average',
+      target: 'adapt',
+      targetHandle: 'value',
+    },
+    {
+      source: 'adapt',
+      sourceHandle: 'result',
+      target: 'gate',
+      targetHandle: 'value',
+    },
+    {
+      source: 'gate',
+      sourceHandle: 'gated',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// Hi-Hat Detection (higher frequency, tighter response)
+registerPreset({
+  id: 'hihat-adaptive',
+  name: '🎩 Hi-Hat Detection',
+  description:
+    'Hi-hat hits: Frequency Band (6–14kHz) → Band Info → Adaptive Normalize → Hysteresis Gate → Output. Tuned for crisp, transient hi-hat hits.',
+  outputType: 'number',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'band',
+      label: 'Frequency Band',
+      inputValues: {
+        startFrequency: 6000,
+        endFrequency: 14000,
+      },
+    },
+    {
+      id: 'info',
+      label: 'Band Info',
+    },
+    {
+      id: 'adapt',
+      label: 'Adaptive Normalize (Quantile)',
+      inputValues: {
+        windowMs: 3000, // Shorter window for faster response
+        qLow: 0.6, // Higher threshold to catch transients
+        qHigh: 0.92,
+        freezeBelow: 35,
+      },
+    },
+    {
+      id: 'gate',
+      label: 'Hysteresis Gate',
+      inputValues: {
+        low: 0.45, // Tighter gate for crisp hits
+        high: 0.55,
+      },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'band',
+      sourceHandle: 'bandData',
+      target: 'info',
+      targetHandle: 'data',
+    },
+    {
+      source: 'info',
+      sourceHandle: 'average',
+      target: 'adapt',
+      targetHandle: 'value',
+    },
+    {
+      source: 'adapt',
+      sourceHandle: 'result',
+      target: 'gate',
+      targetHandle: 'value',
+    },
+    {
+      source: 'gate',
+      sourceHandle: 'gated',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// Kick + Bass Combined Intensity with Smooth Decay
+registerPreset({
+  id: 'kick-bass-smooth-intensity',
+  name: '💥 Kick + Bass (Smooth Decay)',
+  description:
+    'Combines kick and bass energy with smooth decay. Kick Band + Bass Band → Take Maximum → Envelope Follower (smooth release) → Scaled Output. Perfect for beam/light intensity.',
+  outputType: 'number',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'kick_band',
+      label: 'Frequency Band',
+      inputValues: { startFrequency: 80, endFrequency: 150 },
+    },
+    {
+      id: 'kick_info',
+      label: 'Band Info',
+    },
+    {
+      id: 'kick_adapt',
+      label: 'Adaptive Normalize (Quantile)',
+      inputValues: {
+        windowMs: 4000,
+        qLow: 0.5,
+        qHigh: 0.98,
+        freezeBelow: 140,
+      },
+    },
+    {
+      id: 'bass_band',
+      label: 'Frequency Band',
+      inputValues: { startFrequency: 20, endFrequency: 163 },
+    },
+    {
+      id: 'bass_info',
+      label: 'Band Info',
+    },
+    {
+      id: 'bass_adapt',
+      label: 'Adaptive Normalize (Quantile)',
+      inputValues: {
+        windowMs: 4000,
+        qLow: 0.3,
+        qHigh: 0.9,
+        freezeBelow: 130,
+      },
+    },
+    {
+      id: 'combine',
+      label: 'Math',
+      inputValues: { operation: 'max' },
+    },
+    {
+      id: 'envelope',
+      label: 'Envelope Follower',
+      inputValues: { attackMs: 5, releaseMs: 150 },
+    },
+    {
+      id: 'scale',
+      label: 'Math',
+      inputValues: { a: 1, b: 2.5, operation: 'multiply' },
+    },
+  ],
+  edges: [
+    // Kick chain
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'kick_band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'kick_band',
+      sourceHandle: 'bandData',
+      target: 'kick_info',
+      targetHandle: 'data',
+    },
+    {
+      source: 'kick_info',
+      sourceHandle: 'average',
+      target: 'kick_adapt',
+      targetHandle: 'value',
+    },
+    // Bass chain
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'bass_band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'bass_band',
+      sourceHandle: 'bandData',
+      target: 'bass_info',
+      targetHandle: 'data',
+    },
+    {
+      source: 'bass_info',
+      sourceHandle: 'average',
+      target: 'bass_adapt',
+      targetHandle: 'value',
+    },
+    // Combine (take max of kick and bass)
+    {
+      source: 'kick_adapt',
+      sourceHandle: 'result',
+      target: 'combine',
+      targetHandle: 'a',
+    },
+    {
+      source: 'bass_adapt',
+      sourceHandle: 'result',
+      target: 'combine',
+      targetHandle: 'b',
+    },
+    // Smooth decay
+    {
+      source: 'combine',
+      sourceHandle: 'result',
+      target: 'envelope',
+      targetHandle: 'value',
+    },
+    // Scale to desired range (multiply by 2.5 for 0-2.5 output)
+    {
+      source: 'envelope',
+      sourceHandle: 'env',
+      target: 'scale',
+      targetHandle: 'a',
+    },
+    {
+      source: 'scale',
+      sourceHandle: 'result',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// Strobe Flash Rate based on Spectral Flux (Energy Changes)
+registerPreset({
+  id: 'strobe-buildup-detector',
+  name: '⚡ Strobe Buildup Detector',
+  description:
+    'Controls strobe flash rate based on energy changes. Spectral Flux (detects buildups/drops) → Envelope Follower (smooth transitions) → Normalize → Output. Fast flashing during buildups and drops, slower during steady sections.',
+  outputType: 'number',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'flux',
+      label: 'Spectral Flux',
+      inputValues: { smoothMs: 30 },
+    },
+    {
+      id: 'env',
+      label: 'Envelope Follower',
+      inputValues: { attackMs: 50, releaseMs: 800 },
+    },
+    {
+      id: 'norm',
+      label: 'Normalize',
+      inputValues: {
+        inputMin: 30,
+        inputMax: 50,
+        outputMin: 0.0,
+        outputMax: 0.9,
+      },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'flux',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'flux',
+      sourceHandle: 'flux',
       target: 'env',
       targetHandle: 'value',
     },
     {
+      source: 'env',
+      sourceHandle: 'env',
+      target: 'norm',
+      targetHandle: 'value',
+    },
+    {
+      source: 'norm',
+      sourceHandle: 'result',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// Laser Mode Cycling based on Sub-Bass Presence (0-120 Hz)
+registerPreset({
+  id: 'laser-mode-section-cycle',
+  name: '🎨 Laser Mode (Sub-Bass)',
+  description:
+    'Laser mode switching based on sub-bass (0-120 Hz) presence. Monitors kick drum fundamentals with static threshold - simple, focused, and reliable!',
+  outputType: 'string',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'bass_band',
+      label: 'Frequency Band',
+      inputValues: {
+        startFrequency: 0,
+        endFrequency: 120,
+      },
+    },
+    {
+      id: 'bass_info',
+      label: 'Band Info',
+      inputValues: {},
+    },
+    {
+      id: 'detector',
+      label: 'Section Change Detector',
+      inputValues: {
+        threshold: 30,
+        cooldownMs: 100,
+        holdMs: 150,
+      },
+    },
+    {
+      id: 'counter',
+      label: 'Threshold Counter',
+      inputValues: {
+        threshold: 0.5,
+        maxValue: 5,
+      },
+    },
+    {
+      id: 'mapper',
+      label: 'Value Mapper',
+      inputValues: {
+        mode: 'string',
+        mapping: {
+          '0': '0',
+          '1': '1',
+          '2': '2',
+          '3': '3',
+          '4': '4',
+        },
+        default: 'auto',
+      },
+    },
+  ],
+  edges: [
+    {
       source: INPUT_ALIAS,
-      sourceHandle: 'time',
+      sourceHandle: 'frequencyAnalysis',
+      target: 'bass_band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    // Extract sub-bass band data
+    {
+      source: 'bass_band',
+      sourceHandle: 'bandData',
+      target: 'bass_info',
+      targetHandle: 'data',
+    },
+    // Feed average sub-bass to section detector
+    {
+      source: 'bass_info',
+      sourceHandle: 'average',
+      target: 'detector',
+      targetHandle: 'flux',
+    },
+    // Count triggers
+    {
+      source: 'detector',
+      sourceHandle: 'trigger',
+      target: 'counter',
+      targetHandle: 'value',
+    },
+    // Map to mode strings
+    {
+      source: 'counter',
+      sourceHandle: 'count',
+      target: 'mapper',
+      targetHandle: 'input',
+    },
+    {
+      source: 'mapper',
+      sourceHandle: 'output',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// Mode Cycling based on Melody
+registerPreset({
+  id: 'beam-mode-melody-cycle',
+  name: '🔄 Beam Mode Cycling (Melody)',
+  description:
+    'Cycles through beam modes (0-4) based on melody/vocal hits. Melody detection → Threshold Counter → Value Mapper → String output for mode selection.',
+  outputType: 'string',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'band',
+      label: 'Frequency Band',
+      inputValues: {
+        startFrequency: 500,
+        endFrequency: 3762,
+      },
+    },
+    {
+      id: 'harm',
+      label: 'Harmonic Presence',
+      inputValues: {
+        maxHarmonics: 3,
+        toleranceCents: 50,
+        smoothMs: 100,
+        minSNR: 0.6,
+      },
+    },
+    {
+      id: 'env',
+      label: 'Envelope Follower',
+      inputValues: { attackMs: 6, releaseMs: 300 },
+    },
+    {
+      id: 'norm',
+      label: 'Normalize',
+      inputValues: {
+        inputMin: 0.2,
+        inputMax: 0.4,
+        outputMin: 0,
+        outputMax: 1,
+      },
+    },
+    {
+      id: 'counter',
+      label: 'Threshold Counter',
+      inputValues: {
+        threshold: 0.7,
+        maxValue: 5,
+      },
+    },
+    {
+      id: 'mapper',
+      label: 'Value Mapper',
+      inputValues: {
+        mode: 'string',
+        mapping: {
+          '0': '0',
+          '1': '1',
+          '2': '2',
+          '3': '3',
+          '4': '4',
+        },
+        default: '0',
+      },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'band',
+      sourceHandle: 'bandData',
+      target: 'harm',
+      targetHandle: 'data',
+    },
+    {
+      source: 'band',
+      sourceHandle: 'bandStartBin',
+      target: 'harm',
+      targetHandle: 'bandStartBin',
+    },
+    {
+      source: 'band',
+      sourceHandle: 'frequencyPerBin',
+      target: 'harm',
+      targetHandle: 'frequencyPerBin',
+    },
+    {
+      source: 'harm',
+      sourceHandle: 'presence',
       target: 'env',
-      targetHandle: 'time',
+      targetHandle: 'value',
     },
     {
       source: 'env',
       sourceHandle: 'env',
+      target: 'norm',
+      targetHandle: 'value',
+    },
+    {
+      source: 'norm',
+      sourceHandle: 'result',
+      target: 'counter',
+      targetHandle: 'value',
+    },
+    {
+      source: 'counter',
+      sourceHandle: 'count',
+      target: 'mapper',
+      targetHandle: 'input',
+    },
+    {
+      source: 'mapper',
+      sourceHandle: 'output',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// ========================================
+// 🎯 HIGH ENERGY GATE
+// ========================================
+
+registerPreset({
+  id: 'laser-high-energy-gate',
+  name: '⚡ High Energy Gate',
+  description:
+    'Enables lasers only during high energy sections. Uses adaptive normalization to handle varying energy levels with hysteresis to prevent flickering!',
+  outputType: 'boolean',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'full_band',
+      label: 'Frequency Band',
+      inputValues: {
+        startFrequency: 20,
+        endFrequency: 20000,
+      },
+    },
+    {
+      id: 'energy',
+      label: 'Band Info',
+      inputValues: {},
+    },
+    {
+      id: 'normalize',
+      label: 'Adaptive Normalize (Quantile)',
+      inputValues: {
+        windowMs: 2000,
+        qLow: 0.05,
+        qHigh: 0.95,
+        freezeBelow: 50,
+      },
+    },
+    {
+      id: 'gate',
+      label: 'Hysteresis Gate',
+      inputValues: {
+        low: 0.2, // Turn off below 50% normalized energy
+        high: 0.65, // Turn on above 65% normalized energy
+      },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'full_band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'full_band',
+      sourceHandle: 'bandData',
+      target: 'energy',
+      targetHandle: 'data',
+    },
+    {
+      source: 'energy',
+      sourceHandle: 'average',
+      target: 'normalize',
+      targetHandle: 'value',
+    },
+    {
+      source: 'normalize',
+      sourceHandle: 'result',
+      target: 'gate',
+      targetHandle: 'value',
+    },
+    {
+      source: 'gate',
+      sourceHandle: 'state',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// ========================================
+// 🎤 MOVING LIGHTS MODE CYCLE
+// ========================================
+
+registerPreset({
+  id: 'moving-lights-kick-cycle',
+  name: '🎤 Moving Lights (Kick Cycle)',
+  description:
+    'Cycles through moving light modes on each kick hit. Creates dynamic variation in movement patterns!',
+  outputType: 'string',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'kick_band',
+      label: 'Frequency Band',
+      inputValues: {
+        startFrequency: 20,
+        endFrequency: 150,
+      },
+    },
+    {
+      id: 'kick_info',
+      label: 'Band Info',
+      inputValues: {},
+    },
+    {
+      id: 'spike',
+      label: 'Spike',
+      inputValues: {
+        threshold: 50,
+        attack: 10,
+        release: 150,
+      },
+    },
+    {
+      id: 'counter',
+      label: 'Threshold Counter',
+      inputValues: {
+        threshold: 130,
+        maxValue: 5,
+      },
+    },
+    {
+      id: 'mapper',
+      label: 'Value Mapper',
+      inputValues: {
+        mode: 'string',
+        mapping: {
+          '0': '0',
+          '1': '1',
+          '2': '2',
+          '3': '3',
+          '4': '4',
+        },
+        default: '0',
+      },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'kick_band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'kick_band',
+      sourceHandle: 'bandData',
+      target: 'kick_info',
+      targetHandle: 'data',
+    },
+    {
+      source: 'kick_info',
+      sourceHandle: 'average',
+      target: 'spike',
+      targetHandle: 'value',
+    },
+    {
+      source: 'spike',
+      sourceHandle: 'result',
+      target: 'counter',
+      targetHandle: 'value',
+    },
+    {
+      source: 'counter',
+      sourceHandle: 'count',
+      target: 'mapper',
+      targetHandle: 'input',
+    },
+    {
+      source: 'mapper',
+      sourceHandle: 'output',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// ========================================
+// 🌀 SHADER WALL ANIMATIONS
+// ========================================
+
+registerPreset({
+  id: 'shader-wall-bass-pulse',
+  name: '🌀 Shader Wall (Bass Pulse)',
+  description:
+    'Pulsing scale effect based on bass energy. Makes the fractal zoom in/out with the bass!',
+  outputType: 'number',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'bass_band',
+      label: 'Frequency Band',
+      inputValues: {
+        startFrequency: 20,
+        endFrequency: 200,
+      },
+    },
+    {
+      id: 'bass_info',
+      label: 'Band Info',
+      inputValues: {},
+    },
+    {
+      id: 'normalize',
+      label: 'Adaptive Normalize (Quantile)',
+      inputValues: {
+        windowMs: 1000,
+        qLow: 0.1,
+        qHigh: 0.95,
+        freezeBelow: 30,
+      },
+    },
+    {
+      id: 'envelope',
+      label: 'Envelope Follower',
+      inputValues: {
+        attackMs: 10,
+        releaseMs: 300,
+      },
+    },
+    {
+      id: 'math',
+      label: 'Math',
+      inputValues: {
+        a: 1.5,
+        b: 0,
+        operation: 'add',
+      },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'bass_band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'bass_band',
+      sourceHandle: 'bandData',
+      target: 'bass_info',
+      targetHandle: 'data',
+    },
+    {
+      source: 'bass_info',
+      sourceHandle: 'average',
+      target: 'normalize',
+      targetHandle: 'value',
+    },
+    {
+      source: 'normalize',
+      sourceHandle: 'result',
+      target: 'envelope',
+      targetHandle: 'value',
+    },
+    {
+      source: 'envelope',
+      sourceHandle: 'env',
+      target: 'math',
+      targetHandle: 'b',
+    },
+    {
+      source: 'math',
+      sourceHandle: 'result',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+registerPreset({
+  id: 'shader-wall-kick-flash',
+  name: '🌀 Shader Wall (Kick Flash)',
+  description:
+    'Brightness flashes on kick hits. Creates intense visual impact on each kick!',
+  outputType: 'number',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'kick_band',
+      label: 'Frequency Band',
+      inputValues: {
+        startFrequency: 20,
+        endFrequency: 150,
+      },
+    },
+    {
+      id: 'kick_info',
+      label: 'Band Info',
+      inputValues: {},
+    },
+    {
+      id: 'spike',
+      label: 'Spike',
+      inputValues: {
+        threshold: 50,
+        attack: 5,
+        release: 80,
+      },
+    },
+    {
+      id: 'normalize',
+      label: 'Adaptive Normalize (Quantile)',
+      inputValues: {
+        windowMs: 500,
+        qLow: 0,
+        qHigh: 1,
+        freezeBelow: 0,
+      },
+    },
+    {
+      id: 'math',
+      label: 'Math',
+      inputValues: {
+        a: 1.5,
+        b: 0,
+        operation: 'add',
+      },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'kick_band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'kick_band',
+      sourceHandle: 'bandData',
+      target: 'kick_info',
+      targetHandle: 'data',
+    },
+    {
+      source: 'kick_info',
+      sourceHandle: 'average',
+      target: 'spike',
+      targetHandle: 'value',
+    },
+    {
+      source: 'spike',
+      sourceHandle: 'result',
+      target: 'normalize',
+      targetHandle: 'value',
+    },
+    {
+      source: 'normalize',
+      sourceHandle: 'result',
+      target: 'math',
+      targetHandle: 'b',
+    },
+    {
+      source: 'math',
+      sourceHandle: 'result',
       target: OUTPUT_ALIAS,
       targetHandle: 'output',
     },
