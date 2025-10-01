@@ -7,6 +7,9 @@ import useEditorStore from '@/lib/stores/editor-store';
 import { LayerData } from '@/lib/stores/layer-store';
 import { forwardRef, memo, useCallback, useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 
 type RenderFunction = (data: {
   dt: number;
@@ -36,6 +39,10 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+
+  // Post-processing refs
+  const composerRef = useRef<EffectComposer | null>(null);
+  const bloomPassRef = useRef<UnrealBloomPass | null>(null);
 
   // on panel resize, update canvas size
   useOnResize(canvasContainerRef, (entries, element) => {
@@ -73,6 +80,11 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
         // The camera's aspect ratio should always be based on the DISPLAY size.
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
+      }
+
+      // Update post-processing composer size if it exists
+      if (composerRef.current) {
+        composerRef.current.setSize(newWidth, newHeight);
       }
     }
   });
@@ -155,6 +167,34 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       debugEnabled: layer.isDebugEnabled,
     });
 
+    // Initialize post-processing if the layer supports it
+    const layerConfig = layer.config.getValues({
+      audioSignal: new Uint8Array(),
+      frequencyAnalysis: {
+        frequencyData: new Uint8Array(),
+        sampleRate: audioAnalyzer?.context.sampleRate || 44100,
+        fftSize: audioAnalyzer?.fftSize || 2048,
+      },
+      time,
+    });
+
+    if (layerConfig.postProcessing?.bloom) {
+      // Setup post-processing
+      const renderScene = new RenderPass(scene, camera);
+      const bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(newWidth, newHeight),
+        layerConfig.postProcessing.bloomStrength || 0.5,
+        layerConfig.postProcessing.bloomRadius || 0.8,
+        layerConfig.postProcessing.bloomThreshold || 0.6,
+      );
+      const composer = new EffectComposer(renderer);
+      composer.addPass(renderScene);
+      composer.addPass(bloomPass);
+
+      composerRef.current = composer;
+      bloomPassRef.current = bloomPass;
+    }
+
     // Store the renderer, scene and camera for later use
     cameraRef.current = camera;
     sceneRef.current = scene;
@@ -193,7 +233,25 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
           debugEnabled: layer.isDebugEnabled,
           ...data,
         });
-        rendererRef.current.render(sceneRef.current, cameraRef.current);
+
+        // Update post-processing parameters if bloom is enabled
+        const layerConfig = layer.config.getValues(data);
+        if (bloomPassRef.current && layerConfig.postProcessing?.bloom) {
+          bloomPassRef.current.enabled = layerConfig.postProcessing.bloom;
+          bloomPassRef.current.strength =
+            layerConfig.postProcessing.bloomStrength || 0.5;
+          bloomPassRef.current.radius =
+            layerConfig.postProcessing.bloomRadius || 0.8;
+          bloomPassRef.current.threshold =
+            layerConfig.postProcessing.bloomThreshold || 0.6;
+        }
+
+        // Render with or without post-processing
+        if (composerRef.current && layerConfig.postProcessing?.bloom) {
+          composerRef.current.render();
+        } else {
+          rendererRef.current.render(sceneRef.current, cameraRef.current);
+        }
       };
     } else {
       // Setup the 2D draw function

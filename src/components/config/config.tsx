@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
 import { AnimInputData } from '../node-network/animation-nodes';
 import useNodeNetworkStore from '../node-network/node-network-store';
+import { Button } from '../ui/button';
 import { ColorPickerPopover } from '../ui/color-picker';
 import FileInput from '../ui/file-input';
 import { Input } from '../ui/input';
@@ -359,6 +360,52 @@ export class SelectConfigOption extends ConfigParam<string> {
   }
 }
 
+// Button Config Option (Action/Trigger)
+type ButtonConfigOptions = ConfigMeta & {
+  buttonLabel?: string;
+  onPress: () => void;
+};
+
+export class ButtonConfigOption extends BaseConfigOption<null> {
+  options: ButtonConfigOptions;
+  onPress: () => void;
+
+  constructor(options: ButtonConfigOptions) {
+    super(options);
+    this.options = options;
+    this.onPress = options.onPress;
+  }
+
+  getValue(inputData: AnimInputData): null {
+    return null; // Buttons don't have a value
+  }
+
+  setValue(value: null): void {
+    // Buttons don't have a value to set
+  }
+
+  getDefaultValue(): null {
+    return null;
+  }
+
+  clone() {
+    return new ButtonConfigOption(this.options);
+  }
+
+  toFormElement(value: null, onChange: (value: null) => void) {
+    return (
+      <Button
+        onClick={() => {
+          this.onPress();
+        }}
+        variant="outline"
+        className="w-full">
+        {this.options.buttonLabel || this.label}
+      </Button>
+    );
+  }
+}
+
 // Group Config Option
 export class GroupConfigOption<
   T extends Record<string, BaseConfigOption<any>>,
@@ -378,7 +425,13 @@ export class GroupConfigOption<
     const values: Partial<{ [K in keyof T]: any }> = {};
     for (const key in this.options) {
       if (this.options.hasOwnProperty(key)) {
-        values[key] = this.options[key].getValue(inputData);
+        const option = this.options[key];
+        // For buttons, return the instance itself, not its value
+        if (option instanceof ButtonConfigOption) {
+          values[key] = option;
+        } else {
+          values[key] = option.getValue(inputData);
+        }
       }
     }
     return values as T;
@@ -396,7 +449,13 @@ export class GroupConfigOption<
     const defaults: Partial<{ [K in keyof T]: any }> = {};
     for (const key in this.options) {
       if (this.options.hasOwnProperty(key)) {
-        defaults[key] = this.options[key].getDefaultValue();
+        const option = this.options[key];
+        // For buttons, return the instance itself, not its value
+        if (option instanceof ButtonConfigOption) {
+          defaults[key] = option;
+        } else {
+          defaults[key] = option.getDefaultValue();
+        }
       }
     }
     return defaults as T;
@@ -483,7 +542,13 @@ export class VConfig<T extends Record<string, BaseConfigOption<any>>> {
     const values: Partial<InferValues<VConfig<T>>> = {};
     for (const key in this.options) {
       if (this.options.hasOwnProperty(key)) {
-        values[key] = this.options[key].getValue(inputData);
+        const option = this.options[key];
+        // For buttons, return the instance itself, not its value
+        if (option instanceof ButtonConfigOption) {
+          values[key] = option as any;
+        } else {
+          values[key] = option.getValue(inputData);
+        }
       }
     }
     return values as InferValues<VConfig<T>>;
@@ -501,7 +566,13 @@ export class VConfig<T extends Record<string, BaseConfigOption<any>>> {
     const defaults: Partial<InferValues<VConfig<T>>> = {};
     for (const key in this.options) {
       if (this.options.hasOwnProperty(key)) {
-        defaults[key] = this.options[key].getDefaultValue();
+        const option = this.options[key];
+        // For buttons, return the instance itself, not its value
+        if (option instanceof ButtonConfigOption) {
+          defaults[key] = option as any;
+        } else {
+          defaults[key] = option.getDefaultValue();
+        }
       }
     }
     return defaults as InferValues<VConfig<T>>;
@@ -514,9 +585,11 @@ export type InferValues<T> =
     ? {
         [K in keyof U]: U[K] extends GroupConfigOption<infer G>
           ? InferValues<VConfig<G>>
-          : U[K] extends BaseConfigOption<infer V>
-            ? V
-            : never;
+          : U[K] extends ButtonConfigOption
+            ? ButtonConfigOption
+            : U[K] extends BaseConfigOption<infer V>
+              ? V
+              : never;
       }
     : never;
 
@@ -531,6 +604,7 @@ export const v = {
   select: (options: SelectConfigOptions) => new SelectConfigOption(options),
   file: (options: FileConfigOptions) => new FileConfigOption(options),
   vector3: (options: Vector3ConfigOptions) => new Vector3ConfigOption(options),
+  button: (options: ButtonConfigOptions) => new ButtonConfigOption(options),
   group: <T extends Record<string, BaseConfigOption<any>>>(
     meta: ConfigMeta,
     options: T,

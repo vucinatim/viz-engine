@@ -3,13 +3,17 @@ import * as THREE from 'three';
 export function createShaderWall(
   scene: THREE.Scene,
   speakerBoxGeometry: THREE.BoxGeometry,
+  renderer?: THREE.WebGLRenderer,
 ) {
   // --- NEW: SHADER-BASED VISUALIZER WALL ---
+  // Use renderer size if available, otherwise fall back to window size
+  const resolution = renderer
+    ? new THREE.Vector2(renderer.domElement.width, renderer.domElement.height)
+    : new THREE.Vector2(window.innerWidth, window.innerHeight);
+
   const shaderUniforms = {
     u_time: { value: 0.0 },
-    u_resolution: {
-      value: new THREE.Vector2(window.innerWidth, window.innerHeight),
-    },
+    u_resolution: { value: resolution },
   };
 
   const vertexShader = `
@@ -221,6 +225,10 @@ export function createShaderWall(
     }
   };
 
+  const updateResolution = (width: number, height: number) => {
+    shaderWallMaterial.uniforms.u_resolution.value.set(width, height);
+  };
+
   return {
     shaderWall,
     leftSidePanel,
@@ -229,5 +237,6 @@ export function createShaderWall(
     panelSpacing,
     gridWidth,
     update,
+    updateResolution,
   };
 }

@@ -6,6 +6,7 @@ import InstancedSupercube from './instanced-supercube';
 import MorphShapes from './morph-shapes';
 import MovingObjects from './moving-objects';
 import SimpleCube from './simple-cube';
+import StageScene from './stage-scene';
 
 export const AllComps = [
   CurveSpectrum,
@@ -16,6 +17,7 @@ export const AllComps = [
   InstancedSupercube,
   MorphShapes,
   FeatureExtractionBars,
+  StageScene,
 ];
 
 export const CompDefinitionMap = new Map();

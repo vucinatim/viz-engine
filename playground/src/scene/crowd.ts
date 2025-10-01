@@ -5,10 +5,26 @@ import femaleModelUrl from '../models/female-dancer.fbx?url';
 import maleCheerModelUrl from '../models/male-cheer.fbx?url';
 import maleDancerModelUrl from '../models/male-dancer.fbx?url';
 
-const CROWD_COUNT = 500;
+export function createCrowd(
+  scene: THREE.Scene,
+  debug: boolean,
+  count: number = 500,
+) {
+  const CROWD_COUNT = Math.max(0, Math.min(1000, count)); // Clamp between 0 and 1000
 
-export function createCrowd(scene: THREE.Scene, debug: boolean) {
-  const loader = new FBXLoader();
+  // Early return if no crowd
+  if (CROWD_COUNT === 0) {
+    return { update: () => {}, remove: () => {}, getObject: () => null };
+  }
+
+  // Create loading manager to handle missing textures gracefully
+  const loadingManager = new THREE.LoadingManager();
+  loadingManager.onError = (url) => {
+    // Silently ignore texture loading errors - we'll use default materials
+    console.log('Texture not found (using default material):', url);
+  };
+
+  const loader = new FBXLoader(loadingManager);
   const mixers: THREE.AnimationMixer[] = [];
 
   const dancers: {
@@ -18,6 +34,7 @@ export function createCrowd(scene: THREE.Scene, debug: boolean) {
   }[] = [];
 
   let crowdUpdate: (delta: number) => void = () => {};
+  let crowdMesh: THREE.InstancedMesh | null = null;
 
   const loadModel = (url: string): Promise<THREE.Group> => {
     return new Promise((resolve, reject) => {
@@ -166,20 +183,20 @@ export function createCrowd(scene: THREE.Scene, debug: boolean) {
         `,
     });
 
-    const crowdMesh = new THREE.InstancedMesh(
-      mergedGeometry,
-      material,
-      CROWD_COUNT,
-    );
+    crowdMesh = new THREE.InstancedMesh(mergedGeometry, material, CROWD_COUNT);
 
     const dummy = new THREE.Object3D();
     const positions: THREE.Vector3[] = []; // Array to store final valid positions
 
-    // --- CROWD SHAPE PARAMETERS ---
+    // --- ADAPTIVE CROWD SHAPE PARAMETERS ---
+    // Scale depth and spread based on crowd count
+    // Fewer people = more clumped at stage (less depth)
+    // More people = spread out further back
+    const crowdFactor = CROWD_COUNT / 1000; // Normalize to 0-1 range
     const stageFrontZ = 14;
     const stageWidth = 50;
-    const crowdDepth = 80;
-    const crowdSpreadFactor = 1.5;
+    const crowdDepth = 30 + crowdFactor * 50; // 30-80 depth based on count
+    const crowdSpreadFactor = 0.8 + crowdFactor * 0.7; // 0.8-1.5 spread factor
     const minSeparation = 1.8;
     const maxPlacementTries = 100;
 
@@ -251,5 +268,14 @@ export function createCrowd(scene: THREE.Scene, debug: boolean) {
     crowdUpdate(delta);
   };
 
-  return { update };
+  const remove = () => {
+    if (crowdMesh) {
+      scene.remove(crowdMesh);
+      crowdMesh = null;
+    }
+    dancers.length = 0;
+    mixers.length = 0;
+  };
+
+  return { update, remove, getObject: () => crowdMesh };
 }

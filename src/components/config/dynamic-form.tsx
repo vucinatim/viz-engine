@@ -15,7 +15,12 @@ import {
 } from '../ui/form';
 import SimpleTooltip from '../ui/simple-tooltip';
 import { Toggle } from '../ui/toggle';
-import { ConfigParam, GroupConfigOption, VConfigType } from './config';
+import {
+  ButtonConfigOption,
+  ConfigParam,
+  GroupConfigOption,
+  VConfigType,
+} from './config';
 
 interface DynamicFormProps {
   layerId: string;
@@ -45,11 +50,33 @@ const DynamicForm = ({ layerId, config, defaultValues }: DynamicFormProps) => {
                   <div className="flex flex-col gap-y-4 pb-6">
                     {Object.entries(option.options).map(
                       ([innerKey, innerOption]) => {
-                        const opt = innerOption as ConfigParam<any>;
+                        const opt = innerOption as
+                          | ConfigParam<any>
+                          | ButtonConfigOption;
                         const isHidden =
                           typeof opt.visibleIf === 'function' &&
                           !opt.visibleIf(form.getValues());
                         if (isHidden) return null;
+
+                        // Handle buttons separately (they don't have values/animation)
+                        if (opt instanceof ButtonConfigOption) {
+                          return (
+                            <div key={innerKey} className="px-4 pb-6">
+                              <SimpleTooltip
+                                text={opt.description}
+                                trigger={
+                                  <div className="mb-2 flex items-center gap-x-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    {opt.description && (
+                                      <Info className="h-3 w-3 opacity-50" />
+                                    )}
+                                    {opt.label}
+                                  </div>
+                                }
+                              />
+                              {opt.toFormElement(null, () => {})}
+                            </div>
+                          );
+                        }
                         return (
                           <div key={innerKey} className="pb-6">
                             <MemoField
@@ -64,6 +91,21 @@ const DynamicForm = ({ layerId, config, defaultValues }: DynamicFormProps) => {
                     )}
                   </div>
                 </CollapsibleGroup>
+              ) : option instanceof ButtonConfigOption ? (
+                <div className="px-4 pb-6">
+                  <SimpleTooltip
+                    text={option.description}
+                    trigger={
+                      <div className="mb-2 flex items-center gap-x-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        {option.description && (
+                          <Info className="h-3 w-3 opacity-50" />
+                        )}
+                        {option.label}
+                      </div>
+                    }
+                  />
+                  {option.toFormElement(null, () => {})}
+                </div>
               ) : (
                 <div className="pb-6">
                   <MemoField

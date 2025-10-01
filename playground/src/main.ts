@@ -89,7 +89,8 @@ const {
   panelSpacing,
   gridWidth,
   update: updateShaderWall,
-} = createShaderWall(scene, speakerBoxGeometry);
+  updateResolution: updateShaderWallResolution,
+} = createShaderWall(scene, speakerBoxGeometry, renderer);
 createSpeakerStacks(
   scene,
   panelSize,
@@ -135,8 +136,13 @@ const { beamGroup, update: updateBeams } = createBeams(
   scene,
   sceneConfig.beams,
 );
-const { update: updateDj } = createDj(scene);
-const { update: updateCrowd } = createCrowd(scene, sceneConfig.debug);
+const djController = createDj(scene);
+let crowdController = createCrowd(
+  scene,
+  sceneConfig.debug,
+  sceneConfig.crowd.count,
+);
+let lastCrowdCount = sceneConfig.crowd.count;
 
 // --- UI & CONTROLS ---
 const { debugOverlay } = setupUI(
@@ -156,10 +162,8 @@ window.addEventListener('resize', () => {
   renderer.setSize(width, height);
   composer.setSize(width, height);
   renderer.setPixelRatio(window.devicePixelRatio);
-  if (shaderWall) {
-    (
-      shaderWall.material as THREE.ShaderMaterial
-    ).uniforms.u_resolution.value.set(width, height);
+  if (updateShaderWallResolution) {
+    updateShaderWallResolution(width, height);
   }
 });
 
@@ -211,8 +215,20 @@ function animate() {
     if (keysPressed['shift']) camera.position.y -= actualMoveSpeed;
   }
 
-  updateDj(delta);
-  updateCrowd(delta);
+  djController.update(delta);
+
+  // Dynamically recreate crowd if count changed
+  if (sceneConfig.crowd.count !== lastCrowdCount) {
+    crowdController.remove();
+    crowdController = createCrowd(
+      scene,
+      sceneConfig.debug,
+      sceneConfig.crowd.count,
+    );
+    lastCrowdCount = sceneConfig.crowd.count;
+  }
+
+  crowdController.update(delta);
 
   if (debugOverlay) {
     debugOverlay.innerHTML = `

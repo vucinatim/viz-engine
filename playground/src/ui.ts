@@ -369,6 +369,20 @@ export function setupUI(
     });
   }
 
+  // === CROWD ===
+  const crowdCountSlider = document.getElementById(
+    'crowd-count-slider',
+  ) as HTMLInputElement;
+  const crowdCountValueSpan = document.getElementById('crowd-count-value');
+  if (crowdCountSlider) {
+    crowdCountSlider.addEventListener('input', (event) => {
+      const value = parseInt((event.target as HTMLInputElement).value, 10);
+      sceneConfig.crowd.count = value;
+      if (crowdCountValueSpan)
+        crowdCountValueSpan.textContent = value.toString();
+    });
+  }
+
   // === SCENE EFFECTS ===
   const shaderWallToggle = document.getElementById(
     'shader-wall-toggle',

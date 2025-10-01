@@ -43,6 +43,10 @@ export interface BlinderConfig {
   enabled: boolean;
 }
 
+export interface CrowdConfig {
+  count: number;
+}
+
 export interface PostProcessingConfig {
   bloom: boolean;
   bloomStrength: number;
@@ -63,6 +67,7 @@ export interface SceneConfig {
   stageWash: WashLightConfig;
   strobes: StrobeConfig;
   blinders: BlinderConfig;
+  crowd: CrowdConfig;
   shaderWall: boolean;
 
   // Post processing
@@ -116,6 +121,9 @@ export function createDefaultSceneConfig(): SceneConfig {
     },
     blinders: {
       enabled: true,
+    },
+    crowd: {
+      count: 500,
     },
     shaderWall: true,
     postProcessing: {

@@ -36,7 +36,6 @@
     "@remotion/cli": "^4.0.172",
     "@remotion/eslint-plugin": "^4.0.172",
     "@remotion/player": "4.0.172",
-    "@types/three": "^0.164.0",
     "@wavesurfer/react": "^1.0.5",
     "@xyflow/react": "^12.3.1",
     "class-variance-authority": "^0.7.0",
@@ -59,13 +58,14 @@
     "sonner": "^1.4.41",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
-    "three": "^0.180.0",
+    "three": "^0.164.1",
     "wavesurfer.js": "^7.7.11",
     "zod": "^3.23.4",
     "zod-metadata": "^1.1.0",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@types/three": "^0.164.0",
     "@types/color": "^3.0.6",
     "@types/d3-drag": "^3.0.7",
     "@types/d3-selection": "^3.0.11",

@@ -3,8 +3,16 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import modelUrl from '../models/female-dj.fbx?url';
 
 export function createDj(scene: THREE.Scene) {
-  const loader = new FBXLoader();
+  // Create loading manager to handle missing textures gracefully
+  const loadingManager = new THREE.LoadingManager();
+  loadingManager.onError = (url) => {
+    // Silently ignore texture loading errors - we'll use default materials
+    console.log('Texture not found (using default material):', url);
+  };
+
+  const loader = new FBXLoader(loadingManager);
   let mixer: THREE.AnimationMixer | null = null;
+  let djObject: THREE.Group | null = null;
 
   loader.load(modelUrl, (object) => {
     object.scale.set(0.032, 0.032, 0.032);
@@ -22,6 +30,7 @@ export function createDj(scene: THREE.Scene) {
       action.play();
     }
 
+    djObject = object;
     scene.add(object);
   });
 
@@ -31,5 +40,13 @@ export function createDj(scene: THREE.Scene) {
     }
   };
 
-  return { update };
+  const remove = () => {
+    if (djObject) {
+      scene.remove(djObject);
+      djObject = null;
+    }
+    mixer = null;
+  };
+
+  return { update, remove, getObject: () => djObject };
 }
