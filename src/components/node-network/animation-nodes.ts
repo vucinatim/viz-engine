@@ -8,12 +8,14 @@ import HarmonicPresenceBody from './bodies/harmonic-presence-body';
 import HysteresisGateBody from './bodies/hysteresis-gate-body';
 import MultiBandAnalysisBody from './bodies/multi-band-analysis-body';
 import NormalizeBody from './bodies/normalize-body';
+import PitchDetectionBody from './bodies/pitch-detection-body';
 import SectionChangeDetectorBody from './bodies/section-change-detector-body';
 import SpectralCentroidBody from './bodies/spectral-centroid-body';
 import ThresholdCounterBody from './bodies/threshold-counter-body';
 import TimeDomainSectionDetectorBody from './bodies/time-domain-section-detector-body';
 import TonalPresenceBody from './bodies/tonal-presence-body';
 import ValueMapperBody from './bodies/value-mapper-body';
+// No external libraries; implement YIN inline
 export type { AnimNode } from '../config/create-node';
 export type { AnimInputData } from '../config/node-types';
 
@@ -95,6 +97,9 @@ const MathNode = createNode({
         break;
       case MathOperation.Min:
         result = Math.min(a, b);
+        break;
+      case MathOperation.Modulo:
+        result = a % b;
         break;
       default:
         result = a * b;
@@ -356,16 +361,34 @@ const FrequencyBandNode = createNode({
   },
 });
 
-// --- Pitch Detection Node ---
+// --- Pitch Detection (YIN) ---
 const PitchDetectionNode = createNode({
   label: 'Pitch Detection',
   description:
-    'Simple peak-bin pitch from FrequencyAnalysis. Returns note string, Hz, MIDI, octave.',
+    'Time-domain pitch detection using YIN/CMNDF. Very stable for monophonic sources (piano, voice). Low latency!',
+  customBody: PitchDetectionBody,
   inputs: [
+    { id: 'audioSignal', label: 'Audio Signal', type: 'Uint8Array' },
     {
-      id: 'frequencyAnalysis',
-      label: 'Frequency Analysis',
-      type: 'FrequencyAnalysis',
+      id: 'sampleRate',
+      label: 'Sample Rate (Hz)',
+      type: 'number',
+      defaultValue: 44100,
+    },
+    { id: 'minHz', label: 'Min Hz', type: 'number', defaultValue: 60 },
+    { id: 'maxHz', label: 'Max Hz', type: 'number', defaultValue: 1500 },
+    {
+      id: 'threshold',
+      label: 'CMNDF Threshold',
+      type: 'number',
+      defaultValue: 0.1,
+    },
+    { id: 'smoothMs', label: 'Smooth (ms)', type: 'number', defaultValue: 30 },
+    {
+      id: 'stabilityCents',
+      label: 'Stability (cents)',
+      type: 'number',
+      defaultValue: 50,
     },
   ],
   outputs: [
@@ -373,33 +396,155 @@ const PitchDetectionNode = createNode({
     { id: 'frequency', label: 'Frequency (Hz)', type: 'number' },
     { id: 'midi', label: 'MIDI', type: 'number' },
     { id: 'octave', label: 'Octave', type: 'number' },
+    { id: 'confidence', label: 'Confidence', type: 'number' },
   ],
-  computeSignal: ({ frequencyAnalysis }, context) => {
+  computeSignal: (
+    {
+      audioSignal,
+      sampleRate,
+      minHz,
+      maxHz,
+      threshold,
+      smoothMs,
+      stabilityCents,
+    },
+    context,
+    node,
+  ) => {
     if (
-      !frequencyAnalysis ||
-      !frequencyAnalysis.frequencyData ||
-      !frequencyAnalysis.sampleRate ||
-      !frequencyAnalysis.fftSize
+      !node ||
+      !audioSignal ||
+      !(audioSignal instanceof Uint8Array) ||
+      audioSignal.length < 64
     ) {
-      return { note: '', frequency: 0, midi: 0, octave: 0 };
+      return { note: '', frequency: 0, midi: 0, octave: 0, confidence: 0 };
     }
-    const { frequencyData, sampleRate, fftSize } = frequencyAnalysis;
-    // Find the index of the max bin
-    let maxIdx = 0;
-    let maxVal = 0;
-    for (let i = 0; i < frequencyData.length; i++) {
-      if (frequencyData[i] > maxVal) {
-        maxVal = frequencyData[i];
-        maxIdx = i;
+
+    const sr =
+      typeof sampleRate === 'number' && sampleRate > 0 ? sampleRate : 44100;
+    const minF = Math.max(20, typeof minHz === 'number' ? minHz : 60);
+    const maxF = Math.max(minF + 1, typeof maxHz === 'number' ? maxHz : 1500);
+    const tauMin = Math.max(2, Math.floor(sr / maxF));
+    const tauMax = Math.min(audioSignal.length - 2, Math.ceil(sr / minF));
+    if (tauMax <= tauMin + 2) {
+      return { note: '', frequency: 0, midi: 0, octave: 0, confidence: 0 };
+    }
+
+    // Convert to centered float and optionally remove DC
+    const N = audioSignal.length;
+    const x = new Float32Array(N);
+    let mean = 0;
+    for (let i = 0; i < N; i++) {
+      const v = (audioSignal[i] - 128) / 128; // -1..1
+      x[i] = v;
+      mean += v;
+    }
+    mean /= N;
+    for (let i = 0; i < N; i++) x[i] -= mean;
+
+    // YIN difference function d(tau)
+    const d = new Float32Array(tauMax + 1);
+    for (let tau = 1; tau <= tauMax; tau++) {
+      let sum = 0;
+      const limit = N - tau;
+      for (let i = 0; i < limit; i++) {
+        const diff = x[i] - x[i + tau];
+        sum += diff * diff;
+      }
+      d[tau] = sum;
+    }
+
+    // Cumulative mean normalized difference function d'(tau)
+    const cmndf = new Float32Array(tauMax + 1);
+    cmndf[0] = 1;
+    let runningSum = 0;
+    for (let tau = 1; tau <= tauMax; tau++) {
+      runningSum += d[tau];
+      cmndf[tau] = d[tau] * (tau / Math.max(1e-12, runningSum));
+    }
+
+    // Search for absolute minimum in [tauMin..tauMax]
+    // (Don't use threshold crossing - find the deepest valley for best accuracy)
+    let minVal = Infinity;
+    let candTau = tauMin;
+    for (let tau = tauMin; tau <= tauMax; tau++) {
+      const v = cmndf[tau];
+      if (v < minVal) {
+        minVal = v;
+        candTau = tau;
       }
     }
-    // Convert bin index to frequency
-    const nyquist = sampleRate / 2;
-    const frequencyPerBin = nyquist / (fftSize / 2);
-    const freq = maxIdx * frequencyPerBin;
-    // Map frequency to MIDI note
+
+    // Only accept if confidence is reasonable
+    const th = Math.max(
+      0.02,
+      Math.min(0.5, typeof threshold === 'number' ? threshold : 0.1),
+    );
+    if (minVal > th) {
+      // No confident pitch found
+      return { note: '', frequency: 0, midi: 0, octave: 0, confidence: 0 };
+    }
+
+    // Parabolic interpolation around candTau for sub-sample precision
+    const tau0 = Math.max(tauMin, Math.min(tauMax, candTau));
+    const prev = cmndf[tau0 - 1] ?? cmndf[tau0];
+    const curr = cmndf[tau0];
+    const next = cmndf[tau0 + 1] ?? cmndf[tau0];
+    // For a minimum: offset = 0.5 * (a - c) / (a - 2b + c)
+    const denom = prev - 2 * curr + next;
+    const offset = Math.abs(denom) > 1e-12 ? (0.5 * (prev - next)) / denom : 0;
+    let refinedTau =
+      tau0 + (isFinite(offset) && Math.abs(offset) < 1 ? offset : 0);
+
+    // Octave guard: prefer 2*tau if similar cost (helps avoid octave-up mistakes)
+    // Only apply if we have room in our search range
+    const tau2 = Math.min(tauMax, Math.round(refinedTau * 2));
+    if (tau2 <= tauMax && tau2 >= tauMin) {
+      const costTau = cmndf[Math.round(refinedTau)] || cmndf[tau0];
+      const costTau2 = cmndf[tau2];
+      // Be more conservative - only switch if tau2 is significantly better
+      if (isFinite(costTau2) && costTau2 + 0.05 < costTau) {
+        refinedTau = tau2;
+      }
+    }
+
+    const rawFreq = refinedTau > 0 ? sr / refinedTau : 0;
+    let confidence = Math.max(
+      0,
+      Math.min(1, 1 - (cmndf[Math.round(refinedTau)] || 1)),
+    );
+
+    // Temporal smoothing and note stability
+    const state = node.data.state;
+    const t = context.time;
+    const prevTime = typeof state.prevTime === 'number' ? state.prevTime : t;
+    const dt = Math.max(0, t - prevTime);
+    const sMs = Math.max(1, typeof smoothMs === 'number' ? smoothMs : 30);
+    const alpha = 1 - Math.exp(-dt / (sMs / 1000));
+    const prevFreq =
+      typeof state.prevFreq === 'number' && state.prevFreq > 0
+        ? state.prevFreq
+        : rawFreq;
+    const stab = Math.max(
+      5,
+      typeof stabilityCents === 'number' ? stabilityCents : 50,
+    );
+    let freq = rawFreq;
+    if (prevFreq > 0 && rawFreq > 0) {
+      const centsDiff = Math.abs(1200 * Math.log2(rawFreq / prevFreq));
+      if (centsDiff < stab) {
+        // Small change - light smoothing for responsiveness
+        freq = prevFreq + alpha * 0.6 * (rawFreq - prevFreq);
+      } else {
+        // Large change - accept quickly to minimize lag
+        freq = prevFreq + alpha * 0.9 * (rawFreq - prevFreq);
+      }
+    }
+    const prevConf =
+      typeof state.prevConf === 'number' ? state.prevConf : confidence;
+    confidence = prevConf + alpha * 0.7 * (confidence - prevConf);
+
     const midi = freq > 0 ? Math.round(69 + 12 * Math.log2(freq / 440)) : 0;
-    // Map MIDI to note name
     const noteNames = [
       'C',
       'C#',
@@ -417,7 +562,11 @@ const PitchDetectionNode = createNode({
     const noteIdx = midi % 12;
     const octave = Math.floor(midi / 12) - 1;
     const note = freq > 0 ? `${noteNames[noteIdx]}${octave}` : '';
-    return { note, frequency: freq, midi, octave };
+
+    state.prevFreq = freq;
+    state.prevConf = confidence;
+    state.prevTime = t;
+    return { note, frequency: freq, midi, octave, confidence };
   },
 });
 
@@ -1516,6 +1665,62 @@ const TimeDomainSectionDetectorNode = createNode({
   },
 });
 
+const RateLimiterNode = createNode({
+  label: 'Rate Limiter',
+  description:
+    'Limits how often the output value can change. Prevents rapid value switching by enforcing a minimum time interval between changes. Perfect for preventing twitchy mode switches!',
+  inputs: [
+    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
+    {
+      id: 'minIntervalMs',
+      label: 'Min Interval (ms)',
+      type: 'number',
+      defaultValue: 250,
+    },
+  ],
+  outputs: [{ id: 'limited', label: 'Limited', type: 'number' }],
+  computeSignal: ({ value, minIntervalMs }, context, node) => {
+    if (!node) return { limited: 0 };
+
+    const state = node.data.state;
+    const currentValue = typeof value === 'number' ? value : 0;
+    const minInterval = Math.max(
+      0,
+      typeof minIntervalMs === 'number' ? minIntervalMs : 250,
+    );
+    const currentTime = context.time * 1000; // Convert to milliseconds
+
+    // Initialize state
+    if (typeof state.lastValue !== 'number') {
+      state.lastValue = currentValue;
+      state.lastChangeTime = currentTime;
+      return { limited: currentValue };
+    }
+
+    const lastValue = state.lastValue as number;
+    const lastChangeTime = state.lastChangeTime as number;
+    const timeSinceLastChange = currentTime - lastChangeTime;
+
+    // Handle time reset (e.g., when audio loops)
+    if (timeSinceLastChange < 0) {
+      state.lastValue = currentValue;
+      state.lastChangeTime = currentTime;
+      return { limited: currentValue };
+    }
+
+    // Check if value has changed and enough time has passed
+    if (currentValue !== lastValue && timeSinceLastChange >= minInterval) {
+      // Allow the change
+      state.lastValue = currentValue;
+      state.lastChangeTime = currentTime;
+      return { limited: currentValue };
+    }
+
+    // Hold the previous value (rate limiting active)
+    return { limited: lastValue };
+  },
+});
+
 export const nodes: AnimNode[] = [
   SineNode,
   MathNode,
@@ -1527,6 +1732,7 @@ export const nodes: AnimNode[] = [
   PitchDetectionNode,
   ValueMapperNode,
   ThresholdCounterNode,
+  RateLimiterNode,
   SectionChangeDetectorNode,
   SpectralCentroidNode,
   TimeDomainSectionDetectorNode,

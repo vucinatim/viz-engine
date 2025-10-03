@@ -11,6 +11,7 @@ import { createDj } from './scene/dj';
 import { createDebugHelpers } from './scene/helpers';
 import { createLasers } from './scene/lasers';
 import { createMovingLights } from './scene/moving-lights';
+import { createOverheadBlinder } from './scene/overhead-blinder';
 import { createShaderWall } from './scene/shader-wall';
 import { createSpeakerStacks } from './scene/speakers';
 import { createStage } from './scene/stage';
@@ -143,6 +144,10 @@ let crowdController = createCrowd(
   sceneConfig.crowd.count,
 );
 let lastCrowdCount = sceneConfig.crowd.count;
+const { update: updateOverheadBlinder } = createOverheadBlinder(
+  scene,
+  sceneConfig.overheadBlinder,
+);
 
 // --- UI & CONTROLS ---
 const { debugOverlay } = setupUI(
@@ -262,6 +267,7 @@ function animate() {
   updateMovingLights(elapsedTime, sceneConfig.movingLights);
   updateStrobes(sceneConfig.strobes);
   updateBlinders(sceneConfig.blinders);
+  updateOverheadBlinder(elapsedTime, sceneConfig.overheadBlinder);
 
   helpersGroup.visible = sceneConfig.debug;
 

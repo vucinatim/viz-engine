@@ -32,6 +32,9 @@ const DebugAnimation = createComponent({
       defaultValue: '#60a5fa',
     }),
   }),
+  defaultNetworks: {
+    midi: 'pitch-detection-midi-mod',
+  },
   draw: ({ canvasCtx: ctx, config }) => {
     const { width, height } = ctx.canvas;
     const { value, midi, text, color } = config;

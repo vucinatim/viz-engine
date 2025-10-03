@@ -6,6 +6,7 @@ export enum MathOperation {
   Power = 'power',
   Max = 'max',
   Min = 'min',
+  Modulo = 'modulo',
 }
 
 export const MATH_OPERATIONS = Object.values(MathOperation);

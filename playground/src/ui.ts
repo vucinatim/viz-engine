@@ -247,7 +247,14 @@ export function setupUI(
       if (value === 'auto') {
         sceneConfig.beams.mode = 'auto';
       } else {
-        sceneConfig.beams.mode = parseInt(value, 10) as 0 | 1 | 2 | 3 | 4;
+        sceneConfig.beams.mode = parseInt(value, 10) as
+          | 0
+          | 1
+          | 2
+          | 3
+          | 4
+          | 5
+          | 6;
       }
     });
   }
@@ -369,6 +376,33 @@ export function setupUI(
     });
   }
 
+  // === OVERHEAD BLINDER ===
+  const overheadBlinderToggle = document.getElementById(
+    'overhead-blinder-toggle',
+  ) as HTMLInputElement;
+  if (overheadBlinderToggle) {
+    overheadBlinderToggle.addEventListener('change', (event) => {
+      sceneConfig.overheadBlinder.enabled = (
+        event.target as HTMLInputElement
+      ).checked;
+    });
+  }
+
+  const overheadBlinderIntensitySlider = document.getElementById(
+    'overhead-blinder-intensity-slider',
+  ) as HTMLInputElement;
+  const overheadBlinderIntensityValueSpan = document.getElementById(
+    'overhead-blinder-intensity-value',
+  );
+  if (overheadBlinderIntensitySlider) {
+    overheadBlinderIntensitySlider.addEventListener('input', (event) => {
+      const value = parseInt((event.target as HTMLInputElement).value, 10);
+      sceneConfig.overheadBlinder.intensity = value;
+      if (overheadBlinderIntensityValueSpan)
+        overheadBlinderIntensityValueSpan.textContent = value.toString();
+    });
+  }
+
   // === CROWD ===
   const crowdCountSlider = document.getElementById(
     'crowd-count-slider',
@@ -389,7 +423,89 @@ export function setupUI(
   ) as HTMLInputElement;
   if (shaderWallToggle) {
     shaderWallToggle.addEventListener('change', (event) => {
-      sceneConfig.shaderWall = (event.target as HTMLInputElement).checked;
+      sceneConfig.shaderWall.enabled = (
+        event.target as HTMLInputElement
+      ).checked;
+    });
+  }
+
+  const shaderWallScaleSlider = document.getElementById(
+    'shader-wall-scale-slider',
+  ) as HTMLInputElement;
+  const shaderWallScaleValueSpan = document.getElementById(
+    'shader-wall-scale-value',
+  );
+  if (shaderWallScaleSlider) {
+    shaderWallScaleSlider.addEventListener('input', (event) => {
+      const value =
+        parseFloat((event.target as HTMLInputElement).value) / 100.0;
+      sceneConfig.shaderWall.scale = value;
+      if (shaderWallScaleValueSpan)
+        shaderWallScaleValueSpan.textContent = value.toFixed(2);
+    });
+  }
+
+  const shaderWallRotationSlider = document.getElementById(
+    'shader-wall-rotation-slider',
+  ) as HTMLInputElement;
+  const shaderWallRotationValueSpan = document.getElementById(
+    'shader-wall-rotation-value',
+  );
+  if (shaderWallRotationSlider) {
+    shaderWallRotationSlider.addEventListener('input', (event) => {
+      const value =
+        parseFloat((event.target as HTMLInputElement).value) / 100.0;
+      sceneConfig.shaderWall.rotationSpeed = value;
+      if (shaderWallRotationValueSpan)
+        shaderWallRotationValueSpan.textContent = value.toFixed(2);
+    });
+  }
+
+  const shaderWallColorSlider = document.getElementById(
+    'shader-wall-color-slider',
+  ) as HTMLInputElement;
+  const shaderWallColorValueSpan = document.getElementById(
+    'shader-wall-color-value',
+  );
+  if (shaderWallColorSlider) {
+    shaderWallColorSlider.addEventListener('input', (event) => {
+      const value =
+        parseFloat((event.target as HTMLInputElement).value) / 100.0;
+      sceneConfig.shaderWall.colorSpeed = value;
+      if (shaderWallColorValueSpan)
+        shaderWallColorValueSpan.textContent = value.toFixed(2);
+    });
+  }
+
+  const shaderWallTravelSlider = document.getElementById(
+    'shader-wall-travel-slider',
+  ) as HTMLInputElement;
+  const shaderWallTravelValueSpan = document.getElementById(
+    'shader-wall-travel-value',
+  );
+  if (shaderWallTravelSlider) {
+    shaderWallTravelSlider.addEventListener('input', (event) => {
+      const value =
+        parseFloat((event.target as HTMLInputElement).value) / 100.0;
+      sceneConfig.shaderWall.travelSpeed = value;
+      if (shaderWallTravelValueSpan)
+        shaderWallTravelValueSpan.textContent = value.toFixed(2);
+    });
+  }
+
+  const shaderWallBrightnessSlider = document.getElementById(
+    'shader-wall-brightness-slider',
+  ) as HTMLInputElement;
+  const shaderWallBrightnessValueSpan = document.getElementById(
+    'shader-wall-brightness-value',
+  );
+  if (shaderWallBrightnessSlider) {
+    shaderWallBrightnessSlider.addEventListener('input', (event) => {
+      const value =
+        parseFloat((event.target as HTMLInputElement).value) / 100.0;
+      sceneConfig.shaderWall.brightness = value;
+      if (shaderWallBrightnessValueSpan)
+        shaderWallBrightnessValueSpan.textContent = value.toFixed(2);
     });
   }
 

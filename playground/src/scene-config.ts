@@ -11,7 +11,7 @@ export interface LaserConfig {
 
 export interface BeamConfig {
   enabled: boolean;
-  mode: 'auto' | 0 | 1 | 2 | 3 | 4;
+  mode: 'auto' | 0 | 1 | 2 | 3 | 4 | 5 | 6;
   colorMode: ColorMode;
   singleColor: string;
   intensity: number;
@@ -72,6 +72,11 @@ export interface ShaderWallConfig {
   brightness: number;
 }
 
+export interface OverheadBlinderConfig {
+  enabled: boolean;
+  intensity: number;
+}
+
 export interface SceneConfig {
   // Scene elements
   lasers: LaserConfig;
@@ -83,6 +88,7 @@ export interface SceneConfig {
   blinders: BlinderConfig;
   crowd: CrowdConfig;
   shaderWall: ShaderWallConfig;
+  overheadBlinder: OverheadBlinderConfig;
 
   // Post processing
   postProcessing: PostProcessingConfig;
@@ -151,6 +157,10 @@ export function createDefaultSceneConfig(): SceneConfig {
       colorSpeed: 1.0,
       travelSpeed: 1.0,
       brightness: 2.0,
+    },
+    overheadBlinder: {
+      enabled: false,
+      intensity: 50,
     },
     postProcessing: {
       bloom: true,

@@ -4,7 +4,10 @@ import { v } from '../config/config';
 import { createComponent } from '../config/create-component';
 
 // Import scene creation functions from playground
-import { ShaderWallConfig } from '../../../playground/src/scene-config';
+import {
+  OverheadBlinderConfig,
+  ShaderWallConfig,
+} from '../../../playground/src/scene-config';
 import { createBeams } from '../../../playground/src/scene/beams';
 import { createBlinders } from '../../../playground/src/scene/blinders';
 import { createCrowd } from '../../../playground/src/scene/crowd';
@@ -12,6 +15,7 @@ import { createDj } from '../../../playground/src/scene/dj';
 import { createDebugHelpers } from '../../../playground/src/scene/helpers';
 import { createLasers } from '../../../playground/src/scene/lasers';
 import { createMovingLights } from '../../../playground/src/scene/moving-lights';
+import { createOverheadBlinder } from '../../../playground/src/scene/overhead-blinder';
 import { createShaderWall } from '../../../playground/src/scene/shader-wall';
 import { createSpeakerStacks } from '../../../playground/src/scene/speakers';
 import { createStage } from '../../../playground/src/scene/stage';
@@ -88,6 +92,9 @@ type StageSceneState = {
   updateBlinders: ((config: any) => void) | null;
   updateShaderWall: ((time: number, config: ShaderWallConfig) => void) | null;
   updateShaderWallResolution: ((width: number, height: number) => void) | null;
+  updateOverheadBlinder:
+    | ((time: number, config: OverheadBlinderConfig) => void)
+    | null;
   updateDj: ((delta: number) => void) | null;
   updateCrowd: ((delta: number) => void) | null;
   removeDj: (() => void) | null;
@@ -239,7 +246,7 @@ const StageScene = createComponent({
         colorSpeed: v.number({
           label: 'Color Speed',
           description: 'How fast colors cycle',
-          defaultValue: 1.0,
+          defaultValue: 3.0,
           min: 0,
           max: 3,
           step: 0.1,
@@ -430,7 +437,7 @@ const StageScene = createComponent({
           label: 'Mode',
           description: 'Beam pattern mode',
           defaultValue: 'auto',
-          options: ['auto', '0', '1', '2', '3', '4'],
+          options: ['auto', '0', '1', '2', '3', '4', '5', '6'],
         }),
         colorMode: v.select({
           label: 'Color Mode',
@@ -548,6 +555,27 @@ const StageScene = createComponent({
         }),
       },
     ),
+    overheadBlinder: v.group(
+      {
+        label: 'Overhead Blinder',
+        description: 'White flood light from above for drops',
+      },
+      {
+        enabled: v.toggle({
+          label: 'Enabled',
+          description: 'Enable overhead blinder',
+          defaultValue: true,
+        }),
+        intensity: v.number({
+          label: 'Intensity',
+          description: 'Overhead blinder intensity (0 = off)',
+          defaultValue: 0,
+          min: 0,
+          max: 200,
+          step: 1,
+        }),
+      },
+    ),
     accentLights: v.group(
       {
         label: 'Accent Lights',
@@ -634,6 +662,7 @@ const StageScene = createComponent({
     updateBlinders: null,
     updateShaderWall: null,
     updateShaderWallResolution: null,
+    updateOverheadBlinder: null,
     updateDj: null,
     updateCrowd: null,
     removeDj: null,
@@ -667,7 +696,11 @@ const StageScene = createComponent({
     'lasers.mode': 'laser-mode-section-cycle',
     'movingLights.mode': 'moving-lights-kick-cycle',
     'shaderWall.scale': 'shader-wall-bass-pulse',
+    'shaderWall.rotationSpeed': 'shader-wall-rotation-kick-vocal',
+    'shaderWall.travelSpeed': 'shader-wall-travel-snare-cycle',
+    'stageLights.color': 'stage-lights-snare-color-cycle',
     'shaderWall.brightness': 'shader-wall-kick-flash',
+    'overheadBlinder.intensity': 'overhead-blinder-big-impact',
   },
   init3D: ({ threeCtx: { scene, camera, renderer }, state, config }) => {
     // Initialize renderer size tracking
@@ -817,6 +850,12 @@ const StageScene = createComponent({
       mode: config.blinders.mode as 'random' | 'controlled',
     });
     state.updateBlinders = updateBlinders;
+
+    const { update: updateOverheadBlinder } = createOverheadBlinder(scene, {
+      enabled: config.overheadBlinder.enabled,
+      intensity: config.overheadBlinder.intensity,
+    });
+    state.updateOverheadBlinder = updateOverheadBlinder;
 
     const { helpersGroup } = createDebugHelpers(scene);
     state.helpersGroup = helpersGroup;
@@ -1161,6 +1200,13 @@ const StageScene = createComponent({
         enabled: config.blinders.enabled,
         intensity: config.blinders.intensity,
         mode: config.blinders.mode as 'random' | 'controlled',
+      });
+    }
+
+    if (state.updateOverheadBlinder) {
+      state.updateOverheadBlinder(elapsedTime, {
+        enabled: config.overheadBlinder.enabled,
+        intensity: config.overheadBlinder.intensity,
       });
     }
 

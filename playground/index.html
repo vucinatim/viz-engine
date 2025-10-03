@@ -185,6 +185,8 @@
           <option value="2">Center Cross</option>
           <option value="3">Outward Fan</option>
           <option value="4">Crowd Sweep</option>
+          <option value="5">Crowd Lift</option>
+          <option value="6">Pulsing Wings</option>
         </select>
       </div>
       <div class="slider-group">
@@ -280,6 +282,29 @@
         </label>
       </div>
 
+      <!-- Overhead Blinder Section -->
+      <div class="section-header">
+        <h3>Overhead Blinder</h3>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="overhead-blinder-toggle" checked />
+          Enabled
+        </label>
+      </div>
+      <div class="slider-group">
+        <label for="overhead-blinder-intensity-slider"
+          >Intensity:
+          <span id="overhead-blinder-intensity-value">50</span></label
+        >
+        <input
+          type="range"
+          id="overhead-blinder-intensity-slider"
+          min="0"
+          max="200"
+          value="50" />
+      </div>
+
       <!-- Crowd Section -->
       <div class="section-header">
         <h3>Crowd</h3>
@@ -305,6 +330,63 @@
           <input type="checkbox" id="shader-wall-toggle" checked />
           Shader Wall
         </label>
+      </div>
+      <div class="slider-group">
+        <label for="shader-wall-scale-slider"
+          >Wall Scale: <span id="shader-wall-scale-value">2.00</span></label
+        >
+        <input
+          type="range"
+          id="shader-wall-scale-slider"
+          min="10"
+          max="500"
+          value="200" />
+      </div>
+      <div class="slider-group">
+        <label for="shader-wall-rotation-slider"
+          >Rotation Speed:
+          <span id="shader-wall-rotation-value">1.00</span></label
+        >
+        <input
+          type="range"
+          id="shader-wall-rotation-slider"
+          min="0"
+          max="300"
+          value="100" />
+      </div>
+      <div class="slider-group">
+        <label for="shader-wall-color-slider"
+          >Color Speed: <span id="shader-wall-color-value">1.00</span></label
+        >
+        <input
+          type="range"
+          id="shader-wall-color-slider"
+          min="0"
+          max="300"
+          value="100" />
+      </div>
+      <div class="slider-group">
+        <label for="shader-wall-travel-slider"
+          >Travel Speed: <span id="shader-wall-travel-value">1.00</span></label
+        >
+        <input
+          type="range"
+          id="shader-wall-travel-slider"
+          min="0"
+          max="300"
+          value="100" />
+      </div>
+      <div class="slider-group">
+        <label for="shader-wall-brightness-slider"
+          >Brightness:
+          <span id="shader-wall-brightness-value">2.00</span></label
+        >
+        <input
+          type="range"
+          id="shader-wall-brightness-slider"
+          min="10"
+          max="500"
+          value="200" />
       </div>
       <div class="toggle-group">
         <label>

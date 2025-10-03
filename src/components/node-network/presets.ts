@@ -832,7 +832,7 @@ registerPreset({
       inputValues: {
         inputMin: 30,
         inputMax: 50,
-        outputMin: 0.0,
+        outputMin: 0.01,
         outputMax: 0.9,
       },
     },
@@ -964,56 +964,180 @@ registerPreset({
   ],
 });
 
-// Mode Cycling based on Melody
+// Overhead Blinder - Big Impact Flash
+registerPreset({
+  id: 'overhead-blinder-big-impact',
+  name: '💥 Overhead Blinder (Big Impact Flash)',
+  description:
+    'Flashes overhead blinder only on very big bass impacts/drops. Bass-focused analysis with aggressive normalization to trigger only on the biggest moments!',
+  outputType: 'number',
+  autoPlace: true,
+  nodes: [
+    // Bass-focused analysis for big impacts
+    {
+      id: 'full_band',
+      label: 'Frequency Band',
+      inputValues: {
+        startFrequency: 20,
+        endFrequency: 200, // Bass frequencies only
+      },
+    },
+    {
+      id: 'band_info',
+      label: 'Band Info',
+      inputValues: {},
+    },
+    // Aggressive normalization - only the top 2% of energy triggers
+    {
+      id: 'normalize',
+      label: 'Adaptive Normalize (Quantile)',
+      inputValues: {
+        windowMs: 4000, // Medium window for quicker adaptation
+        qLow: 0.6,
+        qHigh: 0.98, // Very high threshold
+        freezeBelow: 100, // Lower freeze threshold
+      },
+    },
+    // Fast attack, medium decay for flash effect
+    {
+      id: 'envelope',
+      label: 'Envelope Follower',
+      inputValues: {
+        attackMs: 1, // Instant flash
+        releaseMs: 400, // Medium decay
+      },
+    },
+    // Gate to only trigger on very strong signals
+    {
+      id: 'gate',
+      label: 'Hysteresis Gate',
+      inputValues: {
+        low: 0.8725, // Extremely high threshold for rare triggers
+        high: 0.9625,
+      },
+    },
+    // Scale to intensity range (subtle flash)
+    {
+      id: 'scale',
+      label: 'Math',
+      inputValues: {
+        a: 0, // Will receive gated signal (0 or 1)
+        b: 10, // Subtle max intensity
+        operation: 'multiply',
+      },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'full_band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'full_band',
+      sourceHandle: 'bandData',
+      target: 'band_info',
+      targetHandle: 'data',
+    },
+    {
+      source: 'band_info',
+      sourceHandle: 'average',
+      target: 'normalize',
+      targetHandle: 'value',
+    },
+    {
+      source: 'normalize',
+      sourceHandle: 'result',
+      target: 'envelope',
+      targetHandle: 'value',
+    },
+    {
+      source: 'envelope',
+      sourceHandle: 'env',
+      target: 'gate',
+      targetHandle: 'value',
+    },
+    {
+      source: 'gate',
+      sourceHandle: 'gated',
+      target: 'scale',
+      targetHandle: 'a',
+    },
+    {
+      source: 'scale',
+      sourceHandle: 'result',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// Mode Cycling based on Bassline Melody
 registerPreset({
   id: 'beam-mode-melody-cycle',
-  name: '🔄 Beam Mode Cycling (Melody)',
+  name: '🔄 Beam Mode Cycling (Bassline Melody)',
   description:
-    'Cycles through beam modes (0-4) based on melody/vocal hits. Melody detection → Threshold Counter → Value Mapper → String output for mode selection.',
+    'Cycles through beam modes (0-6) based on bassline melody changes. Detects bass melody shifts with rate limiting to prevent twitchy switching. Smooth and impactful!',
   outputType: 'string',
   autoPlace: true,
   nodes: [
+    // Bassline melody frequency range
     {
       id: 'band',
       label: 'Frequency Band',
       inputValues: {
-        startFrequency: 500,
-        endFrequency: 3762,
+        startFrequency: 80,
+        endFrequency: 400,
       },
     },
     {
-      id: 'harm',
-      label: 'Harmonic Presence',
-      inputValues: {
-        maxHarmonics: 3,
-        toleranceCents: 50,
-        smoothMs: 100,
-        minSNR: 0.6,
-      },
+      id: 'band_info',
+      label: 'Band Info',
+      inputValues: {},
     },
+    // Detect changes in bassline
     {
       id: 'env',
       label: 'Envelope Follower',
-      inputValues: { attackMs: 6, releaseMs: 300 },
+      inputValues: { attackMs: 10, releaseMs: 200 },
     },
     {
-      id: 'norm',
-      label: 'Normalize',
+      id: 'adapt',
+      label: 'Adaptive Normalize (Quantile)',
       inputValues: {
-        inputMin: 0.2,
-        inputMax: 0.4,
-        outputMin: 0,
-        outputMax: 1,
+        windowMs: 3000,
+        qLow: 0.3,
+        qHigh: 0.99,
+        freezeBelow: 50,
       },
     },
+    {
+      id: 'gate',
+      label: 'Hysteresis Gate',
+      inputValues: {
+        low: 0.8,
+        high: 0.9,
+      },
+    },
+    // Count the changes
     {
       id: 'counter',
       label: 'Threshold Counter',
       inputValues: {
-        threshold: 0.7,
-        maxValue: 5,
+        threshold: 0.5,
+        maxValue: 7,
       },
     },
+    // Rate limit to prevent rapid switching
+    {
+      id: 'limiter',
+      label: 'Rate Limiter',
+      inputValues: {
+        minIntervalMs: 500, // Minimum 500ms between mode changes
+      },
+    },
+    // Map to mode strings
     {
       id: 'mapper',
       label: 'Value Mapper',
@@ -1025,6 +1149,8 @@ registerPreset({
           '2': '2',
           '3': '3',
           '4': '4',
+          '5': '5',
+          '6': '6',
         },
         default: '0',
       },
@@ -1040,42 +1166,42 @@ registerPreset({
     {
       source: 'band',
       sourceHandle: 'bandData',
-      target: 'harm',
+      target: 'band_info',
       targetHandle: 'data',
     },
     {
-      source: 'band',
-      sourceHandle: 'bandStartBin',
-      target: 'harm',
-      targetHandle: 'bandStartBin',
-    },
-    {
-      source: 'band',
-      sourceHandle: 'frequencyPerBin',
-      target: 'harm',
-      targetHandle: 'frequencyPerBin',
-    },
-    {
-      source: 'harm',
-      sourceHandle: 'presence',
+      source: 'band_info',
+      sourceHandle: 'average',
       target: 'env',
       targetHandle: 'value',
     },
     {
       source: 'env',
       sourceHandle: 'env',
-      target: 'norm',
+      target: 'adapt',
       targetHandle: 'value',
     },
     {
-      source: 'norm',
+      source: 'adapt',
       sourceHandle: 'result',
+      target: 'gate',
+      targetHandle: 'value',
+    },
+    {
+      source: 'gate',
+      sourceHandle: 'gated',
       target: 'counter',
       targetHandle: 'value',
     },
     {
       source: 'counter',
       sourceHandle: 'count',
+      target: 'limiter',
+      targetHandle: 'value',
+    },
+    {
+      source: 'limiter',
+      sourceHandle: 'limited',
       target: 'mapper',
       targetHandle: 'input',
     },
@@ -1270,12 +1396,32 @@ registerPreset({
 
 registerPreset({
   id: 'shader-wall-bass-pulse',
-  name: '🌀 Shader Wall (Bass Pulse)',
+  name: '🌀 Shader Wall (Bass Pulse + Slow Wave)',
   description:
-    'Pulsing scale effect based on bass energy. Makes the fractal zoom in/out with the bass!',
+    'Combines a slow sine wave (0-4, 1 cycle/min) with a small bass shake. Creates a breathing effect with audio-reactive details!',
   outputType: 'number',
   autoPlace: true,
   nodes: [
+    // Slow sine wave (1 cycle per minute)
+    {
+      id: 'slow_sine',
+      label: 'Sine',
+      inputValues: {
+        frequency: 0.01667, // 1/60 Hz = 1 cycle per minute
+        phase: 0,
+        amplitude: 2, // Range will be -2 to +2
+      },
+    },
+    {
+      id: 'sine_offset',
+      label: 'Math',
+      inputValues: {
+        a: 3, // Offset to 1
+        b: 0, // Will receive sine output
+        operation: 'add',
+      },
+    },
+    // Bass shake chain
     {
       id: 'bass_band',
       label: 'Frequency Band',
@@ -1308,16 +1454,40 @@ registerPreset({
       },
     },
     {
-      id: 'math',
+      id: 'bass_scale',
       label: 'Math',
       inputValues: {
-        a: 1.5,
-        b: 0,
+        a: 0, // Will receive bass pulse
+        b: 0.3, // Scale factor for small shake
+        operation: 'multiply',
+      },
+    },
+    // Combine both signals
+    {
+      id: 'combine',
+      label: 'Math',
+      inputValues: {
+        a: 0, // Will receive slow sine
+        b: 0, // Will receive bass shake
         operation: 'add',
       },
     },
   ],
   edges: [
+    // Slow sine wave chain
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'time',
+      target: 'slow_sine',
+      targetHandle: 'time',
+    },
+    {
+      source: 'slow_sine',
+      sourceHandle: 'value',
+      target: 'sine_offset',
+      targetHandle: 'b',
+    },
+    // Bass shake chain
     {
       source: INPUT_ALIAS,
       sourceHandle: 'frequencyAnalysis',
@@ -1345,11 +1515,24 @@ registerPreset({
     {
       source: 'envelope',
       sourceHandle: 'env',
-      target: 'math',
+      target: 'bass_scale',
+      targetHandle: 'a',
+    },
+    // Combine both
+    {
+      source: 'sine_offset',
+      sourceHandle: 'result',
+      target: 'combine',
+      targetHandle: 'a',
+    },
+    {
+      source: 'bass_scale',
+      sourceHandle: 'result',
+      target: 'combine',
       targetHandle: 'b',
     },
     {
-      source: 'math',
+      source: 'combine',
       sourceHandle: 'result',
       target: OUTPUT_ALIAS,
       targetHandle: 'output',
@@ -1359,17 +1542,122 @@ registerPreset({
 
 registerPreset({
   id: 'shader-wall-kick-flash',
-  name: '🌀 Shader Wall (Kick Flash)',
+  name: '🌀 Shader Wall (Energy Brightness)',
   description:
-    'Brightness flashes on kick hits. Creates intense visual impact on each kick!',
+    'Brightness adapts to overall song energy (1-3 range). Uses medium averaging window for quick response to energy changes!',
   outputType: 'number',
   autoPlace: true,
   nodes: [
     {
-      id: 'kick_band',
+      id: 'full_band',
       label: 'Frequency Band',
       inputValues: {
         startFrequency: 20,
+        endFrequency: 20000,
+      },
+    },
+    {
+      id: 'band_info',
+      label: 'Band Info',
+      inputValues: {},
+    },
+    {
+      id: 'normalize',
+      label: 'Adaptive Normalize (Quantile)',
+      inputValues: {
+        windowMs: 2500, // Medium window for quick adaptation
+        qLow: 0.1,
+        qHigh: 0.95,
+        freezeBelow: 50,
+      },
+    },
+    {
+      id: 'envelope',
+      label: 'Envelope Follower',
+      inputValues: {
+        attackMs: 50,
+        releaseMs: 200,
+      },
+    },
+    {
+      id: 'scale',
+      label: 'Math',
+      inputValues: {
+        a: 0, // Will receive normalized energy (0-1)
+        b: 2, // Multiply by 2 to get 0-2 range
+        operation: 'multiply',
+      },
+    },
+    {
+      id: 'offset',
+      label: 'Math',
+      inputValues: {
+        a: 1, // Base brightness of 1
+        b: 0, // Will receive scaled energy
+        operation: 'add',
+      },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'full_band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'full_band',
+      sourceHandle: 'bandData',
+      target: 'band_info',
+      targetHandle: 'data',
+    },
+    {
+      source: 'band_info',
+      sourceHandle: 'average',
+      target: 'normalize',
+      targetHandle: 'value',
+    },
+    {
+      source: 'normalize',
+      sourceHandle: 'result',
+      target: 'envelope',
+      targetHandle: 'value',
+    },
+    {
+      source: 'envelope',
+      sourceHandle: 'env',
+      target: 'scale',
+      targetHandle: 'a',
+    },
+    {
+      source: 'scale',
+      sourceHandle: 'result',
+      target: 'offset',
+      targetHandle: 'b',
+    },
+    {
+      source: 'offset',
+      sourceHandle: 'result',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+registerPreset({
+  id: 'shader-wall-rotation-kick-vocal',
+  name: '🌀 Shader Wall (Rotation - Kick Cycle)',
+  description:
+    'Cycles through discrete rotation speeds (0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0) on each kick hit. Creates varying rotation patterns!',
+  outputType: 'number',
+  autoPlace: true,
+  nodes: [
+    // Kick detection chain
+    {
+      id: 'kick_band',
+      label: 'Frequency Band',
+      inputValues: {
+        startFrequency: 80,
         endFrequency: 150,
       },
     },
@@ -1379,35 +1667,47 @@ registerPreset({
       inputValues: {},
     },
     {
-      id: 'spike',
-      label: 'Spike',
-      inputValues: {
-        threshold: 50,
-        attack: 5,
-        release: 80,
-      },
+      id: 'kick_env',
+      label: 'Envelope Follower',
+      inputValues: { attackMs: 6, releaseMs: 120 },
     },
     {
-      id: 'normalize',
+      id: 'kick_adapt',
       label: 'Adaptive Normalize (Quantile)',
       inputValues: {
-        windowMs: 500,
-        qLow: 0,
-        qHigh: 1,
-        freezeBelow: 0,
+        windowMs: 4000,
+        qLow: 0.5,
+        qHigh: 0.98,
+        freezeBelow: 140,
       },
     },
     {
-      id: 'math',
+      id: 'gate',
+      label: 'Hysteresis Gate',
+      inputValues: { low: 0.33, high: 0.45 },
+    },
+    // Counter to cycle through values
+    {
+      id: 'counter',
+      label: 'Threshold Counter',
+      inputValues: {
+        threshold: 0.5,
+        maxValue: 6, // Counts 0-6 (7 values)
+      },
+    },
+    // Scale to get 0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0
+    {
+      id: 'scale',
       label: 'Math',
       inputValues: {
-        a: 1.5,
-        b: 0,
-        operation: 'add',
+        a: 0, // Will receive count 0-6
+        b: 0.5, // Multiply by 0.5
+        operation: 'multiply',
       },
     },
   ],
   edges: [
+    // Kick detection chain
     {
       source: INPUT_ALIAS,
       sourceHandle: 'frequencyAnalysis',
@@ -1423,23 +1723,323 @@ registerPreset({
     {
       source: 'kick_info',
       sourceHandle: 'average',
-      target: 'spike',
+      target: 'kick_env',
       targetHandle: 'value',
     },
     {
-      source: 'spike',
-      sourceHandle: 'result',
-      target: 'normalize',
+      source: 'kick_env',
+      sourceHandle: 'env',
+      target: 'kick_adapt',
       targetHandle: 'value',
     },
     {
-      source: 'normalize',
+      source: 'kick_adapt',
       sourceHandle: 'result',
-      target: 'math',
-      targetHandle: 'b',
+      target: 'gate',
+      targetHandle: 'value',
+    },
+    // Count the kicks
+    {
+      source: 'gate',
+      sourceHandle: 'gated',
+      target: 'counter',
+      targetHandle: 'value',
+    },
+    // Scale to get discrete steps
+    {
+      source: 'counter',
+      sourceHandle: 'count',
+      target: 'scale',
+      targetHandle: 'a',
     },
     {
-      source: 'math',
+      source: 'scale',
+      sourceHandle: 'result',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+registerPreset({
+  id: 'shader-wall-travel-snare-cycle',
+  name: '🌀 Shader Wall (Travel - Snare Cycle)',
+  description:
+    'Cycles through discrete travel speeds (0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0) on each snare hit. Creates varying forward motion patterns!',
+  outputType: 'number',
+  autoPlace: true,
+  nodes: [
+    // Snare detection chain
+    {
+      id: 'snare_band',
+      label: 'Frequency Band',
+      inputValues: { startFrequency: 180, endFrequency: 4000 },
+    },
+    {
+      id: 'snare_info',
+      label: 'Band Info',
+    },
+    {
+      id: 'env',
+      label: 'Envelope Follower',
+      inputValues: { attackMs: 4, releaseMs: 140 },
+    },
+    {
+      id: 'adapt',
+      label: 'Adaptive Normalize (Quantile)',
+      inputValues: {
+        windowMs: 4000,
+        qLow: 0.5,
+        qHigh: 0.95,
+        freezeBelow: 90,
+      },
+    },
+    {
+      id: 'gate',
+      label: 'Hysteresis Gate',
+      inputValues: { low: 0.06, high: 0.14 },
+    },
+    // Counter to cycle through values
+    {
+      id: 'counter',
+      label: 'Threshold Counter',
+      inputValues: {
+        threshold: 0.5,
+        maxValue: 6, // Counts 0-6 (7 values)
+      },
+    },
+    // Scale to get 0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0
+    {
+      id: 'scale',
+      label: 'Math',
+      inputValues: {
+        a: 0, // Will receive count 0-6
+        b: 0.5, // Multiply by 0.5
+        operation: 'multiply',
+      },
+    },
+  ],
+  edges: [
+    // Snare detection chain
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'snare_band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'snare_band',
+      sourceHandle: 'bandData',
+      target: 'snare_info',
+      targetHandle: 'data',
+    },
+    {
+      source: 'snare_info',
+      sourceHandle: 'average',
+      target: 'env',
+      targetHandle: 'value',
+    },
+    {
+      source: 'env',
+      sourceHandle: 'env',
+      target: 'adapt',
+      targetHandle: 'value',
+    },
+    {
+      source: 'adapt',
+      sourceHandle: 'result',
+      target: 'gate',
+      targetHandle: 'value',
+    },
+    // Count the snares
+    {
+      source: 'gate',
+      sourceHandle: 'gated',
+      target: 'counter',
+      targetHandle: 'value',
+    },
+    // Scale to get discrete steps
+    {
+      source: 'counter',
+      sourceHandle: 'count',
+      target: 'scale',
+      targetHandle: 'a',
+    },
+    {
+      source: 'scale',
+      sourceHandle: 'result',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// ========================================
+// 💡 STAGE LIGHTS COLOR CYCLING
+// ========================================
+
+registerPreset({
+  id: 'stage-lights-snare-color-cycle',
+  name: '💡 Stage Lights (Snare Color Cycle)',
+  description:
+    'Cycles through colors on each snare hit. Snare Detection → Threshold Counter → Value Mapper (Color Mode) → Output. Perfect for creating dynamic color changes with the beat!',
+  outputType: 'color',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'snare_band',
+      label: 'Frequency Band',
+      inputValues: { startFrequency: 180, endFrequency: 4000 },
+    },
+    {
+      id: 'snare_info',
+      label: 'Band Info',
+    },
+    {
+      id: 'env',
+      label: 'Envelope Follower',
+      inputValues: { attackMs: 4, releaseMs: 140 },
+    },
+    {
+      id: 'adapt',
+      label: 'Adaptive Normalize (Quantile)',
+      inputValues: {
+        windowMs: 4000,
+        qLow: 0.5,
+        qHigh: 0.95,
+        freezeBelow: 90,
+      },
+    },
+    {
+      id: 'gate',
+      label: 'Hysteresis Gate',
+      inputValues: { low: 0.06, high: 0.14 },
+    },
+    {
+      id: 'counter',
+      label: 'Threshold Counter',
+      inputValues: {
+        threshold: 0.5,
+        maxValue: 5,
+      },
+    },
+    {
+      id: 'mapper',
+      label: 'Value Mapper',
+      inputValues: {
+        mode: 'color',
+        mapping: {
+          '0': '#ff0000', // Red
+          '1': '#00ff00', // Green
+          '2': '#0000ff', // Blue
+          '3': '#ffff00', // Yellow
+          '4': '#ff00ff', // Magenta
+        },
+        default: '#ffffff',
+      },
+    },
+  ],
+  edges: [
+    // Snare detection chain
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'snare_band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'snare_band',
+      sourceHandle: 'bandData',
+      target: 'snare_info',
+      targetHandle: 'data',
+    },
+    {
+      source: 'snare_info',
+      sourceHandle: 'average',
+      target: 'env',
+      targetHandle: 'value',
+    },
+    {
+      source: 'env',
+      sourceHandle: 'env',
+      target: 'adapt',
+      targetHandle: 'value',
+    },
+    {
+      source: 'adapt',
+      sourceHandle: 'result',
+      target: 'gate',
+      targetHandle: 'value',
+    },
+    // Count the hits
+    {
+      source: 'gate',
+      sourceHandle: 'gated',
+      target: 'counter',
+      targetHandle: 'value',
+    },
+    // Map to colors
+    {
+      source: 'counter',
+      sourceHandle: 'count',
+      target: 'mapper',
+      targetHandle: 'input',
+    },
+    {
+      source: 'mapper',
+      sourceHandle: 'output',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// Pitch Detection → MIDI Modulo
+registerPreset({
+  id: 'pitch-detection-midi-mod',
+  name: '🎵 Pitch Detection → MIDI (Mod 12)',
+  description:
+    'Detects pitch from melodic content using YIN algorithm, outputs MIDI note modulo 12 (chromatic scale index 0-11). Perfect for mapping melodies to 12 modes/colors! Low latency.',
+  outputType: 'number',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'pitch',
+      label: 'Pitch Detection',
+      inputValues: {
+        sampleRate: 44100,
+        minHz: 80,
+        maxHz: 1200,
+        threshold: 0.15,
+        smoothMs: 50,
+        stabilityCents: 80,
+      },
+    },
+    {
+      id: 'modulo',
+      label: 'Math',
+      inputValues: {
+        a: 0,
+        b: 12,
+        operation: 'modulo', // MathOperation.Modulo
+      },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'audioSignal',
+      target: 'pitch',
+      targetHandle: 'audioSignal',
+    },
+    {
+      source: 'pitch',
+      sourceHandle: 'midi',
+      target: 'modulo',
+      targetHandle: 'a',
+    },
+    {
+      source: 'modulo',
       sourceHandle: 'result',
       target: OUTPUT_ALIAS,
       targetHandle: 'output',
