@@ -2046,3 +2046,276 @@ registerPreset({
     },
   ],
 });
+
+// ========================================
+// 🎥 DEPTH OF FIELD FOCUS
+// ========================================
+
+registerPreset({
+  id: 'dof-focus-slow-sine',
+  name: '🎥 DOF Focus (Slow Sine Wave)',
+  description:
+    'Slow sine wave oscillating between 1-40 over 5 seconds. Creates a breathing focus effect for depth of field, smoothly sweeping from near to far focus.',
+  outputType: 'number',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'sine',
+      label: 'Sine',
+      inputValues: {
+        frequency: 0.2, // 1/20 Hz = 5 second period
+        phase: 0,
+        amplitude: 1, // -1 to 1 range
+      },
+    },
+    {
+      id: 'normalize',
+      label: 'Math',
+      inputValues: {
+        a: 1, // Add 1
+        b: 0, // Will receive sine output (-1 to 1)
+        operation: 'add',
+      },
+    },
+    {
+      id: 'scale',
+      label: 'Math',
+      inputValues: {
+        a: 0, // Will receive normalized value (0 to 2)
+        b: 19.5, // Multiply by 19.5 to get 0 to 39
+        operation: 'multiply',
+      },
+    },
+    {
+      id: 'offset',
+      label: 'Math',
+      inputValues: {
+        a: 1, // Base offset
+        b: 0, // Will receive scaled value (0 to 39)
+        operation: 'add',
+      },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'time',
+      target: 'sine',
+      targetHandle: 'time',
+    },
+    {
+      source: 'sine',
+      sourceHandle: 'value',
+      target: 'normalize',
+      targetHandle: 'b',
+    },
+    {
+      source: 'normalize',
+      sourceHandle: 'result',
+      target: 'scale',
+      targetHandle: 'a',
+    },
+    {
+      source: 'scale',
+      sourceHandle: 'result',
+      target: 'offset',
+      targetHandle: 'b',
+    },
+    {
+      source: 'offset',
+      sourceHandle: 'result',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// ========================================
+// 🧠 NEURAL NETWORK TRIGGERS
+// ========================================
+
+registerPreset({
+  id: 'neural-seed-snare-cycle',
+  name: '🧠 Neuron Seed (Snare Cycle)',
+  description:
+    'Cycles neuron seed 0-1000 on snare hits, rate-limited to once per 2 seconds for smooth transitions.',
+  outputType: 'number',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'snare_band',
+      label: 'Frequency Band',
+      inputValues: { startFrequency: 50, endFrequency: 150 },
+    },
+    {
+      id: 'snare_info',
+      label: 'Band Info',
+    },
+    {
+      id: 'env',
+      label: 'Envelope Follower',
+      inputValues: { attackMs: 4, releaseMs: 140 },
+    },
+    {
+      id: 'adapt',
+      label: 'Adaptive Normalize (Quantile)',
+      inputValues: {
+        windowMs: 4000,
+        qLow: 0.5,
+        qHigh: 0.95,
+        freezeBelow: 90,
+      },
+    },
+    {
+      id: 'gate',
+      label: 'Hysteresis Gate',
+      inputValues: { low: 0.06, high: 0.14 },
+    },
+    {
+      id: 'counter',
+      label: 'Threshold Counter',
+      inputValues: {
+        threshold: 0.5,
+        maxValue: 1000,
+      },
+    },
+    {
+      id: 'limiter',
+      label: 'Rate Limiter',
+      inputValues: {
+        minIntervalMs: 4000, // Minimum 2 seconds between changes
+      },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'snare_band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'snare_band',
+      sourceHandle: 'bandData',
+      target: 'snare_info',
+      targetHandle: 'data',
+    },
+    {
+      source: 'snare_info',
+      sourceHandle: 'average',
+      target: 'env',
+      targetHandle: 'value',
+    },
+    {
+      source: 'env',
+      sourceHandle: 'env',
+      target: 'adapt',
+      targetHandle: 'value',
+    },
+    {
+      source: 'adapt',
+      sourceHandle: 'result',
+      target: 'gate',
+      targetHandle: 'value',
+    },
+    {
+      source: 'gate',
+      sourceHandle: 'gated',
+      target: 'counter',
+      targetHandle: 'value',
+    },
+    {
+      source: 'counter',
+      sourceHandle: 'count',
+      target: 'limiter',
+      targetHandle: 'value',
+    },
+    {
+      source: 'limiter',
+      sourceHandle: 'limited',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+registerPreset({
+  id: 'neural-fire-on-kick',
+  name: '🧠 Fire Neurons (Kick Trigger)',
+  description:
+    'Triggers neural network firing on every kick drum hit. Kick detection with hysteresis gate for clean boolean pulses.',
+  outputType: 'boolean',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'kick_band',
+      label: 'Frequency Band',
+      inputValues: {
+        startFrequency: 80,
+        endFrequency: 150,
+      },
+    },
+    {
+      id: 'kick_info',
+      label: 'Band Info',
+    },
+    {
+      id: 'env',
+      label: 'Envelope Follower',
+      inputValues: { attackMs: 6, releaseMs: 120 },
+    },
+    {
+      id: 'adapt',
+      label: 'Adaptive Normalize (Quantile)',
+      inputValues: {
+        windowMs: 4000,
+        qLow: 0.5,
+        qHigh: 0.98,
+        freezeBelow: 140,
+      },
+    },
+    {
+      id: 'gate',
+      label: 'Hysteresis Gate',
+      inputValues: { low: 0.33, high: 0.45 },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'kick_band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'kick_band',
+      sourceHandle: 'bandData',
+      target: 'kick_info',
+      targetHandle: 'data',
+    },
+    {
+      source: 'kick_info',
+      sourceHandle: 'average',
+      target: 'env',
+      targetHandle: 'value',
+    },
+    {
+      source: 'env',
+      sourceHandle: 'env',
+      target: 'adapt',
+      targetHandle: 'value',
+    },
+    {
+      source: 'adapt',
+      sourceHandle: 'result',
+      target: 'gate',
+      targetHandle: 'value',
+    },
+    {
+      source: 'gate',
+      sourceHandle: 'state',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});

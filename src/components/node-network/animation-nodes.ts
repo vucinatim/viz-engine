@@ -9,6 +9,7 @@ import HysteresisGateBody from './bodies/hysteresis-gate-body';
 import MultiBandAnalysisBody from './bodies/multi-band-analysis-body';
 import NormalizeBody from './bodies/normalize-body';
 import PitchDetectionBody from './bodies/pitch-detection-body';
+import RateLimiterBody from './bodies/rate-limiter-body';
 import SectionChangeDetectorBody from './bodies/section-change-detector-body';
 import SpectralCentroidBody from './bodies/spectral-centroid-body';
 import ThresholdCounterBody from './bodies/threshold-counter-body';
@@ -1669,6 +1670,7 @@ const RateLimiterNode = createNode({
   label: 'Rate Limiter',
   description:
     'Limits how often the output value can change. Prevents rapid value switching by enforcing a minimum time interval between changes. Perfect for preventing twitchy mode switches!',
+  customBody: RateLimiterBody,
   inputs: [
     { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
     {
@@ -1689,6 +1691,9 @@ const RateLimiterNode = createNode({
       typeof minIntervalMs === 'number' ? minIntervalMs : 250,
     );
     const currentTime = context.time * 1000; // Convert to milliseconds
+
+    // Store current time in state for display body
+    state.currentTime = currentTime;
 
     // Initialize state
     if (typeof state.lastValue !== 'number') {

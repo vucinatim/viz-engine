@@ -414,14 +414,52 @@ function createNeuronGeometry(
   const soma = new THREE.Mesh(somaGeometry, somaMaterial);
   neuronGroup.add(soma);
 
-  // Add activation glow sphere (slightly larger, emissive)
+  // Add activation glow sphere (slightly larger, with soft edge glow)
   const activationGeometry = new THREE.SphereGeometry(1.5, 32, 32);
-  const activationMaterial = new THREE.MeshBasicMaterial({
-    color: somaMaterial.uniforms.glowColor.value,
+
+  // Custom shader for soft edge glow
+  const activationMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      glowColor: { value: somaMaterial.uniforms.glowColor.value },
+      opacity: { value: 0 }, // Hidden by default
+    },
+    vertexShader: `
+      varying vec3 vNormal;
+      varying vec3 vViewPosition;
+      
+      void main() {
+        vNormal = normalize(normalMatrix * normal);
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        vViewPosition = -mvPosition.xyz;
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 glowColor;
+      uniform float opacity;
+      
+      varying vec3 vNormal;
+      varying vec3 vViewPosition;
+      
+      void main() {
+        vec3 normal = normalize(vNormal);
+        vec3 viewDir = normalize(vViewPosition);
+        
+        // Soft edge glow using fresnel (fade toward edges)
+        float fresnel = 1.0 - abs(dot(normal, viewDir));
+        float glow = pow(fresnel, 2.0); // Softer falloff
+        
+        // Combine glow with base opacity
+        float finalOpacity = glow * opacity;
+        
+        gl_FragColor = vec4(glowColor, finalOpacity);
+      }
+    `,
     transparent: true,
-    opacity: 0, // Hidden by default
     depthWrite: false,
+    blending: THREE.AdditiveBlending, // Additive blending for soft glow
   });
+
   const activationSphere = new THREE.Mesh(
     activationGeometry,
     activationMaterial,
@@ -521,7 +559,7 @@ const NeuralNetwork = createComponent({
     neuronCount: v.number({
       label: 'Neuron Count',
       description: 'Number of neurons to display',
-      defaultValue: 25,
+      defaultValue: 30,
       min: 1,
       max: 50,
       step: 1,
@@ -550,7 +588,7 @@ const NeuralNetwork = createComponent({
     somaEmission: v.color({
       label: 'Soma Glow',
       description: 'Emission color of the cell body',
-      defaultValue: '#FF1493', // Hot pink
+      defaultValue: 'rgb(255, 138, 201)', // Hot pink
     }),
     emissiveIntensity: v.number({
       label: 'Glow Intensity',
@@ -617,7 +655,7 @@ const NeuralNetwork = createComponent({
     signalSize: v.number({
       label: 'Signal Orb Size',
       description: 'Radius of traveling signal orbs',
-      defaultValue: 0.3,
+      defaultValue: 0.2,
       min: 0.1,
       max: 2.0,
       step: 0.1,
@@ -625,8 +663,8 @@ const NeuralNetwork = createComponent({
     activationDecay: v.number({
       label: 'Activation Decay',
       description: 'How quickly neurons fade after activation',
-      defaultValue: 2.0,
-      min: 0.5,
+      defaultValue: 0.4,
+      min: 0,
       max: 10.0,
       step: 0.5,
     }),
@@ -639,12 +677,12 @@ const NeuralNetwork = createComponent({
         bloom: v.toggle({
           label: 'Bloom Enabled',
           description: 'Enable bloom glow effect',
-          defaultValue: true,
+          defaultValue: false,
         }),
         bloomStrength: v.number({
           label: 'Bloom Strength',
           description: 'Intensity of the bloom glow effect',
-          defaultValue: 1.5,
+          defaultValue: 0.2,
           min: 0,
           max: 3,
           step: 0.01,
@@ -668,7 +706,7 @@ const NeuralNetwork = createComponent({
         depthOfField: v.toggle({
           label: 'Depth of Field',
           description: 'Enable cinematic shallow focus effect',
-          defaultValue: false,
+          defaultValue: true,
         }),
         dofFocus: v.number({
           label: 'DOF Focus Distance',
@@ -689,7 +727,11 @@ const NeuralNetwork = createComponent({
       },
     ),
   }),
-  defaultNetworks: {},
+  defaultNetworks: {
+    'postProcessing.dofFocus': 'dof-focus-slow-sine',
+    trigger: 'neural-fire-on-kick',
+    seed: 'neural-seed-snare-cycle',
+  },
   init3D: ({ threeCtx: { scene, camera, renderer, composer }, config }) => {
     const initStartTime = performance.now();
 
@@ -698,6 +740,11 @@ const NeuralNetwork = createComponent({
       'Init Call': 'Neural Network init3D',
       Timestamp: new Date().toISOString(),
     });
+
+    // Adjust tone mapping for more accurate colors with DOF
+    // ACESFilmicToneMapping can cause warm color shifts with bokeh blur
+    renderer.toneMapping = THREE.LinearToneMapping;
+    renderer.toneMappingExposure = 1.0;
 
     // Camera positioned inside the neural network for immersive "flying in the brain" effect
     camera.position.set(0, 2, 8);
@@ -1108,30 +1155,36 @@ const NeuralNetwork = createComponent({
             p.clone().add(neuron.position),
           );
 
-          // Create glowing orb
+          // Create glowing orb with high emissive intensity for bloom
           const orbGeometry = new THREE.SphereGeometry(
             config.signalSize,
             16,
             16,
           );
-          const orbMaterial = new THREE.MeshBasicMaterial({
+          const orbMaterial = new THREE.MeshStandardMaterial({
             color: new THREE.Color(config.somaEmission),
+            emissive: new THREE.Color(config.somaEmission),
+            emissiveIntensity: 3.0, // High intensity to trigger bloom
             transparent: true,
-            opacity: 0.9,
+            opacity: 1.0,
+            toneMapped: false, // Bypass tone mapping for pure bright colors
           });
           const orbMesh = new THREE.Mesh(orbGeometry, orbMaterial);
           orbMesh.position.copy(networkPath[0]);
 
-          // Add glow effect
+          // Add outer glow halo (softer, larger)
           const glowGeometry = new THREE.SphereGeometry(
-            config.signalSize * 1.5,
+            config.signalSize * 2.0,
             16,
             16,
           );
-          const glowMaterial = new THREE.MeshBasicMaterial({
+          const glowMaterial = new THREE.MeshStandardMaterial({
             color: new THREE.Color(config.somaEmission),
+            emissive: new THREE.Color(config.somaEmission),
+            emissiveIntensity: 1.5,
             transparent: true,
-            opacity: 0.3,
+            opacity: 0.4,
+            toneMapped: false,
           });
           const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
           orbMesh.add(glowMesh);
@@ -1202,22 +1255,30 @@ const NeuralNetwork = createComponent({
           const fadeProgress = (orb.progress - fadeStart) / (1.0 - fadeStart);
           const opacity = 1.0 - fadeProgress;
 
-          // Update orb material opacity
-          const orbMaterial = orb.mesh.material as THREE.MeshBasicMaterial;
-          orbMaterial.opacity = opacity * 0.9; // Max opacity 0.9
+          // Update orb material opacity and emissive intensity
+          const orbMaterial = orb.mesh.material as THREE.MeshStandardMaterial;
+          orbMaterial.opacity = opacity;
+          orbMaterial.emissiveIntensity = 3.0 * opacity; // Fade emissive too
 
-          // Update glow material opacity
+          // Update glow material opacity and emissive intensity
           if (orb.mesh.children.length > 0) {
             const glowMesh = orb.mesh.children[0] as THREE.Mesh;
-            const glowMaterial = glowMesh.material as THREE.MeshBasicMaterial;
-            glowMaterial.opacity = opacity * 0.3; // Max opacity 0.3
+            const glowMaterial =
+              glowMesh.material as THREE.MeshStandardMaterial;
+            glowMaterial.opacity = opacity * 0.4;
+            glowMaterial.emissiveIntensity = 1.5 * opacity; // Fade emissive too
           }
         }
       }
     }
 
     // Update neuron activations (decay over time)
-    neuronActivations.forEach((activation, index) => {
+    // Only iterate up to the current neuron count to avoid accessing non-existent neurons
+    const currentNeuronCount = neurons.length;
+    for (let index = 0; index < currentNeuronCount; index++) {
+      const activation = neuronActivations[index];
+      if (!activation) continue; // Skip if activation doesn't exist yet
+
       if (activation.level > 0) {
         const timeSinceTrigger = currentTime - activation.lastTriggerTime;
         activation.level = Math.max(
@@ -1228,17 +1289,17 @@ const NeuralNetwork = createComponent({
         // Update activation sphere opacity based on activation level
         const neuron = neurons[index];
         const activationMaterial = neuron.activationSphere
-          .material as THREE.MeshBasicMaterial;
-        activationMaterial.opacity = activation.level * 0.6; // Max 60% opacity
-        activationMaterial.color.set(config.somaEmission);
+          .material as THREE.ShaderMaterial;
+        activationMaterial.uniforms.opacity.value = activation.level * 0.8; // Max 20% opacity for subtle effect
+        activationMaterial.uniforms.glowColor.value.set(config.somaEmission);
       } else {
         // Ensure activation sphere is hidden when not active
         const neuron = neurons[index];
         const activationMaterial = neuron.activationSphere
-          .material as THREE.MeshBasicMaterial;
-        activationMaterial.opacity = 0;
+          .material as THREE.ShaderMaterial;
+        activationMaterial.uniforms.opacity.value = 0;
       }
-    });
+    }
 
     // Update post-processing parameters
     const bloomPass = scene.userData.bloomPass as UnrealBloomPass;
