@@ -10,6 +10,65 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 
+// Custom hook to track dependency changes for debugging
+const useDependencyTracker = (
+  deps: any[],
+  depNames: string[],
+  name: string,
+) => {
+  const prevDepsRef = useRef<any[]>();
+  const callCountRef = useRef(0);
+
+  useEffect(() => {
+    if (prevDepsRef.current) {
+      const changedDeps: {
+        index: number;
+        name: string;
+        prev: any;
+        next: any;
+      }[] = [];
+
+      deps.forEach((dep, index) => {
+        const prevDep = prevDepsRef.current![index];
+        if (prevDep !== dep) {
+          changedDeps.push({
+            index,
+            name: depNames[index] || `dependency-${index}`,
+            prev: prevDep,
+            next: dep,
+          });
+        }
+      });
+
+      if (changedDeps.length > 0) {
+        console.group(
+          `🔄 ${name} callback recreated (call #${++callCountRef.current})`,
+        );
+        console.log('Changed dependencies:');
+        changedDeps.forEach(({ index, name, prev, next }) => {
+          console.log(`  [${index}] ${name}:`, { prev, next });
+        });
+        console.log(
+          'All dependencies:',
+          deps.map((dep, i) => ({
+            name: depNames[i] || `dep-${i}`,
+            value: dep,
+          })),
+        );
+        console.groupEnd();
+      }
+    } else {
+      console.log(
+        `🆕 ${name} callback created (call #${++callCountRef.current})`,
+      );
+    }
+
+    prevDepsRef.current = [...deps];
+  }, deps);
+
+  return callCountRef.current;
+};
+
 type RenderFunction = (data: {
   dt: number;
   audioData: { dataArray: Uint8Array; analyzer: AnalyserNode };
@@ -97,8 +156,55 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     wavesurfer: wavesurfer,
   });
 
+  // Use refs for frequently changing values that don't need to trigger full 3D recreation
+  const layerStateRef = useRef(layer.state);
+  const layerDebugEnabledRef = useRef(layer.isDebugEnabled);
+
+  // Update refs when values change (but don't trigger callback recreation)
+  useEffect(() => {
+    layerStateRef.current = layer.state;
+  }, [layer.state]);
+
+  useEffect(() => {
+    layerDebugEnabledRef.current = layer.isDebugEnabled;
+  }, [layer.isDebugEnabled]);
+
+  // Track setup3D dependencies for debugging
+  // Removed wavesurfer, layer.state, and layer.isDebugEnabled since they're accessed via refs
+  // These only need to trigger recreation when the component or config structure changes
+  const setup3DDeps = [
+    audioAnalyzer?.context.sampleRate,
+    audioAnalyzer?.fftSize,
+    layer.comp,
+    layer.config,
+    resolutionMultiplier,
+  ];
+
+  // Add descriptive names for each dependency to make debugging easier
+  const setup3DDepNames = [
+    'audioAnalyzer.sampleRate',
+    'audioAnalyzer.fftSize',
+    'layer.comp',
+    'layer.config',
+    'resolutionMultiplier',
+  ];
+
+  const setup3DCallCount = useDependencyTracker(
+    setup3DDeps,
+    setup3DDepNames,
+    'setup3D',
+  );
+
   const setup3D = useCallback(() => {
     if (!layer.comp.draw3D || !layerCanvasRef.current) return;
+
+    console.log(
+      `🚀 setup3D executing (call #${setup3DCallCount}) for layer: ${layer.comp.name}`,
+    );
+
+    // Add stack trace to see what's calling setup3D
+    console.trace('setup3D execution call stack:');
+
     const renderer = new THREE.WebGLRenderer({
       canvas: layerCanvasRef.current,
       antialias: true,
@@ -130,7 +236,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     renderer.setSize(newWidth, newHeight, false);
 
     const scene = new THREE.Scene();
-    if (layer.isDebugEnabled) {
+    if (layerDebugEnabledRef.current) {
       const gridHelper = new THREE.GridHelper(10, 10);
       scene.add(gridHelper);
       const axesHelper = new THREE.AxesHelper(5);
@@ -144,7 +250,8 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     );
     camera.position.set(0, 0, 0);
     camera.lookAt(new THREE.Vector3(0, 0, 0));
-    const time = wavesurfer?.getCurrentTime() || 0;
+    // Use fallback time for initial setup - actual time is handled in render loop
+    const time = 0;
 
     // Setup post-processing composer for 3D components
     // Component can add its own passes in init3D
@@ -153,8 +260,9 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     composer.addPass(renderScene);
     composerRef.current = composer;
 
+    console.log('init3D called', layer.comp.name);
     layer.comp.init3D?.({
-      state: layer.state,
+      state: layerStateRef.current,
       threeCtx: {
         renderer,
         scene,
@@ -170,25 +278,75 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
         },
         time,
       }),
-      debugEnabled: layer.isDebugEnabled,
+      debugEnabled: layerDebugEnabledRef.current,
     });
 
     // Store the renderer, scene and camera for later use
     cameraRef.current = camera;
     sceneRef.current = scene;
     rendererRef.current = renderer;
-  }, [
-    audioAnalyzer?.context.sampleRate,
-    audioAnalyzer?.fftSize,
-    layer.comp,
-    layer.config,
-    layer.isDebugEnabled,
-    layer.state,
-    resolutionMultiplier,
-    wavesurfer,
-  ]);
+  }, setup3DDeps);
+
+  // Use refs for frequently changing values that don't need to trigger full render setup recreation
+  const layerSettingsRef = useRef(layer.layerSettings);
+  const mirrorCanvasesRef = useRef(layer.mirrorCanvases);
+  const wavesurferRef = useRef(wavesurfer);
+
+  // Update refs when values change (but don't trigger effect recreation)
+  useEffect(() => {
+    layerSettingsRef.current = layer.layerSettings;
+  }, [layer.layerSettings]);
 
   useEffect(() => {
+    mirrorCanvasesRef.current = layer.mirrorCanvases;
+  }, [layer.mirrorCanvases]);
+
+  useEffect(() => {
+    wavesurferRef.current = wavesurfer;
+  }, [wavesurfer]);
+
+  // Track useEffect dependencies for debugging
+  // Removed layer.layerSettings, layer.mirrorCanvases, and wavesurfer since they're accessed via refs
+  // These only need to trigger recreation when the component structure changes, not UI settings
+  const renderEffectDeps = [
+    audioAnalyzer,
+    getNextAudioFrame,
+    layer.id,
+    layer.comp,
+    layer.config,
+    layer.isExpanded,
+    layer.isDebugEnabled,
+    setup3D,
+    withDebug,
+    playerRef,
+    playerFPS,
+  ];
+
+  const renderEffectDepNames = [
+    'audioAnalyzer',
+    'getNextAudioFrame',
+    'layer.id',
+    'layer.comp',
+    'layer.config',
+    'layer.isExpanded',
+    'layer.isDebugEnabled',
+    'setup3D',
+    'withDebug',
+    'playerRef',
+    'playerFPS',
+  ];
+
+  const renderEffectCallCount = useDependencyTracker(
+    renderEffectDeps,
+    renderEffectDepNames,
+    'renderEffect (calls setup3D)',
+  );
+
+  useEffect(() => {
+    console.log(
+      `🎬 renderEffect executing (call #${renderEffectCallCount}) for layer: ${layer.comp.name}`,
+    );
+
     if (!audioAnalyzer || !layerCanvasRef.current) return;
 
     let renderFunction: RenderFunction | null = null;
@@ -207,8 +365,8 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
             scene: sceneRef.current,
             camera: cameraRef.current,
           },
-          state: layer.state,
-          debugEnabled: layer.isDebugEnabled,
+          state: layerStateRef.current,
+          debugEnabled: layerDebugEnabledRef.current,
           ...data,
         });
 
@@ -224,8 +382,8 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       renderFunction = (data) => {
         layer.comp.draw?.({
           canvasCtx: ctx,
-          state: layer.state,
-          debugEnabled: layer.isDebugEnabled,
+          state: layerStateRef.current,
+          debugEnabled: layerDebugEnabledRef.current,
           ...data,
         });
       };
@@ -244,7 +402,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       const time =
         frame !== null && typeof frame === 'number' && playerFPS > 0
           ? frame / playerFPS
-          : wavesurfer?.getCurrentTime() || 0;
+          : wavesurferRef.current?.getCurrentTime() || 0;
 
       const animInputData = {
         audioSignal: timeDomainData,
@@ -267,7 +425,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
           }),
         {
           dataArray: frequencyData,
-          wavesurfer: wavesurfer,
+          wavesurfer: wavesurferRef.current,
           config: configValues,
         },
       );
@@ -291,16 +449,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
         rendererRef.current.dispose();
       }
     };
-  }, [
-    audioAnalyzer,
-    getNextAudioFrame,
-    layer,
-    setup3D,
-    wavesurfer,
-    withDebug,
-    playerRef,
-    playerFPS,
-  ]);
+  }, renderEffectDeps);
 
   return (
     <div ref={canvasContainerRef} className="absolute inset-0">

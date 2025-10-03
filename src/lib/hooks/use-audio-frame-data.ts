@@ -107,8 +107,10 @@ const useAudioFrameData = ({
       sampleRate: analyzer.context.sampleRate,
       fftSize: analyzer.fftSize,
     };
+    // wavesurfer is NOT in deps because it's only used in the initialization useEffect
+    // Adding it would cause unnecessary callback recreation during initialization
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [analyzer, isFrozen, isPlayingStore, wavesurfer]);
+  }, [analyzer, isFrozen, isPlayingStore]);
 
   return getAudioFrameData;
 };

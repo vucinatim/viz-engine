@@ -691,6 +691,14 @@ const NeuralNetwork = createComponent({
   }),
   defaultNetworks: {},
   init3D: ({ threeCtx: { scene, camera, renderer, composer }, config }) => {
+    const initStartTime = performance.now();
+
+    // Debug: Log init call
+    console.table({
+      'Init Call': 'Neural Network init3D',
+      Timestamp: new Date().toISOString(),
+    });
+
     // Camera positioned inside the neural network for immersive "flying in the brain" effect
     camera.position.set(0, 2, 8);
     camera.lookAt(new THREE.Vector3(0, 0, 0));
@@ -826,6 +834,15 @@ const NeuralNetwork = createComponent({
     scene.add(rimLight);
 
     scene.userData.lights = { ambientLight, keyLight, fillLight, rimLight };
+
+    // Log init completion timing
+    const initDuration = performance.now() - initStartTime;
+    console.table({
+      'Init Complete': 'Neural Network',
+      'Duration (ms)': initDuration.toFixed(2),
+      'Neuron count': config.neuronCount,
+      'Signal orbs': scene.userData.signalOrbs.length,
+    });
   },
   draw3D: ({
     threeCtx: { scene, camera, renderer },

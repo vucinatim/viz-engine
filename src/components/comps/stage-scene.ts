@@ -705,6 +705,25 @@ const StageScene = createComponent({
     state,
     config,
   }) => {
+    // Ensure Vector3 objects are initialized (in case state was reset)
+    if (
+      !state.cinematicPosition ||
+      !(state.cinematicPosition instanceof THREE.Vector3)
+    ) {
+      state.cinematicPosition = new THREE.Vector3();
+    }
+    if (
+      !state.cinematicLookAt ||
+      !(state.cinematicLookAt instanceof THREE.Vector3)
+    ) {
+      state.cinematicLookAt = new THREE.Vector3();
+    }
+
+    // Ensure elapsedTime is initialized (handles state rehydration)
+    if (typeof state.elapsedTime !== 'number' || isNaN(state.elapsedTime)) {
+      state.elapsedTime = 0;
+    }
+
     // Initialize renderer size tracking
     state.lastRendererWidth = renderer.domElement.width;
     state.lastRendererHeight = renderer.domElement.height;
@@ -922,6 +941,12 @@ const StageScene = createComponent({
     }
   },
   draw3D: ({ threeCtx: { renderer, scene, camera }, state, config, dt }) => {
+    // Ensure elapsedTime is valid before incrementing (should be initialized in init3D)
+    if (typeof state.elapsedTime !== 'number' || isNaN(state.elapsedTime)) {
+      state.elapsedTime = 0;
+    }
+    state.elapsedTime += dt;
+
     // === WASD CAMERA CONTROL MODE ===
     // Handle WASD mode activation (triggered by button press)
     if (state.wasdModeActive && !state.onKeyDown) {
@@ -1021,6 +1046,22 @@ const StageScene = createComponent({
     }
 
     // === CINEMATIC CAMERA MODE ===
+    // Initialize cinematicPath if it doesn't exist or isn't a valid instance
+    // (handles state rehydration where THREE.js objects become plain objects)
+    if (
+      !state.cinematicPath ||
+      !(state.cinematicPath instanceof THREE.CatmullRomCurve3)
+    ) {
+      const pathPoints =
+        CINEMATIC_PATHS[
+          config.camera.cinematicPath as keyof typeof CINEMATIC_PATHS
+        ];
+      if (pathPoints) {
+        state.cinematicPath = new THREE.CatmullRomCurve3(pathPoints, true);
+        state.prevCinematicPathName = config.camera.cinematicPath;
+      }
+    }
+
     // Check if cinematic path changed and recreate curve
     if (config.camera.cinematicPath !== state.prevCinematicPathName) {
       const pathPoints =
@@ -1034,18 +1075,40 @@ const StageScene = createComponent({
     }
 
     // Apply camera movement based on active mode
-    if (config.camera.cinematicMode && state.cinematicPath) {
+    // Ensure cinematicPath is a valid CatmullRomCurve3 instance, not just truthy
+    const canUseCinematicMode =
+      config.camera.cinematicMode &&
+      state.cinematicPath &&
+      state.cinematicPath instanceof THREE.CatmullRomCurve3;
+
+    if (canUseCinematicMode) {
       // Cinematic mode takes priority over everything
-      const progress =
-        (state.elapsedTime % config.camera.cinematicDuration) /
-        config.camera.cinematicDuration;
+      // Safety check for cinematicDuration
+      const duration = config.camera.cinematicDuration || 60; // Fallback to 60s default
+      const progress = (state.elapsedTime % duration) / duration;
+
+      // Safety check: ensure progress is a valid number
+      if (isNaN(progress) || !isFinite(progress)) {
+        return; // Skip this frame's camera update
+      }
+
+      // Safety check for cinematicPosition
+      if (!state.cinematicPosition) {
+        state.cinematicPosition = new THREE.Vector3();
+      }
 
       // Get position along the curve
-      state.cinematicPosition.copy(state.cinematicPath.getPointAt(progress));
+      const path = state.cinematicPath; // Already checked by canUseCinematicMode
+      state.cinematicPosition.copy(path!.getPointAt(progress));
       camera.position.lerp(
         state.cinematicPosition,
         config.camera.cinematicLerpSpeed,
       );
+
+      // Safety check for cinematicLookAt
+      if (!state.cinematicLookAt) {
+        state.cinematicLookAt = new THREE.Vector3();
+      }
 
       // Look at the target with smooth lerping
       state.cinematicLookAt.set(
@@ -1130,8 +1193,7 @@ const StageScene = createComponent({
       state.prevCrowdCount = config.characters.crowdCount;
     }
 
-    // Track elapsed time
-    state.elapsedTime += dt;
+    // Use elapsed time (initialized in init3D and incremented at start of draw3D)
     const elapsedTime = state.elapsedTime;
 
     // Update lighting
