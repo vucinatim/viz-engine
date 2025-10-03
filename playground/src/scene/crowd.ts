@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import femaleModelUrl from '../models/female-dancer.fbx?url';
 import maleCheerModelUrl from '../models/male-cheer.fbx?url';
 import maleDancerModelUrl from '../models/male-dancer.fbx?url';
+import { modelCache } from '../utils/model-cache';
 
 export function createCrowd(
   scene: THREE.Scene,
@@ -17,24 +17,6 @@ export function createCrowd(
     return { update: () => {}, remove: () => {}, getObject: () => null };
   }
 
-  // Suppress Three.js warnings during FBX load to prevent lag
-  const originalWarn = console.warn;
-  console.warn = () => {}; // Temporarily disable warnings
-
-  // Create loading manager that prevents texture loading entirely
-  const loadingManager = new THREE.LoadingManager();
-
-  // Override the default texture loader to prevent 404s
-  loadingManager.setURLModifier((url) => {
-    // If it's a texture file (not the FBX itself), return empty data URL
-    if (url.match(/\.(png|jpg|jpeg|gif|bmp|tga)$/i)) {
-      // Return a 1x1 transparent pixel as data URL to avoid 404s
-      return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-    }
-    return url;
-  });
-
-  const loader = new FBXLoader(loadingManager);
   const mixers: THREE.AnimationMixer[] = [];
 
   const dancers: {
@@ -46,24 +28,13 @@ export function createCrowd(
   let crowdUpdate: (delta: number) => void = () => {};
   let crowdMesh: THREE.InstancedMesh | null = null;
 
-  const loadModel = (url: string): Promise<THREE.Group> => {
-    return new Promise((resolve, reject) => {
-      loader.load(url, resolve, undefined, (error) => {
-        console.error('An error happened while loading the model:', error);
-        reject(error);
-      });
-    });
-  };
-
+  // Load models from cache (or fetch if not cached)
   Promise.all([
-    loadModel(femaleModelUrl),
-    loadModel(maleDancerModelUrl),
-    loadModel(maleCheerModelUrl),
+    modelCache.load(femaleModelUrl),
+    modelCache.load(maleDancerModelUrl),
+    modelCache.load(maleCheerModelUrl),
   ])
     .then(([femaleModel, maleDancerModel, maleCheerModel]) => {
-      // Restore console.warn after loading
-      console.warn = originalWarn;
-
       const models = [femaleModel, maleDancerModel, maleCheerModel];
 
       // Find the single SkinnedMesh in the loaded model to use as a template
@@ -283,10 +254,6 @@ export function createCrowd(
     })
     .catch((error) => {
       console.error('Error loading crowd models:', error);
-    })
-    .finally(() => {
-      // Always restore console.warn
-      console.warn = originalWarn;
     });
 
   const update = (delta: number) => {

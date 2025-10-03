@@ -881,10 +881,20 @@ const StageScene = createComponent({
     const { helpersGroup } = createDebugHelpers(scene);
     state.helpersGroup = helpersGroup;
 
+    // Remove old DJ if it exists (handles re-initialization)
+    if (state.removeDj) {
+      state.removeDj();
+    }
+
     // Initialize DJ
     const djController = createDj(scene);
     state.updateDj = djController.update;
     state.removeDj = djController.remove;
+
+    // Remove old crowd if it exists (handles re-initialization)
+    if (state.removeCrowd) {
+      state.removeCrowd();
+    }
 
     // Initialize crowd
     const crowdController = createCrowd(

@@ -1,38 +1,16 @@
 import * as THREE from 'three';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import modelUrl from '../models/female-dj.fbx?url';
+import { modelCache } from '../utils/model-cache';
 
 export function createDj(scene: THREE.Scene) {
-  // Suppress Three.js warnings during FBX load to prevent lag
-  const originalWarn = console.warn;
-  console.warn = () => {}; // Temporarily disable warnings
-
-  // Create loading manager that prevents texture loading entirely
-  const loadingManager = new THREE.LoadingManager();
-
-  // Override the default texture loader to prevent 404s
-  loadingManager.setURLModifier((url) => {
-    // If it's a texture file (not the FBX itself), return empty data URL
-    if (url.match(/\.(png|jpg|jpeg|gif|bmp|tga)$/i)) {
-      // Return a 1x1 transparent pixel as data URL to avoid 404s
-      return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-    }
-    return url;
-  });
-
-  // Restore console.warn after any load completes
-  loadingManager.onLoad = () => {
-    console.warn = originalWarn;
-  };
-  loadingManager.onError = () => {
-    console.warn = originalWarn;
-  };
-
-  const loader = new FBXLoader(loadingManager);
   let mixer: THREE.AnimationMixer | null = null;
   let djObject: THREE.Group | null = null;
 
-  loader.load(modelUrl, (object) => {
+  // Load model from cache (or fetch if not cached)
+  modelCache.load(modelUrl).then((cachedModel) => {
+    // Clone the cached model using SkeletonUtils (preserves skeleton structure)
+    const object = SkeletonUtils.clone(cachedModel) as THREE.Group;
     object.scale.set(0.032, 0.032, 0.032);
     object.position.set(0, 3.4, -7); // Centered, on the stage floor, behind the booth
     object.traverse((child) => {
@@ -42,9 +20,10 @@ export function createDj(scene: THREE.Scene) {
       }
     });
 
-    if (object.animations.length > 0) {
+    // Animations are on the cached model, not the clone
+    if (cachedModel.animations.length > 0) {
       mixer = new THREE.AnimationMixer(object);
-      const action = mixer.clipAction(object.animations[0]);
+      const action = mixer.clipAction(cachedModel.animations[0]);
       action.play();
     }
 
