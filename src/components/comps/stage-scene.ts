@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-// Post-processing now handled at layer level
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { v } from '../config/config';
 import { createComponent } from '../config/create-component';
 
@@ -104,9 +104,8 @@ type StageSceneState = {
   hemisphereLight: THREE.HemisphereLight | null;
   ambientLight: THREE.AmbientLight | null;
 
-  // Post-processing (disabled for now - conflicts with layer renderer)
-  // composer: EffectComposer | null;
-  // bloomPass: UnrealBloomPass | null;
+  // Post-processing
+  bloomPass: UnrealBloomPass | null;
 
   // Track renderer size for resolution updates
   lastRendererWidth: number;
@@ -669,8 +668,7 @@ const StageScene = createComponent({
     removeCrowd: null,
     hemisphereLight: null,
     ambientLight: null,
-    // composer: null,
-    // bloomPass: null,
+    bloomPass: null,
     lastRendererWidth: 0,
     lastRendererHeight: 0,
     prevShowDj: null,
@@ -702,7 +700,11 @@ const StageScene = createComponent({
     'shaderWall.brightness': 'shader-wall-kick-flash',
     'overheadBlinder.intensity': 'overhead-blinder-big-impact',
   },
-  init3D: ({ threeCtx: { scene, camera, renderer }, state, config }) => {
+  init3D: ({
+    threeCtx: { scene, camera, renderer, composer },
+    state,
+    config,
+  }) => {
     // Initialize renderer size tracking
     state.lastRendererWidth = renderer.domElement.width;
     state.lastRendererHeight = renderer.domElement.height;
@@ -905,6 +907,19 @@ const StageScene = createComponent({
     state.djSpotLight.target = djBooth;
     scene.add(state.djSpotLight);
     scene.add(state.djSpotLight.target);
+
+    // Setup post-processing
+    if (composer) {
+      const bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        config.postProcessing.bloomStrength,
+        config.postProcessing.bloomRadius,
+        config.postProcessing.bloomThreshold,
+      );
+      bloomPass.enabled = config.postProcessing.bloom;
+      composer.addPass(bloomPass);
+      state.bloomPass = bloomPass;
+    }
   },
   draw3D: ({ threeCtx: { renderer, scene, camera }, state, config, dt }) => {
     // === WASD CAMERA CONTROL MODE ===
@@ -1247,6 +1262,17 @@ const StageScene = createComponent({
     if (state.updateCrowd) {
       state.updateCrowd(dt);
     }
+
+    // Update post-processing parameters
+    if (state.bloomPass) {
+      state.bloomPass.enabled = config.postProcessing.bloom;
+      state.bloomPass.strength = config.postProcessing.bloomStrength;
+      state.bloomPass.radius = config.postProcessing.bloomRadius;
+      state.bloomPass.threshold = config.postProcessing.bloomThreshold;
+    }
+
+    // Render is handled by layer renderer's composer
+    renderer.render(scene, camera);
   },
 });
 

@@ -17,12 +17,22 @@ export function createCrowd(
     return { update: () => {}, remove: () => {}, getObject: () => null };
   }
 
-  // Create loading manager to handle missing textures gracefully
+  // Suppress Three.js warnings during FBX load to prevent lag
+  const originalWarn = console.warn;
+  console.warn = () => {}; // Temporarily disable warnings
+
+  // Create loading manager that prevents texture loading entirely
   const loadingManager = new THREE.LoadingManager();
-  loadingManager.onError = (url) => {
-    // Silently ignore texture loading errors - we'll use default materials
-    console.log('Texture not found (using default material):', url);
-  };
+
+  // Override the default texture loader to prevent 404s
+  loadingManager.setURLModifier((url) => {
+    // If it's a texture file (not the FBX itself), return empty data URL
+    if (url.match(/\.(png|jpg|jpeg|gif|bmp|tga)$/i)) {
+      // Return a 1x1 transparent pixel as data URL to avoid 404s
+      return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    }
+    return url;
+  });
 
   const loader = new FBXLoader(loadingManager);
   const mixers: THREE.AnimationMixer[] = [];
@@ -49,86 +59,90 @@ export function createCrowd(
     loadModel(femaleModelUrl),
     loadModel(maleDancerModelUrl),
     loadModel(maleCheerModelUrl),
-  ]).then(([femaleModel, maleDancerModel, maleCheerModel]) => {
-    const models = [femaleModel, maleDancerModel, maleCheerModel];
+  ])
+    .then(([femaleModel, maleDancerModel, maleCheerModel]) => {
+      // Restore console.warn after loading
+      console.warn = originalWarn;
 
-    // Find the single SkinnedMesh in the loaded model to use as a template
-    // Note: All instances will share this geometry and material.
-    const templateMesh = femaleModel.children.find(
-      (child) => (child as THREE.SkinnedMesh).isSkinnedMesh,
-    ) as THREE.SkinnedMesh;
+      const models = [femaleModel, maleDancerModel, maleCheerModel];
 
-    if (!templateMesh) return;
-
-    // Use the template's geometry and material for the InstancedMesh.
-    const mergedGeometry = templateMesh.geometry;
-    const atlasTexture = (templateMesh.material as THREE.MeshStandardMaterial)
-      .map;
-
-    const MAX_BONES = templateMesh.skeleton.bones.length;
-
-    mergedGeometry.boundingSphere = new THREE.Sphere(
-      new THREE.Vector3(0, 1, 0),
-      2,
-    );
-    mergedGeometry.computeBoundingBox();
-
-    const BONES = templateMesh.skeleton.bones.length;
-    const TEXTURE_WIDTH = MAX_BONES * 4; // 4 pixels per mat4
-    const TEXTURE_HEIGHT = CROWD_COUNT; // One row per dancer
-
-    const boneData = new Float32Array(TEXTURE_WIDTH * TEXTURE_HEIGHT * 4); // 4 components (RGBA)
-    const boneTexture = new THREE.DataTexture(
-      boneData,
-      TEXTURE_WIDTH,
-      TEXTURE_HEIGHT,
-      THREE.RGBAFormat,
-      THREE.FloatType,
-    );
-
-    for (let i = 0; i < CROWD_COUNT; i++) {
-      // --- CHANGE IS HERE ---
-      // Instead of always using one model, randomly pick from the loaded models.
-      // This will be the source for the skeleton and animations for this instance.
-      const sourceModel = models[Math.floor(Math.random() * models.length)];
-      // --- END OF CHANGE ---
-
-      const newModel = SkeletonUtils.clone(sourceModel);
-
-      const skinnedMesh = newModel.children.find(
+      // Find the single SkinnedMesh in the loaded model to use as a template
+      // Note: All instances will share this geometry and material.
+      const templateMesh = femaleModel.children.find(
         (child) => (child as THREE.SkinnedMesh).isSkinnedMesh,
       ) as THREE.SkinnedMesh;
-      if (!skinnedMesh) continue;
 
-      const skeleton = skinnedMesh.skeleton;
-      const rootBone = skeleton.bones[0];
-      const mixer = new THREE.AnimationMixer(newModel);
+      if (!templateMesh) return;
 
-      if (sourceModel.animations.length > 0) {
-        const animations = sourceModel.animations;
+      // Use the template's geometry and material for the InstancedMesh.
+      const mergedGeometry = templateMesh.geometry;
+      const atlasTexture = (templateMesh.material as THREE.MeshStandardMaterial)
+        .map;
 
-        // Pick a random animation clip from the selected source model
-        const randomClip =
-          animations[Math.floor(Math.random() * animations.length)];
+      const MAX_BONES = templateMesh.skeleton.bones.length;
 
-        const action = mixer.clipAction(randomClip);
+      mergedGeometry.boundingSphere = new THREE.Sphere(
+        new THREE.Vector3(0, 1, 0),
+        2,
+      );
+      mergedGeometry.computeBoundingBox();
 
-        action.time = Math.random() * action.getClip().duration; // Randomize start time
-        action.play();
+      const BONES = templateMesh.skeleton.bones.length;
+      const TEXTURE_WIDTH = MAX_BONES * 4; // 4 pixels per mat4
+      const TEXTURE_HEIGHT = CROWD_COUNT; // One row per dancer
+
+      const boneData = new Float32Array(TEXTURE_WIDTH * TEXTURE_HEIGHT * 4); // 4 components (RGBA)
+      const boneTexture = new THREE.DataTexture(
+        boneData,
+        TEXTURE_WIDTH,
+        TEXTURE_HEIGHT,
+        THREE.RGBAFormat,
+        THREE.FloatType,
+      );
+
+      for (let i = 0; i < CROWD_COUNT; i++) {
+        // --- CHANGE IS HERE ---
+        // Instead of always using one model, randomly pick from the loaded models.
+        // This will be the source for the skeleton and animations for this instance.
+        const sourceModel = models[Math.floor(Math.random() * models.length)];
+        // --- END OF CHANGE ---
+
+        const newModel = SkeletonUtils.clone(sourceModel);
+
+        const skinnedMesh = newModel.children.find(
+          (child) => (child as THREE.SkinnedMesh).isSkinnedMesh,
+        ) as THREE.SkinnedMesh;
+        if (!skinnedMesh) continue;
+
+        const skeleton = skinnedMesh.skeleton;
+        const rootBone = skeleton.bones[0];
+        const mixer = new THREE.AnimationMixer(newModel);
+
+        if (sourceModel.animations.length > 0) {
+          const animations = sourceModel.animations;
+
+          // Pick a random animation clip from the selected source model
+          const randomClip =
+            animations[Math.floor(Math.random() * animations.length)];
+
+          const action = mixer.clipAction(randomClip);
+
+          action.time = Math.random() * action.getClip().duration; // Randomize start time
+          action.play();
+        }
+        dancers.push({ skeleton, mixer, rootBone });
       }
-      dancers.push({ skeleton, mixer, rootBone });
-    }
 
-    const material = new THREE.ShaderMaterial({
-      uniforms: {
-        boneTexture: { value: boneTexture },
-        texture_sampler: {
-          value: atlasTexture,
+      const material = new THREE.ShaderMaterial({
+        uniforms: {
+          boneTexture: { value: boneTexture },
+          texture_sampler: {
+            value: atlasTexture,
+          },
+          bindMatrix: { value: templateMesh.bindMatrix },
+          bindMatrixInverse: { value: templateMesh.bindMatrixInverse },
         },
-        bindMatrix: { value: templateMesh.bindMatrix },
-        bindMatrixInverse: { value: templateMesh.bindMatrixInverse },
-      },
-      vertexShader: `
+        vertexShader: `
           uniform sampler2D boneTexture;
           uniform mat4 bindMatrix;
           uniform mat4 bindMatrixInverse;
@@ -173,7 +187,7 @@ export function createCrowd(
               gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * finalPosition;
           }
         `,
-      fragmentShader: `
+        fragmentShader: `
           uniform sampler2D texture_sampler;
           varying vec2 vUv;
 
@@ -181,88 +195,99 @@ export function createCrowd(
             gl_FragColor = texture2D(texture_sampler, vUv);
           }
         `,
-    });
+      });
 
-    crowdMesh = new THREE.InstancedMesh(mergedGeometry, material, CROWD_COUNT);
+      crowdMesh = new THREE.InstancedMesh(
+        mergedGeometry,
+        material,
+        CROWD_COUNT,
+      );
 
-    const dummy = new THREE.Object3D();
-    const positions: THREE.Vector3[] = []; // Array to store final valid positions
+      const dummy = new THREE.Object3D();
+      const positions: THREE.Vector3[] = []; // Array to store final valid positions
 
-    // --- ADAPTIVE CROWD SHAPE PARAMETERS ---
-    // Scale depth and spread based on crowd count
-    // Fewer people = more clumped at stage (less depth)
-    // More people = spread out further back
-    const crowdFactor = CROWD_COUNT / 1000; // Normalize to 0-1 range
-    const stageFrontZ = 14;
-    const stageWidth = 50;
-    const crowdDepth = 30 + crowdFactor * 50; // 30-80 depth based on count
-    const crowdSpreadFactor = 0.8 + crowdFactor * 0.7; // 0.8-1.5 spread factor
-    const minSeparation = 1.8;
-    const maxPlacementTries = 100;
+      // --- ADAPTIVE CROWD SHAPE PARAMETERS ---
+      // Scale depth and spread based on crowd count
+      // Fewer people = more clumped at stage (less depth)
+      // More people = spread out further back
+      const crowdFactor = CROWD_COUNT / 1000; // Normalize to 0-1 range
+      const stageFrontZ = 14;
+      const stageWidth = 50;
+      const crowdDepth = 30 + crowdFactor * 50; // 30-80 depth based on count
+      const crowdSpreadFactor = 0.8 + crowdFactor * 0.7; // 0.8-1.5 spread factor
+      const minSeparation = 1.8;
+      const maxPlacementTries = 100;
 
-    for (let i = 0; i < CROWD_COUNT; i++) {
-      let positionFound = false;
-      let tries = 0;
-      let candidatePosition = new THREE.Vector3();
+      for (let i = 0; i < CROWD_COUNT; i++) {
+        let positionFound = false;
+        let tries = 0;
+        let candidatePosition = new THREE.Vector3();
 
-      while (!positionFound && tries < maxPlacementTries) {
-        tries++;
-        const depthBias = Math.random() * Math.random();
-        const z = stageFrontZ + depthBias * crowdDepth;
-        const maxSpread =
-          stageWidth / 2 + depthBias * crowdDepth * crowdSpreadFactor;
-        const xBias = (Math.random() + Math.random()) / 2;
-        const x = (xBias - 0.5) * 2 * maxSpread;
+        while (!positionFound && tries < maxPlacementTries) {
+          tries++;
+          const depthBias = Math.random() * Math.random();
+          const z = stageFrontZ + depthBias * crowdDepth;
+          const maxSpread =
+            stageWidth / 2 + depthBias * crowdDepth * crowdSpreadFactor;
+          const xBias = (Math.random() + Math.random()) / 2;
+          const x = (xBias - 0.5) * 2 * maxSpread;
 
-        candidatePosition.set(x, 0, z);
+          candidatePosition.set(x, 0, z);
 
-        let isTooClose = false;
-        for (const pos of positions) {
-          if (candidatePosition.distanceTo(pos) < minSeparation) {
-            isTooClose = true;
-            break;
+          let isTooClose = false;
+          for (const pos of positions) {
+            if (candidatePosition.distanceTo(pos) < minSeparation) {
+              isTooClose = true;
+              break;
+            }
+          }
+
+          if (!isTooClose) {
+            positionFound = true;
           }
         }
+        positions.push(candidatePosition);
+      }
 
-        if (!isTooClose) {
-          positionFound = true;
+      for (let i = 0; i < CROWD_COUNT; i++) {
+        dummy.position.copy(positions[i]);
+
+        const baseRotation = Math.atan2(-dummy.position.x, -dummy.position.z);
+        const randomOffset = (Math.random() - 0.5) * (Math.PI / 4);
+        dummy.rotation.y = baseRotation + randomOffset;
+
+        dummy.scale.set(0.032, 0.032, 0.032);
+        dummy.updateMatrix();
+        crowdMesh.setMatrixAt(i, dummy.matrix);
+      }
+      crowdMesh.instanceMatrix.needsUpdate = true;
+
+      scene.add(crowdMesh);
+
+      crowdUpdate = (delta: number) => {
+        if (!dancers.length) return;
+
+        for (let i = 0; i < dancers.length; i++) {
+          const dancer = dancers[i];
+          dancer.mixer.update(delta);
+          (dancer.mixer.getRoot() as THREE.Object3D).updateMatrixWorld(true);
+          dancer.rootBone.position.set(0, 0, 0);
+          dancer.rootBone.quaternion.set(0, 0, 0, 1);
+          dancer.rootBone.scale.set(1, 1, 1);
+          dancer.skeleton.update();
+          const offset = i * MAX_BONES * 16;
+          boneTexture.image.data.set(dancer.skeleton.boneMatrices, offset);
         }
-      }
-      positions.push(candidatePosition);
-    }
-
-    for (let i = 0; i < CROWD_COUNT; i++) {
-      dummy.position.copy(positions[i]);
-
-      const baseRotation = Math.atan2(-dummy.position.x, -dummy.position.z);
-      const randomOffset = (Math.random() - 0.5) * (Math.PI / 4);
-      dummy.rotation.y = baseRotation + randomOffset;
-
-      dummy.scale.set(0.032, 0.032, 0.032);
-      dummy.updateMatrix();
-      crowdMesh.setMatrixAt(i, dummy.matrix);
-    }
-    crowdMesh.instanceMatrix.needsUpdate = true;
-
-    scene.add(crowdMesh);
-
-    crowdUpdate = (delta: number) => {
-      if (!dancers.length) return;
-
-      for (let i = 0; i < dancers.length; i++) {
-        const dancer = dancers[i];
-        dancer.mixer.update(delta);
-        (dancer.mixer.getRoot() as THREE.Object3D).updateMatrixWorld(true);
-        dancer.rootBone.position.set(0, 0, 0);
-        dancer.rootBone.quaternion.set(0, 0, 0, 1);
-        dancer.rootBone.scale.set(1, 1, 1);
-        dancer.skeleton.update();
-        const offset = i * MAX_BONES * 16;
-        boneTexture.image.data.set(dancer.skeleton.boneMatrices, offset);
-      }
-      boneTexture.needsUpdate = true;
-    };
-  });
+        boneTexture.needsUpdate = true;
+      };
+    })
+    .catch((error) => {
+      console.error('Error loading crowd models:', error);
+    })
+    .finally(() => {
+      // Always restore console.warn
+      console.warn = originalWarn;
+    });
 
   const update = (delta: number) => {
     crowdUpdate(delta);

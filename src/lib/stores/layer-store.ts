@@ -26,10 +26,12 @@ import useLayerValuesStore from './layer-values-store';
 
 export const layerStorePartialize = (state: LayerStore) => ({
   ...state,
-  layers: state.layers.map(({ config, mirrorCanvases, ...rest }) => ({
-    ...rest,
-    comp: { name: rest.comp.name },
-  })),
+  layers: state.layers.map(
+    ({ config, mirrorCanvases, state: componentState, ...rest }) => ({
+      ...rest,
+      comp: { name: rest.comp.name },
+    }),
+  ),
 });
 
 export const layerStoreMerge = (
@@ -53,8 +55,9 @@ export const layerStoreMerge = (
         persistedLayer.id,
         comp.config.clone(),
       ),
-      // Preserve runtime properties from the current state
+      // Preserve runtime properties from the current state or initialize
       mirrorCanvases: currentLayer ? currentLayer.mirrorCanvases : [],
+      state: comp.initialState || {},
     };
 
     return rehydratedLayer;

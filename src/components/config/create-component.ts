@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { NodeNetworkPreset } from '../node-network/presets';
 import { InferValues, VConfig, v } from './config';
 
@@ -21,6 +22,7 @@ type ThreeContext = {
   renderer: THREE.WebGLRenderer;
   scene: THREE.Scene;
   camera: THREE.Camera;
+  composer?: EffectComposer;
 };
 
 type DrawFunction<T, UT> = (params: {

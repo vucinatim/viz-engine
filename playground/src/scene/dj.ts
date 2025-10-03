@@ -3,11 +3,29 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import modelUrl from '../models/female-dj.fbx?url';
 
 export function createDj(scene: THREE.Scene) {
-  // Create loading manager to handle missing textures gracefully
+  // Suppress Three.js warnings during FBX load to prevent lag
+  const originalWarn = console.warn;
+  console.warn = () => {}; // Temporarily disable warnings
+
+  // Create loading manager that prevents texture loading entirely
   const loadingManager = new THREE.LoadingManager();
-  loadingManager.onError = (url) => {
-    // Silently ignore texture loading errors - we'll use default materials
-    console.log('Texture not found (using default material):', url);
+
+  // Override the default texture loader to prevent 404s
+  loadingManager.setURLModifier((url) => {
+    // If it's a texture file (not the FBX itself), return empty data URL
+    if (url.match(/\.(png|jpg|jpeg|gif|bmp|tga)$/i)) {
+      // Return a 1x1 transparent pixel as data URL to avoid 404s
+      return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    }
+    return url;
+  });
+
+  // Restore console.warn after any load completes
+  loadingManager.onLoad = () => {
+    console.warn = originalWarn;
+  };
+  loadingManager.onError = () => {
+    console.warn = originalWarn;
   };
 
   const loader = new FBXLoader(loadingManager);
