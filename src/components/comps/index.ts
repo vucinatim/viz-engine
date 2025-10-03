@@ -5,6 +5,8 @@ import HeartbeatMonitor from './heartbeat-monitor';
 import InstancedSupercube from './instanced-supercube';
 import MorphShapes from './morph-shapes';
 import MovingObjects from './moving-objects';
+import NeuralNetwork from './neural-network';
+import OrbitingCubes from './orbiting-cubes';
 import SimpleCube from './simple-cube';
 import StageScene from './stage-scene';
 
@@ -17,6 +19,8 @@ export const AllComps = [
   InstancedSupercube,
   MorphShapes,
   FeatureExtractionBars,
+  NeuralNetwork,
+  OrbitingCubes,
   StageScene,
 ];
 
