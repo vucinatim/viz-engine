@@ -29,5 +29,12 @@
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules", ".next"]
+  "exclude": [
+    "node_modules",
+    ".next",
+    "playground/vite.config.ts",
+    "playground/main.ts",
+    "playground/controls.ts",
+    "playground/ui.ts"
+  ]
 }
