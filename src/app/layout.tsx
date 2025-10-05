@@ -20,6 +20,16 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <head>
         <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.reactScanConfig = {
+                enabled: ${process.env.NODE_ENV === 'development'},
+                showToolbar: ${process.env.NODE_ENV === 'development'}
+              };
+            `,
+          }}
+        />
+        <script
           async
           crossOrigin="anonymous"
           src="//unpkg.com/react-scan/dist/auto.global.js"

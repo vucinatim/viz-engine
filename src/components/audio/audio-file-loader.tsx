@@ -1,4 +1,3 @@
-import AudioFilesServer from '@/app/audio-files.server';
 import useSetBodyProps from '@/lib/hooks/use-set-body-props';
 import useAudioStore from '@/lib/stores/audio-store';
 import { cn } from '@/lib/utils';
@@ -49,21 +48,28 @@ const AudioFileLoader = () => {
   useSetBodyProps(getRootProps());
 
   useEffect(() => {
-    AudioFilesServer().then((files) => {
-      setAudioFiles(files);
-      if (files.length > 0) {
-        setSelectedFile(files[0]);
-        const url = `/music/${files[0]}`;
-        if (audioElementRef.current) {
-          audioElementRef.current.srcObject = null as any;
-          audioElementRef.current.src = url;
-          audioElementRef.current.muted = false;
-          audioElementRef.current.load();
+    // Fetch audio files from API route
+    fetch('/api/audio-files')
+      .then((res) => res.json())
+      .then((files: string[]) => {
+        setAudioFiles(files);
+        if (files.length > 0) {
+          setSelectedFile(files[0]);
+          const url = `/music/${files[0]}`;
+          if (audioElementRef.current) {
+            audioElementRef.current.srcObject = null as any;
+            audioElementRef.current.src = url;
+            audioElementRef.current.muted = false;
+            audioElementRef.current.load();
+          }
+          wavesurfer?.load(url);
+          setCurrentTrackUrl(url);
         }
-        wavesurfer?.load(url);
-        setCurrentTrackUrl(url);
-      }
-    });
+      })
+      .catch((error) => {
+        console.error('Error loading audio files:', error);
+        setAudioFiles([]);
+      });
   }, [audioElementRef, setCurrentTrackUrl, wavesurfer]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
