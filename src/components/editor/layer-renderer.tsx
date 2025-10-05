@@ -10,65 +10,6 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 
-// Custom hook to track dependency changes for debugging
-const useDependencyTracker = (
-  deps: any[],
-  depNames: string[],
-  name: string,
-) => {
-  const prevDepsRef = useRef<any[]>();
-  const callCountRef = useRef(0);
-
-  useEffect(() => {
-    if (prevDepsRef.current) {
-      const changedDeps: {
-        index: number;
-        name: string;
-        prev: any;
-        next: any;
-      }[] = [];
-
-      deps.forEach((dep, index) => {
-        const prevDep = prevDepsRef.current![index];
-        if (prevDep !== dep) {
-          changedDeps.push({
-            index,
-            name: depNames[index] || `dependency-${index}`,
-            prev: prevDep,
-            next: dep,
-          });
-        }
-      });
-
-      if (changedDeps.length > 0) {
-        console.group(
-          `🔄 ${name} callback recreated (call #${++callCountRef.current})`,
-        );
-        console.log('Changed dependencies:');
-        changedDeps.forEach(({ index, name, prev, next }) => {
-          console.log(`  [${index}] ${name}:`, { prev, next });
-        });
-        console.log(
-          'All dependencies:',
-          deps.map((dep, i) => ({
-            name: depNames[i] || `dep-${i}`,
-            value: dep,
-          })),
-        );
-        console.groupEnd();
-      }
-    } else {
-      console.log(
-        `🆕 ${name} callback created (call #${++callCountRef.current})`,
-      );
-    }
-
-    prevDepsRef.current = [...deps];
-  }, deps);
-
-  return callCountRef.current;
-};
-
 type RenderFunction = (data: {
   dt: number;
   audioData: { dataArray: Uint8Array; analyzer: AnalyserNode };
@@ -103,7 +44,6 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
 
   // on panel resize, update canvas size
   useOnResize(canvasContainerRef, (entries, element) => {
-    console.log('Resizing canvas');
     if (!layerCanvasRef.current) return;
     const newestEntry = entries[entries.length - 1];
 
@@ -112,10 +52,6 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     // Calculate the new internal resolution based on the multiplier
     const newWidth = Math.round(width * resolutionMultiplier);
     const newHeight = Math.round(height * resolutionMultiplier);
-
-    console.log(
-      `Display: ${width}x${height}, Resolution: ${newWidth}x${newHeight} (${resolutionMultiplier}x)`,
-    );
 
     // Set the canvas internal bitmap size (this is what changes with multiplier)
     layerCanvasRef.current.width = newWidth;
@@ -169,41 +105,8 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     layerDebugEnabledRef.current = layer.isDebugEnabled;
   }, [layer.isDebugEnabled]);
 
-  // Track setup3D dependencies for debugging
-  // Removed wavesurfer, layer.state, and layer.isDebugEnabled since they're accessed via refs
-  // These only need to trigger recreation when the component or config structure changes
-  const setup3DDeps = [
-    audioAnalyzer?.context.sampleRate,
-    audioAnalyzer?.fftSize,
-    layer.comp,
-    layer.config,
-    resolutionMultiplier,
-  ];
-
-  // Add descriptive names for each dependency to make debugging easier
-  const setup3DDepNames = [
-    'audioAnalyzer.sampleRate',
-    'audioAnalyzer.fftSize',
-    'layer.comp',
-    'layer.config',
-    'resolutionMultiplier',
-  ];
-
-  const setup3DCallCount = useDependencyTracker(
-    setup3DDeps,
-    setup3DDepNames,
-    'setup3D',
-  );
-
   const setup3D = useCallback(() => {
     if (!layer.comp.draw3D || !layerCanvasRef.current) return;
-
-    console.log(
-      `🚀 setup3D executing (call #${setup3DCallCount}) for layer: ${layer.comp.name}`,
-    );
-
-    // Add stack trace to see what's calling setup3D
-    console.trace('setup3D execution call stack:');
 
     const renderer = new THREE.WebGLRenderer({
       canvas: layerCanvasRef.current,
@@ -260,7 +163,6 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     composer.addPass(renderScene);
     composerRef.current = composer;
 
-    console.log('init3D called', layer.comp.name);
     layer.comp.init3D?.({
       state: layerStateRef.current,
       threeCtx: {
@@ -285,7 +187,13 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     cameraRef.current = camera;
     sceneRef.current = scene;
     rendererRef.current = renderer;
-  }, setup3DDeps);
+  }, [
+    audioAnalyzer?.context.sampleRate,
+    audioAnalyzer?.fftSize,
+    layer.comp,
+    layer.config,
+    resolutionMultiplier,
+  ]);
 
   // Use refs for frequently changing values that don't need to trigger full render setup recreation
   const layerSettingsRef = useRef(layer.layerSettings);
@@ -305,48 +213,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     wavesurferRef.current = wavesurfer;
   }, [wavesurfer]);
 
-  // Track useEffect dependencies for debugging
-  // Removed layer.layerSettings, layer.mirrorCanvases, and wavesurfer since they're accessed via refs
-  // These only need to trigger recreation when the component structure changes, not UI settings
-  const renderEffectDeps = [
-    audioAnalyzer,
-    getNextAudioFrame,
-    layer.id,
-    layer.comp,
-    layer.config,
-    layer.isExpanded,
-    layer.isDebugEnabled,
-    setup3D,
-    withDebug,
-    playerRef,
-    playerFPS,
-  ];
-
-  const renderEffectDepNames = [
-    'audioAnalyzer',
-    'getNextAudioFrame',
-    'layer.id',
-    'layer.comp',
-    'layer.config',
-    'layer.isExpanded',
-    'layer.isDebugEnabled',
-    'setup3D',
-    'withDebug',
-    'playerRef',
-    'playerFPS',
-  ];
-
-  const renderEffectCallCount = useDependencyTracker(
-    renderEffectDeps,
-    renderEffectDepNames,
-    'renderEffect (calls setup3D)',
-  );
-
   useEffect(() => {
-    console.log(
-      `🎬 renderEffect executing (call #${renderEffectCallCount}) for layer: ${layer.comp.name}`,
-    );
-
     if (!audioAnalyzer || !layerCanvasRef.current) return;
 
     let renderFunction: RenderFunction | null = null;
@@ -431,8 +298,8 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       );
 
       // Mirror the rendered canvas to preview canvases
-      if (layer.mirrorCanvases && layer.mirrorCanvases.length > 0) {
-        mirrorToCanvases(layerCanvasRef.current, layer.mirrorCanvases);
+      if (mirrorCanvasesRef.current && mirrorCanvasesRef.current.length > 0) {
+        mirrorToCanvases(layerCanvasRef.current, mirrorCanvasesRef.current);
       }
 
       rafIdRef.current = requestAnimationFrame(renderFrame);
@@ -449,7 +316,19 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
         rendererRef.current.dispose();
       }
     };
-  }, renderEffectDeps);
+  }, [
+    audioAnalyzer,
+    getNextAudioFrame,
+    layer.id,
+    layer.comp,
+    layer.config,
+    layer.isExpanded,
+    layer.isDebugEnabled,
+    setup3D,
+    withDebug,
+    playerRef,
+    playerFPS,
+  ]);
 
   return (
     <div ref={canvasContainerRef} className="absolute inset-0">

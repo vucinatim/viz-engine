@@ -62,7 +62,7 @@ export function saveProject(projectName: string = 'project') {
 
 export function loadProject(file: File) {
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     try {
       const json = e.target?.result as string;
       const projectFile: ProjectFile = JSON.parse(json);
@@ -91,6 +91,10 @@ export function loadProject(file: File) {
       // For stores with serializable state, we can just set it
       useLayerValuesStore.setState(projectFile.layerValuesStore);
       useEditorStore.setState(projectFile.editorStore);
+
+      // Wait for IndexedDB persistence to complete (stores have 100ms throttle)
+      // Add extra buffer to ensure all writes complete
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       alert('Project loaded successfully! The application will now reload.');
 

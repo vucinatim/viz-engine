@@ -1,3 +1,4 @@
+import ScreenSizeGuard from '@/components/ui/screen-size-guard';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import 'zod-metadata/register';
@@ -19,23 +20,17 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.reactScanConfig = {
-                enabled: ${process.env.NODE_ENV === 'development'},
-                showToolbar: ${process.env.NODE_ENV === 'development'}
-              };
-            `,
-          }}
-        />
-        <script
-          async
-          crossOrigin="anonymous"
-          src="//unpkg.com/react-scan/dist/auto.global.js"
-        />
+        {process.env.NODE_ENV === 'development' && (
+          <script
+            async
+            crossOrigin="anonymous"
+            src="//unpkg.com/react-scan/dist/auto.global.js"
+          />
+        )}
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <ScreenSizeGuard>{children}</ScreenSizeGuard>
+      </body>
     </html>
   );
 }
