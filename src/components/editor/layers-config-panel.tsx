@@ -1,64 +1,59 @@
-import useCompStore from "@/lib/stores/comp-store";
-import { useEffect, useMemo } from "react";
-import EditorLayerSearch from "./editor-layer-search";
-import LayerConfigCard from "./layer-config-card";
-import useLayerStore, { LayerData } from "@/lib/stores/layer-store";
-import * as allComps from "@/components/comps";
-import { Button } from "../ui/button";
-import { ChevronsDown, ChevronsUp } from "lucide-react";
+import { AllComps } from '@/components/comps';
+import useCompStore from '@/lib/stores/comp-store';
+import useLayerStore, { LayerData } from '@/lib/stores/layer-store';
 import {
   DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
   DragEndEvent,
   DragStartEvent,
-} from "@dnd-kit/core";
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+} from '@dnd-kit/sortable';
+import { ChevronsDown, ChevronsUp } from 'lucide-react';
+import { useEffect, useMemo } from 'react';
+import { Comp } from '../config/create-component';
+import { Button } from '../ui/button';
+import EditorLayerSearch from './editor-layer-search';
+import LayerConfigCard from './layer-config-card';
 
 const LayersConfigPanel = () => {
   const { layers, setAllLayersExpanded } = useLayerStore();
   const areSomeLayersExpanded = useMemo(
     () => layers.some((layer) => layer.isExpanded),
-    [layers]
+    [layers],
   );
 
   // Initialize the Comps in the CompStore
   useEffect(() => {
-    console.log("Comps have been updated");
     // Add all components to the store
-    Object.values(allComps).forEach((comp) =>
-      useCompStore.getState().addComp(comp)
-    );
+    AllComps.forEach((comp) => useCompStore.getState().addComp(comp as Comp));
 
     // Cleanup function to remove components from the store
     return () => {
-      Object.values(allComps).forEach((comp) =>
-        useCompStore.getState().removeComp(comp.name)
-      );
+      AllComps.forEach((comp) => useCompStore.getState().removeComp(comp.name));
     };
 
     // This makes it reactive to changes to any of the comp files
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allComps]);
+  }, []);
 
   return (
     <div className="absolute inset-0 flex flex-col items-stretch justify-start">
-      <div className="p-4 flex gap-x-2 border-b border-zinc-600">
+      <div className="flex gap-x-2 border-b border-zinc-600 p-4">
         <EditorLayerSearch />
         <Button
           size="icon"
           tooltip="Expand/Collapse All Layers"
           onClick={() => {
             setAllLayersExpanded(areSomeLayersExpanded ? false : true);
-          }}
-        >
+          }}>
           {areSomeLayersExpanded ? (
             <ChevronsUp className="scale-y-90" />
           ) : (
@@ -66,7 +61,7 @@ const LayersConfigPanel = () => {
           )}
         </Button>
       </div>
-      <div className="flex flex-col grow overflow-y-auto pb-[200px]">
+      <div className="flex grow flex-col overflow-y-auto pb-[200px]">
         <SortableLayers layers={layers} />
       </div>
     </div>
@@ -83,7 +78,7 @@ const SortableLayers = ({ layers }: SortableLayersProps) => {
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   function handleDragStart(event: DragStartEvent) {
@@ -97,7 +92,7 @@ const SortableLayers = ({ layers }: SortableLayersProps) => {
     }
 
     if (active.id !== over?.id) {
-      console.log("Reordering layers");
+      console.log('Reordering layers');
       reorderLayers(active.id.toString(), over.id.toString());
     }
   }
@@ -106,9 +101,9 @@ const SortableLayers = ({ layers }: SortableLayersProps) => {
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      modifiers={[restrictToVerticalAxis]}
       onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
+      onDragEnd={handleDragEnd}>
       <SortableContext items={layers} strategy={verticalListSortingStrategy}>
         {layers.toReversed().map((layer, index) => (
           <LayerConfigCard key={layer.id} index={index} layer={layer} />

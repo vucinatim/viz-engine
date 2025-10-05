@@ -1,278 +1,222 @@
-import { z } from "zod";
-import { createComponent } from "../editor/layer-renderer";
-import { InputType, meta } from "@/lib/types/field-metadata";
-import { gradient } from "@/lib/comp-utils/gradient";
-import Color from "color";
+import { gradient } from '@/lib/comp-utils/gradient';
+import Color from 'color';
+import { v } from '../config/config';
+import { createComponent } from '../config/create-component';
 
-const commonSettings = {
-  scaleY: z
-    .number()
-    .min(0)
-    .max(1)
-    .default(0.8)
-    .describe(
-      meta({
-        label: "Y Scale",
-        description: "Scale factor for amplitude visualization",
-        inputType: InputType.Slider,
-      })
-    ),
-  minFrequency: z
-    .number()
-    .min(20)
-    .max(22050)
-    .default(20)
-    .describe(
-      meta({
-        label: "Min Frequency",
-        description: "Minimum frequency displayed",
-        inputType: InputType.Slider,
-      })
-    ),
-  maxFrequency: z
-    .number()
-    .min(20)
-    .max(22050)
-    .default(22050)
-    .describe(
-      meta({
-        label: "Max Frequency",
-        description: "Maximum frequency displayed",
-        inputType: InputType.Slider,
-      })
-    ),
-};
+const commonSettingsConfig = v.group(
+  {
+    label: 'Scaling Settings',
+    description: 'Settings related to scaling and frequency display',
+  },
+  {
+    scaleY: v.number({
+      label: 'Y Scale',
+      description: 'Scale factor for amplitude visualization',
+      defaultValue: 0.8,
+      step: 0.1,
+      min: 0,
+      max: 1,
+    }),
+    minFrequency: v.number({
+      label: 'Min Frequency',
+      description: 'Minimum frequency displayed',
+      defaultValue: 20,
+      step: 1,
+      min: 20,
+      max: 22050,
+    }),
+    maxFrequency: v.number({
+      label: 'Max Frequency',
+      description: 'Maximum frequency displayed',
+      defaultValue: 22050,
+      step: 1,
+      min: 20,
+      max: 22050,
+    }),
+  },
+);
 
-const gridSettings = z
-  .object({
-    color: z
-      .string()
-      .min(1)
-      .default(Color("#ccc").alpha(0.5).string())
-      .describe(
-        meta({
-          label: "Color",
-          description: "Color of the grid lines",
-          inputType: InputType.Color,
-        })
-      ),
-    freqLines: z
-      .number()
-      .int()
-      .min(0)
-      .max(50)
-      .default(10)
-      .describe(
-        meta({
-          label: "Frequency Lines",
-          description: "Number of frequency lines",
-          inputType: InputType.Slider,
-        })
-      ),
-    ampLines: z
-      .number()
-      .int()
-      .min(0)
-      .max(10)
-      .default(5)
-      .describe(
-        meta({
-          label: "Amplitude Lines",
-          description: "Number of amplitude lines",
-          inputType: InputType.Slider,
-        })
-      ),
-  })
-  .describe(
-    meta({
-      label: "Grid Settings",
-      description: "Settings for the grid lines",
-    })
-  );
+const gridSettingsConfig = v.group(
+  {
+    label: 'Grid Settings',
+    description: 'Settings for the grid lines',
+  },
+  {
+    color: v.color({
+      label: 'Color',
+      description: 'Color of the grid lines',
+      defaultValue: '#ccc',
+    }),
+    freqLines: v.number({
+      label: 'Frequency Lines',
+      description: 'Number of frequency lines',
+      defaultValue: 10,
+      step: 1,
+      min: 0,
+      max: 50,
+    }),
+    ampLines: v.number({
+      label: 'Amplitude Lines',
+      description: 'Number of amplitude lines',
+      defaultValue: 5,
+      step: 1,
+      min: 0,
+      max: 10,
+    }),
+  },
+);
 
-const lineSettings = z
-  .object({
-    smoothing: z
-      .boolean()
-      .default(true)
-      .describe(
-        meta({
-          label: "Smoothing",
-          description: "Apply smoothing to the audio data",
-          inputType: InputType.Toggle,
-        })
-      ),
-    color: z
-      .string()
-      .min(1)
-      .default("white")
-      .describe(
-        meta({
-          label: "Line Color",
-          description: "Color of the curve",
-          inputType: InputType.Color,
-        })
-      ),
-    thickness: z
-      .number()
-      .int()
-      .positive()
-      .min(0)
-      .max(10)
-      .default(1)
-      .describe(
-        meta({
-          label: "Line Thickness",
-          description: "Thickness of the curve",
-          inputType: InputType.Slider,
-        })
-      ),
-    gradientHeight: z
-      .number()
-      .int()
-      .min(0)
-      .max(1)
-      .default(0.8)
-      .describe(
-        meta({
-          label: "Gradient Height",
-          description: "Height of the gradient",
-          inputType: InputType.Slider,
-        })
-      ),
-  })
-  .describe(
-    meta({
-      label: "Line Settings",
-      description: "Settings for the curve",
-    })
-  );
+const lineSettingsConfig = v.group(
+  {
+    label: 'Line Settings',
+    description: 'Settings for the curve',
+  },
+  {
+    smoothing: v.toggle({
+      label: 'Smoothing',
+      description: 'Apply smoothing to the audio data',
+      defaultValue: true,
+    }),
+    color: v.color({
+      label: 'Line Color',
+      description: 'Color of the curve',
+      defaultValue: 'white',
+    }),
+    thickness: v.number({
+      label: 'Line Thickness',
+      description: 'Thickness of the curve',
+      defaultValue: 1,
+      step: 1,
+      min: 0,
+      max: 10,
+    }),
+    gradientHeight: v.number({
+      label: 'Gradient Height',
+      description: 'Height of the gradient',
+      defaultValue: 0.8,
+      step: 0.1,
+      min: 0,
+      max: 1,
+    }),
+  },
+);
 
-const pointSettings = z
-  .object({
-    pointColor: z
-      .string()
-      .min(1)
-      .default("white")
-      .describe(
-        meta({
-          label: "Point Color",
-          description: "Color of the points",
-          inputType: InputType.Color,
-        })
-      ),
-    pointSize: z
-      .number()
-      .int()
-      .positive()
-      .min(0)
-      .max(10)
-      .default(3)
-      .describe(
-        meta({
-          label: "Point Size",
-          description: "Size of the points",
-          inputType: InputType.Slider,
-        })
-      ),
-  })
-  .describe(
-    meta({
-      label: "Point Settings",
-      description: "Settings for the points",
-    })
-  );
+const pointSettingsConfig = v.group(
+  {
+    label: 'Point Settings',
+    description: 'Settings for the points',
+  },
+  {
+    pointColor: v.color({
+      label: 'Point Color',
+      description: 'Color of the points',
+      defaultValue: 'white',
+    }),
+    pointSize: v.number({
+      label: 'Point Size',
+      description: 'Size of the points',
+      defaultValue: 3,
+      step: 1,
+      min: 0,
+      max: 10,
+    }),
+  },
+);
 
 const CurveSpectrum = createComponent({
-  name: "Curve Spectrum",
-  description: "Curve visualization of audio spectrum",
+  name: 'Curve Spectrum',
+  description: 'Curve visualization of audio spectrum',
+  config: v.config({
+    appearance: commonSettingsConfig,
+    grid: gridSettingsConfig,
+    line: lineSettingsConfig,
+    points: pointSettingsConfig,
+  }),
   presets: [
     {
-      name: "Default",
+      name: 'Default',
       values: {
-        scaleY: 0.8,
-        minFrequency: 20,
-        maxFrequency: 20000,
-        gridSettings: {
-          color: Color("#ccc").alpha(0.5).string(),
+        appearance: {
+          scaleY: 0.8,
+          minFrequency: 20,
+          maxFrequency: 20000,
+        },
+        grid: {
+          color: Color('#ccc').alpha(0.5).string(),
           freqLines: 10,
           ampLines: 5,
         },
-        lineSettings: {
+        line: {
           smoothing: true,
-          color: "white",
+          color: 'white',
           thickness: 1,
           gradientHeight: 0.8,
         },
-        pointSettings: {
-          pointColor: "white",
+        points: {
+          pointColor: 'white',
           pointSize: 3,
         },
       },
     },
     {
-      name: "Neon",
+      name: 'Neon',
       values: {
-        scaleY: 0.8,
-        minFrequency: 20,
-        maxFrequency: 22050,
-        gridSettings: {
-          color: Color("#ccc").alpha(0.2).string(),
+        appearance: {
+          scaleY: 0.8,
+          minFrequency: 20,
+          maxFrequency: 22050,
+        },
+        grid: {
+          color: Color('#ccc').alpha(0.2).string(),
           freqLines: 10,
           ampLines: 5,
         },
-        lineSettings: {
+        line: {
           smoothing: true,
-          color: "#ff41ca",
+          color: '#ff41ca',
           thickness: 2,
           gradientHeight: 0.8,
         },
-        pointSettings: {
-          pointColor: "white",
+        points: {
+          pointColor: 'white',
           pointSize: 0,
         },
       },
     },
     {
-      name: "Matrix",
+      name: 'Matrix',
       values: {
-        scaleY: 0.7,
-        minFrequency: 30,
-        maxFrequency: 16000,
-        gridSettings: {
-          color: Color("#00ff00").alpha(0.5).string(),
+        appearance: {
+          scaleY: 0.7,
+          minFrequency: 30,
+          maxFrequency: 16000,
+        },
+        grid: {
+          color: Color('#00ff00').alpha(0.5).string(),
           freqLines: 6,
           ampLines: 3,
         },
-        lineSettings: {
+        line: {
           smoothing: false,
-          color: "#00ff00",
+          color: '#00ff00',
           thickness: 0,
           gradientHeight: 1.0,
         },
-        pointSettings: {
-          pointColor: "#00ff00",
+        points: {
+          pointColor: '#00ff00',
           pointSize: 1,
         },
       },
     },
   ],
-  config: z.object({
-    ...commonSettings,
-    lineSettings,
-    pointSettings,
-    gridSettings,
-  }),
   draw: ({
     canvasCtx: ctx,
     audioData: { dataArray, analyzer },
     config: {
-      minFrequency,
-      maxFrequency,
-      scaleY,
-      gridSettings,
-      lineSettings,
-      pointSettings,
+      appearance: { scaleY, minFrequency, maxFrequency },
+      grid: gridSettings,
+      line: lineSettings,
+      points: pointSettings,
     },
   }) => {
     const width = ctx.canvas.width;
@@ -286,12 +230,12 @@ const CurveSpectrum = createComponent({
       drawCtx,
       { numLines: gridSettings.freqLines, color: gridSettings.color },
       minFrequency,
-      maxFrequency
+      maxFrequency,
     );
     drawAmplitudeGridLines(
       drawCtx,
       { numLines: gridSettings.ampLines, color: gridSettings.color },
-      scaleY
+      scaleY,
     );
 
     const points = computeFrequencyPoints(
@@ -302,7 +246,7 @@ const CurveSpectrum = createComponent({
       dataArray,
       analyzer,
       scaleY,
-      lineSettings.smoothing
+      lineSettings.smoothing,
     );
 
     drawCurve(drawCtx, {
@@ -329,7 +273,7 @@ function computeFrequencyPoints(
   dataArray: Uint8Array,
   analyzer: AnalyserNode,
   scaleY: number,
-  smoothing: boolean
+  smoothing: boolean,
 ): { x: number; y: number }[] {
   const points: { x: number; y: number }[] = [];
   const freqRatio = maxFrequency / minFrequency;
@@ -370,7 +314,7 @@ function drawFrequencyGridLines(
   { ctx, width, height }: DrawContext,
   { numLines, color }: GridLineConfig,
   minFrequency: number,
-  maxFrequency: number
+  maxFrequency: number,
 ): void {
   ctx.save();
   const logMinFreq = Math.log10(minFrequency);
@@ -396,7 +340,7 @@ function drawFrequencyGridLines(
 function drawAmplitudeGridLines(
   { ctx, width, height }: DrawContext,
   { numLines, color }: GridLineConfig,
-  scaleY: number
+  scaleY: number,
 ): void {
   ctx.save();
   for (let i = 0; i <= numLines; i++) {
@@ -422,7 +366,7 @@ interface CurveConfig {
 
 function drawCurve(
   { ctx, height }: DrawContext,
-  { points, color, thickness, gradientHeight }: CurveConfig
+  { points, color, thickness, gradientHeight }: CurveConfig,
 ): void {
   if (thickness === 0) return;
 
@@ -449,7 +393,7 @@ function drawCurve(
       x1: 0,
       y1: height - gradientHeight * height,
       stops: [
-        { offset: 0, color: "transparent" }, // Ensuring color fades to transparent
+        { offset: 0, color: 'transparent' }, // Ensuring color fades to transparent
         { offset: 1, color: Color(color).alpha(0.5).string() },
       ],
     });
@@ -472,7 +416,7 @@ interface PointConfig {
 
 function drawPoints(
   { ctx }: DrawContext,
-  { points, color, size }: PointConfig
+  { points, color, size }: PointConfig,
 ): void {
   ctx.save();
   points.forEach((point) => {

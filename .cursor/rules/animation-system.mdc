@@ -1,0 +1,11 @@
+# Animation System Architecture
+
+The animation system is controlled by a node editor. Each animatable parameter gets its own node network, managed by the `useNodeNetworkStore` Zustand store in `[src/components/node-network/node-network-store.ts](mdc:src/components/node-network/node-network-store.ts)`.
+
+Animation nodes are defined in `[src/components/config/animation-nodes.ts](mdc:src/components/config/animation-nodes.ts)` and have a `computeSignal` function for their logic.
+
+The main render loop in `[src/components/editor/layer-renderer.tsx](mdc:src/components/editor/layer-renderer.tsx)` calls `computeNetworkOutput` from the store, passing it the current `audioSignal` (a `Uint8Array`) and `time`. The store then recursively computes the graph's output, using default values stored on the node instance for any unconnected inputs.
+description:
+globs:
+alwaysApply: false
+---

@@ -1,74 +1,69 @@
-"use client";
+'use client';
 
-import { Toggle } from "../ui/toggle";
-import AudioFileLoader from "./audio-file-loader";
-import { Pause, Play } from "lucide-react";
-import VolumeFader from "./volume-fader";
-import useWavesurferSetup from "@/lib/hooks/use-wavesurfer-setup";
-import useKeypress from "@/lib/hooks/use-keypress";
-import useEditorStore from "@/lib/stores/editor-store";
+import useKeypress from '@/lib/hooks/use-keypress';
+import useWavesurferSetup from '@/lib/hooks/use-wavesurfer-setup';
+import useAudioStore from '@/lib/stores/audio-store';
+import useEditorStore from '@/lib/stores/editor-store';
+import { Pause, Play } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { Toggle } from '../ui/toggle';
+import AudioFileLoader from './audio-file-loader';
+import CaptureAudio from './capture-audio';
+import LiveWaveform from './live-waveform';
+import VolumeFader from './volume-fader';
 
 const AudioPanel = () => {
-  const { playerRef } = useEditorStore();
-  const { waveformDisplayRef, audioElementRef, isPlaying, currentTime } =
-    useWavesurferSetup();
+  const setIsPlaying = useEditorStore((state) => state.setIsPlaying);
+  const { waveformDisplayRef, audioElementRef } = useAudioStore();
+  const isPlaying = useEditorStore((state) => state.isPlaying);
+  const isCapturingTab = useAudioStore((s) => s.isCapturingTab);
 
   const playPause = () => {
-    // wavesurfer?.playPause();
-    console.log("playPause");
-    const player = playerRef.current;
-    if (player) {
-      if (player.isPlaying()) {
-        player.pause();
-      } else {
-        player.play();
-      }
-    }
+    // Toggle global play state; RemotionPlayer syncs the actual Player via effect
+    setIsPlaying(!isPlaying);
   };
-  useKeypress("Space", playPause);
+  useKeypress('Space', playPause);
 
   return (
     <div className="absolute inset-0 flex items-stretch justify-stretch">
       <div className="w-20 border-r border-white/20">
         <VolumeFader />
       </div>
-      <div className="grow flex flex-col items-stretch">
-        <div className="grid grid-cols-3 content-center p-2 h-14">
+      <div className="flex grow flex-col items-stretch">
+        <div className="grid h-14 grid-cols-3 content-center p-2">
           <AudioFileLoader />
           <div className="place-self-center">
             <Toggle
               aria-label="Play/Pause"
-              tooltip="Play/Pause (Space)"
-              onClick={playPause}
-            >
+              tooltip={'Play/Pause (Space)'}
+              onClick={playPause}>
               {isPlaying ? <Pause /> : <Play />}
             </Toggle>
           </div>
-          <div className="flex items-center mr-3 justify-end">
-            <p className="text-white text-xs font-mono">
-              {
-                // Format the currentTime in float seconds to a human readable format
-                Math.floor(currentTime / 60)
-                  .toString()
-                  .padStart(2, "0") +
-                  ":" +
-                  Math.floor(currentTime % 60)
-                    .toString()
-                    .padStart(2, "0") +
-                  "." +
-                  // Only show two numbers for milliseconds
-                  Math.floor((currentTime % 1) * 1000)
-                    .toString()
-                    .slice(0, 2)
-                    .padStart(2, "0")
-              }
-            </p>
+          <div className="mr-3 flex items-center justify-end gap-3">
+            <CaptureAudio />
+            <TimecodeText />
           </div>
         </div>
-        <div className="grow relative">
+        <div className="relative grow">
           <div className="absolute inset-0">
             <audio ref={audioElementRef} />
-            <div ref={waveformDisplayRef} className="w-full my-auto" />
+            {/* Live waveform shown only while capturing */}
+            {isCapturingTab && (
+              <div className="absolute inset-0">
+                <LiveWaveform />
+              </div>
+            )}
+            {/* WaveSurfer view hidden during capture */}
+            <div
+              ref={waveformDisplayRef}
+              className={
+                isCapturingTab
+                  ? 'pointer-events-none my-auto w-full opacity-0'
+                  : 'my-auto w-full opacity-100'
+              }
+            />
+            <WavesurferController />
           </div>
         </div>
       </div>
@@ -77,3 +72,40 @@ const AudioPanel = () => {
 };
 
 export default AudioPanel;
+
+// Child component to isolate WaveSurfer hook updates from the parent tree
+const WavesurferController = () => {
+  useWavesurferSetup();
+  return null;
+};
+
+const TimecodeText = () => {
+  const { wavesurfer } = useAudioStore();
+  const spanRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    let raf: number | null = null;
+    const update = () => {
+      if (!spanRef.current || !wavesurfer) {
+        raf = requestAnimationFrame(update);
+        return;
+      }
+      const t = wavesurfer.getCurrentTime ? wavesurfer.getCurrentTime() : 0;
+      const mm = Math.floor(t / 60)
+        .toString()
+        .padStart(2, '0');
+      const ss = Math.floor(t % 60)
+        .toString()
+        .padStart(2, '0');
+      const cs = Math.floor((t % 1) * 100)
+        .toString()
+        .padStart(2, '0');
+      spanRef.current.textContent = `${mm}:${ss}.${cs}`;
+      raf = requestAnimationFrame(update);
+    };
+    raf = requestAnimationFrame(update);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [wavesurfer]);
+  return <p ref={spanRef} className="font-mono text-xs text-white" />;
+};

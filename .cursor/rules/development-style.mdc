@@ -1,0 +1,7 @@
+# Development Style
+
+The user prefers to implement refactoring changes slowly and steadily, proceeding step by step and testing the implementation after each step.
+description:
+globs:
+alwaysApply: false
+---

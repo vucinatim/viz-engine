@@ -1,0 +1,135 @@
+DO NOT MAKE UPT THINGS YOU ARE NOT SURE ABOUT! we are writing docs.. 
+its important to get it EXACTLY right! 
+We are writing SYSTEM_ARCHITECTURE file. Out goal is to write chapter by chapter starting at the highest level of abstraction of the system and going downwards explaining each part of it and deeper into the levels and components themselves.. 
+Lets aim for 3 layers of abstraction of the system first three chapters (general overview and explanation of how it conceptually works and we will add charts too)
+The next chapters will be explaining individual system components on the third (deepest) level from chapter 3.
+lets go like this:
+Each time you will ask me questions about the system and i will provide you files and  my responses on how the system behaves so we can go step by step writing each chapter
+
+BEFORE WE START: Read these files (to get a better understanding of the systems architecture)!
+
+src/remotion/Root.tsx
+src/components/editor/renderer.tsx
+src/components/editor/layer-renderer.tsx
+src/lib/stores/layer-store.ts
+src/components/config/config.tsx
+src/components/config/dynamic-form.tsx
+src/lib/hooks/use-audio-frame-data.ts
+src/lib/hooks/use-wavesurfer-setup.ts
+src/components/node-network/node-network-store.ts
+src/components/node-network/animation-nodes.ts
+
+
+Your job is to help me write this such that the reader will be both excited to read more, engaged, interested and also get the full picture of the systems innerworkings.
+dont use extravagant wordings like we are selling the product but more scientifif neutral kind tone than is focused on the readers understanding and comprehension of the system.
+The info is already there but we just need to shape it and package it nicely with tasteful code snippet examples, mermaid charts, tables and screenshot placeholders.
+Using lists is fine but lets not over use them. and lets add some parts that are conceptually focused on the beginning of each chapter and what the goals are.
+This is going to be text that is part of a computer science masters thesis so use language like "we" instdead of "I" but it should still be a fun to read text.
+The original info text we are working with also repeats itself sometimes many times (lets make sure we dont do that when unnecessary)
+Lets also make sure we dont exaggarate the features (no need to include meaningless stuff that is a feature by default and dont over boast how stable or robust the system is since this is an alpha and there are bound to be bugs)
+
+
+very nice but its not polished yet.. 
+Your job is to help me write this such that the reader will be both excited to read more, engaged, interested and also get the full picture of the systems innerworkings.
+dont use extravagant wordings like we are selling the product but more scientifif neutral kind tone than is focused on the readers understanding and comprehension of the system.
+The info is already there but we just need to shape it and package it nicely with tasteful code snippet examples, mermaid charts, tables and screenshot placeholders.
+Using lists is fine but lets not over use them. and lets add some parts that are conceptually focused on the beginning of each chapter and what the goals are.
+This is going to be text that is part of a computer science masters thesis so use language like "we" instdead of "I" but it should still be a fun to read text.
+The original info text we are working with also repeats itself sometimes many times (lets make sure we dont do that when unnecessary)
+Lets also make sure we dont exaggarate the features (no need to include meaningless stuff that is a feature by default and dont over boast how stable or robust the system is since this is an alpha and there are bound to be bugs)
+
+We will go chapter by chapter and rewrite this entire document into an even better one - such that it truly presents a concise, dense and interesting readable text (i will also add images later in your placeholders). lets also precede this text with some conceptual explanation of the project.. like basically in 3 abstraction levels - that its just a function of audio signal into pixels. then next level introduce state or something like and then the 3 level should be all the parts described below and how they are connected (make mermaid graphs as well if possible)
+
+DO NOT use Canvas tool to write your version. I need it in raw markdown format which means that i want you to write directly in our chat a code snippet and then raw markdown inside of it so i can easily copy it.
+
+lets start here:
+# System Architecture
+
+## Chapter 1: System Overview
+
+The Viz Engine is a sophisticated web-based audio visualization system that combines real-time audio processing, layer-based visual composition, and node-based animation to create dynamic, audio-reactive visualizations. The system is designed to work both as a real-time visualization engine and as a video composition tool for export.
+
+### 1.1 Core Architecture Components
+
+The system consists of three main architectural layers:
+
+1. **Composition Layer** - Remotion-based video composition for export
+2. **Visualization Engine** - Real-time canvas-based rendering system  
+3. **Audio Processing Pipeline** - Web Audio API + WaveSurfer integration
+
+#### 1.1.1 Composition Layer (Remotion)
+
+The Remotion integration serves as the foundation for video export capabilities. While primarily designed for future video export functionality, it also provides the system's timing mechanism:
+
+- **Timing Control**: The Remotion Player drives the system's clock, providing frame-accurate timing at 60 FPS
+- **Export Foundation**: All visualizations are rendered through the Remotion composition, ensuring export compatibility
+- **Synchronization**: The Remotion clock synchronizes audio playback with visual rendering
+
+The Remotion Player wraps the main `Renderer` component and provides:
+- Frame-based timing (`getCurrentFrame()`)
+- Playback controls (play/pause/seek)
+- Duration management based on audio length
+- Fullscreen support
+
+#### 1.1.2 Visualization Engine
+
+The visualization engine is the core rendering system that processes layers and generates visual output:
+
+- **Layer-Based Rendering**: Each visual element is a separate layer with independent properties
+- **Dual Rendering Paths**: Support for both 2D Canvas and 3D Three.js rendering
+- **Real-Time Performance**: Optimized for 60 FPS rendering with audio synchronization
+- **Resolution Scaling**: Configurable internal resolution multiplier for quality control
+
+#### 1.1.3 Audio Processing Pipeline
+
+The audio system provides real-time audio analysis and playback synchronization:
+
+- **WaveSurfer Integration**: Handles audio file loading, playback controls, and waveform visualization
+- **Web Audio API**: Provides real-time frequency and time-domain analysis
+- **Audio Context Management**: Single shared audio context with analyzer and gain nodes
+- **Frame-Synchronized Data**: Audio data is captured per-frame for visualization components
+
+### 1.2 Data Flow Architecture
+
+The system follows a unidirectional data flow pattern:
+
+```
+Audio Source → Web Audio API → Frame Data → Layer Config → Node Networks → Visual Output
+     ↓              ↓              ↓            ↓            ↓
+WaveSurfer → Analyzer Node → Audio Frame → Config Values → Animated Values → Canvas/3D
+```
+
+#### 1.2.1 Audio Data Flow
+
+1. **Audio Source**: Audio files or live capture feed into WaveSurfer
+2. **Analysis**: Web Audio API creates frequency and time-domain data
+3. **Frame Capture**: `useAudioFrameData` hook captures per-frame audio data
+4. **Distribution**: Audio data is distributed to all visualization layers
+
+#### 1.2.2 Visual Data Flow
+
+1. **Layer Configuration**: Each layer has configurable parameters (color, size, position, etc.)
+2. **Animation Networks**: Parameters can be animated through node-based networks
+3. **Value Computation**: Node networks compute animated values from audio data
+4. **Rendering**: Final values are used to render 2D canvas or 3D Three.js content
+
+### 1.3 Rendering Path Selection
+
+The system automatically chooses rendering paths based on component definitions:
+
+- **2D Rendering**: Components with `draw` function use HTML5 Canvas 2D context
+- **3D Rendering**: Components with `draw3D` function use Three.js WebGL renderer
+- **Component Definition**: Each visual component declares its rendering method through its definition
+
+The rendering path is determined at component creation time and remains fixed for the component's lifetime. Components cannot mix 2D and 3D rendering within the same layer.
+
+### 1.4 System Synchronization
+
+The entire system is synchronized through multiple mechanisms:
+
+- **Remotion Clock**: Primary timing source at 60 FPS
+- **Audio Synchronization**: WaveSurfer playback synchronized with Remotion Player
+- **Frame-Based Updates**: All visual updates occur on frame boundaries
+- **State Management**: Zustand stores maintain consistent state across components
+
+This architecture ensures that audio, timing, and visual rendering remain perfectly synchronized, enabling both real-time visualization and frame-accurate video export.

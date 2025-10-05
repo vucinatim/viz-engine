@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EDM Cube Stage Enhanced</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="instructions">
+      Click to enter the scene<br />
+      WASD to move<br />
+      Mouse to look around<br />
+      Space/Shift to fly up/down
+    </div>
+    <div id="debug-overlay"></div>
+    <div id="controls-overlay">
+      <div class="controls-header">
+        <h2>Scene Controls</h2>
+      </div>
+
+      <!-- Lighting Section -->
+      <div class="section-header">
+        <h3>Lighting</h3>
+      </div>
+      <div class="slider-group">
+        <label for="hemi-slider"
+          >Hemisphere Light: <span id="hemi-value">1.00</span></label
+        >
+        <input type="range" id="hemi-slider" min="0" max="500" value="100" />
+      </div>
+      <div class="slider-group">
+        <label for="ambient-slider"
+          >Ambient Light: <span id="ambient-value">0.20</span></label
+        >
+        <input type="range" id="ambient-slider" min="0" max="500" value="20" />
+      </div>
+
+      <!-- Post Processing Section -->
+      <div class="section-header">
+        <h3>Post Processing</h3>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="bloom-toggle" checked />
+          Bloom Enabled
+        </label>
+      </div>
+      <div class="slider-group">
+        <label for="bloom-strength-slider"
+          >Bloom Strength: <span id="bloom-strength-value">0.50</span></label
+        >
+        <input
+          type="range"
+          id="bloom-strength-slider"
+          min="0"
+          max="300"
+          value="50" />
+      </div>
+      <div class="slider-group">
+        <label for="bloom-radius-slider"
+          >Bloom Radius: <span id="bloom-radius-value">0.80</span></label
+        >
+        <input
+          type="range"
+          id="bloom-radius-slider"
+          min="0"
+          max="100"
+          value="80" />
+      </div>
+      <div class="slider-group">
+        <label for="bloom-threshold-slider"
+          >Bloom Threshold: <span id="bloom-threshold-value">0.60</span></label
+        >
+        <input
+          type="range"
+          id="bloom-threshold-slider"
+          min="0"
+          max="100"
+          value="60" />
+      </div>
+
+      <!-- Lasers Section -->
+      <div class="section-header">
+        <h3>Lasers</h3>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="lasers-toggle" checked />
+          Enabled
+        </label>
+      </div>
+      <div class="slider-group">
+        <label for="laser-mode-select">Mode</label>
+        <select id="laser-mode-select">
+          <option value="auto">Auto</option>
+          <option value="0">Wave</option>
+          <option value="1">Wobble</option>
+          <option value="2">Sheet</option>
+        </select>
+      </div>
+      <div class="slider-group">
+        <label for="laser-color-mode-select">Color Mode</label>
+        <select id="laser-color-mode-select">
+          <option value="multi" selected>Multi</option>
+          <option value="single">Single</option>
+        </select>
+      </div>
+      <div class="slider-group">
+        <label for="laser-color">Color</label>
+        <input type="color" id="laser-color" value="#ff0000" />
+      </div>
+      <div class="slider-group">
+        <label for="laser-speed-slider"
+          >Speed: <span id="laser-speed-value">1.00</span></label
+        >
+        <input
+          type="range"
+          id="laser-speed-slider"
+          min="0"
+          max="300"
+          value="100" />
+      </div>
+
+      <!-- Moving Lights Section -->
+      <div class="section-header">
+        <h3>Moving Lights</h3>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="moving-lights-toggle" checked />
+          Enabled
+        </label>
+      </div>
+      <div class="slider-group">
+        <label for="moving-light-color-mode-select">Color Mode</label>
+        <select id="moving-light-color-mode-select">
+          <option value="multi" selected>Multi</option>
+          <option value="single">Single</option>
+        </select>
+      </div>
+      <div class="slider-group">
+        <label for="moving-light-color">Color</label>
+        <input type="color" id="moving-light-color" value="#ffffff" />
+      </div>
+      <div class="slider-group">
+        <label for="moving-light-intensity-slider"
+          >Intensity: <span id="moving-light-intensity-value">5.00</span></label
+        >
+        <input
+          type="range"
+          id="moving-light-intensity-slider"
+          min="0"
+          max="2000"
+          value="500" />
+      </div>
+      <div class="slider-group">
+        <label for="moving-light-speed-slider"
+          >Speed: <span id="moving-light-speed-value">1.00</span></label
+        >
+        <input
+          type="range"
+          id="moving-light-speed-slider"
+          min="0"
+          max="300"
+          value="100" />
+      </div>
+
+      <!-- Beams Section -->
+      <div class="section-header">
+        <h3>Beams</h3>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="beams-toggle" checked />
+          Enabled
+        </label>
+      </div>
+      <div class="slider-group">
+        <label for="beam-mode-select">Mode</label>
+        <select id="beam-mode-select">
+          <option value="auto">Auto</option>
+          <option value="0">Mirrored Wave</option>
+          <option value="1">Strobe</option>
+          <option value="2">Center Cross</option>
+          <option value="3">Outward Fan</option>
+          <option value="4">Crowd Sweep</option>
+          <option value="5">Crowd Lift</option>
+          <option value="6">Pulsing Wings</option>
+        </select>
+      </div>
+      <div class="slider-group">
+        <label for="beam-color-mode-select">Color Mode</label>
+        <select id="beam-color-mode-select">
+          <option value="multi" selected>Multi</option>
+          <option value="single">Single</option>
+        </select>
+      </div>
+      <div class="slider-group">
+        <label for="beam-color">Color</label>
+        <input type="color" id="beam-color" value="#88aaff" />
+      </div>
+      <div class="slider-group">
+        <label for="beam-intensity-slider"
+          >Intensity: <span id="beam-intensity-value">1.00</span></label
+        >
+        <input
+          type="range"
+          id="beam-intensity-slider"
+          min="0"
+          max="300"
+          value="100" />
+      </div>
+
+      <!-- Stage Lights Section -->
+      <div class="section-header">
+        <h3>Stage Lights</h3>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="stage-lights-toggle" checked />
+          Enabled
+        </label>
+      </div>
+      <div class="slider-group">
+        <label for="stage-light-color">Color</label>
+        <input type="color" id="stage-light-color" value="#8888ff" />
+      </div>
+
+      <!-- Stage Wash Section -->
+      <div class="section-header">
+        <h3>Stage Wash</h3>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="stage-wash-toggle" checked />
+          Enabled
+        </label>
+      </div>
+      <div class="slider-group">
+        <label for="stage-wash-slider"
+          >Intensity: <span id="stage-wash-value">5.00</span></label
+        >
+        <input
+          type="range"
+          id="stage-wash-slider"
+          min="0"
+          max="5000"
+          value="500" />
+      </div>
+
+      <!-- Strobes Section -->
+      <div class="section-header">
+        <h3>Strobes</h3>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="strobes-toggle" checked />
+          Enabled
+        </label>
+      </div>
+      <div class="slider-group">
+        <label for="strobe-intensity-slider"
+          >Intensity: <span id="strobe-intensity-value">500</span></label
+        >
+        <input
+          type="range"
+          id="strobe-intensity-slider"
+          min="0"
+          max="1000"
+          value="500" />
+      </div>
+
+      <!-- Blinders Section -->
+      <div class="section-header">
+        <h3>Blinders</h3>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="blinders-toggle" checked />
+          Enabled
+        </label>
+      </div>
+
+      <!-- Overhead Blinder Section -->
+      <div class="section-header">
+        <h3>Overhead Blinder</h3>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="overhead-blinder-toggle" checked />
+          Enabled
+        </label>
+      </div>
+      <div class="slider-group">
+        <label for="overhead-blinder-intensity-slider"
+          >Intensity:
+          <span id="overhead-blinder-intensity-value">50</span></label
+        >
+        <input
+          type="range"
+          id="overhead-blinder-intensity-slider"
+          min="0"
+          max="200"
+          value="50" />
+      </div>
+
+      <!-- Crowd Section -->
+      <div class="section-header">
+        <h3>Crowd</h3>
+      </div>
+      <div class="slider-group">
+        <label for="crowd-count-slider"
+          >Crowd Count: <span id="crowd-count-value">500</span></label
+        >
+        <input
+          type="range"
+          id="crowd-count-slider"
+          min="0"
+          max="1000"
+          value="500" />
+      </div>
+
+      <!-- Scene Effects Section -->
+      <div class="section-header">
+        <h3>Scene Effects</h3>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="shader-wall-toggle" checked />
+          Shader Wall
+        </label>
+      </div>
+      <div class="slider-group">
+        <label for="shader-wall-scale-slider"
+          >Wall Scale: <span id="shader-wall-scale-value">2.00</span></label
+        >
+        <input
+          type="range"
+          id="shader-wall-scale-slider"
+          min="10"
+          max="500"
+          value="200" />
+      </div>
+      <div class="slider-group">
+        <label for="shader-wall-rotation-slider"
+          >Rotation Speed:
+          <span id="shader-wall-rotation-value">1.00</span></label
+        >
+        <input
+          type="range"
+          id="shader-wall-rotation-slider"
+          min="0"
+          max="300"
+          value="100" />
+      </div>
+      <div class="slider-group">
+        <label for="shader-wall-color-slider"
+          >Color Speed: <span id="shader-wall-color-value">1.00</span></label
+        >
+        <input
+          type="range"
+          id="shader-wall-color-slider"
+          min="0"
+          max="300"
+          value="100" />
+      </div>
+      <div class="slider-group">
+        <label for="shader-wall-travel-slider"
+          >Travel Speed: <span id="shader-wall-travel-value">1.00</span></label
+        >
+        <input
+          type="range"
+          id="shader-wall-travel-slider"
+          min="0"
+          max="300"
+          value="100" />
+      </div>
+      <div class="slider-group">
+        <label for="shader-wall-brightness-slider"
+          >Brightness:
+          <span id="shader-wall-brightness-value">2.00</span></label
+        >
+        <input
+          type="range"
+          id="shader-wall-brightness-slider"
+          min="10"
+          max="500"
+          value="200" />
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="cinematic-camera-toggle" />
+          Cinematic Camera
+        </label>
+      </div>
+
+      <!-- Debug Section -->
+      <div class="section-header">
+        <h3>Debug</h3>
+      </div>
+      <div class="toggle-group">
+        <label>
+          <input type="checkbox" id="debug-toggle" />
+          Debug Mode
+        </label>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

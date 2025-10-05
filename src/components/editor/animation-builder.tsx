@@ -1,0 +1,98 @@
+import useEditorStore from '@/lib/stores/editor-store';
+import { cn } from '@/lib/utils';
+import { AudioLines, Maximize2 } from 'lucide-react';
+import { useRef, useState } from 'react';
+import NodeNetworkRenderer from '../node-network/node-network-renderer';
+import useNodeNetworkStore from '../node-network/node-network-store';
+import { Button } from '../ui/button';
+import NodeEditorToolbar from './node-editor-toolbar';
+
+const AnimationBuilder = () => {
+  const isPlaying = useEditorStore((state) => state.isPlaying);
+  const nodeNetworkId = useNodeNetworkStore((state) => state.openNetwork);
+  const networks = useNodeNetworkStore((state) => state.networks);
+  const areNetworksMinimized = useNodeNetworkStore(
+    (state) => state.areNetworksMinimized,
+  );
+  const setNetworksMinimized = useNodeNetworkStore(
+    (state) => state.setNetworksMinimized,
+  );
+  const nodeNetwork = nodeNetworkId && networks[nodeNetworkId];
+
+  const [isHovering, setIsHovering] = useState(false);
+  const reactFlowInstance = useRef<any>(null);
+
+  return (
+    <div
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={(e) => {
+        // Check if the <body/> has data-scroll-locked="1"
+        // This property is set to 1 if the shadcn ContextMenu is open
+        if (document.body.getAttribute('data-scroll-locked') === '1') {
+          return;
+        }
+
+        // Check if any mouse buttons are pressed
+        if (e.buttons) {
+          return;
+        }
+
+        setIsHovering(false);
+      }}
+      className={cn(
+        'absolute inset-0',
+        !nodeNetworkId && 'pointer-events-none',
+        areNetworksMinimized && 'pointer-events-none',
+      )}>
+      {nodeNetwork && (
+        <>
+          <div
+            className={cn(
+              'h-full w-full opacity-0 transition-opacity',
+              isHovering && (isPlaying ? 'opacity-80' : 'opacity-100'),
+              areNetworksMinimized && 'pointer-events-none opacity-0',
+            )}>
+            {nodeNetwork && !areNetworksMinimized && (
+              <NodeNetworkRenderer
+                nodeNetworkId={nodeNetworkId}
+                onReactFlowInit={(instance) => {
+                  reactFlowInstance.current = instance;
+                }}
+                reactFlowInstance={reactFlowInstance}
+              />
+            )}
+            <NodeEditorToolbar
+              nodeNetworkId={nodeNetworkId}
+              reactFlowInstance={reactFlowInstance}
+            />
+          </div>
+          <div
+            className={cn(
+              'pointer-events-none absolute right-4 top-4 rounded-lg bg-zinc-600/30 px-4 py-2 transition-opacity',
+              isHovering && 'opacity-0',
+              areNetworksMinimized && 'opacity-0',
+            )}>
+            <p className="flex items-center justify-center text-xs font-semibold text-white">
+              <AudioLines size={20} className="mr-4 text-purple-400" />
+              {nodeNetwork.name}
+            </p>
+          </div>
+          {areNetworksMinimized && (
+            <div className="pointer-events-auto absolute right-4 top-4 z-10">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 gap-2 px-2 text-xs"
+                onClick={() => setNetworksMinimized(false)}>
+                <Maximize2 size={14} />
+                Show graph
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
+export default AnimationBuilder;

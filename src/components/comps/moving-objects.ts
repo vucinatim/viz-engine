@@ -1,103 +1,73 @@
-import { z } from "zod";
-import { createComponent } from "../editor/layer-renderer";
-import * as THREE from "three";
-import { InputType, meta } from "@/lib/types/field-metadata";
+import * as THREE from 'three';
+import { v } from '../config/config';
+import { createComponent } from '../config/create-component';
 
 const MovingObjects = createComponent({
-  name: "Moving Objects",
-  description: "A moving field of cubes",
-  config: z.object({
-    color: z
-      .string()
-      .default("#a62fde")
-      .describe(
-        meta({
-          label: "Cube Color",
-          description: "Color of the cube",
-          inputType: InputType.Color,
-        })
-      ),
-    spawnSizeScale: z
-      .number()
-      .min(0.1)
-      .max(2.5)
-      .default(1)
-      .describe(
-        meta({
-          label: "Cube Spawn Size Scale",
-          description: "Scale of sizes for the cubes when spawned",
-          inputType: InputType.Slider,
-        })
-      ),
-    spawningAreaOffset: z
-      .number()
-      .min(-100)
-      .max(50)
-      .default(-50)
-      .describe(
-        meta({
-          label: "Spawning Area Offset",
-          description: "Area offset in which cubes will spawn",
-          inputType: InputType.Slider,
-        })
-      ),
-    spawningAreaSize: z
-      .number()
-      .min(0)
-      .max(1)
-      .default(1)
-      .describe(
-        meta({
-          label: "Spawning Area Size",
-          description: "Size of the area in which cubes will spawn",
-          inputType: InputType.Slider,
-        })
-      ),
-    spawningAreaHoleSize: z
-      .number()
-      .min(0)
-      .max(1)
-      .default(0.5)
-      .describe(
-        meta({
-          label: "Spawning Area Hole Size",
-          description: "Size of the hole in the spawning area",
-          inputType: InputType.Slider,
-        })
-      ),
-    spawnInterval: z
-      .number()
-      .min(0.1)
-      .max(5)
-      .default(0.5)
-      .describe(
-        meta({
-          label: "Spawn Interval",
-          description: "Time in seconds between spawns",
-          inputType: InputType.Slider,
-        })
-      ),
-    velocityScale: z
-      .number()
-      .min(0)
-      .max(10)
-      .default(1)
-      .describe(
-        meta({
-          label: "Cube Velocity Scale",
-          description: "Scale of velocities for the cubes",
-          inputType: InputType.Slider,
-        })
-      ),
+  name: 'Moving Objects',
+  description: 'A moving field of cubes',
+  config: v.config({
+    color: v.color({
+      label: 'Cube Color',
+      description: 'Color of the cube',
+      defaultValue: '#a62fde',
+    }),
+    spawnSizeScale: v.number({
+      label: 'Cube Spawn Size Scale',
+      description: 'Scale of sizes for the cubes when spawned',
+      defaultValue: 1,
+      min: 0.1,
+      max: 2.5,
+      step: 0.1,
+    }),
+    spawningAreaOffset: v.number({
+      label: 'Spawning Area Offset',
+      description: 'Area offset in which cubes will spawn',
+      defaultValue: -50,
+      min: -100,
+      max: 50,
+      step: 1,
+    }),
+    spawningAreaSize: v.number({
+      label: 'Spawning Area Size',
+      description: 'Size of the area in which cubes will spawn',
+      defaultValue: 50,
+      min: 0,
+      max: 100,
+      step: 1,
+    }),
+    spawningAreaHoleSize: v.number({
+      label: 'Spawning Area Hole Size',
+      description: 'Size of the hole in the spawning area',
+      defaultValue: 0.5,
+      min: 0,
+      max: 1,
+      step: 0.1,
+    }),
+    spawnInterval: v.number({
+      label: 'Spawn Interval',
+      description: 'Time in seconds between spawns',
+      defaultValue: 0.5,
+      min: 0.1,
+      max: 5,
+      step: 0.1,
+    }),
+    velocityScale: v.number({
+      label: 'Cube Velocity Scale',
+      description: 'Scale of velocities for the cubes',
+      defaultValue: 1,
+      min: 0,
+      max: 10,
+      step: 0.1,
+    }),
   }),
-  state: {
+  createState: () => ({
     cubes: [] as MovingCube[],
     lastSpawnTime: 0,
     spawnPlane: null as THREE.Mesh | null,
     spawnHole: null as THREE.Mesh | null,
     spawningAreaSize: 50,
     currentSpeed: 0,
-  },
+  }),
   init3D: ({ threeCtx: { scene, camera }, state, config, debugEnabled }) => {
     if (state.cubes.length > 0) {
       state.cubes.forEach((cube) => {
@@ -115,13 +85,13 @@ const MovingObjects = createComponent({
         scene,
         0,
         state.spawningAreaSize,
-        "#ff0000"
+        '#ff0000',
       );
       state.spawnHole = addDebugPlane(
         scene,
         0.1,
         state.spawningAreaSize,
-        "#00ff00"
+        '#00ff00',
       );
     }
 
@@ -129,11 +99,11 @@ const MovingObjects = createComponent({
     // const light = new THREE.PointLight("#FFFFFF", 500);
     // light.position.set(5, 5, 5);
     // scene.add(light);
-    const directionalLight = new THREE.DirectionalLight("#ffffff", 10);
+    const directionalLight = new THREE.DirectionalLight('#ffffff', 10);
     directionalLight.position.set(5, 10, 7.5);
     scene.add(directionalLight);
 
-    const ambientLight = new THREE.AmbientLight("#ffffff", 0.2);
+    const ambientLight = new THREE.AmbientLight('#ffffff', 0.2);
     scene.add(ambientLight);
   },
   draw3D: ({
@@ -149,7 +119,7 @@ const MovingObjects = createComponent({
         const size = THREE.MathUtils.lerp(
           config.spawnSizeScale * 0.5,
           config.spawnSizeScale * 5,
-          Math.random()
+          Math.random(),
         );
         const spawnAreaSize = state.spawningAreaSize * config.spawningAreaSize;
         const spawnHoleSize =
@@ -159,13 +129,13 @@ const MovingObjects = createComponent({
         let x = THREE.MathUtils.lerp(
           -spawnAreaSize / 2,
           spawnAreaSize / 2,
-          Math.random()
+          Math.random(),
         );
 
         let y = THREE.MathUtils.lerp(
           -spawnAreaSize / 2,
           spawnAreaSize / 2,
-          Math.random()
+          Math.random(),
         );
 
         // If the cube is inside the hole, move it to the edge of the hole in a random direction
@@ -194,19 +164,19 @@ const MovingObjects = createComponent({
     state.spawnPlane?.scale.set(
       config.spawningAreaSize,
       config.spawningAreaSize,
-      0
+      0,
     );
     state.spawnHole?.position.set(0, 0, config.spawningAreaOffset + 0.1);
     state.spawnHole?.scale.set(
       config.spawningAreaHoleSize,
       config.spawningAreaHoleSize,
-      0
+      0,
     );
 
     // Calculate the average volume of low frequencies
     let lowFreqRange = audioData.dataArray.slice(
       0,
-      Math.floor(audioData.dataArray.length * 0.05)
+      Math.floor(audioData.dataArray.length * 0.05),
     );
     let averageLowFreq =
       lowFreqRange.reduce((acc, val) => acc + val, 0) / lowFreqRange.length;
@@ -255,7 +225,7 @@ function createCube(
   size: number,
   color: string,
   position: THREE.Vector3,
-  velocity: THREE.Vector3
+  velocity: THREE.Vector3,
 ): MovingCube {
   const geometry = new THREE.BoxGeometry(size, size, size);
   const material = new THREE.MeshStandardMaterial({
@@ -275,7 +245,7 @@ function addDebugPlane(
   scene: THREE.Scene,
   positionZ: number,
   size: number = 50,
-  color: string = "#ff0000"
+  color: string = '#ff0000',
 ) {
   const planeGeometry = new THREE.PlaneGeometry(size, size); // Adjust the size to fit your scene scale
   const planeMaterial = new THREE.MeshBasicMaterial({

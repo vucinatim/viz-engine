@@ -1,14 +1,20 @@
-import Image from "next/image";
-import EditorToolbar from "./editor-toolbar";
-import { Label } from "../ui/label";
-import { Switch } from "../ui/switch";
-import useEditorStore from "@/lib/stores/editor-store";
-import { cn } from "@/lib/utils";
+import useEditorStore from '@/lib/stores/editor-store';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
+import { Label } from '../ui/label';
+import { NumberScrubInput } from '../ui/number-scrub-input';
+import { Switch } from '../ui/switch';
+import EditorToolbar from './editor-toolbar';
 
 const EditorHeader = () => {
-  const { ambientMode, setAmbientMode } = useEditorStore();
+  const {
+    ambientMode,
+    setAmbientMode,
+    resolutionMultiplier,
+    setResolutionMultiplier,
+  } = useEditorStore();
   return (
-    <div className="px-4 flex items-center">
+    <div className="flex items-center px-4">
       <Image
         src="/logo.png"
         alt="VizEngineLogo"
@@ -17,26 +23,45 @@ const EditorHeader = () => {
         width={25}
         height={25}
         style={{
-          width: "auto",
-          height: "auto",
+          width: 'auto',
+          height: 'auto',
         }}
       />
       <div className="grow">
         <EditorToolbar />
       </div>
       <div className="flex items-center gap-x-4">
+        <div className="flex items-center gap-x-2">
+          <Label
+            htmlFor="resolution-multiplier"
+            className="text-xs text-white/30">
+            Quality
+          </Label>
+          <div className="flex items-center gap-x-2">
+            <NumberScrubInput
+              inputClassName="focus-visible:ring-0 focus-visible:outline-none"
+              min={0.5}
+              max={3}
+              step={0.1}
+              value={resolutionMultiplier}
+              onChange={setResolutionMultiplier}
+            />
+          </div>
+          <span className="w-8 text-xs text-white/30">
+            {resolutionMultiplier.toFixed(1)}x
+          </span>
+        </div>
         <Label
           htmlFor="airplane-mode"
           className={cn(
-            "text-white/20 transition-colors",
-            ambientMode && "text-white"
-          )}
-        >
+            'text-white/30 transition-colors',
+            ambientMode && 'text-white',
+          )}>
           Ambient Mode
         </Label>
         <Switch
           id="airplane-mode"
-          className="border-white/5 border"
+          className="border border-white/5"
           checked={ambientMode}
           onCheckedChange={setAmbientMode}
         />

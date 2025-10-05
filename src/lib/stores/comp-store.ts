@@ -1,5 +1,5 @@
-import { Comp } from "@/components/editor/layer-renderer";
-import { create } from "zustand";
+import { Comp } from '@/components/config/create-component';
+import { create } from 'zustand';
 
 interface CompStore {
   comps: Comp[];

@@ -6,10 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "docs": "tsx docs/scripts/generate-docs.ts",
+    "docs:dump": "tsx docs/scripts/dump-files.ts",
+    "docs:tree": "tsx docs/scripts/create-tree.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
+    "@dnd-kit/modifiers": "^7.0.0",
     "@dnd-kit/sortable": "^8.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^3.3.4",
@@ -33,10 +37,13 @@
     "@remotion/eslint-plugin": "^4.0.172",
     "@remotion/player": "4.0.172",
     "@wavesurfer/react": "^1.0.5",
+    "@xyflow/react": "^12.3.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "color": "^4.2.3",
+    "d3-drag": "^3.0.0",
+    "d3-selection": "^3.0.0",
     "lodash": "^4.17.21",
     "lucide-react": "^0.373.0",
     "next": "14.2.3",
@@ -46,6 +53,7 @@
     "react-dropzone": "^14.2.3",
     "react-hook-form": "^7.51.3",
     "react-resizable-panels": "^2.0.18",
+    "react-use": "^17.6.0",
     "remotion": "^4.0.172",
     "sonner": "^1.4.41",
     "tailwind-merge": "^2.3.0",
@@ -57,12 +65,14 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@types/three": "^0.164.0",
     "@types/color": "^3.0.6",
+    "@types/d3-drag": "^3.0.7",
+    "@types/d3-selection": "^3.0.11",
     "@types/lodash": "^4.17.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "@types/three": "^0.164.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.3",
     "postcss": "^8",
@@ -71,6 +81,7 @@
     "prettier-plugin-tailwindcss": "^0.6.5",
     "tailwind-scrollbar": "^3.1.0",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "tsx": "^4.20.5",
+    "typescript": "^5.4.5"
   }
 }

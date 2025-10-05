@@ -1,0 +1,179 @@
+/* Basic CSS to make the scene fullscreen */
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #000000; /* Darker background for concert feel */
+}
+canvas {
+  display: block; /* Removes a small gap below the canvas */
+}
+#instructions {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-family: sans-serif;
+  font-size: 24px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 20px;
+  border-radius: 10px;
+  pointer-events: none; /* Allows clicks to go through to the canvas */
+}
+#debug-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: white;
+  font-family: monospace;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 10px;
+  border-radius: 5px;
+  line-height: 1.5;
+  pointer-events: none;
+  z-index: 100; /* Ensure it's on top */
+}
+#controls-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 280px;
+  color: white;
+  font-family: monospace;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  gap: 5px;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Scrollbar styling */
+#controls-overlay::-webkit-scrollbar {
+  width: 8px;
+}
+
+#controls-overlay::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+#controls-overlay::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+#controls-overlay::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.controls-header {
+  position: sticky;
+  top: -20px;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 15px 0 15px 0;
+  margin: -20px -15px 20px -15px;
+  padding-left: 15px;
+  padding-right: 15px;
+  border-bottom: 2px solid rgba(136, 170, 255, 0.5);
+  z-index: 10;
+}
+
+.controls-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #88aaff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.slider-group,
+.toggle-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 8px;
+}
+
+.slider-group label,
+.toggle-group label {
+  margin-bottom: 4px;
+  font-size: 11px;
+}
+
+.slider-group input[type='range'],
+.slider-group input[type='color'] {
+  margin: 0;
+  width: 100%;
+}
+
+.slider-group input[type='color'] {
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.slider-group select {
+  width: 100%;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.slider-group select:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.toggle-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.toggle-group input[type='checkbox'] {
+  cursor: pointer;
+}
+
+/* Section headers */
+.section-header {
+  margin-bottom: 10px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* First section header right after controls header */
+.controls-header + .section-header {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.section-header h3 {
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  font-weight: bold;
+  color: #88aaff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
