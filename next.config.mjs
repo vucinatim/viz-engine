@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config) => {
+  // Exclude the playground directory from Next.js builds
+  pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
+
+  webpack: (config, { isServer }) => {
+    // Ignore the playground directory during webpack compilation
+    config.watchOptions = {
+      ...config.watchOptions,
+      ignored: ['**/node_modules', '**/playground/**'],
+    };
     // Handle FBX files as assets (for Three.js models)
     config.module.rules.push({
       test: /\.(fbx|glb|gltf)$/,
