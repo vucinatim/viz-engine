@@ -8,6 +8,8 @@ import { Button } from '../ui/button';
 import SearchSelect from '../ui/search-select';
 import TickerText from '../ui/ticker-text';
 
+const DEFAULT_AUDIO_FILE = '[Rock] Electronic Rock.mp3';
+
 export const DROPZONE_ACCEPTED_TYPES = {
   'audio/*': ['.mp3', '.wav', '.ogg'],
 };
@@ -54,8 +56,11 @@ const AudioFileLoader = () => {
       .then((files: string[]) => {
         setAudioFiles(files);
         if (files.length > 0) {
-          setSelectedFile(files[0]);
-          const url = `/music/${files[0]}`;
+          // Default to [Rock] Electronic Rock.mp3 if available, otherwise use first file
+          const defaultFile =
+            files.find((f) => f === DEFAULT_AUDIO_FILE) || files[0];
+          setSelectedFile(defaultFile);
+          const url = `/music/${defaultFile}`;
           if (audioElementRef.current) {
             audioElementRef.current.srcObject = null as any;
             audioElementRef.current.src = url;
