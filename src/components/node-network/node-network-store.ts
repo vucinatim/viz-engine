@@ -78,6 +78,7 @@ interface NodeNetworkStore {
     value: any,
   ) => void;
   computeNetworkOutput: (parameterId: string, inputData: AnimInputData) => any; // Compute the output of the network
+  duplicateNetwork: (fromParameterId: string, toParameterId: string) => void; // Duplicate a network from one parameter to another
 }
 
 export const nodeNetworkStorePartialize = (state: NodeNetworkStore) => ({
@@ -516,6 +517,53 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
         // The output node itself just returns its input, so we need to get that specific input value
         return finalOutput;
       },
+
+      // Duplicate a network from one parameter to another
+      duplicateNetwork: (fromParameterId, toParameterId) =>
+        set((state) => {
+          const sourceNetwork = state.networks[fromParameterId];
+          if (!sourceNetwork) return state;
+
+          // Create ID mapping for nodes
+          const nodeIdMap = new Map<string, string>();
+
+          // Clone nodes with new IDs based on toParameterId
+          const clonedNodes = sourceNetwork.nodes.map((node) => {
+            const newNodeId = node.id.replace(fromParameterId, toParameterId);
+            nodeIdMap.set(node.id, newNodeId);
+
+            return {
+              ...node,
+              id: newNodeId,
+              data: {
+                ...node.data,
+                // Deep clone inputValues to avoid reference issues
+                inputValues: { ...node.data.inputValues },
+                state: { ...node.data.state },
+              },
+            };
+          });
+
+          // Clone edges with updated node IDs
+          const clonedEdges = sourceNetwork.edges.map((edge) => ({
+            ...edge,
+            id: edge.id.replace(fromParameterId, toParameterId),
+            source: nodeIdMap.get(edge.source) || edge.source,
+            target: nodeIdMap.get(edge.target) || edge.target,
+          }));
+
+          return {
+            networks: {
+              ...state.networks,
+              [toParameterId]: {
+                ...sourceNetwork,
+                name: toParameterId,
+                nodes: clonedNodes,
+                edges: clonedEdges,
+              },
+            },
+          };
+        }),
     }),
     {
       name: 'node-network-store',

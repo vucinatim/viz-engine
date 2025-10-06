@@ -11,7 +11,7 @@ import {
   Layers2,
   Trash,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import DynamicForm from '../config/dynamic-form';
 import { Button } from '../ui/button';
 import {
@@ -30,13 +30,11 @@ interface LayerConfigCardProps {
 
 function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
   const comp = layer.comp;
-  const {
-    updateLayerComp,
-    removeLayer,
-    duplicateLayer,
-    setIsLayerExpanded,
-    setDebugEnabled,
-  } = useLayerStore();
+  const updateLayerComp = useLayerStore((state) => state.updateLayerComp);
+  const removeLayer = useLayerStore((state) => state.removeLayer);
+  const duplicateLayer = useLayerStore((state) => state.duplicateLayer);
+  const setIsLayerExpanded = useLayerStore((state) => state.setIsLayerExpanded);
+  const setDebugEnabled = useLayerStore((state) => state.setDebugEnabled);
   const [selectedPreset, setSelectedPreset] = useState<any | null>();
   const hasInitialized = useRef(false);
   const [initialValues, setInitialValues] = useState<any | null>(null);
@@ -183,4 +181,10 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
   );
 }
 
-export default LayerConfigCard;
+// Memoize to prevent re-renders when other layers change
+export default memo(LayerConfigCard, (prevProps, nextProps) => {
+  // Only re-render if this specific layer or its index changed
+  return (
+    prevProps.index === nextProps.index && prevProps.layer === nextProps.layer
+  );
+});

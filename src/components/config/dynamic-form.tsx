@@ -165,7 +165,12 @@ const DynamicFormField = ({
             <SimpleTooltip
               text={option.description}
               trigger={
-                <FormLabel className="flex items-center gap-x-2">
+                <FormLabel
+                  className={cn(
+                    'flex items-center gap-x-2',
+                    isAnimated && !isHighlighted && 'text-cyan-500',
+                    isAnimated && isHighlighted && 'text-purple-400',
+                  )}>
                   {option.description && (
                     <Info className="h-3 w-3 opacity-50" />
                   )}
@@ -193,7 +198,11 @@ const DynamicFormField = ({
                   tooltip="Toggle parameter animation"
                   pressed={!!isAnimated}
                   variant={
-                    isAnimated && isHighlighted ? 'highlighted' : 'outline'
+                    isAnimated && isHighlighted
+                      ? 'highlighted'
+                      : isAnimated && !isHighlighted
+                        ? 'active'
+                        : 'outline'
                   }
                   onPressedChange={(newValue) => {
                     // If the toggle is already active but for a different network,

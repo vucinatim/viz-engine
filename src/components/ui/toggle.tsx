@@ -15,6 +15,7 @@ const toggleVariants = cva(
         default: 'bg-transparent',
         outline:
           'border data-[state=on]:border-white bg-transparent hover:bg-accent hover:text-accent-foreground',
+        active: 'border border-cyan-700 bg-transparent text-cyan-700',
         highlighted: 'border border-purple-400 bg-transparent text-purple-400',
       },
       size: {

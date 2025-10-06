@@ -16,7 +16,7 @@ const SimpleTooltip = ({ trigger, text }: SimpleTooltipProps) => {
       <Tooltip>
         <TooltipTrigger asChild>{trigger}</TooltipTrigger>
         {text && (
-          <TooltipContent align="start" className="max-w-[300px] text-xs">
+          <TooltipContent align="center" className="max-w-[300px] text-xs">
             {text}
           </TooltipContent>
         )}

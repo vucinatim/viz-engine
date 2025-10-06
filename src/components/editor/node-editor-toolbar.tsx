@@ -1,7 +1,19 @@
-import { Copy, MinusSquare, Redo2, Trash2, Undo2 } from 'lucide-react';
+import {
+  Copy,
+  FileJson,
+  MinusSquare,
+  Network,
+  Redo2,
+  Trash2,
+  Undo2,
+} from 'lucide-react';
+import { useRef } from 'react';
+import { useRafLoop } from 'react-use';
+import { toast } from 'sonner';
 import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
 import { useNodeNetworkHistory } from '../../lib/hooks/use-node-network-history';
 import { destructureParameterId } from '../../lib/id-utils';
+import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
 import { NodeHandleType } from '../config/node-types';
 import {
   useNodeNetwork,
@@ -9,13 +21,7 @@ import {
 } from '../node-network/node-network-store';
 import { getPresetsForType } from '../node-network/presets';
 import { Button } from '../ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
+import SearchSelect from '../ui/search-select';
 
 interface NodeEditorToolbarProps {
   nodeNetworkId: string;
@@ -31,11 +37,6 @@ const NodeEditorToolbar = ({
 
   // Use node network store for delete functionality
   const { nodes, edges, setNodes, setEdges } = useNodeNetwork(nodeNetworkId);
-
-  // Get live output value using existing architecture
-  // const liveOutput = useAnimationLiveValuesStore(
-  //   (state) => state.values[nodeNetworkId],
-  // );
 
   // Get parameter info using the generic function
   const parameterInfo = useNodeNetworkStore((state) => {
@@ -151,10 +152,16 @@ const NodeEditorToolbar = ({
 
     try {
       await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
-      // Optional: add your preferred toast/notification here
+      toast.success('Graph JSON copied to clipboard');
     } catch (e) {
       console.error('Failed to copy graph JSON', e);
+      toast.error('Failed to copy graph JSON');
     }
+  };
+
+  const handleCopyNetwork = () => {
+    copySelectedNodes();
+    toast.success('Network copied to clipboard');
   };
 
   return (
@@ -199,64 +206,32 @@ const NodeEditorToolbar = ({
           </div>
         </div>
 
-        {/* Right Section - Live Output Display */}
         <div className="flex items-center gap-4">
-          {/* <div className="flex flex-col items-end">
-            <span className="text-xs text-white/60">Live Output</span>
-            <span className="font-mono text-sm text-white">
-              {typeof liveOutput === 'number'
-                ? liveOutput.toFixed(2)
-                : liveOutput !== undefined
-                  ? String(liveOutput)
-                  : '0.00'}
-            </span>
-          </div> */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="secondary" size="sm">
-                Presets
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-64">
-              <DropdownMenuLabel>Select preset</DropdownMenuLabel>
-              {(() => {
-                const store = useNodeNetworkStore.getState();
-                const network = store.networks[nodeNetworkId];
-                const outType = (
-                  network?.nodes.find((n) => n.id.includes('-output-node'))
-                    ?.data as any
-                )?.definition?.inputs?.[0]?.type as NodeHandleType | undefined;
-                const type: NodeHandleType = outType || 'number';
-                const presets = getPresetsForType(type);
-                if (presets.length === 0) {
-                  return (
-                    <DropdownMenuItem disabled>
-                      No presets for {type}
-                    </DropdownMenuItem>
-                  ) as any;
-                }
-                return presets.map((p) => (
-                  <DropdownMenuItem
-                    key={p.id}
-                    onClick={() => applyPreset(p.id)}>
-                    {p.name}
-                  </DropdownMenuItem>
-                ));
-              })()}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <LiveValueDisplay nodeNetworkId={nodeNetworkId} />
+          <PresetsSelect
+            nodeNetworkId={nodeNetworkId}
+            onPresetSelect={applyPreset}
+          />
           <Button
             variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 text-white/80 hover:bg-white/10 hover:text-white"
+            size="icon"
+            className="text-white/80 hover:bg-white/10 hover:text-white"
             onClick={handleCopyGraphJson}
             tooltip="Copy graph JSON">
+            <FileJson size={14} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white/80 hover:bg-white/10 hover:text-white"
+            onClick={handleCopyNetwork}
+            tooltip="Copy network">
             <Copy size={14} />
           </Button>
-          {/* Minimize pinned at far left */}
           <Button
             variant="ghostly"
             size="icon"
+            tooltip="Minimize"
             onClick={() =>
               useNodeNetworkStore.getState().setNetworksMinimized(true)
             }>
@@ -265,6 +240,85 @@ const NodeEditorToolbar = ({
         </div>
       </div>
     </div>
+  );
+};
+
+interface LiveValueDisplayProps {
+  nodeNetworkId: string;
+}
+
+const LiveValueDisplay = ({ nodeNetworkId }: LiveValueDisplayProps) => {
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useRafLoop(() => {
+    if (!ref.current) return;
+    const value = useAnimationLiveValuesStore.getState().values[nodeNetworkId];
+
+    if (value !== undefined) {
+      if (typeof value === 'number') {
+        ref.current.innerText = value.toFixed(2);
+      } else {
+        ref.current.innerText = String(value);
+      }
+    } else {
+      ref.current.innerText = '0.00';
+    }
+  });
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="whitespace-nowrap text-xs text-white/60">
+        Live Output
+      </span>
+      <span ref={ref} className="font-mono text-sm text-white">
+        0.00
+      </span>
+    </div>
+  );
+};
+
+interface PresetsSelectProps {
+  nodeNetworkId: string;
+  onPresetSelect: (presetId: string) => void;
+}
+
+const PresetsSelect = ({
+  nodeNetworkId,
+  onPresetSelect,
+}: PresetsSelectProps) => {
+  const store = useNodeNetworkStore.getState();
+  const network = store.networks[nodeNetworkId];
+  const outType = (
+    network?.nodes.find((n) => n.id.includes('-output-node'))?.data as any
+  )?.definition?.inputs?.[0]?.type as NodeHandleType | undefined;
+  const type: NodeHandleType = outType || 'number';
+  const presets = getPresetsForType(type);
+
+  return (
+    <SearchSelect
+      triggerClassName="bg-white/10"
+      trigger={
+        <div className="flex items-center gap-2">
+          <Network className="h-4 w-4" />
+          <span>Load Presets</span>
+        </div>
+      }
+      options={presets}
+      extractKey={(preset) => preset.name}
+      renderOption={(preset) => (
+        <div className="flex flex-col">
+          <span className="font-medium">{preset.name}</span>
+          {preset.description && (
+            <span className="text-xs text-zinc-400">{preset.description}</span>
+          )}
+        </div>
+      )}
+      placeholder="Search presets..."
+      noItemsMessage={`No presets available for ${type} type`}
+      dropdownWidth={300}
+      align="right"
+      onSelect={(preset) => onPresetSelect(preset.id)}
+    />
   );
 };
 

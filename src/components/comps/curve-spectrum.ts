@@ -148,12 +148,12 @@ const CurveSpectrum = createComponent({
         },
         line: {
           smoothing: true,
-          color: 'white',
+          color: '#ffffff',
           thickness: 1,
           gradientHeight: 0.8,
         },
         points: {
-          pointColor: 'white',
+          pointColor: '#ffffff',
           pointSize: 3,
         },
       },
@@ -178,7 +178,7 @@ const CurveSpectrum = createComponent({
           gradientHeight: 0.8,
         },
         points: {
-          pointColor: 'white',
+          pointColor: '#ffffff',
           pointSize: 0,
         },
       },

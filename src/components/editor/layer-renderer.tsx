@@ -83,7 +83,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   });
 
   // Get the debug function
-  const withDebug = useDebug(debugCanvasRef);
+  const withDebug = useDebug(debugCanvasRef, resolutionMultiplier);
 
   // Get the function to get the next data array
   const getNextAudioFrame = useAudioFrameData({
@@ -294,6 +294,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
           dataArray: frequencyData,
           wavesurfer: wavesurferRef.current,
           config: configValues,
+          configSchema: layer.config,
         },
       );
 
@@ -334,7 +335,15 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     <div ref={canvasContainerRef} className="absolute inset-0">
       <LayerCanvas layer={layer} ref={layerCanvasRef} />
       {layer.isDebugEnabled && (
-        <canvas ref={debugCanvasRef} className="absolute h-full w-full" />
+        <>
+          <div className="absolute inset-0 w-[30%] border-r border-white/10 bg-black/40" />
+          <div className="scrollbar-hide pointer-events-none absolute inset-0 overflow-y-auto">
+            <canvas
+              ref={debugCanvasRef}
+              className="pointer-events-auto w-full"
+            />
+          </div>
+        </>
       )}
     </div>
   );

@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { v } from '../config/config';
 import { createComponent } from '../config/create-component';
-import { INPUT_ALIAS, OUTPUT_ALIAS } from '../node-network/presets';
 
 const SimpleCube = createComponent({
   name: 'Simple Cube',
@@ -15,56 +14,15 @@ const SimpleCube = createComponent({
     size: v.number({
       label: 'Cube Size',
       description: 'Size of the cube',
-      defaultValue: 2,
+      defaultValue: 1.5,
       min: 0.1,
-      max: 10,
+      max: 5,
       step: 0.1,
     }),
   }),
   defaultNetworks: {
-    // Animate size from audio: Input.audioSignal -> Average Volume -> Normalize(0..3) -> Output
-    size: {
-      id: 'cube-size-audio',
-      name: 'Cube Size From Audio',
-      description:
-        'Input.audioSignal -> Average Volume -> Normalize(0..3) -> Output',
-      outputType: 'number',
-      autoPlace: true,
-      nodes: [
-        { id: 'avg', label: 'Average Volume', position: { x: 0, y: -80 } },
-        {
-          id: 'norm',
-          label: 'Normalize',
-          position: { x: 250, y: -80 },
-          inputValues: {
-            inputMin: 0,
-            inputMax: 255,
-            outputMin: 0,
-            outputMax: 3,
-          },
-        },
-      ],
-      edges: [
-        {
-          source: INPUT_ALIAS,
-          sourceHandle: 'audioSignal',
-          target: 'avg',
-          targetHandle: 'data',
-        },
-        {
-          source: 'avg',
-          sourceHandle: 'average',
-          target: 'norm',
-          targetHandle: 'value',
-        },
-        {
-          source: 'norm',
-          sourceHandle: 'result',
-          target: OUTPUT_ALIAS,
-          targetHandle: 'output',
-        },
-      ],
-    },
+    // Animate size with bass presence
+    size: 'bass-adaptive',
   },
   init3D: ({ threeCtx: { scene, camera, renderer } }) => {
     camera.position.set(0, 1, 5); // Position the camera
@@ -96,19 +54,6 @@ const SimpleCube = createComponent({
     dt,
   }) => {
     const cube = scene.userData.cube;
-
-    // Calculate the average volume of low frequencies
-    // let lowFreqRange = dataArray.slice(0, Math.floor(dataArray.length * 0.25)); // Adjust range as needed
-    // let averageLowFreq =
-    //   lowFreqRange.reduce((acc, val) => acc + val, 0) / lowFreqRange.length;
-
-    // // Normalize and use this to scale the cube
-    // let scale = Math.max(0.1, averageLowFreq / 128); // Normalize based on your data's range and desired effect
-    // cube.scale.set(
-    //   scale * config.size,
-    //   scale * config.size,
-    //   scale * config.size,
-    // );
 
     cube.scale.set(config.size, config.size, config.size);
 

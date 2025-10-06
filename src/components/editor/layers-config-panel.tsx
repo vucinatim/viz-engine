@@ -25,7 +25,10 @@ import EditorLayerSearch from './editor-layer-search';
 import LayerConfigCard from './layer-config-card';
 
 const LayersConfigPanel = () => {
-  const { layers, setAllLayersExpanded } = useLayerStore();
+  const layers = useLayerStore((state) => state.layers);
+  const setAllLayersExpanded = useLayerStore(
+    (state) => state.setAllLayersExpanded,
+  );
   const areSomeLayersExpanded = useMemo(
     () => layers.some((layer) => layer.isExpanded),
     [layers],
@@ -73,7 +76,10 @@ interface SortableLayersProps {
 }
 
 const SortableLayers = ({ layers }: SortableLayersProps) => {
-  const { reorderLayers, setAllLayersExpanded } = useLayerStore();
+  const reorderLayers = useLayerStore((state) => state.reorderLayers);
+  const setAllLayersExpanded = useLayerStore(
+    (state) => state.setAllLayersExpanded,
+  );
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {

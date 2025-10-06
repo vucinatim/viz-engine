@@ -1,57 +1,66 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "../ui/form";
-import { Toggle } from "../ui/toggle";
-import { Eye, EyeOff } from "lucide-react";
-import { ColorPickerPopover } from "../ui/color-picker";
-import { Slider } from "../ui/slider";
-import { SimpleSelect } from "../ui/select";
-import useLayerStore, { LayerData } from "@/lib/stores/layer-store";
-import { useEffect } from "react";
+import useLayerStore, { LayerData } from '@/lib/stores/layer-store';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Eye, EyeOff } from 'lucide-react';
+import { useCallback, useEffect, useRef } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { ColorPickerPopover } from '../ui/color-picker';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '../ui/form';
+import { SimpleSelect } from '../ui/select';
+import { Slider } from '../ui/slider';
+import { Toggle } from '../ui/toggle';
 
-const blendingModes = ["normal", "multiply", "screen", "overlay"] as const;
+const blendingModes = ['normal', 'multiply', 'screen', 'overlay'] as const;
 
 export const layerSettingsSchema = z.object({
   visible: z.boolean().default(true),
-  background: z.string().default("rgba(10, 10, 10, 1)"),
+  background: z.string().default('rgba(10, 10, 10, 1)'),
   opacity: z.number().min(0).max(1).default(1),
-  blendingMode: z.enum(blendingModes).default("normal"),
+  blendingMode: z.enum(blendingModes).default('normal'),
   freeze: z.boolean().default(true),
   showDebug: z.boolean().default(false),
 });
 
 export type LayerSettings = z.infer<typeof layerSettingsSchema>;
 
-export type BlendingMode = LayerSettings["blendingMode"];
+export type BlendingMode = LayerSettings['blendingMode'];
 
 interface LayerSettingsProps {
   layer: LayerData;
 }
 
 const LayerSettings = ({ layer }: LayerSettingsProps) => {
-  const { updateLayerSettings } = useLayerStore();
+  const updateLayerSettings = useLayerStore(
+    (state) => state.updateLayerSettings,
+  );
+  const isInternalUpdateRef = useRef(false);
+
   const form = useForm({
     resolver: zodResolver(layerSettingsSchema),
     defaultValues: layer.layerSettings ?? layerSettingsSchema.parse({}),
   });
 
-  // If Layer settings change outside of the form, update the form values
+  const formRef = useRef(form);
+  formRef.current = form;
+
+  // Only reset form if changes came from outside (not from this form)
   useEffect(() => {
-    form.reset(layer.layerSettings ?? layerSettingsSchema.parse({}));
+    if (!isInternalUpdateRef.current) {
+      form.reset(layer.layerSettings ?? layerSettingsSchema.parse({}));
+    }
+    isInternalUpdateRef.current = false;
   }, [layer.layerSettings, form]);
 
-  // Update layer settings on first render to ensure the form is in sync
-  useEffect(() => {
-    updateLayerSettings(layer.id, form.getValues());
-  }, [layer.id, form, updateLayerSettings]);
-
-  // Define handleOnChange as a higher-order function
-  const createOnChangeHandler =
+  // Memoized handler to prevent recreation on every render
+  const createOnChangeHandler = useCallback(
     (originalOnChange: (value: any) => void) => (value: any) => {
+      isInternalUpdateRef.current = true;
       originalOnChange(value);
-      updateLayerSettings(layer.id, form.getValues());
-    };
+      // Get current form values using ref
+      updateLayerSettings(layer.id, formRef.current.getValues());
+    },
+    [layer.id, updateLayerSettings],
+  );
 
   return (
     <Form {...form}>
@@ -68,8 +77,7 @@ const LayerSettings = ({ layer }: LayerSettingsProps) => {
                   pressed={value}
                   onPressedChange={(newValue) =>
                     createOnChangeHandler(() => onChange(newValue))(null)
-                  }
-                >
+                  }>
                   {value ? <Eye /> : <EyeOff />}
                 </Toggle>
               </FormControl>

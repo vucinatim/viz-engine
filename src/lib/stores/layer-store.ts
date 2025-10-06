@@ -6,7 +6,6 @@ import {
   LayerSettings,
   layerSettingsSchema,
 } from '@/components/editor/layer-settings';
-import { autoLayoutNodes } from '@/components/node-network/auto-layout';
 import useNodeNetworkStore from '@/components/node-network/node-network-store';
 import {
   getPresetById,
@@ -158,19 +157,11 @@ const useLayerStore = create<LayerStore>()(
               continue;
             }
 
-            let { nodes, edges } = instantiatePreset(
+            const { nodes, edges } = instantiatePreset(
               preset,
               parameterId,
               outputType,
             );
-            if (preset.autoPlace) {
-              nodes = autoLayoutNodes(nodes, edges, {
-                startX: -300,
-                startY: 0,
-                xGap: 280,
-                yGap: 120,
-              });
-            }
             useNodeNetworkStore.getState().setNetwork(parameterId, {
               name: parameterId,
               isEnabled: true,
@@ -263,16 +254,30 @@ const useLayerStore = create<LayerStore>()(
             .getState()
             .initLayerValues(newLayerId, layerValues);
 
+          // Get old and new parameter IDs
+          const oldParameterIds = getParameterIdsFromConfig(layer.config);
+          const newConfig = assignDeterministicIdsToConfig(
+            newLayerId,
+            layer.config.clone(),
+          );
+          const newParameterIds = getParameterIdsFromConfig(newConfig);
+
+          // Duplicate node networks for each parameter
+          const networkStore = useNodeNetworkStore.getState();
+          oldParameterIds.forEach((oldId, index) => {
+            const newId = newParameterIds[index];
+            if (networkStore.networks[oldId]) {
+              networkStore.duplicateNetwork(oldId, newId);
+            }
+          });
+
           return {
             layers: [
               ...state.layers,
               {
                 ...layer,
                 id: newLayerId,
-                config: assignDeterministicIdsToConfig(
-                  newLayerId,
-                  layer.config.clone(),
-                ),
+                config: newConfig,
                 state: layer.comp.createState
                   ? layer.comp.createState()
                   : undefined,

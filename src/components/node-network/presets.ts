@@ -6,6 +6,7 @@ import {
   NodeDefinitionMap,
   createOutputNode,
 } from './animation-nodes';
+import { autoLayoutNodes } from './auto-layout';
 import { GraphNode } from './node-network-store';
 
 // Aliases used inside presets to reference the network I/O nodes
@@ -132,7 +133,10 @@ export const instantiatePreset = (
     targetHandle: e.targetHandle,
   }));
 
-  return { nodes, edges };
+  // Apply auto-layout if requested
+  const finalNodes = preset.autoPlace ? autoLayoutNodes(nodes, edges) : nodes;
+
+  return { nodes: finalNodes, edges };
 };
 
 // ===== SIMPLE STARTER PRESETS =====
