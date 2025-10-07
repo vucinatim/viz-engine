@@ -127,4 +127,21 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none; /* Chrome, Safari and Opera */
   }
+
+  /* Hide Remotion Player seek bar */
+  .remotion-player [style*='cursor: pointer'][style*='touch-action: none'] {
+    display: none !important;
+  }
+
+  /* Hide Remotion Player playback speed indicator (1x button) */
+  .remotion-player [style*='border-radius: 20px'][style*='font-weight: bold'] {
+    display: none !important;
+  }
+
+  /* Hide Remotion Player spacer divs */
+  .remotion-player
+    [style*='height: 8px;'][style*='width'][style='height: 8px;'],
+  .remotion-player div[style='height: 8px;'] {
+    display: none !important;
+  }
 }

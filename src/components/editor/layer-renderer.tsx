@@ -336,7 +336,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       <LayerCanvas layer={layer} ref={layerCanvasRef} />
       {layer.isDebugEnabled && (
         <>
-          <div className="absolute inset-0 w-[30%] border-r border-white/10 bg-black/40" />
+          <div className="absolute inset-0 w-[30%] border-r border-white/10 bg-black/60" />
           <div className="scrollbar-hide pointer-events-none absolute inset-0 overflow-y-auto">
             <canvas
               ref={debugCanvasRef}

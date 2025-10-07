@@ -52,8 +52,6 @@ const useAudioFrameData = ({
     }
   }, [analyzer, wavesurfer]);
 
-  const isPlayingStore = useEditorStore((s) => s.isPlaying);
-
   const getAudioFrameData = useCallback(() => {
     if (!analyzer) {
       return {
@@ -65,6 +63,8 @@ const useAudioFrameData = ({
     }
 
     // Drive update gating from global play state to match Remotion controls
+    // Read fresh state directly from store to avoid callback recreation on play/pause
+    const isPlayingStore = useEditorStore.getState().isPlaying;
     const isPlaying = !isFrozen || isPlayingStore;
 
     if (isPlaying) {
@@ -108,9 +108,9 @@ const useAudioFrameData = ({
       fftSize: analyzer.fftSize,
     };
     // wavesurfer is NOT in deps because it's only used in the initialization useEffect
-    // Adding it would cause unnecessary callback recreation during initialization
+    // isPlayingStore is read fresh from store.getState() to avoid callback recreation
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [analyzer, isFrozen, isPlayingStore]);
+  }, [analyzer, isFrozen]);
 
   return getAudioFrameData;
 };
