@@ -14,14 +14,14 @@ const SectionChangeDetectorBody = ({
   id: nodeId,
   data,
 }: SectionChangeDetectorBodyProps) => {
+  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const valueHistoryRef = useRef<number[]>([]);
   const changeHistoryRef = useRef<number[]>([]);
   const triggerFlashRef = useRef(0);
   const statsTextRef = useRef<HTMLDivElement>(null);
   const capacity = 90;
-
-  const { getNodeOutput } = useNodeOutputCache.getState();
 
   useRafLoop(() => {
     const canvas = canvasRef.current;

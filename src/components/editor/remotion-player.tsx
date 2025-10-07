@@ -10,13 +10,17 @@ const FPS = 60;
 const ASPECT_RATIO = 'free' as AspectRatio;
 
 const RemotionPlayer = () => {
-  const { setPlayerRef, setPlayerFPS } = useEditorStore();
+  const setPlayerRef = useEditorStore((s) => s.setPlayerRef);
+  const setPlayerFPS = useEditorStore((s) => s.setPlayerFPS);
   const isPlayingStore = useEditorStore((s) => s.isPlaying);
   const setIsPlaying = useEditorStore((s) => s.setIsPlaying);
-  const { audioElementRef } = useAudioStore();
+
+  const audioElementRef = useAudioStore((s) => s.audioElementRef);
   const isCapturingTab = useAudioStore((s) => s.isCapturingTab);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<PlayerRef>(null);
+
   const { width: containerWidth, height: containerHeight } =
     useDimensions(containerRef);
   const [durationInFrames, setDurationInFrames] = useState(1);

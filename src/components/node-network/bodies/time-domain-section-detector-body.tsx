@@ -14,14 +14,14 @@ interface TimeDomainSectionDetectorBodyProps {
 const TimeDomainSectionDetectorBody = ({
   id: nodeId,
 }: TimeDomainSectionDetectorBodyProps) => {
+  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const triggerIndicatorRef = useRef<HTMLDivElement>(null);
   const statsTextRef = useRef<HTMLDivElement>(null);
   const differenceRing = useRef<number[]>([]);
   const capacity = 120;
   const peakRef = useRef<number>(1);
-
-  const { getNodeOutput } = useNodeOutputCache.getState();
 
   useRafLoop(() => {
     const canvas = canvasRef.current;

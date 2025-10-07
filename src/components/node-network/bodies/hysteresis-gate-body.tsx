@@ -23,9 +23,10 @@ const HysteresisGateBody = ({
   data,
   nodeNetworkId,
 }: HysteresisGateBodyProps) => {
+  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
+  const getNodeInputValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
+
   const { updateInputValue } = useNodeNetwork(nodeNetworkId);
-  const { getNodeOutput } = useNodeOutputCache.getState();
-  const { getNodeInputValue } = useNodeLiveValuesStore.getState();
 
   const trackRef = useRef<HTMLDivElement>(null);
   const lowRef = useRef<HTMLDivElement>(null);

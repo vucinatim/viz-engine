@@ -12,12 +12,12 @@ interface RateLimiterBodyProps {
 }
 
 const RateLimiterBody = ({ id: nodeId, data }: RateLimiterBodyProps) => {
+  const getNodeInputValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
+
   const countdownDisplayRef = useRef<HTMLDivElement>(null);
   const statusDisplayRef = useRef<HTMLDivElement>(null);
   const valueDisplayRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
-
-  const { getNodeInputValue } = useNodeLiveValuesStore.getState();
 
   useRafLoop(() => {
     const state = data.state;

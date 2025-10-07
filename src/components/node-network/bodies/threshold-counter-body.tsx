@@ -16,15 +16,15 @@ const ThresholdCounterBody = ({
   id: nodeId,
   data,
 }: ThresholdCounterBodyProps) => {
+  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
+  const getNodeInputValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
+
   const countDisplayRef = useRef<HTMLDivElement>(null);
   const maxValueRef = useRef<HTMLDivElement>(null);
   const historyRef = useRef<HTMLDivElement>(null);
   const triggerHistory = useRef<number[]>([]);
   const lastCount = useRef<number>(0);
   const flashTimestamp = useRef<number>(0);
-
-  const { getNodeOutput } = useNodeOutputCache.getState();
-  const { getNodeInputValue } = useNodeLiveValuesStore.getState();
 
   useRafLoop(() => {
     const output = getNodeOutput(nodeId);

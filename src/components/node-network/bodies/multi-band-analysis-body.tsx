@@ -11,13 +11,13 @@ interface MultiBandAnalysisBodyProps {
 }
 
 const MultiBandAnalysisBody = ({ id: nodeId }: MultiBandAnalysisBodyProps) => {
+  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const bassHistoryRef = useRef<number[]>([]);
   const midHistoryRef = useRef<number[]>([]);
   const highHistoryRef = useRef<number[]>([]);
   const capacity = 60;
-
-  const { getNodeOutput } = useNodeOutputCache.getState();
 
   useRafLoop(() => {
     const canvas = canvasRef.current;

@@ -14,7 +14,7 @@ import useEditorStore from '@/lib/stores/editor-store';
 
 export default function Home() {
   const { props } = useBodyProps();
-  const { ambientMode } = useEditorStore();
+  const ambientMode = useEditorStore((s) => s.ambientMode);
 
   return (
     <main className="relative h-screen w-screen" {...props}>

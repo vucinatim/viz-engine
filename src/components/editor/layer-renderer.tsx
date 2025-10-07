@@ -21,12 +21,15 @@ interface LayerRendererProps {
 }
 
 const LayerRenderer = ({ layer }: LayerRendererProps) => {
-  const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const audioAnalyzer = useAudioStore((s) => s.audioAnalyzer);
+  const wavesurfer = useAudioStore((s) => s.wavesurfer);
+  const resolutionMultiplier = useEditorStore((s) => s.resolutionMultiplier);
+  const playerRef = useEditorStore((s) => s.playerRef);
+  const playerFPS = useEditorStore((s) => s.playerFPS);
 
-  const layerCanvasRef = useRef<HTMLCanvasElement>(null);
   const debugCanvasRef = useRef<HTMLCanvasElement>(null);
-  const { audioAnalyzer, wavesurfer } = useAudioStore();
-  const { resolutionMultiplier, playerRef, playerFPS } = useEditorStore();
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const layerCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Time tracking
   const lastFrameTimeRef = useRef(

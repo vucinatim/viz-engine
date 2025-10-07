@@ -3,11 +3,7 @@ import { memo } from 'react';
 import LayerRenderer from './layer-renderer';
 
 const Renderer = memo(() => {
-  const { layers } = useLayerStore();
-
-  // Note: Audio playback is handled by WaveSurfer in AudioPanel, not here.
-  // The Remotion Player synchronizes its timing with WaveSurfer's audio element.
-  // We don't need a separate Remotion <Audio> component in the editor.
+  const layers = useLayerStore((s) => s.layers);
 
   return (
     <div className="h-full w-full">

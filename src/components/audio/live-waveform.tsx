@@ -4,7 +4,7 @@ import useAudioStore from '@/lib/stores/audio-store';
 import { useEffect, useRef } from 'react';
 
 const LiveWaveform = () => {
-  const { audioAnalyzer } = useAudioStore();
+  const audioAnalyzer = useAudioStore((s) => s.audioAnalyzer);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {

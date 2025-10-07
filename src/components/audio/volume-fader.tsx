@@ -4,8 +4,12 @@ import * as SliderPrimitive from '@radix-ui/react-slider';
 import { useEffect, useRef } from 'react';
 
 const VolumeFader = () => {
-  const { gainNode, audioAnalyzer, audioContext, audioSource, isCapturingTab } =
-    useAudioStore();
+  const gainNode = useAudioStore((s) => s.gainNode);
+  const audioAnalyzer = useAudioStore((s) => s.audioAnalyzer);
+  const audioContext = useAudioStore((s) => s.audioContext);
+  const audioSource = useAudioStore((s) => s.audioSource);
+  const isCapturingTab = useAudioStore((s) => s.isCapturingTab);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number | null>(null);
   // Toggle meter scale rendering on the left edge

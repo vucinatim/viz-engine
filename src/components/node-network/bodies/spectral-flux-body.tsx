@@ -16,8 +16,9 @@ const SpectralFluxBody = ({
   nodeNetworkId,
   data,
 }: SpectralFluxBodyProps) => {
+  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
+
   const { edges } = useNodeNetwork(nodeNetworkId);
-  const { getNodeOutput } = useNodeOutputCache.getState();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const prevDataRef = useRef<Uint8Array | null>(null);
   const fluxRef = useRef<HTMLDivElement>(null);

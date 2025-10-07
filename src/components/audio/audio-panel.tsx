@@ -16,7 +16,8 @@ const AudioPanel = () => {
   const setIsPlaying = useEditorStore((state) => state.setIsPlaying);
   const isPlaying = useEditorStore((state) => state.isPlaying);
   const isCapturingTab = useAudioStore((s) => s.isCapturingTab);
-  const { setAudioElementRef, setWaveformDisplayRef } = useAudioStore();
+  const setAudioElementRef = useAudioStore((s) => s.setAudioElementRef);
+  const setWaveformDisplayRef = useAudioStore((s) => s.setWaveformDisplayRef);
 
   // Create proper React refs locally
   const audioElementRef = useRef<HTMLAudioElement>(null);
@@ -85,7 +86,7 @@ export default AudioPanel;
 
 // Child component to isolate WaveSurfer hook updates from the parent tree
 const WavesurferController = () => {
-  const { wavesurfer } = useAudioStore();
+  const wavesurfer = useAudioStore((s) => s.wavesurfer);
   const isPlaying = useEditorStore((s) => s.isPlaying);
 
   useWavesurferSetup();
@@ -107,7 +108,7 @@ const WavesurferController = () => {
 };
 
 const TimecodeText = () => {
-  const { wavesurfer } = useAudioStore();
+  const wavesurfer = useAudioStore((s) => s.wavesurfer);
   const spanRef = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
     let raf: number | null = null;

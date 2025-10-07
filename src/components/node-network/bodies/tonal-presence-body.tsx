@@ -15,13 +15,13 @@ interface TonalPresenceBodyProps {
 // Visual body for Tonal Presence
 // Shows: bar for peak, bar for (1 - flatness), and their product (presence) over time as a sparkline.
 const TonalPresenceBody = ({ id: nodeId }: TonalPresenceBodyProps) => {
+  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
+  const getNodeInputValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const infoRef = useRef<HTMLDivElement>(null);
   const presenceRing = useRef<number[]>([]);
   const capacity = 160;
-
-  const { getNodeOutput } = useNodeOutputCache.getState();
-  const { getNodeInputValue } = useNodeLiveValuesStore.getState();
 
   useRafLoop(() => {
     const canvas = canvasRef.current;

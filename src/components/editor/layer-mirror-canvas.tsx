@@ -8,7 +8,8 @@ interface LayerMirrorCanvasProps {
 
 const LayerMirrorCanvas = ({ layer }: LayerMirrorCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { registerMirrorCanvas, unregisterMirrorCanvas } = useLayerStore();
+  const registerMirrorCanvas = useLayerStore((s) => s.registerMirrorCanvas);
+  const unregisterMirrorCanvas = useLayerStore((s) => s.unregisterMirrorCanvas);
 
   useEffect(() => {
     const canvas = canvasRef.current;

@@ -6,20 +6,19 @@ import { AUDIO_THEME } from '../theme/audio-theme';
 import useCanvasGradient from './use-canvas-gradient';
 
 function useWavesurferSetup() {
-  const {
-    audioSource,
-    audioContext,
-    audioAnalyzer,
-    gainNode,
-    setWavesurfer,
-    setAudioContext,
-    setAnalyzer,
-    setGainNode,
-  } = useAudioStore();
-  // const waveformDisplayRef = useRef<HTMLDivElement>(null);
-  // const audioElementRef = useRef<HTMLAudioElement>(null);
-  const { playerRef, playerFPS } = useEditorStore();
-  const { waveformDisplayRef, audioElementRef } = useAudioStore();
+  const audioSource = useAudioStore((s) => s.audioSource);
+  const audioContext = useAudioStore((s) => s.audioContext);
+  const audioAnalyzer = useAudioStore((s) => s.audioAnalyzer);
+  const gainNode = useAudioStore((s) => s.gainNode);
+  const setWavesurfer = useAudioStore((s) => s.setWavesurfer);
+  const setAudioContext = useAudioStore((s) => s.setAudioContext);
+  const setAnalyzer = useAudioStore((s) => s.setAnalyzer);
+  const setGainNode = useAudioStore((s) => s.setGainNode);
+  const waveformDisplayRef = useAudioStore((s) => s.waveformDisplayRef);
+  const audioElementRef = useAudioStore((s) => s.audioElementRef);
+
+  const playerRef = useEditorStore((s) => s.playerRef);
+  const playerFPS = useEditorStore((s) => s.playerFPS);
 
   // Keep height in one constant and use it for both WS and gradient length
   const WAVEFORM_HEIGHT = AUDIO_THEME.waveform.height; // theme-driven height

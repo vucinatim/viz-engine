@@ -25,10 +25,9 @@ import EditorLayerSearch from './editor-layer-search';
 import LayerConfigCard from './layer-config-card';
 
 const LayersConfigPanel = () => {
-  const layers = useLayerStore((state) => state.layers);
-  const setAllLayersExpanded = useLayerStore(
-    (state) => state.setAllLayersExpanded,
-  );
+  const layers = useLayerStore((s) => s.layers);
+  const setAllLayersExpanded = useLayerStore((s) => s.setAllLayersExpanded);
+
   const areSomeLayersExpanded = useMemo(
     () => layers.some((layer) => layer.isExpanded),
     [layers],

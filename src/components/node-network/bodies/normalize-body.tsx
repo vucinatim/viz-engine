@@ -14,8 +14,8 @@ interface NormalizeBodyProps {
 
 // Custom body for Normalize node: sparkline preview only (inputs handled by core UI)
 const NormalizeBody = ({ id: nodeId }: NormalizeBodyProps) => {
-  const { getNodeInputValue } = useNodeLiveValuesStore.getState();
-  const { getNodeOutput } = useNodeOutputCache.getState();
+  const getNodeInputValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
+  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const infoRef = useRef<HTMLDivElement>(null);

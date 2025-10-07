@@ -4,19 +4,17 @@ import useAudioStore from '@/lib/stores/audio-store';
 import useEditorStore from '@/lib/stores/editor-store';
 
 const CaptureAudio = () => {
-  const {
-    audioContext,
-    audioAnalyzer,
-    setAudioSource,
-    tabCaptureStream,
-    setTabCaptureStream,
-    isCapturingTab,
-    setIsCapturingTab,
-    captureLabel,
-    setCaptureLabel,
-    audioElementRef,
-    wavesurfer,
-  } = useAudioStore();
+  const audioContext = useAudioStore((s) => s.audioContext);
+  const audioAnalyzer = useAudioStore((s) => s.audioAnalyzer);
+  const setAudioSource = useAudioStore((s) => s.setAudioSource);
+  const tabCaptureStream = useAudioStore((s) => s.tabCaptureStream);
+  const setTabCaptureStream = useAudioStore((s) => s.setTabCaptureStream);
+  const isCapturingTab = useAudioStore((s) => s.isCapturingTab);
+  const setIsCapturingTab = useAudioStore((s) => s.setIsCapturingTab);
+  const captureLabel = useAudioStore((s) => s.captureLabel);
+  const setCaptureLabel = useAudioStore((s) => s.setCaptureLabel);
+  const audioElementRef = useAudioStore((s) => s.audioElementRef);
+  const wavesurfer = useAudioStore((s) => s.wavesurfer);
 
   const startTabCapture = async () => {
     try {

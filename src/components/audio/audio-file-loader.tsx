@@ -15,11 +15,16 @@ export const DROPZONE_ACCEPTED_TYPES = {
 };
 
 const AudioFileLoader = () => {
+  const wavesurfer = useAudioStore((s) => s.wavesurfer);
+  const setAudioFile = useAudioStore((s) => s.setAudioFile);
+  const audioElementRef = useAudioStore((s) => s.audioElementRef);
+  const setCurrentTrackUrl = useAudioStore((s) => s.setCurrentTrackUrl);
+
   const [audioFiles, setAudioFiles] = useState<string[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
-  const { wavesurfer, setAudioFile, audioElementRef, setCurrentTrackUrl } =
-    useAudioStore();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {

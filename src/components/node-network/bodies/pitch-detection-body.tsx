@@ -23,6 +23,10 @@ function PitchDetectionBody({
   data,
   nodeNetworkId,
 }: PitchDetectionBodyProps) {
+  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
+  const getLiveNodeValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
+  const audioAnalyzer = useAudioStore((s) => s.audioAnalyzer);
+
   const [outputs, setOutputs] = useState<any>({});
   const [lastNote, setLastNote] = useState('');
   const [lastFrequency, setLastFrequency] = useState(0);
@@ -32,11 +36,6 @@ function PitchDetectionBody({
   const minLineRef = useRef<HTMLDivElement>(null);
   const maxLineRef = useRef<HTMLDivElement>(null);
   const frequencyDataRef = useRef<Uint8Array>(new Uint8Array());
-
-  const { getNodeOutput } = useNodeOutputCache.getState();
-  const { getNodeInputValue: getLiveNodeValue } =
-    useNodeLiveValuesStore.getState();
-  const audioAnalyzer = useAudioStore((s) => s.audioAnalyzer);
 
   const freqToLogPercent = useCallback((freq: number) => {
     if (freq <= MIN_FREQ) return 0;

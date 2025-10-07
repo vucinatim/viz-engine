@@ -7,12 +7,13 @@ import { Switch } from '../ui/switch';
 import EditorToolbar from './editor-toolbar';
 
 const EditorHeader = () => {
-  const {
-    ambientMode,
-    setAmbientMode,
-    resolutionMultiplier,
-    setResolutionMultiplier,
-  } = useEditorStore();
+  const ambientMode = useEditorStore((s) => s.ambientMode);
+  const setAmbientMode = useEditorStore((s) => s.setAmbientMode);
+  const resolutionMultiplier = useEditorStore((s) => s.resolutionMultiplier);
+  const setResolutionMultiplier = useEditorStore(
+    (s) => s.setResolutionMultiplier,
+  );
+
   return (
     <div className="flex items-center px-4">
       <Image

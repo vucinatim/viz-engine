@@ -21,8 +21,8 @@ const HarmonicPresenceBody = ({ id: nodeId }: HarmonicPresenceBodyProps) => {
   const presenceRing = useRef<number[]>([]);
   const capacity = 160;
 
-  const { getNodeInputValue } = useNodeLiveValuesStore.getState();
-  const { getNodeOutput } = useNodeOutputCache.getState();
+  const getNodeInputValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
+  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
 
   useRafLoop(() => {
     const canvas = canvasRef.current;

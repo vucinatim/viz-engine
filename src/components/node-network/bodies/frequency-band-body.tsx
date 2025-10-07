@@ -26,9 +26,9 @@ const FrequencyBandBody = ({
   data,
   nodeNetworkId,
 }: FrequencyBandBodyProps) => {
-  const { getNodeOutput } = useNodeOutputCache.getState();
-  const { getNodeInputValue: getLiveNodeValue } =
-    useNodeLiveValuesStore.getState();
+  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
+  const getLiveNodeValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
+
   const { edges, updateInputValue } = useNodeNetwork(nodeNetworkId);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);

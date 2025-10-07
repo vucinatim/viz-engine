@@ -3,8 +3,8 @@ import useLayerStore from '@/lib/stores/layer-store';
 import LayerMirrorCanvas from './layer-mirror-canvas';
 
 const AmbientBackground = () => {
-  const { layers } = useLayerStore();
-  const { ambientMode } = useEditorStore();
+  const layers = useLayerStore((s) => s.layers);
+  const ambientMode = useEditorStore((s) => s.ambientMode);
 
   return (
     <div>

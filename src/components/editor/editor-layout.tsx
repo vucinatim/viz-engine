@@ -20,8 +20,9 @@ export function EditorLayout({
   midRightChildren,
   bottomRightChildren,
 }: EditorLayoutProps) {
-  const { setResolutionMultiplier } = useEditorStore();
-  // const {layers} = useLayerStore();
+  const setResolutionMultiplier = useEditorStore(
+    (state) => state.setResolutionMultiplier,
+  );
 
   // Set resolution multiplier to devicePixelRatio on mount and when DPR changes
   useEffect(() => {
@@ -90,7 +91,7 @@ interface EditorPanelProps {
 }
 
 export const EditorPanel = ({ children }: EditorPanelProps) => {
-  const { ambientMode } = useEditorStore();
+  const ambientMode = useEditorStore((s) => s.ambientMode);
   return (
     <div className="absolute inset-0">
       <div

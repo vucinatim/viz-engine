@@ -1,11 +1,9 @@
-import { group } from "console";
-
 interface ParamSchema {
-  type: "number" | "string" | "boolean" | "color" | "select";
+  type: 'number' | 'string' | 'boolean' | 'color' | 'select';
   default: any;
   label: string;
   description: string;
-  uiComponent: "input" | "slider" | "switch" | "colorPicker" | "select";
+  uiComponent: 'input' | 'slider' | 'switch' | 'colorPicker' | 'select';
   options?: any[]; // For select type
   validation?: {
     min?: number;
@@ -20,15 +18,15 @@ interface ConfigSchema {
 }
 // @ts-ignore
 v.group({
-  label: "Layer",
-  description: "Layer settings",
+  label: 'Layer',
+  description: 'Layer settings',
   params: [
     // @ts-ignore
     v.number({
       default: 1,
-      label: "Opacity",
-      description: "The opacity of the layer",
-      uiComponent: "slider",
+      label: 'Opacity',
+      description: 'The opacity of the layer',
+      uiComponent: 'slider',
       validation: {
         min: 0,
         max: 1,
@@ -36,10 +34,10 @@ v.group({
     }),
     // @ts-ignore
     v.color({
-      default: "#000000",
-      label: "Background",
-      description: "The background color of the layer",
-      uiComponent: "colorPicker",
+      default: '#000000',
+      label: 'Background',
+      description: 'The background color of the layer',
+      uiComponent: 'colorPicker',
     }),
   ],
 });

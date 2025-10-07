@@ -12,12 +12,12 @@ interface SpectralCentroidBodyProps {
 }
 
 const SpectralCentroidBody = ({ id: nodeId }: SpectralCentroidBodyProps) => {
+  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const centroidTextRef = useRef<HTMLDivElement>(null);
   const centroidRing = useRef<number[]>([]);
   const capacity = 120;
-
-  const { getNodeOutput } = useNodeOutputCache.getState();
 
   useRafLoop(() => {
     const canvas = canvasRef.current;

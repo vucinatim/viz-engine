@@ -21,8 +21,8 @@ const EnvelopeFollowerBody = ({ id: nodeId }: EnvelopeFollowerBodyProps) => {
   const capacity = 160; // ~ last few seconds depending on frame rate
   const peakRef = useRef<number>(1);
 
-  const { getNodeInputValue } = useNodeLiveValuesStore.getState();
-  const { getNodeOutput } = useNodeOutputCache.getState();
+  const getNodeInputValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
+  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
 
   useRafLoop(() => {
     const canvas = canvasRef.current;
