@@ -25,6 +25,8 @@ import EditorLayerSearch from './editor-layer-search';
 import LayerConfigCard from './layer-config-card';
 
 const LayersConfigPanel = () => {
+  // Parent rerenders when any layer changes (unavoidable with Zustand immutable updates)
+  // But LayerConfigCard is memoized, so only the changed layer card actually rerenders
   const layers = useLayerStore((s) => s.layers);
   const setAllLayersExpanded = useLayerStore((s) => s.setAllLayersExpanded);
 

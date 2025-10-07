@@ -3,6 +3,7 @@ import useAudioStore from '@/lib/stores/audio-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { Player, PlayerRef } from '@remotion/player';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import CustomPlayerControls from './custom-player-controls';
 import Renderer from './renderer';
 
 type AspectRatio = 'free' | number;
@@ -153,12 +154,13 @@ const RemotionPlayer = () => {
         fps={FPS}
         clickToPlay={false}
         loop
-        showPlaybackRateControl
+        showPlaybackRateControl={false}
         showVolumeControls={false}
-        allowFullscreen
-        doubleClickToFullscreen
-        controls
+        allowFullscreen={true}
+        doubleClickToFullscreen={false}
+        controls={false}
       />
+      <CustomPlayerControls durationInFrames={durationInFrames} />
     </div>
   );
 };

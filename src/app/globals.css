@@ -3,6 +3,20 @@
 @tailwind utilities;
 
 @layer base {
+  /* Fullscreen player styles */
+  .remotion-player:fullscreen {
+    background: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .remotion-player:fullscreen video {
+    max-width: 100vw;
+    max-height: 100vh;
+    object-fit: contain;
+  }
+
   :root {
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;

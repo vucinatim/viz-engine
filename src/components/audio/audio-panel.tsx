@@ -4,8 +4,10 @@ import useKeypress from '@/lib/hooks/use-keypress';
 import useWavesurferSetup from '@/lib/hooks/use-wavesurfer-setup';
 import useAudioStore from '@/lib/stores/audio-store';
 import useEditorStore from '@/lib/stores/editor-store';
-import { Pause, Play } from 'lucide-react';
+import { Music, Pause, Play, SkipBack, SkipForward } from 'lucide-react';
 import { useEffect, useRef } from 'react';
+import { Button } from '../ui/button';
+import TickerText from '../ui/ticker-text';
 import { Toggle } from '../ui/toggle';
 import AudioFileLoader from './audio-file-loader';
 import CaptureAudio from './capture-audio';
@@ -18,6 +20,9 @@ const AudioPanel = () => {
   const isCapturingTab = useAudioStore((s) => s.isCapturingTab);
   const setAudioElementRef = useAudioStore((s) => s.setAudioElementRef);
   const setWaveformDisplayRef = useAudioStore((s) => s.setWaveformDisplayRef);
+  const skipToPrevious = useAudioStore((s) => s.skipToPrevious);
+  const skipToNext = useAudioStore((s) => s.skipToNext);
+  const captureLabel = useAudioStore((s) => s.captureLabel);
 
   // Create proper React refs locally
   const audioElementRef = useRef<HTMLAudioElement>(null);
@@ -42,14 +47,43 @@ const AudioPanel = () => {
       </div>
       <div className="flex grow flex-col items-stretch">
         <div className="grid h-14 grid-cols-3 content-center p-2">
-          <AudioFileLoader />
-          <div className="place-self-center">
+          {!isCapturingTab ? (
+            <AudioFileLoader />
+          ) : (
+            <div className="justify-self-start">
+              <Button disabled>
+                <TickerText leadingIcon={<Music />} text="External Audio" />
+              </Button>
+            </div>
+          )}
+          <div className="flex items-center justify-center gap-1">
+            {!isCapturingTab && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={skipToPrevious}
+                tooltip="Previous track / Restart (< 3s)"
+                className="h-9 w-9 opacity-80 hover:opacity-100">
+                <SkipBack className="h-5 w-5" />
+              </Button>
+            )}
             <Toggle
               aria-label="Play/Pause"
-              tooltip={'Play/Pause (Space)'}
+              className="border !border-white/20"
+              tooltip="Play/Pause (Space)"
               onClick={playPause}>
               {isPlaying ? <Pause /> : <Play />}
             </Toggle>
+            {!isCapturingTab && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={skipToNext}
+                tooltip="Next track"
+                className="h-9 w-9 opacity-80 hover:opacity-100">
+                <SkipForward className="h-5 w-5" />
+              </Button>
+            )}
           </div>
           <div className="mr-3 flex items-center justify-end gap-3">
             <CaptureAudio />

@@ -68,6 +68,12 @@ const CaptureAudio = () => {
           setTabCaptureStream(null);
           setIsCapturingTab(false);
           setCaptureLabel(null);
+          // Pause playback when capture ends unexpectedly
+          const playerRef = useEditorStore.getState().playerRef;
+          if (playerRef.current && playerRef.current.isPlaying()) {
+            playerRef.current.pause();
+            useEditorStore.getState().setIsPlaying(false);
+          }
         });
       });
     } catch (e) {
@@ -77,6 +83,12 @@ const CaptureAudio = () => {
       setTabCaptureStream(null);
       setIsCapturingTab(false);
       setCaptureLabel(null);
+      // Pause playback on capture failure
+      const playerRef = useEditorStore.getState().playerRef;
+      if (playerRef.current && playerRef.current.isPlaying()) {
+        playerRef.current.pause();
+        useEditorStore.getState().setIsPlaying(false);
+      }
     }
   };
 
@@ -94,8 +106,7 @@ const CaptureAudio = () => {
           el.src = url;
           el.muted = false;
           el.load();
-          // Resume audible playback of the previously selected track
-          el.play().catch(() => {});
+          // Don't auto-play, just restore the previous track
           wavesurfer?.load(url);
         } else {
           el.removeAttribute('src');
@@ -107,11 +118,11 @@ const CaptureAudio = () => {
     setTabCaptureStream(null);
     setIsCapturingTab(false);
     setCaptureLabel(null);
-    // Ensure the Remotion timeline is playing after exiting capture mode
+    // Pause playback when exiting capture mode
     const playerRef = useEditorStore.getState().playerRef;
-    if (playerRef.current && !playerRef.current.isPlaying()) {
-      playerRef.current.play();
-      useEditorStore.getState().setIsPlaying(true);
+    if (playerRef.current && playerRef.current.isPlaying()) {
+      playerRef.current.pause();
+      useEditorStore.getState().setIsPlaying(false);
     }
   };
 
@@ -129,13 +140,6 @@ const CaptureAudio = () => {
         }>
         {tabCaptureStream ? 'Stop Tab Audio' : 'Capture Tab Audio'}
       </button>
-      {isCapturingTab && (
-        <span
-          className="max-w-[12rem] truncate text-[10px] text-white/70"
-          title={captureLabel || undefined}>
-          {captureLabel}
-        </span>
-      )}
     </div>
   );
 };
