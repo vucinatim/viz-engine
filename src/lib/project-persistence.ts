@@ -60,6 +60,37 @@ export function saveProject(projectName: string = 'project') {
   URL.revokeObjectURL(url);
 }
 
+async function hydrateProjectData(projectFile: ProjectFile) {
+  if (projectFile.version !== VIZ_ENGINE_PROJECT_VERSION) {
+    // Here you could handle migrating old project file versions
+    alert(
+      `Project file version (${projectFile.version}) does not match current version (${VIZ_ENGINE_PROJECT_VERSION}). There may be issues.`,
+    );
+  }
+
+  // Rehydrate stores
+  // For stores with custom merge logic, we manually call it
+  const mergedLayerStore = layerStoreMerge(
+    projectFile.layerStore,
+    useLayerStore.getState(),
+  );
+  useLayerStore.setState(mergedLayerStore);
+
+  const mergedNodeNetworkStore = nodeNetworkStoreMerge(
+    projectFile.nodeNetworkStore,
+    useNodeNetworkStore.getState(),
+  );
+  useNodeNetworkStore.setState(mergedNodeNetworkStore);
+
+  // For stores with serializable state, we can just set it
+  useLayerValuesStore.setState(projectFile.layerValuesStore);
+  useEditorStore.setState(projectFile.editorStore);
+
+  // Wait for IndexedDB persistence to complete (stores have 100ms throttle)
+  // Add extra buffer to ensure all writes complete
+  await new Promise((resolve) => setTimeout(resolve, 300));
+}
+
 export function loadProject(file: File) {
   const reader = new FileReader();
   reader.onload = async (e) => {
@@ -67,34 +98,7 @@ export function loadProject(file: File) {
       const json = e.target?.result as string;
       const projectFile: ProjectFile = JSON.parse(json);
 
-      if (projectFile.version !== VIZ_ENGINE_PROJECT_VERSION) {
-        // Here you could handle migrating old project file versions
-        alert(
-          `Project file version (${projectFile.version}) does not match current version (${VIZ_ENGINE_PROJECT_VERSION}). There may be issues.`,
-        );
-      }
-
-      // Rehydrate stores
-      // For stores with custom merge logic, we manually call it
-      const mergedLayerStore = layerStoreMerge(
-        projectFile.layerStore,
-        useLayerStore.getState(),
-      );
-      useLayerStore.setState(mergedLayerStore);
-
-      const mergedNodeNetworkStore = nodeNetworkStoreMerge(
-        projectFile.nodeNetworkStore,
-        useNodeNetworkStore.getState(),
-      );
-      useNodeNetworkStore.setState(mergedNodeNetworkStore);
-
-      // For stores with serializable state, we can just set it
-      useLayerValuesStore.setState(projectFile.layerValuesStore);
-      useEditorStore.setState(projectFile.editorStore);
-
-      // Wait for IndexedDB persistence to complete (stores have 100ms throttle)
-      // Add extra buffer to ensure all writes complete
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await hydrateProjectData(projectFile);
 
       alert('Project loaded successfully! The application will now reload.');
 
@@ -106,4 +110,28 @@ export function loadProject(file: File) {
     }
   };
   reader.readAsText(file);
+}
+
+export async function loadProjectFromUrl(url: string) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch project: ${response.statusText}`);
+    }
+
+    const json = await response.text();
+    const projectFile: ProjectFile = JSON.parse(json);
+
+    await hydrateProjectData(projectFile);
+
+    alert(
+      'Sample project loaded successfully! The application will now reload.',
+    );
+
+    // Force a page refresh to load the new state from persistence
+    window.location.reload();
+  } catch (error) {
+    console.error('Failed to load sample project', error);
+    alert('Failed to load sample project. See console for details.');
+  }
 }

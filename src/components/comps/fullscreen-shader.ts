@@ -336,8 +336,21 @@ const FullscreenShader = createComponent({
       state.currentShader = config.shader;
     }
 
-    // Update resolution (in case canvas was resized)
+    // Update plane size to match current viewport (handles window resizing)
     const canvas = renderer.domElement;
+    const aspect = canvas.width / canvas.height;
+    const distance = 5;
+
+    // Calculate visible height at distance based on FOV
+    const vFOV = (camera as THREE.PerspectiveCamera).fov * (Math.PI / 180);
+    const visibleHeight = 2 * Math.tan(vFOV / 2) * distance;
+    const visibleWidth = visibleHeight * aspect;
+
+    // Update plane geometry to match current viewport
+    state.plane.geometry.dispose(); // Clean up old geometry
+    state.plane.geometry = new THREE.PlaneGeometry(visibleWidth, visibleHeight);
+
+    // Update resolution (in case canvas was resized)
     state.material.uniforms.uResolution.value.set(canvas.width, canvas.height);
 
     // Update uniforms from config (all animatable via node network)

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { create } from 'zustand';
 import { useNodeNetwork } from '../../components/node-network/node-network-store';
 
@@ -69,14 +69,16 @@ export const useNodeNetworkHistory = (networkId: string) => {
   } = useHistoryStateStore();
 
   // Initialize history for this network if it doesn't exist
-  if (!globalHistory[networkId]) {
-    const initialHistory = {
-      past: [],
-      present: { nodes, edges },
-      future: [],
-    };
-    setHistory(networkId, initialHistory);
-  }
+  useEffect(() => {
+    if (!globalHistory[networkId]) {
+      const initialHistory = {
+        past: [],
+        present: { nodes, edges },
+        future: [],
+      };
+      setHistory(networkId, initialHistory);
+    }
+  }, [networkId, globalHistory, nodes, edges, setHistory]);
 
   // Push current state to history
   const pushToHistory = useCallback(

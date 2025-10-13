@@ -22,6 +22,7 @@ interface SearchSelectProps {
   noItemsMessage?: string;
   dropdownWidth?: number | string;
   align?: 'left' | 'right';
+  keepOpenOnSelect?: boolean;
 }
 
 const SearchSelect = ({
@@ -35,6 +36,7 @@ const SearchSelect = ({
   noItemsMessage,
   dropdownWidth,
   align = 'left',
+  keepOpenOnSelect = false,
 }: SearchSelectProps) => {
   const [open, setOpen] = useState(false);
   const layoutRef = useRef<HTMLDivElement>(null);
@@ -79,7 +81,9 @@ const SearchSelect = ({
                   value={extractKey(option)}
                   onSelect={() => {
                     onSelect(option);
-                    setOpen(false);
+                    if (!keepOpenOnSelect) {
+                      setOpen(false);
+                    }
                   }}>
                   {renderOption(option)}
                 </CommandItem>

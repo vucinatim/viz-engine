@@ -1,3 +1,4 @@
+import { getParameterIdsFromConfig } from '@/lib/comp-utils/config-utils';
 import useLayerStore, { LayerData } from '@/lib/stores/layer-store';
 import useLayerValuesStore from '@/lib/stores/layer-values-store';
 import { cn } from '@/lib/utils';
@@ -7,12 +8,19 @@ import {
   Bug,
   ChevronDown,
   ChevronUp,
+  Copy,
   GripVertical,
   Layers2,
   Trash,
 } from 'lucide-react';
 import { memo, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { ConfigParam, GroupConfigOption } from '../config/config';
+import { UnknownConfig } from '../config/create-component';
 import DynamicForm from '../config/dynamic-form';
+import { safeVTypeToNodeHandleType } from '../config/node-types';
+import { VType } from '../config/types';
+import { useNodeNetworkStore } from '../node-network/node-network-store';
 import { Button } from '../ui/button';
 import {
   Collapsible,
@@ -22,6 +30,36 @@ import {
 import SearchSelect from '../ui/search-select';
 import LayerPreview from './layer-preview';
 import LayerSettings from './layer-settings';
+
+// Helper function to get parameter type from a config path
+function getParameterType(config: UnknownConfig, path: string): VType | null {
+  const parts = path.split('.');
+  let current: any = config.options;
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    const option = current[part];
+
+    if (!option) return null;
+
+    // If this is the last part, get the type
+    if (i === parts.length - 1) {
+      if (option instanceof ConfigParam) {
+        return option.type;
+      }
+      return null;
+    }
+
+    // Navigate into group
+    if (option instanceof GroupConfigOption) {
+      current = option.options;
+    } else {
+      return null;
+    }
+  }
+
+  return null;
+}
 
 interface LayerConfigCardProps {
   index: number;
@@ -120,6 +158,21 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                   }>
                   <Bug className="h-6 w-6" />
                 </Button>
+                <Button
+                  size="iconMini"
+                  variant="defaultLighter"
+                  tooltip="Copy layer settings to clipboard as JSON"
+                  onClick={() => {
+                    const currentValues =
+                      useLayerValuesStore.getState().values[layer.id] ??
+                      layer.comp.defaultValues;
+                    const json = JSON.stringify(currentValues, null, 2);
+                    navigator.clipboard.writeText(json);
+                    console.log('Copied layer settings to clipboard:', json);
+                    toast.success('Layer settings copied to clipboard!');
+                  }}>
+                  <Copy className="h-6 w-6" />
+                </Button>
 
                 <div className="grow" />
                 <CollapsibleTrigger asChild>
@@ -153,9 +206,12 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                   extractKey={(preset) => preset.name}
                   renderOption={(preset) => <div>{preset.name}</div>}
                   noItemsMessage="No presets available."
+                  keepOpenOnSelect={true}
                   onSelect={(preset) => {
+                    // Apply config values
                     layer.config.setValues(preset.values);
                     setSelectedPreset(preset);
+                    setInitialValues(preset.values);
                     useLayerValuesStore
                       .getState()
                       .setLayerValues(layer.id, preset.values);
@@ -163,6 +219,110 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                       ...layer.comp,
                       defaultValues: preset.values,
                     });
+
+                    // Handle networks: clear existing ones and apply new preset networks
+                    // Defer to avoid setState during render
+                    setTimeout(() => {
+                      const networkStore = useNodeNetworkStore.getState();
+
+                      // Get all parameter IDs for this layer
+                      const allParameterIds = getParameterIdsFromConfig(
+                        layer.config,
+                      );
+
+                      // Build a set of parameter paths that should have networks after applying preset
+                      const presetNetworkPaths = new Set(
+                        preset.networks ? Object.keys(preset.networks) : [],
+                      );
+
+                      console.log(
+                        '[Preset] Clearing networks not in preset. Preset networks:',
+                        presetNetworkPaths,
+                      );
+
+                      // Disable/remove networks that aren't in the preset
+                      allParameterIds.forEach((parameterId) => {
+                        // Extract the parameter path from the ID (format: "layerId:paramPath")
+                        const paramPath = parameterId
+                          .split(':')
+                          .slice(1)
+                          .join('.');
+
+                        // If this parameter's network isn't in the preset, disable it
+                        if (!presetNetworkPaths.has(paramPath)) {
+                          const existingNetwork =
+                            networkStore.networks[parameterId];
+                          if (existingNetwork) {
+                            console.log(
+                              `[Preset] Disabling network for '${paramPath}' (not in preset)`,
+                            );
+                            networkStore.setNetwork(parameterId, {
+                              ...existingNetwork,
+                              isEnabled: false,
+                            });
+                          }
+                        }
+                      });
+
+                      // Apply network presets if defined
+                      if (preset.networks) {
+                        console.log(
+                          '[Preset] Networks to apply:',
+                          preset.networks,
+                        );
+                        const applyPresetToNetwork =
+                          networkStore.applyPresetToNetwork;
+
+                        Object.entries(preset.networks).forEach(
+                          ([paramPath, presetId]) => {
+                            // Get the parameter type from the config
+                            const paramType = getParameterType(
+                              layer.config,
+                              paramPath,
+                            );
+                            console.log(
+                              `[Preset] Param '${paramPath}' type:`,
+                              paramType,
+                            );
+
+                            if (paramType) {
+                              // Use colon separator to match parameter ID format
+                              // Replace dots with colons for nested paths (e.g., "group.param" -> "layerId:group:param")
+                              const parameterId = `${layer.id}:${paramPath.replace(/\./g, ':')}`;
+                              const nodeHandleType =
+                                safeVTypeToNodeHandleType(paramType);
+
+                              console.log(
+                                `[Preset] Applying network '${presetId}' to '${parameterId}' with type '${nodeHandleType}'`,
+                              );
+
+                              applyPresetToNetwork(
+                                parameterId,
+                                presetId as string,
+                                nodeHandleType,
+                              );
+
+                              // Verify it was applied
+                              const network =
+                                networkStore.networks[parameterId];
+                              console.log(
+                                `[Preset] Network status for '${parameterId}':`,
+                                network
+                                  ? {
+                                      isEnabled: network.isEnabled,
+                                      nodeCount: network.nodes.length,
+                                    }
+                                  : 'NOT FOUND',
+                              );
+                            } else {
+                              console.warn(
+                                `[Preset] Could not find parameter type for '${paramPath}'`,
+                              );
+                            }
+                          },
+                        );
+                      }
+                    }, 0);
                   }}
                 />
               )}

@@ -10,7 +10,24 @@ import { SimpleSelect } from '../ui/select';
 import { Slider } from '../ui/slider';
 import { Toggle } from '../ui/toggle';
 
-const blendingModes = ['normal', 'multiply', 'screen', 'overlay'] as const;
+const blendingModes = [
+  'normal',
+  'multiply',
+  'screen',
+  'overlay',
+  'darken',
+  'lighten',
+  'color-dodge',
+  'color-burn',
+  'hard-light',
+  'soft-light',
+  'difference',
+  'exclusion',
+  'hue',
+  'saturation',
+  'color',
+  'luminosity',
+] as const;
 
 export const layerSettingsSchema = z.object({
   visible: z.boolean().default(true),

@@ -7,9 +7,11 @@ import InstancedSupercube from './instanced-supercube';
 import MorphShapes from './morph-shapes';
 import MovingObjects from './moving-objects';
 import NeuralNetwork from './neural-network';
+import NoiseShader from './noise-shader';
 import OrbitingCubes from './orbiting-cubes';
 import SimpleCube from './simple-cube';
 import StageScene from './stage-scene';
+import StrobeLight from './strobe-light';
 
 export const AllComps = [
   CurveSpectrum,
@@ -21,9 +23,11 @@ export const AllComps = [
   MorphShapes,
   FeatureExtractionBars,
   NeuralNetwork,
+  NoiseShader,
   OrbitingCubes,
   StageScene,
   FullscreenShader,
+  StrobeLight,
 ];
 
 export const CompDefinitionMap = new Map();

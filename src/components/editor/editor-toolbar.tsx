@@ -7,11 +7,41 @@ import {
   MenubarShortcut,
   MenubarTrigger,
 } from '@/components/ui/menubar';
-import { loadProject, saveProject } from '@/lib/project-persistence';
-import { useRef } from 'react';
+import {
+  loadProject,
+  loadProjectFromUrl,
+  saveProject,
+} from '@/lib/project-persistence';
+import { useEffect, useRef, useState } from 'react';
+
+interface SampleProject {
+  name: string;
+  filename: string;
+  url: string;
+}
 
 const EditorToolbar = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [sampleProjects, setSampleProjects] = useState<SampleProject[]>([]);
+  const [isLoadingSamples, setIsLoadingSamples] = useState(false);
+
+  // Fetch available sample projects
+  useEffect(() => {
+    const fetchSampleProjects = async () => {
+      try {
+        setIsLoadingSamples(true);
+        const response = await fetch('/api/sample-projects');
+        const projects = await response.json();
+        setSampleProjects(projects);
+      } catch (error) {
+        console.error('Failed to fetch sample projects:', error);
+      } finally {
+        setIsLoadingSamples(false);
+      }
+    };
+
+    fetchSampleProjects();
+  }, []);
 
   const handleSaveProject = () => {
     const projectName = prompt('Enter project name:', 'my-viz-project');
@@ -31,6 +61,10 @@ const EditorToolbar = () => {
     }
   };
 
+  const handleLoadSampleProject = (url: string) => {
+    loadProjectFromUrl(url);
+  };
+
   return (
     <>
       <Menubar>
@@ -47,6 +81,7 @@ const EditorToolbar = () => {
             </MenubarItem>
           </MenubarContent>
         </MenubarMenu>
+
         <MenubarMenu>
           <MenubarTrigger>Edit</MenubarTrigger>
           <MenubarContent>
@@ -66,6 +101,30 @@ const EditorToolbar = () => {
           <MenubarTrigger>View</MenubarTrigger>
           <MenubarContent>
             <MenubarItem inset>Toggle Fullscreen</MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+          <MenubarTrigger>Sample Projects</MenubarTrigger>
+          <MenubarContent>
+            {isLoadingSamples ? (
+              <MenubarItem disabled>Loading...</MenubarItem>
+            ) : sampleProjects.length > 0 ? (
+              sampleProjects.map((project) => (
+                <MenubarItem
+                  key={project.filename}
+                  onClick={() => handleLoadSampleProject(project.url)}>
+                  {project.name}
+                </MenubarItem>
+              ))
+            ) : (
+              <MenubarItem disabled>No sample projects available</MenubarItem>
+            )}
+            <MenubarSeparator />
+            <MenubarItem
+              disabled
+              className="text-xs text-muted-foreground opacity-50">
+              Place .vizengine.json files in /public/projects/
+            </MenubarItem>
           </MenubarContent>
         </MenubarMenu>
       </Menubar>

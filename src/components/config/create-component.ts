@@ -11,6 +11,7 @@ export type UnknownConfigValues = InferValues<UnknownConfig>;
 type Preset<T> = {
   name: string;
   values: T; // Infer the values from the VConfig
+  networks?: Record<string, string>; // Optional map of parameter paths to network preset IDs
 };
 
 type AudioDrawData = {
