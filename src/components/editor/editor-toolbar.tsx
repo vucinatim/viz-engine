@@ -104,7 +104,7 @@ const EditorToolbar = () => {
           </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>
-          <MenubarTrigger>Sample Projects</MenubarTrigger>
+          <MenubarTrigger>Examples</MenubarTrigger>
           <MenubarContent>
             {isLoadingSamples ? (
               <MenubarItem disabled>Loading...</MenubarItem>

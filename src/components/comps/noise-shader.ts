@@ -164,6 +164,43 @@ const NoiseShader = createComponent({
       },
     },
     {
+      name: 'Smoke (Monochrome)',
+      values: {
+        noise: {
+          type: 'perlin',
+          scale: 0.6,
+          octaves: 2,
+          lacunarity: 3,
+          gain: 0.3,
+        },
+        animation: {
+          speed: 7,
+          flowX: 0,
+          flowY: 0,
+          rotationSpeed: 0,
+        },
+        distortion: {
+          enabled: true,
+          amount: 4,
+          scale: 1.5,
+        },
+        color: {
+          mode: 'monochrome',
+          color1: '#ffffff',
+          color2: '#ffffff',
+          color3: '#ffffff',
+          hueShift: 1,
+          saturation: 0,
+        },
+        output: {
+          brightness: 1.49,
+          contrast: 3,
+          invert: true,
+          posterize: 0,
+        },
+      },
+    },
+    {
       name: 'Plasma Wave',
       values: {
         noise: {

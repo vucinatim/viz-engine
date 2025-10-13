@@ -1,5 +1,6 @@
 import useEditorStore from '@/lib/stores/editor-store';
 import { cn } from '@/lib/utils';
+import { Github } from 'lucide-react';
 import Image from 'next/image';
 import { Label } from '../ui/label';
 import { NumberScrubInput } from '../ui/number-scrub-input';
@@ -66,6 +67,14 @@ const EditorHeader = () => {
           checked={ambientMode}
           onCheckedChange={setAmbientMode}
         />
+        <a
+          href="https://github.com/vucinatim/viz-engine"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 py-2 text-sm text-white/30 transition-colors hover:text-white"
+          title="View on GitHub">
+          <Github className="h-5 w-5" />
+        </a>
       </div>
     </div>
   );

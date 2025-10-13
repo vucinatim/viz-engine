@@ -7,8 +7,7 @@
  * which should happen automatically when the component definitions are loaded.
  */
 
-import { AnimInputData } from '@/components/config/config';
-import { NodeHandleType } from '@/components/config/node-types';
+import { AnimInputData, NodeHandleType } from '@/components/config/node-types';
 import { GraphNode } from '@/components/node-network/node-network-store';
 import {
   NodeNetworkPreset,
