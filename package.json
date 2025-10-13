@@ -36,6 +36,7 @@
     "@remotion/cli": "^4.0.172",
     "@remotion/eslint-plugin": "^4.0.172",
     "@remotion/player": "4.0.172",
+    "@vercel/analytics": "^1.5.0",
     "@wavesurfer/react": "^1.0.5",
     "@xyflow/react": "^12.3.1",
     "class-variance-authority": "^0.7.0",
@@ -65,7 +66,6 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
-    "@types/three": "^0.164.0",
     "@types/color": "^3.0.6",
     "@types/d3-drag": "^3.0.7",
     "@types/d3-selection": "^3.0.11",
@@ -73,6 +73,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/three": "^0.164.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.3",
     "postcss": "^8",

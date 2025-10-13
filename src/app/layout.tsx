@@ -1,7 +1,9 @@
 import ScreenSizeGuard from '@/components/ui/screen-size-guard';
 import { Toaster } from '@/components/ui/sonner';
+import { Analytics } from '@vercel/analytics/next';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+
 import 'zod-metadata/register';
 import './globals.css';
 
@@ -33,6 +35,7 @@ export default function RootLayout({
         <ScreenSizeGuard>{children}</ScreenSizeGuard>
         <Toaster />
       </body>
+      <Analytics />
     </html>
   );
 }
