@@ -9,6 +9,7 @@ import MovingObjects from './moving-objects';
 import NeuralNetwork from './neural-network';
 import NoiseShader from './noise-shader';
 import OrbitingCubes from './orbiting-cubes';
+import ParticleSystem from './particle-system';
 import SimpleCube from './simple-cube';
 import StageScene from './stage-scene';
 import StrobeLight from './strobe-light';
@@ -25,6 +26,7 @@ export const AllComps = [
   NeuralNetwork,
   NoiseShader,
   OrbitingCubes,
+  ParticleSystem,
   StageScene,
   FullscreenShader,
   StrobeLight,

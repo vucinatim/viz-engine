@@ -47,7 +47,7 @@ const DynamicForm = ({ layerId, config, defaultValues }: DynamicFormProps) => {
                 <CollapsibleGroup
                   label={option.label}
                   description={option.description}>
-                  <div className="flex flex-col gap-y-4 pb-6">
+                  <div className="flex flex-col pb-0 pt-2">
                     {Object.entries(option.options).map(
                       ([innerKey, innerOption]) => {
                         const opt = innerOption as
