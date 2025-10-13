@@ -23,6 +23,7 @@ interface SearchSelectProps {
   dropdownWidth?: number | string;
   align?: 'left' | 'right';
   keepOpenOnSelect?: boolean;
+  renderPreview?: (option: any, isHovered: boolean) => React.ReactNode;
 }
 
 const SearchSelect = ({
@@ -37,12 +38,22 @@ const SearchSelect = ({
   dropdownWidth,
   align = 'left',
   keepOpenOnSelect = false,
+  renderPreview,
 }: SearchSelectProps) => {
   const [open, setOpen] = useState(false);
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const layoutRef = useRef<HTMLDivElement>(null);
 
+  // Reset hover state when dropdown closes
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      setHoveredKey(null);
+    }
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <div ref={layoutRef} className="w-full">
         <PopoverTrigger asChild>
           <Button
@@ -75,19 +86,30 @@ const SearchSelect = ({
           </CommandEmpty>
           <CommandList>
             <CommandGroup heading="Suggestions">
-              {options.map((option, index) => (
-                <CommandItem
-                  key={`${extractKey(option)}-${index}`}
-                  value={extractKey(option)}
-                  onSelect={() => {
-                    onSelect(option);
-                    if (!keepOpenOnSelect) {
-                      setOpen(false);
-                    }
-                  }}>
-                  {renderOption(option)}
-                </CommandItem>
-              ))}
+              {options.map((option, index) => {
+                const key = extractKey(option);
+                const isHovered = hoveredKey === key;
+                return (
+                  <CommandItem
+                    key={`${key}-${index}`}
+                    value={key}
+                    onMouseEnter={() => setHoveredKey(key)}
+                    onMouseLeave={() => setHoveredKey(null)}
+                    onSelect={() => {
+                      onSelect(option);
+                      if (!keepOpenOnSelect) {
+                        setOpen(false);
+                      }
+                    }}>
+                    {renderPreview && (
+                      <div className="mr-3 shrink-0">
+                        {renderPreview(option, isHovered)}
+                      </div>
+                    )}
+                    <div className="flex-1">{renderOption(option)}</div>
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           </CommandList>
         </Command>
