@@ -18,18 +18,22 @@ const EditorHeader = () => {
 
   return (
     <div className="flex items-center px-4">
-      <Image
-        src="/logo.png"
-        alt="VizEngineLogo"
-        className="mr-2"
-        priority
-        width={25}
-        height={25}
-        style={{
-          width: 'auto',
-          height: 'auto',
-        }}
-      />
+      <div className="relative mr-2">
+        <Image
+          src="/logo.png"
+          alt="VizEngineLogo"
+          priority
+          width={25}
+          height={25}
+          style={{
+            width: 'auto',
+            height: 'auto',
+          }}
+        />
+        <div className="fixed left-[-10px] top-1 -rotate-[30deg] rounded-[2px] bg-gradient-to-t from-violet-300 to-purple-50 px-5 py-0.5 text-[6px] font-bold uppercase tracking-wide text-black shadow-md">
+          Alpha
+        </div>
+      </div>
       <div className="grow">
         <EditorToolbar />
       </div>
