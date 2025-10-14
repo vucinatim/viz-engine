@@ -135,3 +135,32 @@ export async function loadProjectFromUrl(url: string) {
     alert('Failed to load sample project. See console for details.');
   }
 }
+
+export function resetProject() {
+  // Reset all stores to their initial states
+  useLayerStore.setState({
+    layers: [],
+  });
+
+  useLayerValuesStore.setState({
+    values: {},
+  });
+
+  useNodeNetworkStore.setState({
+    networks: {},
+    openNetwork: null,
+    areNetworksMinimized: false,
+  });
+
+  useEditorStore.setState({
+    isPlaying: false,
+    playerRef: { current: null },
+    playerFPS: 60,
+    ambientMode: false,
+    dominantColor: '#fff',
+    resolutionMultiplier: 1,
+  });
+
+  // Force reload to ensure clean state
+  window.location.reload();
+}

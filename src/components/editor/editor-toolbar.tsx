@@ -10,6 +10,7 @@ import {
 import {
   loadProject,
   loadProjectFromUrl,
+  resetProject,
   saveProject,
 } from '@/lib/project-persistence';
 import { useEffect, useRef, useState } from 'react';
@@ -65,12 +66,23 @@ const EditorToolbar = () => {
     loadProjectFromUrl(url);
   };
 
+  const handleResetProject = () => {
+    const confirmed = confirm(
+      'Are you sure you want to reset the project? All unsaved changes will be lost.',
+    );
+    if (confirmed) {
+      resetProject();
+    }
+  };
+
   return (
     <>
       <Menubar>
         <MenubarMenu>
           <MenubarTrigger>File</MenubarTrigger>
           <MenubarContent>
+            <MenubarItem onClick={handleResetProject}>Init</MenubarItem>
+            <MenubarSeparator />
             <MenubarItem onClick={handleSaveProject}>
               Save As... <MenubarShortcut>⇧⌘S</MenubarShortcut>
             </MenubarItem>

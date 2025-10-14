@@ -1139,9 +1139,11 @@ const EnvelopeFollowerNode = createNode({
     const r = 1 - Math.exp(-dt / (rMs / 1000));
     const alpha = v > prevEnv ? a : r;
     const env = prevEnv + alpha * (v - prevEnv);
-    state.prevEnv = env;
+    // Only clamp negative values to 0, preserve the original range (0-255 or 0-1)
+    const clampedEnv = Math.max(0, env);
+    state.prevEnv = clampedEnv;
     state.prevTime = t;
-    return { env };
+    return { env: clampedEnv };
   },
 });
 
