@@ -39,6 +39,7 @@ VizEngine is an open-source, browser-based visual programming environment for cr
 - **Hot Reload Ready**: Auto-discovery of new components during development
 
 ### 🎬 **Production Ready**
+- **Video Export**: Frame-by-frame rendering to MP4/WebM (720p-4K) with client-side encoding
 - **Project Persistence**: Automatic saving to IndexedDB with JSON import/export
 - **60 FPS Performance**: Optimized rendering pipeline with memoized computation
 - **Frame-Accurate Timing**: Stable 60 FPS clock powered by Remotion

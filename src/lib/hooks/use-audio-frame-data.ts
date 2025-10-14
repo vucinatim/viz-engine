@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import useEditorStore from '../stores/editor-store';
+import useExportStore from '../stores/export-store';
 
 interface UseAudioFrameDataProps {
   isFrozen: boolean;
@@ -53,6 +54,21 @@ const useAudioFrameData = ({
   }, [analyzer, wavesurfer]);
 
   const getAudioFrameData = useCallback(() => {
+    // CRITICAL: Check if we're exporting and have offline audio data
+    const exportStore = useExportStore.getState();
+    const offlineAudioData = exportStore.currentOfflineAudioData;
+
+    // If we're exporting and have offline data, use it instead of the analyzer
+    if (exportStore.isExporting && offlineAudioData) {
+      return {
+        frequencyData: offlineAudioData.frequencyData,
+        timeDomainData: offlineAudioData.timeDomainData,
+        sampleRate: offlineAudioData.sampleRate,
+        fftSize: offlineAudioData.fftSize,
+      };
+    }
+
+    // Normal playback mode - use the analyzer
     if (!analyzer) {
       return {
         frequencyData: new Uint8Array(),
