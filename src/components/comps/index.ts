@@ -5,7 +5,6 @@ import FullscreenShader from './fullscreen-shader';
 import HeartbeatMonitor from './heartbeat-monitor';
 import InstancedSupercube from './instanced-supercube';
 import MorphShapes from './morph-shapes';
-import MovingObjects from './moving-objects';
 import NeuralNetwork from './neural-network';
 import NoiseShader from './noise-shader';
 import OrbitingCubes from './orbiting-cubes';
@@ -17,7 +16,6 @@ import StrobeLight from './strobe-light';
 export const AllComps = [
   CurveSpectrum,
   DebugAnimation,
-  MovingObjects,
   SimpleCube,
   HeartbeatMonitor,
   InstancedSupercube,

@@ -8,7 +8,7 @@ import { Button } from '../ui/button';
 import SearchSelect from '../ui/search-select';
 import TickerText from '../ui/ticker-text';
 
-const DEFAULT_AUDIO_FILE = '[Rock] Electronic Rock.mp3';
+const DEFAULT_AUDIO_FILE = 'Outsiders (feat. Charlotte Haining).mp3';
 
 export const DROPZONE_ACCEPTED_TYPES = {
   'audio/*': ['.mp3', '.wav', '.ogg'],
