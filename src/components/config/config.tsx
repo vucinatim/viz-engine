@@ -7,6 +7,7 @@ import { Button } from '../ui/button';
 import { ColorPickerPopover } from '../ui/color-picker';
 import FileInput from '../ui/file-input';
 import { Input } from '../ui/input';
+import { ListEditor } from '../ui/list-editor';
 import { SimpleSelect } from '../ui/select'; // Assuming you have a Select component
 import { Slider } from '../ui/slider'; // Assuming this is your custom slider component
 import { Switch } from '../ui/switch';
@@ -41,6 +42,8 @@ export abstract class BaseConfigOption<T> {
   abstract toFormElement(
     value: T | null,
     onChange: (value: T) => void,
+    onDragStart?: () => void,
+    onDragEnd?: () => void,
   ): ReactNode;
 }
 
@@ -155,7 +158,12 @@ export class NumberConfigOption extends ConfigParam<number> {
     return value >= this.options.min && value <= this.options.max;
   }
 
-  toFormElement(value: number, onChange: (value: number) => void) {
+  toFormElement(
+    value: number,
+    onChange: (value: number) => void,
+    onDragStart?: () => void,
+    onDragEnd?: () => void,
+  ) {
     return (
       <Slider
         value={value}
@@ -164,6 +172,8 @@ export class NumberConfigOption extends ConfigParam<number> {
           this.value = val;
           onChange(val);
         }}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
         min={this.options.min}
         max={this.options.max}
         step={this.options.step}
@@ -430,6 +440,66 @@ export class ButtonConfigOption extends BaseConfigOption<null> {
   }
 }
 
+// List Config Option - Generic wrapper for any config type
+type ListConfigOptions<T> = ConfigMeta & {
+  defaultValue: T[];
+  itemConfig: ConfigParam<T>;
+  itemLabel?: string;
+};
+
+export class ListConfigOption<T> extends ConfigParam<T[]> {
+  options: ListConfigOptions<T>;
+  itemConfig: ConfigParam<T>;
+
+  constructor(options: ListConfigOptions<T>) {
+    super(options, VType.List, false); // Lists are not animatable by default
+    this.options = options;
+    this.itemConfig = options.itemConfig;
+  }
+
+  clone() {
+    return new ListConfigOption({
+      ...this.options,
+      defaultValue: [...this.options.defaultValue],
+      itemConfig: this.itemConfig.clone() as ConfigParam<T>,
+    });
+  }
+
+  validate(value: T[]): boolean {
+    if (!Array.isArray(value)) return false;
+    // Validate each item using the item config's validation if available
+    return value.every((item) => {
+      if (
+        'validate' in this.itemConfig &&
+        typeof this.itemConfig.validate === 'function'
+      ) {
+        return this.itemConfig.validate(item);
+      }
+      return true;
+    });
+  }
+
+  toFormElement(value: T[], onChange: (value: T[]) => void) {
+    // Ensure value is always an array
+    const safeValue = value ?? this.options.defaultValue ?? [];
+
+    return (
+      <ListEditor<T>
+        value={safeValue}
+        onChange={(newValue) => {
+          this.value = newValue;
+          onChange(newValue);
+        }}
+        renderItem={(item, index, onItemChange) =>
+          this.itemConfig.toFormElement(item, onItemChange)
+        }
+        createDefaultItem={() => this.itemConfig.getDefaultValue()}
+        itemLabel={this.options.itemLabel || this.itemConfig.label}
+      />
+    );
+  }
+}
+
 // Group Config Option
 export class GroupConfigOption<
   T extends Record<string, BaseConfigOption<any>>,
@@ -629,10 +699,16 @@ export const v = {
   file: (options: FileConfigOptions) => new FileConfigOption(options),
   vector3: (options: Vector3ConfigOptions) => new Vector3ConfigOption(options),
   button: (options: ButtonConfigOptions) => new ButtonConfigOption(options),
-  group: <T extends Record<string, BaseConfigOption<any>>>(
+  list<T = any>(options: ListConfigOptions<T>) {
+    return new ListConfigOption<T>(options);
+  },
+  group<T extends Record<string, BaseConfigOption<any>>>(
     meta: ConfigMeta,
     options: T,
-  ) => new GroupConfigOption(meta, options),
-  config: <T extends Record<string, BaseConfigOption<any>>>(options: T) =>
-    new VConfig(options),
+  ) {
+    return new GroupConfigOption(meta, options);
+  },
+  config<T extends Record<string, BaseConfigOption<any>>>(options: T) {
+    return new VConfig(options);
+  },
 };

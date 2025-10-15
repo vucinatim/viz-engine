@@ -1,3 +1,4 @@
+import { useEditorHistoryStore } from '@/lib/stores/editor-history-store';
 import useLayerValuesStore from '@/lib/stores/layer-values-store';
 import { cn } from '@/lib/utils';
 import { AudioLines, Info, Target } from 'lucide-react';
@@ -33,6 +34,25 @@ const DynamicForm = ({ layerId, config, defaultValues }: DynamicFormProps) => {
     values: defaultValues,
   });
 
+  // Subscribe to network changes to make animated params detection reactive
+  const networks = useNodeNetworkStore((state) => state.networks);
+
+  // Helper function to get animated parameters in a group
+  const getAnimatedParamsInGroup = (groupOption: GroupConfigOption<any>) => {
+    const animatedParams: string[] = [];
+
+    Object.entries(groupOption.options).forEach(([innerKey, innerOption]) => {
+      if (innerOption instanceof ConfigParam && innerOption.isAnimatable) {
+        const isAnimated = networks[innerOption.id]?.isEnabled;
+        if (isAnimated) {
+          animatedParams.push(innerOption.label);
+        }
+      }
+    });
+
+    return animatedParams;
+  };
+
   return (
     <Form {...form}>
       <div className="flex flex-col">
@@ -46,7 +66,8 @@ const DynamicForm = ({ layerId, config, defaultValues }: DynamicFormProps) => {
               {option instanceof GroupConfigOption ? (
                 <CollapsibleGroup
                   label={option.label}
-                  description={option.description}>
+                  description={option.description}
+                  animatedParams={getAnimatedParamsInGroup(option)}>
                   <div className="flex flex-col pb-0 pt-2">
                     {Object.entries(option.options).map(
                       ([innerKey, innerOption]) => {
@@ -150,6 +171,11 @@ const DynamicFormField = ({
     (state) => state.updateLayerValue,
   );
 
+  // Get history bypass control
+  const setBypassHistory = useEditorHistoryStore(
+    (state) => state.setBypassHistory,
+  );
+
   const isHighlighted = openNetwork === option.id;
 
   // Live animated value is rendered in a separate component to avoid
@@ -186,10 +212,21 @@ const DynamicFormField = ({
                   isAnimated && 'pointer-events-none opacity-50',
                 )}>
                 <FormControl>
-                  {option.toFormElement(field.value, (newValue) => {
-                    field.onChange(newValue);
-                    updateLayerValue(layerId, name.split('.'), newValue);
-                  })}
+                  {option.toFormElement(
+                    field.value,
+                    (newValue) => {
+                      field.onChange(newValue);
+                      updateLayerValue(layerId, name.split('.'), newValue);
+                    },
+                    () => {
+                      // On drag start - bypass history
+                      setBypassHistory(true);
+                    },
+                    () => {
+                      // On drag end - re-enable history
+                      setBypassHistory(false);
+                    },
+                  )}
                 </FormControl>
               </div>
               {option.isAnimatable && (

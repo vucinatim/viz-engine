@@ -82,7 +82,13 @@ export async function fastCaptureFrame(
     }
 
     // Draw the canvas content on top of the background
-    ctx.drawImage(canvas, 0, 0, width, height);
+    // Maintain aspect ratio - scale to fit within bounds and center
+    const scale = Math.min(width / canvas.width, height / canvas.height);
+    const scaledWidth = canvas.width * scale;
+    const scaledHeight = canvas.height * scale;
+    const x = (width - scaledWidth) / 2;
+    const y = (height - scaledHeight) / 2;
+    ctx.drawImage(canvas, x, y, scaledWidth, scaledHeight);
 
     // Restore context state
     ctx.restore();

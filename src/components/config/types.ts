@@ -11,4 +11,5 @@ export enum VType {
   File = 'file',
   Vector3 = 'vector3',
   Button = 'button',
+  List = 'list',
 }

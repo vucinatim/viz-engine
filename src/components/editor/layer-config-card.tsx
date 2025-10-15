@@ -1,4 +1,5 @@
 import { getParameterIdsFromConfig } from '@/lib/comp-utils/config-utils';
+import { useEditorHistoryStore } from '@/lib/stores/editor-history-store';
 import useLayerStore, { LayerData } from '@/lib/stores/layer-store';
 import useLayerValuesStore from '@/lib/stores/layer-values-store';
 import { cn } from '@/lib/utils';
@@ -77,6 +78,12 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
   const hasInitialized = useRef(false);
   const [initialValues, setInitialValues] = useState<any | null>(null);
 
+  // Subscribe to store values and bypass history flag
+  const storeValues = useLayerValuesStore((state) => state.values[layer.id]);
+  const isBypassingHistory = useEditorHistoryStore(
+    (state) => state.isBypassingHistory,
+  );
+
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: layer.id });
 
@@ -91,6 +98,25 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layer.id]);
 
+  // Sync form values when store changes (from undo/redo), but NOT during slider drag
+  // We check if we're NOT bypassing history, which means the change came from
+  // undo/redo or other external source, not from user interaction with sliders
+  useEffect(() => {
+    if (!hasInitialized.current) return;
+    if (isBypassingHistory) return; // Don't update during slider drag
+
+    // Only update if values actually changed to avoid unnecessary form resets
+    if (
+      storeValues &&
+      JSON.stringify(storeValues) !== JSON.stringify(initialValues)
+    ) {
+      setInitialValues({ ...storeValues }); // Create new object reference to trigger form update
+      layer.config.setValues(storeValues);
+      // Clear preset selection when values change from external source (undo/redo)
+      setSelectedPreset(null);
+    }
+  }, [storeValues, isBypassingHistory, layer.config, initialValues]);
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -100,7 +126,6 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
     <Collapsible
       open={layer.isExpanded}
       onOpenChange={(open) => {
-        console.log('Setting layer expanded', layer.id, open);
         setIsLayerExpanded(layer.id, open);
       }}
       className="w-full">
@@ -168,7 +193,6 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                       layer.comp.defaultValues;
                     const json = JSON.stringify(currentValues, null, 2);
                     navigator.clipboard.writeText(json);
-                    console.log('Copied layer settings to clipboard:', json);
                     toast.success('Layer settings copied to clipboard!');
                   }}>
                   <Copy className="h-6 w-6" />
@@ -235,11 +259,6 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                         preset.networks ? Object.keys(preset.networks) : [],
                       );
 
-                      console.log(
-                        '[Preset] Clearing networks not in preset. Preset networks:',
-                        presetNetworkPaths,
-                      );
-
                       // Disable/remove networks that aren't in the preset
                       allParameterIds.forEach((parameterId) => {
                         // Extract the parameter path from the ID (format: "layerId:paramPath")
@@ -253,9 +272,6 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                           const existingNetwork =
                             networkStore.networks[parameterId];
                           if (existingNetwork) {
-                            console.log(
-                              `[Preset] Disabling network for '${paramPath}' (not in preset)`,
-                            );
                             networkStore.setNetwork(parameterId, {
                               ...existingNetwork,
                               isEnabled: false,
@@ -266,10 +282,6 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
 
                       // Apply network presets if defined
                       if (preset.networks) {
-                        console.log(
-                          '[Preset] Networks to apply:',
-                          preset.networks,
-                        );
                         const applyPresetToNetwork =
                           networkStore.applyPresetToNetwork;
 
@@ -280,10 +292,6 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                               layer.config,
                               paramPath,
                             );
-                            console.log(
-                              `[Preset] Param '${paramPath}' type:`,
-                              paramType,
-                            );
 
                             if (paramType) {
                               // Use colon separator to match parameter ID format
@@ -292,31 +300,10 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                               const nodeHandleType =
                                 safeVTypeToNodeHandleType(paramType);
 
-                              console.log(
-                                `[Preset] Applying network '${presetId}' to '${parameterId}' with type '${nodeHandleType}'`,
-                              );
-
                               applyPresetToNetwork(
                                 parameterId,
                                 presetId as string,
                                 nodeHandleType,
-                              );
-
-                              // Verify it was applied
-                              const network =
-                                networkStore.networks[parameterId];
-                              console.log(
-                                `[Preset] Network status for '${parameterId}':`,
-                                network
-                                  ? {
-                                      isEnabled: network.isEnabled,
-                                      nodeCount: network.nodes.length,
-                                    }
-                                  : 'NOT FOUND',
-                              );
-                            } else {
-                              console.warn(
-                                `[Preset] Could not find parameter type for '${paramPath}'`,
                               );
                             }
                           },
