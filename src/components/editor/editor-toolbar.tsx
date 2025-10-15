@@ -1,3 +1,14 @@
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Menubar,
   MenubarContent,
@@ -15,7 +26,13 @@ import {
   resetProject,
   saveProject,
 } from '@/lib/project-persistence';
+import {
+  SHORTCUTS,
+  formatShortcut,
+  toShortcutDefinition,
+} from '@/lib/utils/keyboard-shortcuts';
 import { useEffect, useRef, useState } from 'react';
+import ExportImageDialog from './export-image-dialog';
 
 interface SampleProject {
   name: string;
@@ -27,32 +44,47 @@ const EditorToolbar = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [sampleProjects, setSampleProjects] = useState<SampleProject[]>([]);
   const [isLoadingSamples, setIsLoadingSamples] = useState(false);
+  const [isExportImageDialogOpen, setIsExportImageDialogOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [projectName, setProjectName] = useState('my-viz-project');
 
   // Use editor history for undo/redo
   const { undo, redo, canUndo, canRedo } = useEditorHistory();
 
-  // Add keyboard shortcuts for undo/redo
+  // Track fullscreen state changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  // Toggle fullscreen handler
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      console.error('Error toggling fullscreen:', error);
+    }
+  };
+
+  // Add keyboard shortcuts for undo/redo and fullscreen
   useKeyboardShortcuts({
     shortcuts: [
-      {
-        key: 'z',
-        ctrl: true,
-        callback: undo,
-        enabled: canUndo,
-      },
-      {
-        key: 'z',
-        ctrl: true,
-        shift: true,
-        callback: redo,
-        enabled: canRedo,
-      },
-      {
-        key: 'y',
-        ctrl: true,
-        callback: redo,
-        enabled: canRedo,
-      },
+      toShortcutDefinition(SHORTCUTS.undo, undo, canUndo),
+      toShortcutDefinition(SHORTCUTS.redo, redo, canRedo),
+      toShortcutDefinition(SHORTCUTS.redoAlt, redo, canRedo),
+      toShortcutDefinition(SHORTCUTS.fullscreen, toggleFullscreen, true),
     ],
   });
 
@@ -75,9 +107,13 @@ const EditorToolbar = () => {
   }, []);
 
   const handleSaveProject = () => {
-    const projectName = prompt('Enter project name:', 'my-viz-project');
-    if (projectName) {
-      saveProject(projectName);
+    setIsSaveDialogOpen(true);
+  };
+
+  const handleConfirmSave = () => {
+    if (projectName.trim()) {
+      saveProject(projectName.trim());
+      setIsSaveDialogOpen(false);
     }
   };
 
@@ -97,12 +133,12 @@ const EditorToolbar = () => {
   };
 
   const handleResetProject = () => {
-    const confirmed = confirm(
-      'Are you sure you want to reset the project? All unsaved changes will be lost.',
-    );
-    if (confirmed) {
-      resetProject();
-    }
+    setIsResetDialogOpen(true);
+  };
+
+  const handleConfirmReset = () => {
+    resetProject();
+    setIsResetDialogOpen(false);
   };
 
   return (
@@ -114,12 +150,15 @@ const EditorToolbar = () => {
             <MenubarItem onClick={handleResetProject}>Init</MenubarItem>
             <MenubarSeparator />
             <MenubarItem onClick={handleSaveProject}>
-              Save As... <MenubarShortcut>⇧⌘S</MenubarShortcut>
+              Save As...{' '}
+              <MenubarShortcut>
+                {formatShortcut(SHORTCUTS.saveAs)}
+              </MenubarShortcut>
             </MenubarItem>
             <MenubarItem onClick={handleLoadProject}>Open...</MenubarItem>
             <MenubarSeparator />
-            <MenubarItem>
-              Print... <MenubarShortcut>⌘P</MenubarShortcut>
+            <MenubarItem onClick={() => setIsExportImageDialogOpen(true)}>
+              Export Image...
             </MenubarItem>
           </MenubarContent>
         </MenubarMenu>
@@ -128,10 +167,16 @@ const EditorToolbar = () => {
           <MenubarTrigger>Edit</MenubarTrigger>
           <MenubarContent>
             <MenubarItem onClick={undo} disabled={!canUndo}>
-              Undo <MenubarShortcut>⌘Z</MenubarShortcut>
+              Undo{' '}
+              <MenubarShortcut>
+                {formatShortcut(SHORTCUTS.undo)}
+              </MenubarShortcut>
             </MenubarItem>
             <MenubarItem onClick={redo} disabled={!canRedo}>
-              Redo <MenubarShortcut>⇧⌘Z</MenubarShortcut>
+              Redo{' '}
+              <MenubarShortcut>
+                {formatShortcut(SHORTCUTS.redo)}
+              </MenubarShortcut>
             </MenubarItem>
             <MenubarSeparator />
             <MenubarItem disabled>Cut</MenubarItem>
@@ -142,7 +187,12 @@ const EditorToolbar = () => {
         <MenubarMenu>
           <MenubarTrigger>View</MenubarTrigger>
           <MenubarContent>
-            <MenubarItem inset>Toggle Fullscreen</MenubarItem>
+            <MenubarItem onClick={toggleFullscreen}>
+              {isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}{' '}
+              <MenubarShortcut>
+                {formatShortcut(SHORTCUTS.fullscreen)}
+              </MenubarShortcut>
+            </MenubarItem>
           </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>
@@ -177,6 +227,71 @@ const EditorToolbar = () => {
         style={{ display: 'none' }}
         accept=".vizengine.json"
       />
+      <ExportImageDialog
+        open={isExportImageDialogOpen}
+        onOpenChange={setIsExportImageDialogOpen}
+      />
+
+      {/* Save Project Dialog */}
+      <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save Project</DialogTitle>
+            <DialogDescription>
+              Enter a name for your project. This will download a
+              .vizengine.json file.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="project-name">Project Name</Label>
+            <Input
+              id="project-name"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleConfirmSave();
+                }
+              }}
+              placeholder="my-viz-project"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsSaveDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmSave} disabled={!projectName.trim()}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Project Dialog */}
+      <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Project</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to reset the project? All unsaved changes
+              will be lost.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsResetDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmReset}>
+              Reset
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
