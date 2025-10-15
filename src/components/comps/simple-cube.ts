@@ -9,7 +9,7 @@ const SimpleCube = createComponent({
     color: v.color({
       label: 'Cube Color',
       description: 'Color of the cube',
-      defaultValue: '#FF6347',
+      defaultValue: '#FF00FF',
     }),
     size: v.number({
       label: 'Cube Size',
@@ -19,11 +19,23 @@ const SimpleCube = createComponent({
       max: 5,
       step: 0.1,
     }),
+    rotationSpeedX: v.number({
+      label: 'Rotation Speed X',
+      description: 'Rotation speed around X axis',
+      defaultValue: 1.0,
+      min: -10,
+      max: 10,
+      step: 0.1,
+    }),
+    rotationSpeedY: v.number({
+      label: 'Rotation Speed Y',
+      description: 'Rotation speed around Y axis',
+      defaultValue: 1.0,
+      min: -10,
+      max: 10,
+      step: 0.1,
+    }),
   }),
-  defaultNetworks: {
-    // Animate size with bass presence
-    size: 'bass-adaptive',
-  },
   init3D: ({ threeCtx: { scene, camera, renderer } }) => {
     camera.position.set(0, 1, 5); // Position the camera
     camera.lookAt(new THREE.Vector3(0, 0, 0)); // Make the camera look at the origin
@@ -31,7 +43,7 @@ const SimpleCube = createComponent({
 
     // Initialize cube
     const geometry = new THREE.BoxGeometry(1, 1, 1); // Size will be adjusted dynamically
-    const material = new THREE.MeshPhongMaterial({ color: '#FF6347' });
+    const material = new THREE.MeshPhongMaterial({ color: '#FF00FF' });
     const cube = new THREE.Mesh(geometry, material);
     cube.position.set(0, 0, 0); // Explicitly position the cube at the origin
     scene.userData.cube = cube;
@@ -58,8 +70,8 @@ const SimpleCube = createComponent({
     cube.scale.set(config.size, config.size, config.size);
 
     cube.material.color.set(config.color);
-    cube.rotation.x += 1 * dt;
-    cube.rotation.y += 1 * dt;
+    cube.rotation.x += config.rotationSpeedX * dt;
+    cube.rotation.y += config.rotationSpeedY * dt;
 
     renderer.render(scene, camera);
   },

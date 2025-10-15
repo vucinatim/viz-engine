@@ -111,15 +111,6 @@ const useAudioFrameData = ({
       analyzer.getByteTimeDomainData(timeDomainDataRef.current as any);
       lastTimeDomainDataRef.current.set(timeDomainDataRef.current);
 
-      // Debug log for live audio data
-      console.log('[AudioFrameData] Live audio data updated', {
-        frequencyDataLength: frequencyDataRef.current.length,
-        timeDomainDataLength: timeDomainDataRef.current.length,
-        sampleRate: analyzer.context.sampleRate,
-        fftSize: analyzer.fftSize,
-        isPlaying,
-      });
-
       // Throttled debug log
       const now =
         typeof performance !== 'undefined' ? performance.now() : Date.now();

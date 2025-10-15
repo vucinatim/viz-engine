@@ -213,8 +213,8 @@ const voronoiFlow = `
   }
 `;
 
-// Shader 3: Neon Grid - Cyberpunk-style tech substrate
-const neonGrid = `
+// Shader 3: Cyber Grid - Cyberpunk-style tech substrate
+const cyberGrid = `
   uniform float uTime;
   uniform vec3 uColor;
   uniform vec2 uResolution;
@@ -418,7 +418,7 @@ const neonGrid = `
 const shaders: Record<string, string> = {
   'Radial Ripple Grid': radialRippleGrid,
   'Voronoi Flow': voronoiFlow,
-  'Neon Grid': neonGrid,
+  'Cyber Grid': cyberGrid,
 };
 
 type ShaderState = {

@@ -34,6 +34,25 @@ const DynamicForm = ({ layerId, config, defaultValues }: DynamicFormProps) => {
     values: defaultValues,
   });
 
+  // Subscribe to network changes to make animated params detection reactive
+  const networks = useNodeNetworkStore((state) => state.networks);
+
+  // Helper function to get animated parameters in a group
+  const getAnimatedParamsInGroup = (groupOption: GroupConfigOption<any>) => {
+    const animatedParams: string[] = [];
+
+    Object.entries(groupOption.options).forEach(([innerKey, innerOption]) => {
+      if (innerOption instanceof ConfigParam && innerOption.isAnimatable) {
+        const isAnimated = networks[innerOption.id]?.isEnabled;
+        if (isAnimated) {
+          animatedParams.push(innerOption.label);
+        }
+      }
+    });
+
+    return animatedParams;
+  };
+
   return (
     <Form {...form}>
       <div className="flex flex-col">
@@ -47,7 +66,8 @@ const DynamicForm = ({ layerId, config, defaultValues }: DynamicFormProps) => {
               {option instanceof GroupConfigOption ? (
                 <CollapsibleGroup
                   label={option.label}
-                  description={option.description}>
+                  description={option.description}
+                  animatedParams={getAnimatedParamsInGroup(option)}>
                   <div className="flex flex-col pb-0 pt-2">
                     {Object.entries(option.options).map(
                       ([innerKey, innerOption]) => {

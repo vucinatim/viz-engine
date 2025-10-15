@@ -4,6 +4,7 @@ import FeatureExtractionBars from './feature-extraction-bars';
 import FullscreenShader from './fullscreen-shader';
 import HeartbeatMonitor from './heartbeat-monitor';
 import InstancedSupercube from './instanced-supercube';
+import LightTunnel from './light-tunnel';
 import MorphShapes from './morph-shapes';
 import NeuralNetwork from './neural-network';
 import NoiseShader from './noise-shader';
@@ -19,6 +20,7 @@ export const AllComps = [
   SimpleCube,
   HeartbeatMonitor,
   InstancedSupercube,
+  LightTunnel,
   MorphShapes,
   FeatureExtractionBars,
   NeuralNetwork,

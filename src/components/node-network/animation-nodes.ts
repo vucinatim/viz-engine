@@ -1,3 +1,4 @@
+import Color from 'color';
 import { AnimNode, createNode } from '../config/create-node';
 import { MathOperation } from '../config/math-operations';
 import { FrequencyAnalysis, NodeHandleType } from '../config/node-types';
@@ -5,11 +6,13 @@ import AdaptiveNormalizeQuantileBody from './bodies/adaptive-normalize-quantile-
 import EnvelopeFollowerBody from './bodies/envelope-follower-body';
 import frequencyBandBody from './bodies/frequency-band-body';
 import HarmonicPresenceBody from './bodies/harmonic-presence-body';
+import HSLColorBody from './bodies/hsl-color-body';
 import HysteresisGateBody from './bodies/hysteresis-gate-body';
 import MultiBandAnalysisBody from './bodies/multi-band-analysis-body';
 import NormalizeBody from './bodies/normalize-body';
 import PitchDetectionBody from './bodies/pitch-detection-body';
 import RateLimiterBody from './bodies/rate-limiter-body';
+import RGBColorBody from './bodies/rgb-color-body';
 import SectionChangeDetectorBody from './bodies/section-change-detector-body';
 import SpectralCentroidBody from './bodies/spectral-centroid-body';
 import ThresholdCounterBody from './bodies/threshold-counter-body';
@@ -1728,6 +1731,55 @@ const RateLimiterNode = createNode({
   },
 });
 
+// --- RGB Color Node ---
+const RGBColorNode = createNode({
+  label: 'RGB Color',
+  description:
+    'Construct a color from Red, Green, and Blue components (0-255). Drive individual channels with audio!',
+  customBody: RGBColorBody,
+  inputs: [
+    { id: 'r', label: 'Red (0-255)', type: 'number', defaultValue: 255 },
+    { id: 'g', label: 'Green (0-255)', type: 'number', defaultValue: 0 },
+    { id: 'b', label: 'Blue (0-255)', type: 'number', defaultValue: 255 },
+  ],
+  outputs: [{ id: 'color', label: 'Color', type: 'color' }],
+  computeSignal: ({ r, g, b }) => {
+    // Clamp values to 0-255 range
+    const red = Math.max(0, Math.min(255, Math.round(r)));
+    const green = Math.max(0, Math.min(255, Math.round(g)));
+    const blue = Math.max(0, Math.min(255, Math.round(b)));
+
+    // Convert to hex color string
+    const color = Color.rgb(red, green, blue).hex();
+    return { color };
+  },
+});
+
+// --- HSL Color Node ---
+const HSLColorNode = createNode({
+  label: 'HSL Color',
+  description:
+    'Construct a color from Hue (0-360), Saturation (0-100), and Lightness (0-100). Perfect for animating hue shifts!',
+  customBody: HSLColorBody,
+  inputs: [
+    { id: 'h', label: 'Hue (0-360)', type: 'number', defaultValue: 300 },
+    { id: 's', label: 'Saturation (0-100)', type: 'number', defaultValue: 100 },
+    { id: 'l', label: 'Lightness (0-100)', type: 'number', defaultValue: 50 },
+  ],
+  outputs: [{ id: 'color', label: 'Color', type: 'color' }],
+  computeSignal: ({ h, s, l }) => {
+    // Normalize hue to 0-360 range (wrap around)
+    const hue = ((h % 360) + 360) % 360;
+    // Clamp saturation and lightness to 0-100 range
+    const saturation = Math.max(0, Math.min(100, s));
+    const lightness = Math.max(0, Math.min(100, l));
+
+    // Convert to hex color string
+    const color = Color.hsl(hue, saturation, lightness).hex();
+    return { color };
+  },
+});
+
 export const nodes: AnimNode[] = [
   SineNode,
   MathNode,
@@ -1751,6 +1803,8 @@ export const nodes: AnimNode[] = [
   SpectralFluxNode,
   DuckerNode,
   HarmonicPresenceNode,
+  RGBColorNode,
+  HSLColorNode,
 ];
 
 export const NodeDefinitionMap = new Map<string, AnimNode>();

@@ -1,0 +1,817 @@
+{
+  "version": "1.0.0",
+  "layerStore": {
+    "layers": [
+      {
+        "id": "layer-Noise Shader-1760552438958",
+        "comp": {
+          "name": "Noise Shader"
+        },
+        "isExpanded": false,
+        "isDebugEnabled": false,
+        "layerSettings": {
+          "visible": true,
+          "background": "rgba(10, 10, 10, 1)",
+          "opacity": 1,
+          "blendingMode": "normal",
+          "freeze": true,
+          "showDebug": false
+        }
+      },
+      {
+        "id": "layer-Simple Cube-1760551531201",
+        "comp": {
+          "name": "Simple Cube"
+        },
+        "isExpanded": false,
+        "isDebugEnabled": false,
+        "layerSettings": {
+          "visible": true,
+          "background": "rgb(0, 0, 0)",
+          "opacity": 1,
+          "blendingMode": "multiply",
+          "freeze": true,
+          "showDebug": false
+        }
+      },
+      {
+        "id": "layer-Fullscreen Shader-1760552636719",
+        "comp": {
+          "name": "Fullscreen Shader"
+        },
+        "isExpanded": false,
+        "isDebugEnabled": false,
+        "layerSettings": {
+          "visible": true,
+          "background": "rgba(10, 10, 10, 1)",
+          "opacity": 1,
+          "blendingMode": "screen",
+          "freeze": true,
+          "showDebug": false
+        }
+      }
+    ]
+  },
+  "layerValuesStore": {
+    "values": {
+      "layer-Simple Cube-1760551531201": {
+        "color": "#FF00FF",
+        "size": 2.7,
+        "rotationSpeedX": 0.5,
+        "rotationSpeedY": 0.56
+      },
+      "layer-Noise Shader-1760552438958": {
+        "noise": {
+          "type": "simplex",
+          "scale": 7.2,
+          "octaves": 2,
+          "lacunarity": 3,
+          "gain": 0.3
+        },
+        "animation": {
+          "speed": 2.8,
+          "flowX": 0.02,
+          "flowY": 0.02,
+          "rotationSpeed": 0
+        },
+        "distortion": {
+          "enabled": true,
+          "amount": 3.5,
+          "scale": 1
+        },
+        "color": {
+          "mode": "monochrome",
+          "color1": "#ffffff",
+          "color2": "#ffffff",
+          "color3": "#ffffff",
+          "hueShift": 1,
+          "saturation": 0
+        },
+        "output": {
+          "brightness": 1.99,
+          "contrast": 3,
+          "invert": true,
+          "posterize": 1
+        }
+      },
+      "layer-Fullscreen Shader-1760552636719": {
+        "shader": "Radial Ripple Grid",
+        "color": "#00ffff",
+        "speed": 1,
+        "scale": 0.5,
+        "intensity": 0.8,
+        "offsetX": 0,
+        "offsetY": 0,
+        "seed": 0,
+        "scanIntensity": 0.7,
+        "waveIntensity": 0.6
+      }
+    }
+  },
+  "nodeNetworkStore": {
+    "networks": {
+      "layer-Simple Cube-1760551531201:color": {
+        "name": "layer-Simple Cube-1760551531201:color",
+        "isEnabled": true,
+        "isMinimized": false,
+        "nodes": [
+          {
+            "id": "layer-Simple Cube-1760551531201:color-input-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": -849.7420269530635,
+              "y": -4.783648023702398
+            },
+            "data": {
+              "definition": "Input",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 152,
+              "height": 154
+            },
+            "selected": true,
+            "dragging": false
+          },
+          {
+            "id": "layer-Simple Cube-1760551531201:color-output-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 867.8790346180135,
+              "y": 8.40912460699343
+            },
+            "data": {
+              "definition": {
+                "label": "Output",
+                "type": "color"
+              },
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 183,
+              "height": 74
+            },
+            "selected": true,
+            "dragging": false
+          },
+          {
+            "id": "layer-Simple Cube-1760551531201:color-node-1760551929662",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 552.6938932501864,
+              "y": -16.987506884648127
+            },
+            "data": {
+              "definition": "HSL Color",
+              "inputValues": {
+                "h": 300,
+                "s": 100,
+                "l": 50
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 248,
+              "height": 228
+            },
+            "selected": true,
+            "dragging": false
+          },
+          {
+            "id": "layer-Simple Cube-1760551531201:color-node-1760552015278",
+            "type": "NodeRenderer",
+            "position": {
+              "x": -663.2601871297501,
+              "y": -19.42885612837719
+            },
+            "data": {
+              "definition": "Band Info",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 188,
+              "height": 194
+            },
+            "selected": true,
+            "dragging": false
+          },
+          {
+            "id": "layer-Simple Cube-1760551531201:color-node-1760552061000",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 229.38306589266926,
+              "y": -32.992658778794635
+            },
+            "data": {
+              "definition": "Math",
+              "inputValues": {
+                "a": 1,
+                "b": "360",
+                "operation": "multiply"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 237,
+              "height": 154
+            },
+            "selected": true,
+            "dragging": false
+          },
+          {
+            "id": "layer-Simple Cube-1760551531201:color-node-1760552103881",
+            "type": "NodeRenderer",
+            "position": {
+              "x": -47.61601962252212,
+              "y": -58.723544904954835
+            },
+            "data": {
+              "definition": "Envelope Follower",
+              "inputValues": {
+                "value": 0,
+                "attackMs": 10,
+                "releaseMs": "500"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 240,
+              "height": 234
+            },
+            "selected": true,
+            "dragging": false
+          },
+          {
+            "id": "layer-Simple Cube-1760551531201:color-node-1760552203968",
+            "type": "NodeRenderer",
+            "position": {
+              "x": -370.13713584909897,
+              "y": -63.122330565765736
+            },
+            "data": {
+              "definition": "Normalize",
+              "inputValues": {
+                "value": 0,
+                "inputMin": "120",
+                "inputMax": "140",
+                "outputMin": 0,
+                "outputMax": 1
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 254,
+              "height": 314
+            },
+            "selected": true,
+            "dragging": false
+          }
+        ],
+        "edges": [
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Simple Cube-1760551531201:color-input-node",
+            "sourceHandle": "audioSignal",
+            "target": "layer-Simple Cube-1760551531201:color-node-1760552015278",
+            "targetHandle": "data",
+            "id": "xy-edge__layer-Simple Cube-1760551531201:color-input-nodeaudioSignal-layer-Simple Cube-1760551531201:color-node-1760552015278data",
+            "selected": true
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Simple Cube-1760551531201:color-node-1760551929662",
+            "sourceHandle": "color",
+            "target": "layer-Simple Cube-1760551531201:color-output-node",
+            "targetHandle": "output",
+            "id": "xy-edge__layer-Simple Cube-1760551531201:color-node-1760551929662color-layer-Simple Cube-1760551531201:color-output-nodeoutput",
+            "selected": true
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Simple Cube-1760551531201:color-node-1760552061000",
+            "sourceHandle": "result",
+            "target": "layer-Simple Cube-1760551531201:color-node-1760551929662",
+            "targetHandle": "h",
+            "id": "xy-edge__layer-Simple Cube-1760551531201:color-node-1760552061000result-layer-Simple Cube-1760551531201:color-node-1760551929662h",
+            "selected": true
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Simple Cube-1760551531201:color-node-1760552103881",
+            "sourceHandle": "env",
+            "target": "layer-Simple Cube-1760551531201:color-node-1760552061000",
+            "targetHandle": "a",
+            "id": "xy-edge__layer-Simple Cube-1760551531201:color-node-1760552103881env-layer-Simple Cube-1760551531201:color-node-1760552061000a",
+            "selected": true
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Simple Cube-1760551531201:color-node-1760552015278",
+            "sourceHandle": "average",
+            "target": "layer-Simple Cube-1760551531201:color-node-1760552203968",
+            "targetHandle": "value",
+            "id": "xy-edge__layer-Simple Cube-1760551531201:color-node-1760552015278average-layer-Simple Cube-1760551531201:color-node-1760552203968value",
+            "selected": true
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Simple Cube-1760551531201:color-node-1760552203968",
+            "sourceHandle": "result",
+            "target": "layer-Simple Cube-1760551531201:color-node-1760552103881",
+            "targetHandle": "value",
+            "id": "xy-edge__layer-Simple Cube-1760551531201:color-node-1760552203968result-layer-Simple Cube-1760551531201:color-node-1760552103881value",
+            "selected": true
+          }
+        ]
+      },
+      "layer-Simple Cube-1760551531201:size": {
+        "name": "layer-Simple Cube-1760551531201:size",
+        "isEnabled": true,
+        "isMinimized": false,
+        "nodes": [
+          {
+            "id": "layer-Simple Cube-1760551531201:size-input-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "data": {
+              "definition": "Input",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 152,
+              "height": 154
+            }
+          },
+          {
+            "id": "layer-Simple Cube-1760551531201:size-preset-0-band",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 280,
+              "y": 0
+            },
+            "data": {
+              "definition": "Frequency Band",
+              "inputValues": {
+                "startFrequency": 80,
+                "endFrequency": 150
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 341,
+              "height": 266
+            }
+          },
+          {
+            "id": "layer-Simple Cube-1760551531201:size-preset-1-info",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 560,
+              "y": 0
+            },
+            "data": {
+              "definition": "Band Info",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 188,
+              "height": 194
+            }
+          },
+          {
+            "id": "layer-Simple Cube-1760551531201:size-preset-2-env",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 840,
+              "y": 0
+            },
+            "data": {
+              "definition": "Envelope Follower",
+              "inputValues": {
+                "attackMs": 6,
+                "releaseMs": 120
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 240,
+              "height": 234
+            }
+          },
+          {
+            "id": "layer-Simple Cube-1760551531201:size-preset-3-adapt",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1120,
+              "y": 0
+            },
+            "data": {
+              "definition": "Adaptive Normalize (Quantile)",
+              "inputValues": {
+                "windowMs": 4000,
+                "qLow": 0.5,
+                "qHigh": 0.98,
+                "freezeBelow": 140
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 256,
+              "height": 330
+            }
+          },
+          {
+            "id": "layer-Simple Cube-1760551531201:size-preset-4-gate",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1400,
+              "y": 0
+            },
+            "data": {
+              "definition": "Hysteresis Gate",
+              "inputValues": {
+                "low": 0.33,
+                "high": 0.45
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 234,
+              "height": 232
+            }
+          },
+          {
+            "id": "layer-Simple Cube-1760551531201:size-output-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 2112,
+              "y": -4
+            },
+            "data": {
+              "definition": {
+                "label": "Output",
+                "type": "number"
+              },
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 183,
+              "height": 74
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Simple Cube-1760551531201:size-node-1760552578957",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1775,
+              "y": 23
+            },
+            "data": {
+              "definition": "Math",
+              "inputValues": {
+                "a": 1,
+                "b": "2",
+                "operation": "add"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 237,
+              "height": 154
+            },
+            "selected": false,
+            "dragging": false
+          }
+        ],
+        "edges": [
+          {
+            "id": "layer-Simple Cube-1760551531201:size-edge-0",
+            "source": "layer-Simple Cube-1760551531201:size-input-node",
+            "sourceHandle": "frequencyAnalysis",
+            "target": "layer-Simple Cube-1760551531201:size-preset-0-band",
+            "targetHandle": "frequencyAnalysis"
+          },
+          {
+            "id": "layer-Simple Cube-1760551531201:size-edge-1",
+            "source": "layer-Simple Cube-1760551531201:size-preset-0-band",
+            "sourceHandle": "bandData",
+            "target": "layer-Simple Cube-1760551531201:size-preset-1-info",
+            "targetHandle": "data"
+          },
+          {
+            "id": "layer-Simple Cube-1760551531201:size-edge-2",
+            "source": "layer-Simple Cube-1760551531201:size-preset-1-info",
+            "sourceHandle": "average",
+            "target": "layer-Simple Cube-1760551531201:size-preset-2-env",
+            "targetHandle": "value"
+          },
+          {
+            "id": "layer-Simple Cube-1760551531201:size-edge-3",
+            "source": "layer-Simple Cube-1760551531201:size-preset-2-env",
+            "sourceHandle": "env",
+            "target": "layer-Simple Cube-1760551531201:size-preset-3-adapt",
+            "targetHandle": "value"
+          },
+          {
+            "id": "layer-Simple Cube-1760551531201:size-edge-4",
+            "source": "layer-Simple Cube-1760551531201:size-preset-3-adapt",
+            "sourceHandle": "result",
+            "target": "layer-Simple Cube-1760551531201:size-preset-4-gate",
+            "targetHandle": "value"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Simple Cube-1760551531201:size-preset-4-gate",
+            "sourceHandle": "gated",
+            "target": "layer-Simple Cube-1760551531201:size-node-1760552578957",
+            "targetHandle": "a",
+            "id": "xy-edge__layer-Simple Cube-1760551531201:size-preset-4-gategated-layer-Simple Cube-1760551531201:size-node-1760552578957a"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Simple Cube-1760551531201:size-node-1760552578957",
+            "sourceHandle": "result",
+            "target": "layer-Simple Cube-1760551531201:size-output-node",
+            "targetHandle": "output",
+            "id": "xy-edge__layer-Simple Cube-1760551531201:size-node-1760552578957result-layer-Simple Cube-1760551531201:size-output-nodeoutput"
+          }
+        ]
+      },
+      "layer-Fullscreen Shader-1760552636719:color": {
+        "name": "layer-Fullscreen Shader-1760552636719:color",
+        "isEnabled": true,
+        "isMinimized": false,
+        "nodes": [
+          {
+            "id": "layer-Fullscreen Shader-1760552636719:color-input-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": -874,
+              "y": 168
+            },
+            "data": {
+              "definition": "Input",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 152,
+              "height": 154
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Fullscreen Shader-1760552636719:color-output-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 952,
+              "y": 178
+            },
+            "data": {
+              "definition": {
+                "label": "Output",
+                "type": "color"
+              },
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 183,
+              "height": 74
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-e6tlb3cq7",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 572.8080897921243,
+              "y": 171.81669606953037
+            },
+            "data": {
+              "definition": "HSL Color",
+              "inputValues": {
+                "h": 300,
+                "s": 100,
+                "l": 50
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 248,
+              "height": 228
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-rn1gmhbdy",
+            "type": "NodeRenderer",
+            "position": {
+              "x": -643.1459905878123,
+              "y": 169.3753468258013
+            },
+            "data": {
+              "definition": "Band Info",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 188,
+              "height": 194
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-md27mpewl",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 249.49726243460714,
+              "y": 155.81154417538386
+            },
+            "data": {
+              "definition": "Math",
+              "inputValues": {
+                "a": 1,
+                "b": "360",
+                "operation": "multiply"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 237,
+              "height": 154
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-rm0435eej",
+            "type": "NodeRenderer",
+            "position": {
+              "x": -27.501823080584245,
+              "y": 130.08065804922367
+            },
+            "data": {
+              "definition": "Envelope Follower",
+              "inputValues": {
+                "value": 0,
+                "attackMs": 10,
+                "releaseMs": "1000"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 240,
+              "height": 234
+            },
+            "selected": true,
+            "dragging": false
+          },
+          {
+            "id": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-wxqk5y2l5",
+            "type": "NodeRenderer",
+            "position": {
+              "x": -350.0229393071611,
+              "y": 125.68187238841276
+            },
+            "data": {
+              "definition": "Normalize",
+              "inputValues": {
+                "value": 0,
+                "inputMin": "120",
+                "inputMax": "140",
+                "outputMin": 0,
+                "outputMax": 1
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 254,
+              "height": 314
+            },
+            "selected": false,
+            "dragging": false
+          }
+        ],
+        "edges": [
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-md27mpewl",
+            "sourceHandle": "result",
+            "target": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-e6tlb3cq7",
+            "targetHandle": "h",
+            "id": "layer-Fullscreen Shader-1760552636719:color-edge-1760552689219-dt6zf4n6b",
+            "selected": false
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-rm0435eej",
+            "sourceHandle": "env",
+            "target": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-md27mpewl",
+            "targetHandle": "a",
+            "id": "layer-Fullscreen Shader-1760552636719:color-edge-1760552689219-l4qm1j59l",
+            "selected": false
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-rn1gmhbdy",
+            "sourceHandle": "average",
+            "target": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-wxqk5y2l5",
+            "targetHandle": "value",
+            "id": "layer-Fullscreen Shader-1760552636719:color-edge-1760552689219-n7lpvzt9f",
+            "selected": false
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-wxqk5y2l5",
+            "sourceHandle": "result",
+            "target": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-rm0435eej",
+            "targetHandle": "value",
+            "id": "layer-Fullscreen Shader-1760552636719:color-edge-1760552689219-5otim1my1",
+            "selected": false
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Fullscreen Shader-1760552636719:color-input-node",
+            "sourceHandle": "audioSignal",
+            "target": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-rn1gmhbdy",
+            "targetHandle": "data",
+            "id": "xy-edge__layer-Fullscreen Shader-1760552636719:color-input-nodeaudioSignal-layer-Fullscreen Shader-1760552636719:color-node-1760552689219-rn1gmhbdydata"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-e6tlb3cq7",
+            "sourceHandle": "color",
+            "target": "layer-Fullscreen Shader-1760552636719:color-output-node",
+            "targetHandle": "output",
+            "id": "xy-edge__layer-Fullscreen Shader-1760552636719:color-node-1760552689219-e6tlb3cq7color-layer-Fullscreen Shader-1760552636719:color-output-nodeoutput"
+          }
+        ]
+      }
+    },
+    "openNetwork": "layer-Fullscreen Shader-1760552636719:color",
+    "areNetworksMinimized": false
+  },
+  "editorStore": {
+    "playerFPS": 60,
+    "ambientMode": false,
+    "resolutionMultiplier": 2
+  }
+}
