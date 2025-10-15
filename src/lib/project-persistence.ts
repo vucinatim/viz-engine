@@ -2,6 +2,7 @@ import useNodeNetworkStore, {
   nodeNetworkStoreMerge,
   nodeNetworkStorePartialize,
 } from '@/components/node-network/node-network-store';
+import { useEditorHistoryStore } from '@/lib/stores/editor-history-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import useLayerStore, {
   layerStoreMerge,
@@ -86,6 +87,9 @@ async function hydrateProjectData(projectFile: ProjectFile) {
   useLayerValuesStore.setState(projectFile.layerValuesStore);
   useEditorStore.setState(projectFile.editorStore);
 
+  // Reset editor history when loading a project
+  useEditorHistoryStore.getState().resetHistory();
+
   // Wait for IndexedDB persistence to complete (stores have 100ms throttle)
   // Add extra buffer to ensure all writes complete
   await new Promise((resolve) => setTimeout(resolve, 300));
@@ -160,6 +164,9 @@ export function resetProject() {
     dominantColor: '#fff',
     resolutionMultiplier: 1,
   });
+
+  // Reset editor history
+  useEditorHistoryStore.getState().resetHistory();
 
   // Force reload to ensure clean state
   window.location.reload();

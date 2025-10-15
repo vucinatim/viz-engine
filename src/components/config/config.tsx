@@ -41,6 +41,8 @@ export abstract class BaseConfigOption<T> {
   abstract toFormElement(
     value: T | null,
     onChange: (value: T) => void,
+    onDragStart?: () => void,
+    onDragEnd?: () => void,
   ): ReactNode;
 }
 
@@ -155,7 +157,12 @@ export class NumberConfigOption extends ConfigParam<number> {
     return value >= this.options.min && value <= this.options.max;
   }
 
-  toFormElement(value: number, onChange: (value: number) => void) {
+  toFormElement(
+    value: number,
+    onChange: (value: number) => void,
+    onDragStart?: () => void,
+    onDragEnd?: () => void,
+  ) {
     return (
       <Slider
         value={value}
@@ -164,6 +171,8 @@ export class NumberConfigOption extends ConfigParam<number> {
           this.value = val;
           onChange(val);
         }}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
         min={this.options.min}
         max={this.options.max}
         step={this.options.step}

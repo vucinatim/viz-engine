@@ -7,6 +7,8 @@ import {
   MenubarShortcut,
   MenubarTrigger,
 } from '@/components/ui/menubar';
+import { useEditorHistory } from '@/lib/hooks/use-editor-history';
+import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts';
 import {
   loadProject,
   loadProjectFromUrl,
@@ -25,6 +27,34 @@ const EditorToolbar = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [sampleProjects, setSampleProjects] = useState<SampleProject[]>([]);
   const [isLoadingSamples, setIsLoadingSamples] = useState(false);
+
+  // Use editor history for undo/redo
+  const { undo, redo, canUndo, canRedo } = useEditorHistory();
+
+  // Add keyboard shortcuts for undo/redo
+  useKeyboardShortcuts({
+    shortcuts: [
+      {
+        key: 'z',
+        ctrl: true,
+        callback: undo,
+        enabled: canUndo,
+      },
+      {
+        key: 'z',
+        ctrl: true,
+        shift: true,
+        callback: redo,
+        enabled: canRedo,
+      },
+      {
+        key: 'y',
+        ctrl: true,
+        callback: redo,
+        enabled: canRedo,
+      },
+    ],
+  });
 
   // Fetch available sample projects
   useEffect(() => {
@@ -97,16 +127,16 @@ const EditorToolbar = () => {
         <MenubarMenu>
           <MenubarTrigger>Edit</MenubarTrigger>
           <MenubarContent>
-            <MenubarItem>
+            <MenubarItem onClick={undo} disabled={!canUndo}>
               Undo <MenubarShortcut>⌘Z</MenubarShortcut>
             </MenubarItem>
-            <MenubarItem>
+            <MenubarItem onClick={redo} disabled={!canRedo}>
               Redo <MenubarShortcut>⇧⌘Z</MenubarShortcut>
             </MenubarItem>
             <MenubarSeparator />
-            <MenubarItem>Cut</MenubarItem>
-            <MenubarItem>Copy</MenubarItem>
-            <MenubarItem>Paste</MenubarItem>
+            <MenubarItem disabled>Cut</MenubarItem>
+            <MenubarItem disabled>Copy</MenubarItem>
+            <MenubarItem disabled>Paste</MenubarItem>
           </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>
