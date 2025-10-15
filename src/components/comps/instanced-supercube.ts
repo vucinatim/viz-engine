@@ -116,10 +116,16 @@ const InstancedSupercube = createComponent({
     shadowPlane.position.z = -10;
     scene.add(shadowPlane);
   },
-  draw3D: ({ threeCtx: { scene, camera, renderer }, state, config, dt }) => {
-    if (!state.clock || !state.instancedMesh || !state.customUniforms) return;
+  draw3D: ({
+    threeCtx: { scene, camera, renderer },
+    state,
+    config,
+    dt,
+    time,
+  }) => {
+    if (!state.instancedMesh || !state.customUniforms) return;
 
-    const time = state.clock.getElapsedTime();
+    // Use explicit time parameter instead of THREE.Clock
 
     // Update shader time uniform
     state.customUniforms.uTime.value = time;

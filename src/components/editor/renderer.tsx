@@ -6,7 +6,7 @@ const Renderer = memo(() => {
   const layers = useLayerStore((s) => s.layers);
 
   return (
-    <div className="h-full w-full">
+    <div className="h-full w-full" data-renderer-container>
       {layers.map((layer) => (
         <LayerRenderer key={layer.id} layer={layer} />
       ))}

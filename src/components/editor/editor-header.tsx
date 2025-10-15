@@ -6,6 +6,7 @@ import { Label } from '../ui/label';
 import { NumberScrubInput } from '../ui/number-scrub-input';
 import { Switch } from '../ui/switch';
 import EditorToolbar from './editor-toolbar';
+import ExportButton from './export-button';
 import { InterfaceGuide } from './interface-guide';
 
 const EditorHeader = () => {
@@ -72,6 +73,7 @@ const EditorHeader = () => {
           checked={ambientMode}
           onCheckedChange={setAmbientMode}
         />
+        <ExportButton />
         <InterfaceGuide />
         <a
           href="https://github.com/vucinatim/viz-engine"

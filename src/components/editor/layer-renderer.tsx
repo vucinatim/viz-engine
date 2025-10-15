@@ -4,7 +4,8 @@ import useDebug from '@/lib/hooks/use-debug';
 import useOnResize from '@/lib/hooks/use-on-resize';
 import useAudioStore from '@/lib/stores/audio-store';
 import useEditorStore from '@/lib/stores/editor-store';
-import { LayerData } from '@/lib/stores/layer-store';
+import useExportStore from '@/lib/stores/export-store';
+import useLayerStore, { LayerData } from '@/lib/stores/layer-store';
 import { forwardRef, memo, useCallback, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
@@ -12,6 +13,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 
 type RenderFunction = (data: {
   dt: number;
+  time: number;
   audioData: { dataArray: Uint8Array; analyzer: AnalyserNode };
   config: Record<string, any>;
 }) => void;
@@ -26,6 +28,13 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   const resolutionMultiplier = useEditorStore((s) => s.resolutionMultiplier);
   const playerRef = useEditorStore((s) => s.playerRef);
   const playerFPS = useEditorStore((s) => s.playerFPS);
+  const isExporting = useExportStore((s) => s.isExporting);
+  const registerLayerRenderFunction = useLayerStore(
+    (s) => s.registerLayerRenderFunction,
+  );
+  const unregisterLayerRenderFunction = useLayerStore(
+    (s) => s.unregisterLayerRenderFunction,
+  );
 
   const debugCanvasRef = useRef<HTMLCanvasElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
@@ -36,6 +45,11 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     typeof performance !== 'undefined' ? performance.now() : Date.now(),
   );
   const rafIdRef = useRef<number | null>(null);
+
+  // Store the render function so export can call it manually
+  const manualRenderFunctionRef = useRef<
+    ((time: number, dt: number) => void) | null
+  >(null);
 
   // 3D refs
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -115,6 +129,8 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       canvas: layerCanvasRef.current,
       antialias: true,
       alpha: true,
+      // CRITICAL for export: preserve drawing buffer so we can capture frames
+      preserveDrawingBuffer: true,
     });
 
     // Improve color fidelity and contrast
@@ -229,6 +245,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
         if (!rendererRef.current || !sceneRef.current || !cameraRef.current) {
           return;
         }
+
         layer.comp.draw3D?.({
           threeCtx: {
             renderer: rendererRef.current,
@@ -240,9 +257,12 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
           ...data,
         });
 
-        // Render with composer (post-processing handled by component)
+        // Render with composer if available, otherwise use direct renderer
         if (composerRef.current) {
           composerRef.current.render();
+        } else {
+          // Fallback: render directly without post-processing
+          rendererRef.current.render(sceneRef.current, cameraRef.current);
         }
       };
     } else {
@@ -259,25 +279,16 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       };
     }
 
-    const renderFrame = () => {
-      const now =
-        typeof performance !== 'undefined' ? performance.now() : Date.now();
-      const dt = (now - lastFrameTimeRef.current) / 1000.0; // time in seconds
-      lastFrameTimeRef.current = now; // update last frame time
-
+    // Create manual render function that accepts explicit time and dt
+    // This is called by the export orchestrator for frame-accurate rendering
+    const manualRender = (explicitTime: number, explicitDt: number) => {
       const { frequencyData, timeDomainData, sampleRate, fftSize } =
         getNextAudioFrame();
-      // Prefer Remotion Player's clock to drive animation time; fallback to WaveSurfer
-      const frame = playerRef?.current?.getCurrentFrame?.() ?? null;
-      const time =
-        frame !== null && typeof frame === 'number' && playerFPS > 0
-          ? frame / playerFPS
-          : wavesurferRef.current?.getCurrentTime() || 0;
 
       const animInputData = {
         audioSignal: timeDomainData,
         frequencyData,
-        time,
+        time: explicitTime, // Use explicit time passed in
         frequencyAnalysis: {
           frequencyData,
           sampleRate,
@@ -289,7 +300,8 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       withDebug(
         () =>
           renderFunction?.({
-            dt,
+            dt: explicitDt, // Use explicit dt passed in
+            time: explicitTime, // Use explicit time passed in
             audioData: { dataArray: frequencyData, analyzer: audioAnalyzer },
             config: configValues,
           }),
@@ -305,11 +317,42 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       if (mirrorCanvasesRef.current && mirrorCanvasesRef.current.length > 0) {
         mirrorToCanvases(layerCanvasRef.current, mirrorCanvasesRef.current);
       }
-
-      rafIdRef.current = requestAnimationFrame(renderFrame);
     };
 
-    rafIdRef.current = requestAnimationFrame(renderFrame);
+    // Store the manual render function for export to use
+    manualRenderFunctionRef.current = manualRender;
+
+    // Register the render function with the layer store so export can call it
+    registerLayerRenderFunction(layer.id, manualRender);
+
+    // Regular RAF loop for playback (paused during export)
+    const renderFrame = () => {
+      const now =
+        typeof performance !== 'undefined' ? performance.now() : Date.now();
+      const dt = (now - lastFrameTimeRef.current) / 1000.0; // time in seconds
+      lastFrameTimeRef.current = now; // update last frame time
+
+      // Prefer Remotion Player's clock to drive animation time; fallback to WaveSurfer
+      const frame = playerRef?.current?.getCurrentFrame?.() ?? null;
+      const time =
+        frame !== null && typeof frame === 'number' && playerFPS > 0
+          ? frame / playerFPS
+          : wavesurferRef.current?.getCurrentTime() || 0;
+
+      // Use the manual render function with calculated time
+      manualRender(time, dt);
+
+      // CRITICAL: Only continue RAF loop if NOT exporting
+      if (!useExportStore.getState().isExporting) {
+        rafIdRef.current = requestAnimationFrame(renderFrame);
+      }
+    };
+
+    // Only start RAF loop if not currently exporting
+    if (!isExporting) {
+      rafIdRef.current = requestAnimationFrame(renderFrame);
+    }
+
     return () => {
       // Cleanup renderer and other three.js resources when component unmounts or before reinitializing
       if (rafIdRef.current !== null) {
@@ -319,6 +362,10 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       if (rendererRef.current) {
         rendererRef.current.dispose();
       }
+      // Clear the manual render function
+      manualRenderFunctionRef.current = null;
+      // Unregister from layer store
+      unregisterLayerRenderFunction(layer.id);
     };
   }, [
     audioAnalyzer,
@@ -330,6 +377,9 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     withDebug,
     playerRef,
     playerFPS,
+    isExporting,
+    registerLayerRenderFunction,
+    unregisterLayerRenderFunction,
   ]);
 
   return (

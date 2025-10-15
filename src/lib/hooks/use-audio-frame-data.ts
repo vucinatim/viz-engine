@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import useEditorStore from '../stores/editor-store';
+import useExportStore from '../stores/export-store';
 
 interface UseAudioFrameDataProps {
   isFrozen: boolean;
@@ -53,7 +54,32 @@ const useAudioFrameData = ({
   }, [analyzer, wavesurfer]);
 
   const getAudioFrameData = useCallback(() => {
+    // CRITICAL: Check if we're exporting and have offline audio data
+    const exportStore = useExportStore.getState();
+    const offlineAudioData = exportStore.currentOfflineAudioData;
+
+    // If we're exporting and have offline data, use it instead of the analyzer
+    if (exportStore.isExporting && offlineAudioData) {
+      console.log('[AudioFrameData] Using offline audio data during export', {
+        frequencyDataLength: offlineAudioData.frequencyData.length,
+        timeDomainDataLength: offlineAudioData.timeDomainData.length,
+        sampleRate: offlineAudioData.sampleRate,
+        fftSize: offlineAudioData.fftSize,
+        isExporting: exportStore.isExporting,
+      });
+      return {
+        frequencyData: offlineAudioData.frequencyData,
+        timeDomainData: offlineAudioData.timeDomainData,
+        sampleRate: offlineAudioData.sampleRate,
+        fftSize: offlineAudioData.fftSize,
+      };
+    }
+
+    // Normal playback mode - use the analyzer
     if (!analyzer) {
+      console.log(
+        '[AudioFrameData] No analyzer available, returning empty data',
+      );
       return {
         frequencyData: new Uint8Array(),
         timeDomainData: new Uint8Array(),
@@ -84,6 +110,15 @@ const useAudioFrameData = ({
 
       analyzer.getByteTimeDomainData(timeDomainDataRef.current as any);
       lastTimeDomainDataRef.current.set(timeDomainDataRef.current);
+
+      // Debug log for live audio data
+      console.log('[AudioFrameData] Live audio data updated', {
+        frequencyDataLength: frequencyDataRef.current.length,
+        timeDomainDataLength: timeDomainDataRef.current.length,
+        sampleRate: analyzer.context.sampleRate,
+        fftSize: analyzer.fftSize,
+        isPlaying,
+      });
 
       // Throttled debug log
       const now =

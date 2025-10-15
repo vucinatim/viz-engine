@@ -835,6 +835,7 @@ const OrbitingCubes = createComponent({
     audioData: { dataArray },
     config,
     dt,
+    time,
   }) => {
     const structureGroup = scene.userData.structureGroup as THREE.Group;
     let instancedMesh = scene.userData.instancedMesh as THREE.InstancedMesh;
@@ -947,19 +948,16 @@ const OrbitingCubes = createComponent({
 
     lights.ambientLight.intensity = config.ambientBrightness;
 
-    // Rotate the entire structure
-    structureGroup.rotation.x += config.rotationSpeed * dt * 0.3;
-    structureGroup.rotation.y += config.rotationSpeed * dt;
-    structureGroup.rotation.z += config.rotationSpeed * dt * 0.5;
+    // Rotate the entire structure using explicit time
+    structureGroup.rotation.x = time * config.rotationSpeed * 0.3;
+    structureGroup.rotation.y = time * config.rotationSpeed;
+    structureGroup.rotation.z = time * config.rotationSpeed * 0.5;
 
     // Orbit camera around the center with multi-axis rotation (like a satellite)
-    scene.userData.orbitAngle += config.orbitSpeed * dt;
-    scene.userData.orbitAngle2 += config.orbitSpeed * dt * 0.7; // Different speed for drift
-    scene.userData.orbitAngle3 += config.orbitSpeed * dt * 0.4; // Even slower for precession
-
-    const angle1 = scene.userData.orbitAngle;
-    const angle2 = scene.userData.orbitAngle2;
-    const angle3 = scene.userData.orbitAngle3;
+    // Calculate angles directly from time instead of accumulating
+    const angle1 = time * config.orbitSpeed;
+    const angle2 = time * config.orbitSpeed * 0.7; // Different speed for drift
+    const angle3 = time * config.orbitSpeed * 0.4; // Even slower for precession
     const radius = config.orbitRadius;
 
     // Use spherical coordinates with multiple rotating axes
