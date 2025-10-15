@@ -950,12 +950,16 @@ const StageScene = createComponent({
       state.bloomPass = bloomPass;
     }
   },
-  draw3D: ({ threeCtx: { renderer, scene, camera }, state, config, dt }) => {
-    // Ensure elapsedTime is valid before incrementing (should be initialized in init3D)
-    if (typeof state.elapsedTime !== 'number' || isNaN(state.elapsedTime)) {
-      state.elapsedTime = 0;
-    }
-    state.elapsedTime += dt;
+  draw3D: ({
+    threeCtx: { renderer, scene, camera },
+    state,
+    config,
+    dt,
+    time,
+  }) => {
+    // Use explicit time parameter instead of accumulating
+    // This ensures consistent timing during both playback and export
+    const elapsedTime = time;
 
     // === WASD CAMERA CONTROL MODE ===
     // Handle WASD mode activation (triggered by button press)
@@ -1095,7 +1099,7 @@ const StageScene = createComponent({
       // Cinematic mode takes priority over everything
       // Safety check for cinematicDuration
       const duration = config.camera.cinematicDuration || 60; // Fallback to 60s default
-      const progress = (state.elapsedTime % duration) / duration;
+      const progress = (elapsedTime % duration) / duration;
 
       // Safety check: ensure progress is a valid number
       if (isNaN(progress) || !isFinite(progress)) {
@@ -1203,8 +1207,7 @@ const StageScene = createComponent({
       state.prevCrowdCount = config.characters.crowdCount;
     }
 
-    // Use elapsed time (initialized in init3D and incremented at start of draw3D)
-    const elapsedTime = state.elapsedTime;
+    // elapsedTime is already set from the time parameter at the top of this function
 
     // Update lighting
     if (state.hemisphereLight) {

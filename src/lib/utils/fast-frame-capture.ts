@@ -56,6 +56,7 @@ export async function fastCaptureFrame(
     const blendMode =
       (style.mixBlendMode as GlobalCompositeOperation) || 'normal';
     const display = style.display;
+    const background = style.background || style.backgroundColor;
 
     // Skip hidden canvases
     if (display === 'none' || opacity === 0) continue;
@@ -67,7 +68,20 @@ export async function fastCaptureFrame(
     ctx.globalAlpha = opacity;
     ctx.globalCompositeOperation = blendMode;
 
-    // Draw the canvas
+    // CRITICAL FIX: Draw the layer's background first
+    // Each layer can have its own background color/gradient that needs to be blended
+    // In the browser, CSS backgrounds are composited with the canvas content
+    // We need to replicate this by drawing the background rectangle before the canvas
+    if (
+      background &&
+      background !== 'rgba(0, 0, 0, 0)' &&
+      background !== 'transparent'
+    ) {
+      ctx.fillStyle = background;
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    // Draw the canvas content on top of the background
     ctx.drawImage(canvas, 0, 0, width, height);
 
     // Restore context state

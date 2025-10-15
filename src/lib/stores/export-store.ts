@@ -108,8 +108,14 @@ const useExportStore = create<ExportStore>((set, get) => ({
     const newProgress = { ...currentProgress, ...progressUpdate };
 
     // Calculate percentage based on phase and frame count
+    // BUT: if percentage is explicitly provided in progressUpdate, use it
     let percentage = 0;
-    if (newProgress.totalFrames > 0) {
+
+    if (progressUpdate.percentage !== undefined) {
+      // Explicit percentage provided (e.g., from FFmpeg encoding progress)
+      percentage = progressUpdate.percentage;
+    } else if (newProgress.totalFrames > 0) {
+      // Calculate based on phase
       switch (newProgress.phase) {
         case 'preparing':
           percentage = 5;
@@ -119,7 +125,8 @@ const useExportStore = create<ExportStore>((set, get) => ({
             5 + (newProgress.currentFrame / newProgress.totalFrames) * 80;
           break;
         case 'encoding':
-          percentage = 85 + 10; // Encoding is typically quick with modern codecs
+          // Default to 90% if no explicit progress provided during encoding
+          percentage = 90;
           break;
         case 'complete':
           percentage = 100;
@@ -129,7 +136,15 @@ const useExportStore = create<ExportStore>((set, get) => ({
       }
     }
 
-    newProgress.percentage = Math.min(100, Math.max(0, percentage));
+    // Clamp and ensure monotonically increasing progress
+    percentage = Math.min(100, Math.max(0, percentage));
+
+    // CRITICAL: Never allow progress to go backwards (prevents jumpy progress bar)
+    if (percentage < currentProgress.percentage) {
+      percentage = currentProgress.percentage;
+    }
+
+    newProgress.percentage = percentage;
     set({ progress: newProgress });
   },
 

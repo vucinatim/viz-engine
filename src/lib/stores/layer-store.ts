@@ -24,13 +24,13 @@ import { getDefaults } from '../schema-utils';
 import useLayerValuesStore from './layer-values-store';
 
 export const layerStorePartialize = (state: LayerStore) => ({
-  ...state,
   layers: state.layers.map(
     ({ config, mirrorCanvases, state: componentState, ...rest }) => ({
       ...rest,
       comp: { name: rest.comp.name },
     }),
   ),
+  // Exclude layerRenderFunctions from persistence (runtime-only Map)
 });
 
 export const layerStoreMerge = (
@@ -66,6 +66,8 @@ export const layerStoreMerge = (
     ...currentState,
     ...persisted,
     layers: mergedLayers,
+    // Always initialize layerRenderFunctions as a fresh Map (never persisted)
+    layerRenderFunctions: new Map(),
   };
 };
 
@@ -80,8 +82,13 @@ export interface LayerData {
   mirrorCanvases?: HTMLCanvasElement[];
 }
 
+// Manual render function type for export
+export type LayerRenderFunction = (time: number, dt: number) => void;
+
 interface LayerStore {
   layers: LayerData[];
+  // Non-persisted map of layer render functions for export
+  layerRenderFunctions: Map<string, LayerRenderFunction>;
   addLayer: (comp: Comp) => void;
   removeLayer: (id: string) => void;
   setIsLayerExpanded: (id: string, isExpanded: boolean) => void;
@@ -94,12 +101,30 @@ interface LayerStore {
   reorderLayers: (activeId: string, overId: string) => void;
   registerMirrorCanvas: (id: string, canvasRef: HTMLCanvasElement) => void;
   unregisterMirrorCanvas: (id: string, canvasRef: HTMLCanvasElement) => void;
+  // Register/unregister manual render functions for export
+  registerLayerRenderFunction: (id: string, fn: LayerRenderFunction) => void;
+  unregisterLayerRenderFunction: (id: string) => void;
+  // Render all layers with explicit time and dt (used by export)
+  renderAllLayers: (time: number, dt: number) => void;
 }
 
 const useLayerStore = create<LayerStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       layers: [],
+      layerRenderFunctions: new Map(),
+      registerLayerRenderFunction: (id, fn) => {
+        get().layerRenderFunctions.set(id, fn);
+      },
+      unregisterLayerRenderFunction: (id) => {
+        get().layerRenderFunctions.delete(id);
+      },
+      renderAllLayers: (time, dt) => {
+        const { layerRenderFunctions } = get();
+        layerRenderFunctions.forEach((renderFn) => {
+          renderFn(time, dt);
+        });
+      },
       addLayer: (comp) => {
         const newLayerId = generateLayerId(comp.name);
         useLayerValuesStore

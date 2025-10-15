@@ -138,6 +138,13 @@ export async function encodeVideo(
   }
 
   const { fps, format, quality, audioStartTime, audioDuration } = options;
+  const totalFrames = frames.length;
+
+  // Helper to check for cancellation
+  const checkCancellation = async () => {
+    const { default: useExportStore } = await import('../stores/export-store');
+    return useExportStore.getState().shouldCancel;
+  };
 
   try {
     // Write all frames to FFmpeg's virtual filesystem
@@ -149,20 +156,22 @@ export async function encodeVideo(
     const writeTimer = new PerfTimer('Write frames to FFmpeg');
 
     for (let i = 0; i < frames.length; i++) {
+      // Check for cancellation every 10 frames
+      if (i % 10 === 0 && (await checkCancellation())) {
+        log('warning', 'Encoding cancelled during frame writing');
+        throw new Error('Export cancelled by user');
+      }
+
       const frameData = await fetchFile(frames[i]);
       await ffmpeg.writeFile(
         `frame${String(i).padStart(6, '0')}.jpg`,
         frameData,
       );
 
-      if (onProgress && i % 50 === 0) {
-        const progress = (i / frames.length) * 30; // 0-30% for writing frames
-        onProgress(progress);
-        log(
-          'perf',
-          `Writing frames progress`,
-          `${progress.toFixed(1)}% (${i}/${frames.length})`,
-        );
+      // Progress reporting removed - will be done by FFmpeg log handler
+      // to avoid conflicting progress updates
+      if (i % 50 === 0) {
+        log('perf', `Writing frames progress`, `${i}/${frames.length}`);
       }
     }
 
@@ -229,23 +238,76 @@ export async function encodeVideo(
     log('info', 'Starting FFmpeg encoding process');
     const encodingTimer = new PerfTimer('FFmpeg encoding');
 
-    // Set up a timeout for encoding (15 minutes max)
-    const encodingTimeout = new Promise((_, reject) => {
-      setTimeout(
-        () => {
-          reject(new Error('FFmpeg encoding timeout after 15 minutes'));
-        },
-        15 * 60 * 1000,
-      );
-    });
+    // Set up progress tracking by parsing FFmpeg log messages
+    // FFmpeg outputs: "frame=  123 fps=5.6 q=30.0 size=..."
+    let lastReportedProgress = 0;
+    const progressHandler = ({ message }: { message: string }) => {
+      const frameMatch = message.match(/frame=\s*(\d+)/);
+      if (frameMatch && onProgress) {
+        const currentFrame = parseInt(frameMatch[1], 10);
+        // Report progress as 0-100% of encoding phase
+        const progress = Math.min((currentFrame / totalFrames) * 100, 100);
 
-    // Race between encoding and timeout
-    await Promise.race([ffmpeg.exec(command), encodingTimeout]);
+        // Only report if progress has increased to avoid jumps
+        if (progress > lastReportedProgress) {
+          lastReportedProgress = progress;
+          onProgress(progress);
+        }
+      }
+    };
 
-    encodingTimer.end('FFmpeg encoding completed');
+    // Attach the progress handler
+    ffmpeg.on('log', progressHandler);
+
+    // Track intervals for cleanup
+    let cancellationChecker: NodeJS.Timeout | null = null;
+    let checkLoop: NodeJS.Timeout | null = null;
+
+    try {
+      // Set up a timeout for encoding (15 minutes max)
+      const encodingTimeout = new Promise((_, reject) => {
+        setTimeout(
+          () => {
+            reject(new Error('FFmpeg encoding timeout after 15 minutes'));
+          },
+          15 * 60 * 1000,
+        );
+      });
+
+      // Set up cancellation checker (polls every 500ms)
+      let cancelled = false;
+      cancellationChecker = setInterval(async () => {
+        if (await checkCancellation()) {
+          cancelled = true;
+        }
+      }, 500);
+
+      // Race between encoding, timeout, and cancellation
+      const encodingPromise = ffmpeg.exec(command);
+      const cancellationPromise = new Promise<void>((_, reject) => {
+        checkLoop = setInterval(() => {
+          if (cancelled) {
+            reject(new Error('Export cancelled by user'));
+          }
+        }, 100);
+      });
+
+      await Promise.race([
+        encodingPromise,
+        encodingTimeout,
+        cancellationPromise,
+      ]);
+
+      encodingTimer.end('FFmpeg encoding completed');
+    } finally {
+      // Clean up all intervals and handlers
+      if (cancellationChecker) clearInterval(cancellationChecker);
+      if (checkLoop) clearInterval(checkLoop);
+      ffmpeg.off('log', progressHandler);
+    }
 
     if (onProgress) {
-      onProgress(90);
+      onProgress(100); // Encoding complete
     }
 
     // Read the output file
@@ -267,10 +329,6 @@ export async function encodeVideo(
     await ffmpeg.deleteFile(outputFile);
 
     cleanupTimer.end(`${frames.length} frame files + audio cleaned up`);
-
-    if (onProgress) {
-      onProgress(100);
-    }
 
     // Convert to blob
     const mimeType = format === 'mp4' ? 'video/mp4' : 'video/webm';
@@ -301,22 +359,26 @@ function getQualitySettings(
   format: 'mp4' | 'webm',
 ): string[] {
   if (format === 'mp4') {
-    // H.264 settings - optimized for faster encoding
+    // H.264 settings - HEAVILY optimized for WASM encoding speed
+    // WASM is ~10-20x slower than native FFmpeg, so we use much faster presets
     switch (quality) {
       case 'high':
-        // Use faster preset for high quality to avoid extremely long encoding times
-        return ['-preset', 'medium', '-crf', '20', '-tune', 'film'];
+        // veryfast preset: ~3-4x faster than medium, still great quality
+        // For 1920x1080@60fps: ~2-3min instead of 8-10min
+        return ['-preset', 'veryfast', '-crf', '18', '-tune', 'film'];
       case 'medium':
-        return ['-preset', 'fast', '-crf', '23', '-tune', 'film'];
+        // faster preset: good balance of speed and quality
+        return ['-preset', 'faster', '-crf', '22', '-tune', 'film'];
       case 'low':
-        return ['-preset', 'ultrafast', '-crf', '28', '-tune', 'film'];
+        // ultrafast: maximum speed, acceptable quality
+        return ['-preset', 'ultrafast', '-crf', '26', '-tune', 'film'];
     }
   } else {
     // VP9 settings - optimized for faster encoding
     switch (quality) {
       case 'high':
         // Use higher cpu-used for faster encoding
-        return ['-b:v', '2M', '-quality', 'good', '-cpu-used', '2'];
+        return ['-b:v', '2M', '-quality', 'good', '-cpu-used', '3'];
       case 'medium':
         return ['-b:v', '1M', '-quality', 'good', '-cpu-used', '4'];
       case 'low':

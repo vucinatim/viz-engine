@@ -123,8 +123,19 @@ const ExportDialog = ({
     onStartExport();
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    // If closing the dialog and export is complete or errored, reset the export state
+    if (
+      !newOpen &&
+      (progress.phase === 'complete' || progress.phase === 'error')
+    ) {
+      resetExport();
+    }
+    onOpenChange(newOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Export Video</DialogTitle>
@@ -283,11 +294,14 @@ const ExportDialog = ({
                 <span className="text-muted-foreground">
                   Estimated file size:
                 </span>
-                <span className="font-semibold">{estimatedSize} MB</span>
+                <span>
+                  <span className="mr-2 opacity-50">
+                    ({Math.ceil(duration * settings.fps)} frames @{' '}
+                    {settings.fps} FPS)
+                  </span>
+                  <span className="font-semibold">{estimatedSize} MB</span>
+                </span>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                {Math.ceil(duration * settings.fps)} frames @ {settings.fps} FPS
-              </p>
             </div>
 
             {/* Timeline Range */}

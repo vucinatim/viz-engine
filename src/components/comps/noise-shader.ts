@@ -1122,11 +1122,11 @@ const NoiseShader = createComponent({
     // Add to scene
     scene.add(mesh);
   },
-  draw3D: ({ threeCtx: { renderer, camera }, state, config, dt }) => {
+  draw3D: ({ threeCtx: { renderer, camera }, state, config, dt, time }) => {
     if (!state.material || !state.mesh) return;
 
-    // Update elapsed time
-    state.elapsedTime += dt;
+    // Use explicit time parameter instead of accumulating
+    const elapsedTime = time;
 
     // Update resolution if changed
     const currentWidth = renderer.domElement.width;
@@ -1160,7 +1160,7 @@ const NoiseShader = createComponent({
     }
 
     // Update uniforms from config
-    state.material.uniforms.u_time.value = state.elapsedTime;
+    state.material.uniforms.u_time.value = elapsedTime;
 
     // Noise settings
     const noiseTypeMap: { [key: string]: number } = {

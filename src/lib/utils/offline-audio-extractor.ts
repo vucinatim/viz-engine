@@ -79,6 +79,7 @@ export async function extractOfflineAudioData(
       frameChunk,
       fftSize,
       sampleRate,
+      frameIndex,
     );
 
     frames.push({
@@ -105,6 +106,7 @@ function analyzeAudioChunk(
   audioChunk: Float32Array,
   fftSize: number,
   sampleRate: number,
+  frameIndex?: number,
 ): { frequencyData: Uint8Array; timeDomainData: Uint8Array } {
   // Prepare the audio chunk for FFT
   // Pad or truncate to fftSize
@@ -132,8 +134,15 @@ function analyzeAudioChunk(
     const imag = fftOutput[i * 2 + 1];
     const magnitude = Math.sqrt(real * real + imag * imag);
 
+    // Normalize by FFT size (this is critical - AnalyserNode does this automatically)
+    // Also apply a smoothing factor to match AnalyserNode's behavior
+    const normalizedMagnitude = magnitude / fftSize;
+
     // Convert to decibels
-    const decibels = magnitude > 0 ? 20 * Math.log10(magnitude) : minDecibels;
+    const decibels =
+      normalizedMagnitude > 0
+        ? 20 * Math.log10(normalizedMagnitude)
+        : minDecibels;
 
     // Scale to 0-255 range
     const normalized = (decibels - minDecibels) / decibelRange;

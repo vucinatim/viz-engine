@@ -8,7 +8,7 @@ import {
   extractWaveform,
   type WaveformData,
 } from '@/lib/utils/waveform-extractor';
-import { Pause, Play, SkipBack, SkipForward, Square } from 'lucide-react';
+import { Pause, Play } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface VideoTimelineProps {
@@ -103,6 +103,9 @@ export const VideoTimeline = ({
         onTimeChange?.(audioElement.currentTime);
       }
     };
+
+    // Set initial state based on audio element
+    setIsPlaying(!audioElement.paused);
 
     audioElement.addEventListener('play', handlePlay);
     audioElement.addEventListener('pause', handlePause);
@@ -239,38 +242,12 @@ export const VideoTimeline = ({
 
     if (audioElement.paused) {
       audioElement.play().catch(console.error);
+      setIsPlaying(true);
     } else {
       audioElement.pause();
+      setIsPlaying(false);
     }
   }, [audioElementRef]);
-
-  const stopPlayback = useCallback(() => {
-    const audioElement = audioElementRef.current;
-    if (!audioElement) return;
-
-    audioElement.pause();
-    audioElement.currentTime = 0;
-    onTimeChange?.(0);
-  }, [audioElementRef, onTimeChange]);
-
-  const skipBackward = useCallback(() => {
-    const audioElement = audioElementRef.current;
-    if (!audioElement) return;
-
-    audioElement.currentTime = Math.max(0, audioElement.currentTime - 10);
-    onTimeChange?.(audioElement.currentTime);
-  }, [audioElementRef, onTimeChange]);
-
-  const skipForward = useCallback(() => {
-    const audioElement = audioElementRef.current;
-    if (!audioElement) return;
-
-    audioElement.currentTime = Math.min(
-      audioElement.duration,
-      audioElement.currentTime + 10,
-    );
-    onTimeChange?.(audioElement.currentTime);
-  }, [audioElementRef, onTimeChange]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -345,29 +322,9 @@ export const VideoTimeline = ({
 
   return (
     <div className={cn('space-y-2', className)}>
-      {/* Timeline header with time labels */}
+      {/* Timeline header with time labels and play button */}
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>Start: {formatTime(startTime)}</span>
-        <span>Duration: {formatTime(endTime - startTime)}</span>
-        <span>End: {formatTime(endTime)}</span>
-      </div>
-
-      {/* Playback Controls */}
-      <div className="flex items-center justify-center gap-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={skipBackward}
-          className="h-8 w-8 p-0">
-          <SkipBack className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={stopPlayback}
-          className="h-8 w-8 p-0">
-          <Square className="h-4 w-4" />
-        </Button>
         <Button
           variant="outline"
           size="sm"
@@ -379,18 +336,7 @@ export const VideoTimeline = ({
             <Play className="h-4 w-4" />
           )}
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={skipForward}
-          className="h-8 w-8 p-0">
-          <SkipForward className="h-4 w-4" />
-        </Button>
-
-        {/* Current time indicator */}
-        <div className="rounded bg-black/70 px-2 py-1 font-mono text-xs text-white/90 backdrop-blur-sm">
-          {formatTime(currentTime)}
-        </div>
+        <span>End: {formatTime(endTime)}</span>
       </div>
 
       {/* Timeline with waveform and range slider */}
@@ -503,8 +449,8 @@ export const VideoTimeline = ({
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>Total duration: {formatTime(duration)}</span>
         <span>
-          Selected: {formatTime(endTime - startTime)} (
-          {Math.ceil((endTime - startTime) * fps)} frames @ {fps}fps)
+          {formatTime(currentTime)} ({Math.ceil(currentTime * fps)} frames @{' '}
+          {fps} FPS)
         </span>
       </div>
     </div>

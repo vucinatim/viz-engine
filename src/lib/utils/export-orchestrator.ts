@@ -11,6 +11,7 @@ import useExportStore, {
   ExportLog,
   ExportSettings,
 } from '../stores/export-store';
+import useLayerStore from '../stores/layer-store';
 import { fastCaptureFrame } from './fast-frame-capture';
 import {
   BatchFrameWriter,
@@ -78,6 +79,11 @@ export async function exportVideo(
   rendererContainerElement: HTMLElement,
   settings?: Partial<ExportSettings>,
 ): Promise<void> {
+  console.log('[ExportOrchestrator] exportVideo called', {
+    rendererContainerElement,
+    settings,
+  });
+
   const exportStore = useExportStore.getState();
   const audioStore = useAudioStore.getState();
   const editorStore = useEditorStore.getState();
@@ -95,6 +101,12 @@ export async function exportVideo(
 
   try {
     // Initialize
+    exportStore.setIsExporting(true);
+    exportStore.setShouldCancel(false); // Reset cancellation flag
+    exportStore.setError(null);
+    exportStore.clearCapturedFrames();
+    exportStore.clearLogs();
+
     log('info', '🚀 Starting export process');
     log(
       'info',
@@ -103,11 +115,6 @@ export async function exportVideo(
     );
 
     const startTime = Date.now();
-    exportStore.setIsExporting(true);
-    exportStore.setShouldCancel(false); // Reset cancellation flag
-    exportStore.setError(null);
-    exportStore.clearCapturedFrames();
-    exportStore.clearLogs();
 
     const clearTimer = new PerfTimer('Clear previous frames');
     await clearAllFrames();
@@ -203,6 +210,22 @@ export async function exportVideo(
     );
     audioAnalysisTimer.end(`${offlineAudioData.frames.length} frames analyzed`);
 
+    // Analyze the audio data quality
+    if (offlineAudioData.frames.length > 0) {
+      const firstFrame = offlineAudioData.frames[0];
+      const freqMax = Math.max(...firstFrame.frequencyData);
+      const freqMin = Math.min(...firstFrame.frequencyData);
+      const freqAvg =
+        firstFrame.frequencyData.reduce((a, b) => a + b, 0) /
+        firstFrame.frequencyData.length;
+
+      log(
+        'info',
+        'Audio analysis summary',
+        `First frame - Min: ${freqMin}, Max: ${freqMax}, Avg: ${freqAvg.toFixed(1)}`,
+      );
+    }
+
     // Check for cancellation
     if (useExportStore.getState().shouldCancel) {
       throw new Error('Export cancelled by user');
@@ -221,6 +244,22 @@ export async function exportVideo(
 
     // Phase 2: Render frames
     log('info', '🎬 Phase 2: Rendering frames');
+
+    // Check how many layers and what types
+    const layerStore = useLayerStore.getState();
+    const numLayers = layerStore.layers.length;
+    const numRenderFunctions = layerStore.layerRenderFunctions.size;
+    const layerTypes = layerStore.layers
+      .map((l) => `${l.comp.name}(${l.comp.draw3D ? '3D' : '2D'})`)
+      .join(', ');
+
+    log('info', 'Layer configuration', `${numLayers} layers: ${layerTypes}`);
+    log(
+      'info',
+      'Render functions registered',
+      `${numRenderFunctions} of ${numLayers} layers`,
+    );
+
     exportStore.setProgress({
       phase: 'rendering',
       message: 'Rendering frames...',
@@ -298,9 +337,13 @@ export async function exportVideo(
         audioStartTime: finalSettings.startTime, // Trim audio to match exported segment
         audioDuration: finalSettings.duration, // Only use the exported duration
       },
-      (progress) => {
+      (encodingProgress) => {
+        // Map encoding progress (0-100) to overall progress (85-95)
+        // Rendering takes 5-85%, encoding takes 85-95%, cleanup takes 95-100%
+        const overallProgress = 85 + (encodingProgress / 100) * 10;
         exportStore.setProgress({
-          message: `Encoding video... ${Math.round(progress)}%`,
+          percentage: overallProgress,
+          message: `Encoding video... ${Math.round(encodingProgress)}%`,
         });
       },
     );
@@ -404,6 +447,20 @@ export async function exportVideo(
 
 /**
  * Render all frames with manual time stepping
+ *
+ * CRITICAL FIX FOR DOUBLE-SPEED EXPORT ISSUE:
+ * ============================================
+ * Previously, the export relied on playerRef.seekTo() + RAF loops, which caused
+ * a race condition: while waiting for frames to render, RAF loops continued to tick
+ * at browser speed (~60fps), causing components to advance multiple frames ahead.
+ *
+ * THE SOLUTION:
+ * 1. Pause all RAF loops during export (done in layer-renderer.tsx)
+ * 2. Calculate explicit time and dt for each frame
+ * 3. Manually call renderAllLayers() with exact time/dt values
+ * 4. Components use the passed time parameter instead of accumulating internal state
+ *
+ * This ensures frame-perfect synchronization between export and playback.
  */
 async function renderFrames(
   rendererContainer: HTMLElement,
@@ -425,6 +482,7 @@ async function renderFrames(
   // Get stores
   const exportStore = useExportStore.getState();
   const editorStore = useEditorStore.getState();
+  const layerStore = useLayerStore.getState();
 
   // We need to manually drive the animation by setting the player time
   const playerRef = editorStore.playerRef.current;
@@ -432,6 +490,14 @@ async function renderFrames(
   if (!playerRef) {
     log('error', 'Player ref not available');
     throw new Error('Player ref not available');
+  }
+
+  // Validate that we have render functions registered
+  if (layerStore.layerRenderFunctions.size === 0) {
+    log(
+      'warning',
+      'No layer render functions registered - layers may not be initialized yet',
+    );
   }
 
   // Create batch frame writer - keeps DB connection open for all writes (much faster!)
@@ -443,6 +509,9 @@ async function renderFrames(
     // Track performance for periodic logging
     let lastLogTime = performance.now();
     let framesRenderedSinceLog = 0;
+
+    // Calculate fixed delta time for consistent frame stepping
+    const deltaTime = 1 / fps;
 
     // Iterate through each frame
     for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
@@ -457,19 +526,62 @@ async function renderFrames(
         throw new Error('Export cancelled by user');
       }
 
-      // CRITICAL FIX #1: Inject offline audio data for this frame
-      // This ensures components get frame-accurate audio data instead of live data
+      // CRITICAL FIX #1: Calculate exact time for this frame
+      // This is the absolute time in the animation, accounting for startTime
+      const currentTime = settings.startTime + frameIndex * deltaTime;
+
+      // CRITICAL FIX #2: Inject offline audio data for this frame
+      // The offline audio data is already trimmed to the export range (startTime to startTime+duration)
+      // So frameIndex 0 corresponds to startTime, frameIndex 1 to startTime+deltaTime, etc.
       const audioFrameData = offlineAudioData.frames[frameIndex];
       if (audioFrameData) {
+        // Debug log for first few frames to analyze audio data quality
+        if (frameIndex < 3) {
+          const freqMax = Math.max(...audioFrameData.frequencyData);
+          const freqMin = Math.min(...audioFrameData.frequencyData);
+          const freqAvg =
+            audioFrameData.frequencyData.reduce((a, b) => a + b, 0) /
+            audioFrameData.frequencyData.length;
+          const freqSample = Array.from(
+            audioFrameData.frequencyData.slice(0, 10),
+          ).join(', ');
+
+          log(
+            'info',
+            `🎵 Frame ${frameIndex} audio data`,
+            `Sample: [${freqSample}...]\nMin: ${freqMin}, Max: ${freqMax}, Avg: ${freqAvg.toFixed(1)}`,
+          );
+        }
         exportStore.setCurrentOfflineAudioData(audioFrameData);
+      } else {
+        console.warn(
+          `[ExportOrchestrator] No audio data for frame ${frameIndex}`,
+        );
       }
 
-      // CRITICAL FIX #2: Seek to the frame index directly, not with time offset!
-      // The frameIndex is already 0-based, no need to add startTime offset
+      // CRITICAL FIX #3: Manually render all layers with explicit time and dt
+      // This bypasses the RAF loop and gives us frame-perfect control
+      layerStore.renderAllLayers(currentTime, deltaTime);
+
+      // Also update the player to keep its time in sync (for UI/scrubbing)
       playerRef.seekTo(frameIndex);
 
-      // CRITICAL FIX #3: Use double RAF to ensure render completes
-      // Single RAF was too fast for complex scenes
+      // CRITICAL FIX #4: Force WebGL to finish rendering before capture
+      // WebGL commands are asynchronous - we need to ensure GPU completes work
+      const canvases = Array.from(
+        rendererContainer.querySelectorAll('canvas'),
+      ) as HTMLCanvasElement[];
+      for (const canvas of canvases) {
+        // Get existing WebGL context (returns existing context if one exists)
+        const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+        if (gl) {
+          // Force GPU to complete all pending operations before we capture
+          gl.finish(); // Blocks until all commands complete
+        }
+      }
+
+      // Use double RAF to ensure DOM and canvas are fully painted
+      // This gives the browser time to flush all rendering commands
       await new Promise((resolve) => requestAnimationFrame(resolve));
       await new Promise((resolve) => requestAnimationFrame(resolve));
 

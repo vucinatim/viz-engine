@@ -31,6 +31,7 @@ type DrawFunction<T, UT> = (params: {
   audioData: AudioDrawData;
   config: T;
   dt: number;
+  time: number;
   state: UT;
   debugEnabled: boolean;
 }) => void;
@@ -47,6 +48,7 @@ type Draw3DFunction<T, UT> = (params: {
   audioData: AudioDrawData;
   config: T;
   dt: number;
+  time: number;
   state: UT;
   debugEnabled: boolean;
 }) => void;
