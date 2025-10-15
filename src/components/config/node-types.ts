@@ -121,6 +121,7 @@ export const VTypeToNodeHandleType: Record<VType, NodeHandleType> = {
   [VType.File]: 'file',
   [VType.Vector3]: 'vector3',
   [VType.Button]: 'string', // Buttons don't carry data, map to string
+  [VType.List]: 'object', // Lists become objects/arrays
 };
 
 export const NodeHandleTypeToVType: Record<NodeHandleType, VType> = {

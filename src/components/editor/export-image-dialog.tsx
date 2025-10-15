@@ -325,6 +325,7 @@ const ExportImageDialog = ({ open, onOpenChange }: ExportImageDialogProps) => {
             ) : imageUrl ? (
               <div className="relative w-full overflow-hidden rounded-lg border border-zinc-700 bg-black">
                 {/* Show exactly what will be downloaded */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={imageUrl}
                   alt="Export preview"
