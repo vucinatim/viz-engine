@@ -220,6 +220,7 @@ const CompPreview = ({
           state: stateRef.current,
           debugEnabled: false,
           dt: 0.016, // Assume ~60fps
+          time: loopTime,
           audioData: {
             dataArray: frequencyData,
             analyzer: syntheticAnalyzer.current as any,
@@ -239,6 +240,7 @@ const CompPreview = ({
           state: stateRef.current,
           debugEnabled: false,
           dt: 0.016,
+          time: loopTime,
           audioData: {
             dataArray: frequencyData,
             analyzer: syntheticAnalyzer.current as any,
