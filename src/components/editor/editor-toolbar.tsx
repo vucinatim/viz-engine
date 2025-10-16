@@ -133,12 +133,16 @@ const EditorToolbar = () => {
   };
 
   const handleResetProject = () => {
+    console.log('[EditorToolbar] Opening reset dialog...');
     setIsResetDialogOpen(true);
   };
 
-  const handleConfirmReset = () => {
-    resetProject();
+  const handleConfirmReset = async () => {
+    console.log(
+      '[EditorToolbar] User confirmed reset, calling resetProject()...',
+    );
     setIsResetDialogOpen(false);
+    await resetProject();
   };
 
   return (

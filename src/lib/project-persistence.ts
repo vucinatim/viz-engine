@@ -64,7 +64,7 @@ export function saveProject(projectName: string = 'project') {
 async function hydrateProjectData(projectFile: ProjectFile) {
   if (projectFile.version !== VIZ_ENGINE_PROJECT_VERSION) {
     // Here you could handle migrating old project file versions
-    alert(
+    console.warn(
       `Project file version (${projectFile.version}) does not match current version (${VIZ_ENGINE_PROJECT_VERSION}). There may be issues.`,
     );
   }
@@ -89,10 +89,6 @@ async function hydrateProjectData(projectFile: ProjectFile) {
 
   // Reset editor history when loading a project
   useEditorHistoryStore.getState().resetHistory();
-
-  // Wait for IndexedDB persistence to complete (stores have 100ms throttle)
-  // Add extra buffer to ensure all writes complete
-  await new Promise((resolve) => setTimeout(resolve, 300));
 }
 
 export function loadProject(file: File) {
@@ -104,10 +100,7 @@ export function loadProject(file: File) {
 
       await hydrateProjectData(projectFile);
 
-      alert('Project loaded successfully! The application will now reload.');
-
-      // Force a page refresh to load the new state from persistence
-      window.location.reload();
+      console.log('[loadProject] Project loaded successfully!');
     } catch (error) {
       console.error('Failed to load project file', error);
       alert('Failed to load project file. See console for details.');
@@ -128,46 +121,131 @@ export async function loadProjectFromUrl(url: string) {
 
     await hydrateProjectData(projectFile);
 
-    alert(
-      'Sample project loaded successfully! The application will now reload.',
-    );
-
-    // Force a page refresh to load the new state from persistence
-    window.location.reload();
+    console.log('[loadProjectFromUrl] Sample project loaded successfully!');
   } catch (error) {
     console.error('Failed to load sample project', error);
     alert('Failed to load sample project. See console for details.');
   }
 }
 
-export function resetProject() {
-  // Reset all stores to their initial states
-  useLayerStore.setState({
-    layers: [],
+/**
+ * Clear all IndexedDB stores for the viz-engine database
+ */
+async function clearIndexedDB() {
+  return new Promise<void>((resolve, reject) => {
+    const request = indexedDB.open('viz-engine', 1);
+
+    request.onsuccess = () => {
+      const db = request.result;
+      const storeNames = Array.from(db.objectStoreNames);
+
+      if (storeNames.length === 0) {
+        db.close();
+        resolve();
+        return;
+      }
+
+      const transaction = db.transaction(storeNames, 'readwrite');
+      const clearPromises: Promise<void>[] = [];
+
+      for (const storeName of storeNames) {
+        const promise = new Promise<void>((resolveStore, rejectStore) => {
+          const store = transaction.objectStore(storeName);
+          const clearRequest = store.clear();
+          clearRequest.onsuccess = () => resolveStore();
+          clearRequest.onerror = () => rejectStore(clearRequest.error);
+        });
+        clearPromises.push(promise);
+      }
+
+      Promise.all(clearPromises)
+        .then(() => {
+          db.close();
+          resolve();
+        })
+        .catch((error) => {
+          db.close();
+          reject(error);
+        });
+    };
+
+    request.onerror = () => reject(request.error);
   });
+}
 
-  useLayerValuesStore.setState({
-    values: {},
+/**
+ * Clear all localStorage keys related to zustand stores
+ */
+function clearLocalStorage() {
+  const keysToRemove = [
+    'layer-store',
+    'layer-values-store',
+    'node-network-store',
+    'editor-store',
+    'editor-history-store',
+  ];
+
+  keysToRemove.forEach((key) => {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.warn(`Failed to remove localStorage key: ${key}`, error);
+    }
   });
+}
 
-  useNodeNetworkStore.setState({
-    networks: {},
-    openNetwork: null,
-    areNetworksMinimized: false,
-  });
+export async function resetProject() {
+  console.log('[resetProject] Starting project reset...');
 
-  useEditorStore.setState({
-    isPlaying: false,
-    playerRef: { current: null },
-    playerFPS: 60,
-    ambientMode: false,
-    dominantColor: '#fff',
-    resolutionMultiplier: 1,
-  });
+  try {
+    // Step 1: Clear all persisted data
+    console.log('[resetProject] Clearing IndexedDB...');
+    await clearIndexedDB();
 
-  // Reset editor history
-  useEditorHistoryStore.getState().resetHistory();
+    console.log('[resetProject] Clearing localStorage...');
+    clearLocalStorage();
 
-  // Force reload to ensure clean state
-  window.location.reload();
+    // Step 2: Reset all stores to their initial states
+    console.log('[resetProject] Resetting layer store...');
+    useLayerStore.setState({
+      layers: [],
+      layerRenderFunctions: new Map(),
+    });
+
+    console.log('[resetProject] Resetting layer values store...');
+    useLayerValuesStore.setState({
+      values: {},
+    });
+
+    console.log('[resetProject] Resetting node network store...');
+    useNodeNetworkStore.setState({
+      networks: {},
+      openNetwork: null,
+      areNetworksMinimized: false,
+    });
+
+    console.log('[resetProject] Resetting editor store...');
+    // Preserve resolution multiplier (quality setting) when resetting
+    const currentResolutionMultiplier =
+      useEditorStore.getState().resolutionMultiplier;
+    useEditorStore.setState({
+      isPlaying: false,
+      playerRef: { current: null },
+      playerFPS: 60,
+      ambientMode: false,
+      dominantColor: '#fff',
+      resolutionMultiplier: currentResolutionMultiplier,
+    });
+
+    // Reset editor history
+    console.log('[resetProject] Resetting editor history...');
+    useEditorHistoryStore.getState().resetHistory();
+
+    console.log('[resetProject] Project reset complete!');
+  } catch (error) {
+    console.error('[resetProject] Error during reset:', error);
+    alert(
+      `Failed to reset project: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
+  }
 }
