@@ -225,12 +225,14 @@ export async function resetProject() {
     });
 
     console.log('[resetProject] Resetting editor store...');
-    // Preserve resolution multiplier (quality setting) when resetting
+    // Preserve resolution multiplier (quality setting) and playerRef when resetting
+    // playerRef is a runtime reference that should not be reset
     const currentResolutionMultiplier =
       useEditorStore.getState().resolutionMultiplier;
+    const currentPlayerRef = useEditorStore.getState().playerRef;
     useEditorStore.setState({
       isPlaying: false,
-      playerRef: { current: null },
+      playerRef: currentPlayerRef, // Preserve the player ref
       playerFPS: 60,
       ambientMode: false,
       dominantColor: '#fff',

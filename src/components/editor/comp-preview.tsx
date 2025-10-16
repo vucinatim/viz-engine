@@ -94,6 +94,9 @@ const CompPreview = ({
       alpha: true,
     });
 
+    // Set clear color to transparent for proper blend mode support
+    renderer.setClearColor(0x000000, 0); // Black with 0 alpha (fully transparent)
+
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.2;

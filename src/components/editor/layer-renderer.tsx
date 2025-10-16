@@ -133,6 +133,10 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       preserveDrawingBuffer: true,
     });
 
+    // CRITICAL for blend modes: Set clear color to transparent
+    // This ensures the canvas is cleared with alpha = 0, allowing blend modes like multiply to work correctly
+    renderer.setClearColor(0x000000, 0); // Black with 0 alpha (fully transparent)
+
     // Improve color fidelity and contrast
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
