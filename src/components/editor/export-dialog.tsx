@@ -21,7 +21,7 @@ import useAudioStore from '@/lib/stores/audio-store';
 import useExportStore from '@/lib/stores/export-store';
 import { estimateVideoSize } from '@/lib/utils/video-encoder';
 import { AlertCircle, ArrowLeft, Download, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import ExportConsole from './export-console';
 import { VideoTimeline } from './video-timeline';
 
@@ -106,18 +106,21 @@ const ExportDialog = ({
     }
   };
 
-  const handleTimelineChange = (start: number, end: number) => {
-    setCustomStartTime(start);
-    setCustomEndTime(end);
-    setSettings({
-      startTime: start,
-      duration: end - start,
-    });
-  };
+  const handleTimelineChange = useCallback(
+    (start: number, end: number) => {
+      setCustomStartTime(start);
+      setCustomEndTime(end);
+      setSettings({
+        startTime: start,
+        duration: end - start,
+      });
+    },
+    [setSettings],
+  );
 
-  const handleTimeChange = (time: number) => {
+  const handleTimeChange = useCallback((time: number) => {
     setCurrentTime(time);
-  };
+  }, []);
 
   const handleStartExport = () => {
     onStartExport();

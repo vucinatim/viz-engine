@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { RangeSlider } from '@/components/ui/range-slider';
+import { DraggableRangeSelector } from '@/components/ui/draggable-range-selector';
 import useAudioStore from '@/lib/stores/audio-store';
 import { cn } from '@/lib/utils';
 import {
@@ -9,7 +9,7 @@ import {
   type WaveformData,
 } from '@/lib/utils/waveform-extractor';
 import { Pause, Play } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 interface VideoTimelineProps {
   startTime: number;
@@ -24,7 +24,7 @@ interface VideoTimelineProps {
 
 const WAVEFORM_HEIGHT = 80; // Height of the timeline in pixels
 
-export const VideoTimeline = ({
+const VideoTimelineComponent = ({
   startTime,
   endTime,
   duration,
@@ -396,16 +396,16 @@ export const VideoTimeline = ({
           style={{ height: WAVEFORM_HEIGHT, width: '100%' }}
         />
 
-        {/* Range slider overlay */}
+        {/* Range selector overlay */}
         <div className="relative" style={{ height: WAVEFORM_HEIGHT }}>
           <div className="absolute inset-0">
-            <RangeSlider
+            <DraggableRangeSelector
               value={[startTime, endTime]}
               onChange={handleRangeChange}
               min={0}
               max={duration}
               step={0.1}
-              className="h-full px-0 [&_[role=slider]]:border-none [&_[role=slider]]:shadow-none"
+              className="h-full px-0"
             />
           </div>
 
@@ -456,3 +456,6 @@ export const VideoTimeline = ({
     </div>
   );
 };
+
+// Memoize to prevent re-renders when parent re-renders unnecessarily
+export const VideoTimeline = memo(VideoTimelineComponent);
