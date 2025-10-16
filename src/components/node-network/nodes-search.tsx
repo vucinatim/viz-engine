@@ -17,12 +17,14 @@ interface NodeSearchProps {
     x: number;
     y: number;
   };
+  onNodeAdded?: () => void;
 }
 
 const NodesSearch = ({
   networkId,
   mousePosition,
   getCanvasPosition,
+  onNodeAdded,
 }: NodeSearchProps) => {
   const { addNode } = useNodeNetwork(networkId);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -75,6 +77,9 @@ const NodesSearch = ({
                     state: {},
                   },
                 });
+
+                // Call the callback if provided
+                onNodeAdded?.();
               }}>
               <p>{node.label}</p>
             </CommandItem>

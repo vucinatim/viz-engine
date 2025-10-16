@@ -1,13 +1,14 @@
 import {
   Copy,
   FileJson,
-  MinusSquare,
-  Network,
+  Minus,
+  Plus,
   Redo2,
+  Search,
   Trash2,
   Undo2,
 } from 'lucide-react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useRafLoop } from 'react-use';
 import { toast } from 'sonner';
 import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
@@ -19,8 +20,10 @@ import {
   useNodeNetwork,
   useNodeNetworkStore,
 } from '../node-network/node-network-store';
+import NodesSearch from '../node-network/nodes-search';
 import { getPresetsForType } from '../node-network/presets';
 import { Button } from '../ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import SearchSelect from '../ui/search-select';
 
 interface NodeEditorToolbarProps {
@@ -32,6 +35,9 @@ const NodeEditorToolbar = ({
   nodeNetworkId,
   reactFlowInstance,
 }: NodeEditorToolbarProps) => {
+  // Add node popover state
+  const [isAddNodeOpen, setIsAddNodeOpen] = useState(false);
+
   // Use history hook for undo/redo functionality
   const { undo, redo, canUndo, canRedo } = useNodeNetworkHistory(nodeNetworkId);
 
@@ -164,6 +170,20 @@ const NodeEditorToolbar = ({
     toast.success('Network copied to clipboard');
   };
 
+  // Get center position of viewport for adding nodes
+  const getCenterPosition = () => {
+    if (!reactFlowInstance.current) {
+      return { x: 0, y: 0 };
+    }
+    // Get the current viewport
+    const viewport = reactFlowInstance.current.getViewport();
+    // Get the center in flow coordinates
+    return {
+      x: -viewport.x / viewport.zoom + 400,
+      y: -viewport.y / viewport.zoom + 300,
+    };
+  };
+
   return (
     <div className="absolute left-4 right-4 top-4 z-10">
       <div className="flex items-center justify-between rounded-lg border border-white/10 bg-black/20 px-4 py-2 backdrop-blur-md">
@@ -179,12 +199,32 @@ const NodeEditorToolbar = ({
           </div>
           <div className="h-5 w-px bg-white/20" />
           <div className="flex items-center gap-2">
+            <Popover open={isAddNodeOpen} onOpenChange={setIsAddNodeOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-white/80 hover:bg-white/10 hover:text-white"
+                  tooltip="Add Node">
+                  <Plus size={14} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-0" align="start">
+                <NodesSearch
+                  networkId={nodeNetworkId}
+                  mousePosition={{ x: 0, y: 0 }}
+                  getCanvasPosition={getCenterPosition}
+                  onNodeAdded={() => setIsAddNodeOpen(false)}
+                />
+              </PopoverContent>
+            </Popover>
             <Button
               variant="ghost"
               size="sm"
               className="h-7 w-7 p-0 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-50"
               onClick={undo}
-              disabled={!canUndo}>
+              disabled={!canUndo}
+              tooltip="Undo">
               <Undo2 size={14} />
             </Button>
             <Button
@@ -192,7 +232,8 @@ const NodeEditorToolbar = ({
               size="sm"
               className="h-7 w-7 p-0 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-50"
               onClick={redo}
-              disabled={!canRedo}>
+              disabled={!canRedo}
+              tooltip="Redo">
               <Redo2 size={14} />
             </Button>
             <Button
@@ -200,8 +241,25 @@ const NodeEditorToolbar = ({
               size="sm"
               className="h-7 w-7 p-0 text-white/80 hover:bg-white/10 hover:text-white"
               onClick={handleDelete}
-              disabled={!hasDeletableSelection()}>
+              disabled={!hasDeletableSelection()}
+              tooltip="Delete">
               <Trash2 size={14} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 text-white/80 hover:bg-white/10 hover:text-white"
+              onClick={handleCopyGraphJson}
+              tooltip="Copy graph JSON">
+              <FileJson size={14} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 text-white/80 hover:bg-white/10 hover:text-white"
+              onClick={handleCopyNetwork}
+              tooltip="Copy network">
+              <Copy size={14} />
             </Button>
           </div>
         </div>
@@ -213,29 +271,14 @@ const NodeEditorToolbar = ({
             onPresetSelect={applyPreset}
           />
           <Button
-            variant="ghost"
-            size="icon"
-            className="text-white/80 hover:bg-white/10 hover:text-white"
-            onClick={handleCopyGraphJson}
-            tooltip="Copy graph JSON">
-            <FileJson size={14} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-white/80 hover:bg-white/10 hover:text-white"
-            onClick={handleCopyNetwork}
-            tooltip="Copy network">
-            <Copy size={14} />
-          </Button>
-          <Button
             variant="ghostly"
             size="icon"
             tooltip="Minimize"
+            className="-mx-2"
             onClick={() =>
               useNodeNetworkStore.getState().setNetworksMinimized(true)
             }>
-            <MinusSquare size={20} />
+            <Minus size={20} />
           </Button>
         </div>
       </div>
@@ -299,7 +342,7 @@ const PresetsSelect = ({
       triggerClassName="bg-white/10"
       trigger={
         <div className="flex items-center gap-2">
-          <Network className="h-4 w-4" />
+          <Search className="h-4 w-4" />
           <span>Load Presets</span>
         </div>
       }

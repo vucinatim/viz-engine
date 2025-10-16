@@ -144,78 +144,93 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
               )}>
               <GripVertical className="h-4 w-4" />
             </div>
-            <div className="flex grow flex-col gap-y-4 px-4 py-4">
-              <div className="flex h-16 gap-x-4">
-                <div className="flex grow flex-col gap-y-2 overflow-y-auto">
-                  <h2 className="flex items-start text-sm font-semibold">
-                    <div className="mr-2 h-5 w-5 shrink-0 rounded-md bg-gradient-to-br from-zinc-200 to-zinc-500 text-center font-bold text-black opacity-20">
-                      {index + 1}
-                    </div>
-                    {comp.name}
-                  </h2>
-                  <p className="text-xs">{comp.description}</p>
+            <CollapsibleTrigger asChild>
+              <div className="flex grow cursor-pointer flex-col gap-y-4 px-4 py-4 transition-colors hover:bg-zinc-800/30">
+                <div className="flex h-16 gap-x-4">
+                  <div className="flex grow flex-col gap-y-2 overflow-y-auto">
+                    <h2 className="flex items-start text-sm font-semibold">
+                      <div className="mr-2 h-5 w-5 shrink-0 rounded-md bg-gradient-to-br from-zinc-200 to-zinc-500 text-center font-bold text-black opacity-20">
+                        {index + 1}
+                      </div>
+                      {comp.name}
+                    </h2>
+                    <p className="text-xs">{comp.description}</p>
+                  </div>
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}>
+                    <LayerPreview layer={layer} />
+                  </div>
                 </div>
-                <LayerPreview layer={layer} />
-              </div>
 
-              <div className="flex select-none items-center gap-x-2">
-                <Button
-                  size="iconMini"
-                  variant="defaultLighter"
-                  tooltip="Delete layer"
-                  onClick={() => removeLayer(layer.id)}>
-                  <Trash className="h-6 w-6" />
-                </Button>
-                <Button
-                  size="iconMini"
-                  variant="defaultLighter"
-                  tooltip="Duplicate layer"
-                  onClick={() => duplicateLayer(layer.id)}>
-                  <Layers2 className="h-6 w-6" />
-                </Button>
-                <Button
-                  size="iconMini"
-                  variant="defaultLighter"
-                  tooltip="Enable/Disable debug overlay"
-                  className={layer.isDebugEnabled ? 'border border-white' : ''}
-                  onClick={() =>
-                    setDebugEnabled(layer.id, !layer.isDebugEnabled)
-                  }>
-                  <Bug className="h-6 w-6" />
-                </Button>
-                <Button
-                  size="iconMini"
-                  variant="defaultLighter"
-                  tooltip="Copy layer settings to clipboard as JSON"
-                  onClick={() => {
-                    const currentValues =
-                      useLayerValuesStore.getState().values[layer.id] ??
-                      layer.comp.defaultValues;
-                    const json = JSON.stringify(currentValues, null, 2);
-                    navigator.clipboard.writeText(json);
-                    toast.success('Layer settings copied to clipboard!');
-                  }}>
-                  <Copy className="h-6 w-6" />
-                </Button>
-
-                <div className="grow" />
-                <CollapsibleTrigger asChild>
+                <div
+                  className="pointer-events-none flex select-none items-center gap-x-2"
+                  onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}>
                   <Button
+                    size="iconMini"
                     variant="defaultLighter"
-                    className="h-7 px-2"
-                    tooltip="Open/Close layer settings">
-                    <div className="flex cursor-pointer items-center gap-x-2">
-                      <p className="grow text-xs">Settings</p>
-                      {layer.isExpanded ? (
-                        <ChevronUp className="h-5 w-5" />
-                      ) : (
-                        <ChevronDown className="h-5 w-5" />
-                      )}
-                    </div>
+                    tooltip="Delete layer"
+                    className="pointer-events-auto"
+                    onClick={() => removeLayer(layer.id)}>
+                    <Trash className="h-6 w-6" />
                   </Button>
-                </CollapsibleTrigger>
+                  <Button
+                    size="iconMini"
+                    variant="defaultLighter"
+                    tooltip="Duplicate layer"
+                    className="pointer-events-auto"
+                    onClick={() => duplicateLayer(layer.id)}>
+                    <Layers2 className="h-6 w-6" />
+                  </Button>
+                  <Button
+                    size="iconMini"
+                    variant="defaultLighter"
+                    tooltip="Enable/Disable debug overlay"
+                    className={cn(
+                      'pointer-events-auto',
+                      layer.isDebugEnabled ? 'border border-white' : '',
+                    )}
+                    onClick={() =>
+                      setDebugEnabled(layer.id, !layer.isDebugEnabled)
+                    }>
+                    <Bug className="h-6 w-6" />
+                  </Button>
+                  <Button
+                    size="iconMini"
+                    variant="defaultLighter"
+                    tooltip="Copy layer settings to clipboard as JSON"
+                    className="pointer-events-auto"
+                    onClick={() => {
+                      const currentValues =
+                        useLayerValuesStore.getState().values[layer.id] ??
+                        layer.comp.defaultValues;
+                      const json = JSON.stringify(currentValues, null, 2);
+                      navigator.clipboard.writeText(json);
+                      toast.success('Layer settings copied to clipboard!');
+                    }}>
+                    <Copy className="h-6 w-6" />
+                  </Button>
+
+                  <div className="grow" />
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant="defaultLighter"
+                      className="pointer-events-auto h-7 px-2"
+                      tooltip="Open/Close layer settings">
+                      <div className="flex cursor-pointer items-center gap-x-2">
+                        <p className="grow text-xs">Settings</p>
+                        {layer.isExpanded ? (
+                          <ChevronUp className="h-5 w-5" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5" />
+                        )}
+                      </div>
+                    </Button>
+                  </CollapsibleTrigger>
+                </div>
               </div>
-            </div>
+            </CollapsibleTrigger>
           </div>
         </div>
 

@@ -1,0 +1,1895 @@
+{
+  "version": "1.0.0",
+  "layerStore": {
+    "layers": [
+      {
+        "id": "layer-Light Tunnel-1760643746953",
+        "comp": {
+          "name": "Light Tunnel"
+        },
+        "isExpanded": false,
+        "isDebugEnabled": false,
+        "layerSettings": {
+          "visible": true,
+          "background": "rgba(10, 10, 10, 1)",
+          "opacity": 1,
+          "blendingMode": "normal",
+          "freeze": true,
+          "showDebug": false
+        }
+      },
+      {
+        "id": "layer-Noise Shader-1760643834182",
+        "comp": {
+          "name": "Noise Shader"
+        },
+        "isExpanded": false,
+        "isDebugEnabled": false,
+        "layerSettings": {
+          "visible": true,
+          "background": "rgba(10, 10, 10, 1)",
+          "opacity": 1,
+          "blendingMode": "hue",
+          "freeze": true,
+          "showDebug": false
+        }
+      }
+    ]
+  },
+  "layerValuesStore": {
+    "values": {
+      "layer-Light Tunnel-1760643746953": {
+        "structure": {
+          "cubeSize": 1.7,
+          "spacing": 1,
+          "tunnelDepth": 13
+        },
+        "appearance": {
+          "renderMode": "Solid",
+          "colorMode": "Alternating",
+          "edgeColor": "#00FFFF",
+          "colorPalette": [
+            "#FF00FF",
+            "#00FFFF"
+          ]
+        },
+        "edges": {
+          "edgeThickness": 5.5,
+          "glowIntensity": 1.6
+        },
+        "material": {
+          "solidCubeColor": "#0a0a0a",
+          "solidEmissiveColor": "rgb(0, 0, 0)",
+          "solidEmissiveIntensity": 0,
+          "metalness": 0.7,
+          "roughness": 0.77,
+          "envMapIntensity": 0
+        },
+        "lighting": {
+          "enableLights": true,
+          "lightCount": 6,
+          "lightCircleRadius": 4.3,
+          "lightCircleDistance": 7,
+          "lightIntensity": 100,
+          "lightDistance": 100,
+          "lightRotationSpeed": 0.15
+        },
+        "animation": {
+          "tunnelSpeed": 0.5,
+          "rotationSpeed": 0.05
+        },
+        "wave": {
+          "triggerWave": false,
+          "waveSpeed": 8.5,
+          "waveAmplitude": 1,
+          "waveDuration": 0.4
+        },
+        "atmosphere": {
+          "fogDensity": 0.1
+        },
+        "postProcessing": {
+          "bloom": true,
+          "bloomStrength": 0.5,
+          "bloomRadius": 0.8,
+          "bloomThreshold": 0.1,
+          "depthOfField": false,
+          "dofFocus": 19,
+          "dofAperture": 0.0001
+        }
+      },
+      "layer-Noise Shader-1760643834182": {
+        "noise": {
+          "type": "simplex",
+          "scale": 0.5,
+          "octaves": 3,
+          "lacunarity": 2,
+          "gain": 0.5
+        },
+        "animation": {
+          "speed": 3.3,
+          "flowX": 0.05,
+          "flowY": 0.07,
+          "rotationSpeed": 0
+        },
+        "distortion": {
+          "enabled": true,
+          "amount": 0.5,
+          "scale": 1
+        },
+        "color": {
+          "mode": "gradient",
+          "color1": "rgb(140, 175, 38)",
+          "color2": "rgb(53, 180, 217)",
+          "color3": "rgb(21, 217, 255)",
+          "hueShift": 2.4,
+          "saturation": 0.46
+        },
+        "output": {
+          "brightness": 1.4,
+          "contrast": 1.2,
+          "invert": false,
+          "posterize": 0
+        }
+      }
+    }
+  },
+  "nodeNetworkStore": {
+    "networks": {
+      "layer-Light Tunnel-1760643746953:wave:triggerWave": {
+        "name": "layer-Light Tunnel-1760643746953:wave:triggerWave",
+        "isEnabled": true,
+        "isMinimized": false,
+        "nodes": [
+          {
+            "id": "layer-Light Tunnel-1760643746953:wave:triggerWave-input-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "data": {
+              "definition": "Input",
+              "inputValues": {},
+              "state": {}
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:wave:triggerWave-preset-0-kick_band",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 280,
+              "y": 0
+            },
+            "data": {
+              "definition": "Frequency Band",
+              "inputValues": {
+                "startFrequency": 80,
+                "endFrequency": 150
+              },
+              "state": {}
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:wave:triggerWave-preset-1-kick_info",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 560,
+              "y": 0
+            },
+            "data": {
+              "definition": "Band Info",
+              "inputValues": {},
+              "state": {}
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:wave:triggerWave-preset-2-env",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 840,
+              "y": 0
+            },
+            "data": {
+              "definition": "Envelope Follower",
+              "inputValues": {
+                "attackMs": 6,
+                "releaseMs": 120
+              },
+              "state": {}
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:wave:triggerWave-preset-3-adapt",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1120,
+              "y": 0
+            },
+            "data": {
+              "definition": "Adaptive Normalize (Quantile)",
+              "inputValues": {
+                "windowMs": 4000,
+                "qLow": 0.5,
+                "qHigh": 0.98,
+                "freezeBelow": 140
+              },
+              "state": {}
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:wave:triggerWave-preset-4-gate",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1400,
+              "y": 0
+            },
+            "data": {
+              "definition": "Hysteresis Gate",
+              "inputValues": {
+                "low": 0.33,
+                "high": 0.45
+              },
+              "state": {}
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:wave:triggerWave-output-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1680,
+              "y": 0
+            },
+            "data": {
+              "definition": {
+                "label": "Output",
+                "type": "number"
+              },
+              "inputValues": {},
+              "state": {}
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "layer-Light Tunnel-1760643746953:wave:triggerWave-edge-0",
+            "source": "layer-Light Tunnel-1760643746953:wave:triggerWave-input-node",
+            "sourceHandle": "frequencyAnalysis",
+            "target": "layer-Light Tunnel-1760643746953:wave:triggerWave-preset-0-kick_band",
+            "targetHandle": "frequencyAnalysis"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:wave:triggerWave-edge-1",
+            "source": "layer-Light Tunnel-1760643746953:wave:triggerWave-preset-0-kick_band",
+            "sourceHandle": "bandData",
+            "target": "layer-Light Tunnel-1760643746953:wave:triggerWave-preset-1-kick_info",
+            "targetHandle": "data"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:wave:triggerWave-edge-2",
+            "source": "layer-Light Tunnel-1760643746953:wave:triggerWave-preset-1-kick_info",
+            "sourceHandle": "average",
+            "target": "layer-Light Tunnel-1760643746953:wave:triggerWave-preset-2-env",
+            "targetHandle": "value"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:wave:triggerWave-edge-3",
+            "source": "layer-Light Tunnel-1760643746953:wave:triggerWave-preset-2-env",
+            "sourceHandle": "env",
+            "target": "layer-Light Tunnel-1760643746953:wave:triggerWave-preset-3-adapt",
+            "targetHandle": "value"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:wave:triggerWave-edge-4",
+            "source": "layer-Light Tunnel-1760643746953:wave:triggerWave-preset-3-adapt",
+            "sourceHandle": "result",
+            "target": "layer-Light Tunnel-1760643746953:wave:triggerWave-preset-4-gate",
+            "targetHandle": "value"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:wave:triggerWave-edge-5",
+            "source": "layer-Light Tunnel-1760643746953:wave:triggerWave-preset-4-gate",
+            "sourceHandle": "state",
+            "target": "layer-Light Tunnel-1760643746953:wave:triggerWave-output-node",
+            "targetHandle": "output"
+          }
+        ]
+      },
+      "layer-Light Tunnel-1760643746953:animation:tunnelSpeed": {
+        "name": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed",
+        "isEnabled": true,
+        "isMinimized": false,
+        "nodes": [
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-input-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "data": {
+              "definition": "Input",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 152,
+              "height": 154
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-preset-0-band",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 280,
+              "y": 0
+            },
+            "data": {
+              "definition": "Frequency Band",
+              "inputValues": {
+                "startFrequency": 20,
+                "endFrequency": 163
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 341,
+              "height": 266
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-preset-1-info",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 560,
+              "y": 0
+            },
+            "data": {
+              "definition": "Band Info",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 188,
+              "height": 194
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-preset-2-adapt",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 840,
+              "y": 0
+            },
+            "data": {
+              "definition": "Adaptive Normalize (Quantile)",
+              "inputValues": {
+                "windowMs": 4000,
+                "qLow": 0.3,
+                "qHigh": 0.9,
+                "freezeBelow": 130
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 256,
+              "height": 330
+            },
+            "selected": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-preset-3-env_follow",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1132.08134842063,
+              "y": 9.665078736504213
+            },
+            "data": {
+              "definition": "Envelope Follower",
+              "inputValues": {
+                "attackMs": 100,
+                "releaseMs": "1000"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 240,
+              "height": 234
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-output-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 2041.8614860935213,
+              "y": -3.3708316833235585
+            },
+            "data": {
+              "definition": {
+                "label": "Output",
+                "type": "number"
+              },
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 183,
+              "height": 74
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-node-1760644589909",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1406.8182479967902,
+              "y": -37.15316926028576
+            },
+            "data": {
+              "definition": "Math",
+              "inputValues": {
+                "a": 1,
+                "b": "5",
+                "operation": "multiply"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 237,
+              "height": 154
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-node-1760645866877",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1717,
+              "y": -42
+            },
+            "data": {
+              "definition": "Math",
+              "inputValues": {
+                "a": 1,
+                "b": "0.5",
+                "operation": "add"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 237,
+              "height": 154
+            },
+            "selected": false,
+            "dragging": false
+          }
+        ],
+        "edges": [
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-edge-0",
+            "source": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-input-node",
+            "sourceHandle": "frequencyAnalysis",
+            "target": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-preset-0-band",
+            "targetHandle": "frequencyAnalysis"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-edge-1",
+            "source": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-preset-0-band",
+            "sourceHandle": "bandData",
+            "target": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-preset-1-info",
+            "targetHandle": "data"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-edge-2",
+            "source": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-preset-1-info",
+            "sourceHandle": "average",
+            "target": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-preset-2-adapt",
+            "targetHandle": "value"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-edge-3",
+            "source": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-preset-2-adapt",
+            "sourceHandle": "result",
+            "target": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-preset-3-env_follow",
+            "targetHandle": "value"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-preset-3-env_follow",
+            "sourceHandle": "env",
+            "target": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-node-1760644589909",
+            "targetHandle": "a",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:animation:tunnelSpeed-preset-3-env_followenv-layer-Light Tunnel-1760643746953:animation:tunnelSpeed-node-1760644589909a"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-node-1760644589909",
+            "sourceHandle": "result",
+            "target": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-node-1760645866877",
+            "targetHandle": "a",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:animation:tunnelSpeed-node-1760644589909result-layer-Light Tunnel-1760643746953:animation:tunnelSpeed-node-1760645866877a"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-node-1760645866877",
+            "sourceHandle": "result",
+            "target": "layer-Light Tunnel-1760643746953:animation:tunnelSpeed-output-node",
+            "targetHandle": "output",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:animation:tunnelSpeed-node-1760645866877result-layer-Light Tunnel-1760643746953:animation:tunnelSpeed-output-nodeoutput"
+          }
+        ]
+      },
+      "layer-Light Tunnel-1760643746953:animation:rotationSpeed": {
+        "name": "layer-Light Tunnel-1760643746953:animation:rotationSpeed",
+        "isEnabled": true,
+        "isMinimized": false,
+        "nodes": [
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-input-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "data": {
+              "definition": "Input",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 152,
+              "height": 154
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-preset-0-band",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 280,
+              "y": 0
+            },
+            "data": {
+              "definition": "Frequency Band",
+              "inputValues": {
+                "startFrequency": 20,
+                "endFrequency": 163
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 341,
+              "height": 266
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-preset-1-info",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 560,
+              "y": 0
+            },
+            "data": {
+              "definition": "Band Info",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 188,
+              "height": 194
+            },
+            "selected": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-preset-2-adapt",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 840,
+              "y": 0
+            },
+            "data": {
+              "definition": "Adaptive Normalize (Quantile)",
+              "inputValues": {
+                "windowMs": 4000,
+                "qLow": 0.3,
+                "qHigh": 0.9,
+                "freezeBelow": 130
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 256,
+              "height": 330
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-preset-3-env_follow",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1154,
+              "y": 18
+            },
+            "data": {
+              "definition": "Envelope Follower",
+              "inputValues": {
+                "attackMs": 100,
+                "releaseMs": 400
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 240,
+              "height": 234
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-output-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 2133.5,
+              "y": -44
+            },
+            "data": {
+              "definition": {
+                "label": "Output",
+                "type": "number"
+              },
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 183,
+              "height": 74
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-node-1760644794359",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1452,
+              "y": -33
+            },
+            "data": {
+              "definition": "Math",
+              "inputValues": {
+                "a": 1,
+                "b": "0.3",
+                "operation": "multiply"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 237,
+              "height": 154
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-node-1760644845299",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1795,
+              "y": 42
+            },
+            "data": {
+              "definition": "Math",
+              "inputValues": {
+                "a": 1,
+                "b": "0.1",
+                "operation": "add"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 237,
+              "height": 154
+            },
+            "selected": false,
+            "dragging": false
+          }
+        ],
+        "edges": [
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-edge-0",
+            "source": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-input-node",
+            "sourceHandle": "frequencyAnalysis",
+            "target": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-preset-0-band",
+            "targetHandle": "frequencyAnalysis"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-edge-1",
+            "source": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-preset-0-band",
+            "sourceHandle": "bandData",
+            "target": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-preset-1-info",
+            "targetHandle": "data"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-edge-2",
+            "source": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-preset-1-info",
+            "sourceHandle": "average",
+            "target": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-preset-2-adapt",
+            "targetHandle": "value"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-edge-3",
+            "source": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-preset-2-adapt",
+            "sourceHandle": "result",
+            "target": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-preset-3-env_follow",
+            "targetHandle": "value"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-preset-3-env_follow",
+            "sourceHandle": "env",
+            "target": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-node-1760644794359",
+            "targetHandle": "a",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:animation:rotationSpeed-preset-3-env_followenv-layer-Light Tunnel-1760643746953:animation:rotationSpeed-node-1760644794359a",
+            "selected": false
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-node-1760644794359",
+            "sourceHandle": "result",
+            "target": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-node-1760644845299",
+            "targetHandle": "a",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:animation:rotationSpeed-node-1760644794359result-layer-Light Tunnel-1760643746953:animation:rotationSpeed-node-1760644845299a"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-node-1760644845299",
+            "sourceHandle": "result",
+            "target": "layer-Light Tunnel-1760643746953:animation:rotationSpeed-output-node",
+            "targetHandle": "output",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:animation:rotationSpeed-node-1760644845299result-layer-Light Tunnel-1760643746953:animation:rotationSpeed-output-nodeoutput"
+          }
+        ]
+      },
+      "layer-Light Tunnel-1760643746953:structure:cubeSize": {
+        "name": "layer-Light Tunnel-1760643746953:structure:cubeSize",
+        "isEnabled": false,
+        "isMinimized": false,
+        "nodes": [
+          {
+            "id": "layer-Light Tunnel-1760643746953:structure:cubeSize-input-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "data": {
+              "definition": "Input",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 152,
+              "height": 154
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:structure:cubeSize-preset-0-sine",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 280,
+              "y": 0
+            },
+            "data": {
+              "definition": "Sine",
+              "inputValues": {
+                "frequency": "0.3",
+                "phase": "0.5",
+                "amplitude": "0.5"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 233,
+              "height": 194
+            },
+            "selected": true
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:structure:cubeSize-output-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 560,
+              "y": 0
+            },
+            "data": {
+              "definition": {
+                "label": "Output",
+                "type": "number"
+              },
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 183,
+              "height": 74
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "layer-Light Tunnel-1760643746953:structure:cubeSize-edge-0",
+            "source": "layer-Light Tunnel-1760643746953:structure:cubeSize-input-node",
+            "sourceHandle": "time",
+            "target": "layer-Light Tunnel-1760643746953:structure:cubeSize-preset-0-sine",
+            "targetHandle": "time"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:structure:cubeSize-edge-1",
+            "source": "layer-Light Tunnel-1760643746953:structure:cubeSize-preset-0-sine",
+            "sourceHandle": "value",
+            "target": "layer-Light Tunnel-1760643746953:structure:cubeSize-output-node",
+            "targetHandle": "output"
+          }
+        ]
+      },
+      "layer-Light Tunnel-1760643746953:structure:spacing": {
+        "name": "layer-Light Tunnel-1760643746953:structure:spacing",
+        "isEnabled": false,
+        "isMinimized": false,
+        "nodes": [
+          {
+            "id": "layer-Light Tunnel-1760643746953:structure:spacing-input-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "data": {
+              "definition": "Input",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 152,
+              "height": 154
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:structure:spacing-preset-0-sine",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 167.29614271938283,
+              "y": -4.728833172613307
+            },
+            "data": {
+              "definition": "Sine",
+              "inputValues": {
+                "frequency": "0.05",
+                "phase": 0,
+                "amplitude": "0.3"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 233,
+              "height": 194
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:structure:spacing-output-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 619.1104146576664,
+              "y": 21.279749276759894
+            },
+            "data": {
+              "definition": {
+                "label": "Output",
+                "type": "number"
+              },
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 183,
+              "height": 74
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:structure:spacing-node-1760646047083",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 421.1529411764707,
+              "y": 34.85564127290259
+            },
+            "data": {
+              "definition": "Math",
+              "inputValues": {
+                "a": 1,
+                "b": 1,
+                "operation": "add"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 237,
+              "height": 154
+            },
+            "selected": true,
+            "dragging": false
+          }
+        ],
+        "edges": [
+          {
+            "id": "layer-Light Tunnel-1760643746953:structure:spacing-edge-0",
+            "source": "layer-Light Tunnel-1760643746953:structure:spacing-input-node",
+            "sourceHandle": "time",
+            "target": "layer-Light Tunnel-1760643746953:structure:spacing-preset-0-sine",
+            "targetHandle": "time"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:structure:spacing-preset-0-sine",
+            "sourceHandle": "value",
+            "target": "layer-Light Tunnel-1760643746953:structure:spacing-node-1760646047083",
+            "targetHandle": "a",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:structure:spacing-preset-0-sinevalue-layer-Light Tunnel-1760643746953:structure:spacing-node-1760646047083a"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:structure:spacing-node-1760646047083",
+            "sourceHandle": "result",
+            "target": "layer-Light Tunnel-1760643746953:structure:spacing-output-node",
+            "targetHandle": "output",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:structure:spacing-node-1760646047083result-layer-Light Tunnel-1760643746953:structure:spacing-output-nodeoutput"
+          }
+        ]
+      },
+      "layer-Light Tunnel-1760643746953:edges:glowIntensity": {
+        "name": "layer-Light Tunnel-1760643746953:edges:glowIntensity",
+        "isEnabled": true,
+        "isMinimized": false,
+        "nodes": [
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-input-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "data": {
+              "definition": "Input",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 152,
+              "height": 154
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-0-band",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 280,
+              "y": 0
+            },
+            "data": {
+              "definition": "Frequency Band",
+              "inputValues": {
+                "startFrequency": 6000,
+                "endFrequency": 14000
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 341,
+              "height": 266
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-1-info",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 560,
+              "y": 0
+            },
+            "data": {
+              "definition": "Band Info",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 188,
+              "height": 194
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-2-adapt",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 840,
+              "y": 0
+            },
+            "data": {
+              "definition": "Adaptive Normalize (Quantile)",
+              "inputValues": {
+                "windowMs": 3000,
+                "qLow": 0.6,
+                "qHigh": 0.92,
+                "freezeBelow": 35
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 256,
+              "height": 330
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-3-gate",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1120,
+              "y": 0
+            },
+            "data": {
+              "definition": "Hysteresis Gate",
+              "inputValues": {
+                "low": 0.45,
+                "high": 0.55
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 234,
+              "height": 232
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-output-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1907.3600716706833,
+              "y": 33.824004778045634
+            },
+            "data": {
+              "definition": {
+                "label": "Output",
+                "type": "number"
+              },
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 183,
+              "height": 74
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646282549",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1025.8475402200515,
+              "y": 363.6577292247455
+            },
+            "data": {
+              "definition": "Sine",
+              "inputValues": {
+                "time": 0,
+                "frequency": "0.05",
+                "phase": 0,
+                "amplitude": "0.05"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 233,
+              "height": 194
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646295538",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1624.3390485195237,
+              "y": 81.84576381982441
+            },
+            "data": {
+              "definition": "Math",
+              "inputValues": {
+                "a": 1,
+                "b": 1,
+                "operation": "add"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 237,
+              "height": 154
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646362548",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1321.0989461110407,
+              "y": 346.7477748880713
+            },
+            "data": {
+              "definition": "Math",
+              "inputValues": {
+                "a": 1,
+                "b": "0.05",
+                "operation": "add"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 237,
+              "height": 154
+            },
+            "selected": true,
+            "dragging": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760647510200",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1375.787753134041,
+              "y": -64.37116682738672
+            },
+            "data": {
+              "definition": "Math",
+              "inputValues": {
+                "a": 1,
+                "b": "2",
+                "operation": "multiply"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 237,
+              "height": 154
+            },
+            "selected": false,
+            "dragging": false
+          }
+        ],
+        "edges": [
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-edge-0",
+            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-input-node",
+            "sourceHandle": "frequencyAnalysis",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-0-band",
+            "targetHandle": "frequencyAnalysis"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-edge-1",
+            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-0-band",
+            "sourceHandle": "bandData",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-1-info",
+            "targetHandle": "data"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-edge-2",
+            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-1-info",
+            "sourceHandle": "average",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-2-adapt",
+            "targetHandle": "value"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-edge-3",
+            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-2-adapt",
+            "sourceHandle": "result",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-3-gate",
+            "targetHandle": "value"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-input-node",
+            "sourceHandle": "time",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646282549",
+            "targetHandle": "time",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-input-nodetime-layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646282549time"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646295538",
+            "sourceHandle": "result",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-output-node",
+            "targetHandle": "output",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646295538result-layer-Light Tunnel-1760643746953:edges:glowIntensity-output-nodeoutput"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646282549",
+            "sourceHandle": "value",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646362548",
+            "targetHandle": "a",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646282549value-layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646362548a"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646362548",
+            "sourceHandle": "result",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646295538",
+            "targetHandle": "b",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646362548result-layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646295538b"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-3-gate",
+            "sourceHandle": "gated",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760647510200",
+            "targetHandle": "a",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-3-gategated-layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760647510200a"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760647510200",
+            "sourceHandle": "result",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646295538",
+            "targetHandle": "a",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760647510200result-layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646295538a"
+          }
+        ]
+      },
+      "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius": {
+        "name": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius",
+        "isEnabled": true,
+        "isMinimized": false,
+        "nodes": [
+          {
+            "id": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-input-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "data": {
+              "definition": "Input",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 152,
+              "height": 154
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-preset-0-band",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 280,
+              "y": 0
+            },
+            "data": {
+              "definition": "Frequency Band",
+              "inputValues": {
+                "startFrequency": 180,
+                "endFrequency": 4000
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 341,
+              "height": 266
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-preset-1-info",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 560,
+              "y": 0
+            },
+            "data": {
+              "definition": "Band Info",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 188,
+              "height": 194
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-preset-2-env",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 840,
+              "y": 0
+            },
+            "data": {
+              "definition": "Envelope Follower",
+              "inputValues": {
+                "attackMs": 4,
+                "releaseMs": 140
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 240,
+              "height": 234
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-preset-3-adapt",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1120,
+              "y": 0
+            },
+            "data": {
+              "definition": "Adaptive Normalize (Quantile)",
+              "inputValues": {
+                "windowMs": 4000,
+                "qLow": 0.5,
+                "qHigh": 0.95,
+                "freezeBelow": 90
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 256,
+              "height": 330
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-preset-4-gate",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1400,
+              "y": 0
+            },
+            "data": {
+              "definition": "Hysteresis Gate",
+              "inputValues": {
+                "low": 0.06,
+                "high": 0.14
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 234,
+              "height": 232
+            }
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-output-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1680,
+              "y": 0
+            },
+            "data": {
+              "definition": {
+                "label": "Output",
+                "type": "number"
+              },
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 183,
+              "height": 74
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-edge-0",
+            "source": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-input-node",
+            "sourceHandle": "frequencyAnalysis",
+            "target": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-preset-0-band",
+            "targetHandle": "frequencyAnalysis"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-edge-1",
+            "source": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-preset-0-band",
+            "sourceHandle": "bandData",
+            "target": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-preset-1-info",
+            "targetHandle": "data"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-edge-2",
+            "source": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-preset-1-info",
+            "sourceHandle": "average",
+            "target": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-preset-2-env",
+            "targetHandle": "value"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-edge-3",
+            "source": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-preset-2-env",
+            "sourceHandle": "env",
+            "target": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-preset-3-adapt",
+            "targetHandle": "value"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-edge-4",
+            "source": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-preset-3-adapt",
+            "sourceHandle": "result",
+            "target": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-preset-4-gate",
+            "targetHandle": "value"
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-edge-5",
+            "source": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-preset-4-gate",
+            "sourceHandle": "gated",
+            "target": "layer-Light Tunnel-1760643746953:lighting:lightCircleRadius-output-node",
+            "targetHandle": "output"
+          }
+        ]
+      },
+      "layer-Noise Shader-1760643834182:color:color1": {
+        "name": "layer-Noise Shader-1760643834182:color:color1",
+        "isEnabled": true,
+        "isMinimized": false,
+        "nodes": [
+          {
+            "id": "layer-Noise Shader-1760643834182:color:color1-input-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "data": {
+              "definition": "Input",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 152,
+              "height": 154
+            }
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:color:color1-preset-0-snare_band",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 280,
+              "y": 0
+            },
+            "data": {
+              "definition": "Frequency Band",
+              "inputValues": {
+                "startFrequency": 180,
+                "endFrequency": 4000
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 341,
+              "height": 266
+            }
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:color:color1-preset-1-snare_info",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 560,
+              "y": 0
+            },
+            "data": {
+              "definition": "Band Info",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 188,
+              "height": 194
+            }
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:color:color1-preset-2-env",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 840,
+              "y": 0
+            },
+            "data": {
+              "definition": "Envelope Follower",
+              "inputValues": {
+                "attackMs": 4,
+                "releaseMs": 140
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 240,
+              "height": 234
+            }
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:color:color1-preset-3-adapt",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1120,
+              "y": 0
+            },
+            "data": {
+              "definition": "Adaptive Normalize (Quantile)",
+              "inputValues": {
+                "windowMs": 4000,
+                "qLow": 0.5,
+                "qHigh": 0.95,
+                "freezeBelow": 90
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 256,
+              "height": 330
+            }
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:color:color1-preset-4-gate",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1400,
+              "y": 0
+            },
+            "data": {
+              "definition": "Hysteresis Gate",
+              "inputValues": {
+                "low": 0.06,
+                "high": 0.14
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 234,
+              "height": 232
+            }
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:color:color1-preset-5-counter",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1680,
+              "y": 0
+            },
+            "data": {
+              "definition": "Threshold Counter",
+              "inputValues": {
+                "threshold": 0.5,
+                "maxValue": 5
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 234,
+              "height": 266
+            }
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:color:color1-preset-6-mapper",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1960,
+              "y": 0
+            },
+            "data": {
+              "definition": "Value Mapper",
+              "inputValues": {
+                "mode": "color",
+                "mapping": {
+                  "0": "#ff0000",
+                  "1": "#00ff00",
+                  "2": "#0000ff",
+                  "3": "#ffff00",
+                  "4": "#ff00ff"
+                },
+                "default": "#ffffff"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 254,
+              "height": 458
+            }
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:color:color1-output-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 2240,
+              "y": 0
+            },
+            "data": {
+              "definition": {
+                "label": "Output",
+                "type": "color"
+              },
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 183,
+              "height": 74
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "layer-Noise Shader-1760643834182:color:color1-edge-0",
+            "source": "layer-Noise Shader-1760643834182:color:color1-input-node",
+            "sourceHandle": "frequencyAnalysis",
+            "target": "layer-Noise Shader-1760643834182:color:color1-preset-0-snare_band",
+            "targetHandle": "frequencyAnalysis"
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:color:color1-edge-1",
+            "source": "layer-Noise Shader-1760643834182:color:color1-preset-0-snare_band",
+            "sourceHandle": "bandData",
+            "target": "layer-Noise Shader-1760643834182:color:color1-preset-1-snare_info",
+            "targetHandle": "data"
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:color:color1-edge-2",
+            "source": "layer-Noise Shader-1760643834182:color:color1-preset-1-snare_info",
+            "sourceHandle": "average",
+            "target": "layer-Noise Shader-1760643834182:color:color1-preset-2-env",
+            "targetHandle": "value"
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:color:color1-edge-3",
+            "source": "layer-Noise Shader-1760643834182:color:color1-preset-2-env",
+            "sourceHandle": "env",
+            "target": "layer-Noise Shader-1760643834182:color:color1-preset-3-adapt",
+            "targetHandle": "value"
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:color:color1-edge-4",
+            "source": "layer-Noise Shader-1760643834182:color:color1-preset-3-adapt",
+            "sourceHandle": "result",
+            "target": "layer-Noise Shader-1760643834182:color:color1-preset-4-gate",
+            "targetHandle": "value"
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:color:color1-edge-5",
+            "source": "layer-Noise Shader-1760643834182:color:color1-preset-4-gate",
+            "sourceHandle": "gated",
+            "target": "layer-Noise Shader-1760643834182:color:color1-preset-5-counter",
+            "targetHandle": "value"
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:color:color1-edge-6",
+            "source": "layer-Noise Shader-1760643834182:color:color1-preset-5-counter",
+            "sourceHandle": "count",
+            "target": "layer-Noise Shader-1760643834182:color:color1-preset-6-mapper",
+            "targetHandle": "input"
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:color:color1-edge-7",
+            "source": "layer-Noise Shader-1760643834182:color:color1-preset-6-mapper",
+            "sourceHandle": "output",
+            "target": "layer-Noise Shader-1760643834182:color:color1-output-node",
+            "targetHandle": "output"
+          }
+        ]
+      },
+      "layer-Noise Shader-1760643834182:animation:speed": {
+        "name": "layer-Noise Shader-1760643834182:animation:speed",
+        "isEnabled": true,
+        "isMinimized": false,
+        "nodes": [
+          {
+            "id": "layer-Noise Shader-1760643834182:animation:speed-input-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "data": {
+              "definition": "Input",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 152,
+              "height": 154
+            }
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:animation:speed-preset-0-band",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 280,
+              "y": 0
+            },
+            "data": {
+              "definition": "Frequency Band",
+              "inputValues": {
+                "startFrequency": 20,
+                "endFrequency": 163
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 341,
+              "height": 266
+            }
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:animation:speed-preset-1-info",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 560,
+              "y": 0
+            },
+            "data": {
+              "definition": "Band Info",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 188,
+              "height": 194
+            }
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:animation:speed-preset-2-adapt",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 840,
+              "y": 0
+            },
+            "data": {
+              "definition": "Adaptive Normalize (Quantile)",
+              "inputValues": {
+                "windowMs": 4000,
+                "qLow": 0.3,
+                "qHigh": 0.9,
+                "freezeBelow": 130
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 256,
+              "height": 330
+            }
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:animation:speed-preset-3-env_follow",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1120,
+              "y": 0
+            },
+            "data": {
+              "definition": "Envelope Follower",
+              "inputValues": {
+                "attackMs": 100,
+                "releaseMs": 400
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 240,
+              "height": 234
+            }
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:animation:speed-output-node",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1400,
+              "y": 0
+            },
+            "data": {
+              "definition": {
+                "label": "Output",
+                "type": "number"
+              },
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 183,
+              "height": 74
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "layer-Noise Shader-1760643834182:animation:speed-edge-0",
+            "source": "layer-Noise Shader-1760643834182:animation:speed-input-node",
+            "sourceHandle": "frequencyAnalysis",
+            "target": "layer-Noise Shader-1760643834182:animation:speed-preset-0-band",
+            "targetHandle": "frequencyAnalysis"
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:animation:speed-edge-1",
+            "source": "layer-Noise Shader-1760643834182:animation:speed-preset-0-band",
+            "sourceHandle": "bandData",
+            "target": "layer-Noise Shader-1760643834182:animation:speed-preset-1-info",
+            "targetHandle": "data"
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:animation:speed-edge-2",
+            "source": "layer-Noise Shader-1760643834182:animation:speed-preset-1-info",
+            "sourceHandle": "average",
+            "target": "layer-Noise Shader-1760643834182:animation:speed-preset-2-adapt",
+            "targetHandle": "value"
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:animation:speed-edge-3",
+            "source": "layer-Noise Shader-1760643834182:animation:speed-preset-2-adapt",
+            "sourceHandle": "result",
+            "target": "layer-Noise Shader-1760643834182:animation:speed-preset-3-env_follow",
+            "targetHandle": "value"
+          },
+          {
+            "id": "layer-Noise Shader-1760643834182:animation:speed-edge-4",
+            "source": "layer-Noise Shader-1760643834182:animation:speed-preset-3-env_follow",
+            "sourceHandle": "env",
+            "target": "layer-Noise Shader-1760643834182:animation:speed-output-node",
+            "targetHandle": "output"
+          }
+        ]
+      }
+    },
+    "openNetwork": "layer-Light Tunnel-1760643746953:edges:glowIntensity",
+    "areNetworksMinimized": false
+  },
+  "editorStore": {
+    "playerFPS": 60,
+    "ambientMode": false,
+    "resolutionMultiplier": 2
+  }
+}

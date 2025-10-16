@@ -8,6 +8,7 @@ import {
   Controls,
   Edge,
   ReactFlow,
+  reconnectEdge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import {
@@ -127,6 +128,15 @@ const NodeNetworkRenderer = ({
     [nodes, edges],
   );
 
+  // Handle edge reconnection
+  const onReconnect = useCallback(
+    (oldEdge: Edge, newConnection: Connection) => {
+      const newEdges = reconnectEdge(oldEdge, newConnection, edges);
+      setEdges(newEdges);
+    },
+    [edges, setEdges],
+  );
+
   const nodeTypes = useMemo(
     () => ({
       NodeRenderer: (props: any) => {
@@ -214,6 +224,10 @@ const NodeNetworkRenderer = ({
             nodes={nodes}
             edges={edges}
             isValidConnection={isValidConnection}
+            connectionRadius={40}
+            snapToGrid={false}
+            edgesReconnectable={true}
+            onReconnect={onReconnect}
             onNodesChange={(changes) => {
               // Check if this is a drag operation
               const isDragStart = changes.some(

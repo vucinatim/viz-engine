@@ -7,8 +7,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, useConnection } from '@xyflow/react';
 import { Info } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { MATH_OPERATIONS } from '../config/math-operations';
 import {
   NodeHandleType,
@@ -147,6 +148,7 @@ const NodeRenderer = ({
                   position={Position.Left}
                   type="target"
                   index={index}
+                  nodeId={nodeId}
                 />
                 <p className="pointer-events-none pl-1 text-xs">
                   {input.label}
@@ -167,6 +169,7 @@ const NodeRenderer = ({
                   position={Position.Right}
                   type="source"
                   index={index}
+                  nodeId={nodeId}
                 />
               </div>
             ))}
@@ -192,23 +195,111 @@ interface RenderHandleProps {
   position: Position;
   type: 'source' | 'target';
   index: number;
+  nodeId: string;
 }
 
-const ConnectionHandle = ({ io, position, type, index }: RenderHandleProps) => {
+const ConnectionHandle = ({
+  io,
+  position,
+  type,
+  index,
+  nodeId,
+}: RenderHandleProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const handleRef = useRef<HTMLDivElement>(null);
+  const connection = useConnection();
   const handleColor = getTypeColor(io.type as NodeHandleType);
+
+  // Check if a connection is currently being made
+  const isConnecting = !!connection.inProgress;
+
+  // Check if this handle is valid for the current connection
+  const isValidTarget =
+    isConnecting &&
+    ((type === 'target' && connection.fromHandle?.type === 'source') ||
+      (type === 'source' && connection.fromHandle?.type === 'target'));
+
+  // Determine if handle should glow
+  const shouldGlow = isHovered || (isConnecting && isValidTarget);
+
+  const handleOverlayMouseDown = (e: React.MouseEvent) => {
+    const handleElement = handleRef.current;
+
+    if (handleElement) {
+      console.log('Clicking handle:', io.id, 'on node:', nodeId);
+      // Get the center of the small handle
+      const rect = handleElement.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      // Temporarily hide the overlay to prevent interference
+      const overlay = e.currentTarget as HTMLElement;
+      overlay.style.pointerEvents = 'none';
+
+      // Create and dispatch mousedown at the center of the handle
+      const mouseDownEvent = new MouseEvent('mousedown', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX: centerX,
+        clientY: centerY,
+        screenX: e.screenX,
+        screenY: e.screenY,
+        button: 0,
+        buttons: 1,
+      });
+
+      handleElement.dispatchEvent(mouseDownEvent);
+
+      // Re-enable overlay after a short delay
+      setTimeout(() => {
+        overlay.style.pointerEvents = 'all';
+      }, 100);
+    } else {
+      console.error('Handle ref not available for:', io.id);
+    }
+  };
+
   return (
-    <Handle
-      type={type}
-      id={io.id}
-      position={position}
-      className="!h-3 !w-3"
-      style={{
-        top: `${24 + index * 40}px`,
-        backgroundColor: handleColor,
-        border: `2px solid ${handleColor}`,
-        boxShadow: '0 0 0 2px rgba(0,0,0,0.1)',
-      }}
-    />
+    <>
+      {/* Actual handle - small and positioned normally */}
+      <Handle
+        ref={handleRef}
+        type={type}
+        id={io.id}
+        position={position}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className="group !h-3 !w-3"
+        style={{
+          top: `${24 + index * 40}px`,
+          cursor: 'crosshair',
+          backgroundColor: handleColor,
+          border: `1px solid ${shouldGlow ? '#ffffff' : handleColor}`,
+          boxShadow: shouldGlow
+            ? `0 0 8px ${handleColor}`
+            : '0 0 0 1px rgba(0,0,0,0.3)',
+        }}
+      />
+
+      {/* Larger invisible overlay - sibling, not child */}
+      <div
+        className="nodrag nopan absolute cursor-crosshair rounded-full"
+        onMouseDown={handleOverlayMouseDown}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        style={{
+          top: `${24 + index * 40}px`,
+          transform: 'translate(-50%, -50%)',
+          left: position === Position.Left ? '0' : 'auto',
+          right: position === Position.Right ? '-40px' : 'auto',
+          width: '40px',
+          height: '40px',
+          backgroundColor: 'transparent',
+          pointerEvents: 'all',
+        }}
+      />
+    </>
   );
 };
 

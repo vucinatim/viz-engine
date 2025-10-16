@@ -39,6 +39,20 @@ const EditorHeader = () => {
         <EditorToolbar />
       </div>
       <div className="flex items-center gap-x-4">
+        <Label
+          htmlFor="airplane-mode"
+          className={cn(
+            'text-white/30 transition-colors',
+            ambientMode && 'text-white',
+          )}>
+          Ambient Mode
+        </Label>
+        <Switch
+          id="airplane-mode"
+          className="border border-white/5"
+          checked={ambientMode}
+          onCheckedChange={setAmbientMode}
+        />
         <div className="flex items-center gap-x-2">
           <Label
             htmlFor="resolution-multiplier"
@@ -55,24 +69,11 @@ const EditorHeader = () => {
               onChange={setResolutionMultiplier}
             />
           </div>
-          <span className="w-8 text-xs text-white/30">
+          {/* <span className="w-8 text-xs text-white/30">
             {resolutionMultiplier.toFixed(1)}x
-          </span>
+          </span> */}
         </div>
-        <Label
-          htmlFor="airplane-mode"
-          className={cn(
-            'text-white/30 transition-colors',
-            ambientMode && 'text-white',
-          )}>
-          Ambient Mode
-        </Label>
-        <Switch
-          id="airplane-mode"
-          className="border border-white/5"
-          checked={ambientMode}
-          onCheckedChange={setAmbientMode}
-        />
+
         <ExportButton />
         <InterfaceGuide />
         <a
