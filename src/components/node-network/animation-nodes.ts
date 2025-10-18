@@ -670,6 +670,27 @@ const BandInfoNode = createNode({
   },
 });
 
+const AverageVolumeNode = createNode({
+  label: 'Average Volume',
+  description:
+    'Calculates the average value of a Uint8Array (e.g. audio signal or frequency band). Simple volume measurement.',
+  inputs: [{ id: 'data', label: 'Data', type: 'Uint8Array' }],
+  outputs: [{ id: 'average', label: 'Average', type: 'number' }],
+  computeSignal: ({ data }) => {
+    if (!data || !(data instanceof Uint8Array) || data.length === 0) {
+      return { average: 0 };
+    }
+
+    let sum = 0;
+    for (let i = 0; i < data.length; i++) {
+      sum += data[i];
+    }
+    const average = sum / data.length;
+
+    return { average };
+  },
+});
+
 // --- Spectral Flux (wideband) ---
 const SpectralFluxNode = createNode({
   label: 'Spectral Flux',
@@ -1798,6 +1819,7 @@ export const nodes: AnimNode[] = [
   HysteresisGateNode,
   RefractoryGateNode,
   BandInfoNode,
+  AverageVolumeNode,
   TonalPresenceNode,
   EnvelopeFollowerNode,
   SpectralFluxNode,
