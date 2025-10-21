@@ -158,4 +158,8 @@
   .remotion-player div[style='height: 8px;'] {
     display: none !important;
   }
+
+  .aspect-video-custom {
+    aspect-ratio: 1244/626;
+  }
 }

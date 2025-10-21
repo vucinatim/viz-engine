@@ -8,6 +8,7 @@ import { Switch } from '../ui/switch';
 import { DebugInfoDialog } from './debug-info-dialog';
 import EditorToolbar from './editor-toolbar';
 import ExportButton from './export-button';
+import { HelpDialog } from './help-dialog';
 import { InterfaceGuide } from './interface-guide';
 
 const EditorHeader = () => {
@@ -76,6 +77,7 @@ const EditorHeader = () => {
         </div>
 
         <ExportButton />
+        <HelpDialog />
         <DebugInfoDialog />
         <InterfaceGuide />
         <a

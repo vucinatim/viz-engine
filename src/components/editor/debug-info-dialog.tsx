@@ -21,6 +21,15 @@ export function DebugInfoDialog() {
   const networks = useNodeNetworkStore((s) => s.networks);
 
   const getDebugInfo = () => {
+    // Check if we're on the client side
+    if (typeof window === 'undefined') {
+      return JSON.stringify(
+        { error: 'Debug info only available on client side' },
+        null,
+        2,
+      );
+    }
+
     const info = {
       timestamp: new Date().toISOString(),
       userAgent: navigator.userAgent,
@@ -77,6 +86,7 @@ export function DebugInfoDialog() {
   };
 
   const handleCopy = async () => {
+    if (typeof window === 'undefined') return;
     const debugInfo = getDebugInfo();
     await navigator.clipboard.writeText(debugInfo);
     setCopied(true);
@@ -84,6 +94,7 @@ export function DebugInfoDialog() {
   };
 
   const handleOpenGitHubIssue = () => {
+    if (typeof window === 'undefined') return;
     const debugInfo = getDebugInfo();
     const issueBody = encodeURIComponent(
       `## Bug Description\n\n[Describe the bug here]\n\n## Steps to Reproduce\n\n1. [Step 1]\n2. [Step 2]\n3. [Step 3]\n\n## Expected Behavior\n\n[What you expected to happen]\n\n## Actual Behavior\n\n[What actually happened]\n\n## Debug Information\n\n\`\`\`json\n${debugInfo}\n\`\`\``,
