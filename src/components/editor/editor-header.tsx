@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Label } from '../ui/label';
 import { NumberScrubInput } from '../ui/number-scrub-input';
 import { Switch } from '../ui/switch';
+import { DebugInfoDialog } from './debug-info-dialog';
 import EditorToolbar from './editor-toolbar';
 import ExportButton from './export-button';
 import { InterfaceGuide } from './interface-guide';
@@ -75,12 +76,13 @@ const EditorHeader = () => {
         </div>
 
         <ExportButton />
+        <DebugInfoDialog />
         <InterfaceGuide />
         <a
           href="https://github.com/vucinatim/viz-engine"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 py-2 text-sm text-white/30 transition-colors hover:text-white"
+          className="flex items-center gap-2 py-2 text-sm text-zinc-500 transition-colors hover:text-white"
           title="View on GitHub">
           <Github className="h-5 w-5" />
         </a>

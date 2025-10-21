@@ -89,7 +89,7 @@ export function InterfaceGuide() {
       <button
         onMouseEnter={() => setShowGuide(true)}
         onMouseLeave={() => setShowGuide(false)}
-        className="flex items-center gap-2 py-2 text-sm text-white/30 transition-colors hover:text-white"
+        className="flex items-center gap-2 py-2 text-sm text-zinc-500 transition-colors hover:text-white"
         title="Interface Guide">
         <Info className="h-5 w-5" />
       </button>
