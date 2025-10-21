@@ -215,7 +215,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                   <div className="grow" />
                   <CollapsibleTrigger asChild>
                     <Button
-                      variant="defaultLighter"
+                      variant="ghostly"
                       className="pointer-events-auto h-7 px-2"
                       tooltip="Open/Close layer settings">
                       <div className="flex cursor-pointer items-center gap-x-2">

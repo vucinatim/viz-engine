@@ -56,6 +56,9 @@ interface NodeNetworkStore {
   // Global minimize for all node-network editors
   areNetworksMinimized: boolean;
   setNetworksMinimized: (isMinimized: boolean) => void;
+  // Force show overlay flag (set when animation is enabled, cleared after mouse enter/leave)
+  shouldForceShowOverlay: boolean;
+  setShouldForceShowOverlay: (shouldShow: boolean) => void;
   setNetworkEnabled: (
     parameterId: string,
     isEnabled: boolean,
@@ -83,6 +86,8 @@ interface NodeNetworkStore {
 
 export const nodeNetworkStorePartialize = (state: NodeNetworkStore) => ({
   ...state,
+  // Don't persist transient UI state
+  shouldForceShowOverlay: false,
   networks: Object.fromEntries(
     Object.entries(state.networks).map(([id, network]) => [
       id,
@@ -196,10 +201,15 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
       networks: {}, // Store networks by parameterId
       openNetwork: null, // The parameterId of the network that is currently open
       areNetworksMinimized: false,
+      shouldForceShowOverlay: false,
 
       // Set the network that is currently open
       setOpenNetwork: (parameterId: string | null) =>
         set({ openNetwork: parameterId }),
+
+      // Set the force show overlay flag
+      setShouldForceShowOverlay: (shouldShow: boolean) =>
+        set({ shouldForceShowOverlay: shouldShow }),
 
       // Enable/disable a network
       setNetworkEnabled: (
@@ -226,6 +236,11 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
           get().setOpenNetwork(null);
         } else if (isEnabled && get().openNetwork === null) {
           get().setOpenNetwork(parameterId);
+        }
+
+        // If enabling an animation, force show the overlay
+        if (isEnabled) {
+          get().setShouldForceShowOverlay(true);
         }
       },
 
@@ -267,6 +282,8 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
           },
         }));
         get().setOpenNetwork(parameterId);
+        // Force show the overlay when creating a new network
+        get().setShouldForceShowOverlay(true);
       },
 
       // Apply a preset by id to a network
@@ -293,6 +310,8 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
           },
         }));
         get().setOpenNetwork(parameterId);
+        // Force show the overlay when applying a preset
+        get().setShouldForceShowOverlay(true);
       },
 
       // Minimize / restore a specific network UI

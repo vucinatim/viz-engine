@@ -11,11 +11,17 @@ import {
 } from './command';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 
+export interface GroupedOption {
+  groupLabel: string;
+  items: any[];
+}
+
 interface SearchSelectProps {
   trigger: React.ReactNode;
   triggerClassName?: string;
-  options: any[];
-  renderOption: (option: any) => React.ReactNode;
+  options?: any[];
+  groupedOptions?: GroupedOption[];
+  renderOption: (option: any, isActive: boolean) => React.ReactNode;
   onSelect: (option: any) => void;
   extractKey: (option: any) => string;
   placeholder?: string;
@@ -24,12 +30,15 @@ interface SearchSelectProps {
   align?: 'left' | 'right';
   keepOpenOnSelect?: boolean;
   renderPreview?: (option: any, isHovered: boolean) => React.ReactNode;
+  onHover?: (option: any) => void;
+  isActive?: (option: any) => boolean;
 }
 
 const SearchSelect = ({
   trigger,
   triggerClassName,
   options,
+  groupedOptions,
   onSelect,
   renderOption,
   extractKey,
@@ -39,6 +48,8 @@ const SearchSelect = ({
   align = 'left',
   keepOpenOnSelect = false,
   renderPreview,
+  onHover,
+  isActive,
 }: SearchSelectProps) => {
   const [open, setOpen] = useState(false);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
@@ -51,6 +62,11 @@ const SearchSelect = ({
       setHoveredKey(null);
     }
   };
+
+  // Determine if we're using grouped or flat options
+  const isGrouped = !!groupedOptions;
+  const flatOptions = options || [];
+  const groups = groupedOptions || [];
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -85,32 +101,83 @@ const SearchSelect = ({
             {noItemsMessage || 'No options available.'}
           </CommandEmpty>
           <CommandList>
-            <CommandGroup heading="Suggestions">
-              {options.map((option, index) => {
-                const key = extractKey(option);
-                const isHovered = hoveredKey === key;
-                return (
-                  <CommandItem
-                    key={`${key}-${index}`}
-                    value={key}
-                    onMouseEnter={() => setHoveredKey(key)}
-                    onMouseLeave={() => setHoveredKey(null)}
-                    onSelect={() => {
-                      onSelect(option);
-                      if (!keepOpenOnSelect) {
-                        setOpen(false);
-                      }
-                    }}>
-                    {renderPreview && (
-                      <div className="mr-3 shrink-0">
-                        {renderPreview(option, isHovered)}
+            {isGrouped ? (
+              groups.map((group, groupIndex) => (
+                <CommandGroup key={groupIndex} heading={group.groupLabel}>
+                  {group.items.map((option, index) => {
+                    const key = extractKey(option);
+                    const isHovered = hoveredKey === key;
+                    const isOptionActive = isActive ? isActive(option) : false;
+                    return (
+                      <CommandItem
+                        key={`${key}-${index}`}
+                        value={key}
+                        onMouseEnter={() => {
+                          setHoveredKey(key);
+                          onHover?.(option);
+                        }}
+                        onMouseLeave={() => setHoveredKey(null)}
+                        onSelect={() => {
+                          onSelect(option);
+                          if (!keepOpenOnSelect) {
+                            setOpen(false);
+                          }
+                        }}
+                        className={cn(
+                          'transition-colors',
+                          isOptionActive && 'bg-purple-400/10',
+                        )}>
+                        <div className="flex-1">
+                          {renderOption(option, isOptionActive)}
+                        </div>
+                        {renderPreview && (
+                          <div className="ml-3 shrink-0">
+                            {renderPreview(option, isHovered)}
+                          </div>
+                        )}
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              ))
+            ) : (
+              <CommandGroup heading="Suggestions">
+                {flatOptions.map((option, index) => {
+                  const key = extractKey(option);
+                  const isHovered = hoveredKey === key;
+                  const isOptionActive = isActive ? isActive(option) : false;
+                  return (
+                    <CommandItem
+                      key={`${key}-${index}`}
+                      value={key}
+                      onMouseEnter={() => {
+                        setHoveredKey(key);
+                        onHover?.(option);
+                      }}
+                      onMouseLeave={() => setHoveredKey(null)}
+                      onSelect={() => {
+                        onSelect(option);
+                        if (!keepOpenOnSelect) {
+                          setOpen(false);
+                        }
+                      }}
+                      className={cn(
+                        'transition-colors',
+                        isOptionActive && 'bg-purple-400/10',
+                      )}>
+                      <div className="flex-1">
+                        {renderOption(option, isOptionActive)}
                       </div>
-                    )}
-                    <div className="flex-1">{renderOption(option)}</div>
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
+                      {renderPreview && (
+                        <div className="ml-3 shrink-0">
+                          {renderPreview(option, isHovered)}
+                        </div>
+                      )}
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>

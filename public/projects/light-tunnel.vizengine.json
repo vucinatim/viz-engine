@@ -1000,8 +1000,8 @@
             "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-0-band",
             "type": "NodeRenderer",
             "position": {
-              "x": 280,
-              "y": 0
+              "x": 216,
+              "y": -94
             },
             "data": {
               "definition": "Frequency Band",
@@ -1014,14 +1014,16 @@
             "measured": {
               "width": 341,
               "height": 266
-            }
+            },
+            "selected": false,
+            "dragging": false
           },
           {
             "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-1-info",
             "type": "NodeRenderer",
             "position": {
-              "x": 560,
-              "y": 0
+              "x": 598,
+              "y": -82
             },
             "data": {
               "definition": "Band Info",
@@ -1031,7 +1033,9 @@
             "measured": {
               "width": 188,
               "height": 194
-            }
+            },
+            "selected": false,
+            "dragging": false
           },
           {
             "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-2-adapt",
@@ -1079,8 +1083,8 @@
             "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-output-node",
             "type": "NodeRenderer",
             "position": {
-              "x": 1907.3600716706833,
-              "y": 33.824004778045634
+              "x": 2003.3600716706833,
+              "y": 43.824004778045634
             },
             "data": {
               "definition": {
@@ -1101,8 +1105,8 @@
             "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646282549",
             "type": "NodeRenderer",
             "position": {
-              "x": 1025.8475402200515,
-              "y": 363.6577292247455
+              "x": 1097.8475402200515,
+              "y": 339.6577292247455
             },
             "data": {
               "definition": "Sine",
@@ -1122,11 +1126,57 @@
             "dragging": false
           },
           {
-            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646295538",
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646362548",
             "type": "NodeRenderer",
             "position": {
-              "x": 1624.3390485195237,
-              "y": 81.84576381982441
+              "x": 1419.0989461110407,
+              "y": 266.7477748880713
+            },
+            "data": {
+              "definition": "Math",
+              "inputValues": {
+                "a": 1,
+                "b": "0",
+                "operation": "max"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 237,
+              "height": 154
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760647510200",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1439.787753134041,
+              "y": -100.37116682738673
+            },
+            "data": {
+              "definition": "Math",
+              "inputValues": {
+                "a": 1,
+                "b": "2",
+                "operation": "multiply"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 237,
+              "height": 154
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761065876330",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1737,
+              "y": 96
             },
             "data": {
               "definition": "Math",
@@ -1145,49 +1195,92 @@
             "dragging": false
           },
           {
-            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646362548",
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066631256",
             "type": "NodeRenderer",
             "position": {
-              "x": 1321.0989461110407,
-              "y": 346.7477748880713
+              "x": 192,
+              "y": -470.68359375
             },
             "data": {
-              "definition": "Math",
+              "definition": "Frequency Band",
               "inputValues": {
-                "a": 1,
-                "b": "0.05",
-                "operation": "add"
+                "startFrequency": 20.537879390036245,
+                "endFrequency": 194.6512497453911
               },
               "state": {}
             },
             "measured": {
-              "width": 237,
-              "height": 154
+              "width": 341,
+              "height": 266
             },
-            "selected": true,
+            "selected": false,
             "dragging": false
           },
           {
-            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760647510200",
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066760577",
             "type": "NodeRenderer",
             "position": {
-              "x": 1375.787753134041,
-              "y": -64.37116682738672
+              "x": 594,
+              "y": -342.03515625
             },
             "data": {
-              "definition": "Math",
+              "definition": "Band Info",
+              "inputValues": {},
+              "state": {}
+            },
+            "measured": {
+              "width": 188,
+              "height": 194
+            },
+            "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066803689",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 831,
+              "y": -305.0390625
+            },
+            "data": {
+              "definition": "Envelope Follower",
               "inputValues": {
-                "a": 1,
-                "b": "2",
-                "operation": "multiply"
+                "value": 0,
+                "attackMs": "100",
+                "releaseMs": "1000"
               },
               "state": {}
             },
             "measured": {
-              "width": 237,
-              "height": 154
+              "width": 240,
+              "height": 234
             },
             "selected": false,
+            "dragging": false
+          },
+          {
+            "id": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066952001",
+            "type": "NodeRenderer",
+            "position": {
+              "x": 1111,
+              "y": -330
+            },
+            "data": {
+              "definition": "Normalize",
+              "inputValues": {
+                "value": 0,
+                "inputMin": "50",
+                "inputMax": "150",
+                "outputMin": "0.2",
+                "outputMax": "2"
+              },
+              "state": {}
+            },
+            "measured": {
+              "width": 254,
+              "height": 314
+            },
+            "selected": true,
             "dragging": false
           }
         ],
@@ -1236,17 +1329,6 @@
             "style": {
               "stroke": "white"
             },
-            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646295538",
-            "sourceHandle": "result",
-            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-output-node",
-            "targetHandle": "output",
-            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646295538result-layer-Light Tunnel-1760643746953:edges:glowIntensity-output-nodeoutput"
-          },
-          {
-            "animated": true,
-            "style": {
-              "stroke": "white"
-            },
             "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646282549",
             "sourceHandle": "value",
             "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646362548",
@@ -1258,11 +1340,66 @@
             "style": {
               "stroke": "white"
             },
+            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760647510200",
+            "sourceHandle": "result",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761065876330",
+            "targetHandle": "a",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760647510200result-layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761065876330a"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
             "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646362548",
             "sourceHandle": "result",
-            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646295538",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761065876330",
             "targetHandle": "b",
-            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646362548result-layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646295538b"
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646362548result-layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761065876330b"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761065876330",
+            "sourceHandle": "result",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-output-node",
+            "targetHandle": "output",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761065876330result-layer-Light Tunnel-1760643746953:edges:glowIntensity-output-nodeoutput"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-input-node",
+            "sourceHandle": "frequencyAnalysis",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066631256",
+            "targetHandle": "frequencyAnalysis",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-input-nodefrequencyAnalysis-layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066631256frequencyAnalysis"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066631256",
+            "sourceHandle": "bandData",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066760577",
+            "targetHandle": "data",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066631256bandData-layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066760577data"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066760577",
+            "sourceHandle": "average",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066803689",
+            "targetHandle": "value",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066760577average-layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066803689value"
           },
           {
             "animated": true,
@@ -1272,19 +1409,30 @@
             "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-3-gate",
             "sourceHandle": "gated",
             "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760647510200",
-            "targetHandle": "a",
-            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-3-gategated-layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760647510200a"
+            "targetHandle": "b",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-preset-3-gategated-layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760647510200b"
           },
           {
             "animated": true,
             "style": {
               "stroke": "white"
             },
-            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760647510200",
+            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066803689",
+            "sourceHandle": "env",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066952001",
+            "targetHandle": "value",
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066803689env-layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066952001value"
+          },
+          {
+            "animated": true,
+            "style": {
+              "stroke": "white"
+            },
+            "source": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066952001",
             "sourceHandle": "result",
-            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646295538",
+            "target": "layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760647510200",
             "targetHandle": "a",
-            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760647510200result-layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760646295538a"
+            "id": "xy-edge__layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1761066952001result-layer-Light Tunnel-1760643746953:edges:glowIntensity-node-1760647510200a"
           }
         ]
       },

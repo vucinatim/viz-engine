@@ -6,6 +6,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { destructureParameterId } from '@/lib/id-utils';
+import useLayerStore from '@/lib/stores/layer-store';
 import { cn } from '@/lib/utils';
 import { Handle, Position, useConnection } from '@xyflow/react';
 import { Info } from 'lucide-react';
@@ -48,9 +50,23 @@ const NodeRenderer = ({
   } as any);
 
   const { edges, updateInputValue } = useNodeNetwork(nodeNetworkId);
+  const layers = useLayerStore((state) => state.layers);
 
   // Check if this is a protected node (input/output)
   const isProtectedNode = label === 'Input' || label === 'Output';
+  const isOutputNode = label === 'Output';
+
+  // Get parameter info for output node label
+  const parameterInfo = isOutputNode
+    ? (() => {
+        const info = destructureParameterId(nodeNetworkId);
+        const layer = layers.find((l) => l.id === info.layerId);
+        return {
+          ...info,
+          layerName: layer?.comp.name || info.componentName,
+        };
+      })()
+    : null;
 
   // Get the output type for display in header
   const getNodeHeaderText = () => {
@@ -120,71 +136,92 @@ const NodeRenderer = ({
   };
 
   return (
-    <div
-      className={cn(
-        'rounded-lg border shadow-md',
-        isProtectedNode
-          ? 'border-blue-500 bg-zinc-900/50'
-          : 'border-zinc-700 bg-zinc-900',
-        selected && 'border-purple-500 shadow-lg',
-      )}>
-      <div className="flex w-full items-center justify-between gap-2 rounded-t-lg bg-zinc-800 px-2 py-1">
-        <p className="select-none text-xs font-bold">{getNodeHeaderText()}</p>
-        {definition?.description && (
-          <SimpleTooltip
-            text={definition.description}
-            trigger={<Info className="h-3 w-3 opacity-70" />}
-          />
-        )}
-      </div>
-      <div className="relative flex min-w-[150px] flex-col p-2">
-        <div className="flex justify-between gap-x-4">
-          {/* Inputs */}
-          <div className="flex flex-col gap-y-2">
-            {(inputs || []).map((input: any, index: number) => (
-              <div key={input.id} className="flex h-8 items-center gap-x-2">
-                <ConnectionHandle
-                  io={input}
-                  position={Position.Left}
-                  type="target"
-                  index={index}
-                  nodeId={nodeId}
-                />
-                <p className="pointer-events-none pl-1 text-xs">
-                  {input.label}
-                </p>
-                {renderInput(input)}
-              </div>
-            ))}
-          </div>
-          {/* Outputs */}
-          <div className="flex flex-col items-end gap-y-2">
-            {(outputs || []).map((output: any, index: number) => (
-              <div key={output.id} className="flex h-8 items-center gap-x-2">
-                <p className="pointer-events-none pr-1 text-xs">
-                  {output.label}
-                </p>
-                <ConnectionHandle
-                  io={output}
-                  position={Position.Right}
-                  type="source"
-                  index={index}
-                  nodeId={nodeId}
-                />
-              </div>
-            ))}
+    <div className="relative">
+      {/* Floating label above output node */}
+      {isOutputNode && parameterInfo && (
+        <div className="pointer-events-none absolute bottom-full left-0 mb-2">
+          <div className="flex flex-col gap-0.5">
+            <div className="text-xs font-semibold text-white">
+              {parameterInfo.displayName}
+            </div>
+            <div className="flex items-center gap-1.5 text-[10px] text-white/60">
+              <span>{parameterInfo.layerName}</span>
+              {parameterInfo.groupPath && (
+                <>
+                  <span>›</span>
+                  <span>{parameterInfo.groupPath}</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
-        {CustomBody && (
-          <div className="p-2">
-            <CustomBody
-              id={nodeId}
-              data={data}
-              selected={selected}
-              nodeNetworkId={nodeNetworkId}
+      )}
+      <div
+        className={cn(
+          'rounded-lg border shadow-md',
+          isProtectedNode
+            ? 'border-blue-500 bg-zinc-900/50'
+            : 'border-zinc-700 bg-zinc-900',
+          selected && 'border-purple-500 shadow-lg',
+        )}>
+        <div className="flex w-full items-center justify-between gap-2 rounded-t-lg bg-zinc-800 px-2 py-1">
+          <p className="select-none text-xs font-bold">{getNodeHeaderText()}</p>
+          {definition?.description && (
+            <SimpleTooltip
+              text={definition.description}
+              trigger={<Info className="h-3 w-3 opacity-70" />}
             />
+          )}
+        </div>
+        <div className="relative flex min-w-[150px] flex-col p-2">
+          <div className="flex justify-between gap-x-4">
+            {/* Inputs */}
+            <div className="flex flex-col gap-y-2">
+              {(inputs || []).map((input: any, index: number) => (
+                <div key={input.id} className="flex h-8 items-center gap-x-2">
+                  <ConnectionHandle
+                    io={input}
+                    position={Position.Left}
+                    type="target"
+                    index={index}
+                    nodeId={nodeId}
+                  />
+                  <p className="pointer-events-none pl-1 text-xs">
+                    {input.label}
+                  </p>
+                  {renderInput(input)}
+                </div>
+              ))}
+            </div>
+            {/* Outputs */}
+            <div className="flex flex-col items-end gap-y-2">
+              {(outputs || []).map((output: any, index: number) => (
+                <div key={output.id} className="flex h-8 items-center gap-x-2">
+                  <p className="pointer-events-none pr-1 text-xs">
+                    {output.label}
+                  </p>
+                  <ConnectionHandle
+                    io={output}
+                    position={Position.Right}
+                    type="source"
+                    index={index}
+                    nodeId={nodeId}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
-        )}
+          {CustomBody && (
+            <div className="p-2">
+              <CustomBody
+                id={nodeId}
+                data={data}
+                selected={selected}
+                nodeNetworkId={nodeNetworkId}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -32,6 +32,7 @@ import {
   toShortcutDefinition,
 } from '@/lib/utils/keyboard-shortcuts';
 import { useEffect, useRef, useState } from 'react';
+import EnabledAnimationsDropdown from './enabled-animations-dropdown';
 import ExportImageDialog from './export-image-dialog';
 
 interface SampleProject {
@@ -199,6 +200,9 @@ const EditorToolbar = () => {
             </MenubarItem>
           </MenubarContent>
         </MenubarMenu>
+        {/* <div className="px-1">
+          <div className="h-6 w-px self-center bg-white/10" />
+        </div> */}
         <MenubarMenu>
           <MenubarTrigger>Examples</MenubarTrigger>
           <MenubarContent>
@@ -223,6 +227,7 @@ const EditorToolbar = () => {
             </MenubarItem>
           </MenubarContent>
         </MenubarMenu>
+        <EnabledAnimationsDropdown />
       </Menubar>
       <input
         type="file"

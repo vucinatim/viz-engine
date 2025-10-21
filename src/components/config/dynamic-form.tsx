@@ -1,10 +1,11 @@
 import { useEditorHistoryStore } from '@/lib/stores/editor-history-store';
 import useLayerValuesStore from '@/lib/stores/layer-values-store';
 import { cn } from '@/lib/utils';
-import { AudioLines, Info, Target } from 'lucide-react';
+import { AudioLines, Info, Target, X } from 'lucide-react';
 import { UseFormReturn, useForm } from 'react-hook-form';
 import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
 import useNodeNetworkStore from '../node-network/node-network-store';
+import { Button } from '../ui/button';
 import CollapsibleGroup from '../ui/collapsible-group';
 import {
   Form,
@@ -230,30 +231,47 @@ const DynamicFormField = ({
                 </FormControl>
               </div>
               {option.isAnimatable && (
-                <Toggle
-                  aria-label="Toggle Animation"
-                  tooltip="Toggle parameter animation"
-                  pressed={!!isAnimated}
-                  variant={
-                    isAnimated && isHighlighted
-                      ? 'highlighted'
-                      : isAnimated && !isHighlighted
-                        ? 'active'
-                        : 'outline'
-                  }
-                  onPressedChange={(newValue) => {
-                    // If the toggle is already active but for a different network,
-                    // clicking it again should open the corresponding network editor
-                    if (isAnimated && !isHighlighted) {
-                      setOpenNetwork(option.id);
-                      return;
+                <>
+                  <Toggle
+                    aria-label="Enable/Select Animation"
+                    tooltip="Enable or select parameter animation"
+                    pressed={!!isAnimated}
+                    variant={
+                      isAnimated && isHighlighted
+                        ? 'highlighted'
+                        : isAnimated && !isHighlighted
+                          ? 'active'
+                          : 'outline'
                     }
+                    onPressedChange={() => {
+                      // If already animated, just select/open it
+                      if (isAnimated) {
+                        setOpenNetwork(option.id);
+                        return;
+                      }
 
-                    // Otherwise, just toggle the animation on/off
-                    setNetworkEnabled(option.id, newValue, option.type);
-                  }}>
-                  {isAnimated ? <AudioLines /> : <Target />}
-                </Toggle>
+                      // Otherwise, enable the animation
+                      setNetworkEnabled(option.id, true, option.type);
+                    }}>
+                    {isAnimated ? <AudioLines /> : <Target />}
+                  </Toggle>
+                  {isAnimated && (
+                    <SimpleTooltip
+                      text="Disable animation"
+                      trigger={
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 hover:bg-red-500/20"
+                          onClick={() => {
+                            setNetworkEnabled(option.id, false, option.type);
+                          }}>
+                          <X size={14} className="text-red-400" />
+                        </Button>
+                      }
+                    />
+                  )}
+                </>
               )}
             </div>
             <FormMessage>{fieldState.error?.message}</FormMessage>
@@ -288,17 +306,24 @@ const MemoField = React.memo(DynamicFormField, (prev, next) => {
 
 // Separate component that subscribes to the live values store.
 // Only this small element re-renders as the animated value changes.
-const AnimatedLiveValue = ({ parameterId }: { parameterId: string }) => {
+export const AnimatedLiveValue = ({
+  parameterId,
+  className = 'text-zinc-300',
+}: {
+  parameterId: string;
+  className?: string;
+}) => {
   const value = useAnimationLiveValuesStore(
     (state) => state.values[parameterId],
   );
+
+  if (value === undefined) return null;
+
   let text: string;
   if (typeof value === 'number') {
     text = value.toFixed(2);
   } else if (typeof value === 'string') {
     text = value;
-  } else if (value === undefined) {
-    text = '';
   } else {
     try {
       text = JSON.stringify(value);
@@ -306,5 +331,5 @@ const AnimatedLiveValue = ({ parameterId }: { parameterId: string }) => {
       text = String(value);
     }
   }
-  return <div className="text-zinc-300">{text}</div>;
+  return <span className={className}>{text}</span>;
 };

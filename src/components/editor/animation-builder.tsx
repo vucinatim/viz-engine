@@ -1,10 +1,11 @@
+import { destructureParameterId } from '@/lib/id-utils';
 import useEditorStore from '@/lib/stores/editor-store';
+import useLayerStore from '@/lib/stores/layer-store';
 import { cn } from '@/lib/utils';
-import { AudioLines, Maximize2 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { AudioLines } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import NodeNetworkRenderer from '../node-network/node-network-renderer';
 import useNodeNetworkStore from '../node-network/node-network-store';
-import { Button } from '../ui/button';
 import NodeEditorToolbar from './node-editor-toolbar';
 
 const AnimationBuilder = () => {
@@ -17,14 +18,48 @@ const AnimationBuilder = () => {
   const setNetworksMinimized = useNodeNetworkStore(
     (state) => state.setNetworksMinimized,
   );
+  const shouldForceShowOverlay = useNodeNetworkStore(
+    (state) => state.shouldForceShowOverlay,
+  );
+  const setShouldForceShowOverlay = useNodeNetworkStore(
+    (state) => state.setShouldForceShowOverlay,
+  );
   const nodeNetwork = nodeNetworkId && networks[nodeNetworkId];
+  const layers = useLayerStore((state) => state.layers);
 
   const [isHovering, setIsHovering] = useState(false);
+  const [hasMouseEntered, setHasMouseEntered] = useState(false);
   const reactFlowInstance = useRef<any>(null);
+
+  // Get formatted parameter info
+  const parameterInfo = nodeNetworkId
+    ? (() => {
+        const info = destructureParameterId(nodeNetworkId);
+        const layer = layers.find((l) => l.id === info.layerId);
+        return {
+          ...info,
+          layerName: layer?.comp.name || info.componentName,
+        };
+      })()
+    : null;
+
+  // When shouldForceShowOverlay changes to true, show the overlay immediately
+  useEffect(() => {
+    if (shouldForceShowOverlay) {
+      setIsHovering(true);
+      setHasMouseEntered(false);
+    }
+  }, [shouldForceShowOverlay]);
 
   return (
     <div
-      onMouseEnter={() => setIsHovering(true)}
+      onMouseEnter={() => {
+        setIsHovering(true);
+        // Mark that mouse has entered
+        if (shouldForceShowOverlay) {
+          setHasMouseEntered(true);
+        }
+      }}
       onMouseLeave={(e) => {
         // Check if the <body/> has data-scroll-locked="1"
         // This property is set to 1 if the shadcn ContextMenu is open
@@ -38,6 +73,12 @@ const AnimationBuilder = () => {
         }
 
         setIsHovering(false);
+
+        // If we were force showing and mouse has entered, now clear the force show flag
+        if (shouldForceShowOverlay && hasMouseEntered) {
+          setShouldForceShowOverlay(false);
+          setHasMouseEntered(false);
+        }
       }}
       className={cn(
         'absolute inset-0',
@@ -72,23 +113,24 @@ const AnimationBuilder = () => {
               isHovering && 'opacity-0',
               areNetworksMinimized && 'opacity-0',
             )}>
-            <p className="flex items-center justify-center text-xs font-semibold text-white">
-              <AudioLines size={20} className="mr-4 text-purple-400" />
-              {nodeNetwork.name}
-            </p>
-          </div>
-          {areNetworksMinimized && (
-            <div className="pointer-events-auto absolute right-4 top-4 z-10">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 gap-2 px-2 text-xs"
-                onClick={() => setNetworksMinimized(false)}>
-                <Maximize2 size={14} />
-                Show graph
-              </Button>
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-0.5 text-right">
+                <div className="text-sm font-semibold text-white">
+                  {parameterInfo?.displayName || 'Parameter'}
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-white/60">
+                  <span>{parameterInfo?.layerName || 'Layer'}</span>
+                  {parameterInfo?.groupPath && (
+                    <>
+                      <span>›</span>
+                      <span>{parameterInfo.groupPath}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <AudioLines size={24} className="text-purple-400" />
             </div>
-          )}
+          </div>
         </>
       )}
     </div>

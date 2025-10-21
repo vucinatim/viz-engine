@@ -15,6 +15,7 @@ import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard'
 import { useNodeNetworkHistory } from '../../lib/hooks/use-node-network-history';
 import { destructureParameterId } from '../../lib/id-utils';
 import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
+import useLayerStore from '../../lib/stores/layer-store';
 import { NodeHandleType } from '../config/node-types';
 import {
   useNodeNetwork,
@@ -43,6 +44,7 @@ const NodeEditorToolbar = ({
 
   // Use node network store for delete functionality
   const { nodes, edges, setNodes, setEdges } = useNodeNetwork(nodeNetworkId);
+  const layers = useLayerStore((state) => state.layers);
 
   // Get parameter info using the generic function
   const parameterInfo = useNodeNetworkStore((state) => {
@@ -50,8 +52,10 @@ const NodeEditorToolbar = ({
     if (!network) return null;
 
     const destructured = destructureParameterId(nodeNetworkId);
+    const layer = layers.find((l) => l.id === destructured.layerId);
     return {
       ...destructured,
+      layerName: layer?.comp.name || destructured.componentName,
       isEnabled: network.isEnabled,
     };
   });
@@ -189,13 +193,19 @@ const NodeEditorToolbar = ({
       <div className="flex items-center justify-between rounded-lg border border-white/10 bg-black/20 px-4 py-2 backdrop-blur-md">
         {/* Left Section - Animation Info & Actions */}
         <div className="flex items-center gap-4">
-          <div className="flex flex-col">
-            <span className="text-sm font-medium text-white">
-              {parameterInfo?.componentName || 'Animation'}
+          <div className="flex flex-col gap-0.5">
+            <span className="text-sm font-semibold text-white">
+              {parameterInfo?.displayName || 'Parameter'}
             </span>
-            <span className="text-xs text-white/60">
-              {parameterInfo?.parameterName || 'Parameter'}
-            </span>
+            <div className="flex items-center gap-1.5 text-xs text-white/60">
+              <span>{parameterInfo?.layerName || 'Layer'}</span>
+              {parameterInfo?.groupPath && (
+                <>
+                  <span>›</span>
+                  <span>{parameterInfo.groupPath}</span>
+                </>
+              )}
+            </div>
           </div>
           <div className="h-5 w-px bg-white/20" />
           <div className="flex items-center gap-2">
@@ -273,11 +283,9 @@ const NodeEditorToolbar = ({
           <Button
             variant="ghostly"
             size="icon"
-            tooltip="Minimize"
+            tooltip="Close"
             className="-mx-2"
-            onClick={() =>
-              useNodeNetworkStore.getState().setNetworksMinimized(true)
-            }>
+            onClick={() => useNodeNetworkStore.getState().setOpenNetwork(null)}>
             <Minus size={20} />
           </Button>
         </div>
