@@ -72,7 +72,7 @@ const EnabledAnimationsDropdown = () => {
           items: animationsInLayer,
         };
       })
-      .filter((group) => group !== null);
+      .filter((group): group is NonNullable<typeof group> => group !== null);
 
     return grouped;
   }, [networks, layers]);
