@@ -1,3 +1,4 @@
+import useNodeNetworkStore from '@/components/node-network/node-network-store';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -8,6 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { destructureParameterId } from '@/lib/id-utils';
 import useLayerStore from '@/lib/stores/layer-store';
 import { Bug, Check, Copy, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
@@ -16,6 +18,7 @@ export function DebugInfoDialog() {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const layers = useLayerStore((s) => s.layers);
+  const networks = useNodeNetworkStore((s) => s.networks);
 
   const getDebugInfo = () => {
     const info = {
@@ -30,6 +33,30 @@ export function DebugInfoDialog() {
       project: {
         layersCount: layers.length,
         visibleLayers: layers.filter((l) => l.layerSettings.visible).length,
+        layers: layers.map((layer) => ({
+          id: layer.id,
+          name: layer.comp.name,
+          visible: layer.layerSettings.visible,
+          expanded: layer.isExpanded,
+          debugEnabled: layer.isDebugEnabled,
+        })),
+        animations: {
+          totalNetworks: Object.keys(networks).length,
+          enabledAnimations: Object.entries(networks)
+            .filter(([_, network]) => network.isEnabled)
+            .map(([parameterId, network]) => {
+              const info = destructureParameterId(parameterId);
+              const layer = layers.find((l) => l.id === info.layerId);
+              return {
+                parameterId,
+                layerName: layer?.comp.name || info.componentName,
+                parameterName: info.parameterName,
+                groupPath: info.groupPath,
+                nodeCount: network.nodes.length,
+                edgeCount: network.edges.length,
+              };
+            }),
+        },
       },
       webGL: (() => {
         const canvas = document.createElement('canvas');
