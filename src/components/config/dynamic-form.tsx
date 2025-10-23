@@ -1,4 +1,4 @@
-import { useEditorHistoryStore } from '@/lib/stores/editor-history-store';
+import { useHistoryStore } from '@/lib/stores/history-store';
 import useLayerValuesStore from '@/lib/stores/layer-values-store';
 import { cn } from '@/lib/utils';
 import { AudioLines, Info, Target, X } from 'lucide-react';
@@ -179,9 +179,7 @@ const DynamicFormField = ({
   );
 
   // Get history bypass control
-  const setBypassHistory = useEditorHistoryStore(
-    (state) => state.setBypassHistory,
-  );
+  const setBypassHistory = useHistoryStore((state) => state.setBypassHistory);
 
   const isHighlighted = openNetwork === option.id;
 

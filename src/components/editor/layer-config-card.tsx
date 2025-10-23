@@ -1,5 +1,5 @@
 import { getParameterIdsFromConfig } from '@/lib/comp-utils/config-utils';
-import { useEditorHistoryStore } from '@/lib/stores/editor-history-store';
+import { useHistoryStore } from '@/lib/stores/history-store';
 import useLayerStore, { LayerData } from '@/lib/stores/layer-store';
 import useLayerValuesStore from '@/lib/stores/layer-values-store';
 import { cn } from '@/lib/utils';
@@ -80,7 +80,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
 
   // Subscribe to store values and bypass history flag
   const storeValues = useLayerValuesStore((state) => state.values[layer.id]);
-  const isBypassingHistory = useEditorHistoryStore(
+  const isBypassingHistory = useHistoryStore(
     (state) => state.isBypassingHistory,
   );
 

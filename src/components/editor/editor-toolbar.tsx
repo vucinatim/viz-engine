@@ -18,7 +18,6 @@ import {
   MenubarShortcut,
   MenubarTrigger,
 } from '@/components/ui/menubar';
-import { useEditorHistory } from '@/lib/hooks/use-editor-history';
 import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts';
 import {
   loadProject,
@@ -26,6 +25,7 @@ import {
   resetProject,
   saveProject,
 } from '@/lib/project-persistence';
+import { useHistoryStore } from '@/lib/stores/history-store';
 import {
   SHORTCUTS,
   formatShortcut,
@@ -34,6 +34,7 @@ import {
 import { memo, useEffect, useRef, useState } from 'react';
 import EnabledAnimationsDropdown from './enabled-animations-dropdown';
 import ExportImageDialog from './export-image-dialog';
+import HistoryContextIndicator from './history-context-indicator';
 
 interface SampleProject {
   name: string;
@@ -51,8 +52,12 @@ const EditorToolbar = () => {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [projectName, setProjectName] = useState('my-viz-project');
 
-  // Use editor history for undo/redo
-  const { undo, redo, canUndo, canRedo } = useEditorHistory();
+  // Use unified history for context-aware undo/redo
+  const undo = useHistoryStore((state) => state.undo);
+  const redo = useHistoryStore((state) => state.redo);
+  const canUndo = useHistoryStore((state) => state.canUndo());
+  const canRedo = useHistoryStore((state) => state.canRedo());
+  const activeContext = useHistoryStore((state) => state.activeContext);
 
   // Track fullscreen state changes
   useEffect(() => {
@@ -228,6 +233,7 @@ const EditorToolbar = () => {
           </MenubarContent>
         </MenubarMenu>
         <EnabledAnimationsDropdown />
+        <HistoryContextIndicator />
       </Menubar>
       <input
         type="file"

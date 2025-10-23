@@ -7,6 +7,7 @@ import AudioPanel from '@/components/audio/audio-panel';
 import AmbientBackground from '@/components/editor/ambient-background';
 import AnimationBuilder from '@/components/editor/animation-builder';
 import EditorHeader from '@/components/editor/editor-header';
+import HistoryManager from '@/components/editor/history-manager';
 import ProjectDropzone from '@/components/editor/project-dropzone';
 import RemotionPlayer from '@/components/editor/remotion-player';
 import useBodyProps from '@/lib/stores/body-props-store';
@@ -18,6 +19,7 @@ export default function Home() {
 
   return (
     <main className="relative h-screen w-screen" {...props}>
+      <HistoryManager />
       <ProjectDropzone className="flex flex-col">
         <div className="absolute inset-0 bg-zinc-900">
           {ambientMode && <AmbientBackground />}

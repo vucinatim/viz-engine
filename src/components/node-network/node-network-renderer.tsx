@@ -14,14 +14,15 @@ import '@xyflow/react/dist/style.css';
 import {
   MouseEvent as ReactMouseEvent,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
 import '../../lib/css/xyflow.css';
-import { useKeyboardShortcuts } from '../../lib/hooks/use-keyboard-shortcuts';
 import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
-import { useNodeNetworkHistory } from '../../lib/hooks/use-node-network-history';
+import { useHistoryStore } from '../../lib/stores/history-store';
+import useNodeNetworkStore from '../node-network/node-network-store';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -47,44 +48,68 @@ const NodeNetworkRenderer = ({
   const localReactFlowInstance = useRef<any>(null);
   const finalReactFlowInstance = reactFlowInstance || localReactFlowInstance;
 
-  // Use history hook for undo/redo functionality
-  const {
-    nodes,
-    edges,
-    setNodes,
-    setEdges,
-    undo,
-    redo,
-    canUndo,
-    canRedo,
-    startDrag,
-    endDrag,
-  } = useNodeNetworkHistory(nodeNetworkId);
+  // Get nodes and edges from the network store
+  const network = useNodeNetworkStore((state) => state.networks[nodeNetworkId]);
+  const nodes = network?.nodes || [];
+  const edges = network?.edges || [];
 
-  // Use keyboard shortcuts hook for undo/redo shortcuts
-  useKeyboardShortcuts({
-    shortcuts: [
-      {
-        key: 'z',
-        ctrl: true,
-        callback: undo,
-        enabled: canUndo,
-      },
-      {
-        key: 'z',
-        ctrl: true,
-        shift: true,
-        callback: redo,
-        enabled: canRedo,
-      },
-      {
-        key: 'y',
-        ctrl: true,
-        callback: redo,
-        enabled: canRedo,
-      },
-    ],
-  });
+  // Get store functions
+  const setNodesInNetwork = useNodeNetworkStore(
+    (state) => state.setNodesInNetwork,
+  );
+  const setEdgesInNetwork = useNodeNetworkStore(
+    (state) => state.setEdgesInNetwork,
+  );
+
+  // Wrapped setters that push to history
+  const setNodes = useCallback(
+    (newNodes: any[]) => {
+      setNodesInNetwork(nodeNetworkId, newNodes);
+      useHistoryStore
+        .getState()
+        .pushNodeHistory(nodeNetworkId, newNodes, edges);
+    },
+    [nodeNetworkId, edges, setNodesInNetwork],
+  );
+
+  const setEdges = useCallback(
+    (newEdges: any[]) => {
+      setEdgesInNetwork(nodeNetworkId, newEdges);
+      useHistoryStore
+        .getState()
+        .pushNodeHistory(nodeNetworkId, nodes, newEdges);
+    },
+    [nodeNetworkId, nodes, setEdgesInNetwork],
+  );
+
+  // History functions
+  const undo = useCallback(() => {
+    useHistoryStore.getState().undoNodeEditor(nodeNetworkId);
+  }, [nodeNetworkId]);
+
+  const redo = useCallback(() => {
+    useHistoryStore.getState().redoNodeEditor(nodeNetworkId);
+  }, [nodeNetworkId]);
+
+  const canUndo = useHistoryStore(
+    (state) => (state.nodeHistories[nodeNetworkId]?.past.length || 0) > 0,
+  );
+  const canRedo = useHistoryStore(
+    (state) => (state.nodeHistories[nodeNetworkId]?.future.length || 0) > 0,
+  );
+
+  const startDrag = useCallback(() => {
+    useHistoryStore.getState().startNodeDrag(nodeNetworkId);
+  }, [nodeNetworkId]);
+
+  const endDrag = useCallback(() => {
+    useHistoryStore.getState().endNodeDrag(nodeNetworkId);
+  }, [nodeNetworkId]);
+
+  // Initialize node history for this network
+  useEffect(() => {
+    useHistoryStore.getState().initializeNodeHistory(nodeNetworkId);
+  }, [nodeNetworkId]);
 
   // Use the clipboard hook for copy/paste functionality
   const {

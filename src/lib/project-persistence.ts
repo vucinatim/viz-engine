@@ -2,8 +2,8 @@ import useNodeNetworkStore, {
   nodeNetworkStoreMerge,
   nodeNetworkStorePartialize,
 } from '@/components/node-network/node-network-store';
-import { useEditorHistoryStore } from '@/lib/stores/editor-history-store';
 import useEditorStore from '@/lib/stores/editor-store';
+import { useHistoryStore } from '@/lib/stores/history-store';
 import useLayerStore, {
   layerStoreMerge,
   layerStorePartialize,
@@ -88,7 +88,7 @@ async function hydrateProjectData(projectFile: ProjectFile) {
   useEditorStore.setState(projectFile.editorStore);
 
   // Reset editor history when loading a project
-  useEditorHistoryStore.getState().resetHistory();
+  useHistoryStore.getState().resetLayerHistory();
 }
 
 export function loadProject(file: File) {
@@ -241,7 +241,7 @@ export async function resetProject() {
 
     // Reset editor history
     console.log('[resetProject] Resetting editor history...');
-    useEditorHistoryStore.getState().resetHistory();
+    useHistoryStore.getState().resetLayerHistory();
 
     console.log('[resetProject] Project reset complete!');
   } catch (error) {

@@ -1,5 +1,6 @@
 import { destructureParameterId } from '@/lib/id-utils';
 import useEditorStore from '@/lib/stores/editor-store';
+import { useHistoryStore } from '@/lib/stores/history-store';
 import useLayerStore from '@/lib/stores/layer-store';
 import { cn } from '@/lib/utils';
 import { AudioLines } from 'lucide-react';
@@ -29,6 +30,14 @@ const AnimationBuilder = () => {
   );
   const layers = useLayerStore((state) => state.layers);
 
+  // History context management
+  const setOpenNodeNetwork = useHistoryStore(
+    (state) => state.setOpenNodeNetwork,
+  );
+  const setNodeEditorFocused = useHistoryStore(
+    (state) => state.setNodeEditorFocused,
+  );
+
   const [isHovering, setIsHovering] = useState(false);
   const [hasMouseEntered, setHasMouseEntered] = useState(false);
   const reactFlowInstance = useRef<any>(null);
@@ -45,6 +54,11 @@ const AnimationBuilder = () => {
       })()
     : null;
 
+  // Sync open network with history context store
+  useEffect(() => {
+    setOpenNodeNetwork(nodeNetworkId);
+  }, [nodeNetworkId, setOpenNodeNetwork]);
+
   // When shouldForceShowOverlay changes to true, show the overlay immediately
   useEffect(() => {
     if (shouldForceShowOverlay) {
@@ -52,6 +66,15 @@ const AnimationBuilder = () => {
       setHasMouseEntered(false);
     }
   }, [shouldForceShowOverlay]);
+
+  // Update focus state based on hover (when user is interacting with node editor)
+  useEffect(() => {
+    if (nodeNetworkId && !areNetworksMinimized) {
+      setNodeEditorFocused(isHovering);
+    } else {
+      setNodeEditorFocused(false);
+    }
+  }, [isHovering, nodeNetworkId, areNetworksMinimized, setNodeEditorFocused]);
 
   return (
     <div

@@ -8,13 +8,13 @@ import {
   Trash2,
   Undo2,
 } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useRafLoop } from 'react-use';
 import { toast } from 'sonner';
 import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
-import { useNodeNetworkHistory } from '../../lib/hooks/use-node-network-history';
 import { destructureParameterId } from '../../lib/id-utils';
 import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
+import { useHistoryStore } from '../../lib/stores/history-store';
 import useLayerStore from '../../lib/stores/layer-store';
 import { cn } from '../../lib/utils';
 import { NodeHandleType } from '../config/node-types';
@@ -37,8 +37,21 @@ const NodeEditorToolbar = ({
   // Add node popover state
   const [isAddNodeOpen, setIsAddNodeOpen] = useState(false);
 
-  // Use history hook for undo/redo functionality
-  const { undo, redo, canUndo, canRedo } = useNodeNetworkHistory(nodeNetworkId);
+  // History functions
+  const undo = useCallback(() => {
+    useHistoryStore.getState().undoNodeEditor(nodeNetworkId);
+  }, [nodeNetworkId]);
+
+  const redo = useCallback(() => {
+    useHistoryStore.getState().redoNodeEditor(nodeNetworkId);
+  }, [nodeNetworkId]);
+
+  const canUndo = useHistoryStore(
+    (state) => (state.nodeHistories[nodeNetworkId]?.past.length || 0) > 0,
+  );
+  const canRedo = useHistoryStore(
+    (state) => (state.nodeHistories[nodeNetworkId]?.future.length || 0) > 0,
+  );
 
   // Get store functions without subscribing to data that changes frequently
   const setNodesInNetwork = useNodeNetworkStore(
