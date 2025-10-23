@@ -60,7 +60,7 @@ const CollapsibleGroup = ({
                           className={cn(
                             'h-3 w-3',
                             hasAnimatedParams
-                              ? 'text-cyan-500 opacity-100'
+                              ? 'text-animation-blue opacity-100'
                               : 'opacity-50',
                           )}
                         />

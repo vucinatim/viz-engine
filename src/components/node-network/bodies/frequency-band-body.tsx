@@ -36,6 +36,19 @@ const FrequencyBandBody = ({
   const endHandleRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
+  // Track drag state for range dragging
+  const dragStateRef = useRef<{
+    isDragging: boolean;
+    startX: number;
+    initialStartFreq: number;
+    initialEndFreq: number;
+  }>({
+    isDragging: false,
+    startX: 0,
+    initialStartFreq: 0,
+    initialEndFreq: 0,
+  });
+
   const { startFrequency, endFrequency } = data.inputValues;
 
   // Update getInputValue to handle frequencyAnalysis
@@ -88,9 +101,88 @@ const FrequencyBandBody = ({
       }
     };
 
+    const setupRangeDrag = () => {
+      if (overlayRef.current) {
+        const d3Selection = select(overlayRef.current);
+        const dragBehavior = drag()
+          .on('start', (event: DragEvent) => {
+            // Check if we're clicking near the handles - if so, don't start range drag
+            const startPercent = freqToLogPercent(
+              getLiveNodeValue(nodeId, 'startFrequency') ??
+                data.inputValues.startFrequency,
+            );
+            const endPercent = freqToLogPercent(
+              getLiveNodeValue(nodeId, 'endFrequency') ??
+                data.inputValues.endFrequency,
+            );
+
+            const clickPercent = (event.x / width) * 100;
+            const handleMargin = 6; // 6% margin around handles (increased for larger hit boxes)
+
+            // Don't start range drag if clicking near handles
+            if (
+              clickPercent < startPercent + handleMargin ||
+              clickPercent > endPercent - handleMargin
+            ) {
+              return;
+            }
+
+            dragStateRef.current.isDragging = true;
+            dragStateRef.current.startX = event.x;
+            dragStateRef.current.initialStartFreq =
+              getLiveNodeValue(nodeId, 'startFrequency') ??
+              data.inputValues.startFrequency;
+            dragStateRef.current.initialEndFreq =
+              getLiveNodeValue(nodeId, 'endFrequency') ??
+              data.inputValues.endFrequency;
+          })
+          .on('drag', (event: DragEvent) => {
+            if (!dragStateRef.current.isDragging) return;
+
+            const deltaX = event.x - dragStateRef.current.startX;
+            const deltaPercent = (deltaX / width) * 100;
+            const deltaLogFreq =
+              (deltaPercent / 100) * (MAX_LOG_FREQ - MIN_LOG_FREQ);
+            const deltaFreq = Math.exp(deltaLogFreq);
+
+            const newStartFreq = Math.max(
+              MIN_FREQ,
+              Math.min(
+                MAX_FREQ,
+                dragStateRef.current.initialStartFreq * deltaFreq,
+              ),
+            );
+            const newEndFreq = Math.max(
+              MIN_FREQ,
+              Math.min(
+                MAX_FREQ,
+                dragStateRef.current.initialEndFreq * deltaFreq,
+              ),
+            );
+
+            // Ensure start frequency is less than end frequency
+            if (newStartFreq < newEndFreq) {
+              updateInputValue(nodeId, 'startFrequency', newStartFreq);
+              updateInputValue(nodeId, 'endFrequency', newEndFreq);
+            }
+          })
+          .on('end', () => {
+            dragStateRef.current.isDragging = false;
+          });
+        d3Selection.call(dragBehavior as any);
+      }
+    };
+
     setupDrag(startHandleRef, 'startFrequency');
     setupDrag(endHandleRef, 'endFrequency');
-  }, [nodeId, updateInputValue, xToLogFreq]);
+    setupRangeDrag();
+  }, [
+    nodeId,
+    updateInputValue,
+    xToLogFreq,
+    getLiveNodeValue,
+    data.inputValues,
+  ]);
 
   // Update sourceNodeId to use frequencyAnalysis
   const sourceNodeId = useMemo(
@@ -155,7 +247,7 @@ const FrequencyBandBody = ({
     }
     if (endHandleRef.current) {
       endHandleRef.current.style.left = `${endPercent}%`;
-      endHandleRef.current.style.transform = 'translateX(-100%)';
+      endHandleRef.current.style.transform = 'translateX(-16px)';
     }
     if (overlayRef.current) {
       overlayRef.current.style.left = `${startPercent}%`;
@@ -169,15 +261,27 @@ const FrequencyBandBody = ({
       <div
         ref={startHandleRef}
         className="absolute top-0 h-full w-1 cursor-ew-resize bg-blue-400"
-      />
+        style={{
+          transform: 'translateX(-16px)',
+          width: '32px',
+          background: 'transparent',
+        }}>
+        <div className="absolute left-1/2 top-0 h-full w-1 -translate-x-1/2 bg-blue-400" />
+      </div>
       <div
         ref={endHandleRef}
         className="absolute top-0 h-full w-1 cursor-ew-resize bg-blue-400"
-      />
+        style={{
+          transform: 'translateX(-16px)',
+          width: '32px',
+          background: 'transparent',
+        }}>
+        <div className="absolute left-1/2 top-0 h-full w-1 -translate-x-1/2 bg-blue-400" />
+      </div>
       <div
         ref={overlayRef}
         className={cn(
-          'pointer-events-none absolute top-0 h-full bg-blue-500/50 mix-blend-multiply',
+          'absolute top-0 h-full cursor-move bg-blue-500/50 mix-blend-multiply',
         )}
       />
     </div>

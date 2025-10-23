@@ -67,8 +67,15 @@
 
 /* Edge updater circles - make them much bigger for easier reconnection */
 .react-flow__edgeupdater {
-  r: 50 !important; /* Much larger radius */
+  r: 40 !important; /* Much larger radius */
   cursor: move !important;
   stroke: transparent !important;
   fill: transparent !important;
+  transition: all 0.2s ease;
+}
+
+/* Edge updater hover effect */
+.react-flow__edgeupdater:hover {
+  fill: rgba(6, 182, 212, 0.2) !important; /* more visible on hover */
+  filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.4));
 }

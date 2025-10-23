@@ -5,13 +5,16 @@ import { cn } from '@/lib/utils';
 import { AudioLines } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import NodeNetworkRenderer from '../node-network/node-network-renderer';
-import useNodeNetworkStore from '../node-network/node-network-store';
+import useNodeNetworkStore, {
+  useSpecificNetwork,
+} from '../node-network/node-network-store';
 import NodeEditorToolbar from './node-editor-toolbar';
 
 const AnimationBuilder = () => {
   const isPlaying = useEditorStore((state) => state.isPlaying);
   const nodeNetworkId = useNodeNetworkStore((state) => state.openNetwork);
-  const networks = useNodeNetworkStore((state) => state.networks);
+  // Use optimized selector to only subscribe to the specific network we need
+  const nodeNetwork = useSpecificNetwork(nodeNetworkId);
   const areNetworksMinimized = useNodeNetworkStore(
     (state) => state.areNetworksMinimized,
   );
@@ -24,7 +27,6 @@ const AnimationBuilder = () => {
   const setShouldForceShowOverlay = useNodeNetworkStore(
     (state) => state.setShouldForceShowOverlay,
   );
-  const nodeNetwork = nodeNetworkId && networks[nodeNetworkId];
   const layers = useLayerStore((state) => state.layers);
 
   const [isHovering, setIsHovering] = useState(false);
@@ -85,7 +87,7 @@ const AnimationBuilder = () => {
         !nodeNetworkId && 'pointer-events-none',
         areNetworksMinimized && 'pointer-events-none',
       )}>
-      {nodeNetwork && (
+      {nodeNetwork && nodeNetworkId && (
         <>
           <div
             className={cn(
@@ -128,7 +130,7 @@ const AnimationBuilder = () => {
                   )}
                 </div>
               </div>
-              <AudioLines size={24} className="text-purple-400" />
+              <AudioLines size={24} className="text-animation-purple" />
             </div>
           </div>
         </>

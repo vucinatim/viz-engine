@@ -145,19 +145,19 @@ function PitchDetectionBody({
   return (
     <div className="space-y-3 p-1">
       {/* Main Display with Spectrum */}
-      <div className="nodrag nopan relative h-28 w-full overflow-hidden rounded-lg border border-purple-500/20">
+      <div className="nodrag nopan border-animation-purple/20 relative h-28 w-full overflow-hidden rounded-lg border">
         {/* Canvas for spectrum visualization */}
         <canvas ref={canvasRef} className="h-full w-full bg-gray-900/50" />
 
         {/* Min/Max cutoff lines */}
         <div
           ref={minLineRef}
-          className="pointer-events-none absolute top-0 h-full w-0.5 bg-purple-400"
+          className="bg-animation-purple pointer-events-none absolute top-0 h-full w-0.5"
           style={{ boxShadow: '0 0 4px rgba(168, 85, 247, 0.8)' }}
         />
         <div
           ref={maxLineRef}
-          className="pointer-events-none absolute top-0 h-full w-0.5 bg-purple-400"
+          className="bg-animation-purple pointer-events-none absolute top-0 h-full w-0.5"
           style={{ boxShadow: '0 0 4px rgba(168, 85, 247, 0.8)' }}
         />
 
@@ -178,7 +178,7 @@ function PitchDetectionBody({
         {/* Note Display - Overlaid on top */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <div
-            className={`text-4xl font-bold ${hasSignal ? 'text-purple-300' : 'text-gray-500'}`}
+            className={`text-4xl font-bold ${hasSignal ? 'text-animation-purple/80' : 'text-gray-500'}`}
             style={{
               textShadow:
                 '0 0 10px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.6)',
@@ -251,12 +251,12 @@ function PitchDetectionBody({
                 className={`h-8 flex-1 rounded transition-all duration-150 ${
                   isBlackKey
                     ? isActive
-                      ? 'bg-purple-500'
+                      ? 'bg-animation-purple'
                       : 'bg-gray-700'
                     : isActive
-                      ? 'bg-purple-400'
+                      ? 'bg-animation-purple'
                       : 'bg-gray-600'
-                } ${isActive ? 'ring-2 ring-purple-300' : ''}`}
+                } ${isActive ? 'ring-animation-purple/60 ring-2' : ''}`}
                 title={noteName}>
                 <div className="mt-0.5 text-center text-[8px] opacity-60">
                   {noteName}

@@ -125,7 +125,7 @@ const SearchSelect = ({
                         }}
                         className={cn(
                           'transition-colors',
-                          isOptionActive && 'bg-purple-400/10',
+                          isOptionActive && 'bg-animation-purple/10',
                         )}>
                         <div className="flex-1">
                           {renderOption(option, isOptionActive)}
@@ -163,7 +163,7 @@ const SearchSelect = ({
                       }}
                       className={cn(
                         'transition-colors',
-                        isOptionActive && 'bg-purple-400/10',
+                        isOptionActive && 'bg-animation-purple/10',
                       )}>
                       <div className="flex-1">
                         {renderOption(option, isOptionActive)}

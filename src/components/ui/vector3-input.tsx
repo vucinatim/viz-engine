@@ -57,7 +57,7 @@ export default function Vector3Input({
           min={min}
           max={max}
           step={step}
-          inputClassName={cn('w-full bg-sky-500/20', inputClassName)}
+          inputClassName={cn('bg-animation-blue/20 w-full', inputClassName)}
         />
       </div>
       <div className="flex w-full flex-col">

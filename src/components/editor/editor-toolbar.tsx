@@ -31,7 +31,7 @@ import {
   formatShortcut,
   toShortcutDefinition,
 } from '@/lib/utils/keyboard-shortcuts';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import EnabledAnimationsDropdown from './enabled-animations-dropdown';
 import ExportImageDialog from './export-image-dialog';
 
@@ -152,7 +152,7 @@ const EditorToolbar = () => {
         <MenubarMenu>
           <MenubarTrigger>File</MenubarTrigger>
           <MenubarContent>
-            <MenubarItem onClick={handleResetProject}>Init</MenubarItem>
+            <MenubarItem onClick={handleResetProject}>New Project</MenubarItem>
             <MenubarSeparator />
             <MenubarItem onClick={handleSaveProject}>
               Save As...{' '}
@@ -305,4 +305,4 @@ const EditorToolbar = () => {
   );
 };
 
-export default EditorToolbar;
+export default memo(EditorToolbar);

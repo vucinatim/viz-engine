@@ -185,8 +185,26 @@ const NodeNetworkRenderer = ({
                       node.data.definition.label === 'Output');
 
                   if (!isProtected) {
-                    // Handle delete - this would need to be implemented
-                    console.log('Delete node:', props.id);
+                    // Use ReactFlow's built-in deletion mechanism
+                    // First select the node, then trigger delete
+                    if (finalReactFlowInstance.current) {
+                      // Select the node first
+                      finalReactFlowInstance.current.setNodes((nds: any[]) =>
+                        nds.map((n: any) => ({
+                          ...n,
+                          selected: n.id === props.id,
+                        })),
+                      );
+
+                      // Then trigger the delete action
+                      setTimeout(() => {
+                        if (finalReactFlowInstance.current) {
+                          finalReactFlowInstance.current.deleteElements({
+                            nodes: [{ id: props.id }],
+                          });
+                        }
+                      }, 10);
+                    }
                   }
                 }}>
                 Delete
@@ -218,7 +236,7 @@ const NodeNetworkRenderer = ({
             panOnScroll
             zoomOnPinch
             selectionOnDrag
-            panOnDrag={false}
+            panOnDrag={true}
             colorMode="dark"
             nodeTypes={nodeTypes}
             nodes={nodes}
@@ -273,7 +291,30 @@ const NodeNetworkRenderer = ({
               const newEdges = applyEdgeChanges(changes, edges);
               setEdges(newEdges);
             }}
-            onConnect={(params) => setEdges(addEdge(params, edges))}
+            onConnect={(params) => {
+              // Check if there's already an edge connected to the target input
+              const existingEdgeIndex = edges.findIndex(
+                (edge) =>
+                  edge.target === params.target &&
+                  edge.targetHandle === params.targetHandle,
+              );
+
+              if (existingEdgeIndex !== -1) {
+                // Replace the existing edge
+                const newEdges = [...edges];
+                newEdges[existingEdgeIndex] = {
+                  id: `edge-${Date.now()}-${Math.random()}`,
+                  source: params.source,
+                  sourceHandle: params.sourceHandle,
+                  target: params.target,
+                  targetHandle: params.targetHandle,
+                };
+                setEdges(newEdges);
+              } else {
+                // Add new edge normally
+                setEdges(addEdge(params, edges));
+              }
+            }}
             defaultEdgeOptions={{
               animated: true,
               style: {

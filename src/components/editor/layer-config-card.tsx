@@ -129,12 +129,12 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
         setIsLayerExpanded(layer.id, open);
       }}
       className="w-full">
-      <div className="relative">
+      <div className="group relative">
         <div
           ref={setNodeRef}
           style={style}
           className="sticky top-0 z-20 border-b border-zinc-600">
-          <div className="flex overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-900/90 backdrop-blur-sm">
+          <div className="flex overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-900/90 backdrop-blur-sm transition-colors group-hover:from-zinc-700/70 group-hover:to-zinc-700/50">
             <div
               {...attributes}
               {...listeners}
@@ -148,13 +148,13 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
               <div className="flex grow cursor-pointer flex-col gap-y-4 px-4 py-4 transition-colors hover:bg-zinc-800/30">
                 <div className="flex h-16 gap-x-4">
                   <div className="flex grow flex-col gap-y-2 overflow-y-auto">
-                    <h2 className="flex items-start text-sm font-semibold">
+                    <h2 className="flex select-none items-start text-sm font-semibold">
                       <div className="mr-2 h-5 w-5 shrink-0 rounded-md bg-gradient-to-br from-zinc-200 to-zinc-500 text-center font-bold text-black opacity-20">
                         {index + 1}
                       </div>
                       {comp.name}
                     </h2>
-                    <p className="text-xs">{comp.description}</p>
+                    <p className="select-none text-xs">{comp.description}</p>
                   </div>
                   <div
                     onClick={(e) => e.stopPropagation()}
@@ -219,7 +219,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                       className="pointer-events-auto h-7 px-2"
                       tooltip="Open/Close layer settings">
                       <div className="flex cursor-pointer items-center gap-x-2">
-                        <p className="grow text-xs">Settings</p>
+                        <p className="grow select-none text-xs">Settings</p>
                         {layer.isExpanded ? (
                           <ChevronUp className="h-5 w-5" />
                         ) : (
@@ -234,13 +234,16 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
           </div>
         </div>
 
-        <CollapsibleContent className="space-y-2">
-          <div className="flex flex-col gap-y-4">
-            <div className="z-10 flex select-none flex-col gap-y-3 bg-gradient-to-b from-zinc-900 to-transparent px-4 pt-4">
+        <CollapsibleContent className="space-y-2 transition-colors group-hover:bg-zinc-800/30">
+          <div className="flex flex-col">
+            <div className="z-10 flex select-none flex-col gap-y-3 bg-gradient-to-b from-zinc-900 to-transparent px-4 pb-4 pt-4 transition-colors group-hover:bg-zinc-700/20">
               <LayerSettings layer={layer} />
               {comp.presets && comp.presets.length > 0 && (
                 <SearchSelect
-                  trigger={<p>{selectedPreset?.name ?? 'Presets'}</p>}
+                  trigger={
+                    <p>{selectedPreset?.name ?? 'Select a preset...'}</p>
+                  }
+                  triggerClassName="bg-white/70 text-black hover:bg-black/40"
                   options={comp.presets}
                   extractKey={(preset) => preset.name}
                   renderOption={(preset) => <div>{preset.name}</div>}
@@ -329,7 +332,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                 />
               )}
             </div>
-            <div className="relative flex select-none flex-col gap-y-2 border-b border-zinc-600">
+            <div className="relative flex select-none flex-col gap-y-2 border-b border-zinc-600 transition-colors group-hover:bg-zinc-700/20">
               <DynamicForm
                 layerId={layer.id}
                 config={layer.config}

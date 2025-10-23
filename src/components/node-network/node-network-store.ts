@@ -3,6 +3,7 @@ import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
 import { Edge, Node } from '@xyflow/react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { useShallow } from 'zustand/react/shallow';
 import {
   NodeHandleType,
   canConnectTypes,
@@ -667,4 +668,83 @@ export const useConnectionValidation = () => {
     getTypeColor,
     getTypeLabel,
   };
+};
+
+// Optimized selectors for performance
+// These should be used instead of subscribing to the entire networks object
+
+/**
+ * Hook to get just the isEnabled state for a specific parameter
+ * This prevents rerenders when node positions or other network data changes
+ */
+export const useIsNetworkEnabled = (parameterId: string) => {
+  return useNodeNetworkStore(
+    (state) => state.networks[parameterId]?.isEnabled ?? false,
+  );
+};
+
+/**
+ * Hook to get only the enabled network parameter IDs
+ * This prevents rerenders when disabled networks change
+ */
+export const useEnabledNetworkIds = () => {
+  return useNodeNetworkStore(
+    useShallow((state) =>
+      Object.entries(state.networks)
+        .filter(([_, network]) => network.isEnabled)
+        .map(([parameterId]) => parameterId),
+    ),
+  );
+};
+
+/**
+ * Hook to get a map of parameterId -> isEnabled
+ * Useful when you need to check multiple parameters efficiently
+ */
+export const useNetworkEnabledMap = () => {
+  return useNodeNetworkStore(
+    useShallow((state) => {
+      const map: Record<string, boolean> = {};
+      Object.entries(state.networks).forEach(([parameterId, network]) => {
+        map[parameterId] = network.isEnabled;
+      });
+      return map;
+    }),
+  );
+};
+
+/**
+ * Hook to get a specific network by parameterId
+ * Only rerenders when that specific network changes
+ */
+export const useSpecificNetwork = (parameterId: string | null) => {
+  return useNodeNetworkStore((state) =>
+    parameterId ? state.networks[parameterId] : null,
+  );
+};
+
+/**
+ * Hook to get only the enabled networks as an object
+ *
+ * ⚠️ WARNING: This WILL rerender when network data changes (including node positions)
+ * because it returns the full network objects.
+ *
+ * In most cases, you should use:
+ * - `useEnabledNetworkIds()` if you only need the list of enabled parameter IDs
+ * - `useNetworkEnabledMap()` if you need to check enabled state for multiple parameters
+ * - `useSpecificNetwork(id)` if you need the full network for a specific parameter
+ *
+ * This hook is mainly useful for components that genuinely need all enabled network
+ * data AND should rerender when that data changes (e.g., previews that show node graphs).
+ */
+export const useEnabledNetworks = () => {
+  return useNodeNetworkStore((state) => {
+    const enabledNetworks: { [parameterId: string]: NodeNetwork } = {};
+    Object.entries(state.networks).forEach(([parameterId, network]) => {
+      if (network.isEnabled) {
+        enabledNetworks[parameterId] = network;
+      }
+    });
+    return enabledNetworks;
+  });
 };

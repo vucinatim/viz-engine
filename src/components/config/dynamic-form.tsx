@@ -4,7 +4,9 @@ import { cn } from '@/lib/utils';
 import { AudioLines, Info, Target, X } from 'lucide-react';
 import { UseFormReturn, useForm } from 'react-hook-form';
 import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
-import useNodeNetworkStore from '../node-network/node-network-store';
+import useNodeNetworkStore, {
+  useNetworkEnabledMap,
+} from '../node-network/node-network-store';
 import { Button } from '../ui/button';
 import CollapsibleGroup from '../ui/collapsible-group';
 import {
@@ -35,8 +37,9 @@ const DynamicForm = ({ layerId, config, defaultValues }: DynamicFormProps) => {
     values: defaultValues,
   });
 
-  // Subscribe to network changes to make animated params detection reactive
-  const networks = useNodeNetworkStore((state) => state.networks);
+  // Subscribe ONLY to the enabled state map (not the entire networks object)
+  // This prevents rerenders when node positions or other network data changes
+  const networkEnabledMap = useNetworkEnabledMap();
 
   // Helper function to get animated parameters in a group
   const getAnimatedParamsInGroup = (groupOption: GroupConfigOption<any>) => {
@@ -44,7 +47,7 @@ const DynamicForm = ({ layerId, config, defaultValues }: DynamicFormProps) => {
 
     Object.entries(groupOption.options).forEach(([innerKey, innerOption]) => {
       if (innerOption instanceof ConfigParam && innerOption.isAnimatable) {
-        const isAnimated = networks[innerOption.id]?.isEnabled;
+        const isAnimated = networkEnabledMap[innerOption.id];
         if (isAnimated) {
           animatedParams.push(innerOption.label);
         }
@@ -168,6 +171,9 @@ const DynamicFormField = ({
   const setNetworkEnabled = useNodeNetworkStore(
     (state) => state.setNetworkEnabled,
   );
+  const setShouldForceShowOverlay = useNodeNetworkStore(
+    (state) => state.setShouldForceShowOverlay,
+  );
   const updateLayerValue = useLayerValuesStore(
     (state) => state.updateLayerValue,
   );
@@ -195,8 +201,8 @@ const DynamicFormField = ({
                 <FormLabel
                   className={cn(
                     'flex items-center gap-x-2',
-                    isAnimated && !isHighlighted && 'text-cyan-500',
-                    isAnimated && isHighlighted && 'text-purple-400',
+                    isAnimated && !isHighlighted && 'text-animation-blue',
+                    isAnimated && isHighlighted && 'text-animation-purple',
                   )}>
                   {option.description && (
                     <Info className="h-3 w-3 opacity-50" />
@@ -247,6 +253,7 @@ const DynamicFormField = ({
                       // If already animated, just select/open it
                       if (isAnimated) {
                         setOpenNetwork(option.id);
+                        setShouldForceShowOverlay(true);
                         return;
                       }
 

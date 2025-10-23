@@ -8,7 +8,7 @@ import {
   Trash2,
   Undo2,
 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useRafLoop } from 'react-use';
 import { toast } from 'sonner';
 import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
@@ -16,11 +16,9 @@ import { useNodeNetworkHistory } from '../../lib/hooks/use-node-network-history'
 import { destructureParameterId } from '../../lib/id-utils';
 import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
 import useLayerStore from '../../lib/stores/layer-store';
+import { cn } from '../../lib/utils';
 import { NodeHandleType } from '../config/node-types';
-import {
-  useNodeNetwork,
-  useNodeNetworkStore,
-} from '../node-network/node-network-store';
+import { useNodeNetworkStore } from '../node-network/node-network-store';
 import NodesSearch from '../node-network/nodes-search';
 import { getPresetsForType } from '../node-network/presets';
 import { Button } from '../ui/button';
@@ -42,23 +40,37 @@ const NodeEditorToolbar = ({
   // Use history hook for undo/redo functionality
   const { undo, redo, canUndo, canRedo } = useNodeNetworkHistory(nodeNetworkId);
 
-  // Use node network store for delete functionality
-  const { nodes, edges, setNodes, setEdges } = useNodeNetwork(nodeNetworkId);
+  // Get store functions without subscribing to data that changes frequently
+  const setNodesInNetwork = useNodeNetworkStore(
+    (state) => state.setNodesInNetwork,
+  );
+  const setEdgesInNetwork = useNodeNetworkStore(
+    (state) => state.setEdgesInNetwork,
+  );
   const layers = useLayerStore((state) => state.layers);
 
-  // Get parameter info using the generic function
-  const parameterInfo = useNodeNetworkStore((state) => {
-    const network = state.networks[nodeNetworkId];
-    if (!network) return null;
+  // Create wrapper functions to match the expected interface
+  const setNodes = (newNodes: any[]) =>
+    setNodesInNetwork(nodeNetworkId, newNodes);
+  const setEdges = (newEdges: any[]) =>
+    setEdgesInNetwork(nodeNetworkId, newEdges);
 
+  // Get parameter info using the generic function
+  // Only subscribe to isEnabled, not the entire network
+  const isNetworkEnabled = useNodeNetworkStore(
+    (state) => state.networks[nodeNetworkId]?.isEnabled ?? false,
+  );
+
+  // Compute parameter info from networkId and layers
+  const parameterInfo = useMemo(() => {
     const destructured = destructureParameterId(nodeNetworkId);
     const layer = layers.find((l) => l.id === destructured.layerId);
     return {
       ...destructured,
       layerName: layer?.comp.name || destructured.componentName,
-      isEnabled: network.isEnabled,
+      isEnabled: isNetworkEnabled,
     };
-  });
+  }, [nodeNetworkId, layers, isNetworkEnabled]);
 
   const applyPreset = (presetId: string) => {
     const store = useNodeNetworkStore.getState();
@@ -98,6 +110,13 @@ const NodeEditorToolbar = ({
     );
 
     if (deletableNodeIds.length === 0) return;
+
+    // Get current nodes and edges from store when needed
+    const store = useNodeNetworkStore.getState();
+    const network = store.networks[nodeNetworkId];
+    if (!network) return;
+
+    const { nodes, edges } = network;
 
     // Remove selected nodes
     const newNodes = nodes.filter(
@@ -345,13 +364,26 @@ const PresetsSelect = ({
   const type: NodeHandleType = outType || 'number';
   const presets = getPresetsForType(type);
 
+  // Check if there are any nodes in the network (indicating active animations)
+  const hasActiveAnimations = network?.nodes && network.nodes.length > 0;
+
   return (
     <SearchSelect
       triggerClassName="bg-white/10"
       trigger={
         <div className="flex items-center gap-2">
-          <Search className="h-4 w-4" />
-          <span>Load Presets</span>
+          <Search
+            className={cn(
+              'h-4 w-4',
+              hasActiveAnimations ? 'text-purple-300' : 'text-foreground',
+            )}
+          />
+          <span
+            className={cn(
+              hasActiveAnimations ? 'text-purple-300' : 'text-foreground',
+            )}>
+            Load Presets
+          </span>
         </div>
       }
       options={presets}

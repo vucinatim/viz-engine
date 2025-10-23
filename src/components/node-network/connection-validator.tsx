@@ -14,16 +14,8 @@ export const isConnectionValid = (
     return false;
   }
 
-  // Check for duplicate connections
-  const isDuplicate = edges.some(
-    (edge) =>
-      edge.target === connection.target &&
-      edge.targetHandle === connection.targetHandle,
-  );
-
-  if (isDuplicate) {
-    return false;
-  }
+  // Allow connections to already connected inputs (they will replace the existing edge)
+  // No need to check for duplicates as we want to allow replacement
 
   // Validate the connection using our type system
   return validateConnection(

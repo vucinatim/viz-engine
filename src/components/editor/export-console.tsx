@@ -47,7 +47,7 @@ const ExportConsole = () => {
       case 'error':
         return 'text-red-400';
       case 'perf':
-        return 'text-purple-400';
+        return 'text-animation-purple';
       default:
         return 'text-gray-400';
     }
@@ -144,7 +144,7 @@ const ExportConsole = () => {
                 <div className="flex-1">
                   <span>{log.message}</span>
                   {log.duration !== undefined && (
-                    <span className="ml-2 text-purple-400">
+                    <span className="text-animation-purple ml-2">
                       ({formatDuration(log.duration)})
                     </span>
                   )}

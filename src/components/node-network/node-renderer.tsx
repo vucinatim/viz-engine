@@ -50,23 +50,28 @@ const NodeRenderer = ({
   } as any);
 
   const { edges, updateInputValue } = useNodeNetwork(nodeNetworkId);
-  const layers = useLayerStore((state) => state.layers);
 
   // Check if this is a protected node (input/output)
   const isProtectedNode = label === 'Input' || label === 'Output';
   const isOutputNode = label === 'Output';
 
+  // For output nodes, get the layer name from nodeNetworkId
+  // Only read the layer name when needed, not the entire layers array
+  const layerInfo = isOutputNode ? destructureParameterId(nodeNetworkId) : null;
+  const layerName = useLayerStore((state) => {
+    if (!isOutputNode || !layerInfo) return null;
+    const layer = state.layers.find((l) => l.id === layerInfo.layerId);
+    return layer?.comp.name || layerInfo.componentName;
+  });
+
   // Get parameter info for output node label
-  const parameterInfo = isOutputNode
-    ? (() => {
-        const info = destructureParameterId(nodeNetworkId);
-        const layer = layers.find((l) => l.id === info.layerId);
-        return {
-          ...info,
-          layerName: layer?.comp.name || info.componentName,
-        };
-      })()
-    : null;
+  const parameterInfo =
+    isOutputNode && layerInfo
+      ? {
+          ...layerInfo,
+          layerName: layerName || layerInfo.componentName,
+        }
+      : null;
 
   // Get the output type for display in header
   const getNodeHeaderText = () => {
@@ -160,9 +165,9 @@ const NodeRenderer = ({
         className={cn(
           'rounded-lg border shadow-md',
           isProtectedNode
-            ? 'border-blue-500 bg-zinc-900/50'
+            ? 'border-blue-500 bg-zinc-900'
             : 'border-zinc-700 bg-zinc-900',
-          selected && 'border-purple-500 shadow-lg',
+          selected && 'border-animation-purple shadow-lg',
         )}>
         <div className="flex w-full items-center justify-between gap-2 rounded-t-lg bg-zinc-800 px-2 py-1">
           <p className="select-none text-xs font-bold">{getNodeHeaderText()}</p>

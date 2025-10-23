@@ -3,7 +3,9 @@
 import { destructureParameterId } from '@/lib/id-utils';
 import useLayerStore from '@/lib/stores/layer-store';
 import { useCallback, useMemo } from 'react';
-import useNodeNetworkStore from '../node-network/node-network-store';
+import useNodeNetworkStore, {
+  useEnabledNetworkIds,
+} from '../node-network/node-network-store';
 import { Badge } from '../ui/badge';
 import SearchSelect from '../ui/search-select';
 import AnimationItem from './animation-item';
@@ -14,7 +16,9 @@ import LazyNodeNetworkPreview from './lazy-node-network-preview';
  * Shows visual previews of node networks for quick recognition
  */
 const EnabledAnimationsDropdown = () => {
-  const networks = useNodeNetworkStore((state) => state.networks);
+  // Use optimized selector to only get enabled parameter IDs (not full networks)
+  // This prevents rerenders when node positions change or disabled networks change
+  const enabledNetworkIds = useEnabledNetworkIds();
   const setOpenNetwork = useNodeNetworkStore((state) => state.setOpenNetwork);
   const openNetwork = useNodeNetworkStore((state) => state.openNetwork);
   const setShouldForceShowOverlay = useNodeNetworkStore(
@@ -42,20 +46,17 @@ const EnabledAnimationsDropdown = () => {
   // Group enabled animations by layer in the same order as the layer stack
   const groupedAnimations = useMemo(() => {
     // First, collect all enabled animations with their metadata
-    const allAnimations = Object.entries(networks)
-      .filter(([_, network]) => network.isEnabled)
-      .map(([parameterId, network]) => {
-        const info = destructureParameterId(parameterId);
-        const layer = layers.find((l) => l.id === info.layerId);
+    const allAnimations = enabledNetworkIds.map((parameterId) => {
+      const info = destructureParameterId(parameterId);
+      const layer = layers.find((l) => l.id === info.layerId);
 
-        return {
-          parameterId,
-          network,
-          ...info,
-          layerName: layer?.comp.name || info.componentName,
-          layerId: info.layerId,
-        };
-      });
+      return {
+        parameterId,
+        ...info,
+        layerName: layer?.comp.name || info.componentName,
+        layerId: info.layerId,
+      };
+    });
 
     // Group by layer in reversed order (to match the visual layer stack)
     const grouped = [...layers]
@@ -75,7 +76,7 @@ const EnabledAnimationsDropdown = () => {
       .filter((group): group is NonNullable<typeof group> => group !== null);
 
     return grouped;
-  }, [networks, layers]);
+  }, [enabledNetworkIds, layers]);
 
   // Memoize render functions to prevent recreating them
   const renderOption = useCallback((animation: any, isActive: boolean) => {
@@ -118,7 +119,12 @@ const EnabledAnimationsDropdown = () => {
       <SearchSelect
         trigger={
           <div className="flex items-center gap-2">
-            <span>Animations</span>
+            <span
+              className={
+                totalAnimations > 0 ? 'text-purple-300' : 'text-foreground'
+              }>
+              Animations
+            </span>
             {totalAnimations > 0 && (
               <Badge
                 variant="secondary"

@@ -162,10 +162,10 @@ export function HelpDialog() {
             <span
               className={`rounded-full px-3 py-1 text-xs font-medium ${
                 currentTutorial.category === 'getting-started'
-                  ? 'bg-blue-500/20 text-sky-300'
+                  ? 'bg-animation-blue/20 text-animation-blue/80'
                   : currentTutorial.category === 'important'
                     ? 'bg-orange-500/20 text-orange-300'
-                    : 'bg-purple-500/20 text-purple-300'
+                    : 'bg-animation-purple/20 text-animation-purple/80'
               }`}>
               {currentTutorial.category === 'getting-started'
                 ? 'Getting Started'

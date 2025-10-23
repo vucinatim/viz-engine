@@ -132,7 +132,7 @@ const CaptureAudio = () => {
         className={
           'rounded px-2 py-1 text-xs transition-colors ' +
           (isCapturingTab
-            ? 'border border-cyan-400/60 bg-cyan-500/10 text-cyan-200 hover:bg-cyan-500/20'
+            ? 'border-animation-blue/60 bg-animation-blue/10 text-animation-blue/80 hover:bg-animation-blue/20 border'
             : 'border border-white/20 hover:bg-white/10')
         }
         onClick={() =>

@@ -2,6 +2,7 @@ import useEditorStore from '@/lib/stores/editor-store';
 import { cn } from '@/lib/utils';
 import { Github } from 'lucide-react';
 import Image from 'next/image';
+import { memo } from 'react';
 import { Label } from '../ui/label';
 import { NumberScrubInput } from '../ui/number-scrub-input';
 import { Switch } from '../ui/switch';
@@ -93,4 +94,4 @@ const EditorHeader = () => {
   );
 };
 
-export default EditorHeader;
+export default memo(EditorHeader);

@@ -17,8 +17,6 @@ import { useState } from 'react';
 export function DebugInfoDialog() {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const layers = useLayerStore((s) => s.layers);
-  const networks = useNodeNetworkStore((s) => s.networks);
 
   const getDebugInfo = () => {
     // Check if we're on the client side
@@ -29,6 +27,10 @@ export function DebugInfoDialog() {
         2,
       );
     }
+
+    // Read store state directly instead of subscribing (only when function is called)
+    const layers = useLayerStore.getState().layers;
+    const networks = useNodeNetworkStore.getState().networks;
 
     const info = {
       timestamp: new Date().toISOString(),
