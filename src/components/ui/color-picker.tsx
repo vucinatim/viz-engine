@@ -58,6 +58,8 @@ const ColorPickerPopover = forwardRef<
         valRef.current,
       );
       drawAlphaThumb(alphaCanvasRef.current, alphaRef.current);
+      // Auto-focus the canvas for immediate interaction
+      svCanvasRef.current?.focus();
     });
     // Intentionally ignore canvas helpers to keep effect stable while open
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -392,7 +394,8 @@ const ColorPickerPopover = forwardRef<
           <div className="relative" style={{ width: '100%', height: 160 }}>
             <canvas
               ref={svCanvasRef}
-              className="h-full w-full rounded-sm border border-border"
+              className="h-full w-full rounded-sm border border-border outline-none"
+              tabIndex={0}
               onPointerDown={handleSVPointer}
             />
           </div>

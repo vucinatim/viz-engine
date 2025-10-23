@@ -1,5 +1,4 @@
 import { getParameterIdsFromConfig } from '@/lib/comp-utils/config-utils';
-import { useHistoryStore } from '@/lib/stores/history-store';
 import useLayerStore, { LayerData } from '@/lib/stores/layer-store';
 import useLayerValuesStore from '@/lib/stores/layer-values-store';
 import { cn } from '@/lib/utils';
@@ -18,7 +17,6 @@ import { memo, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { ConfigParam, GroupConfigOption } from '../config/config';
 import { UnknownConfig } from '../config/create-component';
-import DynamicForm from '../config/dynamic-form';
 import { safeVTypeToNodeHandleType } from '../config/node-types';
 import { VType } from '../config/types';
 import { useNodeNetworkStore } from '../node-network/node-network-store';
@@ -29,6 +27,7 @@ import {
   CollapsibleTrigger,
 } from '../ui/collapsible';
 import SearchSelect from '../ui/search-select';
+import LayerParameters from './layer-parameters';
 import LayerPreview from './layer-preview';
 import LayerSettings from './layer-settings';
 
@@ -76,46 +75,19 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
   const setDebugEnabled = useLayerStore((state) => state.setDebugEnabled);
   const [selectedPreset, setSelectedPreset] = useState<any | null>();
   const hasInitialized = useRef(false);
-  const [initialValues, setInitialValues] = useState<any | null>(null);
-
-  // Subscribe to store values and bypass history flag
-  const storeValues = useLayerValuesStore((state) => state.values[layer.id]);
-  const isBypassingHistory = useHistoryStore(
-    (state) => state.isBypassingHistory,
-  );
 
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: layer.id });
 
-  // When the persisted values are loaded, sync them with the config instance
+  // Initialize layer values from store on mount
   useEffect(() => {
     if (hasInitialized.current) return;
     const storeValues = useLayerValuesStore.getState().values[layer.id];
     const valuesToUse = storeValues ?? layer.comp.defaultValues;
     layer.config.setValues(valuesToUse);
-    setInitialValues(valuesToUse);
     hasInitialized.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layer.id]);
-
-  // Sync form values when store changes (from undo/redo), but NOT during slider drag
-  // We check if we're NOT bypassing history, which means the change came from
-  // undo/redo or other external source, not from user interaction with sliders
-  useEffect(() => {
-    if (!hasInitialized.current) return;
-    if (isBypassingHistory) return; // Don't update during slider drag
-
-    // Only update if values actually changed to avoid unnecessary form resets
-    if (
-      storeValues &&
-      JSON.stringify(storeValues) !== JSON.stringify(initialValues)
-    ) {
-      setInitialValues({ ...storeValues }); // Create new object reference to trigger form update
-      layer.config.setValues(storeValues);
-      // Clear preset selection when values change from external source (undo/redo)
-      setSelectedPreset(null);
-    }
-  }, [storeValues, isBypassingHistory, layer.config, initialValues]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -253,7 +225,6 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                     // Apply config values
                     layer.config.setValues(preset.values);
                     setSelectedPreset(preset);
-                    setInitialValues(preset.values);
                     useLayerValuesStore
                       .getState()
                       .setLayerValues(layer.id, preset.values);
@@ -333,11 +304,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
               )}
             </div>
             <div className="relative flex select-none flex-col gap-y-2 border-b border-zinc-600 transition-colors group-hover:bg-zinc-700/20">
-              <DynamicForm
-                layerId={layer.id}
-                config={layer.config}
-                defaultValues={initialValues ?? layer.comp.defaultValues}
-              />
+              <LayerParameters layerId={layer.id} config={layer.config} />
             </div>
           </div>
         </CollapsibleContent>
