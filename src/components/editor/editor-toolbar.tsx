@@ -223,7 +223,7 @@ const EditorToolbar = () => {
             </MenubarItem>
             <MenubarSeparator />
             <MenubarItem onClick={toggleProfiler}>
-              {profilerVisible ? '✓ ' : ''}Performance Profiler
+              {profilerVisible ? '✓ ' : ''}Performance
             </MenubarItem>
           </MenubarContent>
         </MenubarMenu>

@@ -55,8 +55,22 @@ export const useKeyboardShortcuts = ({
         const altMatch = shortcut.alt === true ? event.altKey : !event.altKey;
 
         if (modifierMatch && shiftMatch && altMatch) {
-          event.preventDefault();
-          event.stopPropagation();
+          // Only prevent default if we have a callback and it's not a standard browser shortcut
+          // Allow standard browser shortcuts like Cmd+C, Cmd+V, Cmd+A to work normally
+          const isStandardBrowserShortcut =
+            (event.key.toLowerCase() === 'c' &&
+              (event.metaKey || event.ctrlKey)) ||
+            (event.key.toLowerCase() === 'v' &&
+              (event.metaKey || event.ctrlKey)) ||
+            (event.key.toLowerCase() === 'a' &&
+              (event.metaKey || event.ctrlKey)) ||
+            (event.key.toLowerCase() === 'x' &&
+              (event.metaKey || event.ctrlKey));
+
+          if (!isStandardBrowserShortcut) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
           shortcut.callback();
           break; // Only trigger the first matching shortcut
         }

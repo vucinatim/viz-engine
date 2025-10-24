@@ -1,0 +1,1014 @@
+// Chart Export Utility
+// Renders charts in offscreen canvas and exports as PNG
+
+import type { RecordingSession } from '@/lib/stores/performance-recorder-types';
+
+export interface ChartExportOptions {
+  width?: number;
+  height?: number;
+  backgroundColor?: string;
+  title?: string;
+  subtitle?: string;
+  showLegend?: boolean;
+  showGrid?: boolean;
+  showAxes?: boolean;
+  fontSize?: number;
+  titleFontSize?: number;
+  padding?: number;
+}
+
+export interface ChartData {
+  timeSeries: Array<{
+    time: number;
+    fps: number;
+    avgFps: number;
+    memory: number;
+    frameBudget: number;
+    layers: number;
+    nodeNetworks: number;
+  }>;
+  layerPerformance: Array<{
+    name: string;
+    avgRenderTime: number;
+    maxRenderTime: number;
+    avgDrawCalls: number;
+  }>;
+  nodeNetworkPerformance: Array<{
+    name: string;
+    avgComputeTime: number;
+    maxComputeTime: number;
+    nodeCount: number;
+  }>;
+}
+
+// Default export options
+const DEFAULT_OPTIONS: Required<ChartExportOptions> = {
+  width: 1200,
+  height: 600,
+  backgroundColor: 'transparent', // Changed to transparent for light mode compatibility
+  title: '',
+  subtitle: '',
+  showLegend: true,
+  showGrid: true,
+  showAxes: true,
+  fontSize: 12,
+  titleFontSize: 16,
+  padding: 80, // Increased from 60 to give more space for labels
+};
+
+// Create offscreen canvas
+function createOffscreenCanvas(width: number, height: number): OffscreenCanvas {
+  const canvas = new OffscreenCanvas(width, height);
+  return canvas;
+}
+
+// Get canvas context with proper settings
+function getCanvasContext(
+  canvas: OffscreenCanvas,
+): OffscreenCanvasRenderingContext2D {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('Failed to get 2D context from offscreen canvas');
+  }
+
+  // Enable high DPI rendering
+  const dpr = window.devicePixelRatio || 1;
+  const rect = { width: canvas.width, height: canvas.height };
+
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+
+  return ctx;
+}
+
+// Draw background
+function drawBackground(
+  ctx: OffscreenCanvasRenderingContext2D,
+  width: number,
+  height: number,
+  backgroundColor: string,
+) {
+  if (backgroundColor !== 'transparent') {
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, width, height);
+  }
+  // For transparent background, we don't draw anything
+}
+
+// Draw title and subtitle
+function drawTitle(
+  ctx: OffscreenCanvasRenderingContext2D,
+  title: string,
+  subtitle: string,
+  width: number,
+  padding: number,
+  titleFontSize: number,
+  fontSize: number,
+) {
+  if (!title && !subtitle) return;
+
+  ctx.fillStyle = '#111827'; // Dark text for light mode compatibility
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+
+  if (title) {
+    ctx.font = `bold ${titleFontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+    ctx.fillText(title, width / 2, padding);
+  }
+
+  if (subtitle) {
+    ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+    ctx.fillText(
+      subtitle,
+      width / 2,
+      padding + (title ? titleFontSize + 8 : 0),
+    );
+  }
+}
+
+// Draw grid with proper data bounds
+function drawGrid(
+  ctx: OffscreenCanvasRenderingContext2D,
+  width: number,
+  height: number,
+  padding: number,
+  dataMin: number,
+  dataMax: number,
+  isHorizontal: boolean = true,
+) {
+  ctx.strokeStyle = '#6b7280'; // Even darker gray for better visibility
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 2]);
+
+  const chartWidth = width - 2 * padding;
+  const chartHeight = height - 2 * padding - 60; // Account for title space
+
+  if (isHorizontal) {
+    // Horizontal grid lines with proper data scaling
+    const steps = 5;
+    for (let i = 0; i <= steps; i++) {
+      const y = padding + 60 + (chartHeight * i) / steps;
+      ctx.beginPath();
+      ctx.moveTo(padding, y);
+      ctx.lineTo(padding + chartWidth, y);
+      ctx.stroke();
+    }
+  } else {
+    // Vertical grid lines
+    const steps = 8;
+    for (let i = 0; i <= steps; i++) {
+      const x = padding + (chartWidth * i) / steps;
+      ctx.beginPath();
+      ctx.moveTo(x, padding + 60);
+      ctx.lineTo(x, padding + 60 + chartHeight);
+      ctx.stroke();
+    }
+  }
+
+  ctx.setLineDash([]);
+}
+
+// Draw axes with tick marks and labels
+function drawAxes(
+  ctx: OffscreenCanvasRenderingContext2D,
+  width: number,
+  height: number,
+  padding: number,
+  xLabel: string,
+  yLabel: string,
+  fontSize: number,
+  xMin?: number,
+  xMax?: number,
+  yMin?: number,
+  yMax?: number,
+) {
+  const chartWidth = width - 2 * padding;
+  const chartHeight = height - 2 * padding - 60;
+
+  ctx.strokeStyle = '#111827'; // Same color as title for consistency
+  ctx.lineWidth = 2;
+  ctx.fillStyle = '#111827'; // Same color as title for consistency
+  ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // X-axis
+  ctx.beginPath();
+  ctx.moveTo(padding, padding + 60 + chartHeight);
+  ctx.lineTo(padding + chartWidth, padding + 60 + chartHeight);
+  ctx.stroke();
+
+  // Y-axis
+  ctx.beginPath();
+  ctx.moveTo(padding, padding + 60);
+  ctx.lineTo(padding, padding + 60 + chartHeight);
+  ctx.stroke();
+
+  // Draw tick marks and labels for Y-axis
+  if (yMin !== undefined && yMax !== undefined) {
+    const steps = 5;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+
+    for (let i = 0; i <= steps; i++) {
+      const value = yMin + (yMax - yMin) * (i / steps);
+      const y = padding + 60 + chartHeight - (chartHeight * i) / steps;
+
+      // Draw tick mark
+      ctx.beginPath();
+      ctx.moveTo(padding - 5, y);
+      ctx.lineTo(padding, y);
+      ctx.stroke();
+
+      // Draw label
+      ctx.fillText(value.toFixed(1), padding - 20, y);
+    }
+  }
+
+  // Draw tick marks and labels for X-axis
+  if (xMin !== undefined && xMax !== undefined) {
+    const steps = 6;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+
+    for (let i = 0; i <= steps; i++) {
+      const value = xMin + (xMax - xMin) * (i / steps);
+      const x = padding + (chartWidth * i) / steps;
+
+      // Draw tick mark
+      ctx.beginPath();
+      ctx.moveTo(x, padding + 60 + chartHeight);
+      ctx.lineTo(x, padding + 60 + chartHeight + 5);
+      ctx.stroke();
+
+      // Draw label
+      ctx.fillText(value.toFixed(1), x, padding + 60 + chartHeight + 12);
+    }
+  }
+
+  // Axis labels
+  ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  if (xLabel) {
+    ctx.fillText(
+      xLabel,
+      padding + chartWidth / 2,
+      padding + 60 + chartHeight + 40,
+    );
+  }
+
+  if (yLabel) {
+    ctx.save();
+    ctx.translate(padding - 65, padding + 60 + chartHeight / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(yLabel, 0, 0);
+    ctx.restore();
+  }
+}
+
+// Draw line chart
+function drawLineChart(
+  ctx: OffscreenCanvasRenderingContext2D,
+  data: Array<{ x: number; y: number }>,
+  width: number,
+  height: number,
+  padding: number,
+  color: string,
+  lineWidth: number = 2,
+  xMin?: number,
+  xMax?: number,
+  yMin?: number,
+  yMax?: number,
+) {
+  if (data.length < 2) return;
+
+  const chartWidth = width - 2 * padding;
+  const chartHeight = height - 2 * padding - 60;
+
+  // Use provided bounds or calculate from data
+  const dataXValues = data.map((d) => d.x);
+  const dataYValues = data.map((d) => d.y);
+  const dataXMin = Math.min(...dataXValues);
+  const dataXMax = Math.max(...dataXValues);
+  const dataYMin = Math.min(...dataYValues);
+  const dataYMax = Math.max(...dataYValues);
+
+  const xMinPadded = xMin ?? dataXMin;
+  const xMaxPadded = xMax ?? dataXMax;
+  const yMinPadded = yMin ?? dataYMin;
+  const yMaxPadded = yMax ?? dataYMax;
+
+  // Draw line
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.beginPath();
+
+  data.forEach((point, index) => {
+    const x =
+      padding +
+      ((point.x - xMinPadded) / (xMaxPadded - xMinPadded)) * chartWidth;
+    const y =
+      padding +
+      60 +
+      chartHeight -
+      ((point.y - yMinPadded) / (yMaxPadded - yMinPadded)) * chartHeight;
+
+    if (index === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  });
+
+  ctx.stroke();
+}
+
+// Draw area chart
+function drawAreaChart(
+  ctx: OffscreenCanvasRenderingContext2D,
+  data: Array<{ x: number; y: number }>,
+  width: number,
+  height: number,
+  padding: number,
+  color: string,
+  fillColor: string,
+  xMin?: number,
+  xMax?: number,
+  yMin?: number,
+  yMax?: number,
+) {
+  if (data.length < 2) return;
+
+  const chartWidth = width - 2 * padding;
+  const chartHeight = height - 2 * padding - 60;
+
+  // Use provided bounds or calculate from data
+  const dataXValues = data.map((d) => d.x);
+  const dataYValues = data.map((d) => d.y);
+  const dataXMin = Math.min(...dataXValues);
+  const dataXMax = Math.max(...dataXValues);
+  const dataYMin = Math.min(...dataYValues);
+  const dataYMax = Math.max(...dataYValues);
+
+  const xMinPadded = xMin ?? dataXMin;
+  const xMaxPadded = xMax ?? dataXMax;
+  const yMinPadded = yMin ?? dataYMin;
+  const yMaxPadded = yMax ?? dataYMax;
+
+  // Create gradient for filled area
+  const gradient = ctx.createLinearGradient(
+    0,
+    padding + 60,
+    0,
+    padding + 60 + chartHeight,
+  );
+  gradient.addColorStop(0, fillColor);
+  gradient.addColorStop(1, 'transparent');
+
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+
+  data.forEach((point, index) => {
+    const x =
+      padding +
+      ((point.x - xMinPadded) / (xMaxPadded - xMinPadded)) * chartWidth;
+    const y =
+      padding +
+      60 +
+      chartHeight -
+      ((point.y - yMinPadded) / (yMaxPadded - yMinPadded)) * chartHeight;
+
+    if (index === 0) {
+      ctx.moveTo(x, padding + 60 + chartHeight); // Start at bottom
+      ctx.lineTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  });
+
+  // Close the area
+  const lastPoint = data[data.length - 1];
+  const lastX =
+    padding +
+    ((lastPoint.x - xMinPadded) / (xMaxPadded - xMinPadded)) * chartWidth;
+  ctx.lineTo(lastX, padding + 60 + chartHeight);
+  ctx.closePath();
+  ctx.fill();
+
+  // Draw line on top
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+
+  data.forEach((point, index) => {
+    const x =
+      padding +
+      ((point.x - xMinPadded) / (xMaxPadded - xMinPadded)) * chartWidth;
+    const y =
+      padding +
+      60 +
+      chartHeight -
+      ((point.y - yMinPadded) / (yMaxPadded - yMinPadded)) * chartHeight;
+
+    if (index === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  });
+
+  ctx.stroke();
+}
+
+// Draw bar chart
+function drawBarChart(
+  ctx: OffscreenCanvasRenderingContext2D,
+  data: Array<{ name: string; value: number }>,
+  width: number,
+  height: number,
+  padding: number,
+  color: string,
+) {
+  if (data.length === 0) return;
+
+  const chartWidth = width - 2 * padding;
+  const chartHeight = height - 2 * padding - 60;
+
+  const barWidth = (chartWidth / data.length) * 0.8;
+  const barSpacing = (chartWidth / data.length) * 0.2;
+
+  // Find data bounds
+  const values = data.map((d) => d.value);
+  const maxValue = Math.max(...values);
+  const minValue = Math.min(...values);
+  const valueRange = maxValue - minValue;
+  const paddedMax = maxValue + valueRange * 0.1;
+  const paddedMin = Math.max(0, minValue - valueRange * 0.1);
+
+  // Draw bars
+  data.forEach((item, index) => {
+    const x = padding + index * (barWidth + barSpacing) + barSpacing / 2;
+    const barHeight =
+      ((item.value - paddedMin) / (paddedMax - paddedMin)) * chartHeight;
+    const y = padding + 60 + chartHeight - barHeight;
+
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, barWidth, barHeight);
+
+    // Draw value label
+    ctx.fillStyle = '#111827'; // Dark text for light mode
+    ctx.font =
+      '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(item.value.toFixed(1), x + barWidth / 2, y - 2);
+
+    // Draw name label
+    ctx.fillStyle = '#374151'; // Dark gray for light mode
+    ctx.textBaseline = 'top';
+    ctx.fillText(item.name, x + barWidth / 2, padding + 60 + chartHeight + 5);
+  });
+}
+
+// Draw grouped bar chart for comparing two metrics
+function drawGroupedBarChart(
+  ctx: OffscreenCanvasRenderingContext2D,
+  data: Array<{
+    name: string;
+    avgValue: number;
+    maxValue: number;
+  }>,
+  width: number,
+  height: number,
+  padding: number,
+  avgColor: string,
+  maxColor: string,
+) {
+  if (data.length === 0) return;
+
+  const chartWidth = width - 2 * padding;
+  const chartHeight = height - 2 * padding - 60;
+
+  const groupWidth = (chartWidth / data.length) * 0.8;
+  const groupSpacing = (chartWidth / data.length) * 0.2;
+  const barWidth = groupWidth * 0.4; // Each bar takes 40% of group width
+  const barSpacing = groupWidth * 0.2; // 20% spacing between bars in group
+
+  // Find data bounds for both metrics
+  const allValues = [
+    ...data.map((d) => d.avgValue),
+    ...data.map((d) => d.maxValue),
+  ];
+  const maxValue = Math.max(...allValues);
+  const minValue = Math.min(...allValues);
+  const valueRange = maxValue - minValue;
+  const paddedMax = maxValue + valueRange * 0.1;
+  const paddedMin = Math.max(0, minValue - valueRange * 0.1);
+
+  // Draw bars
+  data.forEach((item, index) => {
+    const groupX =
+      padding + index * (groupWidth + groupSpacing) + groupSpacing / 2;
+
+    // Draw average bar
+    const avgBarHeight =
+      ((item.avgValue - paddedMin) / (paddedMax - paddedMin)) * chartHeight;
+    const avgY = padding + 60 + chartHeight - avgBarHeight;
+    const avgX = groupX + barSpacing / 2;
+
+    ctx.fillStyle = avgColor;
+    ctx.fillRect(avgX, avgY, barWidth, avgBarHeight);
+
+    // Draw max bar
+    const maxBarHeight =
+      ((item.maxValue - paddedMin) / (paddedMax - paddedMin)) * chartHeight;
+    const maxY = padding + 60 + chartHeight - maxBarHeight;
+    const maxX = groupX + barSpacing / 2 + barWidth + barSpacing;
+
+    ctx.fillStyle = maxColor;
+    ctx.fillRect(maxX, maxY, barWidth, maxBarHeight);
+
+    // Draw value labels
+    ctx.fillStyle = '#111827'; // Dark text for light mode
+    ctx.font =
+      '9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+
+    // Average value label
+    ctx.fillText(item.avgValue.toFixed(1), avgX + barWidth / 2, avgY - 2);
+
+    // Max value label
+    ctx.fillText(item.maxValue.toFixed(1), maxX + barWidth / 2, maxY - 2);
+
+    // Draw name label
+    ctx.fillStyle = '#374151'; // Dark gray for light mode
+    ctx.textBaseline = 'top';
+    ctx.fillText(
+      item.name,
+      groupX + groupWidth / 2,
+      padding + 60 + chartHeight + 5,
+    );
+  });
+}
+
+// Export FPS chart as PNG
+export async function exportFPSChart(
+  session: RecordingSession,
+  options: ChartExportOptions = {},
+): Promise<Blob> {
+  const opts = { ...DEFAULT_OPTIONS, ...options };
+  const canvas = createOffscreenCanvas(opts.width, opts.height);
+  const ctx = getCanvasContext(canvas);
+
+  // Prepare data
+  const startTime = session.snapshots[0]?.timestamp || 0;
+  const timeSeriesData = session.snapshots.map((snapshot, index) => ({
+    x: (snapshot.timestamp - startTime) / 1000, // Convert to seconds
+    y: snapshot.editorFPS,
+  }));
+
+  const avgFPSData = session.snapshots.map((snapshot, index) => ({
+    x: (snapshot.timestamp - startTime) / 1000, // Convert to seconds
+    y: snapshot.editorAvgFPS,
+  }));
+
+  // Find data bounds for proper scaling
+  const allFPSValues = [
+    ...timeSeriesData.map((d) => d.y),
+    ...avgFPSData.map((d) => d.y),
+  ];
+  const allTimeValues = timeSeriesData.map((d) => d.x);
+  const yMin = Math.min(...allFPSValues);
+  const yMax = Math.max(...allFPSValues);
+  const xMin = Math.min(...allTimeValues);
+  const xMax = Math.max(...allTimeValues);
+
+  // Draw chart
+  drawBackground(ctx, opts.width, opts.height, opts.backgroundColor);
+  drawTitle(
+    ctx,
+    opts.title || 'FPS Performance Over Time',
+    `Session: ${session.name}`,
+    opts.width,
+    opts.padding,
+    opts.titleFontSize,
+    opts.fontSize,
+  );
+
+  if (opts.showGrid) {
+    drawGrid(ctx, opts.width, opts.height, opts.padding, yMin, yMax, true);
+  }
+
+  if (opts.showAxes) {
+    drawAxes(
+      ctx,
+      opts.width,
+      opts.height,
+      opts.padding,
+      'Time (seconds)',
+      'FPS',
+      opts.fontSize,
+      xMin,
+      xMax,
+      yMin,
+      yMax,
+    );
+  }
+
+  if (timeSeriesData.length > 0) {
+    // Draw area chart for current FPS
+    drawAreaChart(
+      ctx,
+      timeSeriesData,
+      opts.width,
+      opts.height,
+      opts.padding,
+      '#059669', // Darker green for light mode
+      '#10b98140', // Semi-transparent green
+      xMin,
+      xMax,
+      yMin,
+      yMax,
+    );
+
+    // Draw line chart for average FPS
+    drawLineChart(
+      ctx,
+      avgFPSData,
+      opts.width,
+      opts.height,
+      opts.padding,
+      '#2563eb', // Darker blue for light mode
+      2,
+      xMin,
+      xMax,
+      yMin,
+      yMax,
+    );
+  }
+
+  return canvas.convertToBlob({ type: 'image/png' });
+}
+
+// Export Memory chart as PNG
+export async function exportMemoryChart(
+  session: RecordingSession,
+  options: ChartExportOptions = {},
+): Promise<Blob> {
+  const opts = { ...DEFAULT_OPTIONS, ...options };
+  const canvas = createOffscreenCanvas(opts.width, opts.height);
+  const ctx = getCanvasContext(canvas);
+
+  // Prepare data
+  const startTime = session.snapshots[0]?.timestamp || 0;
+  const timeSeriesData = session.snapshots.map((snapshot) => ({
+    x: (snapshot.timestamp - startTime) / 1000, // Convert to seconds
+    y: snapshot.memoryUsedMB,
+  }));
+
+  // Find data bounds for proper scaling
+  const yValues = timeSeriesData.map((d) => d.y);
+  const xValues = timeSeriesData.map((d) => d.x);
+  const yMin = Math.min(...yValues);
+  const yMax = Math.max(...yValues);
+  const xMin = Math.min(...xValues);
+  const xMax = Math.max(...xValues);
+
+  // Draw chart
+  drawBackground(ctx, opts.width, opts.height, opts.backgroundColor);
+  drawTitle(
+    ctx,
+    opts.title || 'Memory Usage Over Time',
+    `Session: ${session.name}`,
+    opts.width,
+    opts.padding,
+    opts.titleFontSize,
+    opts.fontSize,
+  );
+
+  if (opts.showGrid) {
+    drawGrid(ctx, opts.width, opts.height, opts.padding, yMin, yMax, true);
+  }
+
+  if (opts.showAxes) {
+    drawAxes(
+      ctx,
+      opts.width,
+      opts.height,
+      opts.padding,
+      'Time (seconds)',
+      'Memory (MB)',
+      opts.fontSize,
+      xMin,
+      xMax,
+      yMin,
+      yMax,
+    );
+  }
+
+  if (timeSeriesData.length > 0) {
+    drawLineChart(
+      ctx,
+      timeSeriesData,
+      opts.width,
+      opts.height,
+      opts.padding,
+      '#7c3aed', // Darker purple for light mode
+      2,
+      xMin,
+      xMax,
+      yMin,
+      yMax,
+    );
+  }
+
+  return canvas.convertToBlob({ type: 'image/png' });
+}
+
+// Export Frame Budget chart as PNG
+export async function exportFrameBudgetChart(
+  session: RecordingSession,
+  options: ChartExportOptions = {},
+): Promise<Blob> {
+  const opts = { ...DEFAULT_OPTIONS, ...options };
+  const canvas = createOffscreenCanvas(opts.width, opts.height);
+  const ctx = getCanvasContext(canvas);
+
+  // Prepare data
+  const startTime = session.snapshots[0]?.timestamp || 0;
+  const timeSeriesData = session.snapshots.map((snapshot) => ({
+    x: (snapshot.timestamp - startTime) / 1000, // Convert to seconds
+    y: snapshot.cpuUsage,
+  }));
+
+  // Find data bounds for proper scaling
+  const yValues = timeSeriesData.map((d) => d.y);
+  const xValues = timeSeriesData.map((d) => d.x);
+  const yMin = Math.min(...yValues);
+  const yMax = Math.max(...yValues);
+  const xMin = Math.min(...xValues);
+  const xMax = Math.max(...xValues);
+
+  // Draw chart
+  drawBackground(ctx, opts.width, opts.height, opts.backgroundColor);
+  drawTitle(
+    ctx,
+    opts.title || 'Frame Budget Usage Over Time',
+    `Session: ${session.name}`,
+    opts.width,
+    opts.padding,
+    opts.titleFontSize,
+    opts.fontSize,
+  );
+
+  if (opts.showGrid) {
+    drawGrid(ctx, opts.width, opts.height, opts.padding, yMin, yMax, true);
+  }
+
+  if (opts.showAxes) {
+    drawAxes(
+      ctx,
+      opts.width,
+      opts.height,
+      opts.padding,
+      'Time (seconds)',
+      'Frame Budget (%)',
+      opts.fontSize,
+      xMin,
+      xMax,
+      yMin,
+      yMax,
+    );
+  }
+
+  if (timeSeriesData.length > 0) {
+    drawLineChart(
+      ctx,
+      timeSeriesData,
+      opts.width,
+      opts.height,
+      opts.padding,
+      '#ea580c', // Darker orange for light mode
+      2,
+      xMin,
+      xMax,
+      yMin,
+      yMax,
+    );
+  }
+
+  return canvas.convertToBlob({ type: 'image/png' });
+}
+
+// Export Layer Performance chart as PNG
+export async function exportLayerPerformanceChart(
+  session: RecordingSession,
+  options: ChartExportOptions = {},
+): Promise<Blob> {
+  const opts = { ...DEFAULT_OPTIONS, ...options };
+  const canvas = createOffscreenCanvas(opts.width, opts.height);
+  const ctx = getCanvasContext(canvas);
+
+  // Prepare layer performance data
+  const layerMap = new Map<
+    string,
+    { renderTimes: number[]; drawCalls: number[] }
+  >();
+
+  session.snapshots.forEach((snapshot) => {
+    snapshot.layers.forEach((layer) => {
+      if (!layerMap.has(layer.layerId)) {
+        layerMap.set(layer.layerId, { renderTimes: [], drawCalls: [] });
+      }
+      const data = layerMap.get(layer.layerId)!;
+      data.renderTimes.push(layer.renderTime);
+      data.drawCalls.push(layer.drawCalls);
+    });
+  });
+
+  const layerPerformanceData = Array.from(layerMap.entries()).map(
+    ([layerId, data]) => {
+      const layer = session.snapshots[0].layers.find(
+        (l) => l.layerId === layerId,
+      );
+      const avgRenderTime =
+        data.renderTimes.reduce((a, b) => a + b, 0) / data.renderTimes.length;
+      const maxRenderTime = Math.max(...data.renderTimes);
+
+      return {
+        name: layer?.layerName || layerId,
+        avgValue: avgRenderTime,
+        maxValue: maxRenderTime,
+      };
+    },
+  );
+
+  // Draw chart
+  drawBackground(ctx, opts.width, opts.height, opts.backgroundColor);
+  drawTitle(
+    ctx,
+    opts.title || 'Layer Performance Breakdown',
+    `Session: ${session.name}`,
+    opts.width,
+    opts.padding,
+    opts.titleFontSize,
+    opts.fontSize,
+  );
+
+  if (opts.showGrid) {
+    drawGrid(ctx, opts.width, opts.height, opts.padding, 0, 1, false);
+  }
+
+  if (opts.showAxes) {
+    const allValues = [
+      ...layerPerformanceData.map((d) => d.avgValue),
+      ...layerPerformanceData.map((d) => d.maxValue),
+    ];
+    const yMin = Math.min(...allValues);
+    const yMax = Math.max(...allValues);
+
+    drawAxes(
+      ctx,
+      opts.width,
+      opts.height,
+      opts.padding,
+      'Layer',
+      'Render Time (ms)',
+      opts.fontSize,
+      undefined,
+      undefined,
+      yMin,
+      yMax,
+    );
+  }
+
+  if (layerPerformanceData.length > 0) {
+    drawGroupedBarChart(
+      ctx,
+      layerPerformanceData,
+      opts.width,
+      opts.height,
+      opts.padding,
+      '#2563eb', // Darker blue for average
+      '#dc2626', // Red for maximum
+    );
+  }
+
+  return canvas.convertToBlob({ type: 'image/png' });
+}
+
+// Export Node Network Performance chart as PNG
+export async function exportNodeNetworkPerformanceChart(
+  session: RecordingSession,
+  options: ChartExportOptions = {},
+): Promise<Blob> {
+  const opts = { ...DEFAULT_OPTIONS, ...options };
+  const canvas = createOffscreenCanvas(opts.width, opts.height);
+  const ctx = getCanvasContext(canvas);
+
+  // Prepare node network performance data
+  const networkMap = new Map<
+    string,
+    { computeTimes: number[]; nodeCounts: number[] }
+  >();
+
+  session.snapshots.forEach((snapshot) => {
+    snapshot.nodeNetworks.forEach((network) => {
+      if (!networkMap.has(network.parameterId)) {
+        networkMap.set(network.parameterId, {
+          computeTimes: [],
+          nodeCounts: [],
+        });
+      }
+      const data = networkMap.get(network.parameterId)!;
+      data.computeTimes.push(network.computeTime);
+      data.nodeCounts.push(network.nodeCount);
+    });
+  });
+
+  const nodeNetworkPerformanceData = Array.from(networkMap.entries()).map(
+    ([parameterId, data]) => {
+      const network = session.snapshots[0].nodeNetworks.find(
+        (n) => n.parameterId === parameterId,
+      );
+      const avgComputeTime =
+        data.computeTimes.reduce((a, b) => a + b, 0) / data.computeTimes.length;
+      const maxComputeTime = Math.max(...data.computeTimes);
+
+      return {
+        name: network?.parameterName || parameterId,
+        avgValue: avgComputeTime,
+        maxValue: maxComputeTime,
+      };
+    },
+  );
+
+  // Draw chart
+  drawBackground(ctx, opts.width, opts.height, opts.backgroundColor);
+  drawTitle(
+    ctx,
+    opts.title || 'Node Network Computation Time',
+    `Session: ${session.name}`,
+    opts.width,
+    opts.padding,
+    opts.titleFontSize,
+    opts.fontSize,
+  );
+
+  if (opts.showGrid) {
+    drawGrid(ctx, opts.width, opts.height, opts.padding, 0, 1, false);
+  }
+
+  if (opts.showAxes) {
+    const allValues = [
+      ...nodeNetworkPerformanceData.map((d) => d.avgValue),
+      ...nodeNetworkPerformanceData.map((d) => d.maxValue),
+    ];
+    const yMin = Math.min(...allValues);
+    const yMax = Math.max(...allValues);
+
+    drawAxes(
+      ctx,
+      opts.width,
+      opts.height,
+      opts.padding,
+      'Parameter',
+      'Compute Time (ms)',
+      opts.fontSize,
+      undefined,
+      undefined,
+      yMin,
+      yMax,
+    );
+  }
+
+  if (nodeNetworkPerformanceData.length > 0) {
+    drawGroupedBarChart(
+      ctx,
+      nodeNetworkPerformanceData,
+      opts.width,
+      opts.height,
+      opts.padding,
+      '#059669', // Darker green for average
+      '#dc2626', // Red for maximum
+    );
+  }
+
+  return canvas.convertToBlob({ type: 'image/png' });
+}
+
+// Download blob as file
+export function downloadChartAsPNG(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}

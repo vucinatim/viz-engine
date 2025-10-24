@@ -62,6 +62,11 @@ export interface ProfilerState {
   editorFPS: FPSMetrics;
   layerFPSMap: Map<string, LayerFPSMetrics>;
 
+  // Frame time tracking
+  frameTimes: number[];
+  maxFrameTime: number;
+  meanFrameTime: number;
+
   // System Metrics
   memory: MemoryMetrics;
   gpu: GPUMetrics;
@@ -97,6 +102,11 @@ export interface ProfilerState {
     nodeCount: number,
   ) => void;
   removeNodeNetwork: (parameterId: string) => void;
+  updateFrameTimes: (
+    frameTimes: number[],
+    maxFrameTime: number,
+    meanFrameTime: number,
+  ) => void;
   reset: () => void;
   initializeExistingLayersAndNetworks: () => void;
 }
@@ -136,6 +146,11 @@ const useProfilerStore = create<ProfilerState>((set, get) => ({
 
   editorFPS: createInitialFPSMetrics(),
   layerFPSMap: new Map(),
+
+  // Frame time tracking
+  frameTimes: [],
+  maxFrameTime: 0,
+  meanFrameTime: 0,
 
   memory: {
     usedJSHeapSize: 0,
@@ -230,6 +245,14 @@ const useProfilerStore = create<ProfilerState>((set, get) => ({
       lastUpdate: performance.now(),
     }),
 
+  updateFrameTimes: (frameTimes, maxFrameTime, meanFrameTime) =>
+    set({
+      frameTimes,
+      maxFrameTime,
+      meanFrameTime,
+      lastUpdate: performance.now(),
+    }),
+
   updateNodeNetwork: (parameterId, parameterName, computeTime, nodeCount) =>
     set((state) => {
       const newMap = new Map(state.nodeNetworkMap);
@@ -258,6 +281,9 @@ const useProfilerStore = create<ProfilerState>((set, get) => ({
       editorFPS: createInitialFPSMetrics(),
       layerFPSMap: new Map(),
       nodeNetworkMap: new Map(),
+      frameTimes: [],
+      maxFrameTime: 0,
+      meanFrameTime: 0,
       memory: {
         usedJSHeapSize: 0,
         totalJSHeapSize: 0,

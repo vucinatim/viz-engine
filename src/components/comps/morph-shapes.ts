@@ -388,6 +388,18 @@ const MorphShapes = createComponent({
     const css = config.color;
     const lin = cssColorToLinearRGB(css);
     const glow = Math.max(0.2, Math.min(5.0, config.glowIntensity ?? 1.0));
+
+    // Ensure colorUniforms is properly initialized (defensive check for rehydration)
+    if (
+      !state.colorUniforms ||
+      !state.colorUniforms.uColor ||
+      !state.colorUniforms.uColor.value
+    ) {
+      state.colorUniforms = {
+        uColor: { value: new THREE.Vector3(1, 1, 1) },
+      };
+    }
+
     state.colorUniforms.uColor.value.x = lin.r * glow;
     state.colorUniforms.uColor.value.y = lin.g * glow;
     state.colorUniforms.uColor.value.z = lin.b * glow;
@@ -440,6 +452,18 @@ const MorphShapes = createComponent({
     const css = config.color;
     const lin = cssColorToLinearRGB(css);
     const glow = Math.max(0.2, Math.min(5.0, config.glowIntensity ?? 1.0));
+
+    // Ensure colorUniforms is properly initialized (defensive check for rehydration)
+    if (
+      !state.colorUniforms ||
+      !state.colorUniforms.uColor ||
+      !state.colorUniforms.uColor.value
+    ) {
+      state.colorUniforms = {
+        uColor: { value: new THREE.Vector3(1, 1, 1) },
+      };
+    }
+
     state.colorUniforms.uColor.value.x = lin.r * glow;
     state.colorUniforms.uColor.value.y = lin.g * glow;
     state.colorUniforms.uColor.value.z = lin.b * glow;

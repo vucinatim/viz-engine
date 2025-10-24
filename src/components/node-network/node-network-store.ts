@@ -1,3 +1,4 @@
+import { getParameterIdsFromConfig } from '@/lib/comp-utils/config-utils';
 import { useNodeLiveValuesStore } from '@/lib/stores/node-live-values-store';
 import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
 import { Edge, Node } from '@xyflow/react';
@@ -83,6 +84,7 @@ interface NodeNetworkStore {
   ) => void;
   computeNetworkOutput: (parameterId: string, inputData: AnimInputData) => any; // Compute the output of the network
   duplicateNetwork: (fromParameterId: string, toParameterId: string) => void; // Duplicate a network from one parameter to another
+  clearStaleNetworks: () => void; // Clear networks that are no longer associated with existing layers
 }
 
 export const nodeNetworkStorePartialize = (state: NodeNetworkStore) => ({
@@ -418,6 +420,8 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
 
       // Compute the output of the network
       computeNetworkOutput: (parameterId: string, inputData: AnimInputData) => {
+        const startTime = performance.now();
+
         const network = get().networks[parameterId];
         if (!network || !network.isEnabled) {
           throw new Error('Network not found or not enabled');
@@ -534,6 +538,29 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
 
         const finalOutput = computeNodeOutput(outputNode); // Compute the final output of the network
 
+        // Measure computation time and report to profiler
+        const computeTime = performance.now() - startTime;
+
+        // Report to profiler if enabled
+        if (typeof window !== 'undefined') {
+          try {
+            const {
+              default: useProfilerStore,
+            } = require('@/lib/stores/profiler-store');
+            const profilerState = useProfilerStore.getState();
+            if (profilerState.enabled) {
+              profilerState.updateNodeNetwork(
+                parameterId,
+                network.name || parameterId,
+                computeTime,
+                nodes.length,
+              );
+            }
+          } catch (e) {
+            // Profiler store might not be available, ignore
+          }
+        }
+
         // The output node itself just returns its input, so we need to get that specific input value
         return finalOutput;
       },
@@ -584,6 +611,57 @@ export const useNodeNetworkStore = create<NodeNetworkStore>()(
             },
           };
         }),
+
+      // Clear networks that are no longer associated with existing layers
+      clearStaleNetworks: () => {
+        if (typeof window === 'undefined') return;
+
+        try {
+          // Get current layers from layer store
+          const {
+            default: useLayerStore,
+          } = require('@/lib/stores/layer-store');
+          const { layers } = useLayerStore.getState();
+
+          // Get all parameter IDs from existing layers
+          const validParameterIds = new Set<string>();
+
+          layers.forEach((layer: any) => {
+            if (layer.config && layer.config.options) {
+              const parameterIds = getParameterIdsFromConfig(layer.config);
+              parameterIds.forEach((id: string) => validParameterIds.add(id));
+            }
+          });
+
+          // Remove networks that don't have corresponding parameters
+          set((state) => {
+            const newNetworks = { ...state.networks };
+            let removedCount = 0;
+
+            Object.keys(newNetworks).forEach((parameterId) => {
+              if (!validParameterIds.has(parameterId)) {
+                delete newNetworks[parameterId];
+                removedCount++;
+              }
+            });
+
+            // If the currently open network was removed, close it
+            const newOpenNetwork =
+              state.openNetwork && validParameterIds.has(state.openNetwork)
+                ? state.openNetwork
+                : null;
+
+            console.log(`Cleared ${removedCount} stale node networks`);
+
+            return {
+              networks: newNetworks,
+              openNetwork: newOpenNetwork,
+            };
+          });
+        } catch (error) {
+          console.error('Error clearing stale networks:', error);
+        }
+      },
     }),
     {
       name: 'node-network-store',

@@ -2,9 +2,9 @@ import useProfilerStore from '@/lib/stores/profiler-store';
 import { useEffect, useRef } from 'react';
 
 // Constants for update intervals (in ms)
-const MEMORY_UPDATE_INTERVAL = 1000; // Update memory every 1 second
+const MEMORY_UPDATE_INTERVAL = 100; // Update memory every 100ms (match display refresh rate)
 const INDEXEDDB_UPDATE_INTERVAL = 5000; // Update IndexedDB every 5 seconds
-const CPU_UPDATE_INTERVAL = 500; // Update CPU estimate every 500ms
+const CPU_UPDATE_INTERVAL = 100; // Update CPU estimate every 100ms (increased for accuracy)
 
 /**
  * Hook to monitor memory usage using Performance API
@@ -18,13 +18,14 @@ export function useMemoryMonitor() {
     if (!enabled) return;
 
     // Check if performance.memory is available (Chrome/Edge only)
-    const perfMemory = (performance as any).memory;
-    if (!perfMemory) {
+    if (!(performance as any).memory) {
       console.warn('Performance memory API not available in this browser');
       return;
     }
 
     const updateMemoryMetrics = () => {
+      // Read performance.memory FRESH each time - don't cache the reference!
+      const perfMemory = (performance as any).memory;
       const usedJSHeapSize = perfMemory.usedJSHeapSize / (1024 * 1024); // Convert to MB
       const totalJSHeapSize = perfMemory.totalJSHeapSize / (1024 * 1024);
       const jsHeapSizeLimit = perfMemory.jsHeapSizeLimit / (1024 * 1024);
@@ -151,64 +152,122 @@ export function useGPUMonitor() {
 }
 
 /**
- * Hook to monitor CPU usage estimate
- * Estimates CPU usage based on task execution time vs idle time
+ * Hook to monitor main thread activity and long tasks
+ * Measures frame budget usage and detects blocking tasks
+ *
+ * Note: Real CPU usage % is not available in browsers for security reasons.
+ * Instead, we measure main thread blocking time and frame budget utilization.
  */
 export function useCPUMonitor() {
   const updateCPU = useProfilerStore((s) => s.updateCPU);
+  const updateFrameTimes = useProfilerStore((s) => s.updateFrameTimes);
   const enabled = useProfilerStore((s) => s.enabled);
-  const taskTimeRef = useRef(0);
-  const idleTimeRef = useRef(0);
-  const lastCheckRef = useRef(performance.now());
+  const frameTimesRef = useRef<number[]>([]);
+  const longTaskCountRef = useRef(0);
+  const longTaskDurationRef = useRef(0);
+  const lastUpdateRef = useRef(performance.now());
 
   useEffect(() => {
     if (!enabled) return;
 
     let animationFrameId: number;
     let timeoutId: NodeJS.Timeout;
+    let observer: PerformanceObserver | null = null;
 
-    const measureCPU = () => {
+    // Setup Long Task API observer (detects tasks >50ms)
+    if ('PerformanceObserver' in window) {
+      try {
+        observer = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if (entry.entryType === 'longtask') {
+              longTaskCountRef.current++;
+              longTaskDurationRef.current += entry.duration;
+            }
+          }
+        });
+        observer.observe({ entryTypes: ['longtask'] });
+      } catch (e) {
+        // Long Task API not supported in this browser
+        console.warn('Long Task API not available');
+      }
+    }
+
+    // Measure frame times to estimate main thread utilization
+    let lastFrameTime = performance.now();
+    const measureFrameTiming = () => {
       const now = performance.now();
-      const taskStart = now;
+      const frameTime = now - lastFrameTime;
+      lastFrameTime = now;
 
-      // Simulate a small task to measure execution time
-      // This is a rough estimate - actual CPU usage is not directly measurable in browser
-      const taskDuration = performance.now() - taskStart;
-      taskTimeRef.current += taskDuration;
-
-      // Request idle callback to measure idle time
-      if ('requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(
-          (deadline: any) => {
-            idleTimeRef.current += deadline.timeRemaining();
-          },
-          { timeout: 100 },
-        );
+      // Store frame times (cap at 100 samples for rolling window)
+      frameTimesRef.current.push(frameTime);
+      if (frameTimesRef.current.length > 100) {
+        frameTimesRef.current.shift();
       }
 
-      animationFrameId = requestAnimationFrame(measureCPU);
+      animationFrameId = requestAnimationFrame(measureFrameTiming);
     };
 
     const updateCPUMetrics = () => {
       const now = performance.now();
-      const elapsed = now - lastCheckRef.current;
-      lastCheckRef.current = now;
+      const elapsed = now - lastUpdateRef.current;
+      lastUpdateRef.current = now;
 
-      const totalTime = taskTimeRef.current + idleTimeRef.current;
-      const usage = totalTime > 0 ? (taskTimeRef.current / totalTime) * 100 : 0;
+      // Calculate frame budget usage (target: 16.67ms for 60fps)
+      const targetFrameTime = 16.67;
+      const frameTimes = frameTimesRef.current;
+
+      let usage = 0;
+      let maxTaskDuration = 0;
+
+      if (frameTimes.length > 0) {
+        // Average frame time over the measurement window
+        const avgFrameTime =
+          frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
+        maxTaskDuration = Math.max(...frameTimes);
+
+        // Usage = how much of the frame budget we're using
+        // 100% = consistently hitting 16.67ms (full 60fps budget)
+        // >100% = dropping frames (capped at 100 for display)
+        usage = Math.min(100, (avgFrameTime / targetFrameTime) * 100);
+      }
+
+      // Factor in long tasks (heavy blocking)
+      if (longTaskCountRef.current > 0) {
+        // If we detected long tasks, boost usage to reflect blocking
+        const blockingPercent = Math.min(
+          100,
+          (longTaskDurationRef.current / elapsed) * 100,
+        );
+        usage = Math.max(usage, blockingPercent);
+      }
 
       updateCPU({
-        usage: Math.min(100, Math.max(0, usage)), // Clamp between 0-100
-        taskDuration: taskTimeRef.current,
+        usage: Math.round(usage),
+        taskDuration: maxTaskDuration,
       });
 
-      // Reset counters
-      taskTimeRef.current = 0;
-      idleTimeRef.current = 0;
+      // Update frame times for accurate maxFrameTimeMs calculation
+      const currentFrameTimes = [...frameTimes];
+      const currentMaxFrameTime = maxTaskDuration;
+      const currentMeanFrameTime =
+        frameTimes.length > 0
+          ? frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length
+          : 0;
+
+      updateFrameTimes(
+        currentFrameTimes,
+        currentMaxFrameTime,
+        currentMeanFrameTime,
+      );
+
+      // Reset long task counters
+      longTaskCountRef.current = 0;
+      longTaskDurationRef.current = 0;
     };
 
     // Start measuring
-    animationFrameId = requestAnimationFrame(measureCPU);
+    animationFrameId = requestAnimationFrame(measureFrameTiming);
 
     // Update metrics periodically
     timeoutId = setInterval(updateCPUMetrics, CPU_UPDATE_INTERVAL);
@@ -216,8 +275,11 @@ export function useCPUMonitor() {
     return () => {
       cancelAnimationFrame(animationFrameId);
       clearInterval(timeoutId);
+      if (observer) {
+        observer.disconnect();
+      }
     };
-  }, [enabled, updateCPU]);
+  }, [enabled, updateCPU, updateFrameTimes]);
 }
 
 /**
