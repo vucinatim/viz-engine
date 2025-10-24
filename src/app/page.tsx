@@ -8,8 +8,10 @@ import AmbientBackground from '@/components/editor/ambient-background';
 import AnimationBuilder from '@/components/editor/animation-builder';
 import EditorHeader from '@/components/editor/editor-header';
 import HistoryManager from '@/components/editor/history-manager';
+import { ProfilerPanel } from '@/components/editor/profiler-panel';
 import ProjectDropzone from '@/components/editor/project-dropzone';
 import RemotionPlayer from '@/components/editor/remotion-player';
+import { useProfilerMonitors } from '@/lib/hooks/use-profiler-monitors';
 import useBodyProps from '@/lib/stores/body-props-store';
 import useEditorStore from '@/lib/stores/editor-store';
 
@@ -17,9 +19,13 @@ export default function Home() {
   const { props } = useBodyProps();
   const ambientMode = useEditorStore((s) => s.ambientMode);
 
+  // Initialize profiler monitors
+  useProfilerMonitors();
+
   return (
     <main className="relative h-screen w-screen" {...props}>
       <HistoryManager />
+      <ProfilerPanel />
       <ProjectDropzone className="flex flex-col">
         <div className="absolute inset-0 bg-zinc-900">
           {ambientMode && <AmbientBackground />}

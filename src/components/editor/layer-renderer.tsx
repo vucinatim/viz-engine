@@ -1,11 +1,16 @@
 import { mirrorToCanvases } from '@/lib/comp-utils/mirror-to-canvases';
 import useAudioFrameData from '@/lib/hooks/use-audio-frame-data';
 import useDebug from '@/lib/hooks/use-debug';
+import { useLayerFPSTracker } from '@/lib/hooks/use-layer-fps-tracker';
 import useOnResize from '@/lib/hooks/use-on-resize';
 import useAudioStore from '@/lib/stores/audio-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import useExportStore from '@/lib/stores/export-store';
 import useLayerStore, { LayerData } from '@/lib/stores/layer-store';
+import {
+  createDrawCallCounter,
+  DrawCallCounter,
+} from '@/lib/utils/webgl-draw-call-counter';
 import { forwardRef, memo, useCallback, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
@@ -36,6 +41,9 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     (s) => s.unregisterLayerRenderFunction,
   );
 
+  // Profiler tracking for this layer
+  const layerFPSTracker = useLayerFPSTracker(layer.id, layer.comp.name);
+
   const debugCanvasRef = useRef<HTMLCanvasElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const layerCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -58,6 +66,9 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
 
   // Post-processing ref
   const composerRef = useRef<EffectComposer | null>(null);
+
+  // Draw call counter for profiling
+  const drawCallCounterRef = useRef<DrawCallCounter | null>(null);
 
   // on panel resize, update canvas size
   useOnResize(canvasContainerRef, (entries, element) => {
@@ -210,6 +221,10 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     cameraRef.current = camera;
     sceneRef.current = scene;
     rendererRef.current = renderer;
+
+    // Setup draw call counter for profiling (wraps WebGL context)
+    const gl = renderer.getContext();
+    drawCallCounterRef.current = createDrawCallCounter(gl);
   }, [
     audioAnalyzer?.context.sampleRate,
     audioAnalyzer?.fftSize,
@@ -250,6 +265,11 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
           return;
         }
 
+        layerFPSTracker.startRender();
+
+        // Reset draw call counter before rendering
+        drawCallCounterRef.current?.reset();
+
         layer.comp.draw3D?.({
           threeCtx: {
             renderer: rendererRef.current,
@@ -268,18 +288,26 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
           // Fallback: render directly without post-processing
           rendererRef.current.render(sceneRef.current, cameraRef.current);
         }
+
+        // Get draw call count after rendering
+        const drawCalls = drawCallCounterRef.current?.getCount() || 0;
+        layerFPSTracker.endRender(drawCalls);
       };
     } else {
       // Setup the 2D draw function
       const ctx = layerCanvasRef.current.getContext('2d');
       if (!ctx) return;
       renderFunction = (data) => {
+        layerFPSTracker.startRender();
+
         layer.comp.draw?.({
           canvasCtx: ctx,
           state: layerStateRef.current,
           debugEnabled: layerDebugEnabledRef.current,
           ...data,
         });
+
+        layerFPSTracker.endRender();
       };
     }
 
@@ -365,6 +393,11 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       }
       if (rendererRef.current) {
         rendererRef.current.dispose();
+      }
+      // Cleanup draw call counter
+      if (drawCallCounterRef.current) {
+        drawCallCounterRef.current.cleanup();
+        drawCallCounterRef.current = null;
       }
       // Clear the manual render function
       manualRenderFunctionRef.current = null;

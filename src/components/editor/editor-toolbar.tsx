@@ -26,6 +26,7 @@ import {
   saveProject,
 } from '@/lib/project-persistence';
 import { useHistoryStore } from '@/lib/stores/history-store';
+import useProfilerStore from '@/lib/stores/profiler-store';
 import {
   SHORTCUTS,
   formatShortcut,
@@ -58,6 +59,23 @@ const EditorToolbar = () => {
   const canUndo = useHistoryStore((state) => state.canUndo());
   const canRedo = useHistoryStore((state) => state.canRedo());
   const activeContext = useHistoryStore((state) => state.activeContext);
+
+  // Profiler controls
+  const profilerEnabled = useProfilerStore((s) => s.enabled);
+  const profilerVisible = useProfilerStore((s) => s.visible);
+  const setProfilerEnabled = useProfilerStore((s) => s.setEnabled);
+  const setProfilerVisible = useProfilerStore((s) => s.setVisible);
+
+  const toggleProfiler = () => {
+    if (!profilerEnabled) {
+      // If enabling for the first time, enable and show
+      setProfilerEnabled(true);
+      setProfilerVisible(true);
+    } else {
+      // If already enabled, just toggle visibility
+      setProfilerVisible(!profilerVisible);
+    }
+  };
 
   // Track fullscreen state changes
   useEffect(() => {
@@ -202,6 +220,10 @@ const EditorToolbar = () => {
               <MenubarShortcut>
                 {formatShortcut(SHORTCUTS.fullscreen)}
               </MenubarShortcut>
+            </MenubarItem>
+            <MenubarSeparator />
+            <MenubarItem onClick={toggleProfiler}>
+              {profilerVisible ? '✓ ' : ''}Performance Profiler
             </MenubarItem>
           </MenubarContent>
         </MenubarMenu>
