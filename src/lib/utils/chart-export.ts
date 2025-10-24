@@ -47,15 +47,15 @@ export interface ChartData {
 const DEFAULT_OPTIONS: Required<ChartExportOptions> = {
   width: 1200,
   height: 600,
-  backgroundColor: 'transparent', // Changed to transparent for light mode compatibility
+  backgroundColor: 'white', // Changed to white background for better visibility
   title: '',
   subtitle: '',
   showLegend: true,
   showGrid: true,
   showAxes: true,
-  fontSize: 12,
-  titleFontSize: 16,
-  padding: 80, // Increased from 60 to give more space for labels
+  fontSize: 18, // Increased from 12 for better readability
+  titleFontSize: 28, // Increased from 16 for more prominent titles
+  padding: 100, // Increased from 80 to accommodate larger text
 };
 
 // Create offscreen canvas
@@ -124,7 +124,7 @@ function drawTitle(
     ctx.fillText(
       subtitle,
       width / 2,
-      padding + (title ? titleFontSize + 8 : 0),
+      padding + (title ? titleFontSize + 12 : 0),
     );
   }
 }
@@ -144,13 +144,13 @@ function drawGrid(
   ctx.setLineDash([2, 2]);
 
   const chartWidth = width - 2 * padding;
-  const chartHeight = height - 2 * padding - 60; // Account for title space
+  const chartHeight = height - 2 * padding - 80; // Account for larger title space
 
   if (isHorizontal) {
     // Horizontal grid lines with proper data scaling
     const steps = 5;
     for (let i = 0; i <= steps; i++) {
-      const y = padding + 60 + (chartHeight * i) / steps;
+      const y = padding + 80 + (chartHeight * i) / steps;
       ctx.beginPath();
       ctx.moveTo(padding, y);
       ctx.lineTo(padding + chartWidth, y);
@@ -162,8 +162,8 @@ function drawGrid(
     for (let i = 0; i <= steps; i++) {
       const x = padding + (chartWidth * i) / steps;
       ctx.beginPath();
-      ctx.moveTo(x, padding + 60);
-      ctx.lineTo(x, padding + 60 + chartHeight);
+      ctx.moveTo(x, padding + 80);
+      ctx.lineTo(x, padding + 80 + chartHeight);
       ctx.stroke();
     }
   }
@@ -182,10 +182,10 @@ function drawLegend(
 ) {
   if (legendItems.length === 0) return;
 
-  const legendX = width - padding - 200; // Position legend on the right
+  const legendX = width - padding - 250; // Position legend on the right, more space for larger text
   const legendY = padding + 20;
-  const itemHeight = fontSize + 8;
-  const lineLength = 20;
+  const itemHeight = fontSize + 12; // Increased spacing between legend items
+  const lineLength = 25; // Longer lines for better visibility
 
   ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
   ctx.textAlign = 'left';
@@ -211,7 +211,7 @@ function drawLegend(
 
     // Draw label
     ctx.fillStyle = '#111827'; // Dark text for light mode
-    ctx.fillText(item.label, legendX + lineLength + 8, y);
+    ctx.fillText(item.label, legendX + lineLength + 12, y);
   });
 }
 
@@ -230,7 +230,7 @@ function drawAxes(
   yMax?: number,
 ) {
   const chartWidth = width - 2 * padding;
-  const chartHeight = height - 2 * padding - 60;
+  const chartHeight = height - 2 * padding - 80;
 
   ctx.strokeStyle = '#111827'; // Same color as title for consistency
   ctx.lineWidth = 2;
@@ -241,14 +241,14 @@ function drawAxes(
 
   // X-axis
   ctx.beginPath();
-  ctx.moveTo(padding, padding + 60 + chartHeight);
-  ctx.lineTo(padding + chartWidth, padding + 60 + chartHeight);
+  ctx.moveTo(padding, padding + 80 + chartHeight);
+  ctx.lineTo(padding + chartWidth, padding + 80 + chartHeight);
   ctx.stroke();
 
   // Y-axis
   ctx.beginPath();
-  ctx.moveTo(padding, padding + 60);
-  ctx.lineTo(padding, padding + 60 + chartHeight);
+  ctx.moveTo(padding, padding + 80);
+  ctx.lineTo(padding, padding + 80 + chartHeight);
   ctx.stroke();
 
   // Draw tick marks and labels for Y-axis
@@ -260,7 +260,7 @@ function drawAxes(
 
     for (let i = 0; i <= steps; i++) {
       const value = yMin + (yMax - yMin) * (i / steps);
-      const y = padding + 60 + chartHeight - (chartHeight * i) / steps;
+      const y = padding + 80 + chartHeight - (chartHeight * i) / steps;
 
       // Draw tick mark
       ctx.beginPath();
@@ -269,7 +269,7 @@ function drawAxes(
       ctx.stroke();
 
       // Draw label
-      ctx.fillText(value.toFixed(1), padding - 20, y);
+      ctx.fillText(value.toFixed(1), padding - 10, y);
     }
   }
 
@@ -286,12 +286,12 @@ function drawAxes(
 
       // Draw tick mark
       ctx.beginPath();
-      ctx.moveTo(x, padding + 60 + chartHeight);
-      ctx.lineTo(x, padding + 60 + chartHeight + 5);
+      ctx.moveTo(x, padding + 80 + chartHeight);
+      ctx.lineTo(x, padding + 80 + chartHeight + 5);
       ctx.stroke();
 
       // Draw label
-      ctx.fillText(value.toFixed(1), x, padding + 60 + chartHeight + 12);
+      ctx.fillText(value.toFixed(1), x, padding + 80 + chartHeight + 20);
     }
   }
 
@@ -304,13 +304,13 @@ function drawAxes(
     ctx.fillText(
       xLabel,
       padding + chartWidth / 2,
-      padding + 60 + chartHeight + 40,
+      padding + 80 + chartHeight + 50,
     );
   }
 
   if (yLabel) {
     ctx.save();
-    ctx.translate(padding - 65, padding + 60 + chartHeight / 2);
+    ctx.translate(padding - 80, padding + 80 + chartHeight / 2);
     ctx.rotate(-Math.PI / 2);
     ctx.fillText(yLabel, 0, 0);
     ctx.restore();
@@ -334,7 +334,7 @@ function drawLineChart(
   if (data.length < 2) return;
 
   const chartWidth = width - 2 * padding;
-  const chartHeight = height - 2 * padding - 60;
+  const chartHeight = height - 2 * padding - 80;
 
   // Use provided bounds or calculate from data
   const dataXValues = data.map((d) => d.x);
@@ -360,7 +360,7 @@ function drawLineChart(
       ((point.x - xMinPadded) / (xMaxPadded - xMinPadded)) * chartWidth;
     const y =
       padding +
-      60 +
+      80 +
       chartHeight -
       ((point.y - yMinPadded) / (yMaxPadded - yMinPadded)) * chartHeight;
 
@@ -391,7 +391,7 @@ function drawAreaChart(
   if (data.length < 2) return;
 
   const chartWidth = width - 2 * padding;
-  const chartHeight = height - 2 * padding - 60;
+  const chartHeight = height - 2 * padding - 80;
 
   // Use provided bounds or calculate from data
   const dataXValues = data.map((d) => d.x);
@@ -409,9 +409,9 @@ function drawAreaChart(
   // Create gradient for filled area
   const gradient = ctx.createLinearGradient(
     0,
-    padding + 60,
+    padding + 80,
     0,
-    padding + 60 + chartHeight,
+    padding + 80 + chartHeight,
   );
   gradient.addColorStop(0, fillColor);
   gradient.addColorStop(1, 'transparent');
@@ -425,12 +425,12 @@ function drawAreaChart(
       ((point.x - xMinPadded) / (xMaxPadded - xMinPadded)) * chartWidth;
     const y =
       padding +
-      60 +
+      80 +
       chartHeight -
       ((point.y - yMinPadded) / (yMaxPadded - yMinPadded)) * chartHeight;
 
     if (index === 0) {
-      ctx.moveTo(x, padding + 60 + chartHeight); // Start at bottom
+      ctx.moveTo(x, padding + 80 + chartHeight); // Start at bottom
       ctx.lineTo(x, y);
     } else {
       ctx.lineTo(x, y);
@@ -442,7 +442,7 @@ function drawAreaChart(
   const lastX =
     padding +
     ((lastPoint.x - xMinPadded) / (xMaxPadded - xMinPadded)) * chartWidth;
-  ctx.lineTo(lastX, padding + 60 + chartHeight);
+  ctx.lineTo(lastX, padding + 80 + chartHeight);
   ctx.closePath();
   ctx.fill();
 
@@ -457,7 +457,7 @@ function drawAreaChart(
       ((point.x - xMinPadded) / (xMaxPadded - xMinPadded)) * chartWidth;
     const y =
       padding +
-      60 +
+      80 +
       chartHeight -
       ((point.y - yMinPadded) / (yMaxPadded - yMinPadded)) * chartHeight;
 
@@ -483,10 +483,10 @@ function drawBarChart(
   if (data.length === 0) return;
 
   const chartWidth = width - 2 * padding;
-  const chartHeight = height - 2 * padding - 60;
+  const chartHeight = height - 2 * padding - 80;
 
-  const barWidth = (chartWidth / data.length) * 0.8;
-  const barSpacing = (chartWidth / data.length) * 0.2;
+  const barWidth = (chartWidth / data.length) * 0.8; // Increased back to 0.8 for better bar width
+  const barSpacing = (chartWidth / data.length) * 0.2; // Reduced back to 0.2 for less gap
 
   // Find data bounds
   const values = data.map((d) => d.value);
@@ -501,7 +501,7 @@ function drawBarChart(
     const x = padding + index * (barWidth + barSpacing) + barSpacing / 2;
     const barHeight =
       ((item.value - paddedMin) / (paddedMax - paddedMin)) * chartHeight;
-    const y = padding + 60 + chartHeight - barHeight;
+    const y = padding + 80 + chartHeight - barHeight;
 
     ctx.fillStyle = color;
     ctx.fillRect(x, y, barWidth, barHeight);
@@ -509,15 +509,86 @@ function drawBarChart(
     // Draw value label
     ctx.fillStyle = '#111827'; // Dark text for light mode
     ctx.font =
-      '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      '20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
     ctx.fillText(item.value.toFixed(1), x + barWidth / 2, y - 2);
 
-    // Draw name label
-    ctx.fillStyle = '#374151'; // Dark gray for light mode
+    // Draw name label with multi-line support
+    ctx.fillStyle = '#111827'; // Darker text for better visibility
     ctx.textBaseline = 'top';
-    ctx.fillText(item.name, x + barWidth / 2, padding + 60 + chartHeight + 5);
+
+    // Split long names into two lines
+    const maxCharsPerLine = 12;
+    const name = item.name;
+    if (name.length > maxCharsPerLine) {
+      let splitPoint = -1;
+
+      // First, look for parentheses patterns like "(Neural Network)"
+      const parenMatch = name.match(/^(.+?)\s*\(([^)]+)\)$/);
+      if (parenMatch) {
+        const mainPart = parenMatch[1].trim();
+        const parenPart = `(${parenMatch[2]})`;
+
+        // If main part is short enough, split before parentheses
+        if (mainPart.length <= maxCharsPerLine) {
+          ctx.fillText(
+            mainPart,
+            x + barWidth / 2,
+            padding + 80 + chartHeight + 5,
+          );
+          ctx.fillText(
+            parenPart,
+            x + barWidth / 2,
+            padding + 80 + chartHeight + 25,
+          );
+        } else {
+          // Main part is too long, use regular splitting
+          const midPoint = Math.floor(name.length / 2);
+          splitPoint = midPoint;
+
+          // Find a good split point (space or dash)
+          for (let i = 0; i < Math.min(6, name.length - midPoint); i++) {
+            const char = name[midPoint + i];
+            if (char === ' ' || char === '-' || char === '_') {
+              splitPoint = midPoint + i;
+              break;
+            }
+          }
+
+          const line1 = name.substring(0, splitPoint).trim();
+          const line2 = name.substring(splitPoint).trim();
+
+          ctx.fillText(line1, x + barWidth / 2, padding + 80 + chartHeight + 5);
+          ctx.fillText(
+            line2,
+            x + barWidth / 2,
+            padding + 80 + chartHeight + 25,
+          );
+        }
+      } else {
+        // No parentheses pattern, use regular splitting
+        const midPoint = Math.floor(name.length / 2);
+        splitPoint = midPoint;
+
+        // Find a good split point (space or dash)
+        for (let i = 0; i < Math.min(6, name.length - midPoint); i++) {
+          const char = name[midPoint + i];
+          if (char === ' ' || char === '-' || char === '_') {
+            splitPoint = midPoint + i;
+            break;
+          }
+        }
+
+        const line1 = name.substring(0, splitPoint).trim();
+        const line2 = name.substring(splitPoint).trim();
+
+        ctx.fillText(line1, x + barWidth / 2, padding + 80 + chartHeight + 5);
+        ctx.fillText(line2, x + barWidth / 2, padding + 80 + chartHeight + 25);
+      }
+    } else {
+      ctx.fillText(name, x + barWidth / 2, padding + 80 + chartHeight + 5);
+    }
   });
 }
 
@@ -538,10 +609,10 @@ function drawGroupedBarChart(
   if (data.length === 0) return;
 
   const chartWidth = width - 2 * padding;
-  const chartHeight = height - 2 * padding - 60;
+  const chartHeight = height - 2 * padding - 80;
 
-  const groupWidth = (chartWidth / data.length) * 0.8;
-  const groupSpacing = (chartWidth / data.length) * 0.2;
+  const groupWidth = (chartWidth / data.length) * 0.8; // Increased back to 0.8 for better bar width
+  const groupSpacing = (chartWidth / data.length) * 0.2; // Reduced back to 0.2 for less gap
   const barWidth = groupWidth * 0.4; // Each bar takes 40% of group width
   const barSpacing = groupWidth * 0.2; // 20% spacing between bars in group
 
@@ -564,7 +635,7 @@ function drawGroupedBarChart(
     // Draw average bar
     const avgBarHeight =
       ((item.avgValue - paddedMin) / (paddedMax - paddedMin)) * chartHeight;
-    const avgY = padding + 60 + chartHeight - avgBarHeight;
+    const avgY = padding + 80 + chartHeight - avgBarHeight;
     const avgX = groupX + barSpacing / 2;
 
     ctx.fillStyle = avgColor;
@@ -573,7 +644,7 @@ function drawGroupedBarChart(
     // Draw max bar
     const maxBarHeight =
       ((item.maxValue - paddedMin) / (paddedMax - paddedMin)) * chartHeight;
-    const maxY = padding + 60 + chartHeight - maxBarHeight;
+    const maxY = padding + 80 + chartHeight - maxBarHeight;
     const maxX = groupX + barSpacing / 2 + barWidth + barSpacing;
 
     ctx.fillStyle = maxColor;
@@ -582,7 +653,7 @@ function drawGroupedBarChart(
     // Draw value labels
     ctx.fillStyle = '#111827'; // Dark text for light mode
     ctx.font =
-      '9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      '20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
 
@@ -592,14 +663,97 @@ function drawGroupedBarChart(
     // Max value label
     ctx.fillText(item.maxValue.toFixed(1), maxX + barWidth / 2, maxY - 2);
 
-    // Draw name label
-    ctx.fillStyle = '#374151'; // Dark gray for light mode
+    // Draw name label with multi-line support
+    ctx.fillStyle = '#111827'; // Darker text for better visibility
     ctx.textBaseline = 'top';
-    ctx.fillText(
-      item.name,
-      groupX + groupWidth / 2,
-      padding + 60 + chartHeight + 5,
-    );
+
+    // Split long names into two lines
+    const maxCharsPerLine = 12;
+    const name = item.name;
+    if (name.length > maxCharsPerLine) {
+      let splitPoint = -1;
+
+      // First, look for parentheses patterns like "(Neural Network)"
+      const parenMatch = name.match(/^(.+?)\s*\(([^)]+)\)$/);
+      if (parenMatch) {
+        const mainPart = parenMatch[1].trim();
+        const parenPart = `(${parenMatch[2]})`;
+
+        // If main part is short enough, split before parentheses
+        if (mainPart.length <= maxCharsPerLine) {
+          ctx.fillText(
+            mainPart,
+            groupX + groupWidth / 2,
+            padding + 80 + chartHeight + 5,
+          );
+          ctx.fillText(
+            parenPart,
+            groupX + groupWidth / 2,
+            padding + 80 + chartHeight + 25,
+          );
+        } else {
+          // Main part is too long, use regular splitting
+          const midPoint = Math.floor(name.length / 2);
+          splitPoint = midPoint;
+
+          // Find a good split point (space or dash)
+          for (let i = 0; i < Math.min(6, name.length - midPoint); i++) {
+            const char = name[midPoint + i];
+            if (char === ' ' || char === '-' || char === '_') {
+              splitPoint = midPoint + i;
+              break;
+            }
+          }
+
+          const line1 = name.substring(0, splitPoint).trim();
+          const line2 = name.substring(splitPoint).trim();
+
+          ctx.fillText(
+            line1,
+            groupX + groupWidth / 2,
+            padding + 80 + chartHeight + 5,
+          );
+          ctx.fillText(
+            line2,
+            groupX + groupWidth / 2,
+            padding + 80 + chartHeight + 25,
+          );
+        }
+      } else {
+        // No parentheses pattern, use regular splitting
+        const midPoint = Math.floor(name.length / 2);
+        splitPoint = midPoint;
+
+        // Find a good split point (space or dash)
+        for (let i = 0; i < Math.min(6, name.length - midPoint); i++) {
+          const char = name[midPoint + i];
+          if (char === ' ' || char === '-' || char === '_') {
+            splitPoint = midPoint + i;
+            break;
+          }
+        }
+
+        const line1 = name.substring(0, splitPoint).trim();
+        const line2 = name.substring(splitPoint).trim();
+
+        ctx.fillText(
+          line1,
+          groupX + groupWidth / 2,
+          padding + 80 + chartHeight + 5,
+        );
+        ctx.fillText(
+          line2,
+          groupX + groupWidth / 2,
+          padding + 80 + chartHeight + 25,
+        );
+      }
+    } else {
+      ctx.fillText(
+        name,
+        groupX + groupWidth / 2,
+        padding + 80 + chartHeight + 5,
+      );
+    }
   });
 }
 
@@ -774,14 +928,14 @@ export async function exportMemoryChart(
   }
 
   if (timeSeriesData.length > 0) {
-    drawLineChart(
+    drawAreaChart(
       ctx,
       timeSeriesData,
       opts.width,
       opts.height,
       opts.padding,
       '#7c3aed', // Darker purple for light mode
-      2,
+      '#8b5cf640', // Semi-transparent purple
       xMin,
       xMax,
       yMin,
@@ -849,14 +1003,14 @@ export async function exportFrameBudgetChart(
   }
 
   if (timeSeriesData.length > 0) {
-    drawLineChart(
+    drawAreaChart(
       ctx,
       timeSeriesData,
       opts.width,
       opts.height,
       opts.padding,
       '#ea580c', // Darker orange for light mode
-      2,
+      '#f9731640', // Semi-transparent orange
       xMin,
       xMax,
       yMin,
@@ -923,7 +1077,7 @@ export async function exportLayerPerformanceChart(
   );
 
   if (opts.showGrid) {
-    drawGrid(ctx, opts.width, opts.height, opts.padding, 0, 1, false);
+    drawGrid(ctx, opts.width, opts.height, opts.padding, 0, 1, true);
   }
 
   if (opts.showAxes) {
@@ -1041,7 +1195,7 @@ export async function exportNodeNetworkPerformanceChart(
   );
 
   if (opts.showGrid) {
-    drawGrid(ctx, opts.width, opts.height, opts.padding, 0, 1, false);
+    drawGrid(ctx, opts.width, opts.height, opts.padding, 0, 1, true);
   }
 
   if (opts.showAxes) {
