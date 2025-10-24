@@ -106,7 +106,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
           ref={setNodeRef}
           style={style}
           className="sticky top-0 z-20 border-b border-zinc-600">
-          <div className="flex overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-900/90 backdrop-blur-sm transition-colors group-hover:from-zinc-700/70 group-hover:to-zinc-700/50">
+          <div className="flex overflow-hidden bg-gradient-to-b from-zinc-900 to-zinc-900/90 backdrop-blur-sm transition-colors group-hover:from-zinc-700/70 group-hover:to-zinc-700/50 group-hover:backdrop-blur-md">
             <div
               {...attributes}
               {...listeners}
