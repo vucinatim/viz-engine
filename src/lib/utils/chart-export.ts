@@ -1,7 +1,9 @@
 // Chart Export Utility
 // Renders charts in offscreen canvas and exports as PNG
 
+import { destructureParameterId } from '@/lib/id-utils';
 import type { RecordingSession } from '@/lib/stores/performance-recorder-types';
+import JSZip from 'jszip';
 
 export interface ChartExportOptions {
   width?: number;
@@ -167,6 +169,50 @@ function drawGrid(
   }
 
   ctx.setLineDash([]);
+}
+
+// Draw legend
+function drawLegend(
+  ctx: OffscreenCanvasRenderingContext2D,
+  width: number,
+  height: number,
+  padding: number,
+  legendItems: Array<{ label: string; color: string; lineWidth?: number }>,
+  fontSize: number,
+) {
+  if (legendItems.length === 0) return;
+
+  const legendX = width - padding - 200; // Position legend on the right
+  const legendY = padding + 20;
+  const itemHeight = fontSize + 8;
+  const lineLength = 20;
+
+  ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+
+  legendItems.forEach((item, index) => {
+    const y = legendY + index * itemHeight;
+
+    // Draw colored line/box
+    if (item.lineWidth) {
+      // For line charts
+      ctx.strokeStyle = item.color;
+      ctx.lineWidth = item.lineWidth;
+      ctx.beginPath();
+      ctx.moveTo(legendX, y);
+      ctx.lineTo(legendX + lineLength, y);
+      ctx.stroke();
+    } else {
+      // For bar charts
+      ctx.fillStyle = item.color;
+      ctx.fillRect(legendX, y - 6, 12, 12);
+    }
+
+    // Draw label
+    ctx.fillStyle = '#111827'; // Dark text for light mode
+    ctx.fillText(item.label, legendX + lineLength + 8, y);
+  });
 }
 
 // Draw axes with tick marks and labels
@@ -651,6 +697,21 @@ export async function exportFPSChart(
       yMin,
       yMax,
     );
+
+    // Draw legend
+    if (opts.showLegend) {
+      drawLegend(
+        ctx,
+        opts.width,
+        opts.height,
+        opts.padding,
+        [
+          { label: 'Current FPS', color: '#059669', lineWidth: 2 },
+          { label: 'Rolling Average', color: '#2563eb', lineWidth: 2 },
+        ],
+        opts.fontSize,
+      );
+    }
   }
 
   return canvas.convertToBlob({ type: 'image/png' });
@@ -898,6 +959,21 @@ export async function exportLayerPerformanceChart(
       '#2563eb', // Darker blue for average
       '#dc2626', // Red for maximum
     );
+
+    // Draw legend
+    if (opts.showLegend) {
+      drawLegend(
+        ctx,
+        opts.width,
+        opts.height,
+        opts.padding,
+        [
+          { label: 'Average Render Time', color: '#2563eb' },
+          { label: 'Maximum Render Time', color: '#dc2626' },
+        ],
+        opts.fontSize,
+      );
+    }
   }
 
   return canvas.convertToBlob({ type: 'image/png' });
@@ -941,8 +1017,11 @@ export async function exportNodeNetworkPerformanceChart(
         data.computeTimes.reduce((a, b) => a + b, 0) / data.computeTimes.length;
       const maxComputeTime = Math.max(...data.computeTimes);
 
+      // Use destructureParameterId to get proper display names
+      const paramInfo = destructureParameterId(parameterId);
+
       return {
-        name: network?.parameterName || parameterId,
+        name: `${paramInfo.displayName} (${paramInfo.componentName})`,
         avgValue: avgComputeTime,
         maxValue: maxComputeTime,
       };
@@ -998,6 +1077,21 @@ export async function exportNodeNetworkPerformanceChart(
       '#059669', // Darker green for average
       '#dc2626', // Red for maximum
     );
+
+    // Draw legend
+    if (opts.showLegend) {
+      drawLegend(
+        ctx,
+        opts.width,
+        opts.height,
+        opts.padding,
+        [
+          { label: 'Average Compute Time', color: '#059669' },
+          { label: 'Maximum Compute Time', color: '#dc2626' },
+        ],
+        opts.fontSize,
+      );
+    }
   }
 
   return canvas.convertToBlob({ type: 'image/png' });
@@ -1009,6 +1103,87 @@ export function downloadChartAsPNG(blob: Blob, filename: string) {
   const link = document.createElement('a');
   link.href = url;
   link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+// Export all charts as a ZIP file
+export async function exportAllChartsAsZip(
+  session: RecordingSession,
+  options: ChartExportOptions = {},
+): Promise<Blob> {
+  const zip = new JSZip();
+
+  // Create a folder for the charts
+  const chartsFolder = zip.folder('charts');
+
+  if (!chartsFolder) {
+    throw new Error('Failed to create charts folder in ZIP');
+  }
+
+  // Export all chart types
+  const chartExports = [
+    {
+      name: 'fps_performance',
+      exportFn: () => exportFPSChart(session, options),
+    },
+    {
+      name: 'memory_usage',
+      exportFn: () => exportMemoryChart(session, options),
+    },
+    {
+      name: 'frame_budget',
+      exportFn: () => exportFrameBudgetChart(session, options),
+    },
+    {
+      name: 'layer_performance',
+      exportFn: () => exportLayerPerformanceChart(session, options),
+    },
+    {
+      name: 'node_network_performance',
+      exportFn: () => exportNodeNetworkPerformanceChart(session, options),
+    },
+  ];
+
+  // Generate all charts and add to ZIP
+  for (const chart of chartExports) {
+    try {
+      const blob = await chart.exportFn();
+      const filename = `${session.name.replace(/[^a-z0-9]/gi, '_')}_${chart.name}.png`;
+      chartsFolder.file(filename, blob);
+    } catch (error) {
+      console.warn(`Failed to export ${chart.name} chart:`, error);
+      // Continue with other charts even if one fails
+    }
+  }
+
+  // Add a README file with information about the charts
+  const readmeContent = `Performance Charts Export
+Session: ${session.name}
+Generated: ${new Date().toISOString()}
+
+Charts included:
+- fps_performance.png: FPS performance over time
+- memory_usage.png: Memory usage over time  
+- frame_budget.png: Frame budget usage over time
+- layer_performance.png: Layer performance breakdown
+- node_network_performance.png: Node network computation time
+
+Each chart is exported as a high-resolution PNG image suitable for reports and documentation.
+`;
+
+  zip.file('README.txt', readmeContent);
+
+  // Generate the ZIP file
+  return await zip.generateAsync({ type: 'blob' });
+}
+
+// Download ZIP file
+export function downloadAllChartsAsZip(blob: Blob, sessionName: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${sessionName.replace(/[^a-z0-9]/gi, '_')}_all_charts.zip`;
   link.click();
   URL.revokeObjectURL(url);
 }

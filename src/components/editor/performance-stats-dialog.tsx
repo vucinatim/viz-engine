@@ -1,7 +1,10 @@
+import { destructureParameterId } from '@/lib/id-utils';
 import type { RecordingSession } from '@/lib/stores/performance-recorder-types';
 import { computeSessionStatistics } from '@/lib/stores/performance-recorder-utils';
 import {
+  downloadAllChartsAsZip,
   downloadChartAsPNG,
+  exportAllChartsAsZip,
   exportFPSChart,
   exportFrameBudgetChart,
   exportLayerPerformanceChart,
@@ -298,6 +301,7 @@ const PerformanceStatsDialogComponent = ({
   const [exportingCharts, setExportingCharts] = useState<Set<string>>(
     new Set(),
   );
+  const [exportingZip, setExportingZip] = useState(false);
 
   // Compute statistics
   const stats = useMemo(
@@ -399,8 +403,12 @@ const PerformanceStatsDialogComponent = ({
       const avgNodeCount =
         data.nodeCounts.reduce((a, b) => a + b, 0) / data.nodeCounts.length;
 
+      // Use destructureParameterId to get proper display names
+      const paramInfo = destructureParameterId(parameterId);
+
       return {
-        name: network?.parameterName || parameterId,
+        name: paramInfo.displayName,
+        layerName: paramInfo.componentName,
         avgComputeTime: Number(avgComputeTime.toFixed(3)),
         maxComputeTime: Number(maxComputeTime.toFixed(3)),
         nodeCount: Math.round(avgNodeCount),
@@ -511,6 +519,21 @@ const PerformanceStatsDialogComponent = ({
     );
   };
 
+  // Download all charts as ZIP
+  const handleDownloadAllCharts = async () => {
+    if (!session) return;
+
+    setExportingZip(true);
+    try {
+      const zipBlob = await exportAllChartsAsZip(session);
+      downloadAllChartsAsZip(zipBlob, session.name);
+    } catch (error) {
+      console.error('Failed to export all charts as ZIP:', error);
+    } finally {
+      setExportingZip(false);
+    }
+  };
+
   if (!session || !stats) {
     return null;
   }
@@ -563,6 +586,20 @@ const PerformanceStatsDialogComponent = ({
                   title="Download simplified chart data for plotting tools (Python, LaTeX, etc.)">
                   <Download className="h-3 w-3" />
                   Chart Data
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadAllCharts}
+                  disabled={exportingZip}
+                  className="h-6 gap-1.5 px-2 text-xs"
+                  title="Download all chart images as a ZIP file">
+                  {exportingZip ? (
+                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                  ) : (
+                    <ImageIcon className="h-3 w-3" />
+                  )}
+                  {exportingZip ? 'Exporting...' : 'All Charts'}
                 </Button>
               </div>
             </div>
@@ -916,7 +953,13 @@ const PerformanceStatsDialogComponent = ({
                     <XAxis
                       dataKey="name"
                       stroke="#999"
-                      tick={{ fill: '#999' }}
+                      tick={{ fill: '#999', fontSize: 12 }}
+                      tickFormatter={(value, index) => {
+                        const item = nodeNetworkPerformanceData[index];
+                        return item
+                          ? `${item.name} (${item.layerName})`
+                          : value;
+                      }}
                     />
                     <YAxis stroke="#999" tick={{ fill: '#999' }} />
                     <Tooltip
@@ -1350,7 +1393,12 @@ const PerformanceStatsDialogComponent = ({
                         <tr key={idx}>
                           <td
                             className={`px-4 py-2 text-white ${idx < nodeNetworkPerformanceData.length - 1 ? 'border-b border-white/5' : ''}`}>
-                            {network.name}
+                            <div>
+                              <div className="font-medium">{network.name}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {network.layerName}
+                              </div>
+                            </div>
                           </td>
                           <td
                             className={`px-4 py-2 text-right font-mono text-white ${idx < nodeNetworkPerformanceData.length - 1 ? 'border-b border-white/5' : ''}`}>
