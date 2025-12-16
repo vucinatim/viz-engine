@@ -100,7 +100,7 @@ const NodeEditorToolbar = ({
   };
 
   // Use clipboard hook for copy functionality
-  const { copySelectedNodes } = useNodeGraphClipboard({
+  const { copyAllNodes } = useNodeGraphClipboard({
     parameterId: nodeNetworkId,
     reactFlowInstance,
   });
@@ -202,7 +202,7 @@ const NodeEditorToolbar = ({
   };
 
   const handleCopyNetwork = () => {
-    copySelectedNodes();
+    copyAllNodes();
     toast.success('Network copied to clipboard');
   };
 

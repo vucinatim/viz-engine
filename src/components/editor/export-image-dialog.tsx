@@ -20,7 +20,10 @@ import {
 import { Slider } from '@/components/ui/slider';
 import useEditorStore from '@/lib/stores/editor-store';
 import useLayerStore from '@/lib/stores/layer-store';
-import { fastCaptureFrame } from '@/lib/utils/fast-frame-capture';
+import {
+  fastCaptureFrame,
+  isTransparentBackground,
+} from '@/lib/utils/fast-frame-capture';
 import { Download, Loader2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -154,7 +157,8 @@ const ExportImageDialog = ({ open, onOpenChange }: ExportImageDialogProps) => {
               : (cssBlendMode as GlobalCompositeOperation);
 
           const display = style.display;
-          const background = style.background || style.backgroundColor;
+          // Use backgroundColor directly - background shorthand includes non-color values
+          const background = style.backgroundColor;
           if (display === 'none' || opacity === 0) continue;
 
           // CRITICAL FIX for multiply/blend modes:
@@ -171,11 +175,8 @@ const ExportImageDialog = ({ open, onOpenChange }: ExportImageDialogProps) => {
           if (!tempCtx) continue;
 
           // Draw background on temp canvas (without blend mode)
-          if (
-            background &&
-            background !== 'rgba(0, 0, 0, 0)' &&
-            background !== 'transparent'
-          ) {
+          // Skip if background is transparent (including rgba with alpha=0)
+          if (!isTransparentBackground(background)) {
             tempCtx.fillStyle = background;
             tempCtx.fillRect(0, 0, width, height);
           }

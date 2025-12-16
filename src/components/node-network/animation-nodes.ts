@@ -1387,31 +1387,47 @@ const MultiBandAnalysisNode = createNode({
     const bassMaxFreq = typeof bassMax === 'number' ? bassMax : 250;
     const midMaxFreq = typeof midMax === 'number' ? midMax : 4000;
 
+    // Web Audio's getByteFrequencyData returns dB values scaled to 0-255
+    // where 0 = minDecibels (-100dB) and 255 = maxDecibels (-30dB)
+    // We need to convert to linear magnitude for accurate energy comparison across bands
+    const minDb = -100;
+    const maxDb = -30;
+    const dbRange = maxDb - minDb; // 70
+
+    // Noise floor threshold - ignore very quiet bins
+    const noiseFloorByte = 28; // roughly -80dB
+
     let bassEnergy = 0;
     let midEnergy = 0;
     let highEnergy = 0;
 
-    // AGGRESSIVE perceptual weighting to compensate for FFT bin density
-    // Goal: balanced D&B drop should show ~33% each band
+    // Perceptual weighting - now lighter since linear conversion handles most of the issue
     const getPerceptualWeight = (freq: number): number => {
       if (freq < 20) return 0;
-      if (freq < 60) return 5.0; // Sub-bass (kick fundamentals)
-      if (freq < 150) return 4.0; // Bass fundamentals
-      if (freq < 300) return 3.0; // Bass harmonics
-      if (freq < 600) return 2.0; // Low-mids
-      if (freq < 1500) return 1.2; // Mids
-      if (freq < 4000) return 0.8; // Upper mids
-      if (freq < 8000) return 0.4; // Highs (compensate for bin density)
-      if (freq < 12000) return 0.2; // Very high (many bins, little importance)
-      return 0.1; // Extreme highs (mostly noise/artifacts)
+      if (freq < 60) return 1.5; // Sub-bass
+      if (freq < 150) return 1.3; // Bass fundamentals
+      if (freq < 300) return 1.2; // Bass harmonics
+      if (freq < 600) return 1.1; // Low-mids
+      if (freq < 1500) return 1.0; // Mids
+      if (freq < 4000) return 0.9; // Upper mids
+      if (freq < 8000) return 0.7; // Highs
+      if (freq < 12000) return 0.4; // Very high
+      return 0.2; // Extreme highs (mostly noise/artifacts)
     };
 
-    // Sum energy in each band with perceptual weighting
+    // Sum energy in each band using LINEAR magnitudes with perceptual weighting
     for (let i = 0; i < n; i++) {
+      const byteValue = data[i];
+      // Skip bins below noise floor
+      if (byteValue < noiseFloorByte) continue;
+
       const freq = i * freqPerBin;
-      const magnitude = data[i];
+      // Convert byte to dB, then to linear magnitude
+      const dB = (byteValue / 255) * dbRange + minDb;
+      const linearMagnitude = Math.pow(10, dB / 20);
+
       const weight = getPerceptualWeight(freq);
-      const weightedMagnitude = magnitude * weight;
+      const weightedMagnitude = linearMagnitude * weight;
 
       if (freq <= bassMaxFreq) {
         bassEnergy += weightedMagnitude;
@@ -1476,12 +1492,31 @@ const SpectralCentroidNode = createNode({
     // Calculate frequency per bin
     const freqPerBin = sampleRate / fftSize;
 
+    // Web Audio's getByteFrequencyData returns dB values scaled to 0-255
+    // where 0 = minDecibels (-100dB) and 255 = maxDecibels (-30dB)
+    // We need to convert to linear magnitude for accurate centroid calculation
+    const minDb = -100;
+    const maxDb = -30;
+    const dbRange = maxDb - minDb; // 70
+
     // Calculate spectral centroid: Σ(frequency * magnitude) / Σ(magnitude)
+    // Using LINEAR magnitudes, not dB values
     let weightedSum = 0;
     let magnitudeSum = 0;
 
+    // Noise floor threshold - ignore very quiet bins (below ~-80dB)
+    const noiseFloorByte = 28; // roughly -80dB
+
     for (let i = 0; i < n; i++) {
-      const magnitude = data[i];
+      const byteValue = data[i];
+      // Skip bins below noise floor to reduce high-frequency bias from noise
+      if (byteValue < noiseFloorByte) continue;
+
+      // Convert byte to dB: dB = (byte/255) * range + minDb
+      const dB = (byteValue / 255) * dbRange + minDb;
+      // Convert dB to linear magnitude: linear = 10^(dB/20)
+      const magnitude = Math.pow(10, dB / 20);
+
       const frequency = i * freqPerBin;
       weightedSum += frequency * magnitude;
       magnitudeSum += magnitude;
@@ -1504,10 +1539,11 @@ const SpectralCentroidNode = createNode({
     state.prevCentroid = smoothedCentroid;
     state.prevTime = t;
 
-    // Normalize to 0-1 range (typical range: 200Hz - 4000Hz)
+    // Normalize to 0-1 range (typical range: 500Hz - 6000Hz for music)
+    // With proper linear magnitude weighting, centroid will be lower for bass-heavy content
     const normalized = Math.max(
       0,
-      Math.min(1, (smoothedCentroid - 200) / 3800),
+      Math.min(1, (smoothedCentroid - 500) / 5500),
     );
 
     return { centroid: smoothedCentroid, normalized };

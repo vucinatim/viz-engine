@@ -1998,6 +1998,180 @@ registerPreset({
   ],
 });
 
+// ========================================
+// 🌈 SPECTRAL CENTROID HUE
+// ========================================
+
+registerPreset({
+  id: 'spectral-centroid-hue',
+  name: '🌈 Spectral Centroid Hue',
+  description:
+    'Maps spectral centroid (timbral brightness) to hue. Bass-heavy = blue/purple, treble-heavy = red/orange. Creates smooth color shifts that follow the tonal character of the music.',
+  outputType: 'color',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'centroid',
+      label: 'Spectral Centroid',
+      inputValues: { smoothMs: 200 },
+    },
+    {
+      id: 'norm',
+      label: 'Normalize',
+      inputValues: {
+        inputMin: 0,
+        inputMax: 1,
+        outputMin: 0,
+        outputMax: 360,
+      },
+    },
+    {
+      id: 'hsl',
+      label: 'HSL Color',
+      inputValues: {
+        h: 0,
+        s: 70,
+        l: 40,
+      },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'centroid',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'centroid',
+      sourceHandle: 'normalized',
+      target: 'norm',
+      targetHandle: 'value',
+    },
+    {
+      source: 'norm',
+      sourceHandle: 'result',
+      target: 'hsl',
+      targetHandle: 'h',
+    },
+    {
+      source: 'hsl',
+      sourceHandle: 'color',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
+// ========================================
+// 🎹 HARMONIC PITCH TO COLOR
+// ========================================
+
+registerPreset({
+  id: 'harmonic-pitch-color',
+  name: '🎹 Harmonic Pitch → 12 Colors',
+  description:
+    'Detects harmonic content in a frequency band and maps the MIDI pitch class (0-11) to 12 distinct hues. Each chromatic note gets a unique color! Great for melodic/vocal content.',
+  outputType: 'color',
+  autoPlace: true,
+  nodes: [
+    {
+      id: 'band',
+      label: 'Frequency Band',
+      inputValues: {
+        startFrequency: 550,
+        endFrequency: 1850,
+      },
+    },
+    {
+      id: 'harmonic',
+      label: 'Harmonic Presence',
+      inputValues: {
+        toleranceCents: 40,
+        smoothMs: 0.1,
+      },
+    },
+    {
+      id: 'mod12',
+      label: 'Math',
+      inputValues: {
+        a: 0,
+        b: 12,
+        operation: 'modulo',
+      },
+    },
+    {
+      id: 'norm',
+      label: 'Normalize',
+      inputValues: {
+        inputMin: 0,
+        inputMax: 12,
+        outputMin: 0,
+        outputMax: 360,
+      },
+    },
+    {
+      id: 'hsl',
+      label: 'HSL Color',
+      inputValues: {
+        h: 0,
+        s: 100,
+        l: 50,
+      },
+    },
+  ],
+  edges: [
+    {
+      source: INPUT_ALIAS,
+      sourceHandle: 'frequencyAnalysis',
+      target: 'band',
+      targetHandle: 'frequencyAnalysis',
+    },
+    {
+      source: 'band',
+      sourceHandle: 'bandData',
+      target: 'harmonic',
+      targetHandle: 'data',
+    },
+    {
+      source: 'band',
+      sourceHandle: 'bandStartBin',
+      target: 'harmonic',
+      targetHandle: 'bandStartBin',
+    },
+    {
+      source: 'band',
+      sourceHandle: 'frequencyPerBin',
+      target: 'harmonic',
+      targetHandle: 'frequencyPerBin',
+    },
+    {
+      source: 'harmonic',
+      sourceHandle: 'midi',
+      target: 'mod12',
+      targetHandle: 'a',
+    },
+    {
+      source: 'mod12',
+      sourceHandle: 'result',
+      target: 'norm',
+      targetHandle: 'value',
+    },
+    {
+      source: 'norm',
+      sourceHandle: 'result',
+      target: 'hsl',
+      targetHandle: 'h',
+    },
+    {
+      source: 'hsl',
+      sourceHandle: 'color',
+      target: OUTPUT_ALIAS,
+      targetHandle: 'output',
+    },
+  ],
+});
+
 // Pitch Detection → MIDI Modulo
 registerPreset({
   id: 'pitch-detection-midi-mod',

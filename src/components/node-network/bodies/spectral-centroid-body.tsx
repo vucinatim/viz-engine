@@ -59,12 +59,14 @@ const SpectralCentroidBody = ({ id: nodeId }: SpectralCentroidBodyProps) => {
     ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, cssW, cssH);
 
+    // Frequency range for visualization (matches the corrected centroid calculation)
+    const minFreq = 200;
+    const maxFreq = 8000;
+
     // Draw frequency range markers
     const drawMarker = (hz: number, label: string, color: string) => {
-      const minFreq = 200;
-      const maxFreq = 4000;
-      const normalized = (hz - minFreq) / (maxFreq - minFreq);
-      const y = cssH - normalized * cssH;
+      const normalizedHz = (hz - minFreq) / (maxFreq - minFreq);
+      const y = cssH - normalizedHz * cssH;
 
       ctx.strokeStyle = color;
       ctx.lineWidth = 1;
@@ -82,14 +84,11 @@ const SpectralCentroidBody = ({ id: nodeId }: SpectralCentroidBodyProps) => {
     };
 
     drawMarker(500, 'Bass', 'rgba(59,130,246,0.4)');
-    drawMarker(1500, 'Mids', 'rgba(168,85,247,0.4)');
-    drawMarker(3000, 'Highs', 'rgba(239,68,68,0.4)');
+    drawMarker(2000, 'Mids', 'rgba(168,85,247,0.4)');
+    drawMarker(5000, 'Highs', 'rgba(239,68,68,0.4)');
 
     // Draw centroid waveform with color gradient based on frequency
     if (centroidRing.current.length >= 2) {
-      const minFreq = 200;
-      const maxFreq = 4000;
-
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       const stepX = cssW / Math.max(1, capacity - 1);
@@ -121,13 +120,18 @@ const SpectralCentroidBody = ({ id: nodeId }: SpectralCentroidBodyProps) => {
 
     // Update centroid text with color
     if (centroidTextRef.current) {
-      const hue = normalized * 240; // 240 (blue) to 0 (red)
+      // Map centroid to hue: low freq = blue (240), high freq = red (0)
+      const normalizedForColor = Math.max(
+        0,
+        Math.min(1, (centroid - minFreq) / (maxFreq - minFreq)),
+      );
+      const hue = (1 - normalizedForColor) * 240; // 240 (blue) at low freq, 0 (red) at high
       centroidTextRef.current.innerHTML = `
-        <div class="text-lg font-bold font-mono" style="color: hsl(${240 - hue}, 80%, 65%)">
+        <div class="text-lg font-bold font-mono" style="color: hsl(${hue}, 80%, 65%)">
           ${centroid.toFixed(0)} Hz
         </div>
         <div class="text-[9px] text-zinc-400 mt-0.5">
-          ${centroid < 800 ? 'Bass' : centroid < 2000 ? 'Mids' : 'Highs'}
+          ${centroid < 1000 ? 'Bass' : centroid < 3000 ? 'Mids' : 'Highs'}
         </div>
       `;
       centroidTextRef.current.className = cn(

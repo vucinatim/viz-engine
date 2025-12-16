@@ -5,6 +5,25 @@
  * manually. This is 10-50x faster than html2canvas but requires manual blending.
  */
 
+import Color from 'color';
+
+/**
+ * Check if a CSS background color is effectively transparent (alpha = 0)
+ */
+export function isTransparentBackground(
+  background: string | null | undefined,
+): boolean {
+  if (!background || background === 'transparent') return true;
+
+  try {
+    const alpha = Color(background).alpha();
+    return alpha === 0;
+  } catch {
+    // If Color can't parse it, assume not transparent
+    return false;
+  }
+}
+
 export interface FastCaptureOptions {
   width: number;
   height: number;
@@ -64,7 +83,8 @@ export async function fastCaptureFrame(
         : (cssBlendMode as GlobalCompositeOperation);
 
     const display = style.display;
-    const background = style.background || style.backgroundColor;
+    // Use backgroundColor directly - background shorthand includes non-color values
+    const background = style.backgroundColor;
 
     // Skip hidden canvases
     if (display === 'none' || opacity === 0) continue;
@@ -83,11 +103,8 @@ export async function fastCaptureFrame(
     if (!tempCtx) continue;
 
     // Draw background on temp canvas (without blend mode)
-    if (
-      background &&
-      background !== 'rgba(0, 0, 0, 0)' &&
-      background !== 'transparent'
-    ) {
+    // Skip if background is transparent (including rgba with alpha=0)
+    if (!isTransparentBackground(background)) {
       tempCtx.fillStyle = background;
       tempCtx.fillRect(0, 0, width, height);
     }

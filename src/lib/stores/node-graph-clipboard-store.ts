@@ -1,15 +1,34 @@
 import { Edge, Node } from '@xyflow/react';
 import { create } from 'zustand';
 
+// Edge that was connected to an input or output node
+interface BoundaryEdge {
+  // The handle on the input/output node
+  boundaryHandle: string;
+  // The node ID that was connected (will be remapped on paste)
+  connectedNodeId: string;
+  // The handle on the connected node
+  connectedHandle: string;
+}
+
 // Node graph clipboard data structure for copy/paste
 interface NodeGraphClipboardData {
   nodes: Node[];
   edges: Edge[];
+  // Edges that connected from input node to copied nodes
+  inputEdges: BoundaryEdge[];
+  // Edges that connected from copied nodes to output node
+  outputEdges: BoundaryEdge[];
 }
 
 interface NodeGraphClipboardStore {
   clipboard: NodeGraphClipboardData | null;
-  copyNodes: (nodes: Node[], edges: Edge[]) => void;
+  copyNodes: (
+    nodes: Node[],
+    edges: Edge[],
+    inputEdges?: BoundaryEdge[],
+    outputEdges?: BoundaryEdge[],
+  ) => void;
   pasteNodes: (
     position: { x: number; y: number },
     parameterId: string,
@@ -22,8 +41,13 @@ export const useNodeGraphClipboardStore = create<NodeGraphClipboardStore>(
   (set, get) => ({
     clipboard: null,
 
-    copyNodes: (nodes: Node[], edges: Edge[]) => {
-      set({ clipboard: { nodes, edges } });
+    copyNodes: (
+      nodes: Node[],
+      edges: Edge[],
+      inputEdges: BoundaryEdge[] = [],
+      outputEdges: BoundaryEdge[] = [],
+    ) => {
+      set({ clipboard: { nodes, edges, inputEdges, outputEdges } });
     },
 
     pasteNodes: (position: { x: number; y: number }, parameterId: string) => {
@@ -63,14 +87,6 @@ export const useNodeGraphClipboardStore = create<NodeGraphClipboardStore>(
           },
         };
       });
-
-      // Create new edges with updated node IDs
-      const newEdges = clipboard.edges.map((edge) => ({
-        ...edge,
-        id: `${parameterId}-edge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        source: newNodeIdMap.get(edge.source) || edge.source,
-        target: newNodeIdMap.get(edge.target) || edge.target,
-      }));
 
       return newNodes;
     },
