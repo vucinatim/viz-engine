@@ -691,6 +691,36 @@ const AverageVolumeNode = createNode({
   },
 });
 
+const RMSNode = createNode({
+  label: 'RMS Level',
+  description:
+    'Calculates the Root Mean Square (true energy) of a signal. Handles polarity correctly by squaring values. Essential for raw audio waveforms.',
+  inputs: [{ id: 'data', label: 'Data', type: 'Uint8Array' }],
+  outputs: [{ id: 'rms', label: 'RMS', type: 'number' }],
+  computeSignal: ({ data }) => {
+    if (!data || !(data instanceof Uint8Array) || data.length === 0) {
+      return { rms: 0 };
+    }
+
+    let sumSquares = 0;
+    const n = data.length;
+
+    // Web Audio data is 0-255, with 128 being "silence" (zero crossing).
+    // We must center it to -1..1 range before squaring.
+    for (let i = 0; i < n; i++) {
+      // Normalize: 0 -> -1, 128 -> 0, 255 -> 1
+      const normalized = (data[i] - 128) / 128;
+      sumSquares += normalized * normalized;
+    }
+
+    const meanSquare = sumSquares / n;
+    const rms = Math.sqrt(meanSquare);
+
+    // Result is 0..1 (where 1 is a full-scale square wave)
+    return { rms };
+  },
+});
+
 // --- Spectral Flux (wideband) ---
 const SpectralFluxNode = createNode({
   label: 'Spectral Flux',
@@ -1856,6 +1886,7 @@ export const nodes: AnimNode[] = [
   RefractoryGateNode,
   BandInfoNode,
   AverageVolumeNode,
+  RMSNode,
   TonalPresenceNode,
   EnvelopeFollowerNode,
   SpectralFluxNode,
