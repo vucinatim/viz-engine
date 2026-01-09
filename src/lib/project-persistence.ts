@@ -38,6 +38,7 @@ export function saveProject(projectName: string = 'project') {
     playerFPS: editorStoreState.playerFPS,
     ambientMode: editorStoreState.ambientMode,
     resolutionMultiplier: editorStoreState.resolutionMultiplier,
+    rhythmSelection: editorStoreState.rhythmSelection,
   };
 
   const projectFile: ProjectFile = {

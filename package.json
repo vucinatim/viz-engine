@@ -69,7 +69,8 @@
     "wavesurfer.js": "^7.7.11",
     "zod": "^3.23.4",
     "zod-metadata": "^1.1.0",
-    "zustand": "^4.5.2"
+    "zustand": "^4.5.2",
+    "@viz-engine/rhythm-core": "workspace:*"
   },
   "devDependencies": {
     "@types/color": "^3.0.6",

@@ -10,6 +10,7 @@ import EditorHeader from '@/components/editor/editor-header';
 import HistoryManager from '@/components/editor/history-manager';
 import { ProfilerPanel } from '@/components/editor/profiler-panel';
 import ProjectDropzone from '@/components/editor/project-dropzone';
+import RhythmLabPanel from '@/components/editor/rhythm-lab-panel';
 import RemotionPlayer from '@/components/editor/remotion-player';
 import { useProfilerMonitors } from '@/lib/hooks/use-profiler-monitors';
 import useBodyProps from '@/lib/stores/body-props-store';
@@ -18,6 +19,7 @@ import useEditorStore from '@/lib/stores/editor-store';
 export default function Home() {
   const { props } = useBodyProps();
   const ambientMode = useEditorStore((s) => s.ambientMode);
+  const isRhythmLabOpen = useEditorStore((s) => s.isRhythmLabOpen);
 
   // Initialize profiler monitors
   useProfilerMonitors();
@@ -41,9 +43,15 @@ export default function Home() {
           }
           topRightChildren={
             <EditorPanel>
-              <RemotionPlayer />
-              <AnimationBuilder />
-              {/* <Renderer /> */}
+              {isRhythmLabOpen ? (
+                <RhythmLabPanel />
+              ) : (
+                <>
+                  <RemotionPlayer />
+                  <AnimationBuilder />
+                  {/* <Renderer /> */}
+                </>
+              )}
             </EditorPanel>
           }
           bottomRightChildren={

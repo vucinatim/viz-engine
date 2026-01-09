@@ -12,6 +12,7 @@ import { Toggle } from '../ui/toggle';
 import AudioFileLoader from './audio-file-loader';
 import CaptureAudio from './capture-audio';
 import LiveWaveform from './live-waveform';
+import RhythmSelectionStrip from './rhythm-selection-strip';
 import VolumeFader from './volume-fader';
 
 const AudioPanel = () => {
@@ -23,6 +24,7 @@ const AudioPanel = () => {
   const skipToPrevious = useAudioStore((s) => s.skipToPrevious);
   const skipToNext = useAudioStore((s) => s.skipToNext);
   const captureLabel = useAudioStore((s) => s.captureLabel);
+  const isRhythmLabOpen = useEditorStore((s) => s.isRhythmLabOpen);
 
   // Create proper React refs locally
   const audioElementRef = useRef<HTMLAudioElement>(null);
@@ -108,6 +110,7 @@ const AudioPanel = () => {
                   : 'my-auto w-full opacity-100'
               }
             />
+            {!isCapturingTab && isRhythmLabOpen && <RhythmSelectionStrip />}
             <WavesurferController />
           </div>
         </div>

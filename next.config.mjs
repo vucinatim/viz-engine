@@ -2,6 +2,7 @@
 const nextConfig = {
   // Exclude the playground directory from Next.js builds
   pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
+  transpilePackages: ['@viz-engine/rhythm-core'],
 
   webpack: (config, { isServer }) => {
     // Ignore the playground directory during webpack compilation

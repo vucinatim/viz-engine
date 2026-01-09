@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { Github } from 'lucide-react';
 import Image from 'next/image';
 import { memo } from 'react';
+import { Button } from '../ui/button';
 import { Label } from '../ui/label';
 import { NumberScrubInput } from '../ui/number-scrub-input';
 import { Switch } from '../ui/switch';
@@ -19,6 +20,8 @@ const EditorHeader = () => {
   const setResolutionMultiplier = useEditorStore(
     (s) => s.setResolutionMultiplier,
   );
+  const isRhythmLabOpen = useEditorStore((s) => s.isRhythmLabOpen);
+  const setIsRhythmLabOpen = useEditorStore((s) => s.setIsRhythmLabOpen);
 
   return (
     <div className="flex items-center px-4">
@@ -77,6 +80,12 @@ const EditorHeader = () => {
           </span> */}
         </div>
 
+        <Button
+          variant={isRhythmLabOpen ? 'default' : 'outline'}
+          className="h-8"
+          onClick={() => setIsRhythmLabOpen(!isRhythmLabOpen)}>
+          Rhythm Lab
+        </Button>
         <ExportButton />
         <HelpDialog />
         <DebugInfoDialog />
