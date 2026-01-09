@@ -13,7 +13,6 @@ import { Toggle } from '../ui/toggle';
 import AudioFileLoader from './audio-file-loader';
 import CaptureAudio from './capture-audio';
 import LiveWaveform from './live-waveform';
-import RhythmSelectionStrip from './rhythm-selection-strip';
 import VolumeFader from './volume-fader';
 import WaveformDisplay from './waveform-display';
 
@@ -24,7 +23,6 @@ const AudioPanel = () => {
   const setAudioElementRef = useAudioStore((s) => s.setAudioElementRef);
   const skipToPrevious = useAudioStore((s) => s.skipToPrevious);
   const skipToNext = useAudioStore((s) => s.skipToNext);
-  const isRhythmLabOpen = useEditorStore((s) => s.isRhythmLabOpen);
 
   // Create proper React refs locally
   const audioElementRef = useRef<HTMLAudioElement>(null);
@@ -113,7 +111,6 @@ const AudioPanel = () => {
                 />
               </div>
             )}
-            {!isCapturingTab && isRhythmLabOpen && <RhythmSelectionStrip />}
           </div>
         </div>
       </div>

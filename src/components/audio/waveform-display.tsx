@@ -498,8 +498,10 @@ const WaveformDisplay = ({
   const playerRef = useEditorStore((s) => s.playerRef);
   const playerFPS = useEditorStore((s) => s.playerFPS);
   const isPlaying = useEditorStore((s) => s.isPlaying);
+  const isRhythmLabOpen = useEditorStore((s) => s.isRhythmLabOpen);
+  const rhythmSelection = useEditorStore((s) => s.rhythmSelection);
+  const setRhythmSelection = useEditorStore((s) => s.setRhythmSelection);
   const [viewMode, setViewMode] = useState<'static' | 'follow'>('static');
-  const [selection, setSelection] = useState({ start: 0, end: 0.2 });
   const selectionOverlayRef = useRef<HTMLDivElement>(null);
   const loopRef = useRef({
     mode: 'static' as 'static' | 'follow',
@@ -538,15 +540,14 @@ const WaveformDisplay = ({
     [],
   );
 
-  const selectionDuration = clamp(
-    selection.end - selection.start,
-    MIN_SELECTION,
-    1,
+  const selectionDuration = useMemo(
+    () => clamp(rhythmSelection.end - rhythmSelection.start, MIN_SELECTION, 1),
+    [rhythmSelection.end, rhythmSelection.start],
   );
   const normalizedSelection = useMemo(() => {
-    const start = clamp(selection.start, 0, 1 - selectionDuration);
+    const start = clamp(rhythmSelection.start, 0, 1 - selectionDuration);
     return { start, end: start + selectionDuration };
-  }, [selection.start, selectionDuration]);
+  }, [rhythmSelection.start, selectionDuration]);
 
   const viewStart = normalizedSelection.start;
   const viewEnd = viewStart + selectionDuration;
@@ -558,6 +559,12 @@ const WaveformDisplay = ({
       end: viewEnd * duration,
     };
   }, [duration, viewEnd, viewMode, viewStart]);
+
+  useEffect(() => {
+    if (isRhythmLabOpen && viewMode === 'follow') {
+      setViewMode('static');
+    }
+  }, [isRhythmLabOpen, viewMode]);
 
   useEffect(() => {
     const audio = audioElementRef.current;
@@ -610,18 +617,18 @@ const WaveformDisplay = ({
     const el = selectionOverlayRef.current;
     if (!el) return;
     el.style.width = `${selectionDuration * 100}%`;
-      if (viewMode === 'follow') {
-        let raf = 0;
-        const tick = () => {
-          const audio = audioElementRef.current;
-          const rawTime = audio?.currentTime || 0;
-          const latency =
-            (audioContext?.baseLatency || 0) +
-            (audioContext?.outputLatency || 0);
-          const now = Math.max(0, rawTime - latency - PLAYHEAD_TIME_OFFSET);
-          const playheadNorm = duration > 0 ? now / duration : 0;
-          const start = clamp(
-            playheadNorm - selectionDuration / 2,
+    if (viewMode === 'follow') {
+      let raf = 0;
+      const tick = () => {
+        const audio = audioElementRef.current;
+        const rawTime = audio?.currentTime || 0;
+        const latency =
+          (audioContext?.baseLatency || 0) +
+          (audioContext?.outputLatency || 0);
+        const now = Math.max(0, rawTime - latency - PLAYHEAD_TIME_OFFSET);
+        const playheadNorm = duration > 0 ? now / duration : 0;
+        const start = clamp(
+          playheadNorm - selectionDuration / 2,
           0,
           1 - selectionDuration,
         );
@@ -632,7 +639,14 @@ const WaveformDisplay = ({
       return () => cancelAnimationFrame(raf);
     }
     el.style.left = `${viewStart * 100}%`;
-  }, [audioElementRef, duration, selectionDuration, viewMode, viewStart]);
+  }, [
+    audioElementRef,
+    duration,
+    selectionDuration,
+    viewMode,
+    viewStart,
+    audioContext,
+  ]);
 
   const mainPeaks = useMemo(() => {
     if (!peaksLevels || peaksLevels.length === 0) return null;
@@ -667,9 +681,9 @@ const WaveformDisplay = ({
       mode = 'move';
     }
 
-    if (viewMode === 'follow' && (mode === 'move' || mode === 'jump')) {
-      setViewMode('static');
-    }
+      if (viewMode === 'follow' && (mode === 'move' || mode === 'jump')) {
+        setViewMode('static');
+      }
 
     const startAtDrag = baseStart;
     const endAtDrag = baseEnd;
@@ -680,19 +694,27 @@ const WaveformDisplay = ({
       const delta = (localX - startX) / rect.width;
 
       if (mode === 'left') {
-        const newStart = clamp(startAtDrag + delta, 0, endAtDrag - MIN_SELECTION);
-        setSelection({ start: newStart, end: endAtDrag });
+        const newStart = clamp(
+          startAtDrag + delta,
+          0,
+          endAtDrag - MIN_SELECTION,
+        );
+        setRhythmSelection({ start: newStart, end: endAtDrag });
         return;
       }
       if (mode === 'right') {
-        const newEnd = clamp(endAtDrag + delta, startAtDrag + MIN_SELECTION, 1);
-        setSelection({ start: startAtDrag, end: newEnd });
+        const newEnd = clamp(
+          endAtDrag + delta,
+          startAtDrag + MIN_SELECTION,
+          1,
+        );
+        setRhythmSelection({ start: startAtDrag, end: newEnd });
         return;
       }
       if (mode === 'move') {
         const width = endAtDrag - startAtDrag;
         const newStart = clamp(startAtDrag + delta, 0, 1 - width);
-        setSelection({ start: newStart, end: newStart + width });
+        setRhythmSelection({ start: newStart, end: newStart + width });
         return;
       }
 
@@ -708,7 +730,7 @@ const WaveformDisplay = ({
         newEnd = 1;
         newStart = 1 - width;
       }
-      setSelection({ start: newStart, end: newEnd });
+      setRhythmSelection({ start: newStart, end: newEnd });
     };
 
     update(event.clientX);

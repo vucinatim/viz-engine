@@ -8,7 +8,8 @@ import { Button } from '../ui/button';
 import SearchSelect from '../ui/search-select';
 import TickerText from '../ui/ticker-text';
 
-const DEFAULT_AUDIO_FILE = 'Outsiders (feat. Charlotte Haining).mp3';
+// const DEFAULT_AUDIO_FILE = 'Outsiders (feat. Charlotte Haining).mp3';
+const DEFAULT_AUDIO_FILE = '[HipHop] 808 Rap.mp3';
 
 export const DROPZONE_ACCEPTED_TYPES = {
   'audio/*': ['.mp3', '.wav', '.ogg'],
@@ -84,12 +85,7 @@ const AudioFileLoader = () => {
         console.error('Error loading audio files:', error);
         setAudioFiles([]);
       });
-  }, [
-    audioElementRef,
-    setCurrentTrackUrl,
-    setTrackList,
-    setCurrentTrackIndex,
-  ]);
+  }, [audioElementRef, setCurrentTrackUrl, setTrackList, setCurrentTrackIndex]);
 
   // Sync selected file with current track index from store (e.g., when skip buttons are used)
   useEffect(() => {
