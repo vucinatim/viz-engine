@@ -58,3 +58,55 @@ export interface BeatTrackResult {
   beats: Float32Array;
   confidence: number;
 }
+
+export type StageParamType = 'number' | 'boolean' | 'select';
+
+export interface StageParamDefinition {
+  id: string;
+  label: string;
+  type: StageParamType;
+  defaultValue: number | boolean | string;
+  unit?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  options?: string[];
+  description?: string;
+}
+
+export interface StageOutputDefinition {
+  id: string;
+  label: string;
+  unit?: string;
+  shape?: number | [number, number];
+}
+
+export interface StageOverlayDefinition {
+  id: string;
+  label: string;
+  kind: 'curve' | 'grid' | 'markers';
+  source: string;
+  color?: string;
+}
+
+export interface StageContract {
+  id: string;
+  name: string;
+  inputs?: string[];
+  params: StageParamDefinition[];
+  outputs: StageOutputDefinition[];
+  overlays?: StageOverlayDefinition[];
+}
+
+export interface StageOutputData {
+  id: string;
+  data: Float32Array;
+  unit?: string;
+}
+
+export interface StageResult {
+  id: string;
+  outputs: StageOutputData[];
+  stats?: Record<string, number>;
+  meta?: Record<string, number | string | boolean>;
+}

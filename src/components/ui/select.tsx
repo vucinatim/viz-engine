@@ -18,10 +18,17 @@ export const SimpleSelect = React.forwardRef<
     value: string;
     onChange: (value: string) => void;
     options: string[];
+    size?: "md" | "sm" | "xs";
   }
->(({ name, value, onChange, options }, ref) => (
+>(({ name, value, onChange, options, size = "md" }, ref) => (
   <Select value={value} onValueChange={onChange}>
-    <SelectTrigger className="w-full">
+    <SelectTrigger
+      className={cn(
+        "w-full",
+        size === "sm" && "h-7 px-2.5 text-[11px]",
+        size === "xs" && "h-6 px-2 text-[10px]"
+      )}
+    >
       <SelectValue placeholder={`Select ${name}`} />
     </SelectTrigger>
     <SelectContent>

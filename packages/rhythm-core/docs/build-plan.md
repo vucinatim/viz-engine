@@ -195,6 +195,19 @@ Transparency requirements
 - Parameter changes recompute only dependent stages (avoid full recompute).
 - Provide "export JSON" per stage for debugging and regression tests.
 
+Rhythm Lab UI implementation status (current)
+- Header includes selection time range, output dropdown, recompute button, and close icon.
+- Vertical split is resizable (waveform/visualization on top, pipeline cards below).
+- Pipeline cards are horizontally scrollable with compact inline controls.
+- Per-stage toggle dot enables/disables overlay rendering on the canvas.
+- Onset stage wired: params (hop, n_fft, win, aggregate, log), stats (frames/min/max/mean), and overlay curve.
+- Stage placeholders (tempogram/tempo/grid/extraction) exist and are ready for wiring.
+
+How to extend from here
+- Add a new stage to the analysis graph, define params + default values, and wire its output from rhythm-core.
+- Add overlay definitions and colors, then render them on the shared canvas when toggled.
+- Keep stage outputs inspectable (arrays + units + times) so the UI stays generic.
+
 Testing strategy
 - Unit tests for framing, windowing, FFT output size, and onset flux
 - Golden-file style tests on short audio fixtures (deterministic outputs)
