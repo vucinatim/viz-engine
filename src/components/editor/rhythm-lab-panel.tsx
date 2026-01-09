@@ -14,7 +14,7 @@ const AGGREGATE_OPTIONS = ['mean', 'median', 'max'];
 const RhythmLabPanel = () => {
   const setIsRhythmLabOpen = useEditorStore((s) => s.setIsRhythmLabOpen);
   const rhythmSelection = useEditorStore((s) => s.rhythmSelection);
-  const wavesurfer = useAudioStore((s) => s.wavesurfer);
+  const storedAudioBuffer = useAudioStore((s) => s.audioBuffer);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
@@ -32,19 +32,8 @@ const RhythmLabPanel = () => {
   });
 
   useEffect(() => {
-    if (!wavesurfer) return;
-
-    const handleReady = () => {
-      setAudioBuffer(wavesurfer.getDecodedData());
-    };
-
-    wavesurfer.on('ready', handleReady);
-    handleReady();
-
-    return () => {
-      wavesurfer.un('ready', handleReady);
-    };
-  }, [wavesurfer]);
+    setAudioBuffer(storedAudioBuffer ?? null);
+  }, [storedAudioBuffer]);
 
   const selectionInfo = useMemo(() => {
     if (!audioBuffer) return { startSec: 0, endSec: 0, duration: 0 };

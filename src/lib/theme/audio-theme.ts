@@ -3,8 +3,9 @@ export const AUDIO_THEME = {
     height: 72,
     // A cooler, more dynamic gradient from top->bottom (0 to 1)
     gradientStops: [
-      { offset: 0, color: 'rgb(34, 211, 238)' }, // A cool, electric cyan-500 for the peaks
-      { offset: 1.0, color: 'rgb(76, 29, 149)' }, // A deep violet-900 for the base, giving depth
+      { offset: 0, color: 'rgb(34, 211, 238)' }, // electric cyan-500
+      { offset: 0.6, color: 'rgb(139, 92, 246)' }, // violet-500
+      { offset: 1.0, color: 'rgb(76, 29, 149)' }, // violet-900
     ],
     // Fallback solid colors updated to match the new gradient
     fallbackWaveColor: 'rgb(192, 132, 252)', // purple-400

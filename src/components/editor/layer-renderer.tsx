@@ -29,7 +29,7 @@ interface LayerRendererProps {
 
 const LayerRenderer = ({ layer }: LayerRendererProps) => {
   const audioAnalyzer = useAudioStore((s) => s.audioAnalyzer);
-  const wavesurfer = useAudioStore((s) => s.wavesurfer);
+  const audioElementRef = useAudioStore((s) => s.audioElementRef);
   const resolutionMultiplier = useEditorStore((s) => s.resolutionMultiplier);
   const playerRef = useEditorStore((s) => s.playerRef);
   const playerFPS = useEditorStore((s) => s.playerFPS);
@@ -117,7 +117,6 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   const getNextAudioFrame = useAudioFrameData({
     isFrozen: layer.layerSettings.freeze,
     analyzer: audioAnalyzer,
-    wavesurfer: wavesurfer,
   });
 
   // Use refs for frequently changing values that don't need to trigger full 3D recreation
@@ -236,7 +235,6 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   // Use refs for frequently changing values that don't need to trigger full render setup recreation
   const layerSettingsRef = useRef(layer.layerSettings);
   const mirrorCanvasesRef = useRef(layer.mirrorCanvases);
-  const wavesurferRef = useRef(wavesurfer);
 
   // Update refs when values change (but don't trigger effect recreation)
   useEffect(() => {
@@ -246,10 +244,6 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   useEffect(() => {
     mirrorCanvasesRef.current = layer.mirrorCanvases;
   }, [layer.mirrorCanvases]);
-
-  useEffect(() => {
-    wavesurferRef.current = wavesurfer;
-  }, [wavesurfer]);
 
   useEffect(() => {
     if (!audioAnalyzer || !layerCanvasRef.current) return;
@@ -339,7 +333,6 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
           }),
         {
           dataArray: frequencyData,
-          wavesurfer: wavesurferRef.current,
           config: configValues,
           configSchema: layer.config,
         },
@@ -364,12 +357,12 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       const dt = (now - lastFrameTimeRef.current) / 1000.0; // time in seconds
       lastFrameTimeRef.current = now; // update last frame time
 
-      // Prefer Remotion Player's clock to drive animation time; fallback to WaveSurfer
+      // Prefer Remotion Player's clock to drive animation time; fallback to audio element
       const frame = playerRef?.current?.getCurrentFrame?.() ?? null;
       const time =
         frame !== null && typeof frame === 'number' && playerFPS > 0
           ? frame / playerFPS
-          : wavesurferRef.current?.getCurrentTime() || 0;
+          : audioElementRef.current?.currentTime || 0;
 
       // Use the manual render function with calculated time
       manualRender(time, dt);

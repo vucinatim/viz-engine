@@ -8,13 +8,14 @@ import {
   UnknownConfigValues,
 } from '@/components/config/create-component';
 import React, { useCallback, useRef } from 'react';
-import WaveSurfer from 'wavesurfer.js';
 import { calculateAudioLevel } from '../comp-utils/audio-utils';
+import useAudioStore from '../stores/audio-store';
 
 function useDebug(
   debugCanvasRef: React.RefObject<HTMLCanvasElement>,
   resolutionMultiplier: number = 1,
 ) {
+  const audioElementRef = useAudioStore((s) => s.audioElementRef);
   // High-precision timing for FPS estimation
   const prevTsRef = useRef<number | null>(null);
   const smoothedFpsRef = useRef(0);
@@ -25,12 +26,10 @@ function useDebug(
     (
       drawFunction: Function,
       {
-        wavesurfer,
         dataArray,
         config,
         configSchema,
       }: {
-        wavesurfer: WaveSurfer | null;
         dataArray: Uint8Array;
         config: UnknownConfigValues;
         configSchema: UnknownConfig;
@@ -55,7 +54,7 @@ function useDebug(
       // Prepare debug information
       const debugInfo = {
         fps: smoothedFpsRef.current,
-        currentTime: wavesurfer?.getCurrentTime() || 0,
+        currentTime: audioElementRef.current?.currentTime || 0,
         currentLevel: calculateAudioLevel(dataArray),
         lastFrameTime: drawEnd - drawStart,
       };

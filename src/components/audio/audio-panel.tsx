@@ -1,7 +1,8 @@
 'use client';
 
+import useAudioEngine from '@/lib/hooks/use-audio-engine';
+import useAudioPlaybackSync from '@/lib/hooks/use-audio-playback-sync';
 import useKeypress from '@/lib/hooks/use-keypress';
-import useWavesurferSetup from '@/lib/hooks/use-wavesurfer-setup';
 import useAudioStore from '@/lib/stores/audio-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { Music, Pause, Play, SkipBack, SkipForward } from 'lucide-react';
@@ -14,27 +15,27 @@ import CaptureAudio from './capture-audio';
 import LiveWaveform from './live-waveform';
 import RhythmSelectionStrip from './rhythm-selection-strip';
 import VolumeFader from './volume-fader';
+import WaveformDisplay from './waveform-display';
 
 const AudioPanel = () => {
   const setIsPlaying = useEditorStore((state) => state.setIsPlaying);
   const isPlaying = useEditorStore((state) => state.isPlaying);
   const isCapturingTab = useAudioStore((s) => s.isCapturingTab);
   const setAudioElementRef = useAudioStore((s) => s.setAudioElementRef);
-  const setWaveformDisplayRef = useAudioStore((s) => s.setWaveformDisplayRef);
   const skipToPrevious = useAudioStore((s) => s.skipToPrevious);
   const skipToNext = useAudioStore((s) => s.skipToNext);
-  const captureLabel = useAudioStore((s) => s.captureLabel);
   const isRhythmLabOpen = useEditorStore((s) => s.isRhythmLabOpen);
 
   // Create proper React refs locally
   const audioElementRef = useRef<HTMLAudioElement>(null);
-  const waveformDisplayRef = useRef<HTMLDivElement>(null);
 
   // Pass the refs to the store so other components can access them
   useEffect(() => {
     setAudioElementRef(audioElementRef);
-    setWaveformDisplayRef(waveformDisplayRef);
-  }, [setAudioElementRef, setWaveformDisplayRef]);
+  }, [setAudioElementRef]);
+
+  const { peaksLevels, duration, bufferDuration, isLoading } = useAudioEngine();
+  useAudioPlaybackSync();
 
   const playPause = () => {
     // Toggle global play state; RemotionPlayer syncs the actual Player via effect
@@ -101,17 +102,18 @@ const AudioPanel = () => {
                 <LiveWaveform />
               </div>
             )}
-            {/* WaveSurfer view hidden during capture */}
-            <div
-              ref={waveformDisplayRef}
-              className={
-                isCapturingTab
-                  ? 'pointer-events-none my-auto w-full opacity-0'
-                  : 'my-auto w-full opacity-100'
-              }
-            />
+            {/* Waveform view hidden during capture */}
+            {!isCapturingTab && (
+              <div className="h-full w-full">
+                <WaveformDisplay
+                  peaksLevels={peaksLevels}
+                  duration={duration}
+                  bufferDuration={bufferDuration}
+                  isLoading={isLoading}
+                />
+              </div>
+            )}
             {!isCapturingTab && isRhythmLabOpen && <RhythmSelectionStrip />}
-            <WavesurferController />
           </div>
         </div>
       </div>
@@ -121,40 +123,18 @@ const AudioPanel = () => {
 
 export default AudioPanel;
 
-// Child component to isolate WaveSurfer hook updates from the parent tree
-const WavesurferController = () => {
-  const wavesurfer = useAudioStore((s) => s.wavesurfer);
-  const isPlaying = useEditorStore((s) => s.isPlaying);
-
-  useWavesurferSetup();
-
-  // Sync WaveSurfer playback with global play state
-  useEffect(() => {
-    if (!wavesurfer) return;
-
-    const wsPlaying = wavesurfer.isPlaying();
-
-    if (isPlaying && !wsPlaying) {
-      wavesurfer.play();
-    } else if (!isPlaying && wsPlaying) {
-      wavesurfer.pause();
-    }
-  }, [wavesurfer, isPlaying]);
-
-  return null;
-};
-
 const TimecodeText = () => {
-  const wavesurfer = useAudioStore((s) => s.wavesurfer);
+  const audioElementRef = useAudioStore((s) => s.audioElementRef);
   const spanRef = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
     let raf: number | null = null;
     const update = () => {
-      if (!spanRef.current || !wavesurfer) {
+      const audio = audioElementRef.current;
+      if (!spanRef.current || !audio) {
         raf = requestAnimationFrame(update);
         return;
       }
-      const t = wavesurfer.getCurrentTime ? wavesurfer.getCurrentTime() : 0;
+      const t = audio.currentTime || 0;
       const mm = Math.floor(t / 60)
         .toString()
         .padStart(2, '0');
@@ -171,6 +151,6 @@ const TimecodeText = () => {
     return () => {
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [wavesurfer]);
+  }, [audioElementRef]);
   return <p ref={spanRef} className="font-mono text-xs text-white" />;
 };

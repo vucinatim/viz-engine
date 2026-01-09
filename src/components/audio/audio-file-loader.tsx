@@ -15,7 +15,6 @@ export const DROPZONE_ACCEPTED_TYPES = {
 };
 
 const AudioFileLoader = () => {
-  const wavesurfer = useAudioStore((s) => s.wavesurfer);
   const setAudioFile = useAudioStore((s) => s.setAudioFile);
   const audioElementRef = useAudioStore((s) => s.audioElementRef);
   const setCurrentTrackUrl = useAudioStore((s) => s.setCurrentTrackUrl);
@@ -39,13 +38,12 @@ const AudioFileLoader = () => {
           audioElementRef.current.muted = false;
           audioElementRef.current.load();
         }
-        wavesurfer?.load(objectUrl);
         setCurrentTrackUrl(objectUrl);
         setAudioFile(acceptedFiles[0]);
         setSelectedFile(acceptedFiles[0].name);
       }
     },
-    [audioElementRef, setAudioFile, setCurrentTrackUrl, wavesurfer],
+    [audioElementRef, setAudioFile, setCurrentTrackUrl],
   );
   const { getRootProps, isDragActive, isDragReject, fileRejections } =
     useDropzone({
@@ -79,7 +77,6 @@ const AudioFileLoader = () => {
             audioElementRef.current.muted = false;
             audioElementRef.current.load();
           }
-          wavesurfer?.load(url);
           setCurrentTrackUrl(url);
         }
       })
@@ -92,7 +89,6 @@ const AudioFileLoader = () => {
     setCurrentTrackUrl,
     setTrackList,
     setCurrentTrackIndex,
-    wavesurfer,
   ]);
 
   // Sync selected file with current track index from store (e.g., when skip buttons are used)
@@ -115,7 +111,6 @@ const AudioFileLoader = () => {
         audioElementRef.current.muted = false;
         audioElementRef.current.load();
       }
-      wavesurfer?.load(objectUrl);
       setCurrentTrackUrl(objectUrl);
       setAudioFile(file);
     }
@@ -167,7 +162,6 @@ const AudioFileLoader = () => {
           }
           setSelectedFile(filename);
           setCurrentTrackIndex(trackIndex);
-          wavesurfer?.load(objectUrl);
           setCurrentTrackUrl(objectUrl);
         }}
       />

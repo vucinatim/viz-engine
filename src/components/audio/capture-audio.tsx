@@ -14,7 +14,6 @@ const CaptureAudio = () => {
   const captureLabel = useAudioStore((s) => s.captureLabel);
   const setCaptureLabel = useAudioStore((s) => s.setCaptureLabel);
   const audioElementRef = useAudioStore((s) => s.audioElementRef);
-  const wavesurfer = useAudioStore((s) => s.wavesurfer);
 
   const startTabCapture = async () => {
     try {
@@ -107,7 +106,6 @@ const CaptureAudio = () => {
           el.muted = false;
           el.load();
           // Don't auto-play, just restore the previous track
-          wavesurfer?.load(url);
         } else {
           el.removeAttribute('src');
           el.load();

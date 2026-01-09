@@ -1,18 +1,15 @@
 import { useCallback, useEffect, useRef } from 'react';
-import WaveSurfer from 'wavesurfer.js';
 import useEditorStore from '../stores/editor-store';
 import useExportStore from '../stores/export-store';
 
 interface UseAudioFrameDataProps {
   isFrozen: boolean;
   analyzer: AnalyserNode | null;
-  wavesurfer: WaveSurfer | null;
 }
 
 const useAudioFrameData = ({
   isFrozen,
   analyzer,
-  wavesurfer,
 }: UseAudioFrameDataProps) => {
   const frequencyDataRef = useRef<Uint8Array>(new Uint8Array());
   const timeDomainDataRef = useRef<Uint8Array>(new Uint8Array());
@@ -21,37 +18,26 @@ const useAudioFrameData = ({
   const lastLogRef = useRef<number>(0);
 
   useEffect(() => {
-    if (analyzer && wavesurfer) {
-      const initData = () => {
-        // Preallocate and reuse buffers to avoid per-frame allocations
-        const size = analyzer.frequencyBinCount;
-        if (frequencyDataRef.current.length !== size) {
-          frequencyDataRef.current = new Uint8Array(size);
-          lastFrequencyDataRef.current = new Uint8Array(size);
-        }
-        if (timeDomainDataRef.current.length !== size) {
-          timeDomainDataRef.current = new Uint8Array(size);
-          lastTimeDomainDataRef.current = new Uint8Array(size);
-        }
-
-        analyzer.getByteFrequencyData(frequencyDataRef.current as any);
-        lastFrequencyDataRef.current.set(frequencyDataRef.current);
-
-        analyzer.getByteTimeDomainData(timeDomainDataRef.current as any);
-        lastTimeDomainDataRef.current.set(timeDomainDataRef.current);
-
-        // eslint-disable-next-line no-console
-        console.debug(`[AudioFrameData] Preallocated buffers size=${size}`);
-      };
-
-      wavesurfer.on('ready', initData);
-      initData(); // Also run on initial setup
-
-      return () => {
-        wavesurfer.un('ready', initData);
-      };
+    if (!analyzer) return;
+    const size = analyzer.frequencyBinCount;
+    if (frequencyDataRef.current.length !== size) {
+      frequencyDataRef.current = new Uint8Array(size);
+      lastFrequencyDataRef.current = new Uint8Array(size);
     }
-  }, [analyzer, wavesurfer]);
+    if (timeDomainDataRef.current.length !== size) {
+      timeDomainDataRef.current = new Uint8Array(size);
+      lastTimeDomainDataRef.current = new Uint8Array(size);
+    }
+
+    analyzer.getByteFrequencyData(frequencyDataRef.current as any);
+    lastFrequencyDataRef.current.set(frequencyDataRef.current);
+
+    analyzer.getByteTimeDomainData(timeDomainDataRef.current as any);
+    lastTimeDomainDataRef.current.set(timeDomainDataRef.current);
+
+    // eslint-disable-next-line no-console
+    console.debug(`[AudioFrameData] Preallocated buffers size=${size}`);
+  }, [analyzer]);
 
   const getAudioFrameData = useCallback(() => {
     // CRITICAL: Check if we're exporting and have offline audio data
@@ -133,7 +119,6 @@ const useAudioFrameData = ({
       sampleRate: analyzer.context.sampleRate,
       fftSize: analyzer.fftSize,
     };
-    // wavesurfer is NOT in deps because it's only used in the initialization useEffect
     // isPlayingStore is read fresh from store.getState() to avoid callback recreation
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [analyzer, isFrozen]);
