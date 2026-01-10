@@ -42,20 +42,32 @@ export interface TempogramResult {
 
 export interface TempoOptions extends TempogramOptions {
   prior?: Float32Array;
+  preferHigher?: boolean;
+  candidateCount?: number;
+  dedupeTolerance?: number;
+  snapToHalf?: boolean;
+  preferIntegerTolerance?: number;
 }
 
 export interface TempoResult {
   tempo: number;
   candidates: Float32Array;
+  refinedTempo?: number;
 }
 
 export interface BeatTrackOptions extends TempoOptions {
   tightness?: number;
+  tempo?: number;
+  phaseOffset?: number;
+  optimizePhase?: boolean;
 }
 
 export interface BeatTrackResult {
   tempo: number;
   beats: Float32Array;
+  beatsTimes?: Float32Array;
+  phaseOffset?: number;
+  periodFrames?: number;
   confidence: number;
 }
 

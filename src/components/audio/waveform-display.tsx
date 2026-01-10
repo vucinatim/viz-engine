@@ -1,16 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
 import useAudioStore from '@/lib/stores/audio-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { AUDIO_THEME } from '@/lib/theme/audio-theme';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 const MINIMAP_HEIGHT = 28;
 const TIMELINE_HEIGHT = 32;
 const TIMELINE_GAP = 6;
 const MAIN_AMPLITUDE_SCALE = 0.85;
 const MINIMAP_AMPLITUDE_SCALE = 0.65;
-const PLAYHEAD_TIME_OFFSET = 0.5;
 const MIN_SELECTION = 0.04;
 const HANDLE_PX = 8;
 
@@ -102,8 +101,7 @@ const drawWaveform = ({
     const i0 = Math.max(0, Math.min(len - 1, Math.floor(idx)));
     const i1 = Math.min(len - 1, i0 + 1);
     const frac = idx - i0;
-    const ampValue =
-      peaks[i0] * (1 - frac) + peaks[i1] * frac;
+    const ampValue = peaks[i0] * (1 - frac) + peaks[i1] * frac;
     ctx.lineTo(x, mid - ampValue * amp);
   }
   for (let x = width - 1; x >= 0; x -= 1) {
@@ -111,8 +109,7 @@ const drawWaveform = ({
     const i0 = Math.max(0, Math.min(len - 1, Math.floor(idx)));
     const i1 = Math.min(len - 1, i0 + 1);
     const frac = idx - i0;
-    const ampValue =
-      peaks[i0] * (1 - frac) + peaks[i1] * frac;
+    const ampValue = peaks[i0] * (1 - frac) + peaks[i1] * frac;
     ctx.lineTo(x, mid + ampValue * amp);
   }
   ctx.closePath();
@@ -171,7 +168,7 @@ const WaveformCanvas = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const width = useCanvasWidth(canvasRef);
   const audioElementRef = useAudioStore((s) => s.audioElementRef);
-  const audioContext = useAudioStore((s) => s.audioContext);
+  const visualTimeRef = useRef(useAudioStore.getState().visualTime);
   const rafRef = useRef<number | null>(null);
   const hoverXRef = useRef<number | null>(null);
   const renderRef = useRef<() => void>(() => {});
@@ -211,6 +208,7 @@ const WaveformCanvas = ({
     amplitudeScaleRef.current = amplitudeScale;
     playheadColorRef.current = playheadColor;
     renderRef.current();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     amplitudeScale,
     duration,
@@ -225,6 +223,13 @@ const WaveformCanvas = ({
     viewportEnd,
     viewportStart,
   ]);
+
+  useEffect(() => {
+    const unsub = useAudioStore.subscribe((state) => {
+      visualTimeRef.current = state.visualTime;
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -255,12 +260,7 @@ const WaveformCanvas = ({
         lastCssHeightRef.current = cssHeight;
       }
 
-      const audio = audioElementRef.current;
-      const rawTime = audio?.currentTime || 0;
-      const latency =
-        (audioContext?.baseLatency || 0) +
-        (audioContext?.outputLatency || 0);
-      const now = Math.max(0, rawTime - latency - PLAYHEAD_TIME_OFFSET);
+      const now = Math.max(0, visualTimeRef.current);
       const durationNow = durationRef.current;
       const peaksDurationNow =
         peaksDurationRef.current && peaksDurationRef.current > 0
@@ -277,7 +277,10 @@ const WaveformCanvas = ({
       const viewEnd = followPlayheadRef.current
         ? viewStart + viewSpan
         : clamp(viewportEndRef.current, viewStart + 0.0001, 1);
-      const viewDuration = Math.max(0.0001, (viewEnd - viewStart) * durationNow);
+      const viewDuration = Math.max(
+        0.0001,
+        (viewEnd - viewStart) * durationNow,
+      );
       const viewStartTime = viewStart * durationNow;
       const viewStartNorm =
         peaksDurationNow > 0 ? viewStartTime / peaksDurationNow : viewStart;
@@ -373,16 +376,11 @@ const WaveformCanvas = ({
     if (!onSeek || duration <= 0) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const x = event.clientX - rect.left;
-    const audio = audioElementRef.current;
-    const now = audio?.currentTime || 0;
+    const now = Math.max(0, visualTimeRef.current);
     const viewSpan = clamp(selectionDuration, 0.0001, 1);
     const followStart =
-      duration > 0
-        ? clamp(now / duration - viewSpan / 2, 0, 1 - viewSpan)
-        : 0;
-    const viewStart = followPlayhead
-      ? followStart
-      : clamp(viewportStart, 0, 1);
+      duration > 0 ? clamp(now / duration - viewSpan / 2, 0, 1 - viewSpan) : 0;
+    const viewStart = followPlayhead ? followStart : clamp(viewportStart, 0, 1);
     const viewEnd = followPlayhead
       ? viewStart + viewSpan
       : clamp(viewportEnd, viewStart + 0.0001, 1);
@@ -465,10 +463,7 @@ const TimelineCanvas = ({ duration }: { duration: number }) => {
   return <canvas ref={canvasRef} className="block w-full" />;
 };
 
-const pickPeaksLevel = (
-  levels: Float32Array[],
-  desiredLength: number,
-) => {
+const pickPeaksLevel = (levels: Float32Array[], desiredLength: number) => {
   if (levels.length === 0) return new Float32Array();
   let best = levels[0];
   let bestDiff = Math.abs(levels[0].length - desiredLength);
@@ -494,7 +489,7 @@ const WaveformDisplay = ({
   isLoading: boolean;
 }) => {
   const audioElementRef = useAudioStore((s) => s.audioElementRef);
-  const audioContext = useAudioStore((s) => s.audioContext);
+  const visualTimeRef = useRef(useAudioStore.getState().visualTime);
   const playerRef = useEditorStore((s) => s.playerRef);
   const playerFPS = useEditorStore((s) => s.playerFPS);
   const isPlaying = useEditorStore((s) => s.isPlaying);
@@ -531,10 +526,9 @@ const WaveformDisplay = ({
     }
   };
 
-
   const minimapColors = useMemo(
     () => ({
-      gradientStops: AUDIO_THEME.waveform.gradientStops,
+      gradientStops: [...AUDIO_THEME.waveform.gradientStops],
       progressColor: AUDIO_THEME.waveform.minimap.progressColor,
     }),
     [],
@@ -561,10 +555,11 @@ const WaveformDisplay = ({
   }, [duration, viewEnd, viewMode, viewStart]);
 
   useEffect(() => {
-    if (isRhythmLabOpen && viewMode === 'follow') {
-      setViewMode('static');
-    }
-  }, [isRhythmLabOpen, viewMode]);
+    const unsub = useAudioStore.subscribe((state) => {
+      visualTimeRef.current = state.visualTime;
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const audio = audioElementRef.current;
@@ -620,12 +615,7 @@ const WaveformDisplay = ({
     if (viewMode === 'follow') {
       let raf = 0;
       const tick = () => {
-        const audio = audioElementRef.current;
-        const rawTime = audio?.currentTime || 0;
-        const latency =
-          (audioContext?.baseLatency || 0) +
-          (audioContext?.outputLatency || 0);
-        const now = Math.max(0, rawTime - latency - PLAYHEAD_TIME_OFFSET);
+        const now = Math.max(0, visualTimeRef.current);
         const playheadNorm = duration > 0 ? now / duration : 0;
         const start = clamp(
           playheadNorm - selectionDuration / 2,
@@ -639,18 +629,14 @@ const WaveformDisplay = ({
       return () => cancelAnimationFrame(raf);
     }
     el.style.left = `${viewStart * 100}%`;
-  }, [
-    audioElementRef,
-    duration,
-    selectionDuration,
-    viewMode,
-    viewStart,
-    audioContext,
-  ]);
+  }, [audioElementRef, duration, selectionDuration, viewMode, viewStart]);
 
   const mainPeaks = useMemo(() => {
     if (!peaksLevels || peaksLevels.length === 0) return null;
-    const desiredBars = Math.max(256, Math.floor(selectionDuration > 0 ? 1200 : 800));
+    const desiredBars = Math.max(
+      256,
+      Math.floor(selectionDuration > 0 ? 1200 : 800),
+    );
     const target = desiredBars / Math.max(0.0001, viewEnd - viewStart);
     return pickPeaksLevel(peaksLevels, target);
   }, [peaksLevels, selectionDuration, viewEnd, viewStart]);
@@ -681,9 +667,9 @@ const WaveformDisplay = ({
       mode = 'move';
     }
 
-      if (viewMode === 'follow' && (mode === 'move' || mode === 'jump')) {
-        setViewMode('static');
-      }
+    if (viewMode === 'follow' && (mode === 'move' || mode === 'jump')) {
+      setViewMode('static');
+    }
 
     const startAtDrag = baseStart;
     const endAtDrag = baseEnd;
@@ -703,11 +689,7 @@ const WaveformDisplay = ({
         return;
       }
       if (mode === 'right') {
-        const newEnd = clamp(
-          endAtDrag + delta,
-          startAtDrag + MIN_SELECTION,
-          1,
-        );
+        const newEnd = clamp(endAtDrag + delta, startAtDrag + MIN_SELECTION, 1);
         setRhythmSelection({ start: startAtDrag, end: newEnd });
         return;
       }
@@ -751,13 +733,13 @@ const WaveformDisplay = ({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-0">
-      <div className="relative flex-1 min-h-0">
+      <div className="relative min-h-0 flex-1">
         <WaveformCanvas
           peaks={mainPeaks}
           duration={duration}
           peaksDuration={bufferDuration}
           progressColor={AUDIO_THEME.waveform.fallbackProgressColor}
-          gradientStops={AUDIO_THEME.waveform.gradientStops}
+          gradientStops={[...AUDIO_THEME.waveform.gradientStops]}
           viewportStart={viewStart}
           viewportEnd={viewEnd}
           followPlayhead={viewMode === 'follow'}

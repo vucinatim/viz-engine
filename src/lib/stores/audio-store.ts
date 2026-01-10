@@ -10,6 +10,8 @@ interface AudioStore {
   audioContext: AudioContext | null;
   audioAnalyzer: AnalyserNode | null;
   gainNode: GainNode | null;
+  currentTime: number;
+  visualTime: number;
   currentTrackUrl: string | null;
   audioElementRef: { current: HTMLAudioElement | null };
   tabCaptureStream: MediaStream | null;
@@ -23,6 +25,8 @@ interface AudioStore {
   setAudioContext: (audioContext: AudioContext) => void;
   setAnalyzer: (analyzer: AnalyserNode) => void;
   setGainNode: (gainNode: GainNode) => void;
+  setCurrentTime: (currentTime: number) => void;
+  setVisualTime: (visualTime: number) => void;
   setCurrentTrackUrl: (url: string | null) => void;
   setAudioElementRef: (audioElementRef: {
     current: HTMLAudioElement | null;
@@ -48,6 +52,8 @@ const useAudioStore = create<AudioStore>((set, get) => ({
   audioContext: null,
   audioAnalyzer: null,
   gainNode: null,
+  currentTime: 0,
+  visualTime: 0,
   currentTrackUrl: null,
   audioElementRef: { current: null },
   tabCaptureStream: null,
@@ -60,6 +66,8 @@ const useAudioStore = create<AudioStore>((set, get) => ({
   setAudioContext: (audioContext) => set({ audioContext }),
   setAnalyzer: (analyzer) => set({ audioAnalyzer: analyzer }),
   setGainNode: (gainNode) => set({ gainNode }),
+  setCurrentTime: (currentTime) => set({ currentTime }),
+  setVisualTime: (visualTime) => set({ visualTime }),
   setCurrentTrackUrl: (currentTrackUrl) => set({ currentTrackUrl }),
   setAudioElementRef: (audioElementRef) => set({ audioElementRef }),
   setAudioSource: (node) => set({ audioSource: { current: node } }),

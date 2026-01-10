@@ -4,6 +4,7 @@ import useAudioEngine from '@/lib/hooks/use-audio-engine';
 import useAudioPlaybackSync from '@/lib/hooks/use-audio-playback-sync';
 import useKeypress from '@/lib/hooks/use-keypress';
 import useAudioStore from '@/lib/stores/audio-store';
+import { getVisualTime } from '@/lib/utils/audio-time';
 import useEditorStore from '@/lib/stores/editor-store';
 import { Music, Pause, Play, SkipBack, SkipForward } from 'lucide-react';
 import { useEffect, useRef } from 'react';
@@ -21,6 +22,9 @@ const AudioPanel = () => {
   const isPlaying = useEditorStore((state) => state.isPlaying);
   const isCapturingTab = useAudioStore((s) => s.isCapturingTab);
   const setAudioElementRef = useAudioStore((s) => s.setAudioElementRef);
+  const audioContext = useAudioStore((s) => s.audioContext);
+  const setCurrentTime = useAudioStore((s) => s.setCurrentTime);
+  const setVisualTime = useAudioStore((s) => s.setVisualTime);
   const skipToPrevious = useAudioStore((s) => s.skipToPrevious);
   const skipToNext = useAudioStore((s) => s.skipToNext);
 
@@ -31,6 +35,23 @@ const AudioPanel = () => {
   useEffect(() => {
     setAudioElementRef(audioElementRef);
   }, [setAudioElementRef]);
+
+  useEffect(() => {
+    let raf: number | null = null;
+    const tick = () => {
+      const audio = audioElementRef.current;
+      if (audio) {
+        const raw = audio.currentTime || 0;
+        setCurrentTime(raw);
+        setVisualTime(getVisualTime(raw, audioContext));
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [audioContext, setCurrentTime, setVisualTime]);
 
   const { peaksLevels, duration, bufferDuration, isLoading } = useAudioEngine();
   useAudioPlaybackSync();
@@ -121,33 +142,16 @@ const AudioPanel = () => {
 export default AudioPanel;
 
 const TimecodeText = () => {
-  const audioElementRef = useAudioStore((s) => s.audioElementRef);
-  const spanRef = useRef<HTMLParagraphElement>(null);
-  useEffect(() => {
-    let raf: number | null = null;
-    const update = () => {
-      const audio = audioElementRef.current;
-      if (!spanRef.current || !audio) {
-        raf = requestAnimationFrame(update);
-        return;
-      }
-      const t = audio.currentTime || 0;
-      const mm = Math.floor(t / 60)
-        .toString()
-        .padStart(2, '0');
-      const ss = Math.floor(t % 60)
-        .toString()
-        .padStart(2, '0');
-      const cs = Math.floor((t % 1) * 100)
-        .toString()
-        .padStart(2, '0');
-      spanRef.current.textContent = `${mm}:${ss}.${cs}`;
-      raf = requestAnimationFrame(update);
-    };
-    raf = requestAnimationFrame(update);
-    return () => {
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, [audioElementRef]);
-  return <p ref={spanRef} className="font-mono text-xs text-white" />;
+  const currentTime = useAudioStore((s) => s.currentTime);
+  const t = currentTime || 0;
+  const mm = Math.floor(t / 60)
+    .toString()
+    .padStart(2, '0');
+  const ss = Math.floor(t % 60)
+    .toString()
+    .padStart(2, '0');
+  const cs = Math.floor((t % 1) * 100)
+    .toString()
+    .padStart(2, '0');
+  return <p className="font-mono text-xs text-white">{`${mm}:${ss}.${cs}`}</p>;
 };

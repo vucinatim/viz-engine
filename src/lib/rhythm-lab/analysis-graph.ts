@@ -58,20 +58,26 @@ export const PIPELINE_STAGES: PipelineStageDefinition[] = [
   {
     id: 'tempogram',
     title: 'Tempogram',
-    status: 'placeholder',
-    params: [],
+    status: 'active',
+    params: [
+      { id: 'minBpm', label: 'min bpm', type: 'number', unit: 'bpm' },
+      { id: 'maxBpm', label: 'max bpm', type: 'number', unit: 'bpm' },
+    ],
   },
   {
     id: 'tempo',
     title: 'Tempo',
-    status: 'placeholder',
+    status: 'active',
     params: [],
   },
   {
     id: 'grid',
     title: 'Grid',
-    status: 'placeholder',
-    params: [],
+    status: 'active',
+    params: [
+      { id: 'phaseOffset', label: 'phase (frames)', type: 'number', unit: 'frames' },
+      { id: 'optimizePhase', label: 'optimize', type: 'boolean' },
+    ],
   },
   {
     id: 'extraction',

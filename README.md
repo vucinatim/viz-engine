@@ -1,362 +1,169 @@
 # VizEngine
 
-**A Node-Based Web Editor for Customizable Audio-Driven Animations**
+**A Web-Native Audio-Reactive Animation Engine**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://www.viz-engine.com)
+[![Thesis](https://img.shields.io/badge/Read_The_Thesis-PDF-orange)](docs/viz-engine-thesis.pdf)
 
-> 🎓 **Academic Project**: This project is the result of a master's thesis in Computer Science. For a comprehensive technical deep-dive, see [the full thesis](docs/thesis-text.md).
-
-**[🚀 Try it live at www.viz-engine.com](https://www.viz-engine.com)**
+**[🚀 Try the Editor Live at viz-engine.com](https://www.viz-engine.com)**
 
 <p align="center">
   <img src="public/gifs/demo.gif" alt="VizEngine Demo" width="800">
   <br>
-  <em>Create audio-reactive visualizations in your browser</em>
+  <em>Create audio-reactive visuals in your browser. (Yes, it actually exports video.)</em>
 </p>
 
----
-
-VizEngine is an open-source, browser-based visual programming environment for creating audio-reactive visualizations. Built entirely with modern web technologies, it combines a layer-based compositing system with a powerful node-based animation engine to make professional-grade audio visualization accessible to developers and artists alike.
+>ℹ️ **Project Status:** VizEngine is architecturally powerful and capable of high-quality results, but you may encounter bugs. Contributions and bug reports are very welcome!
 
 ---
 
-## ✨ Key Features
+**VizEngine** is a web-native tool designed to bridge the gap between simple creative coding sketches and complex professional software like TouchDesigner.
 
-### 🎨 **Hybrid Creative Paradigm**
-- **Layer-Based Compositing**: Stack and blend 2D and 3D visual elements with CSS-powered blend modes
-- **Node-Based Animation**: Visually program complex behaviors by connecting modular processing nodes
-- **Dual Rendering Paths**: Seamlessly mix HTML Canvas 2D graphics with Three.js-powered 3D scenes
+It combines a **layer-based workflow** (like Photoshop) with a **node-based animation engine**, allowing you to build complex, reactive scenes using standard web technologies.
 
-### 🎵 **Deep Audio Integration**
-- **Real-Time Analysis**: Built-in FFT, RMS, spectral flux, and perceptual feature extraction
-- **Live Input Support**: Capture audio from files, microphone, or other browser tabs
-- **Musical Intelligence**: Pre-built nodes for kick/snare detection, harmonic analysis, and envelope following
+## ✨ Features
 
-### 🛠️ **Developer-First Design**
-- **Declarative API**: Define new visual components and animation nodes with minimal boilerplate
-- **Type-Safe & Extensible**: Full TypeScript support with schema-driven configuration
-- **Hot Reload Ready**: Auto-discovery of new components during development
+### 🎨 Hybrid Creative Workflow
+* **Layers:** Stack visual elements using a familiar interface. Layers are composited using the DOM and CSS hardware acceleration.
+* **Nodes:** Animate *any* parameter (color, position, opacity) by connecting it to audio analyzers in a visual graph.
+* **3D + 2D:** Seamlessly mix HTML5 Canvas shaders with Three.js 3D scenes in the same composition.
 
-### 🎬 **Production Ready**
-- **Video Export**: Frame-by-frame rendering to MP4/WebM (720p-4K) with client-side encoding
-- **Project Persistence**: Automatic saving to IndexedDB with JSON import/export
-- **60 FPS Performance**: Optimized rendering pipeline with memoized computation
-- **Frame-Accurate Timing**: Stable 60 FPS clock powered by Remotion
+### 🎵 Professional Audio Architecture
+* **Dual-Path Audio Engine:** The system separates "Playback" from "Analysis." You hear high-fidelity audio, while the visualization engine gets raw, zero-latency data for tighter sync.
+* **Smart Triggers:** Includes pre-built detection nodes for **Kick/Snare isolation**, **Melody detection**, and **Harmonic Presence**.
+
+### 🎬 Native Video Export (No Screen Recording)
+* **Offline Rendering:** Unlike screen recorders which lag if the frame rate drops, VizEngine recalculates every frame deterministically offline.
+* **High Quality:** It uses `ffmpeg.wasm` to encode smooth 60 FPS video (MP4/WebM) directly in your browser—no server required.
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Node.js** 18+ and **pnpm** (recommended) or npm/yarn
-- A modern browser (Chrome/Edge recommended for best Web Audio API support)
+* **Node.js** 18+ and **pnpm** (recommended)
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/vucinatim/viz-engine.git
+git clone [https://github.com/vucinatim/viz-engine.git](https://github.com/vucinatim/viz-engine.git)
 cd viz-engine
 
 # Install dependencies
 pnpm install
 
-# Start the development server
+# Start the local editor
 pnpm dev
+
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and start creating!
+Open [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) to start creating.
 
 ---
 
-## 📖 Core Concepts
+## 🆚 Why VizEngine?
 
-### The Layer System
-A **Layer** is an instance of a visual **Component**. Each layer has:
-- **Config**: User-facing parameters (color, size, etc.)
-- **State**: Internal data persisted across frames
-- **Settings**: Opacity, blend mode, and visibility controls
-
-Layers are rendered to individual `<canvas>` elements and composited by the browser for optimal performance.
-
-### The Node Network
-Every animatable parameter can be driven by a **node network**—a directed acyclic graph that computes values in real-time:
-- **INPUT Node**: Provides global data (audio signal, time, etc.)
-- **Processing Nodes**: Transform data (math, smoothing, audio analysis)
-- **OUTPUT Node**: Delivers the final value to the layer parameter
-
-### Architecture Overview
-
-```
-┌─────────────────┐
-│  Audio Source   │
-└────────┬────────┘
-         │
-    ┌────▼─────────────────┐
-    │  Web Audio Pipeline  │  ← FFT, RMS, Time-Domain Analysis
-    └────┬─────────────────┘
-         │
-    ┌────▼──────────────────┐
-    │  Node Network Engine  │  ← Lazy evaluation, memoization
-    └────┬──────────────────┘
-         │
-    ┌────▼───────────────────┐
-    │  Visualization Engine  │  ← 2D Canvas / Three.js
-    └────┬───────────────────┘
-         │
-    ┌────▼──────────────────┐
-    │  Composition Layer    │  ← DOM-based compositing
-    └───────────────────────┘
-```
+| Feature | VizEngine | TouchDesigner | cables.gl |
+| --- | --- | --- | --- |
+| **Platform** | **Web-Native** (Browser) | Desktop App | Web-Based |
+| **License** | **Open Source (MIT)** | Proprietary / Paid | Proprietary / Freemium |
+| **Paradigm** | **Hybrid** (Layers + Nodes) | Node-Based Dataflow | Node-Based Visual |
+| **Export** | **Client-Side Video (MP4)** | Real-time / Spout | Real-time |
+| **Goal** | Shareable Audio-Visuals | Live Events | Interactive Web Art |
 
 ---
 
-## 🧩 Extending VizEngine
+## 🏗️ Architecture & Performance
 
-VizEngine is designed for extensibility. Here's how to add your own visuals and processing nodes.
+This engine was engineered to prove that the web is ready for serious motion graphics. During thesis stress-testing (rendering 8.3 million pixels with active node networks), it achieved:
+* **M1 Pro:** 111.6 FPS Mean 
+* **RTX 2060:** 84.4 FPS Mean 
+* **Node Overhead:** Less than 0.2ms per frame 
 
-### Creating a Visual Component
+It achieves this via **DOM-based compositing** (giving every layer its own lightweight canvas) and a **Strict Schema System** that ensures type safety and performance.
 
-Components are defined using the `createComponent` factory function. Here's a minimal example:
+---
+
+## 🧩 Developer Guide
+
+VizEngine is designed to be hacked on. You can add your own custom visuals using a simple, typed API.
+> Additions to the visuals and nodes are very welcome!
+
+### 💡 AI Coding Tip
+
+The API uses a strict schema, which makes it remarkably easy for LLMs to write code for.
+
+**Try it yourself:**
+Ask ChatGPT: *"Write a VizEngine component that draws a bouncing circle using the 2D context."*  
+> Tip: Paste in some example code from `/src/comps` to give it context.
+
+### Creating a Component
+
+Use the `createComponent` factory. The UI controls are auto-generated from your config.
 
 ```typescript
 // src/components/comps/my-visual.ts
 import { createComponent, v } from '@/components/config';
 import * as THREE from 'three';
 
-export const MyRotatingCube = createComponent({
-  name: 'My Rotating Cube',
-  description: 'A simple audio-reactive 3D cube',
-  
-  // Declarative configuration schema
+export const RotatingCube = createComponent({
+  name: 'Rotating Cube',
+
+  // 1. Define parameters (UI is auto-generated!)
   config: v.config({
-    color: v.color({ 
-      label: 'Cube Color',
-      defaultValue: '#FF6347' 
-    }),
-    rotationSpeed: v.number({ 
-      label: 'Rotation Speed',
-      defaultValue: 1,
-      min: -5,
-      max: 5
-    })
+    color: v.color({ defaultValue: '#FF6347' }),
+    speed: v.number({ defaultValue: 1, min: 0, max: 5 })
   }),
 
-  // One-time setup for 3D components
+  // 2. Setup (Runs once)
   init3D: ({ threeCtx }) => {
     const geometry = new THREE.BoxGeometry(1, 1, 1);
     const material = new THREE.MeshStandardMaterial();
-    const cube = new THREE.Mesh(geometry, material);
-    threeCtx.scene.userData.cube = cube;
-    threeCtx.scene.add(cube);
+    threeCtx.scene.userData.cube = new THREE.Mesh(geometry, material);
+    threeCtx.scene.add(threeCtx.scene.userData.cube);
   },
 
-  // Per-frame rendering
+  // 3. Render Loop (60 FPS)
   draw3D: ({ threeCtx, config, dt }) => {
     const cube = threeCtx.scene.userData.cube;
-    if (cube) {
-      cube.material.color.set(config.color);
-      cube.rotation.y += config.rotationSpeed * dt;
-    }
+    cube.material.color.set(config.color);
+    cube.rotation.y += config.speed * dt;
   }
 });
-```
-
-**For 2D components**, implement a `draw` function instead:
-
-```typescript
-draw: ({ canvasCtx, config, audioData, width, height }) => {
-  canvasCtx.fillStyle = config.color;
-  canvasCtx.fillRect(0, 0, width, height);
-}
-```
-
-### Creating an Animation Node
-
-Nodes are processing units in the animation graph. Here's how to create one:
-
-```typescript
-// src/components/config/node-types.ts (or create a new file in /nodes)
-import { createNode } from '@/components/config';
-
-export const MyCustomNode = createNode({
-  label: 'My Node',
-  description: 'Multiplies input by 2',
-  
-  inputs: [
-    { id: 'value', label: 'Input', type: 'number', defaultValue: 0 }
-  ],
-  
-  outputs: [
-    { id: 'result', label: 'Output', type: 'number' }
-  ],
-
-  computeSignal: ({ value }) => {
-    return { result: value * 2 };
-  }
-});
-```
-
-**For stateful nodes** (e.g., smoothing over time):
-
-```typescript
-createState: () => ({ previousValue: 0 }),
-
-computeSignal: ({ value, attack, release }, context, node) => {
-  const state = node.data.state as { previousValue: number };
-  const smoothed = /* ...your smoothing logic... */;
-  state.previousValue = smoothed;
-  return { result: smoothed };
-}
-```
-
----
-
-## 📁 Project Structure
 
 ```
-viz-engine/
-├── src/
-│   ├── app/                    # Next.js app router
-│   ├── components/
-│   │   ├── comps/              # Visual components (add yours here!)
-│   │   ├── config/             # createComponent & createNode APIs
-│   │   ├── editor/             # Main editor UI
-│   │   ├── node-network/       # Node editor UI
-│   │   ├── audio/              # Audio controls
-│   │   └── ui/                 # Reusable UI primitives (shadcn/ui)
-│   ├── lib/
-│   │   ├── stores/             # Zustand state stores
-│   │   ├── hooks/              # Custom React hooks
-│   │   └── types/              # TypeScript definitions
-│   └── remotion/               # Remotion player integration
-├── public/
-│   ├── music/                  # Sample audio files
-│   └── projects/               # Example .vizengine.json projects
-└── docs/                       # Technical documentation
-```
-
----
-
-## 🛠️ Available Scripts
-
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start development server |
-| `pnpm build` | Build for production |
-| `pnpm start` | Run production build |
-| `pnpm lint` | Run ESLint |
-| `pnpm docs` | Generate project documentation |
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Whether you're:
-- 🎨 **Creating visual components** for the community library
-- 🔧 **Building new audio analysis nodes**
-- 🐛 **Fixing bugs** or improving performance
-- 📚 **Writing documentation** or tutorials
-
-### Contribution Workflow
-
-1. **Fork** the repository
-2. **Create a branch** for your feature (`git checkout -b feature/amazing-visual`)
-3. **Add your component** to `src/components/comps/` (it will auto-register!)
-4. **Test** your changes thoroughly
-5. **Commit** with clear messages (`git commit -m 'Add: Amazing Particle System'`)
-6. **Push** and open a **Pull Request**
-
-### Development Guidelines
-
-- **TypeScript**: Use strict typing for all new code
-- **Components**: Follow the declarative `createComponent` pattern
-- **Performance**: Test with multiple layers and complex node networks
-- **Documentation**: Add JSDoc comments to exported functions
-
----
-
-## 🏗️ Architecture & Technology Stack
-
-### Core Technologies
-- **Next.js 14** - Application framework
-- **React 18** - UI library
-- **TypeScript** - Type safety
-- **Three.js** - 3D rendering (WebGL)
-- **Web Audio API** - Real-time audio analysis
-
-### Key Libraries
-- **Zustand** - Lightweight state management
-- **Remotion** - Frame-accurate timing & playback control
-- **@xyflow/react** - Node editor canvas
-- **Radix UI + shadcn/ui** - Accessible UI components
-- **dnd-kit** - Drag & drop for layer reordering
-- **WaveSurfer.js** - Audio waveform visualization
-
----
-
-## 📚 Documentation
-
-- **[System Architecture](docs/SYSTEM_ARCHITECTURE.md)** - Detailed architectural overview
-- **[Stage Scene Component](docs/STAGE_SCENE_COMPONENT.md)** - Complex 3D example walkthrough
-- **[Layer Blending Showcase](docs/LAYER_BLENDING_SHOWCASE.md)** - Multi-layer compositing guide
-- **[Interactive Node Flow](docs/interactive-node-flow.md)** - Node system deep-dive
-- **[Full Thesis](docs/thesis-text.md)** - Complete academic documentation
 
 ---
 
 ## 🎯 Roadmap
 
-### Short Term
-- [ ] Comprehensive test suite (unit + visual regression)
-- [ ] Expand node library (BPM detection, more audio features)
-- [ ] Keyframe-based animation system
-- [ ] Undo/redo history
+### Core & Ecosystem
 
-### Medium Term
-- [ ] Video export functionality (render to MP4)
-- [ ] Web Workers for node computation (off main thread)
-- [ ] WebAssembly for performance-critical nodes
-- [ ] Post-processing effects (bloom, DOF)
-- [ ] Component marketplace/gallery
+* [ ] **`rhythm-core` Package**: Developing a standalone "Librosa for TypeScript" library for offline rhythmic analysis and feature extraction (active).
+* [ ] **VizEngine Runtime**: A lightweight NPM package to render project JSONs inside any React application.
+* [ ] **WebGPU Support**: Exploring next-gen rendering pipelines for massive particle systems.
+* [ ] **Renderer Agnosticism**: Abstracting the engine to support renderers beyond Three.js (e.g., Babylon.js, p5.js).
 
-### Long Term
-- [ ] Cloud-based project storage
-- [ ] Real-time collaboration (multiplayer editing)
-- [ ] AI-powered component generation
-- [ ] DMX/Art-Net for physical lighting control
+### Editor & Workflow
+
+* [ ] **AI Assistant**: LLM integration for generating components and natural language editor control.
+* [ ] **Meta Nodes**: Ability to group and collapse complex node graphs.
+* [ ] **Keyframe Editor**: Manual animation curves to blend with audio-reactive values.
+* [ ] **Popout Preview**: Detachable preview window for multi-monitor setups.
+
+### Audio & IO
+
+* [ ] **MIDI Integration**: Input for parameter control and Output for sending processed signals to hardware.
+* [ ] **Advanced Audio Sources**: Robust streaming from microphone and external audio inputs.
+
+
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License**.
 
----
-
-## 🙏 Acknowledgments
-
-This project was created as part of a master's thesis at the University of Ljubljana, Faculty of Computer and Information Science, under the supervision of doc. dr. Aleš Smrdel.
-
-**Inspired by:**
-- TouchDesigner (Derivative)
-- cables.gl
-- Hydra (Olivia Jack)
-- The creative coding community
-
----
-
-## 🔗 Links
-
-- **Live Demo**: [www.viz-engine.com](https://www.viz-engine.com)
-- **Issue Tracker**: [GitHub Issues](https://github.com/vucinatim/viz-engine/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/vucinatim/viz-engine/discussions)
-
----
-
-<p align="center">
-  Made with ❤️ for the web audio-visual community
-  <br>
-  <sub>If VizEngine helps your project, consider giving it a ⭐</sub>
-</p>
+**Academic Note:** *This project was originally developed as a Master's Thesis at the University of Ljubljana. For a detailed breakdown of the algorithms and architecture, please [read the thesis PDF](https://www.google.com/search?q=docs/viz-engine-thesis.pdf).*
