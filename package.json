@@ -80,7 +80,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/three": "^0.164.0",
-    "eslint": "^8",
+    "eslint": "^9",
     "eslint-config-next": "14.2.3",
     "postcss": "^8",
     "prettier": "^3.3.2",
