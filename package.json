@@ -2,11 +2,24 @@
   "name": "viz-engine",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@9.9.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "build:packages": "pnpm --recursive --filter \"./packages/**\" build",
+    "typecheck:packages": "pnpm --recursive --filter \"./packages/**\" lint",
+    "studio:dev": "pnpm --filter @viz-engine/app-viz-studio dev",
+    "studio:build": "pnpm --filter @viz-engine/app-viz-studio build",
+    "studio:typecheck": "pnpm --filter @viz-engine/app-viz-studio typecheck",
+    "viz": "pnpm build:packages && pnpm --filter @viz-engine/dev-cli cli",
+    "viz:example:validate": "pnpm build:packages && pnpm --filter @viz-engine/dev-cli cli example validate",
+    "viz:example:frame": "pnpm build:packages && pnpm --filter @viz-engine/dev-cli cli example frame --frame 36",
+    "typecheck:v2": "pnpm typecheck:packages && pnpm studio:typecheck",
+    "build:v2": "pnpm build:packages && pnpm studio:build",
+    "test:v2": "vitest run",
+    "check:v2": "pnpm typecheck:v2 && pnpm test:v2 && pnpm build:v2",
     "docs": "tsx docs/scripts/generate-docs.ts",
     "docs:dump": "tsx docs/scripts/dump-files.ts",
     "docs:tree": "tsx docs/scripts/create-tree.ts"
@@ -88,6 +101,7 @@
     "tailwind-scrollbar": "^3.1.0",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.20.5",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vitest": "^3.2.4"
   }
 }

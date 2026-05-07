@@ -60,6 +60,7 @@ This is the current source of truth for where VizEngine is heading:
 
 - [plans/v2/v2-system-design.md](./plans/v2/v2-system-design.md)
 - [plans/v2/first-real-implementation-slicing-plan.md](./plans/v2/first-real-implementation-slicing-plan.md)
+- [plans/v2/foundation-implementation-progress.md](./plans/v2/foundation-implementation-progress.md)
 
 ## Product Vision
 

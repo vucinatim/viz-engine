@@ -105,3 +105,44 @@
   composition rules, Remotion as the first production render host, native
   FFmpeg as the encoding/muxing layer, and Railway CPU workers as the first
   deployed render environment
+
+## 2026-05-08
+
+- started the first real V2 implementation slice instead of continuing to plan
+- introduced a shared package-safe TypeScript base in `tsconfig.base.json` so
+  new V2 packages no longer inherit Next-specific root config
+- expanded the workspace structure to support `apps/*` as well as `packages/*`
+- added root V2 scripts for package typecheck/build, studio app, V2 test runs,
+  and combined `check:v2` verification
+- created the first real V2 packages:
+  - `packages/viz-contracts`
+  - `packages/viz-runtime`
+  - `packages/viz-bake`
+  - `packages/viz-remotion-adapter`
+  - `packages/viz-example-projects`
+- created the first real V2 app shell:
+  - `apps/viz-studio`
+- implemented the first canonical runtime contract surface:
+  - project document validation
+  - deterministic frame context creation
+  - runtime session creation
+  - ordered layer resolution
+  - first frame-plan resolution against baked audio feature artifacts
+  - component registry scaffolding
+- implemented the first bake-plan generation seam from canonical project assets
+- implemented the first Remotion composition/frame-state adapter seam
+- added canonical example fixtures for:
+  - a real V2 example project document
+  - a standard audio feature timeline artifact
+  - initial component metadata definitions
+- added the first root V2 automated tests covering:
+  - project validation
+  - frame-plan resolution
+  - bake-plan generation
+  - Remotion adapter framing
+- added the first local-first CLI package:
+  - `packages/viz-dev-cli`
+- added root example CLI commands for validating and inspecting canonical V2
+  example projects
+- added `docs/plans/v2/foundation-implementation-progress.md` to keep an
+  explicit implementation trail from scaffold to actual visual runtime proof
