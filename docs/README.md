@@ -1,51 +1,28 @@
-# Documentation Generation
+# VizEngine Docs
 
-This folder contains scripts and tools for automatically generating project documentation.
+This folder is now the start of the V2 documentation spine for VizEngine.
 
-## Scripts
+Start here:
 
-### Main Documentation Generator
+- [docs-index.md](./docs-index.md)
+- [current-state.md](./current-state.md)
+- [working-agreements.md](./working-agreements.md)
+- [visions/viz-engine-v2-vision.md](./visions/viz-engine-v2-vision.md)
+- [suggestions.md](./suggestions.md)
+
+The old implementation notes in this folder are still useful reference material,
+but they should not be treated as the source of truth for the V2 rewrite.
+
+## Documentation Scripts
+
+VizEngine already has local docs-generation helpers:
+
 ```bash
 pnpm docs
-```
-This runs the complete documentation generation process:
-1. Dumps all project files
-2. Creates a tree structure
-3. Generates markdown documentation
-4. Cleans up temporary files
-
-### Individual Scripts
-
-#### Dump Files
-```bash
 pnpm docs:dump
-```
-Lists all files in the project and saves them to `docs/all-files.txt`
-
-#### Create Tree Structure
-```bash
 pnpm docs:tree
 ```
-Converts the file list into a tree structure and generates `docs/PROJECT_STRUCTURE.md`
 
-## Generated Files
-
-- `PROJECT_STRUCTURE.md` - Complete project file tree with documentation
-- `all-files.txt` - Temporary file with all project files (auto-deleted)
-
-## Scripts Location
-
-All scripts are located in the `docs/scripts/` folder:
-- `dump-files.ts` - File discovery script (TypeScript)
-- `create-tree.ts` - Tree structure generator (TypeScript)
-- `generate-docs.ts` - Main orchestrator script (TypeScript)
-
-## Usage
-
-To regenerate the project structure documentation:
-
-```bash
-pnpm docs
-```
-
-This will create an up-to-date `PROJECT_STRUCTURE.md` file with the current state of your project.
+These generate structural reference docs such as `PROJECT_STRUCTURE.md`. They
+are useful for orientation, but architecture direction should live in the new
+docs surfaces above.

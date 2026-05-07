@@ -1,6 +1,6 @@
 # VizEngine
 
-**A Web-Native Audio-Reactive Animation Engine**
+**A Web-Native Audio-Reactive Animation Engine, now entering a V2 rewrite**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://www.viz-engine.com)
@@ -14,13 +14,33 @@
   <em>Create audio-reactive visuals in your browser. (Yes, it actually exports video.)</em>
 </p>
 
->ℹ️ **Project Status:** VizEngine is architecturally powerful and capable of high-quality results, but you may encounter bugs. Contributions and bug reports are very welcome!
+>ℹ️ **Project Status:** VizEngine V1 proved the core concept. The repo is now
+> entering a V2 full-replacement rewrite focused on a deterministic runtime,
+> AI-native scene authoring, and clean Magnify Core integration.
 
 ---
 
-**VizEngine** is a web-native tool designed to bridge the gap between simple creative coding sketches and complex professional software like TouchDesigner.
+**VizEngine** is a web-native tool designed to bridge the gap between simple
+creative coding sketches and complex professional software like TouchDesigner.
 
-It combines a **layer-based workflow** (like Photoshop) with a **node-based animation engine**, allowing you to build complex, reactive scenes using standard web technologies.
+V1 combines a **layer-based workflow** (like Photoshop) with a **node-based
+animation engine**, allowing you to build complex, reactive scenes using
+standard web technologies.
+
+V2 is intended to turn VizEngine into:
+
+- a deterministic visual runtime
+- a browser-based editor for that runtime
+- an AI-native scene system
+- a clean rendering attachment for Magnify Core
+
+Start here for the rewrite:
+
+- [docs/docs-index.md](docs/docs-index.md)
+- [docs/current-state.md](docs/current-state.md)
+- [docs/working-agreements.md](docs/working-agreements.md)
+- [docs/visions/viz-engine-v2-vision.md](docs/visions/viz-engine-v2-vision.md)
+- [docs/plans/v2/v2-foundation-and-rewrite-plan.md](docs/plans/v2/v2-foundation-and-rewrite-plan.md)
 
 ## ✨ Features
 
@@ -137,7 +157,25 @@ export const RotatingCube = createComponent({
 
 ---
 
+## 🎯 V2 Direction
+
+The current direction is a full replacement rewrite.
+
+Key rules:
+
+- no legacy compatibility layer by default
+- no dead code or dead folders preserved for comfort
+- salvage proven ideas selectively
+- rebuild runtime boundaries cleanly
+- keep live, render, and bake as first-class modes
+- keep Remotion as an adapter, not the source-of-truth architecture
+
 ## 🎯 Roadmap
+
+### V1 Roadmap Notes
+
+These roadmap notes reflect the old engine direction and should now be treated
+as reference material, not the canonical V2 execution plan.
 
 ### Core & Ecosystem
 
