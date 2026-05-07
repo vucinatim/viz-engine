@@ -13,7 +13,12 @@ This is the entrypoint for VizEngine documentation during the V2 rewrite.
 ## Active Direction
 
 - [visions/viz-engine-v2-vision.md](./visions/viz-engine-v2-vision.md)
+- [visions/viz-cloud-and-integration-vision.md](./visions/viz-cloud-and-integration-vision.md)
+- [visions/multi-renderer-and-backend-capability-vision.md](./visions/multi-renderer-and-backend-capability-vision.md)
+- [visions/rendering-performance-and-deployment-strategy.md](./visions/rendering-performance-and-deployment-strategy.md)
+- [visions/specialized-ai-runner-vision.md](./visions/specialized-ai-runner-vision.md)
 - [plans/v2/v2-foundation-and-rewrite-plan.md](./plans/v2/v2-foundation-and-rewrite-plan.md)
+- [plans/v2/v2-system-design.md](./plans/v2/v2-system-design.md)
 
 This is the current source of truth for where VizEngine is heading:
 
@@ -21,6 +26,7 @@ This is the current source of truth for where VizEngine is heading:
 - live editor plus headless render runtime
 - AI-native project model and action surface
 - clean integration path into Magnify Core
+- open-core product plus optional hosted Viz Cloud
 
 ## V2 Specs
 
@@ -29,6 +35,39 @@ This is the current source of truth for where VizEngine is heading:
 - [specs/v2/node-contract.md](./specs/v2/node-contract.md)
 - [specs/v2/bake-artifact-contract.md](./specs/v2/bake-artifact-contract.md)
 - [specs/v2/runtime-package-split-plan.md](./specs/v2/runtime-package-split-plan.md)
+- [specs/v2/runtime-api-spec.md](./specs/v2/runtime-api-spec.md)
+- [specs/v2/ai-action-schema-spec.md](./specs/v2/ai-action-schema-spec.md)
+- [specs/v2/ai-native-command-and-control-surface.md](./specs/v2/ai-native-command-and-control-surface.md)
+- [specs/v2/future-mcp-tool-surface-inventory.md](./specs/v2/future-mcp-tool-surface-inventory.md)
+- [specs/v2/viz-cloud-workspace-data-model.md](./specs/v2/viz-cloud-workspace-data-model.md)
+- [specs/v2/viz-to-magnify-integration-api-spec.md](./specs/v2/viz-to-magnify-integration-api-spec.md)
+- [specs/v2/project-version-publication-workflow.md](./specs/v2/project-version-publication-workflow.md)
+- [specs/v2/viz-cloud-orchestration-with-inngest.md](./specs/v2/viz-cloud-orchestration-with-inngest.md)
+- [specs/v2/render-job-ownership-and-lifecycle-model.md](./specs/v2/render-job-ownership-and-lifecycle-model.md)
+- [specs/v2/bake-job-ownership-and-lifecycle-model.md](./specs/v2/bake-job-ownership-and-lifecycle-model.md)
+- [specs/v2/auth-and-identity-federation-model.md](./specs/v2/auth-and-identity-federation-model.md)
+- [specs/v2/linked-account-and-sso-flow-design.md](./specs/v2/linked-account-and-sso-flow-design.md)
+- [specs/v2/draft-autosave-and-working-head-storage-model.md](./specs/v2/draft-autosave-and-working-head-storage-model.md)
+- [specs/v2/local-persistence-and-import-export-model.md](./specs/v2/local-persistence-and-import-export-model.md)
+- [specs/v2/asset-resolver-and-storage-abstraction-spec.md](./specs/v2/asset-resolver-and-storage-abstraction-spec.md)
+- [specs/v2/asset-lifecycle-and-derivation-job-model.md](./specs/v2/asset-lifecycle-and-derivation-job-model.md)
+- [specs/v2/audio-feature-timeline-spec.md](./specs/v2/audio-feature-timeline-spec.md)
+- [specs/v2/package-build-publication-and-versioning-strategy.md](./specs/v2/package-build-publication-and-versioning-strategy.md)
+- [specs/v2/runtime-package-consumption-and-local-tarball-integration-plan.md](./specs/v2/runtime-package-consumption-and-local-tarball-integration-plan.md)
+- [specs/v2/local-first-cli-and-developer-ergonomics-plan.md](./specs/v2/local-first-cli-and-developer-ergonomics-plan.md)
+
+## Deep Design
+
+- [plans/v2/v2-system-design.md](./plans/v2/v2-system-design.md)
+- [plans/v2/first-real-implementation-slicing-plan.md](./plans/v2/first-real-implementation-slicing-plan.md)
+
+## Product Vision
+
+- [visions/viz-cloud-and-integration-vision.md](./visions/viz-cloud-and-integration-vision.md)
+- [visions/deployment-and-app-shell-posture.md](./visions/deployment-and-app-shell-posture.md)
+- [visions/multi-renderer-and-backend-capability-vision.md](./visions/multi-renderer-and-backend-capability-vision.md)
+- [visions/rendering-performance-and-deployment-strategy.md](./visions/rendering-performance-and-deployment-strategy.md)
+- [visions/specialized-ai-runner-vision.md](./visions/specialized-ai-runner-vision.md)
 
 ## Repo Operating System
 

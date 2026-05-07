@@ -39,6 +39,15 @@ The UI remains important, but mainly as:
 
 not as the only way the system can be operated.
 
+VizEngine should also remain its own product, not only an internal Magnify
+tool.
+
+The preferred product model is:
+
+- open-source Viz core
+- optional hosted Viz Cloud
+- deep contract-based integration with Magnify Core
+
 ## Primary Architectural Decision
 
 The source of truth should not be:
@@ -151,6 +160,10 @@ The clean design is:
 - Viz owns the scene model and runtime contract
 - Remotion mounts or calls the Viz runtime for deterministic frame evaluation
 
+The longer-term backend diversity direction now lives here:
+
+- [Multi-Renderer And Backend Capability Vision](./multi-renderer-and-backend-capability-vision.md)
+
 ## Magnify Core Fit
 
 Magnify Core should own:
@@ -180,6 +193,13 @@ The clean connection point is:
 
 Magnify should not need to understand editor internals.
 
+The preferred integration shape is connected-workspace style integration rather
+than manual copy-paste handoff.
+
+The deeper product and integration model lives here:
+
+- [Viz Cloud And Integration Vision](./viz-cloud-and-integration-vision.md)
+
 ## AI-Native Vision
 
 VizEngine V2 should be designed so an AI agent can operate it through explicit
@@ -201,6 +221,15 @@ The ideal flow is:
 2. the user watches the preview and inspects the result
 3. the AI iterates through stable actions
 4. the final scene artifact is handed to Magnify for rendering and publishing
+
+The deeper command-and-control direction now lives here:
+
+- [AI-Native Command And Control Surface](../specs/v2/ai-native-command-and-control-surface.md)
+
+Important timing rule:
+
+- the heavy agent-control and specialized-runner layer should come after the
+  stable baseline and after Viz proves itself in real Magnify usage
 
 ## V2 Package Shape
 

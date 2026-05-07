@@ -65,6 +65,10 @@ This should support:
 It should be possible for both Viz runtime and Magnify adapters to consume the
 same baked feature artifact.
 
+The deeper contract now lives here:
+
+- [Audio Feature Timeline Spec](./audio-feature-timeline-spec.md)
+
 ## Simulation Checkpoints
 
 For heavier physics or simulation systems, V2 should support checkpoint baking.

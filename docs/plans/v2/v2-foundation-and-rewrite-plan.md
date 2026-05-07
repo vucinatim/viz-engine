@@ -123,10 +123,20 @@ Deliverables:
 - Remotion adapter over the Viz runtime
 - local deterministic render path
 - Magnify-facing integration contract
+- local package-consumption proof inside Magnify before hosted Viz integration
+  work
 
 Exit condition:
 
 - one Viz scene can drive preview and final render without semantic drift
+- Magnify can consume the Viz runtime seam locally without depending on Viz
+  Cloud
+
+Important sequencing note:
+
+- the first Magnify proof should be package-first and local
+- cloud-linked integration should reuse that seam later instead of being the
+  first proof target
 
 ## Phase 6: Purge
 
@@ -152,3 +162,22 @@ The first V2 design docs now exist:
 5. [V2 Runtime Package Split Plan](../../specs/v2/runtime-package-split-plan.md)
 
 These should guide the next implementation planning pass.
+
+## Deep System Design
+
+The deeper architecture pass now lives here:
+
+- [VizEngine V2 System Design](./v2-system-design.md)
+
+The first concrete implementation scaffold plan now lives here:
+
+- [First Real Implementation Slicing Plan](./first-real-implementation-slicing-plan.md)
+
+This document records the first important concrete decisions around:
+
+- time model
+- state model
+- graph embedding
+- runtime stepping
+- AI action surface
+- Magnify integration

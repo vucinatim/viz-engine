@@ -107,3 +107,11 @@ entrypoints:
 - deterministic render adapter
 
 Magnify should not need to understand editor internals.
+
+If Viz Cloud exists, Magnify should also integrate through:
+
+- workspace/project/version identifiers
+- API calls
+- artifact references
+
+It should not integrate through direct Viz database coupling.
