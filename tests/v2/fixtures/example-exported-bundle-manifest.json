@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "kind": "viz.project-bundle-manifest.v1",
+  "projectFile": "project.json",
+  "assetEntries": [
+    {
+      "assetId": "asset-audio-main",
+      "kind": "audio",
+      "path": "assets/asset-audio-main.mp3",
+      "mimeType": "audio/mpeg"
+    },
+    {
+      "assetId": "asset-image-cover",
+      "kind": "image",
+      "path": "assets/asset-image-cover.svg",
+      "mimeType": "image/svg+xml",
+      "metadata": {
+        "width": 720,
+        "height": 720
+      }
+    }
+  ],
+  "artifactEntries": [
+    {
+      "artifactId": "artifact-audio-standard-main",
+      "kind": "audio-feature-timeline",
+      "path": "baked/artifact-audio-standard-main.json"
+    }
+  ]
+}

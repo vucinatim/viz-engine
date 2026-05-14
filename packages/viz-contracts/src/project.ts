@@ -1,7 +1,8 @@
-import type { VizArtifactId, VizAssetId, VizGraphId, VizLayerId, VizProjectId } from "./ids";
-import type { VizArtifactRef } from "./artifacts";
-import type { VizAssetRef } from "./assets";
-import type { VizExecutionMode, VizRendererFamily, VizTimeline, VizViewport } from "./runtime";
+import type { VizArtifactId, VizAssetId, VizGraphId, VizLayerId, VizProjectId } from "./ids.js";
+import type { VizArtifactRef } from "./artifacts.js";
+import type { VizAssetRef } from "./assets.js";
+import type { VizNodeGraphDocument } from "./graphs.js";
+import type { VizExecutionMode, VizRendererFamily, VizTimeline, VizViewport } from "./runtime.js";
 
 export const VIZ_PROJECT_SCHEMA_VERSION = "2.0.0-alpha.1" as const;
 
@@ -26,6 +27,10 @@ export type VizValueSource =
   | {
       kind: "literal";
       value: unknown;
+    }
+  | {
+      kind: "asset-ref";
+      assetId: VizAssetId;
     }
   | {
       kind: "graph-output";
@@ -61,13 +66,6 @@ export interface VizLayer {
   renderPolicy?: VizLayerRenderPolicy;
 }
 
-export interface VizNodeGraphRef {
-  id: VizGraphId;
-  name: string;
-  entryNodeIds: string[];
-  metadata?: Record<string, unknown>;
-}
-
 export interface VizProjectDocument {
   schemaVersion: typeof VIZ_PROJECT_SCHEMA_VERSION;
   projectId: VizProjectId;
@@ -78,6 +76,6 @@ export interface VizProjectDocument {
   layers: VizLayer[];
   assetRefs?: VizAssetRef[];
   artifactRefs?: VizArtifactRef[];
-  graphs?: VizNodeGraphRef[];
+  graphs?: VizNodeGraphDocument[];
   metadata?: Record<string, unknown>;
 }

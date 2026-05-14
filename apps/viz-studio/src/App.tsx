@@ -1,12 +1,40 @@
-import { exampleComponents, exampleProjectDocument, exampleResolvedArtifacts } from "@viz-engine/example-projects";
-import { createVizComponentRegistry, createVizFramePlan, createVizRuntimeSession } from "@viz-engine/runtime";
-import { useState } from "react";
+import { createCoreComponentRegistry } from "@viz-engine/components-core";
+import {
+  exampleProjectDocument,
+  exampleResolvedArtifacts,
+  exampleResolvedAssets,
+} from "@viz-engine/example-projects";
+import { createCoreNodeRegistry } from "@viz-engine/nodes-core";
+import { renderVizRenderPlanToSvgMarkup } from "@viz-engine/renderer-svg";
+import { createVizFramePlan, createVizRenderPlan, createVizRuntimeSession } from "@viz-engine/runtime";
+import { Suspense, lazy, useState } from "react";
 
-const componentRegistry = createVizComponentRegistry(exampleComponents);
+const ThreePreviewPane = lazy(async () => {
+  const module = await import("./ThreePreviewPane");
+  return {
+    default: module.ThreePreviewPane,
+  };
+});
+
+const componentRegistry = createCoreComponentRegistry();
+const nodeRegistry = createCoreNodeRegistry();
 
 const formatValue = (value: unknown): string => {
   if (typeof value === "number") {
     return value.toFixed(4);
+  }
+
+  if (
+    value &&
+    typeof value === "object" &&
+    "id" in value &&
+    "kind" in value &&
+    "imageSourceUri" in value
+  ) {
+    const id = typeof value.id === "string" ? value.id : "unknown";
+    const uri = typeof value.imageSourceUri === "string" ? value.imageSourceUri : "";
+    const preview = uri.startsWith("data:") ? "data-uri" : uri;
+    return `${id} (${preview})`;
   }
 
   return JSON.stringify(value);
@@ -18,6 +46,7 @@ export function App() {
   const session = createVizRuntimeSession({
     project: exampleProjectDocument,
     mode: "render",
+    resolvedAssets: exampleResolvedAssets,
     resolvedArtifacts: exampleResolvedArtifacts,
     seed: "studio-seed",
   });
@@ -26,7 +55,17 @@ export function App() {
     session,
     frame,
     registry: componentRegistry,
+    nodeRegistry,
   });
+
+  const renderPlan = createVizRenderPlan({
+    session,
+    frame,
+    registry: componentRegistry,
+    nodeRegistry,
+  });
+
+  const svgMarkup = renderVizRenderPlanToSvgMarkup(renderPlan);
 
   return (
     <main className="app-shell">
@@ -37,7 +76,8 @@ export function App() {
           <p className="lede">
             This app is the first real V2 shell. It consumes the extracted workspace packages,
             validates a canonical project document, resolves baked feature inputs, and inspects
-            the deterministic frame plan that later renderers will consume.
+            the deterministic frame plan that later renderers will consume. This slice now also
+            proves a real asset-backed image layer through the same shared runtime path.
           </p>
         </div>
         <div className="project-meta">
@@ -85,35 +125,31 @@ export function App() {
       <section className="content-grid">
         <article className="canvas-card">
           <header>
-            <h2>Visual Intent Preview</h2>
-            <p>Debug rendering only. This is not the final compositor.</p>
+            <h2>Three Preview</h2>
+            <p>Primary WebGL proof path driven by the shared runtime render plan.</p>
           </header>
-          <div className="mock-stage">
-            <div className="mock-background" />
-            <div className="mock-bars">
-              {Array.from({ length: 16 }, (_, index) => {
-                const bassInput = framePlan.layers.find((layer) => layer.layerId === "layer-bars");
-                const bassValue =
-                  typeof bassInput?.resolvedInputs.bass?.value === "number"
-                    ? bassInput.resolvedInputs.bass.value
-                    : 0;
-
-                const loudnessValue =
-                  typeof bassInput?.resolvedInputs.loudness?.value === "number"
-                    ? bassInput.resolvedInputs.loudness.value
-                    : 0;
-
-                const barHeight = 14 + ((index % 5) + 1) * 14 * bassValue + loudnessValue * 60;
-
-                return (
-                  <span
-                    key={index}
-                    className="mock-bar"
-                    style={{ height: `${Math.min(180, barHeight)}px` }}
-                  />
-                );
-              })}
+          <div className="three-stage">
+            <Suspense
+              fallback={
+                <div className="three-stage-fallback">
+                  <strong>Loading renderer…</strong>
+                  <span>The WebGL preview is split into a secondary chunk.</span>
+                </div>
+              }
+            >
+              <ThreePreviewPane
+                renderPlan={renderPlan}
+                width={exampleProjectDocument.viewport.width}
+                height={exampleProjectDocument.viewport.height}
+              />
+            </Suspense>
+          </div>
+          <div className="svg-debug-panel">
+            <div className="svg-debug-header">
+              <h3>SVG Proof Output</h3>
+              <span>Deterministic debug renderer</span>
             </div>
+            <div className="svg-stage" dangerouslySetInnerHTML={{ __html: svgMarkup }} />
           </div>
         </article>
 

@@ -462,7 +462,7 @@ This prevents background over-analysis.
 This artifact family should be consumable both by:
 
 - Viz runtime
-- Magnify adapters
+- external host adapters
 
 That is very important.
 

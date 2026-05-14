@@ -46,7 +46,6 @@ const Toggle = React.forwardRef<
       <div>
         <TogglePrimitive.Root
           ref={ref}
-          defaultPressed
           className={cn(toggleVariants({ variant, size, className }))}
           {...props}
         />

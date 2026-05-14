@@ -158,9 +158,7 @@ h1 {
   margin-bottom: 18px;
 }
 
-.mock-stage {
-  position: relative;
-  min-height: 460px;
+.svg-stage {
   overflow: hidden;
   border-radius: 22px;
   background:
@@ -168,30 +166,69 @@ h1 {
     linear-gradient(180deg, #06121a 0%, #02070b 100%);
 }
 
-.mock-background {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at center, rgba(59, 212, 255, 0.08), transparent 40%),
-    radial-gradient(circle at 50% 80%, rgba(11, 62, 88, 0.6), transparent 55%);
+.svg-stage svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
-.mock-bars {
-  position: absolute;
-  inset: auto 48px 42px;
+.three-stage {
+  overflow: hidden;
+  border-radius: 22px;
+  min-height: 360px;
   display: grid;
-  grid-template-columns: repeat(16, 1fr);
-  gap: 8px;
-  align-items: end;
-  height: 220px;
+  place-items: center;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(65, 223, 255, 0.18), transparent 25%),
+    linear-gradient(180deg, #06121a 0%, #02070b 100%);
 }
 
-.mock-bar {
-  border-radius: 999px 999px 10px 10px;
-  background: linear-gradient(180deg, #a8fbff 0%, #2fc7ff 55%, #1658ff 100%);
-  box-shadow:
-    0 0 22px rgba(71, 208, 255, 0.46),
-    0 10px 24px rgba(4, 17, 26, 0.35);
+.three-stage canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.three-stage-fallback {
+  display: grid;
+  gap: 0.45rem;
+  text-align: center;
+  padding: 2rem;
+  color: rgba(217, 231, 245, 0.86);
+}
+
+.three-stage-fallback strong {
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+}
+
+.three-stage-fallback span {
+  font-size: 0.9rem;
+  color: rgba(177, 197, 217, 0.72);
+}
+
+.svg-debug-panel {
+  margin-top: 18px;
+}
+
+.svg-debug-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.svg-debug-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.svg-debug-header span {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(152, 196, 227, 0.78);
 }
 
 .layer-list {

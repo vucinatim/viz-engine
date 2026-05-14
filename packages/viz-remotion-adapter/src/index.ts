@@ -1,5 +1,11 @@
-import type { VizExecutionMode, VizProjectDocument } from "@viz-engine/contracts";
-import { createVizRuntimeSession } from "@viz-engine/runtime";
+import type { VizExecutionMode, VizProjectDocument, VizRenderPlan, VizResolvedArtifact, VizResolvedAsset } from "@viz-engine/contracts";
+import { renderVizRenderPlanToSvgMarkup } from "@viz-engine/renderer-svg";
+import {
+  createVizRenderPlan,
+  createVizRuntimeSession,
+  type VizComponentRegistry,
+  type VizNodeRegistry,
+} from "@viz-engine/runtime";
 
 export interface VizRemotionCompositionConfig {
   id: string;
@@ -13,7 +19,14 @@ export interface CreateVizRemotionFrameStateOptions {
   project: VizProjectDocument;
   frame: number;
   mode?: Extract<VizExecutionMode, "render" | "bake">;
+  resolvedAssets?: VizResolvedAsset[];
+  resolvedArtifacts?: VizResolvedArtifact[];
   seed?: string;
+}
+
+export interface CreateVizRemotionRenderPlanOptions extends CreateVizRemotionFrameStateOptions {
+  registry: VizComponentRegistry;
+  nodeRegistry?: VizNodeRegistry;
 }
 
 export const createVizRemotionCompositionConfig = (
@@ -32,19 +45,17 @@ export const createVizRemotionFrameState = ({
   project,
   frame,
   mode = "render",
+  resolvedAssets,
+  resolvedArtifacts,
   seed,
 }: CreateVizRemotionFrameStateOptions) => {
-  const sessionOptions =
-    seed === undefined
-      ? {
-          project,
-          mode,
-        }
-      : {
-          project,
-          mode,
-          seed,
-        };
+  const sessionOptions = {
+    project,
+    mode,
+    ...(resolvedAssets === undefined ? {} : { resolvedAssets }),
+    ...(resolvedArtifacts === undefined ? {} : { resolvedArtifacts }),
+    ...(seed === undefined ? {} : { seed }),
+  };
 
   const session = createVizRuntimeSession(sessionOptions);
 
@@ -53,4 +64,32 @@ export const createVizRemotionFrameState = ({
     frameContext: session.getFrameContext(frame),
     layers: session.getOrderedLayers(),
   };
+};
+
+export const createVizRemotionRenderPlan = ({
+  registry,
+  nodeRegistry,
+  ...options
+}: CreateVizRemotionRenderPlanOptions): VizRenderPlan => {
+  const session = createVizRuntimeSession({
+    project: options.project,
+    mode: options.mode ?? "render",
+    ...(options.resolvedAssets === undefined ? {} : { resolvedAssets: options.resolvedAssets }),
+    ...(options.resolvedArtifacts === undefined ? {} : { resolvedArtifacts: options.resolvedArtifacts }),
+    ...(options.seed === undefined ? {} : { seed: options.seed }),
+  });
+
+  return createVizRenderPlan({
+    session,
+    frame: options.frame,
+    registry,
+    ...(nodeRegistry === undefined ? {} : { nodeRegistry }),
+  });
+};
+
+export const createVizRemotionSvgMarkup = (
+  options: CreateVizRemotionRenderPlanOptions,
+): string => {
+  const renderPlan = createVizRemotionRenderPlan(options);
+  return renderVizRenderPlanToSvgMarkup(renderPlan);
 };

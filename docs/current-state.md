@@ -7,6 +7,15 @@ VizEngine is at the boundary between:
 - a strong V1 prototype/editor
 - and a planned V2 rewrite into a deterministic runtime plus authoring system
 
+One very important clarification:
+
+- V1 is not only “legacy code”
+- V1 is also the current product-quality UX reference
+
+The editor experience in V1 should be treated as something to preserve
+deliberately, even while the hidden runtime/store architecture underneath it is
+replaced aggressively.
+
 The current codebase already proves several important ideas:
 
 - typed component definitions
@@ -33,6 +42,31 @@ That means the repo should move toward:
 - an AI-native command surface for scene creation and editing
 - a full replacement rewrite with explicit purge of obsolete V1 architecture
 
+But this should not be misread as:
+
+- discard the V1 editor experience
+- replace the product surface with a different weaker dev-shell UI
+
+The intended direction is:
+
+- preserve the strength of the current editor UX
+- rebuild that editor over V2 runtime, action, and document truth
+- replace architecture, not product instincts
+
+That direction is no longer only conceptual.
+
+The repo now has:
+
+- a real V2 runtime/package spine
+- a real action-driven working-head foundation
+- a real local operator surface
+- a real V2-backed editor shell mounted inside the actual Next app terrain
+
+So the current phase is no longer “invent V2”.
+
+The current phase is “keep rebuilding the real editor experience over those V2
+truth surfaces without regressing the V1 UX bar”.
+
 ## Current V1 Truth
 
 Today the repo still contains:
@@ -43,6 +77,21 @@ Today the repo still contains:
 - node evaluation paths that are partly editor-oriented
 - browser export pipelines that are useful but should not become the production
   render architecture
+
+The important distinction is:
+
+- these are not all equal
+- some of this is architecture debt
+- some of this is hard-won product UX value
+
+We should mine V1 aggressively for:
+
+- panel layout and spatial workflow
+- live preview feel
+- audio/visual interaction patterns
+- layer workflow
+- animation/node workflow intent
+- serious-tool UX density and polish
 
 ## What Should Not Be Assumed
 
@@ -59,6 +108,7 @@ Do not assume:
 Preferred posture:
 
 - salvage the good contracts and ideas
+- preserve the V1 editor UX quality bar explicitly
 - rewrite the runtime boundaries aggressively
 - purge obsolete structure decisively
 - keep the authoring DX simple

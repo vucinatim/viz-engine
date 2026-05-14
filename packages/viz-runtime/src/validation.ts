@@ -2,8 +2,8 @@ import {
   VIZ_PROJECT_SCHEMA_VERSION,
   type VizArtifactRef,
   type VizAssetRef,
+  type VizNodeGraphDocument,
   type VizLayer,
-  type VizNodeGraphRef,
   type VizProjectDocument,
 } from "@viz-engine/contracts";
 
@@ -117,6 +117,69 @@ const validateLayerReferences = (
   }
 };
 
+const validateGraphDocuments = (
+  graphs: VizNodeGraphDocument[],
+  issues: VizProjectValidationIssue[],
+): void => {
+  for (const graph of graphs) {
+    const nodeIds = new Set<string>();
+
+    for (const node of graph.nodes ?? []) {
+      if (nodeIds.has(node.id)) {
+        issues.push({
+          code: "duplicate-id",
+          path: `graphs.${graph.id}.nodes`,
+          message: `Graph "${graph.id}" contains duplicate node id "${node.id}".`,
+        });
+      }
+
+      nodeIds.add(node.id);
+    }
+
+    for (const node of graph.nodes ?? []) {
+      if (!isNonEmptyString(node.type)) {
+        issues.push({
+          code: "missing-field",
+          path: `graphs.${graph.id}.nodes.${node.id}`,
+          message: `Graph "${graph.id}" contains node "${node.id}" without a node type.`,
+        });
+      }
+
+      for (const [inputKey, binding] of Object.entries(node.inputs ?? {})) {
+        if (binding.kind === "node-output" && !nodeIds.has(binding.nodeId)) {
+          issues.push({
+            code: "missing-reference",
+            path: `graphs.${graph.id}.nodes.${node.id}.inputs.${inputKey}`,
+            message: `Graph "${graph.id}" node "${node.id}" references missing upstream node "${binding.nodeId}".`,
+          });
+        }
+      }
+    }
+
+    const outputKeys = new Set<string>();
+
+    for (const output of graph.outputs ?? []) {
+      if (outputKeys.has(output.key)) {
+        issues.push({
+          code: "duplicate-id",
+          path: `graphs.${graph.id}.outputs`,
+          message: `Graph "${graph.id}" contains duplicate output key "${output.key}".`,
+        });
+      }
+
+      outputKeys.add(output.key);
+
+      if (!nodeIds.has(output.nodeId)) {
+        issues.push({
+          code: "missing-reference",
+          path: `graphs.${graph.id}.outputs.${output.key}`,
+          message: `Graph "${graph.id}" output "${output.key}" references missing node "${output.nodeId}".`,
+        });
+      }
+    }
+  }
+};
+
 export const validateProjectDocument = (value: unknown): VizProjectValidationResult => {
   const issues: VizProjectValidationIssue[] = [];
 
@@ -208,7 +271,8 @@ export const validateProjectDocument = (value: unknown): VizProjectValidationRes
   const layers = validateObjectArray<VizLayer>(value.layers, "layers", issues);
   const assetRefs = validateObjectArray<VizAssetRef>(value.assetRefs, "assetRefs", issues);
   const artifactRefs = validateObjectArray<VizArtifactRef>(value.artifactRefs, "artifactRefs", issues);
-  const graphs = validateObjectArray<VizNodeGraphRef>(value.graphs, "graphs", issues);
+  const graphs = validateObjectArray<VizNodeGraphDocument>(value.graphs, "graphs", issues);
+  validateGraphDocuments(graphs, issues);
 
   if (!Array.isArray(value.layerOrder)) {
     issues.push({

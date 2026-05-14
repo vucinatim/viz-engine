@@ -5,6 +5,12 @@ const nextConfig = {
   transpilePackages: ['@viz-engine/rhythm-core'],
 
   webpack: (config, { isServer }) => {
+    config.resolve.extensionAlias = {
+      ...(config.resolve.extensionAlias ?? {}),
+      '.js': ['.ts', '.tsx', '.js'],
+      '.mjs': ['.mts', '.mjs'],
+    };
+
     // Ignore the playground directory during webpack compilation
     config.watchOptions = {
       ...config.watchOptions,

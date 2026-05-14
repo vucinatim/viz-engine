@@ -1,4 +1,4 @@
-import type { VizArtifactId, VizAssetId } from "./ids";
+import type { VizArtifactId, VizAssetId } from "./ids.js";
 
 export type VizAssetKind = "audio" | "image" | "video" | "binary";
 
@@ -34,3 +34,43 @@ export interface VizResolvedAsset {
   bytes?: ArrayBuffer;
   metadata?: Record<string, unknown>;
 }
+
+interface VizMaterializedAssetBase {
+  id: VizAssetId;
+  kind: VizAssetKind;
+  source: VizAssetSource;
+  label?: string;
+  mimeType?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface VizMaterializedAudioAsset extends VizMaterializedAssetBase {
+  kind: "audio";
+  audioSourceUri: string;
+}
+
+export interface VizMaterializedImageAsset extends VizMaterializedAssetBase {
+  kind: "image";
+  imageSourceUri: string;
+  width?: number;
+  height?: number;
+}
+
+export interface VizMaterializedVideoAsset extends VizMaterializedAssetBase {
+  kind: "video";
+  videoSourceUri: string;
+  width?: number;
+  height?: number;
+}
+
+export interface VizMaterializedBinaryAsset extends VizMaterializedAssetBase {
+  kind: "binary";
+  bytes?: ArrayBuffer;
+  binarySourceUri?: string;
+}
+
+export type VizMaterializedAsset =
+  | VizMaterializedAudioAsset
+  | VizMaterializedImageAsset
+  | VizMaterializedVideoAsset
+  | VizMaterializedBinaryAsset;

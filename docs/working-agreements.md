@@ -11,6 +11,16 @@ VizEngine should become:
 - an AI-native scene system
 - a reusable rendering attachment for Magnify Core
 
+Very important clarification:
+
+- the V1 editor experience is not disposable
+- the V1 hidden architecture is disposable
+
+We are not trying to invent a weaker alternate editor.
+
+We are trying to preserve and rebuild the existing high-quality live authoring
+experience on top of proper V2 contracts and runtime boundaries.
+
 It should not become:
 
 - only a browser toy
@@ -29,6 +39,10 @@ It should not become:
 8. Keep the runtime headless-capable.
 9. Keep the component and node authoring API small and typed.
 10. Prefer fewer stronger primitives over sprawling configurability.
+11. Preserve the proven V1 editor UX patterns unless V2 gives a clearly better
+    replacement.
+12. Replace the architecture underneath the editor, not the product-quality
+    editing posture itself.
 
 ## Rewrite Rules
 
@@ -44,6 +58,22 @@ Default assumptions:
 
 If a temporary bridge is needed, it should be explicitly justified and removed
 quickly.
+
+This rewrite rule applies to architecture, not to hard-won UX quality.
+
+We should purge:
+
+- bad store ownership
+- hidden runtime semantics
+- dead paths
+- obsolete coupling
+
+We should preserve deliberately:
+
+- live authoring feel
+- panel layout quality
+- workflow clarity
+- serious-tool interaction patterns
 
 ## AI-Native Rules
 

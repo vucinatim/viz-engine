@@ -9,7 +9,11 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@viz-engine/components-core": "workspace:*",
     "@viz-engine/example-projects": "workspace:*",
+    "@viz-engine/nodes-core": "workspace:*",
+    "@viz-engine/renderer-svg": "workspace:*",
+    "@viz-engine/renderer-three": "workspace:*",
     "@viz-engine/runtime": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

@@ -1,4 +1,4 @@
-import type { VizArtifactRef } from "./artifacts";
+import type { VizArtifactRef } from "./artifacts.js";
 
 export type VizAudioFeatureProfile = "standard" | "extended" | "specialized";
 

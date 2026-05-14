@@ -1,5 +1,16 @@
-import { exampleProjectDocument } from "@viz-engine/example-projects";
-import { createVizRemotionCompositionConfig, createVizRemotionFrameState } from "@viz-engine/remotion-adapter";
+import { createCoreComponentRegistry } from "@viz-engine/components-core";
+import {
+  exampleProjectDocument,
+  exampleResolvedArtifacts,
+  exampleResolvedAssets,
+} from "@viz-engine/example-projects";
+import { createCoreNodeRegistry } from "@viz-engine/nodes-core";
+import {
+  createVizRemotionCompositionConfig,
+  createVizRemotionFrameState,
+  createVizRemotionRenderPlan,
+  createVizRemotionSvgMarkup,
+} from "@viz-engine/remotion-adapter";
 import { describe, expect, it } from "vitest";
 
 describe("Viz Remotion adapter", () => {
@@ -16,11 +27,46 @@ describe("Viz Remotion adapter", () => {
     const frameState = createVizRemotionFrameState({
       project: exampleProjectDocument,
       frame: 12,
+      resolvedAssets: exampleResolvedAssets,
+      resolvedArtifacts: exampleResolvedArtifacts,
       seed: "remotion-seed",
     });
 
     expect(frameState.frameContext.frame).toBe(12);
     expect(frameState.frameContext.seed).toBe("remotion-seed");
-    expect(frameState.layers).toHaveLength(3);
+    expect(frameState.layers).toHaveLength(4);
+  });
+
+  it("creates the same runtime-backed render plan for Remotion", () => {
+    const renderPlan = createVizRemotionRenderPlan({
+      project: exampleProjectDocument,
+      frame: 12,
+      resolvedAssets: exampleResolvedAssets,
+      resolvedArtifacts: exampleResolvedArtifacts,
+      registry: createCoreComponentRegistry(),
+      nodeRegistry: createCoreNodeRegistry(),
+      seed: "remotion-seed",
+    });
+
+    expect(renderPlan.issues).toHaveLength(0);
+    expect(renderPlan.layers).toHaveLength(4);
+    expect(renderPlan.materializedAssets).toHaveLength(2);
+    expect(renderPlan.layers[1]?.node?.kind).toBe("group");
+  });
+
+  it("produces proof-level SVG markup for Remotion consumption", () => {
+    const svgMarkup = createVizRemotionSvgMarkup({
+      project: exampleProjectDocument,
+      frame: 12,
+      resolvedAssets: exampleResolvedAssets,
+      resolvedArtifacts: exampleResolvedArtifacts,
+      registry: createCoreComponentRegistry(),
+      nodeRegistry: createCoreNodeRegistry(),
+      seed: "remotion-seed",
+    });
+
+    expect(svgMarkup.startsWith("<svg")).toBe(true);
+    expect(svgMarkup.includes("data-layer-id=\"layer-cover\"")).toBe(true);
+    expect(svgMarkup.includes("data-layer-id=\"layer-bars\"")).toBe(true);
   });
 });

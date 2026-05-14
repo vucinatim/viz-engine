@@ -127,17 +127,19 @@ Node graphs should not be implied by editor state.
 
 They should be explicit scene content.
 
-Each binding should identify:
+V2 should start with embedded graph documents.
 
-- target parameter path
-- graph id
+The practical early model is:
 
-The graph itself can live either:
+- graph-level external inputs using stable `VizValueSource` bindings
+- node-level input bindings using:
+  - literal values
+  - graph-input bindings
+  - upstream node-output bindings
+- named graph outputs that layers can consume through `graph-output`
 
-- embedded in the project document
-- or as a referenced reusable graph object if that becomes necessary later
-
-V2 should start simple and embed them unless reuse clearly demands otherwise.
+That keeps the canonical document explicit without inventing a second hidden
+graph representation owned by the editor.
 
 ## Editor State Exclusion Rule
 

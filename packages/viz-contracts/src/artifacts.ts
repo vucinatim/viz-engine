@@ -1,4 +1,4 @@
-import type { VizArtifactId, VizAssetId } from "./ids";
+import type { VizArtifactId, VizAssetId } from "./ids.js";
 
 export type VizArtifactKind =
   | "audio-feature-timeline"

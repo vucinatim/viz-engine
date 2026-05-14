@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "es2020",
     "lib": ["dom", "dom.iterable", "esnext"],
+    "baseUrl": ".",
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -9,6 +10,25 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@viz-engine/rhythm-core": ["packages/rhythm-core/src/index.ts"],
+      "@viz-engine/contracts": ["packages/viz-contracts/src/index.ts"],
+      "@viz-engine/runtime": ["packages/viz-runtime/src/index.ts"],
+      "@viz-engine/bake": ["packages/viz-bake/src/index.ts"],
+      "@viz-engine/remotion-adapter": ["packages/viz-remotion-adapter/src/index.ts"],
+      "@viz-engine/example-projects": ["packages/viz-example-projects/src/index.ts"],
+      "@viz-engine/example-projects/node": ["packages/viz-example-projects/src/node.ts"],
+      "@viz-engine/dev-cli": ["packages/viz-dev-cli/src/index.ts"],
+      "@viz-engine/actions": ["packages/viz-actions/src/index.ts"],
+      "@viz-engine/editor-session": ["packages/viz-editor-session/src/index.ts"],
+      "@viz-engine/editor-control": ["packages/viz-editor-control/src/index.ts"],
+      "@viz-engine/editor-control/node": ["packages/viz-editor-control/src/node.ts"],
+      "@viz-engine/nodes-core": ["packages/viz-nodes-core/src/index.ts"],
+      "@viz-engine/components-core": ["packages/viz-components-core/src/index.ts"],
+      "@viz-engine/renderer-svg": ["packages/viz-renderer-svg/src/index.ts"],
+      "@viz-engine/renderer-three": ["packages/viz-renderer-three/src/index.ts"]
+    }
   }
 }

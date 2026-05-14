@@ -1,8 +1,9 @@
 import type {
   VizAudioFeatureTimelineArtifact,
-  VizComponentDefinition,
+  VizNodeGraphDocument,
   VizProjectDocument,
   VizResolvedArtifact,
+  VizResolvedAsset,
 } from "@viz-engine/contracts";
 import { VIZ_PROJECT_SCHEMA_VERSION } from "@viz-engine/contracts";
 
@@ -14,6 +15,33 @@ const createFeatureSeries = (
 };
 
 const frameCount = 180;
+
+const exampleCoverSvg = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 720">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0c2030" />
+      <stop offset="60%" stop-color="#152d43" />
+      <stop offset="100%" stop-color="#1e6f9e" />
+    </linearGradient>
+    <radialGradient id="pulse" cx="50%" cy="42%" r="56%">
+      <stop offset="0%" stop-color="#8ff8ff" stop-opacity="0.92" />
+      <stop offset="38%" stop-color="#3bd4ff" stop-opacity="0.54" />
+      <stop offset="100%" stop-color="#07111b" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="720" height="720" fill="url(#bg)" />
+  <circle cx="360" cy="260" r="220" fill="url(#pulse)" />
+  <path d="M100 520C180 430 260 400 340 430C420 460 470 560 560 560C610 560 650 540 690 500V720H0V590C30 580 60 560 100 520Z" fill="#08121d" fill-opacity="0.84" />
+  <circle cx="205" cy="190" r="42" fill="#9ef8ff" fill-opacity="0.28" />
+  <circle cx="515" cy="168" r="28" fill="#9ef8ff" fill-opacity="0.2" />
+  <text x="86" y="600" fill="#eafcff" font-size="64" font-family="Arial, sans-serif" font-weight="700">V2 SIGNAL</text>
+  <text x="90" y="654" fill="#9fd9ea" font-size="24" font-family="Arial, sans-serif" letter-spacing="6">MEDIA PROOF</text>
+</svg>
+`.trim();
+
+const exampleCoverDataUri = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(exampleCoverSvg)}`;
+const exampleAudioPlaceholderBytes = new TextEncoder().encode("viz-engine-audio-placeholder").buffer;
 
 export const exampleAudioTimelineArtifact: VizAudioFeatureTimelineArtifact = {
   id: "artifact-audio-standard-main",
@@ -42,6 +70,175 @@ export const exampleAudioTimelineArtifact: VizAudioFeatureTimelineArtifact = {
   ],
 };
 
+export const exampleMainReactivityGraph: VizNodeGraphDocument = {
+  id: "graph-main-reactivity",
+  name: "Main Reactivity Graph",
+  inputs: {
+    bassSource: {
+      kind: "artifact-feature",
+      artifactId: exampleAudioTimelineArtifact.id,
+      feature: "bass-energy",
+    },
+    loudnessSource: {
+      kind: "artifact-feature",
+      artifactId: exampleAudioTimelineArtifact.id,
+      feature: "loudness",
+    },
+    fluxSource: {
+      kind: "artifact-feature",
+      artifactId: exampleAudioTimelineArtifact.id,
+      feature: "spectral-flux",
+    },
+  },
+  nodes: [
+    {
+      id: "node-bass-input",
+      type: "graph-input",
+      inputs: {
+        inputKey: {
+          kind: "literal",
+          value: "bassSource",
+        },
+      },
+    },
+    {
+      id: "node-loudness-input",
+      type: "graph-input",
+      inputs: {
+        inputKey: {
+          kind: "literal",
+          value: "loudnessSource",
+        },
+      },
+    },
+    {
+      id: "node-flux-input",
+      type: "graph-input",
+      inputs: {
+        inputKey: {
+          kind: "literal",
+          value: "fluxSource",
+        },
+      },
+    },
+    {
+      id: "node-bars-bass-scale",
+      type: "multiply",
+      inputs: {
+        value: {
+          kind: "node-output",
+          nodeId: "node-bass-input",
+          output: "value",
+        },
+        factor: {
+          kind: "literal",
+          value: 0.92,
+        },
+      },
+    },
+    {
+      id: "node-bars-loudness-bias",
+      type: "add",
+      inputs: {
+        a: {
+          kind: "node-output",
+          nodeId: "node-loudness-input",
+          output: "value",
+        },
+        b: {
+          kind: "literal",
+          value: 0.08,
+        },
+      },
+    },
+    {
+      id: "node-bars-loudness-clamp",
+      type: "clamp",
+      inputs: {
+        value: {
+          kind: "node-output",
+          nodeId: "node-bars-loudness-bias",
+          output: "value",
+        },
+        min: {
+          kind: "literal",
+          value: 0,
+        },
+        max: {
+          kind: "literal",
+          value: 1,
+        },
+      },
+    },
+    {
+      id: "node-flux-bloom-scale",
+      type: "multiply",
+      inputs: {
+        value: {
+          kind: "node-output",
+          nodeId: "node-flux-input",
+          output: "value",
+        },
+        factor: {
+          kind: "literal",
+          value: 1.15,
+        },
+      },
+    },
+    {
+      id: "node-flux-bloom-clamp",
+      type: "clamp",
+      inputs: {
+        value: {
+          kind: "node-output",
+          nodeId: "node-flux-bloom-scale",
+          output: "value",
+        },
+        min: {
+          kind: "literal",
+          value: 0,
+        },
+        max: {
+          kind: "literal",
+          value: 1,
+        },
+      },
+    },
+    {
+      id: "node-flux-bloom-decay",
+      type: "decay",
+      inputs: {
+        value: {
+          kind: "node-output",
+          nodeId: "node-flux-bloom-clamp",
+          output: "value",
+        },
+        falloffPerSecond: {
+          kind: "literal",
+          value: 1.35,
+        },
+      },
+    },
+  ],
+  outputs: [
+    {
+      key: "barsBass",
+      nodeId: "node-bars-bass-scale",
+      output: "value",
+    },
+    {
+      key: "barsLoudness",
+      nodeId: "node-bars-loudness-clamp",
+      output: "value",
+    },
+    {
+      key: "bloomIntensity",
+      nodeId: "node-flux-bloom-decay",
+      output: "value",
+    },
+  ],
+};
+
 export const exampleProjectDocument: VizProjectDocument = {
   schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
   projectId: "project-example-reactive-bars",
@@ -55,7 +252,7 @@ export const exampleProjectDocument: VizProjectDocument = {
     height: 720,
     backgroundColor: "#06131d",
   },
-  layerOrder: ["layer-background", "layer-bars", "layer-bloom"],
+  layerOrder: ["layer-background", "layer-cover", "layer-bars", "layer-bloom"],
   layers: [
     {
       id: "layer-background",
@@ -76,6 +273,32 @@ export const exampleProjectDocument: VizProjectDocument = {
       },
     },
     {
+      id: "layer-cover",
+      name: "Cover Art",
+      componentId: "cover-image",
+      enabled: true,
+      opacity: 0.94,
+      blendMode: "normal",
+      rendererFamily: "three",
+      settings: {
+        x: 116,
+        y: 102,
+        width: 408,
+        height: 408,
+      },
+      inputs: {
+        image: {
+          kind: "asset-ref",
+          assetId: "asset-image-cover",
+        },
+      },
+      requiredAssetIds: ["asset-image-cover"],
+      renderPolicy: {
+        supportedModes: ["live", "render"],
+        preferredRendererFamily: "three",
+      },
+    },
+    {
       id: "layer-bars",
       name: "Reactive Bars",
       componentId: "reactive-bars",
@@ -89,14 +312,14 @@ export const exampleProjectDocument: VizProjectDocument = {
       },
       inputs: {
         bass: {
-          kind: "artifact-feature",
-          artifactId: exampleAudioTimelineArtifact.id,
-          feature: "bass-energy",
+          kind: "graph-output",
+          graphId: exampleMainReactivityGraph.id,
+          output: "barsBass",
         },
         loudness: {
-          kind: "artifact-feature",
-          artifactId: exampleAudioTimelineArtifact.id,
-          feature: "loudness",
+          kind: "graph-output",
+          graphId: exampleMainReactivityGraph.id,
+          output: "barsLoudness",
         },
       },
       requiredAssetIds: ["asset-audio-main"],
@@ -119,9 +342,9 @@ export const exampleProjectDocument: VizProjectDocument = {
       },
       inputs: {
         intensity: {
-          kind: "artifact-feature",
-          artifactId: exampleAudioTimelineArtifact.id,
-          feature: "spectral-flux",
+          kind: "graph-output",
+          graphId: exampleMainReactivityGraph.id,
+          output: "bloomIntensity",
         },
       },
       requiredArtifactIds: [exampleAudioTimelineArtifact.id],
@@ -136,9 +359,21 @@ export const exampleProjectDocument: VizProjectDocument = {
       mimeType: "audio/mpeg",
       originalFileName: "main-song.mp3",
     },
+    {
+      id: "asset-image-cover",
+      kind: "image",
+      source: "generated",
+      label: "Example Cover",
+      mimeType: "image/svg+xml",
+      originalFileName: "example-cover.svg",
+      metadata: {
+        width: 720,
+        height: 720,
+      },
+    },
   ],
   artifactRefs: [exampleAudioTimelineArtifact],
-  graphs: [],
+  graphs: [exampleMainReactivityGraph],
   metadata: {
     authoringMode: "example",
   },
@@ -156,52 +391,24 @@ export const exampleResolvedArtifacts: VizResolvedArtifact[] = [
   },
 ];
 
-export const exampleComponents: VizComponentDefinition[] = [
+export const exampleResolvedAssets: VizResolvedAsset[] = [
   {
-    id: "solid-color",
-    name: "Solid Color",
-    rendererFamily: "three",
-    description: "Simple background fill layer.",
-    inputs: [
-      {
-        key: "glow",
-        label: "Glow",
-        supportedSources: ["literal"],
-      },
-    ],
+    id: "asset-audio-main",
+    kind: "audio",
+    source: "local",
+    uri: "memory://assets/main-song.mp3",
+    mimeType: "audio/mpeg",
+    bytes: exampleAudioPlaceholderBytes,
   },
   {
-    id: "reactive-bars",
-    name: "Reactive Bars",
-    rendererFamily: "three",
-    description: "Bars driven by precomputed music features.",
-    inputs: [
-      {
-        key: "bass",
-        label: "Bass Energy",
-        supportedSources: ["artifact-feature"],
-        required: true,
-      },
-      {
-        key: "loudness",
-        label: "Loudness",
-        supportedSources: ["artifact-feature"],
-        required: true,
-      },
-    ],
-  },
-  {
-    id: "radial-bloom",
-    name: "Radial Bloom",
-    rendererFamily: "three",
-    description: "Accent bloom driven by spectral flux.",
-    inputs: [
-      {
-        key: "intensity",
-        label: "Intensity",
-        supportedSources: ["artifact-feature"],
-        required: true,
-      },
-    ],
+    id: "asset-image-cover",
+    kind: "image",
+    source: "generated",
+    uri: exampleCoverDataUri,
+    mimeType: "image/svg+xml",
+    metadata: {
+      width: 720,
+      height: 720,
+    },
   },
 ];

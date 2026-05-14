@@ -22,3 +22,79 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
   bake, editor, and render adapters.
 - Plan the V1 purge deliberately so the rewrite does not stall in an indefinite
   half-migrated state with duplicate folders and dead runtime paths.
+- Split renderer preview-time asset hydration from future server/render-time
+  asset materialization behind a cleaner shared material resolver once the
+  first asset-backed proof is stable.
+- Continue from the current inherited-style cleanup toward a pass-based
+  compositor model in the `Three` path so preview and final-render semantics
+  can eventually align for opacity, blend isolation, and later masks/effects.
+- Keep the studio shell intentionally chunked as the runtime and renderer
+  packages grow, so future preview/editor capability does not drift back into a
+  single eager bundle after the first WebGL split.
+- Keep the new golden-fixture workflow deliberate and reviewable as runtime
+  behavior expands, so new snapshots stay small, canonical, and tied to
+  meaningful engine semantics instead of becoming a dumping ground for noise.
+- Keep host integrations consuming the portable runtime contract instead of
+  growing app-specific adapter packages inside the Viz core workspace unless a
+  truly reusable host boundary emerges.
+- Extend the new pure-node graph slice into explicit temporal-node execution
+  only after checkpointing, state ownership, and render-mode stepping rules are
+  nailed down, so graph state does not leak back into editor-owned behavior.
+- Keep the new temporal replay/checkpoint baseline simple until durable
+  bake-time checkpoints land: fixed-step replay plus explicit runtime-session
+  checkpoints first, then deliberate artifact-backed history optimizations,
+  rather than random-access shortcuts that obscure scene semantics.
+- Keep the new project action surface pure and shared across editor, CLI, and
+  future agent tooling so undo/history, collaboration, and AI mutation do not
+  fork into app-specific mutation paths.
+- Grow the current directory-backed bundle writer into a fuller import/export
+  product surface deliberately, with archive packaging and explicit export
+  policies for non-trivial media/artifact payloads, instead of letting ad hoc
+  one-off export paths emerge per host or app shell.
+- Extend the new isolated-layer `Three` compositor into a fuller pass/effect
+  graph deliberately, but keep layer ownership explicit so masks, blur, bloom,
+  and later post-processing do not get reimplemented as primitive-level hacks.
+- Keep the future agent-operated editor loop centered on the same action and
+  runtime surfaces as the CLI and tests, so “open the editor and build it live”
+  does not drift into a browser-only control architecture with hidden state.
+- Preserve the V1 editor UX as a first-class product reference while replacing
+  the architecture underneath it, so V2 does not accidentally regress from a
+  serious creative tool into a lower-ambition dev shell or inspector product.
+- Build the next editor rebuild seam as a generic live transport and
+  audio-session foundation on top of `@viz-engine/editor-session`, not inside a
+  shell-specific app store, so play/pause/seek, live-vs-baked diagnostics, and
+  audio-session lifecycle can later plug under the preserved V1 editor UX
+  cleanly.
+- When wiring the new transport/audio controllers under the preserved V1 editor
+  shell, keep browser media element ownership outside the pure session package
+  and feed only explicit state transitions inward, so browser quirks do not
+  leak back into canonical editor/runtime semantics.
+- Keep the new `@viz-engine/editor-control` surface intentionally small and
+  stable, and only add operations that correspond to durable runtime/editor
+  concepts, so the future MCP/tool layer grows around real semantics instead of
+  becoming a bag of one-off convenience commands.
+- The next component-authoring follow-up should be a true live pick-up loop for
+  new or changed V2 components under the preserved editor UX, not just more
+  scaffold helpers, so the agent can actually write a component and let the
+  user see it update with minimal friction.
+- Keep the new `@viz-engine/editor-control` browser-vs-Node split strict as the
+  editor grows, so bundle/filesystem concerns do not leak back into browser
+  builds and the operator surface stays safe to mount under the real editor.
+- The next editor-facing follow-up should harden repeated browser-verified
+  play/pause/seek behavior under the V2-backed Next shell, so the live loop is
+  proven in the actual product terrain and not only through deterministic
+  package/runtime tests.
+- As more of the preserved V1 editor surface is rebuilt over V2, track and
+  deliberately burn down the remaining legacy Next/ESLint warnings in old V1
+  files so the final editor terrain does not carry avoidable noise forward.
+- Keep browser-facing transport controls in the preserved V2 editor shell
+  mechanically simple and explicitly controlled; avoid over-clever control
+  primitives on the critical live-loop path when a plain button conveys the
+  state more truthfully for both humans and agents.
+- The next live-loop follow-up should connect the local operator surface and the
+  open browser/editor session more directly, so browser verification can observe
+  canonical state transitions without relying on fragile UI event synthesis
+  alone.
+- Build the next layer-creation/editor-authoring step on top of the new
+  component-catalog truth, so new layer flows stay registry-driven instead of
+  hardcoding component knowledge into the UI.

@@ -1,5 +1,5 @@
-import type { VizResolvedArtifact } from "./artifacts";
-import type { VizResolvedAsset } from "./assets";
+import type { VizResolvedArtifact } from "./artifacts.js";
+import type { VizMaterializedAsset, VizResolvedAsset } from "./assets.js";
 
 export type VizExecutionMode = "live" | "render" | "bake";
 
@@ -37,5 +37,6 @@ export interface VizFrameContext {
 
 export interface VizRuntimeResources {
   resolvedAssets?: VizResolvedAsset[];
+  materializedAssets?: VizMaterializedAsset[];
   resolvedArtifacts?: VizResolvedArtifact[];
 }

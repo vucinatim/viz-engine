@@ -14,6 +14,7 @@ This is the entrypoint for VizEngine documentation during the V2 rewrite.
 
 - [visions/viz-engine-v2-vision.md](./visions/viz-engine-v2-vision.md)
 - [visions/viz-cloud-and-integration-vision.md](./visions/viz-cloud-and-integration-vision.md)
+- [visions/agent-operated-live-editor-vision.md](./visions/agent-operated-live-editor-vision.md)
 - [visions/multi-renderer-and-backend-capability-vision.md](./visions/multi-renderer-and-backend-capability-vision.md)
 - [visions/rendering-performance-and-deployment-strategy.md](./visions/rendering-performance-and-deployment-strategy.md)
 - [visions/specialized-ai-runner-vision.md](./visions/specialized-ai-runner-vision.md)
@@ -25,6 +26,7 @@ This is the current source of truth for where VizEngine is heading:
 - deterministic runtime
 - live editor plus headless render runtime
 - AI-native project model and action surface
+- agent-operated live editor collaboration
 - clean integration path into Magnify Core
 - open-core product plus optional hosted Viz Cloud
 
@@ -61,10 +63,34 @@ This is the current source of truth for where VizEngine is heading:
 - [plans/v2/v2-system-design.md](./plans/v2/v2-system-design.md)
 - [plans/v2/first-real-implementation-slicing-plan.md](./plans/v2/first-real-implementation-slicing-plan.md)
 - [plans/v2/foundation-implementation-progress.md](./plans/v2/foundation-implementation-progress.md)
+- [plans/v2/first-visual-runtime-proof-plan.md](./plans/v2/first-visual-runtime-proof-plan.md)
+- [plans/v2/first-three-compositor-proof-plan.md](./plans/v2/first-three-compositor-proof-plan.md)
+- [plans/v2/media-backed-render-node-proof-plan.md](./plans/v2/media-backed-render-node-proof-plan.md)
+- [plans/v2/shared-asset-materialization-implementation-plan.md](./plans/v2/shared-asset-materialization-implementation-plan.md)
+- [plans/v2/three-renderer-compositor-semantics-cleanup-plan.md](./plans/v2/three-renderer-compositor-semantics-cleanup-plan.md)
+- [plans/v2/local-bundle-fixture-validation-plan.md](./plans/v2/local-bundle-fixture-validation-plan.md)
+- [plans/v2/first-graph-execution-slice-plan.md](./plans/v2/first-graph-execution-slice-plan.md)
+- [plans/v2/portable-bundle-roundtrip-implementation-plan.md](./plans/v2/portable-bundle-roundtrip-implementation-plan.md)
+- [plans/v2/explicit-three-layer-compositor-implementation-plan.md](./plans/v2/explicit-three-layer-compositor-implementation-plan.md)
+- [plans/v2/first-action-surface-implementation-plan.md](./plans/v2/first-action-surface-implementation-plan.md)
+- [plans/v2/first-temporal-graph-execution-plan.md](./plans/v2/first-temporal-graph-execution-plan.md)
+- [plans/v2/agent-operated-live-editor-roadmap.md](./plans/v2/agent-operated-live-editor-roadmap.md)
+- [plans/v2/v1-editor-ux-preservation-and-v2-rebuild-map.md](./plans/v2/v1-editor-ux-preservation-and-v2-rebuild-map.md)
+- [plans/v2/editor-session-foundation-implementation-plan.md](./plans/v2/editor-session-foundation-implementation-plan.md)
+- [plans/v2/live-preview-and-audio-session-foundation-plan.md](./plans/v2/live-preview-and-audio-session-foundation-plan.md)
+- [plans/v2/local-agent-control-surface-implementation-plan.md](./plans/v2/local-agent-control-surface-implementation-plan.md)
+- [plans/v2/component-authoring-foundation-implementation-plan.md](./plans/v2/component-authoring-foundation-implementation-plan.md)
+- [plans/v2/rich-scene-authoring-and-debugging-implementation-plan.md](./plans/v2/rich-scene-authoring-and-debugging-implementation-plan.md)
+- [plans/v2/agent-native-creative-loop-proof-plan.md](./plans/v2/agent-native-creative-loop-proof-plan.md)
+- [plans/v2/live-editor-transport-and-audio-hardening-plan.md](./plans/v2/live-editor-transport-and-audio-hardening-plan.md)
+- [plans/v2/editor-component-catalog-inspection-plan.md](./plans/v2/editor-component-catalog-inspection-plan.md)
+- [plans/v2/validation-hardening-and-golden-output-plan.md](./plans/v2/validation-hardening-and-golden-output-plan.md)
+- [plans/v2/package-consumer-readiness-proof-plan.md](./plans/v2/package-consumer-readiness-proof-plan.md)
 
 ## Product Vision
 
 - [visions/viz-cloud-and-integration-vision.md](./visions/viz-cloud-and-integration-vision.md)
+- [visions/agent-operated-live-editor-vision.md](./visions/agent-operated-live-editor-vision.md)
 - [visions/deployment-and-app-shell-posture.md](./visions/deployment-and-app-shell-posture.md)
 - [visions/multi-renderer-and-backend-capability-vision.md](./visions/multi-renderer-and-backend-capability-vision.md)
 - [visions/rendering-performance-and-deployment-strategy.md](./visions/rendering-performance-and-deployment-strategy.md)

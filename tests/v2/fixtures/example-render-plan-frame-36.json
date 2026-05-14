@@ -1,0 +1,684 @@
+{
+  "frameContext": {
+    "deltaTimeSeconds": 0.0333,
+    "durationInFrames": 180,
+    "fps": 30,
+    "frame": 36,
+    "isFirstFrame": false,
+    "isLastFrame": false,
+    "mode": "render",
+    "seed": "golden-fixture-seed",
+    "timeInSeconds": 1.2
+  },
+  "viewport": {
+    "backgroundColor": "#06131d",
+    "height": 720,
+    "width": 1280
+  },
+  "issues": [],
+  "materializedAssets": [
+    {
+      "id": "asset-audio-main",
+      "kind": "audio",
+      "source": "local",
+      "mimeType": "audio/mpeg",
+      "sourceUriKind": "uri"
+    },
+    {
+      "id": "asset-image-cover",
+      "kind": "image",
+      "source": "generated",
+      "mimeType": "image/svg+xml",
+      "width": 720,
+      "height": 720,
+      "sourceUriKind": "data-uri",
+      "metadata": {
+        "height": 720,
+        "width": 720
+      }
+    }
+  ],
+  "layers": [
+    {
+      "layerId": "layer-background",
+      "componentId": "solid-color",
+      "componentName": "Solid Color",
+      "rendererFamily": "three",
+      "enabled": true,
+      "opacity": 1,
+      "blendMode": "normal",
+      "settings": {
+        "color": "#06131d"
+      },
+      "resolvedInputs": {
+        "glow": {
+          "key": "glow",
+          "sourceKind": "literal",
+          "status": "resolved",
+          "value": 0.18
+        }
+      },
+      "node": {
+        "kind": "group",
+        "id": "layer-background",
+        "style": {
+          "blendMode": "normal",
+          "opacity": 1
+        },
+        "children": [
+          {
+            "kind": "rect",
+            "id": "layer-background-base",
+            "style": {
+              "fill": "#06131d"
+            },
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 720
+          },
+          {
+            "kind": "rect",
+            "id": "layer-background-glow",
+            "style": {
+              "fill": "#0e4963",
+              "opacity": 0.18
+            },
+            "x": 0,
+            "y": 0,
+            "width": 1280,
+            "height": 720
+          }
+        ]
+      }
+    },
+    {
+      "layerId": "layer-cover",
+      "componentId": "cover-image",
+      "componentName": "Cover Image",
+      "rendererFamily": "three",
+      "enabled": true,
+      "opacity": 0.94,
+      "blendMode": "normal",
+      "settings": {
+        "height": 408,
+        "width": 408,
+        "x": 116,
+        "y": 102
+      },
+      "resolvedInputs": {
+        "image": {
+          "key": "image",
+          "sourceKind": "asset-ref",
+          "status": "resolved",
+          "value": {
+            "id": "asset-image-cover",
+            "kind": "image",
+            "source": "generated",
+            "mimeType": "image/svg+xml",
+            "width": 720,
+            "height": 720,
+            "sourceUriKind": "data-uri",
+            "metadata": {
+              "height": 720,
+              "width": 720
+            }
+          }
+        }
+      },
+      "node": {
+        "kind": "group",
+        "id": "layer-cover",
+        "style": {
+          "blendMode": "normal",
+          "opacity": 0.94
+        },
+        "children": [
+          {
+            "kind": "rect",
+            "id": "layer-cover-matte",
+            "style": {
+              "fill": "#0a1824",
+              "opacity": 0.9
+            },
+            "x": 98,
+            "y": 84,
+            "width": 444,
+            "height": 338.4
+          },
+          {
+            "kind": "image",
+            "id": "layer-cover-image",
+            "style": {
+              "opacity": 0.96
+            },
+            "assetId": "asset-image-cover",
+            "x": 116,
+            "y": 102,
+            "width": 408,
+            "height": 302.4,
+            "fitMode": "cover"
+          },
+          {
+            "kind": "rect",
+            "id": "layer-cover-rim",
+            "style": {
+              "opacity": 0.55,
+              "stroke": "#88f3ff",
+              "strokeWidth": 3
+            },
+            "x": 113,
+            "y": 99,
+            "width": 414,
+            "height": 308.4
+          }
+        ]
+      }
+    },
+    {
+      "layerId": "layer-bars",
+      "componentId": "reactive-bars",
+      "componentName": "Reactive Bars",
+      "rendererFamily": "three",
+      "enabled": true,
+      "opacity": 1,
+      "blendMode": "screen",
+      "settings": {
+        "accentColor": "#88f3ff",
+        "barCount": 32
+      },
+      "resolvedInputs": {
+        "bass": {
+          "key": "bass",
+          "sourceKind": "graph-output",
+          "status": "resolved",
+          "value": 0.7634
+        },
+        "loudness": {
+          "key": "loudness",
+          "sourceKind": "graph-output",
+          "status": "resolved",
+          "value": 0.7468
+        }
+      },
+      "node": {
+        "kind": "group",
+        "id": "layer-bars",
+        "style": {
+          "blendMode": "screen",
+          "opacity": 1
+        },
+        "children": [
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-0",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 102.4,
+            "y": 591.0482,
+            "width": 25.85,
+            "height": 71.3518,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-1",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 136.25,
+            "y": 603.9225,
+            "width": 25.85,
+            "height": 58.4775,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-2",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 170.1,
+            "y": 620.7641,
+            "width": 25.85,
+            "height": 41.6359,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-3",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 203.95,
+            "y": 636.5589,
+            "width": 25.85,
+            "height": 25.8411,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-4",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 237.8,
+            "y": 645.7407,
+            "width": 25.85,
+            "height": 16.6593,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-5",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 271.65,
+            "y": 644.7663,
+            "width": 25.85,
+            "height": 17.6337,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-6",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 305.5,
+            "y": 634.6333,
+            "width": 25.85,
+            "height": 27.7667,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-7",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 339.35,
+            "y": 612.7111,
+            "width": 25.85,
+            "height": 49.6889,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-8",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 373.2,
+            "y": 577.8007,
+            "width": 25.85,
+            "height": 84.5993,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-9",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 407.05,
+            "y": 530.8773,
+            "width": 25.85,
+            "height": 131.5227,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-10",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 440.9,
+            "y": 562.5169,
+            "width": 25.85,
+            "height": 99.8831,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-11",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 474.75,
+            "y": 522.5101,
+            "width": 25.85,
+            "height": 139.8899,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-12",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 508.6,
+            "y": 480.793,
+            "width": 25.85,
+            "height": 181.607,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-13",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 542.45,
+            "y": 442.6093,
+            "width": 25.85,
+            "height": 219.7907,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-14",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 576.3,
+            "y": 413.3384,
+            "width": 25.85,
+            "height": 249.0616,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-15",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 610.15,
+            "y": 524.5452,
+            "width": 25.85,
+            "height": 137.8548,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-16",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 644,
+            "y": 513.265,
+            "width": 25.85,
+            "height": 149.135,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-17",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 677.85,
+            "y": 514.1013,
+            "width": 25.85,
+            "height": 148.2987,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-18",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 711.7,
+            "y": 527.2495,
+            "width": 25.85,
+            "height": 135.1505,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-19",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 745.55,
+            "y": 550.7043,
+            "width": 25.85,
+            "height": 111.6957,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-20",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 779.4,
+            "y": 614.0642,
+            "width": 25.85,
+            "height": 48.3358,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-21",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 813.25,
+            "y": 627.1581,
+            "width": 25.85,
+            "height": 35.2419,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-22",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 847.1,
+            "y": 639.6426,
+            "width": 25.85,
+            "height": 22.7574,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-23",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 880.95,
+            "y": 646.2367,
+            "width": 25.85,
+            "height": 16.1633,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-24",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 914.8,
+            "y": 641.9449,
+            "width": 25.85,
+            "height": 20.4551,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-25",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 948.65,
+            "y": 634.8977,
+            "width": 25.85,
+            "height": 27.5023,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-26",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 982.5,
+            "y": 614.5987,
+            "width": 25.85,
+            "height": 47.8013,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-27",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 1016.35,
+            "y": 582.2999,
+            "width": 25.85,
+            "height": 80.1001,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-28",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 1050.2,
+            "y": 538.8168,
+            "width": 25.85,
+            "height": 123.5832,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-29",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 1084.05,
+            "y": 487.1113,
+            "width": 25.85,
+            "height": 175.2887,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-30",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 1117.9,
+            "y": 541.3902,
+            "width": 25.85,
+            "height": 121.0098,
+            "radius": 12.925
+          },
+          {
+            "kind": "rect",
+            "id": "layer-bars-bar-31",
+            "style": {
+              "fill": "#88f3ff",
+              "opacity": 0.8481
+            },
+            "x": 1151.75,
+            "y": 503.1101,
+            "width": 25.85,
+            "height": 159.2899,
+            "radius": 12.925
+          }
+        ]
+      }
+    },
+    {
+      "layerId": "layer-bloom",
+      "componentId": "radial-bloom",
+      "componentName": "Radial Bloom",
+      "rendererFamily": "three",
+      "enabled": true,
+      "opacity": 0.65,
+      "blendMode": "add",
+      "settings": {
+        "color": "#3bd4ff"
+      },
+      "resolvedInputs": {
+        "intensity": {
+          "key": "intensity",
+          "sourceKind": "graph-output",
+          "status": "resolved",
+          "value": 0.7426
+        }
+      },
+      "node": {
+        "kind": "group",
+        "id": "layer-bloom",
+        "style": {
+          "blendMode": "add",
+          "opacity": 0.65
+        },
+        "children": [
+          {
+            "kind": "circle",
+            "id": "layer-bloom-outer",
+            "style": {
+              "fill": "#3bd4ff",
+              "opacity": 0.0994
+            },
+            "cx": 640,
+            "cy": 302.4,
+            "r": 266.2344
+          },
+          {
+            "kind": "circle",
+            "id": "layer-bloom-inner",
+            "style": {
+              "fill": "#3bd4ff",
+              "opacity": 0.2537
+            },
+            "cx": 640,
+            "cy": 302.4,
+            "r": 136.8299
+          }
+        ]
+      }
+    }
+  ]
+}

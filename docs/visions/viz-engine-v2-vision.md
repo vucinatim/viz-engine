@@ -19,6 +19,32 @@ V2 exists to turn VizEngine into the thing it was always trying to become:
 - a real machine-operable visual system
 - a real rendering attachment for larger media systems like Magnify Core
 
+## Critical UX Principle
+
+V2 is not a license to throw away the V1 editor experience.
+
+The current V1 editor should be treated as a major product asset.
+
+Its strengths include:
+
+- exceptional live-authoring feel
+- thoughtful panel layout
+- strong layer workflow
+- strong audio/visual workflow
+- serious creative-tool UX instincts
+
+So the V2 posture should be:
+
+- preserve the quality bar of the current editor experience
+- preserve the core workflow shape where it is strong
+- replace the hidden architecture underneath it
+
+This means the rewrite is:
+
+- aggressive about runtime/store/document architecture
+- conservative about discarding proven UX without a clearly better
+  replacement
+
 ## Core Product Thesis
 
 VizEngine V2 should be the canonical system for authoring music visuals.
@@ -38,6 +64,9 @@ The UI remains important, but mainly as:
 - a high-leverage editing surface
 
 not as the only way the system can be operated.
+
+And in practice that editing surface should still feel like a serious live
+creative tool, not only a thin inspector shell.
 
 VizEngine should also remain its own product, not only an internal Magnify
 tool.
@@ -63,6 +92,9 @@ The source of truth should be:
 - plus explicit baked artifacts
 - plus a deterministic runtime contract
 
+But the product-facing authoring surface should still preserve the strengths of
+the current editor where those strengths are real.
+
 ## Replacement Rewrite Principle
 
 VizEngine V2 should be built as a full replacement rewrite, not as a timid
@@ -76,6 +108,20 @@ That means:
 - compatibility layers should be treated as exceptions, not defaults
 
 The goal is a clean professional system, not a museum of earlier decisions.
+
+That does not mean erasing the current editor’s product strengths.
+
+We should preserve:
+
+- the right live workflow
+- the right visual density
+- the right interaction posture
+
+while removing:
+
+- the wrong architectural ownership
+- the wrong store coupling
+- the wrong runtime boundaries
 
 ## What VizEngine V2 Must Be
 

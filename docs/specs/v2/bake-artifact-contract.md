@@ -62,7 +62,7 @@ This should support:
 - source window metadata
 - feature descriptors
 
-It should be possible for both Viz runtime and Magnify adapters to consume the
+It should be possible for both Viz runtime and external host adapters to consume the
 same baked feature artifact.
 
 The deeper contract now lives here:

@@ -1,0 +1,36 @@
+{
+  "name": "@viz-engine/editor-control",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "default": "./dist/node.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@viz-engine/components-core": "workspace:*",
+    "@viz-engine/contracts": "workspace:*",
+    "@viz-engine/dev-cli": "workspace:*",
+    "@viz-engine/editor-session": "workspace:*",
+    "@viz-engine/example-projects": "workspace:*",
+    "@viz-engine/nodes-core": "workspace:*",
+    "@viz-engine/renderer-svg": "workspace:*",
+    "@viz-engine/runtime": "workspace:*"
+  }
+}

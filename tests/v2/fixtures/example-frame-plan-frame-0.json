@@ -1,0 +1,118 @@
+{
+  "frameContext": {
+    "deltaTimeSeconds": 0.0333,
+    "durationInFrames": 180,
+    "fps": 30,
+    "frame": 0,
+    "isFirstFrame": true,
+    "isLastFrame": false,
+    "mode": "render",
+    "seed": "golden-fixture-seed",
+    "timeInSeconds": 0
+  },
+  "issues": [],
+  "layers": [
+    {
+      "layerId": "layer-background",
+      "componentId": "solid-color",
+      "componentName": "Solid Color",
+      "rendererFamily": "three",
+      "enabled": true,
+      "opacity": 1,
+      "blendMode": "normal",
+      "settings": {
+        "color": "#06131d"
+      },
+      "resolvedInputs": {
+        "glow": {
+          "key": "glow",
+          "sourceKind": "literal",
+          "status": "resolved",
+          "value": 0.18
+        }
+      }
+    },
+    {
+      "layerId": "layer-cover",
+      "componentId": "cover-image",
+      "componentName": "Cover Image",
+      "rendererFamily": "three",
+      "enabled": true,
+      "opacity": 0.94,
+      "blendMode": "normal",
+      "settings": {
+        "height": 408,
+        "width": 408,
+        "x": 116,
+        "y": 102
+      },
+      "resolvedInputs": {
+        "image": {
+          "key": "image",
+          "sourceKind": "asset-ref",
+          "status": "resolved",
+          "value": {
+            "id": "asset-image-cover",
+            "kind": "image",
+            "source": "generated",
+            "mimeType": "image/svg+xml",
+            "width": 720,
+            "height": 720,
+            "sourceUriKind": "data-uri",
+            "metadata": {
+              "height": 720,
+              "width": 720
+            }
+          }
+        }
+      }
+    },
+    {
+      "layerId": "layer-bars",
+      "componentId": "reactive-bars",
+      "componentName": "Reactive Bars",
+      "rendererFamily": "three",
+      "enabled": true,
+      "opacity": 1,
+      "blendMode": "screen",
+      "settings": {
+        "accentColor": "#88f3ff",
+        "barCount": 32
+      },
+      "resolvedInputs": {
+        "bass": {
+          "key": "bass",
+          "sourceKind": "graph-output",
+          "status": "resolved",
+          "value": 0.276
+        },
+        "loudness": {
+          "key": "loudness",
+          "sourceKind": "graph-output",
+          "status": "resolved",
+          "value": 0.28
+        }
+      }
+    },
+    {
+      "layerId": "layer-bloom",
+      "componentId": "radial-bloom",
+      "componentName": "Radial Bloom",
+      "rendererFamily": "three",
+      "enabled": true,
+      "opacity": 0.65,
+      "blendMode": "add",
+      "settings": {
+        "color": "#3bd4ff"
+      },
+      "resolvedInputs": {
+        "intensity": {
+          "key": "intensity",
+          "sourceKind": "graph-output",
+          "status": "resolved",
+          "value": 0.7475
+        }
+      }
+    }
+  ]
+}

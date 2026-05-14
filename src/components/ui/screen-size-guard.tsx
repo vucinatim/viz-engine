@@ -1,4 +1,7 @@
+'use client';
+
 import { Monitor } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 // Shows on screens smaller than lg (1024px)
 export default function ScreenSizeGuard({
@@ -6,6 +9,17 @@ export default function ScreenSizeGuard({
 }: {
   children: React.ReactNode;
 }) {
+  const [allowSmallViewport, setAllowSmallViewport] = useState(false);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    setAllowSmallViewport(searchParams.get('allowSmallViewport') === '1');
+  }, []);
+
+  if (allowSmallViewport) {
+    return <>{children}</>;
+  }
+
   return (
     <>
       {/* Main app - always rendered */}

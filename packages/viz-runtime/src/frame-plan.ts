@@ -3,19 +3,24 @@ import type {
   VizExecutionMode,
   VizFramePlan,
   VizFramePlanIssue,
+  VizGraphEvaluationResult,
   VizLayer,
   VizLayerFrameSnapshot,
+  VizMaterializedAsset,
   VizResolvedInputValue,
   VizValueSource,
 } from "@viz-engine/contracts";
-import { getAudioFeatureTimelineArtifact, sampleAudioFeatureValue } from "./audio-feature-timeline";
-import type { VizComponentRegistry } from "./component-registry";
-import type { VizRuntimeSession } from "./runtime-session";
+import { getAudioFeatureTimelineArtifact, sampleAudioFeatureValue } from "./audio-feature-timeline.js";
+import type { VizComponentRegistry } from "./component-registry.js";
+import { evaluateVizGraphs } from "./graph-evaluator.js";
+import type { VizNodeRegistry } from "./node-registry.js";
+import type { VizRuntimeSession } from "./runtime-session.js";
 
 export interface CreateVizFramePlanOptions {
   session: VizRuntimeSession;
   frame: number;
   registry?: VizComponentRegistry;
+  nodeRegistry?: VizNodeRegistry;
 }
 
 const getDefaultRendererFamily = (
@@ -103,6 +108,41 @@ const resolveArtifactFeatureInput = (
   };
 };
 
+const resolveAssetRefInput = (
+  key: string,
+  source: Extract<VizValueSource, { kind: "asset-ref" }>,
+  session: VizRuntimeSession,
+  issues: VizFramePlanIssue[],
+  layerId: string,
+): VizResolvedInputValue => {
+  const asset = session.getMaterializedAssetMap().get(source.assetId);
+
+  if (!asset) {
+    issues.push(
+      createIssue(
+        "missing-asset",
+        layerId,
+        key,
+        `Layer "${layerId}" could not resolve asset "${source.assetId}".`,
+      ),
+    );
+
+    return {
+      key,
+      sourceKind: "asset-ref",
+      status: "missing",
+      message: `Missing resolved asset "${source.assetId}".`,
+    };
+  }
+
+  return {
+    key,
+    sourceKind: "asset-ref",
+    status: "resolved",
+    value: asset satisfies VizMaterializedAsset,
+  };
+};
+
 const resolveInputValue = (
   key: string,
   source: VizValueSource,
@@ -110,6 +150,7 @@ const resolveInputValue = (
   frame: number,
   issues: VizFramePlanIssue[],
   layerId: string,
+  graphResults: Map<string, VizGraphEvaluationResult>,
 ): VizResolvedInputValue => {
   if (source.kind === "literal") {
     return resolveLiteralInput(key, source);
@@ -119,21 +160,61 @@ const resolveInputValue = (
     return resolveArtifactFeatureInput(key, source, session, frame, issues, layerId);
   }
 
-  issues.push(
-    createIssue(
-      "unsupported-source",
-      layerId,
-      key,
-      `Input source kind "${source.kind}" is not implemented in the runtime frame planner yet.`,
-    ),
-  );
+  if (source.kind === "asset-ref") {
+    return resolveAssetRefInput(key, source, session, issues, layerId);
+  }
 
-  return {
-    key,
-    sourceKind: source.kind,
-    status: "unsupported",
-    message: `Input source kind "${source.kind}" is not implemented yet.`,
-  };
+  if (source.kind === "graph-output") {
+    const graphResult = graphResults.get(source.graphId);
+
+    if (!graphResult) {
+      issues.push(
+        createIssue(
+          "missing-graph",
+          layerId,
+          key,
+          `Layer "${layerId}" references missing graph "${source.graphId}".`,
+        ),
+      );
+
+      return {
+        key,
+        sourceKind: "graph-output",
+        status: "missing",
+        message: `Missing graph "${source.graphId}".`,
+      };
+    }
+
+    const graphOutput = graphResult.values[source.output];
+
+    if (graphOutput === undefined) {
+      issues.push(
+        createIssue(
+          "missing-graph-output",
+          layerId,
+          key,
+          `Graph "${source.graphId}" did not produce output "${source.output}" for layer "${layerId}".`,
+        ),
+      );
+
+      return {
+        key,
+        sourceKind: "graph-output",
+        status: "missing",
+        message: `Missing graph output "${source.output}" from graph "${source.graphId}".`,
+      };
+    }
+
+    return {
+      key,
+      sourceKind: "graph-output",
+      status: "resolved",
+      value: graphOutput,
+    };
+  }
+
+  const exhaustiveSource: never = source;
+  throw new Error(`Unhandled Viz input source in frame planner: ${JSON.stringify(exhaustiveSource)}.`);
 };
 
 const shouldIncludeLayer = (layer: VizLayer, mode: VizExecutionMode): boolean => {
@@ -150,9 +231,28 @@ export const createVizFramePlan = ({
   session,
   frame,
   registry,
+  nodeRegistry,
 }: CreateVizFramePlanOptions): VizFramePlan => {
   const frameContext = session.getFrameContext(frame);
   const issues: VizFramePlanIssue[] = [];
+  const graphResults = evaluateVizGraphs({
+    session,
+    frame: frameContext.frame,
+    ...(nodeRegistry === undefined ? {} : { registry: nodeRegistry }),
+  });
+
+  for (const result of graphResults.values()) {
+    for (const graphIssue of result.issues) {
+      issues.push(
+        createIssue(
+          graphIssue.code === "missing-graph-input" ? "missing-feature" : "graph-evaluation-failed",
+          `graph:${result.graphId}`,
+          graphIssue.inputKey ?? graphIssue.nodeId ?? "__graph__",
+          graphIssue.message,
+        ),
+      );
+    }
+  }
 
   const layers = session
     .getOrderedLayers()
@@ -162,7 +262,7 @@ export const createVizFramePlan = ({
       const resolvedInputs = Object.fromEntries(
         Object.entries(layer.inputs ?? {}).map(([key, source]) => [
           key,
-          resolveInputValue(key, source, session, frameContext.frame, issues, layer.id),
+          resolveInputValue(key, source, session, frameContext.frame, issues, layer.id, graphResults),
         ]),
       );
 
