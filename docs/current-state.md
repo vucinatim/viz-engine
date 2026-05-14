@@ -60,12 +60,20 @@ The repo now has:
 - a real V2 runtime/package spine
 - a real action-driven working-head foundation
 - a real local operator surface
-- a real V2-backed editor shell mounted inside the actual Next app terrain
+- a separate V2 dev-shell path for engine validation
 
 So the current phase is no longer “invent V2”.
 
-The current phase is “keep rebuilding the real editor experience over those V2
-truth surfaces without regressing the V1 UX bar”.
+The current phase is “rebuild the real editor experience over those V2 truth
+surfaces without regressing the V1 UX bar”.
+
+One important correction:
+
+- an earlier attempt to make a weaker V2 shell the active app surface was
+  rolled back
+- the V1 editor remains the active product shell
+- V2 editor/session/control work should be treated as foundation work until it
+  can be wired under the preserved real editor UX
 
 ## Current V1 Truth
 

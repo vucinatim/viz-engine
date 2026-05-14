@@ -1,5 +1,20 @@
 # Work Ledger
 
+## 2026-05-14
+
+- reverted commit `5eaa4eb` (`refactor: migrate active editor shell to vite`)
+- restored the real Next editor shell as the active product surface
+- removed the fake V2 product-shell files that were lowering the UX bar:
+  - `src/components/editor/v2-*`
+  - `src/components/audio/v2-audio-panel.tsx`
+  - `src/lib/v2-editor/app-store.ts`
+  - related V2 shell tests
+- kept the V2 engine/foundation packages intact
+- corrected the docs posture so the repo now explicitly says:
+  - preserve the V1 editor UX
+  - replace architecture underneath it
+  - do not ship or grow a weaker parallel replacement editor
+
 ## 2026-05-07
 
 - established the initial VizEngine V2 docs spine

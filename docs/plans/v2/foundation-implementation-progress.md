@@ -329,23 +329,14 @@ It now also proves the first component-authoring foundation slice:
   - the scaffold helper
   - rendering the V1-derived component through the canonical V2 runtime path
 
-It now also proves the first rich-scene authoring and debugging slice in the
-real Next editor terrain:
+An important correction:
 
-- the real `src/app/page.tsx` entrypoint now mounts a V2-backed editor shell
-  instead of treating V2 as an isolated side-shell only
-- the browser app now consumes `@viz-engine/editor-control` through a dedicated
-  browser-local store in `src/lib/v2-editor`
-- scene, graph, and issue truth are now inspectable inside the editor UI
-  through dedicated V2 panels instead of only package-level tests or CLI
-  outputs
-- preview, transport, and audio-session state are visible in the editor shell
-  through explicit control-surface state, not hidden store-owned runtime
-  semantics
-- the root app now has explicit validation in `pnpm check:v2`, so the real
-  Next editor surface is part of the V2 gate rather than a side concern
-- dedicated UI integration tests now prove that the scene/graph/issues
-  inspection surface renders canonical working-head truth
+- an earlier attempt to mount a weaker V2 shell into the real Next editor
+  terrain was rolled back
+- the active product surface should remain the preserved V1 editor UX until V2
+  foundations are wired underneath it without lowering that UX bar
+- the package-level V2 editor/session/control work remains valuable foundation
+  work, but it should not be mistaken for the product-shell migration itself
 
 It now also proves the first agent-native creative-loop slice:
 
@@ -361,37 +352,11 @@ It now also proves the first agent-native creative-loop slice:
   human-plus-agent authoring path is operational
 - the creative-loop proof is now part of the full V2 validation gate
 
-It now also proves the first live editor transport-and-audio hardening slice:
+The browser-facing V2 shell experiments around live transport/audio controls
+and component-catalog inspection were also part of that rolled-back path.
 
-- bundled audio discovery now lives in a shared server helper instead of only a
-  client fetch path
-- the real Next page now passes bundled-track truth into the V2 editor shell
-- the V2 audio panel now exposes bundled-track visibility and explicit loop
-  control in the real editor terrain
-- the V2 app-store preview loop no longer depends on `requestAnimationFrame`
-  alone; it now advances transport on a timer-driven loop so preview semantics
-  are not paint-cycle-owned
-- the V2 app-store tests now directly prove:
-  - playback advancement without a bound audio element
-  - bundled track load and preview-duration extension
-  - reset behavior when reopening the canonical example
-- the old screen-size guard now has an explicit local bypass query path for the
-  Codex/browser-driven editor loop:
-  - `?allowSmallViewport=1`
-
-It now also proves the first editor-visible component catalog slice:
-
-- `@viz-engine/editor-control` now exposes truthful component summaries from the
-  registered V2 component set
-- the V2 app-store now carries that component-catalog truth into the editor UI
-- the real scene panel now has a `Components` tab showing:
-  - component name
-  - component id
-  - renderer family
-  - description
-  - exposed inputs
-- the editor panel tests now prove that the component catalog renders in the
-  real shell instead of remaining code-only knowledge
+- keep the underlying session/control concepts
+- do not treat the discarded V2 shell UI as the target editor surface
 
 ## What Is Still Missing
 

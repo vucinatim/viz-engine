@@ -300,9 +300,6 @@ importers:
       '@viz-engine/contracts':
         specifier: workspace:*
         version: link:../viz-contracts
-      '@viz-engine/runtime':
-        specifier: workspace:*
-        version: link:../viz-runtime
 
   packages/viz-contracts: {}
 
