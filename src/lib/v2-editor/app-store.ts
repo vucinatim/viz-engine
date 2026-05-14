@@ -6,16 +6,16 @@ import {
   type VizEditorControlMutationResult,
   type VizEditorControlSnapshot,
   type VizEditorGraphRuntimeInspection,
-} from "@viz-engine/editor-control";
+} from '@viz-engine/editor-control';
 import type {
   VizEditorAudioAnalyzerState,
   VizEditorAudioSource,
-} from "@viz-engine/editor-session";
-import type { VizProjectAction } from "@viz-engine/contracts";
+} from '@viz-engine/editor-session';
+import type { VizProjectAction } from '@viz-engine/contracts';
 
 export interface VizEditorAppAudioState {
   fileName: string | undefined;
-  sourceKind: VizEditorAudioSource["kind"] | undefined;
+  sourceKind: VizEditorAudioSource['kind'] | undefined;
   currentTimeSeconds: number;
   durationSeconds: number;
   hasBoundElement: boolean;
@@ -36,7 +36,7 @@ export interface VizEditorAppStore {
   getState(): VizEditorAppState;
   dispose(): void;
   openExampleProject(): VizEditorAppState;
-  setActivePanel(panel: VizEditorControlSnapshot["session"]["uiState"]["activePanel"]): VizEditorAppState;
+  setActivePanel(panel: VizEditorControlSnapshot['session']['uiState']['activePanel']): VizEditorAppState;
   selectLayer(layerId: string | undefined): VizEditorAppState;
   selectGraph(graphId: string | undefined): VizEditorAppState;
   play(): Promise<VizEditorAppState>;
@@ -45,7 +45,7 @@ export interface VizEditorAppStore {
   seekToFrame(frame: number): VizEditorAppState;
   seekToTime(seconds: number): VizEditorAppState;
   setLoop(loop: boolean): VizEditorAppState;
-  setPreviewMode(mode: VizEditorControlSnapshot["transport"]["mode"]): VizEditorAppState;
+  setPreviewMode(mode: VizEditorControlSnapshot['transport']['mode']): VizEditorAppState;
   applyAction(action: VizProjectAction): VizEditorControlMutationResult;
   loadAudioFile(file: File): VizEditorAppState;
   loadBundledAudioTrack(fileName: string): VizEditorAppState;
@@ -63,13 +63,13 @@ const createInitialState = (control: VizEditorControl): VizEditorAppState => {
     graphRuntime: control.inspectGraphRuntime(),
     components: control.inspectComponents(),
     audio: {
-      fileName: undefined,
-      sourceKind: undefined,
-      currentTimeSeconds: 0,
-      durationSeconds: 0,
-      hasBoundElement: false,
-      hasAudioSource: false,
-      error: undefined,
+        fileName: undefined,
+        sourceKind: undefined,
+        currentTimeSeconds: 0,
+        durationSeconds: 0,
+        hasBoundElement: false,
+        hasAudioSource: false,
+        error: undefined,
     },
   };
 };
@@ -222,7 +222,7 @@ export const createVizEditorAppStore = (): VizEditorAppStore => {
 
   const loadAudioSource = (source: VizEditorAudioSource) => {
     setAudioSource(source);
-    control.setAudioAnalyzerState("unavailable");
+    control.setAudioAnalyzerState('unavailable');
     control.setLiveInputAvailable(false);
 
     state = {
@@ -238,7 +238,7 @@ export const createVizEditorAppStore = (): VizEditorAppStore => {
     };
 
     if (audioElement) {
-      audioElement.src = source.uri ?? "";
+      audioElement.src = source.uri ?? '';
       audioElement.currentTime = 0;
       audioElement.loop = control.getSnapshot().transport.loop;
       audioElement.load();
@@ -283,7 +283,7 @@ export const createVizEditorAppStore = (): VizEditorAppStore => {
       currentAudioSource = undefined;
       control.openExampleProject();
       control.setUiState({
-        activePanel: "layers",
+        activePanel: 'layers',
         expandedLayerIds: control.getWorkingProject().layerOrder.slice(0, 3),
         selectedLayerId:
           control.getWorkingProject().layerOrder[0] ??
@@ -318,23 +318,34 @@ export const createVizEditorAppStore = (): VizEditorAppStore => {
     },
     async play() {
       control.play();
-      ensurePlaybackLoop();
 
-      if (audioElement && audioElement.src) {
+      if (audioElement && currentAudioSource) {
         try {
           await audioElement.play();
-          syncFromAudioElement();
-        } catch (error) {
           state = {
             ...state,
             audio: {
               ...state.audio,
-              error: error instanceof Error ? error.message : String(error),
+              error: undefined,
             },
           };
+        } catch (error) {
+          control.pause();
+          state = {
+            ...state,
+            audio: {
+              ...state.audio,
+              error:
+                error instanceof Error
+                  ? error.message
+                  : 'Audio playback failed.',
+            },
+          };
+          return emit();
         }
       }
 
+      ensurePlaybackLoop();
       return refresh();
     },
     pause() {
@@ -355,29 +366,29 @@ export const createVizEditorAppStore = (): VizEditorAppStore => {
     seekToFrame(frame) {
       control.seekToFrame(frame);
 
-      if (audioElement) {
+      if (audioElement && Number.isFinite(audioElement.duration)) {
         audioElement.currentTime = frame / state.snapshot.transport.fps;
-        state = {
-          ...state,
-          audio: {
-            ...state.audio,
-            currentTimeSeconds: audioElement.currentTime,
-          },
-        };
       }
 
       return refresh();
     },
     seekToTime(seconds) {
-      return this.seekToFrame(Math.floor(seconds * state.snapshot.transport.fps));
+      const nextSeconds = Math.max(0, seconds);
+
+      if (audioElement) {
+        audioElement.currentTime = nextSeconds;
+        return syncFromAudioElement();
+      }
+
+      return this.seekToFrame(
+        Math.floor(nextSeconds * state.snapshot.transport.fps),
+      );
     },
     setLoop(loop) {
       control.setLoop(loop);
-
       if (audioElement) {
         audioElement.loop = loop;
       }
-
       return refresh();
     },
     setPreviewMode(mode) {
@@ -386,13 +397,7 @@ export const createVizEditorAppStore = (): VizEditorAppStore => {
     },
     applyAction(action) {
       const result = control.applyAction(action);
-      state = {
-        ...state,
-        snapshot: control.getSnapshot(),
-        debugSnapshot: control.createDebugSnapshot(),
-        graphRuntime: control.inspectGraphRuntime(),
-      };
-      emit();
+      refresh();
       return result;
     },
     loadAudioFile(file) {
@@ -400,99 +405,110 @@ export const createVizEditorAppStore = (): VizEditorAppStore => {
       audioObjectUrl = URL.createObjectURL(file);
 
       return loadAudioSource({
-        kind: "file",
-        id: `file:${file.name}`,
+        kind: 'file',
+        id: `audio-${file.name}`,
         label: file.name,
         uri: audioObjectUrl,
       });
     },
     loadBundledAudioTrack(fileName) {
+      revokeAudioObjectUrl();
       return loadAudioSource({
-        kind: "file",
-        id: `bundled:${fileName}`,
+        kind: 'file',
+        id: `library-${fileName}`,
         label: fileName,
         uri: `/music/${encodeURIComponent(fileName)}`,
       });
     },
     bindAudioElement(element) {
       if (audioElement === element) {
-        return refresh();
+        return state;
       }
 
       detachAudioListeners();
       audioElement = element;
 
-      if (audioElement) {
-        audioElement.loop = control.getSnapshot().transport.loop;
+      if (!audioElement) {
+        return refresh();
+      }
 
-        audioElement.onloadedmetadata = () => {
-          const durationSeconds = audioElement && Number.isFinite(audioElement.duration)
-            ? audioElement.duration
-            : undefined;
+      if (audioObjectUrl) {
+        audioElement.src = audioObjectUrl;
+      } else if (currentAudioSource?.uri) {
+        audioElement.src = currentAudioSource.uri;
+      }
 
-          if (currentAudioSource) {
-            currentAudioSource =
-              durationSeconds === undefined
-                ? currentAudioSource
-                : {
-                    ...currentAudioSource,
-                    durationSeconds,
-                  };
-          }
+      audioElement.loop = control.getSnapshot().transport.loop;
 
-          syncPreviewDurationFromAudio(durationSeconds);
-          state = {
-            ...state,
-            audio: {
-              ...state.audio,
-              durationSeconds: durationSeconds ?? state.audio.durationSeconds,
-            },
-          };
-          refresh();
-        };
-
-        audioElement.ontimeupdate = () => {
-          syncFromAudioElement();
-        };
-
-        audioElement.onplay = () => {
-          ensurePlaybackLoop();
-          refresh();
-        };
-
-        audioElement.onpause = () => {
-          refresh();
-        };
-
-        audioElement.onended = () => {
-          control.pause();
-          control.seekToFrame(0);
-          stopPlaybackLoop();
-          refresh();
-        };
-
-        audioElement.onerror = () => {
-          state = {
-            ...state,
-            audio: {
-              ...state.audio,
-              error: "Failed to load audio source.",
-            },
-          };
-          refresh();
-        };
+      audioElement.onloadedmetadata = () => {
+        const boundAudioElement = audioElement;
+        const durationSeconds =
+          boundAudioElement && Number.isFinite(boundAudioElement.duration)
+            ? boundAudioElement.duration
+            : 0;
 
         if (currentAudioSource) {
-          audioElement.src = currentAudioSource.uri ?? "";
-          audioElement.currentTime = 0;
-          audioElement.load();
+          currentAudioSource = {
+            ...currentAudioSource,
+            durationSeconds,
+          };
+          control.attachAudioSource(currentAudioSource);
         }
-      }
+
+        syncPreviewDurationFromAudio(durationSeconds);
+
+        state = {
+          ...state,
+          audio: {
+            ...state.audio,
+            durationSeconds,
+          },
+        };
+        refresh();
+      };
+
+      audioElement.ontimeupdate = () => {
+        syncFromAudioElement();
+      };
+
+      audioElement.onplay = () => {
+        control.play();
+        ensurePlaybackLoop();
+        refresh();
+      };
+
+      audioElement.onpause = () => {
+        control.pause();
+        stopPlaybackLoop();
+        refresh();
+      };
+
+      audioElement.onended = () => {
+        if (control.getSnapshot().transport.loop) {
+          return;
+        }
+        control.pause();
+        stopPlaybackLoop();
+        refresh();
+      };
+
+      audioElement.onerror = () => {
+        state = {
+          ...state,
+          audio: {
+            ...state.audio,
+            error: 'Audio element failed to load the selected file.',
+          },
+        };
+        control.pause();
+        stopPlaybackLoop();
+        emit();
+      };
 
       return refresh();
     },
-    setAudioAnalyzerState(audioAnalyzerState) {
-      control.setAudioAnalyzerState(audioAnalyzerState);
+    setAudioAnalyzerState(nextState) {
+      control.setAudioAnalyzerState(nextState);
       return refresh();
     },
   };

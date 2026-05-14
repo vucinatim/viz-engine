@@ -1,36 +1,39 @@
+'use client';
+
 import type {
   VizLayerFrameSnapshot,
   VizResolvedInputValue,
-} from "@viz-engine/contracts";
-import React, { Suspense, lazy, useMemo } from "react";
+} from '@viz-engine/contracts';
+import React from 'react';
+import { useMemo, Suspense, lazy } from 'react';
 
-import { Button } from "./ui/button";
-import { useV2EditorActions, useV2EditorSnapshot } from "./v2-editor-provider";
+import { Button } from '@/components/ui/button';
+import { useV2EditorActions, useV2EditorSnapshot } from './v2-editor-provider';
 
 const V2ThreePreviewPane = lazy(async () => {
-  const previewModule = await import("./v2-three-preview-pane");
+  const previewModule = await import('./v2-three-preview-pane');
   return {
     default: previewModule.V2ThreePreviewPane,
   };
 });
 
 const formatValue = (value: unknown): string => {
-  if (typeof value === "number") {
+  if (typeof value === 'number') {
     return value.toFixed(4);
   }
 
-  if (typeof value === "string") {
+  if (typeof value === 'string') {
     return value;
   }
 
   if (
     value &&
-    typeof value === "object" &&
-    "id" in value &&
-    "kind" in value
+    typeof value === 'object' &&
+    'id' in value &&
+    'kind' in value
   ) {
-    const id = typeof value.id === "string" ? value.id : "unknown";
-    const kind = typeof value.kind === "string" ? value.kind : "value";
+    const id = typeof value.id === 'string' ? value.id : 'unknown';
+    const kind = typeof value.kind === 'string' ? value.kind : 'value';
     return `${kind}:${id}`;
   }
 
@@ -58,16 +61,14 @@ export const V2PreviewStage = () => {
             <div className="absolute inset-0 flex items-center justify-center text-sm text-white/60">
               Loading WebGL preview…
             </div>
-          }
-        >
+          }>
           <div className="absolute inset-0 flex items-center justify-center">
             <div
               className="overflow-hidden rounded-xl border border-white/10 shadow-2xl"
               style={{
                 width: Math.min(viewport.width, 960),
                 height: Math.min(viewport.height, 540),
-              }}
-            >
+              }}>
               <V2ThreePreviewPane
                 renderPlan={snapshot.debugSnapshot.renderPlan}
                 width={viewport.width}
@@ -103,29 +104,27 @@ export const V2PreviewStage = () => {
               aria-label="Toggle playback"
               variant="outline"
               className={[
-                "border-white/10 text-white hover:bg-white/10",
+                'border-white/10 text-white hover:bg-white/10',
                 snapshot.snapshot.transport.isPlaying
-                  ? "bg-white text-black hover:bg-white/90"
-                  : "bg-transparent",
-              ].join(" ")}
+                  ? 'bg-white text-black hover:bg-white/90'
+                  : 'bg-transparent',
+              ].join(' ')}
               onClick={() => {
                 void actions.togglePlayback();
               }}
             >
-              {snapshot.snapshot.transport.isPlaying ? "Pause" : "Play"}
+              {snapshot.snapshot.transport.isPlaying ? 'Pause' : 'Play'}
             </Button>
             <Button
               variant="outline"
               className="border-white/10 bg-transparent text-white hover:bg-white/10"
-              onClick={() => actions.setPreviewMode("live")}
-            >
+              onClick={() => actions.setPreviewMode('live')}>
               Live
             </Button>
             <Button
               variant="outline"
               className="border-white/10 bg-transparent text-white hover:bg-white/10"
-              onClick={() => actions.setPreviewMode("render")}
-            >
+              onClick={() => actions.setPreviewMode('render')}>
               Render
             </Button>
           </div>
@@ -181,28 +180,27 @@ export const V2PreviewStage = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                {Object.values(selectedLayerFrame.resolvedInputs).map(
-                  (input: VizResolvedInputValue) => (
-                    <div
-                      key={input.key}
-                      className="rounded-lg border border-white/10 bg-white/[0.03] p-3"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm text-white">{input.key}</p>
-                          <p className="text-xs text-white/45">
-                            {input.sourceKind}
-                          </p>
-                        </div>
-                        <span className="text-right text-xs text-white/75">
-                          {input.status === "resolved"
-                            ? formatValue(input.value)
-                            : input.message}
-                        </span>
+                {Object.values(
+                  selectedLayerFrame.resolvedInputs,
+                ).map((input: VizResolvedInputValue) => (
+                  <div
+                    key={input.key}
+                    className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm text-white">{input.key}</p>
+                        <p className="text-xs text-white/45">
+                          {input.sourceKind}
+                        </p>
                       </div>
+                      <span className="text-right text-xs text-white/75">
+                        {input.status === 'resolved'
+                          ? formatValue(input.value)
+                          : input.message}
+                      </span>
                     </div>
-                  ),
-                )}
+                  </div>
+                ))}
               </div>
             </div>
           ) : (

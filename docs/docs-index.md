@@ -86,7 +86,6 @@ This is the current source of truth for where VizEngine is heading:
 - [plans/v2/editor-component-catalog-inspection-plan.md](./plans/v2/editor-component-catalog-inspection-plan.md)
 - [plans/v2/validation-hardening-and-golden-output-plan.md](./plans/v2/validation-hardening-and-golden-output-plan.md)
 - [plans/v2/package-consumer-readiness-proof-plan.md](./plans/v2/package-consumer-readiness-proof-plan.md)
-- [plans/v2/vite-product-shell-migration-plan.md](./plans/v2/vite-product-shell-migration-plan.md)
 
 ## Product Vision
 

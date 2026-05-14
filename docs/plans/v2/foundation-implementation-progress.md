@@ -205,17 +205,6 @@ It now also proves the first intentional studio chunk split:
   stays closer to a real inspector and does not eagerly bundle the whole
   preview stack on first paint
 
-It now also proves the first real app-shell migration:
-
-- the active browser product shell now runs through `apps/viz-studio`
-- the V2 editor/session/live-preview app code now lives under the Vite app
-  instead of the removed root Next app path
-- the Vite app now serves the repo root `public/` media/project assets directly
-- bundled track discovery now happens through a Vite virtual module instead of
-  a server-side Next route/helper
-- root `dev` and `build` scripts now target the Vite app
-- the old root Next app/config files are removed from the active runtime path
-
 It now also proves the first hardened validation baseline:
 
 - file-backed golden fixtures now pin canonical frame-plan outputs
@@ -341,12 +330,12 @@ It now also proves the first component-authoring foundation slice:
   - rendering the V1-derived component through the canonical V2 runtime path
 
 It now also proves the first rich-scene authoring and debugging slice in the
-real active editor terrain:
+real Next editor terrain:
 
-- the real active Vite app entrypoint now mounts a V2-backed editor shell
+- the real `src/app/page.tsx` entrypoint now mounts a V2-backed editor shell
   instead of treating V2 as an isolated side-shell only
 - the browser app now consumes `@viz-engine/editor-control` through a dedicated
-  browser-local store in `apps/viz-studio/src/app-store.ts`
+  browser-local store in `src/lib/v2-editor`
 - scene, graph, and issue truth are now inspectable inside the editor UI
   through dedicated V2 panels instead of only package-level tests or CLI
   outputs
@@ -354,7 +343,7 @@ real active editor terrain:
   through explicit control-surface state, not hidden store-owned runtime
   semantics
 - the root app now has explicit validation in `pnpm check:v2`, so the real
-  Vite editor surface is part of the V2 gate rather than a side concern
+  Next editor surface is part of the V2 gate rather than a side concern
 - dedicated UI integration tests now prove that the scene/graph/issues
   inspection surface renders canonical working-head truth
 
@@ -374,9 +363,9 @@ It now also proves the first agent-native creative-loop slice:
 
 It now also proves the first live editor transport-and-audio hardening slice:
 
-- bundled audio discovery now lives in the active Vite app via a generated
-  virtual module instead of only a client fetch path
-- the real Vite app now passes bundled-track truth into the V2 editor shell
+- bundled audio discovery now lives in a shared server helper instead of only a
+  client fetch path
+- the real Next page now passes bundled-track truth into the V2 editor shell
 - the V2 audio panel now exposes bundled-track visibility and explicit loop
   control in the real editor terrain
 - the V2 app-store preview loop no longer depends on `requestAnimationFrame`

@@ -6,32 +6,17 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@radix-ui/react-label": "^2.1.7",
-    "@radix-ui/react-slot": "^1.2.4",
-    "@radix-ui/react-switch": "^1.2.6",
-    "@radix-ui/react-tooltip": "^1.2.8",
     "@viz-engine/components-core": "workspace:*",
-    "@viz-engine/contracts": "workspace:*",
-    "@viz-engine/editor-control": "workspace:*",
-    "@viz-engine/editor-session": "workspace:*",
     "@viz-engine/example-projects": "workspace:*",
     "@viz-engine/nodes-core": "workspace:*",
     "@viz-engine/renderer-svg": "workspace:*",
     "@viz-engine/renderer-three": "workspace:*",
     "@viz-engine/runtime": "workspace:*",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.511.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-resizable-panels": "^2.1.9",
-    "sonner": "^2.0.7",
-    "tailwind-merge": "^3.3.0",
-    "zustand": "^5.0.8"
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.79",

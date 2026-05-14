@@ -1,20 +1,22 @@
-import React from "react";
+'use client';
 
-import { AmbientBackground } from "./ambient-background";
-import { EditorLayout, EditorPanel } from "./editor-layout";
-import { useStudioUiStore } from "./studio-ui-store";
-import { V2AudioPanel } from "./v2-audio-panel";
-import { V2EditorHeader } from "./v2-editor-header";
-import { V2PreviewStage } from "./v2-preview-stage";
-import { V2ScenePanel } from "./v2-scene-panel";
-import { V2EditorProvider } from "./v2-editor-provider";
+import React from 'react';
+import AmbientBackground from '@/components/editor/ambient-background';
+import EditorLayout, { EditorPanel } from '@/components/editor/editor-layout';
+import useEditorStore from '@/lib/stores/editor-store';
+
+import { V2AudioPanel } from '@/components/audio/v2-audio-panel';
+import { V2EditorHeader } from '@/components/editor/v2-editor-header';
+import { V2PreviewStage } from '@/components/editor/v2-preview-stage';
+import { V2ScenePanel } from '@/components/editor/v2-scene-panel';
+import { V2EditorProvider } from '@/components/editor/v2-editor-provider';
 
 export const V2EditorShell = ({
   bundledTracks,
 }: {
   bundledTracks: string[];
 }) => {
-  const ambientMode = useStudioUiStore((state) => state.ambientMode);
+  const ambientMode = useEditorStore((state) => state.ambientMode);
 
   return (
     <V2EditorProvider>

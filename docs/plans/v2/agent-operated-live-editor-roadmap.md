@@ -47,7 +47,7 @@ The repo already has:
 - shared asset materialization
 - a `Three` preview baseline
 - editor-session and local control foundations
-- a V2-backed shell inside the real Vite editor terrain
+- a V2-backed shell inside the real Next editor terrain
 - a first scripted agent-native creative-loop proof
 - validation and golden tests
 

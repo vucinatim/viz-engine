@@ -1,17 +1,20 @@
-import React, {
+'use client';
+
+import React from 'react';
+import {
   createContext,
   useContext,
   useEffect,
   useRef,
   useSyncExternalStore,
   type ReactNode,
-} from "react";
+} from 'react';
 
 import {
   createVizEditorAppStore,
   type VizEditorAppState,
   type VizEditorAppStore,
-} from "./app-store";
+} from '@/lib/v2-editor/app-store';
 
 const VizEditorAppStoreContext = createContext<VizEditorAppStore | null>(null);
 
@@ -39,7 +42,7 @@ const useVizEditorAppStore = (): VizEditorAppStore => {
   const store = useContext(VizEditorAppStoreContext);
 
   if (!store) {
-    throw new Error("V2 editor hooks must be used inside V2EditorProvider.");
+    throw new Error('V2 editor hooks must be used inside V2EditorProvider.');
   }
 
   return store;

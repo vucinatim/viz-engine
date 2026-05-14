@@ -5,8 +5,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { act } from 'react-dom/test-utils';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { V2ScenePanel } from '../../apps/viz-studio/src/v2-scene-panel';
-import { V2EditorProvider } from '../../apps/viz-studio/src/v2-editor-provider';
+import { V2ScenePanel } from '@/components/editor/v2-scene-panel';
+import { V2EditorProvider } from '@/components/editor/v2-editor-provider';
 
 let container: HTMLDivElement | null = null;
 let root: Root | null = null;
