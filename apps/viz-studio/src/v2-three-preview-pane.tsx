@@ -1,23 +1,24 @@
+import type { VizRenderPlan } from "@viz-engine/contracts";
 import {
   createVizThreePreviewController,
   type VizThreePreviewController,
 } from "@viz-engine/renderer-three";
-import type { VizRenderPlan } from "@viz-engine/contracts";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 
-interface ThreePreviewPaneProps {
+interface V2ThreePreviewPaneProps {
   renderPlan: VizRenderPlan;
   width: number;
   height: number;
 }
 
-export function ThreePreviewPane({
+export const V2ThreePreviewPane = ({
   renderPlan,
   width,
   height,
-}: ThreePreviewPaneProps) {
+}: V2ThreePreviewPaneProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const controllerRef = useRef<VizThreePreviewController | null>(null);
+  const initialRenderPlanRef = useRef(renderPlan);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -28,7 +29,7 @@ export function ThreePreviewPane({
 
     const controller = createVizThreePreviewController({
       canvas,
-      renderPlan,
+      renderPlan: initialRenderPlanRef.current,
     });
     controllerRef.current = controller;
 
@@ -39,8 +40,9 @@ export function ThreePreviewPane({
   }, []);
 
   useEffect(() => {
+    controllerRef.current?.resize(width, height);
     controllerRef.current?.update(renderPlan);
-  }, [renderPlan]);
+  }, [height, renderPlan, width]);
 
   return <canvas ref={canvasRef} width={width} height={height} />;
-}
+};

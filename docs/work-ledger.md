@@ -261,8 +261,8 @@
   - CLI component scaffold helper
   - first V1-derived V2 component port:
     - `feature-channel-bars`
-- implemented the first V2-backed editor shell in the real Next app terrain:
-  - `src/app/page.tsx` now mounts a V2 editor shell
+- implemented the first V2-backed editor shell in the real active app terrain:
+  - the browser product shell now mounts a V2 editor shell
   - browser-local editor state now wraps the V2 control surface instead of
     recreating runtime semantics directly in UI code
   - scene, graph, issue, preview, and audio-session truth are now inspectable
@@ -274,7 +274,7 @@
   filesystem-backed roundtrips
 - added root-app validation to the V2 gate:
   - `pnpm app:check`
-  - root Next app typecheck/build now run inside `pnpm check:v2`
+  - the active browser app typecheck/build now run inside `pnpm check:v2`
 - added the first agent-native creative-loop proof in
   `tools/v2/agent-creative-loop-scenario.ts`, proving that the agent can open
   the canonical project, add graph/layer content, inspect runtime output,
@@ -283,8 +283,8 @@
   - `rich-scene-authoring-and-debugging-implementation-plan.md`
   - `agent-native-creative-loop-proof-plan.md`
 - hardened the real editor live loop further:
-  - bundled audio discovery now comes from a shared server helper
-  - the real Next page now passes bundled-track truth into the V2 editor shell
+  - bundled audio discovery now comes from the active app shell path
+  - the active editor app now passes bundled-track truth into the V2 editor shell
   - the V2 audio panel now exposes bundled tracks and explicit loop control
   - preview advancement in the V2 app-store no longer depends only on
     `requestAnimationFrame`
@@ -469,3 +469,14 @@
   - `pnpm test:v2`
   - `pnpm viz:bundle:validate`
   - `pnpm check:v2`
+- added `docs/plans/v2/vite-product-shell-migration-plan.md` and migrated the
+  active browser product shell off Next and onto Vite:
+  - promoted `apps/viz-studio` into the real editor shell instead of keeping it
+    as a secondary inspector app
+  - moved the active V2 editor/session/live-preview UI code under the Vite app
+  - added a Vite virtual module for bundled audio track discovery and served
+    the repo root `public/` directory through the Vite app
+  - removed the root Next app/config/runtime files from the active path
+  - repointed root `dev`, `build`, and V2 validation to the Vite app
+  - kept tests green after updating the app-store and scene-panel tests to the
+    new Vite-owned shell files

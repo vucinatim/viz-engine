@@ -60,7 +60,7 @@ The repo now has:
 - a real V2 runtime/package spine
 - a real action-driven working-head foundation
 - a real local operator surface
-- a real V2-backed editor shell mounted inside the actual Next app terrain
+- a real V2-backed editor shell mounted inside the active Vite app
 
 So the current phase is no longer “invent V2”.
 
@@ -71,7 +71,8 @@ truth surfaces without regressing the V1 UX bar”.
 
 Today the repo still contains:
 
-- the existing Next.js editor
+- the preserved V1 editor terrain and UX reference components
+- an active Vite editor shell for the V2 rebuild path
 - Zustand-heavy runtime coupling
 - component code that may depend on hidden mutable state
 - node evaluation paths that are partly editor-oriented

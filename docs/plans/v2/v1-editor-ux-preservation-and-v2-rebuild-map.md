@@ -42,7 +42,7 @@ The mission is:
 
 The following V1 surfaces were inspected directly:
 
-- [src/app/page.tsx](/Users/timvucina/Desktop/MyProjects/viz-engine/src/app/page.tsx)
+- [apps/viz-studio/src/App.tsx](/Users/timvucina/Desktop/MyProjects/viz-engine/apps/viz-studio/src/App.tsx)
 - [src/components/editor/editor-layout.tsx](/Users/timvucina/Desktop/MyProjects/viz-engine/src/components/editor/editor-layout.tsx)
 - [src/components/editor/editor-header.tsx](/Users/timvucina/Desktop/MyProjects/viz-engine/src/components/editor/editor-header.tsx)
 - [src/components/editor/editor-toolbar.tsx](/Users/timvucina/Desktop/MyProjects/viz-engine/src/components/editor/editor-toolbar.tsx)

@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createVizEditorAppStore } from '@/lib/v2-editor/app-store';
+import { createVizEditorAppStore } from '../../apps/viz-studio/src/app-store';
 
 const createMockAudioElement = (durationSeconds: number) => {
   const audio = document.createElement('audio');

@@ -81,7 +81,7 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
   editor grows, so bundle/filesystem concerns do not leak back into browser
   builds and the operator surface stays safe to mount under the real editor.
 - The next editor-facing follow-up should harden repeated browser-verified
-  play/pause/seek behavior under the V2-backed Next shell, so the live loop is
+  play/pause/seek behavior under the V2-backed Vite shell, so the live loop is
   proven in the actual product terrain and not only through deterministic
   package/runtime tests.
 - As more of the preserved V1 editor surface is rebuilt over V2, track and
@@ -98,3 +98,7 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
 - Build the next layer-creation/editor-authoring step on top of the new
   component-catalog truth, so new layer flows stay registry-driven instead of
   hardcoding component knowledge into the UI.
+- As the Vite shell stabilizes, extract the app-local editor UI primitives and
+  state into cleaner reusable packages only where the boundary is genuinely
+  shared, so the product shell stays self-contained for now without drifting
+  back into a root-src dumping ground.

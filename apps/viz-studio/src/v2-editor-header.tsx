@@ -1,24 +1,22 @@
-'use client';
+import React from "react";
+import { RotateCcw } from "lucide-react";
 
-import React from 'react';
-import useEditorStore from '@/lib/stores/editor-store';
-import { RotateCcw } from 'lucide-react';
-
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { NumberScrubInput } from '@/components/ui/number-scrub-input';
-import { Switch } from '@/components/ui/switch';
-import { useV2EditorActions, useV2EditorSnapshot } from './v2-editor-provider';
+import { useStudioUiStore } from "./studio-ui-store";
+import { Button } from "./ui/button";
+import { Label } from "./ui/label";
+import { NumberScrubInput } from "./ui/number-scrub-input";
+import { Switch } from "./ui/switch";
+import { useV2EditorActions, useV2EditorSnapshot } from "./v2-editor-provider";
 
 export const V2EditorHeader = () => {
   const snapshot = useV2EditorSnapshot();
   const actions = useV2EditorActions();
-  const ambientMode = useEditorStore((state) => state.ambientMode);
-  const setAmbientMode = useEditorStore((state) => state.setAmbientMode);
-  const resolutionMultiplier = useEditorStore(
+  const ambientMode = useStudioUiStore((state) => state.ambientMode);
+  const setAmbientMode = useStudioUiStore((state) => state.setAmbientMode);
+  const resolutionMultiplier = useStudioUiStore(
     (state) => state.resolutionMultiplier,
   );
-  const setResolutionMultiplier = useEditorStore(
+  const setResolutionMultiplier = useStudioUiStore(
     (state) => state.setResolutionMultiplier,
   );
 
@@ -42,7 +40,8 @@ export const V2EditorHeader = () => {
         <Button
           variant="outline"
           className="border-white/10 bg-transparent text-white hover:bg-white/10"
-          onClick={() => actions.openExampleProject()}>
+          onClick={() => actions.openExampleProject()}
+        >
           <RotateCcw className="mr-2 h-4 w-4" />
           Reload Example
         </Button>
