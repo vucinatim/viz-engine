@@ -67,6 +67,17 @@ This is no longer just a doc-only posture.
 - introduced the first local-first CLI surface for validating and inspecting
   canonical example projects without going through the app shell
 
+### Product Shell and Styling Foundation
+
+- replaced the old Next shell with the preserved real editor mounted through
+  `apps/viz-studio`
+- removed the old Next-only API route glue in favor of bundled public-manifest
+  inputs
+- moved the active product styles into `src/styles/globals.css`
+- upgraded the active product shell to the Vite-native Tailwind v4 styling
+  path
+- removed the old Tailwind v3/PostCSS config layer after the Vite cutover
+
 ## What This Proves
 
 The current setup proves that V2 now has:

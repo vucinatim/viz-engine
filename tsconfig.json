@@ -2,24 +2,16 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ]
+    "jsx": "react-jsx",
+    "incremental": true
   },
   "include": [
-    "next-env.d.ts",
     "vite-imports.d.ts",
     "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
+    "**/*.tsx"
   ],
   "exclude": [
     "node_modules",
-    ".next",
     "playground/vite.config.ts",
     "playground/main.ts",
     "playground/controls.ts",

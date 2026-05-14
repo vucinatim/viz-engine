@@ -2,6 +2,35 @@
 
 ## 2026-05-14
 
+- completed the real shell cutover the right way:
+  - deleted the old Next shell and API routes
+  - turned `apps/viz-studio` into the real product shell instead of the
+    placeholder inspector app
+  - preserved the existing editor UI by mounting the real editor surface
+    through Vite instead of redesigning it
+  - replaced the tiny Next-only integration points with Vite-safe equivalents:
+    - `next/image` -> native image tags where needed
+    - `/api/audio-files` -> static bundled-audio manifest
+    - `/api/sample-projects` -> static sample-project manifest
+  - moved the shared product styles into `src/styles/globals.css`
+  - removed `next`, `@vercel/analytics`, `eslint-config-next`,
+    `next.config.mjs`, `next-env.d.ts`, and `tsconfig.app.json`
+  - moved `src/app/favicon.ico` to `public/favicon.ico`
+  - revalidated the full repo with `pnpm check:foundation`
+  - browser-verified the real preserved editor surface running from Vite
+- completed the styling-foundation cleanup after the shell migration:
+  - upgraded the product shell to the Vite-native Tailwind v4 path
+  - removed the old root `tailwind.config.ts`
+  - removed the old root `postcss.config.mjs`
+  - removed the app-local `apps/viz-studio/postcss.config.cjs` override
+  - replaced the old dark-mode workaround with an explicit `html.dark` root
+  - updated `components.json` to point at `src/styles/globals.css`
+  - fixed secondary CSS `@apply` usage under Tailwind v4 with explicit
+    `@reference`
+  - normalized the dev server back to `http://localhost:4173/`
+  - revalidated the full repo again with `pnpm check:foundation`
+  - browser-verified the styled editor at
+    `http://localhost:4173/?allowSmallViewport=1`
 - cleaned the non-doc codebase naming so the rewrite no longer reads like a
   parallel “v2 app”:
   - renamed `tests/v2` -> `tests/foundation`

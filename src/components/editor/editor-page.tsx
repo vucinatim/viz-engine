@@ -1,25 +1,23 @@
 'use client';
 
-import EditorLayout, { EditorPanel } from '@/components/editor/editor-layout';
-import LayersConfigPanel from '@/components/editor/layers-config-panel';
-
 import AudioPanel from '@/components/audio/audio-panel';
 import AmbientBackground from '@/components/editor/ambient-background';
 import AnimationBuilder from '@/components/editor/animation-builder';
 import EditorHeader from '@/components/editor/editor-header';
+import EditorLayout, { EditorPanel } from '@/components/editor/editor-layout';
 import HistoryManager from '@/components/editor/history-manager';
-import { ProfilerPanel } from '@/components/editor/profiler-panel';
+import LayersConfigPanel from '@/components/editor/layers-config-panel';
 import ProjectDropzone from '@/components/editor/project-dropzone';
+import { ProfilerPanel } from '@/components/editor/profiler-panel';
 import RemotionPlayer from '@/components/editor/remotion-player';
 import { useProfilerMonitors } from '@/lib/hooks/use-profiler-monitors';
 import useBodyProps from '@/lib/stores/body-props-store';
 import useEditorStore from '@/lib/stores/editor-store';
 
-export default function Home() {
+export default function EditorPage() {
   const { props } = useBodyProps();
   const ambientMode = useEditorStore((s) => s.ambientMode);
 
-  // Initialize profiler monitors
   useProfilerMonitors();
 
   return (
@@ -43,7 +41,6 @@ export default function Home() {
             <EditorPanel>
               <RemotionPlayer />
               <AnimationBuilder />
-              {/* <Renderer /> */}
             </EditorPanel>
           }
           bottomRightChildren={

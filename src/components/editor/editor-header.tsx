@@ -1,7 +1,6 @@
 import useEditorStore from '@/lib/stores/editor-store';
 import { cn } from '@/lib/utils';
 import { Github } from 'lucide-react';
-import Image from 'next/image';
 import { memo } from 'react';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
@@ -26,16 +25,12 @@ const EditorHeader = () => {
   return (
     <div className="flex items-center px-4">
       <div className="relative mr-2">
-        <Image
+        <img
           src="/logo.png"
           alt="VizEngineLogo"
-          priority
           width={25}
           height={25}
-          style={{
-            width: 'auto',
-            height: 'auto',
-          }}
+          className="h-[25px] w-[25px] shrink-0 object-contain"
         />
         <div className="fixed left-[-10px] top-1 -rotate-[30deg] rounded-[2px] bg-gradient-to-t from-violet-300 to-purple-50 px-5 py-0.5 text-[6px] font-bold uppercase tracking-wide text-black shadow-md">
           Alpha

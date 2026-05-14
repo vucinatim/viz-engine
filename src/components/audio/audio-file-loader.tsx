@@ -1,4 +1,5 @@
 import useSetBodyProps from '@/lib/hooks/use-set-body-props';
+import { getBundledAudioFiles } from '@/lib/public-manifests';
 import useAudioStore from '@/lib/stores/audio-store';
 import { cn } from '@/lib/utils';
 import { AlertCircle, Folder, Music } from 'lucide-react';
@@ -58,33 +59,24 @@ const AudioFileLoader = () => {
   useSetBodyProps(getRootProps());
 
   useEffect(() => {
-    // Fetch audio files from API route
-    fetch('/api/audio-files')
-      .then((res) => res.json())
-      .then((files: string[]) => {
-        setAudioFiles(files);
-        setTrackList(files);
-        if (files.length > 0) {
-          // Default to [Rock] Electronic Rock.mp3 if available, otherwise use first file
-          const defaultFile =
-            files.find((f) => f === DEFAULT_AUDIO_FILE) || files[0];
-          const defaultIndex = files.indexOf(defaultFile);
-          setSelectedFile(defaultFile);
-          setCurrentTrackIndex(defaultIndex);
-          const url = `/music/${defaultFile}`;
-          if (audioElementRef.current) {
-            audioElementRef.current.srcObject = null as any;
-            audioElementRef.current.src = url;
-            audioElementRef.current.muted = false;
-            audioElementRef.current.load();
-          }
-          setCurrentTrackUrl(url);
-        }
-      })
-      .catch((error) => {
-        console.error('Error loading audio files:', error);
-        setAudioFiles([]);
-      });
+    const files = getBundledAudioFiles();
+    setAudioFiles(files);
+    setTrackList(files);
+    if (files.length > 0) {
+      const defaultFile =
+        files.find((f) => f === DEFAULT_AUDIO_FILE) || files[0];
+      const defaultIndex = files.indexOf(defaultFile);
+      setSelectedFile(defaultFile);
+      setCurrentTrackIndex(defaultIndex);
+      const url = `/music/${defaultFile}`;
+      if (audioElementRef.current) {
+        audioElementRef.current.srcObject = null as any;
+        audioElementRef.current.src = url;
+        audioElementRef.current.muted = false;
+        audioElementRef.current.load();
+      }
+      setCurrentTrackUrl(url);
+    }
   }, [audioElementRef, setCurrentTrackUrl, setTrackList, setCurrentTrackIndex]);
 
   // Sync selected file with current track index from store (e.g., when skip buttons are used)

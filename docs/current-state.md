@@ -77,19 +77,23 @@ So the current phase is no longer “invent V2”.
 The current phase is “rebuild the real editor experience over those V2 truth
 surfaces without regressing the V1 UX bar”.
 
-One important correction:
+One important correction was followed by the right shell migration:
 
-- an earlier attempt to make a weaker V2 shell the active app surface was
-  rolled back
-- the V1 editor remains the active product shell
-- V2 editor/session/control work should be treated as foundation work until it
-  can be wired under the preserved real editor UX
+- an earlier attempt to make a weaker replacement shell the active app surface
+  was rolled back
+- the actual product shell is now the preserved real editor, mounted through
+  the Vite app at `apps/viz-studio`
+- the old Next shell is gone
+- the active styling stack is now the Vite-native Tailwind v4 path, not the
+  old Tailwind v3 plus PostCSS config path
+- V2 editor/session/control work remains foundation work until it is wired
+  further under the preserved real editor UX
 
 ## Current V1 Truth
 
 Today the repo still contains:
 
-- the existing Next.js editor
+- the existing editor UX and component surface
 - Zustand-heavy runtime coupling
 - component code that may depend on hidden mutable state
 - node evaluation paths that are partly editor-oriented

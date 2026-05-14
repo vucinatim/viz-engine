@@ -19,6 +19,7 @@ import {
   MenubarTrigger,
 } from '@/components/ui/menubar';
 import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts';
+import { getBundledSampleProjects } from '@/lib/public-manifests';
 import {
   loadProject,
   loadProjectFromUrl,
@@ -114,20 +115,9 @@ const EditorToolbar = () => {
 
   // Fetch available sample projects
   useEffect(() => {
-    const fetchSampleProjects = async () => {
-      try {
-        setIsLoadingSamples(true);
-        const response = await fetch('/api/sample-projects');
-        const projects = await response.json();
-        setSampleProjects(projects);
-      } catch (error) {
-        console.error('Failed to fetch sample projects:', error);
-      } finally {
-        setIsLoadingSamples(false);
-      }
-    };
-
-    fetchSampleProjects();
+    setIsLoadingSamples(true);
+    setSampleProjects(getBundledSampleProjects());
+    setIsLoadingSamples(false);
   }, []);
 
   const handleSaveProject = () => {

@@ -1,3 +1,5 @@
+@reference "../../styles/globals.css";
+
 .react-flow__attribution {
   display: none !important;
 }

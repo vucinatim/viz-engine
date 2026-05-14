@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { ChevronLeft, ChevronRight, Chrome, HelpCircle } from 'lucide-react';
-import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 
 const TUTORIAL_VIDEO_BASE_URL =
@@ -217,11 +216,10 @@ export function HelpDialog() {
             ) : currentTutorial.category === 'tips' &&
               currentTutorial.imageUrl ? (
               <div className="aspect-video-custom relative w-full overflow-hidden rounded-lg border border-white/10 bg-zinc-900">
-                <Image
+                <img
                   src={currentTutorial.imageUrl}
                   alt={currentTutorial.title}
-                  fill
-                  className="object-cover"
+                  className="h-full w-full object-cover"
                 />
               </div>
             ) : currentTutorial.category === 'getting-started' &&

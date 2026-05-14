@@ -57,3 +57,13 @@ Do not preserve V1 structure just because it already exists.
 
 If an implementation path requires preserving V1-specific architectural baggage,
 stop and propose the cleaner replacement path instead.
+
+## Agentic Devtools Preference
+
+For Railway, Namecheap, and npm agent or MCP work:
+
+1. prefer the published package `@vucinatim/agentic-devtools`
+2. prefer `npx -y @vucinatim/agentic-devtools mcp <tool>` for MCP host configuration
+3. use global `agentic-devtools` only for terminal convenience
+4. do not rely on copied local plugin or tool repos when the published package covers the use case
+5. keep official provider CLIs optional rather than primary unless a repo-native command explicitly requires them
