@@ -60,4 +60,4 @@ This slice is only complete when:
 - the exported bundle can be reloaded
 - the reloaded bundle validates cleanly
 - render output from the reloaded bundle still works
-- `pnpm check:v2` remains green
+- `pnpm check:foundation` remains green

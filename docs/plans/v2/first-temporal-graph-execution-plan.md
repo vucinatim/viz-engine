@@ -67,4 +67,4 @@ This slice is complete when:
 - at least one temporal node ships in `@viz-engine/nodes-core`
 - the canonical example graph uses real temporal behavior
 - tests prove stable temporal outputs
-- `pnpm fixtures:v2:update` and `pnpm check:v2` remain green
+- `pnpm fixtures:update` and `pnpm check:foundation` remain green

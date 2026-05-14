@@ -54,18 +54,18 @@ It should also reinforce the browser/node boundary inside the control surface:
 
 ## Deliverables
 
-- scripted local proof in `tools/v2/agent-creative-loop-scenario.ts`
+- scripted local proof in `tools/foundation/agent-creative-loop-scenario.ts`
 - browser-safe `@viz-engine/editor-control` root entry
 - Node-only bundle helpers in `@viz-engine/editor-control/node`
 - test and build config updates so both root app and node-only control paths
   validate cleanly
-- full-gate proof through `pnpm smoke:creative-loop:v2`
+- full-gate proof through `pnpm smoke:creative-loop`
 
 ## Validation
 
-- `pnpm smoke:creative-loop:v2`
+- `pnpm smoke:creative-loop`
 - external/package-facing operator tests that continue to pass
-- full `pnpm check:v2`
+- full `pnpm check:foundation`
 
 ## Exit Criteria
 

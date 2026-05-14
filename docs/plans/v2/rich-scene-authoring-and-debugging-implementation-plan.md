@@ -57,13 +57,13 @@ That includes:
 - transport/audio panel under `src/components/audio`
 - richer `@viz-engine/editor-control` inspection surface
 - UI integration tests for scene/graph/issues inspection
-- root-app validation included in `pnpm check:v2`
+- root-app validation included in `pnpm check:foundation`
 
 ## Validation
 
 - dedicated UI integration tests for the scene/inspection surface
 - browser-safe build verification for the real Next app
-- full `pnpm check:v2`
+- full `pnpm check:foundation`
 - manual browser verification that the real editor shell opens and renders
 
 ## Exit Criteria

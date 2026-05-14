@@ -17,7 +17,7 @@ export const featureChannelBarsComponent: VizComponentImplementation = {
   id: "feature-channel-bars",
   name: "Feature Channel Bars",
   rendererFamily: "three",
-  description: "V2 port of the V1 feature-extraction bars concept as five reactive channels.",
+  description: "Port of the V1 feature-extraction bars concept as five reactive channels.",
   inputs: CHANNELS.map((channel) => ({
     key: channel.key,
     label: channel.key[0]!.toUpperCase() + channel.key.slice(1),

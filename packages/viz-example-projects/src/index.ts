@@ -35,7 +35,7 @@ const exampleCoverSvg = `
   <path d="M100 520C180 430 260 400 340 430C420 460 470 560 560 560C610 560 650 540 690 500V720H0V590C30 580 60 560 100 520Z" fill="#08121d" fill-opacity="0.84" />
   <circle cx="205" cy="190" r="42" fill="#9ef8ff" fill-opacity="0.28" />
   <circle cx="515" cy="168" r="28" fill="#9ef8ff" fill-opacity="0.2" />
-  <text x="86" y="600" fill="#eafcff" font-size="64" font-family="Arial, sans-serif" font-weight="700">V2 SIGNAL</text>
+  <text x="86" y="600" fill="#eafcff" font-size="64" font-family="Arial, sans-serif" font-weight="700">VIZ SIGNAL</text>
   <text x="90" y="654" fill="#9fd9ea" font-size="24" font-family="Arial, sans-serif" letter-spacing="6">MEDIA PROOF</text>
 </svg>
 `.trim();

@@ -62,7 +62,7 @@ Improve the component-authoring posture by:
   - `@viz-engine/runtime`
   - `@viz-engine/dev-cli`
 - dedicated component tests
-- full `pnpm check:v2`
+- full `pnpm check:foundation`
 
 ## Exit Criteria
 

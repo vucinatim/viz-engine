@@ -111,7 +111,7 @@ This slice should add tests for:
 
 - mapping render nodes into scene nodes or scene metadata
 - deterministic renderer preparation logic
-- no regression in the shared `check:v2` path
+- no regression in the shared `check:foundation` path
 
 We do not need browser pixel-perfect snapshot testing yet.
 

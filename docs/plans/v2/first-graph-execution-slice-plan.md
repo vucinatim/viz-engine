@@ -108,7 +108,7 @@ This slice is only complete when all of these are true:
 - example and bundle flows still pass
 - studio build still passes
 - external consumer smoke still passes
-- `pnpm check:v2` is green
+- `pnpm check:foundation` is green
 
 ## Exit Condition
 

@@ -2,6 +2,19 @@
 
 ## 2026-05-14
 
+- cleaned the non-doc codebase naming so the rewrite no longer reads like a
+  parallel “v2 app”:
+  - renamed `tests/v2` -> `tests/foundation`
+  - renamed `tools/v2` -> `tools/foundation`
+  - renamed the active validation scripts to `*:foundation` / `fixtures:update`
+  - removed stray `V2` product-facing strings from `apps/viz-studio` and the
+    example assets/components
+  - removed the stale dead `packages/viz-magnify-adapter` artifact directory
+- clarified the core V2 product rule across the active docs:
+  - preserve the visible V1 editor surface very literally
+  - replace truth/state/runtime ownership underneath it
+  - treat agent operability as an action/runtime problem, not a UI redesign
+    problem
 - reverted commit `5eaa4eb` (`refactor: migrate active editor shell to vite`)
 - restored the real Next editor shell as the active product surface
 - removed the fake V2 product-shell files that were lowering the UX bar:
@@ -128,7 +141,7 @@
   new V2 packages no longer inherit Next-specific root config
 - expanded the workspace structure to support `apps/*` as well as `packages/*`
 - added root V2 scripts for package typecheck/build, studio app, V2 test runs,
-  and combined `check:v2` verification
+  and combined `check:foundation` verification
 - created the first real V2 packages:
   - `packages/viz-contracts`
   - `packages/viz-runtime`
@@ -208,21 +221,21 @@
 - cleaned up accidental compiled source artifacts after the dist-first package
   export refactor so package builds remain strictly `dist`-owned
 - validated the full V2 surface again after the media-backed proof:
-  - `pnpm check:v2`
+  - `pnpm check:foundation`
   - `pnpm viz:example:svg`
 - added `docs/plans/v2/package-consumer-readiness-proof-plan.md` to define the
   next slice: proving that Viz V2 packages work as real external tarball
   dependencies instead of only inside the monorepo
 - implemented the first package-consumer readiness proof:
   - trimmed V2 package tarballs to `dist`-first contents
-  - added `tools/v2/package-consumer-smoke.mjs`
-  - added `pnpm smoke:consumer:v2`
-  - folded the consumer smoke into `pnpm check:v2`
+  - added `tools/foundation/package-consumer-smoke.mjs`
+  - added `pnpm smoke:consumer`
+  - folded the consumer smoke into `pnpm check:foundation`
   - fixed built package ESM imports to use explicit relative `.js` specifiers
   - proved that a temporary external consumer can install Viz tarballs and
     render the canonical example project without workspace alias help
 - validated the external consumer seam:
-  - `pnpm smoke:consumer:v2`
+  - `pnpm smoke:consumer`
 - temporarily proved the cross-repo Magnify seam locally to validate that the
   portable Viz runtime could be hosted inside Magnify's Remotion environment
 - deliberately removed the Magnify-specific adapter/package direction after the
@@ -239,7 +252,7 @@
   of treating Magnify-specific glue as part of the core runtime architecture
 - revalidated the cleaned portable-runtime-first setup with:
   - `pnpm install`
-  - `pnpm check:v2`
+  - `pnpm check:foundation`
 
 ## 2026-05-14
 
@@ -289,9 +302,9 @@
   filesystem-backed roundtrips
 - added root-app validation to the V2 gate:
   - `pnpm app:check`
-  - root Next app typecheck/build now run inside `pnpm check:v2`
+  - root Next app typecheck/build now run inside `pnpm check:foundation`
 - added the first agent-native creative-loop proof in
-  `tools/v2/agent-creative-loop-scenario.ts`, proving that the agent can open
+  `tools/foundation/agent-creative-loop-scenario.ts`, proving that the agent can open
   the canonical project, add graph/layer content, inspect runtime output,
   export a bundle, and reload it through the same V2 operator stack
 - added explicit implementation docs for:
@@ -318,7 +331,7 @@
   - `live-editor-transport-and-audio-hardening-plan.md`
   - `editor-component-catalog-inspection-plan.md`
 - revalidated the full V2 stack after the editor-shell and creative-loop work:
-  - `pnpm check:v2`
+  - `pnpm check:foundation`
   current V2 baseline to a real human-plus-agent live creation loop
 - clarified the V2 source-of-truth docs so it is now explicit that:
   - the V1 editor experience is the UX reference to preserve
@@ -376,8 +389,8 @@
     source URIs embedded in render nodes
 - expanded the V2 validation surface with a dedicated materialized-asset test
 - revalidated the materialization slice with:
-  - `pnpm test:v2`
-  - `pnpm check:v2`
+  - `pnpm test:foundation`
+  - `pnpm check:foundation`
 - added `docs/plans/v2/three-renderer-compositor-semantics-cleanup-plan.md`
   and implemented the first meaningful `Three` semantics cleanup:
   - inherited group opacity/blend propagation through the render tree
@@ -386,8 +399,8 @@
     scene-graph shape
 - validated the `Three` semantics slice with:
   - `pnpm --filter @viz-engine/renderer-three lint`
-  - `pnpm test:v2`
-  - `pnpm check:v2`
+  - `pnpm test:foundation`
+  - `pnpm check:foundation`
 - added `docs/plans/v2/local-bundle-fixture-validation-plan.md` and
   implemented the first real local bundle-directory proof:
   - typed bundle-manifest contracts
@@ -427,14 +440,14 @@
 - added `docs/plans/v2/validation-hardening-and-golden-output-plan.md` and
   implemented the first hardened validation baseline:
   - added a shared golden-output normalizer for canonical frame/render summaries
-  - added a checked-in `tests/v2/fixtures` golden set for frame-plan,
+  - added a checked-in `tests/foundation/fixtures` golden set for frame-plan,
     render-plan, SVG, and exported bundle-manifest outputs
-  - added `pnpm fixtures:v2:update` to regenerate those fixtures deliberately
+  - added `pnpm fixtures:update` to regenerate those fixtures deliberately
   - added corruption-path tests covering invalid manifest metadata, missing
     files, orphan manifest entries, and missing manifest entries
   - hardened the local bundle loader so missing or malformed artifact payloads
     become explicit issues instead of crashing bundle loading
-  - kept `pnpm check:v2` green with the stronger validation surface
+  - kept `pnpm check:foundation` green with the stronger validation surface
 - added `docs/plans/v2/first-temporal-graph-execution-plan.md` and
   implemented the first real temporal graph baseline:
   - expanded node contracts to support explicit temporal stepping
@@ -459,7 +472,7 @@
   - converted the example project and shipped example bundle to use real graph
     outputs for audio-reactive shaping
   - added direct graph tests for deterministic outputs and cycle detection
-  - kept `pnpm check:v2` green after the graph slice
+  - kept `pnpm check:foundation` green after the graph slice
 - added `docs/plans/v2/portable-bundle-roundtrip-implementation-plan.md` and
   implemented the first real bundle export/reload path:
   - added a node-only local bundle writer in the CLI layer
@@ -471,7 +484,7 @@
   - added roundtrip tests for export and reload
   - strengthened the external consumer smoke to export and reload a packaged
     bundle outside the monorepo
-  - kept `pnpm check:v2` green after the bundle roundtrip slice
+  - kept `pnpm check:foundation` green after the bundle roundtrip slice
 - added `docs/plans/v2/explicit-three-layer-compositor-implementation-plan.md`
   and implemented the first explicit layer compositor step in the `Three`
   preview path:
@@ -479,8 +492,8 @@
   - moved layer opacity and blend ownership onto compositor surfaces
   - kept inner group/style opacity inside the layer content scene
   - expanded renderer tests to assert compositor-surface behavior directly
-  - kept `pnpm check:v2` green after the compositor slice
+  - kept `pnpm check:foundation` green after the compositor slice
 - validated the local bundle slice with:
-  - `pnpm test:v2`
+  - `pnpm test:foundation`
   - `pnpm viz:bundle:validate`
-  - `pnpm check:v2`
+  - `pnpm check:foundation`

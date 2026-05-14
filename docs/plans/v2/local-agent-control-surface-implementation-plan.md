@@ -73,7 +73,7 @@ That package should:
 - package lint/build
 - dedicated control-surface tests
 - external consumer smoke
-- full `pnpm check:v2`
+- full `pnpm check:foundation`
 
 ## Exit Criteria
 

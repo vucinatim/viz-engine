@@ -58,4 +58,4 @@ This slice is complete when:
 - a pure reducer package exists
 - tests prove actions can create valid project mutations
 - tests prove mutated projects still validate and plan/render correctly
-- `pnpm check:v2` remains green
+- `pnpm check:foundation` remains green

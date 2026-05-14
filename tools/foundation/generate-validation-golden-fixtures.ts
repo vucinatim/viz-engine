@@ -16,7 +16,7 @@ import { summarizeFramePlan, summarizeRenderPlan } from "./golden-output";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDirectory, "..", "..");
-const fixtureDirectory = resolve(repoRoot, "tests", "v2", "fixtures");
+const fixtureDirectory = resolve(repoRoot, "tests", "foundation", "fixtures");
 
 mkdirSync(fixtureDirectory, { recursive: true });
 

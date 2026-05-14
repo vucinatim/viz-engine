@@ -71,13 +71,13 @@ export function App() {
     <main className="app-shell">
       <section className="hero-panel">
         <div>
-          <p className="eyebrow">VizEngine V2 Foundation</p>
+          <p className="eyebrow">VizEngine Foundation</p>
           <h1>Runtime Frame Plan Inspector</h1>
           <p className="lede">
-            This app is the first real V2 shell. It consumes the extracted workspace packages,
-            validates a canonical project document, resolves baked feature inputs, and inspects
-            the deterministic frame plan that later renderers will consume. This slice now also
-            proves a real asset-backed image layer through the same shared runtime path.
+            This app consumes the extracted workspace packages, validates a canonical project
+            document, resolves baked feature inputs, and inspects the deterministic frame plan
+            that later renderers will consume. This slice now also proves a real asset-backed
+            image layer through the same shared runtime path.
           </p>
         </div>
         <div className="project-meta">

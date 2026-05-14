@@ -15,6 +15,18 @@ Very important clarification:
 
 - the V1 editor experience is not disposable
 - the V1 hidden architecture is disposable
+- the visible editor surface should remain effectively identical unless there
+  is a clearly better replacement
+
+That means preserving, by default:
+
+- the same visual styling language
+- the same panel layout
+- the same toolbar/header posture
+- the same layer workflow
+- the same node-editor posture
+- the same audio/transport posture
+- the same overall interaction density and feel
 
 We are not trying to invent a weaker alternate editor.
 
@@ -43,6 +55,10 @@ It should not become:
     replacement.
 12. Replace the architecture underneath the editor, not the product-quality
     editing posture itself.
+13. Do not redesign the editor shell, color system, button language, panel
+    structure, or node-editor posture unless explicitly approved.
+14. Treat agent operability as a state/action/runtime integration problem, not
+    as a reason to simplify or replace the editor UX.
 
 ## Rewrite Rules
 
@@ -78,6 +94,12 @@ We should preserve deliberately:
 ## AI-Native Rules
 
 The AI should not need to click around the UI to operate the system.
+
+The editor should remain powerful and dense for humans.
+
+The agent should operate the same scene through stable contracts underneath
+that UI, with browser interaction used mainly for verification or exceptional
+surface-level actions.
 
 VizEngine should expose stable machine-facing actions such as:
 

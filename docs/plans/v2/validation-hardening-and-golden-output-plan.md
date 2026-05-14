@@ -76,4 +76,4 @@ This slice is complete when:
 - the repo has a real golden-fixture update command
 - canonical output tests compare against checked-in fixtures
 - bundle corruption tests cover the first real failure matrix
-- `pnpm check:v2` remains green
+- `pnpm check:foundation` remains green

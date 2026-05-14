@@ -66,7 +66,7 @@ This slice is complete when:
   nodes
 - renderers no longer depend on raw source URIs embedded in the render graph
 - the example project still renders correctly through the shared runtime path
-- `pnpm check:v2` passes
+- `pnpm check:foundation` passes
 
 ## Next Likely Slice After This
 

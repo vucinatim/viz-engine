@@ -39,6 +39,16 @@ So the V2 posture should be:
 - preserve the core workflow shape where it is strong
 - replace the hidden architecture underneath it
 
+That preservation should be interpreted very literally unless intentionally
+changed:
+
+- same visual/editor shell identity
+- same color and control language
+- same layout structure
+- same timeline and transport posture
+- same node-editor posture
+- same “serious creative tool” density
+
 This means the rewrite is:
 
 - aggressive about runtime/store/document architecture
@@ -68,6 +78,15 @@ not as the only way the system can be operated.
 And in practice that editing surface should still feel like a serious live
 creative tool, not only a thin inspector shell.
 
+Very important:
+
+- V2 is not a mandate to simplify the editor
+- V2 is not a mandate to redesign the editor visually
+- V2 is not a mandate to replace dense tool UX with a cleaner-looking but
+  weaker shell
+
+The visible product should stay recognizably VizEngine.
+
 VizEngine should also remain its own product, not only an internal Magnify
 tool.
 
@@ -94,6 +113,11 @@ The source of truth should be:
 
 But the product-facing authoring surface should still preserve the strengths of
 the current editor where those strengths are real.
+
+So the architectural move is:
+
+- move truth out of app-owned hidden state
+- keep the editor as the high-quality cockpit over that truth
 
 ## Replacement Rewrite Principle
 
@@ -250,6 +274,17 @@ The deeper product and integration model lives here:
 
 VizEngine V2 should be designed so an AI agent can operate it through explicit
 contracts instead of UI imitation.
+
+This does not imply a different user-facing editor paradigm.
+
+The intended model is:
+
+- human users keep the strong existing editor surface
+- the editor dispatches canonical actions into canonical working-head/runtime
+  systems
+- the agent dispatches those same kinds of actions through a local/tool surface
+- the browser remains a shared visual verification surface, not the primary
+  source of truth
 
 That requires:
 

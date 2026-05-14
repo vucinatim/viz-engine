@@ -69,4 +69,4 @@ This slice is complete when:
 - V2 can validate and render from a real bundle directory fixture
 - the runtime contract remains unchanged
 - bundle loading stays outside the core runtime package
-- `pnpm check:v2` passes
+- `pnpm check:foundation` passes

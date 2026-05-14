@@ -12,9 +12,9 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { summarizeFramePlan, summarizeRenderPlan } from "../../tools/v2/golden-output";
+import { summarizeFramePlan, summarizeRenderPlan } from "../../tools/foundation/golden-output";
 
-const fixtureDirectory = resolve(process.cwd(), "tests/v2/fixtures");
+const fixtureDirectory = resolve(process.cwd(), "tests/foundation/fixtures");
 const componentRegistry = createCoreComponentRegistry();
 const nodeRegistry = createCoreNodeRegistry();
 

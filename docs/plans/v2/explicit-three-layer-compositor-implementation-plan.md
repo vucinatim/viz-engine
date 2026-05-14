@@ -55,4 +55,4 @@ This slice is only complete when:
 - compositor layers are explicit in code
 - tests prove layer opacity is isolated from inner group opacity
 - the studio still builds
-- `pnpm check:v2` stays green
+- `pnpm check:foundation` stays green

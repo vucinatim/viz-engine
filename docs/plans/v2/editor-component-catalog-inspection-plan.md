@@ -60,7 +60,7 @@ That includes:
 - control-surface tests
 - UI integration tests for the scene panel
 - root app typecheck
-- full `pnpm check:v2`
+- full `pnpm check:foundation`
 
 ## Exit Criteria
 

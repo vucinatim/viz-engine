@@ -47,7 +47,6 @@ The repo already has:
 - shared asset materialization
 - a `Three` preview baseline
 - editor-session and local control foundations
-- a V2-backed shell inside the real Next editor terrain
 - a first scripted agent-native creative-loop proof
 - validation and golden tests
 
@@ -66,6 +65,19 @@ Very important clarification:
 The V1 editor is the UX reference.
 
 The V2 package/app baseline is the new architectural core.
+
+One hard rule for the roadmap:
+
+- do not replace the visible editor with a simplified alternate shell
+- do not “modernize” the UI by lowering its density or changing its product
+  posture
+- do not treat agent operability as a reason to redesign the editor
+
+The deliverable is:
+
+- the same editor surface
+- backed by better architecture
+- operable by both humans and agents
 
 ## Roadmap Principles
 
@@ -96,6 +108,11 @@ cases.
 
 This is the phase that turns the V2 foundation from “a runtime shell” into
 “the architectural base for the real editor experience”.
+
+This phase should be understood as:
+
+- keep the visible editor shell
+- replace the ownership model beneath it
 
 ### Deliverables
 
@@ -482,7 +499,7 @@ complexity before the local collaborative loop is real.
 
 Every phase should preserve or improve these gates:
 
-- `pnpm check:v2` stays green
+- `pnpm check:foundation` stays green
 - golden outputs are updated deliberately
 - new behavior gets direct tests, not only manual confidence
 - the studio build stays healthy

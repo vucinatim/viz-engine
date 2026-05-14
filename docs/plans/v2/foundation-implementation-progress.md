@@ -34,8 +34,8 @@ This is no longer just a doc-only posture.
 
 - introduced a package-safe shared TypeScript base config
 - expanded the PNPM workspace to support `apps/*`
-- added explicit V2 scripts for package typecheck/build, studio app, tests, and
-  combined V2 checks
+- added explicit foundation scripts for package typecheck/build, studio app,
+  tests, and combined validation checks
 
 ### Canonical Contracts
 
@@ -61,7 +61,7 @@ This is no longer just a doc-only posture.
 
 - introduced a canonical example project package
 - introduced deterministic example baked feature artifacts
-- introduced the first root V2 test suite
+- introduced the first root foundation test suite
 - introduced a minimal Vite-based `viz-studio` app shell that consumes the
   packages directly
 - introduced the first local-first CLI surface for validating and inspecting
@@ -76,7 +76,7 @@ The current setup proves that V2 now has:
 - a deterministic runtime shell
 - package-consumable example data
 - a validatable and testable setup
-- a first app shell outside the old Next editor terrain
+- a first dedicated dev shell outside the old Next editor terrain
 
 It now also proves the first actual visual runtime path:
 
@@ -211,7 +211,7 @@ It now also proves the first hardened validation baseline:
 - file-backed golden fixtures now pin canonical render-plan outputs
 - file-backed golden fixtures now pin canonical SVG proof output
 - file-backed golden fixtures now pin canonical exported bundle manifest output
-- the repo now has a deliberate `pnpm fixtures:v2:update` command for
+- the repo now has a deliberate `pnpm fixtures:update` command for
   regenerating those goldens
 - bundle corruption tests now cover invalid manifest metadata, missing files,
   orphan entries, and missing manifest entries
@@ -239,7 +239,7 @@ It now also proves the first external package-consumer path:
 - Node-valid ESM package output with explicit relative `.js` specifiers
 - an external temporary consumer that installs Viz tarballs and renders the
   canonical example project without workspace alias help
-- `check:v2` now validates both the internal workspace path and the external
+- `check:foundation` now validates both the internal workspace path and the external
   tarball-consumer path
 
 The runtime direction is now explicitly portable-first:
@@ -341,14 +341,14 @@ An important correction:
 It now also proves the first agent-native creative-loop slice:
 
 - the repo now has a scripted end-to-end local creative-loop scenario in
-  `tools/v2/agent-creative-loop-scenario.ts`
+  `tools/foundation/agent-creative-loop-scenario.ts`
 - that proof opens the canonical example project, mutates the working head,
   adds graph and layer content, inspects runtime output, exports a bundle, and
   reloads it successfully
 - `@viz-engine/editor-control` now keeps a clean browser-vs-Node boundary:
   - the root package entry is browser-safe
   - bundle IO lives behind `@viz-engine/editor-control/node`
-- `pnpm smoke:creative-loop:v2` now validates that one truthful local
+- `pnpm smoke:creative-loop` now validates that one truthful local
   human-plus-agent authoring path is operational
 - the creative-loop proof is now part of the full V2 validation gate
 

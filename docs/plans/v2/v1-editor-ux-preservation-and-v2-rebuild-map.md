@@ -38,6 +38,20 @@ The mission is:
 
 - “rebuild the real Viz editor over V2 truth”
 
+This should be read literally:
+
+- keep the real editor shell
+- keep the real panel system
+- keep the real colors, buttons, and visual language
+- keep the real node-editor posture
+- keep the real audio/transport surface
+- keep the real interaction density
+
+The default is preservation.
+
+Any visible redesign should require an explicit positive reason, not happen as
+a side effect of the rewrite.
+
 ## What Was Verified
 
 The following V1 surfaces were inspected directly:
@@ -85,6 +99,10 @@ It creates the correct creative-tool relationship between:
 This spatial workflow should be preserved unless a clearly better replacement
 is proven.
 
+Not approximately preserved.
+
+Preserved as the real product surface.
+
 ### 2. Dense, serious-tool header and toolbar posture
 
 The current header and toolbar do not feel like a toy app.
@@ -100,6 +118,8 @@ They already express the right product posture:
 - tool-density without clutter collapse
 
 That seriousness should remain.
+
+It is part of the product identity, not optional polish.
 
 ### 3. Layer-centric composition workflow
 
@@ -180,6 +200,9 @@ The broader thing to preserve is the feeling that the editor is:
 
 That feel is a real requirement.
 
+This is why “cleaner” replacement shells are not acceptable if they lose this
+quality bar.
+
 ## Architecture To Replace
 
 These are not product strengths.
@@ -208,6 +231,11 @@ The current layer store mixes:
 That is not the right long-term boundary.
 
 The editor should consume scene truth and runtime truth, not own both.
+
+That is the paradigm change:
+
+- not a new editor concept
+- a new ownership model underneath the same editor concept
 
 ### 3. Hidden direct coupling between UI state and render behavior
 
@@ -245,6 +273,7 @@ That is exactly what should be replaced.
 
 - overall panel layout
 - editor header posture
+- actual color and control language
 - file/examples/export workflows as product affordances
 - layer list and layer card mental model
 - inline parameter + animation affordance model
@@ -253,6 +282,13 @@ That is exactly what should be replaced.
 - transport controls and fullscreen behavior
 - audio panel centrality
 - overall density and immediacy
+
+### Preserve as product identity
+
+- the editor should still look and feel like VizEngine
+- a user familiar with V1 should recognize the tool immediately
+- the node editor should still feel attached to the live visual stage
+- the audio workflow should still feel first-class rather than bolted on
 
 ### Replace as architecture
 
@@ -294,6 +330,8 @@ Not:
 - a browser automation layer pretending to be architecture
 
 This seam should sit underneath the preserved editor workflow.
+
+It is not permission to create a replacement shell and “come back later”.
 
 ## Immediate Rebuild Strategy
 

@@ -29,7 +29,7 @@ const run = (command, args, cwd) => {
   }).trim();
 };
 
-const tempRoot = mkdtempSync(join(tmpdir(), "viz-v2-package-smoke-"));
+const tempRoot = mkdtempSync(join(tmpdir(), "viz-foundation-package-smoke-"));
 const tarballDir = join(tempRoot, "tarballs");
 const consumerDir = join(tempRoot, "consumer");
 
@@ -54,7 +54,7 @@ try {
   }
 
   const consumerPackageJson = {
-    name: "viz-v2-consumer-smoke",
+    name: "viz-foundation-consumer-smoke",
     private: true,
     type: "module",
     dependencies: Object.fromEntries(

@@ -76,7 +76,7 @@ That layer should:
 - `@viz-engine/editor-session` lint/build
 - dedicated live-preview tests
 - full V2 test suite
-- full `pnpm check:v2`
+- full `pnpm check:foundation`
 
 ## Exit Criteria
 

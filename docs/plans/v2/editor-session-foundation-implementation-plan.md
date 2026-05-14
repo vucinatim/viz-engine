@@ -72,7 +72,7 @@ That package should:
 - dedicated editor-session test coverage
 - V2 test suite
 - external package-consumer smoke
-- full `pnpm check:v2`
+- full `pnpm check:foundation`
 
 ## Exit Criteria
 

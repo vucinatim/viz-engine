@@ -53,7 +53,7 @@ describe("Viz component authoring foundation", () => {
     ]);
   });
 
-  it("renders the V1-derived feature-channel-bars component through the canonical V2 runtime path", () => {
+  it("renders the V1-derived feature-channel-bars component through the canonical runtime path", () => {
     const project: VizProjectDocument = {
       schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
       projectId: "project-component-proof",

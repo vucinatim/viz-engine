@@ -50,8 +50,18 @@ But this should not be misread as:
 The intended direction is:
 
 - preserve the strength of the current editor UX
+- preserve the actual visible editor shell unless a better replacement is
+  intentionally proven
 - rebuild that editor over V2 runtime, action, and document truth
 - replace architecture, not product instincts
+
+That means preserving by default:
+
+- the same layout
+- the same colors and controls
+- the same node-editor posture
+- the same audio/transport posture
+- the same dense, serious-tool feel
 
 That direction is no longer only conceptual.
 
@@ -60,7 +70,7 @@ The repo now has:
 - a real V2 runtime/package spine
 - a real action-driven working-head foundation
 - a real local operator surface
-- a separate V2 dev-shell path for engine validation
+- a separate dev-shell path for engine validation
 
 So the current phase is no longer “invent V2”.
 

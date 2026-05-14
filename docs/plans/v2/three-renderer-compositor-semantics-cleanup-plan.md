@@ -54,4 +54,4 @@ This slice is complete when:
 - group opacity and blend semantics are no longer ignored in the `Three` path
 - stroke-only rects no longer render as filled quads
 - tests prove the new behavior
-- `pnpm check:v2` passes
+- `pnpm check:foundation` passes
