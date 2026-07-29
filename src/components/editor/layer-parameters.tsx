@@ -1,6 +1,6 @@
-import { useHistoryStore } from '@/lib/stores/history-store';
-import useLayerValuesStore from '@/lib/stores/layer-values-store';
+import editorControl from '@/lib/editor-control';
 import { cn } from '@/lib/utils';
+import { useVizSessionSelector } from '@/lib/viz-session';
 import { AudioLines, Info, Target, X } from 'lucide-react';
 import { memo } from 'react';
 import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
@@ -11,6 +11,7 @@ import {
   VConfigType,
 } from '../config/config';
 import useNodeNetworkStore, {
+  useIsNetworkEnabled,
   useNetworkEnabledMap,
 } from '../node-network/node-network-store';
 import { Button } from '../ui/button';
@@ -29,7 +30,12 @@ const LayerParameters = ({ layerId, config }: LayerParametersProps) => {
   const networkEnabledMap = useNetworkEnabledMap();
 
   // Get all current values once for visibleIf checks
-  const allValues = useLayerValuesStore((state) => state.values[layerId]);
+  const allValues = useVizSessionSelector(
+    (state) =>
+      state.project.workingProject.layers.find(
+        (layer) => layer.id === layerId,
+      )?.settings,
+  );
 
   // Helper function to get animated parameters in a group
   const getAnimatedParamsInGroup = (groupOption: GroupConfigOption<any>) => {
@@ -147,36 +153,26 @@ interface ParameterFieldProps {
 const ParameterField = memo(
   ({ layerId, paramPath, option }: ParameterFieldProps) => {
     // Subscribe ONLY to this parameter's value
-    const value = useLayerValuesStore((state) => {
-      const layerValues = state.values[layerId];
+    const value = useVizSessionSelector((state) => {
+      const layerValues = state.project.workingProject.layers.find(
+        (layer) => layer.id === layerId,
+      )?.settings;
       if (!layerValues) return undefined;
 
       // Navigate the path to get the value
-      let current = layerValues;
+      let current: unknown = layerValues;
       for (const key of paramPath) {
-        current = current?.[key];
+        if (typeof current !== 'object' || current === null) {
+          return undefined;
+        }
+        current = (current as Record<string, unknown>)[key];
       }
       return current;
     });
 
-    const isAnimated = useNodeNetworkStore(
-      (state) => state.networks[option.id]?.isEnabled,
-    );
+    const isAnimated = useIsNetworkEnabled(option.id);
 
     const openNetwork = useNodeNetworkStore((state) => state.openNetwork);
-    const setOpenNetwork = useNodeNetworkStore((state) => state.setOpenNetwork);
-    const setNetworkEnabled = useNodeNetworkStore(
-      (state) => state.setNetworkEnabled,
-    );
-    const setShouldForceShowOverlay = useNodeNetworkStore(
-      (state) => state.setShouldForceShowOverlay,
-    );
-    const updateLayerValue = useLayerValuesStore(
-      (state) => state.updateLayerValue,
-    );
-
-    // Get history bypass control
-    const setBypassHistory = useHistoryStore((state) => state.setBypassHistory);
 
     const isHighlighted = openNetwork === option.id;
 
@@ -206,15 +202,19 @@ const ParameterField = memo(
             {option.toFormElement(
               value,
               (newValue) => {
-                updateLayerValue(layerId, paramPath, newValue);
+                editorControl.project.updateLayerValue(
+                  layerId,
+                  paramPath,
+                  newValue,
+                );
               },
               () => {
                 // On drag start - bypass history
-                setBypassHistory(true);
+                editorControl.history.setBypassHistory(true);
               },
               () => {
                 // On drag end - re-enable history
-                setBypassHistory(false);
+                editorControl.history.setBypassHistory(false);
               },
             )}
           </div>
@@ -234,13 +234,17 @@ const ParameterField = memo(
                 onPressedChange={() => {
                   // If already animated, just select/open it
                   if (isAnimated) {
-                    setOpenNetwork(option.id);
-                    setShouldForceShowOverlay(true);
+                    editorControl.nodeEditor.openNetwork(option.id);
+                    editorControl.nodeEditor.setShouldForceShowOverlay(true);
                     return;
                   }
 
                   // Otherwise, enable the animation
-                  setNetworkEnabled(option.id, true, option.type);
+                  editorControl.nodeEditor.setAnimationEnabled(
+                    option.id,
+                    true,
+                    option.type,
+                  );
                 }}>
                 {isAnimated ? <AudioLines /> : <Target />}
               </Toggle>
@@ -253,7 +257,11 @@ const ParameterField = memo(
                       size="icon"
                       className="h-8 w-8 hover:bg-red-500/20"
                       onClick={() => {
-                        setNetworkEnabled(option.id, false, option.type);
+                        editorControl.nodeEditor.setAnimationEnabled(
+                          option.id,
+                          false,
+                          option.type,
+                        );
                       }}>
                       <X size={14} className="text-red-400" />
                     </Button>

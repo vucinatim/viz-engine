@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
-import useAudioStore from '@/lib/stores/audio-store';
-import useEditorStore from '@/lib/stores/editor-store';
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
+import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
 
 const useAudioPlaybackSync = () => {
-  const audioElementRef = useAudioStore((s) => s.audioElementRef);
-  const isPlaying = useEditorStore((s) => s.isPlaying);
+  const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);
+  const isPlaying = useEditorPreviewStore((s) => s.transport.isPlaying);
 
   useEffect(() => {
     const audio = audioElementRef.current;

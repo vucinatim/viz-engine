@@ -1,6 +1,8 @@
 import useDimensions from '@/lib/hooks/use-dimensions';
-import useAudioStore from '@/lib/stores/audio-store';
-import useEditorStore from '@/lib/stores/editor-store';
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
+import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
+import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
+import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import { Player, PlayerRef } from '@remotion/player';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import CustomPlayerControls from './custom-player-controls';
@@ -11,13 +13,26 @@ const FPS = 60;
 const ASPECT_RATIO = 'free' as AspectRatio;
 
 const RemotionPlayer = () => {
-  const setPlayerRef = useEditorStore((s) => s.setPlayerRef);
-  const setPlayerFPS = useEditorStore((s) => s.setPlayerFPS);
-  const isPlayingStore = useEditorStore((s) => s.isPlaying);
-  const setIsPlaying = useEditorStore((s) => s.setIsPlaying);
+  const setPlayerRef = useEditorRuntimePreviewAttachmentStore(
+    (state) => state.setPlayerRef,
+  );
+  const setDurationFrames = useEditorPreviewStore(
+    (state) => state.setDurationFrames,
+  );
+  const syncCurrentFrame = useEditorPreviewStore(
+    (state) => state.syncCurrentFrame,
+  );
+  const isPlaying = useEditorPreviewStore(
+    (state) => state.transport.isPlaying,
+  );
+  const currentFrame = useEditorPreviewStore(
+    (state) => state.transport.currentFrame,
+  );
 
-  const audioElementRef = useAudioStore((s) => s.audioElementRef);
-  const isCapturingTab = useAudioStore((s) => s.isCapturingTab);
+  const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);
+  const isCapturingTab = useEditorAudioSessionStore(
+    (s) => s.session.source?.kind === 'stream',
+  );
 
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<PlayerRef>(null);
@@ -30,8 +45,10 @@ const RemotionPlayer = () => {
   // Register the player ref
   useEffect(() => {
     setPlayerRef(playerRef);
-    setPlayerFPS(FPS);
-  }, [playerRef, setPlayerFPS, setPlayerRef]);
+    return () => {
+      setPlayerRef({ current: null });
+    };
+  }, [playerRef, setPlayerRef]);
 
   useEffect(() => {
     const audioElement = audioElementRef.current;
@@ -41,11 +58,18 @@ const RemotionPlayer = () => {
     const updateDuration = () => {
       const dur = audioElement.duration;
       if (Number.isFinite(dur) && dur > 0) {
-        setDurationInFrames(Math.max(1, Math.ceil(dur * FPS)));
+        const nextDurationFrames = Math.max(1, Math.ceil(dur * FPS));
+        setDurationInFrames(nextDurationFrames);
+        setDurationFrames(nextDurationFrames);
       } else if (isCapturingTab) {
         // MediaStreams often report Infinity
         const fallbackSeconds = 60 * 30; // 30 min
-        setDurationInFrames(Math.max(1, Math.ceil(fallbackSeconds * FPS)));
+        const nextDurationFrames = Math.max(
+          1,
+          Math.ceil(fallbackSeconds * FPS),
+        );
+        setDurationInFrames(nextDurationFrames);
+        setDurationFrames(nextDurationFrames);
       } // else keep previous duration
     };
 
@@ -61,16 +85,18 @@ const RemotionPlayer = () => {
       audioElement.removeEventListener('loadedmetadata', updateDuration);
       audioElement.removeEventListener('durationchange', updateDuration);
     };
-  }, [audioElementRef, src, isCapturingTab]);
+  }, [audioElementRef, src, isCapturingTab, setDurationFrames]);
 
   // While capturing tab audio, MediaStream duration is Infinity.
   // Provide a large finite duration so <Player/> remains happy.
   useEffect(() => {
     if (isCapturingTab) {
       const fallbackSeconds = 60 * 30; // 30 minutes
-      setDurationInFrames(Math.max(1, Math.ceil(fallbackSeconds * FPS)));
+      const nextDurationFrames = Math.max(1, Math.ceil(fallbackSeconds * FPS));
+      setDurationInFrames(nextDurationFrames);
+      setDurationFrames(nextDurationFrames);
     }
-  }, [isCapturingTab]);
+  }, [isCapturingTab, setDurationFrames]);
 
   const isFullscreen = playerRef.current?.isFullscreen();
 
@@ -112,29 +138,36 @@ const RemotionPlayer = () => {
   useEffect(() => {
     const p = playerRef.current;
     if (!p) return;
-    const currently = p.isPlaying();
-    if (isPlayingStore && !currently) p.play();
-    if (!isPlayingStore && currently) p.pause();
-  }, [isPlayingStore]);
+    const actualFrame = p.getCurrentFrame?.() ?? 0;
+    const currentlyPlaying = p.isPlaying();
 
-  // Poll Player state to keep store in sync with built-in controls
+    if (Math.abs(actualFrame - currentFrame) > 1) {
+      p.seekTo(currentFrame);
+    }
+
+    if (isPlaying && !currentlyPlaying) {
+      p.play();
+    }
+
+    if (!isPlaying && currentlyPlaying) {
+      p.pause();
+    }
+  }, [currentFrame, isPlaying]);
+
+  // Poll current frame so preview transport stays canonical while the player runs
   useEffect(() => {
     let raf = 0;
-    let last = playerRef.current?.isPlaying() ?? false;
     const tick = () => {
       const p = playerRef.current;
       if (p) {
-        const now = p.isPlaying();
-        if (now !== last) {
-          setIsPlaying(now);
-          last = now;
-        }
+        const frame = p.getCurrentFrame?.() ?? 0;
+        syncCurrentFrame(frame);
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [setIsPlaying]);
+  }, [syncCurrentFrame]);
 
   return (
     <div

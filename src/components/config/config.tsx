@@ -2,7 +2,10 @@ import Color from 'color';
 import { ReactNode } from 'react';
 import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
 import { AnimInputData } from '../node-network/animation-nodes';
-import useNodeNetworkStore from '../node-network/node-network-store';
+import {
+  computeNodeNetworkOutput,
+  getNodeNetwork,
+} from '../node-network/node-network-store';
 import { Button } from '../ui/button';
 import { ColorPickerPopover } from '../ui/color-picker';
 import FileInput from '../ui/file-input';
@@ -64,16 +67,13 @@ export abstract class ConfigParam<T> extends BaseConfigOption<T> {
   }
 
   getValue(inputData: AnimInputData): T {
-    const isAnimated =
-      useNodeNetworkStore.getState().networks[this.id]?.isEnabled;
+    const isAnimated = getNodeNetwork(this.id)?.isEnabled;
     if (!isAnimated) {
       return this.value;
     }
 
     try {
-      const animatedValue = useNodeNetworkStore
-        .getState()
-        .computeNetworkOutput(this.id, inputData);
+      const animatedValue = computeNodeNetworkOutput(this.id, inputData);
       useAnimationLiveValuesStore.getState().setValue(this.id, animatedValue);
       return animatedValue;
     } catch (error) {
@@ -318,16 +318,13 @@ export class BooleanConfigOption extends ConfigParam<boolean> {
   }
 
   getValue(inputData: AnimInputData): boolean {
-    const isAnimated =
-      useNodeNetworkStore.getState().networks[this.id]?.isEnabled;
+    const isAnimated = getNodeNetwork(this.id)?.isEnabled;
     if (!isAnimated) {
       return this.value;
     }
 
     try {
-      const animatedValue = useNodeNetworkStore
-        .getState()
-        .computeNetworkOutput(this.id, inputData);
+      const animatedValue = computeNodeNetworkOutput(this.id, inputData);
       useAnimationLiveValuesStore.getState().setValue(this.id, animatedValue);
       // Convert number to boolean: any non-zero value is true
       const boolValue =

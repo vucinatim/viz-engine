@@ -1,11 +1,13 @@
 'use client';
 
+import editorControl from '@/lib/editor-control';
 import {
   OUTPUT_VIEW_OPTIONS,
   PIPELINE_STAGES,
 } from '@/lib/rhythm-lab/analysis-graph';
 import { STAGE_COLORS } from '@/lib/rhythm-lab/stage-colors';
-import useAudioStore from '@/lib/stores/audio-store';
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
+import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import useRhythmLabStore from '@/lib/stores/rhythm-lab-store';
 import { X } from 'lucide-react';
@@ -24,11 +26,12 @@ import TempoCard from './rhythm-lab/tempo-card';
 import TempogramCard from './rhythm-lab/tempogram-card';
 
 const RhythmLabPanel = () => {
-  const setIsRhythmLabOpen = useEditorStore((s) => s.setIsRhythmLabOpen);
   const isRhythmLabOpen = useEditorStore((s) => s.isRhythmLabOpen);
   const rhythmSelection = useEditorStore((s) => s.rhythmSelection);
-  const audioBuffer = useAudioStore((s) => s.audioBuffer);
-  const visualTimeRef = useRef(useAudioStore.getState().visualTime);
+  const audioBuffer = useAudioEngineStore((s) => s.audioBuffer);
+  const visualTimeRef = useRef(
+    useEditorAudioSessionStore.getState().visualTime,
+  );
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const workerRef = useRef<Worker | null>(null);
   const requestIdRef = useRef(0);
@@ -463,7 +466,7 @@ const RhythmLabPanel = () => {
   ]);
 
   useEffect(() => {
-    const unsub = useAudioStore.subscribe((state) => {
+    const unsub = useEditorAudioSessionStore.subscribe((state) => {
       visualTimeRef.current = state.visualTime;
     });
     return () => unsub();
@@ -503,7 +506,7 @@ const RhythmLabPanel = () => {
           <Button
             variant="outline"
             className="h-7 w-7 p-0"
-            onClick={() => setIsRhythmLabOpen(false)}
+            onClick={() => editorControl.ui.setRhythmLabOpen(false)}
             aria-label="Close rhythm lab">
             <X className="h-4 w-4" />
           </Button>

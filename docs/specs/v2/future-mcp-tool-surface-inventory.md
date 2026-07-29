@@ -64,6 +64,12 @@ They should not bypass those layers through:
 - editor-only hacks
 - UI event simulation as the primary path
 
+The same rule should apply to runtime controls:
+
+- MCP/tools should wrap the same canonical working-head and runtime/session
+  operations the editor uses
+- they should not invent a separate agent-only control plane
+
 ## Tool Surface Layers
 
 The future machine-callable surface should be understood as six layers:
@@ -96,6 +102,9 @@ They should be thin wrappers around the core action model.
 
 These tools let the agent inspect how the scene behaves without committing
 final renders.
+
+They should also expose canonical runtime/session controls, not only passive
+inspection.
 
 ## 5. Bake/Render/Version Operations
 
@@ -258,6 +267,20 @@ Examples:
 
 - `viz.asset.list`
 - `viz.asset.get`
+
+## Runtime Tool Examples
+
+The runtime/tool family should eventually include operations like:
+
+- `viz.runtime.preview.get`
+- `viz.runtime.preview.set_transport`
+- `viz.runtime.preview.set_time`
+- `viz.runtime.preview.set_resolution`
+- `viz.runtime.preview.set_audio_session`
+- `viz.runtime.preview.inspect_state`
+
+These should map onto the same underlying runtime entry points the editor uses
+for preview and live control.
 - `viz.asset.attach`
 - `viz.asset.replace`
 - `viz.asset.inspect`

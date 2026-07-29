@@ -3,7 +3,8 @@
 import { PipelineStageDefinition } from '@/lib/rhythm-lab/analysis-graph';
 import { STAGE_COLORS } from '@/lib/rhythm-lab/stage-colors';
 import useRhythmLabStore from '@/lib/stores/rhythm-lab-store';
-import useAudioStore from '@/lib/stores/audio-store';
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
+import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { useEffect, useRef, useState } from 'react';
 import StageCard from './stage-card';
@@ -20,8 +21,10 @@ const GridCard = ({ stage }: GridCardProps) => {
   const beatPhase = useRhythmLabStore((s) => s.beatPhase);
   const beatPeriodFrames = useRhythmLabStore((s) => s.beatPeriodFrames);
   const enabled = useRhythmLabStore((s) => Boolean(s.enabledStages.grid));
-  const audioBuffer = useAudioStore((s) => s.audioBuffer);
-  const visualTimeRef = useRef(useAudioStore.getState().visualTime);
+  const audioBuffer = useAudioEngineStore((s) => s.audioBuffer);
+  const visualTimeRef = useRef(
+    useEditorAudioSessionStore.getState().visualTime,
+  );
   const rhythmSelection = useEditorStore((s) => s.rhythmSelection);
   const rafRef = useRef(0);
   const lastTimeRef = useRef(-1);
@@ -29,7 +32,7 @@ const GridCard = ({ stage }: GridCardProps) => {
   const [flash, setFlash] = useState(0);
 
   useEffect(() => {
-    const unsub = useAudioStore.subscribe((state) => {
+    const unsub = useEditorAudioSessionStore.subscribe((state) => {
       visualTimeRef.current = state.visualTime;
     });
     return () => unsub();

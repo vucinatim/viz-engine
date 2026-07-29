@@ -1,10 +1,10 @@
-import { useHistoryStore } from '@/lib/stores/history-store';
-import useLayerValuesStore from '@/lib/stores/layer-values-store';
+import editorControl from '@/lib/editor-control';
 import { cn } from '@/lib/utils';
 import { AudioLines, Info, Target, X } from 'lucide-react';
 import { UseFormReturn, useForm } from 'react-hook-form';
 import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
 import useNodeNetworkStore, {
+  useIsNetworkEnabled,
   useNetworkEnabledMap,
 } from '../node-network/node-network-store';
 import { Button } from '../ui/button';
@@ -162,24 +162,9 @@ const DynamicFormField = ({
   option,
   form,
 }: DynamicFormFieldProps) => {
-  const isAnimated = useNodeNetworkStore(
-    (state) => state.networks[option.id]?.isEnabled,
-  );
+  const isAnimated = useIsNetworkEnabled(option.id);
 
   const openNetwork = useNodeNetworkStore((state) => state.openNetwork);
-  const setOpenNetwork = useNodeNetworkStore((state) => state.setOpenNetwork);
-  const setNetworkEnabled = useNodeNetworkStore(
-    (state) => state.setNetworkEnabled,
-  );
-  const setShouldForceShowOverlay = useNodeNetworkStore(
-    (state) => state.setShouldForceShowOverlay,
-  );
-  const updateLayerValue = useLayerValuesStore(
-    (state) => state.updateLayerValue,
-  );
-
-  // Get history bypass control
-  const setBypassHistory = useHistoryStore((state) => state.setBypassHistory);
 
   const isHighlighted = openNetwork === option.id;
 
@@ -221,15 +206,19 @@ const DynamicFormField = ({
                     field.value,
                     (newValue) => {
                       field.onChange(newValue);
-                      updateLayerValue(layerId, name.split('.'), newValue);
+                      editorControl.project.updateLayerValue(
+                        layerId,
+                        name.split('.'),
+                        newValue,
+                      );
                     },
                     () => {
                       // On drag start - bypass history
-                      setBypassHistory(true);
+                      editorControl.history.setBypassHistory(true);
                     },
                     () => {
                       // On drag end - re-enable history
-                      setBypassHistory(false);
+                      editorControl.history.setBypassHistory(false);
                     },
                   )}
                 </FormControl>
@@ -250,13 +239,17 @@ const DynamicFormField = ({
                     onPressedChange={() => {
                       // If already animated, just select/open it
                       if (isAnimated) {
-                        setOpenNetwork(option.id);
-                        setShouldForceShowOverlay(true);
+                        editorControl.nodeEditor.openNetwork(option.id);
+                        editorControl.nodeEditor.setShouldForceShowOverlay(true);
                         return;
                       }
 
                       // Otherwise, enable the animation
-                      setNetworkEnabled(option.id, true, option.type);
+                      editorControl.nodeEditor.setAnimationEnabled(
+                        option.id,
+                        true,
+                        option.type,
+                      );
                     }}>
                     {isAnimated ? <AudioLines /> : <Target />}
                   </Toggle>
@@ -269,7 +262,11 @@ const DynamicFormField = ({
                           size="icon"
                           className="h-8 w-8 hover:bg-red-500/20"
                           onClick={() => {
-                            setNetworkEnabled(option.id, false, option.type);
+                            editorControl.nodeEditor.setAnimationEnabled(
+                              option.id,
+                              false,
+                              option.type,
+                            );
                           }}>
                           <X size={14} className="text-red-400" />
                         </Button>

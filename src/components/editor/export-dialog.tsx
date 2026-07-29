@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import useAudioStore from '@/lib/stores/audio-store';
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useExportStore from '@/lib/stores/export-store';
 import { estimateVideoSize } from '@/lib/utils/video-encoder';
 import { AlertCircle, ArrowLeft, Download, X } from 'lucide-react';
@@ -44,7 +44,7 @@ const ExportDialog = ({
   const progress = useExportStore((s) => s.progress);
   const error = useExportStore((s) => s.error);
   const resetExport = useExportStore((s) => s.resetExport);
-  const audioElementRef = useAudioStore((s) => s.audioElementRef);
+  const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);
 
   const [customStartTime, setCustomStartTime] = useState(settings.startTime);
   const [customEndTime, setCustomEndTime] = useState(

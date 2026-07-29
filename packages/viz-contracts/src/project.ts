@@ -8,10 +8,22 @@ export const VIZ_PROJECT_SCHEMA_VERSION = "2.0.0-alpha.1" as const;
 
 export type VizBlendMode =
   | "normal"
-  | "add"
-  | "screen"
   | "multiply"
-  | "overlay";
+  | "screen"
+  | "overlay"
+  | "darken"
+  | "lighten"
+  | "color-dodge"
+  | "color-burn"
+  | "hard-light"
+  | "soft-light"
+  | "difference"
+  | "exclusion"
+  | "hue"
+  | "saturation"
+  | "color"
+  | "luminosity"
+  | "add";
 
 export interface VizLayerTransform {
   x?: number;
@@ -49,6 +61,11 @@ export interface VizLayerRenderPolicy {
   preferredRendererFamily?: VizRendererFamily;
 }
 
+export interface VizLayerSurface {
+  backgroundColor?: string;
+  freezeWhenPaused?: boolean;
+}
+
 export interface VizLayer {
   id: VizLayerId;
   name: string;
@@ -58,6 +75,7 @@ export interface VizLayer {
   blendMode: VizBlendMode;
   rendererFamily?: VizRendererFamily;
   transform?: VizLayerTransform;
+  surface?: VizLayerSurface;
   settings?: Record<string, unknown>;
   inputs?: Record<string, VizValueSource>;
   graphId?: VizGraphId;

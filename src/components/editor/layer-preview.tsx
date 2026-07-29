@@ -1,4 +1,5 @@
-import useLayerStore, { LayerData } from '@/lib/stores/layer-store';
+import editorControl from '@/lib/editor-control';
+import { LayerData } from '@/lib/stores/editor-layer-projection-store';
 import { cn } from '@/lib/utils';
 import { Eye, EyeOff } from 'lucide-react';
 import LayerMirrorCanvas from './layer-mirror-canvas';
@@ -8,14 +9,12 @@ interface LayerPreviewProps {
 }
 
 const LayerPreview = ({ layer }: LayerPreviewProps) => {
-  const updateLayerSettings = useLayerStore((s) => s.updateLayerSettings);
-
   return (
     <div className="group relative aspect-video h-full shrink-0 cursor-pointer overflow-hidden rounded-md">
       {layer.layerSettings.visible && <LayerMirrorCanvas layer={layer} />}
       <div
         onMouseDown={() =>
-          updateLayerSettings(layer.id, {
+          editorControl.project.updateLayerSettings(layer.id, {
             ...layer.layerSettings,
             visible: !layer.layerSettings.visible,
           })

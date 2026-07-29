@@ -1,1542 +1,1644 @@
 {
-  "version": "1.0.0",
-  "layerStore": {
+  "version": "2.0.0-alpha.1",
+  "project": {
+    "schemaVersion": "2.0.0-alpha.1",
+    "projectId": "layer-blending-showcase",
+    "name": "Layer Blending Showcase",
+    "timeline": {
+      "fps": 60,
+      "durationInFrames": 1
+    },
+    "viewport": {
+      "width": 1920,
+      "height": 1080,
+      "backgroundColor": "#000000"
+    },
+    "layerOrder": [
+      "layer-Fullscreen Shader-1760370419586",
+      "layer-Noise Shader-1760370465345",
+      "layer-Neural Network-1760370435624",
+      "layer-Strobe Light-1760375514040"
+    ],
     "layers": [
       {
         "id": "layer-Fullscreen Shader-1760370419586",
-        "comp": {
-          "name": "Fullscreen Shader"
+        "name": "Fullscreen Shader",
+        "componentId": "fullscreen-shader",
+        "enabled": true,
+        "opacity": 1,
+        "blendMode": "normal",
+        "surface": {
+          "backgroundColor": "rgb(10, 10, 10)",
+          "freezeWhenPaused": true
         },
-        "isExpanded": false,
-        "isDebugEnabled": false,
-        "layerSettings": {
-          "visible": true,
-          "background": "rgb(10, 10, 10)",
-          "opacity": 1,
-          "blendingMode": "normal",
-          "freeze": true,
-          "showDebug": false
+        "settings": {
+          "shader": "Radial Ripple Grid",
+          "color": "rgb(71, 119, 134)",
+          "speed": 0.1,
+          "scale": 1.2,
+          "intensity": 3,
+          "offsetX": 0,
+          "offsetY": 0
         }
       },
       {
         "id": "layer-Noise Shader-1760370465345",
-        "comp": {
-          "name": "Noise Shader"
+        "name": "Noise Shader",
+        "componentId": "noise-shader",
+        "enabled": true,
+        "opacity": 1,
+        "blendMode": "multiply",
+        "surface": {
+          "backgroundColor": "rgba(10, 10, 10, 1)",
+          "freezeWhenPaused": true
         },
-        "isExpanded": false,
-        "isDebugEnabled": false,
-        "layerSettings": {
-          "visible": true,
-          "background": "rgba(10, 10, 10, 1)",
-          "opacity": 1,
-          "blendingMode": "multiply",
-          "freeze": true,
-          "showDebug": false
+        "settings": {
+          "noise": {
+            "type": "perlin",
+            "scale": 0.6,
+            "octaves": 2,
+            "lacunarity": 3,
+            "gain": 0.3
+          },
+          "animation": {
+            "speed": 7,
+            "flowX": 0,
+            "flowY": 0,
+            "rotationSpeed": 0
+          },
+          "distortion": {
+            "enabled": true,
+            "amount": 4,
+            "scale": 1.5
+          },
+          "color": {
+            "mode": "monochrome",
+            "color1": "#ffffff",
+            "color2": "#ffffff",
+            "color3": "#ffffff",
+            "hueShift": 1,
+            "saturation": 0
+          },
+          "output": {
+            "brightness": 1.49,
+            "contrast": 3,
+            "invert": true,
+            "posterize": 0
+          }
         }
       },
       {
         "id": "layer-Neural Network-1760370435624",
-        "comp": {
-          "name": "Neural Network"
+        "name": "Neural Network",
+        "componentId": "neural-network",
+        "enabled": true,
+        "opacity": 1,
+        "blendMode": "normal",
+        "surface": {
+          "backgroundColor": "rgba(10, 10, 10, 0)",
+          "freezeWhenPaused": true
         },
-        "isExpanded": false,
-        "isDebugEnabled": false,
-        "layerSettings": {
-          "visible": true,
-          "background": "rgba(10, 10, 10, 0)",
-          "opacity": 1,
-          "blendingMode": "normal",
-          "freeze": true,
-          "showDebug": false
+        "settings": {
+          "neuronCount": 30,
+          "seed": 42,
+          "tubeRadius": 0.25,
+          "neuronColor": "#00CED1",
+          "somaEmission": "rgb(255, 138, 201)",
+          "emissiveIntensity": 2,
+          "metalness": 0,
+          "roughness": 0.9,
+          "fresnelPower": 3,
+          "growth": 1,
+          "dendriteReach": 20,
+          "trigger": false,
+          "signalSpeed": 30,
+          "signalSize": 0.2,
+          "activationDecay": 0.4,
+          "postProcessing": {
+            "bloom": false,
+            "bloomStrength": 0.2,
+            "bloomRadius": 0.8,
+            "bloomThreshold": 0.3,
+            "depthOfField": false,
+            "dofFocus": 10,
+            "dofAperture": 0.0005
+          }
+        },
+        "inputs": {
+          "postProcessing:dofFocus": {
+            "kind": "graph-output",
+            "graphId": "layer-Neural Network-1760370435624:postProcessing:dofFocus",
+            "output": "value"
+          },
+          "trigger": {
+            "kind": "graph-output",
+            "graphId": "layer-Neural Network-1760370435624:trigger",
+            "output": "value"
+          },
+          "seed": {
+            "kind": "graph-output",
+            "graphId": "layer-Neural Network-1760370435624:seed",
+            "output": "value"
+          },
+          "signalSpeed": {
+            "kind": "graph-output",
+            "graphId": "layer-Neural Network-1760370435624:signalSpeed",
+            "output": "value"
+          }
         }
       },
       {
         "id": "layer-Strobe Light-1760375514040",
-        "comp": {
-          "name": "Strobe Light"
+        "name": "Strobe Light",
+        "componentId": "strobe-light",
+        "enabled": true,
+        "opacity": 1,
+        "blendMode": "soft-light",
+        "surface": {
+          "backgroundColor": "rgba(10, 10, 10, 1)",
+          "freezeWhenPaused": true
         },
-        "isExpanded": false,
-        "isDebugEnabled": false,
-        "layerSettings": {
-          "visible": true,
-          "background": "rgba(10, 10, 10, 1)",
-          "opacity": 1,
-          "blendingMode": "soft-light",
-          "freeze": true,
-          "showDebug": false
+        "settings": {
+          "mode": "Manual",
+          "color": "#ffffff",
+          "intensity": 10.5,
+          "strength": 1,
+          "dutyCycle": 0.3,
+          "flashRate": 0.3
+        },
+        "inputs": {
+          "strength": {
+            "kind": "graph-output",
+            "graphId": "layer-Strobe Light-1760375514040:strength",
+            "output": "value"
+          },
+          "intensity": {
+            "kind": "graph-output",
+            "graphId": "layer-Strobe Light-1760375514040:intensity",
+            "output": "value"
+          }
         }
       }
-    ]
-  },
-  "layerValuesStore": {
-    "values": {
-      "layer-Instanced Supercube-1754333746807": {
-        "explosionFactor": 1.67,
-        "rotationSpeed": 0.2,
-        "animationSpeed": 0.08,
-        "gridSize": 5,
-        "spacing": 4,
-        "explosionShift": 0
-      },
-      "layer-Curve Spectrum-1754333784540": {
-        "appearance": {
-          "scaleY": 0.8,
-          "minFrequency": 20,
-          "maxFrequency": 22050
-        },
-        "grid": {
-          "color": "#ccc",
-          "freqLines": 10,
-          "ampLines": 5
-        },
-        "line": {
-          "smoothing": true,
-          "color": "white",
-          "thickness": 1,
-          "gradientHeight": 0.8
-        },
-        "points": {
-          "pointColor": "white",
-          "pointSize": 3
-        }
-      },
-      "layer-Fullscreen Shader-1760370419586": {
-        "shader": "Radial Ripple Grid",
-        "color": "rgb(71, 119, 134)",
-        "speed": 0.1,
-        "scale": 1.2,
-        "intensity": 3,
-        "offsetX": 0,
-        "offsetY": 0
-      },
-      "layer-Neural Network-1760370435624": {
-        "neuronCount": 30,
-        "seed": 42,
-        "tubeRadius": 0.25,
-        "neuronColor": "#00CED1",
-        "somaEmission": "rgb(255, 138, 201)",
-        "emissiveIntensity": 2,
-        "metalness": 0,
-        "roughness": 0.9,
-        "fresnelPower": 3,
-        "growth": 1,
-        "dendriteReach": 20,
-        "trigger": false,
-        "signalSpeed": 30,
-        "signalSize": 0.2,
-        "activationDecay": 0.4,
-        "postProcessing": {
-          "bloom": false,
-          "bloomStrength": 0.2,
-          "bloomRadius": 0.8,
-          "bloomThreshold": 0.3,
-          "depthOfField": false,
-          "dofFocus": 10,
-          "dofAperture": 0.0005
-        }
-      },
-      "layer-Noise Shader-1760370465345": {
-        "noise": {
-          "type": "perlin",
-          "scale": 0.6,
-          "octaves": 2,
-          "lacunarity": 3,
-          "gain": 0.3
-        },
-        "animation": {
-          "speed": 7,
-          "flowX": 0,
-          "flowY": 0,
-          "rotationSpeed": 0
-        },
-        "distortion": {
-          "enabled": true,
-          "amount": 4,
-          "scale": 1.5
-        },
-        "color": {
-          "mode": "monochrome",
-          "color1": "#ffffff",
-          "color2": "#ffffff",
-          "color3": "#ffffff",
-          "hueShift": 1,
-          "saturation": 0
-        },
-        "output": {
-          "brightness": 1.49,
-          "contrast": 3,
-          "invert": true,
-          "posterize": 0
-        }
-      },
-      "layer-Strobe Light-1760375514040": {
-        "mode": "Manual",
-        "color": "#ffffff",
-        "intensity": 10.5,
-        "strength": 1,
-        "dutyCycle": 0.3,
-        "flashRate": 0.3
-      }
-    }
-  },
-  "nodeNetworkStore": {
-    "networks": {
-      "layer-Neural Network-1760370435624:postProcessing:dofFocus": {
+    ],
+    "graphs": [
+      {
+        "id": "layer-Neural Network-1760370435624:postProcessing:dofFocus",
         "name": "layer-Neural Network-1760370435624:postProcessing:dofFocus",
-        "isEnabled": true,
-        "isMinimized": false,
+        "enabled": true,
         "nodes": [
           {
             "id": "layer-Neural Network-1760370435624:postProcessing:dofFocus-input-node",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 0,
-              "y": 0
-            },
-            "data": {
-              "definition": "Input",
-              "inputValues": {},
-              "state": {}
+            "type": "Input",
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 0,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Neural Network-1760370435624:postProcessing:dofFocus-preset-0-sine",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 280,
-              "y": 0
-            },
-            "data": {
-              "definition": "Sine",
-              "inputValues": {
-                "frequency": 0.2,
-                "phase": 0,
-                "amplitude": 1
+            "type": "Sine",
+            "inputs": {
+              "frequency": {
+                "kind": "literal",
+                "value": 0.2
               },
-              "state": {}
+              "phase": {
+                "kind": "literal",
+                "value": 0
+              },
+              "amplitude": {
+                "kind": "literal",
+                "value": 1
+              },
+              "time": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:postProcessing:dofFocus-input-node",
+                "output": "time",
+                "edgeId": "layer-Neural Network-1760370435624:postProcessing:dofFocus-edge-0"
+              }
+            },
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 280,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Neural Network-1760370435624:postProcessing:dofFocus-preset-1-normalize",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 560,
-              "y": 0
-            },
-            "data": {
-              "definition": "Math",
-              "inputValues": {
-                "a": 1,
-                "b": 0,
-                "operation": "add"
+            "type": "Math",
+            "inputs": {
+              "a": {
+                "kind": "literal",
+                "value": 1
               },
-              "state": {}
+              "b": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:postProcessing:dofFocus-preset-0-sine",
+                "output": "value",
+                "edgeId": "layer-Neural Network-1760370435624:postProcessing:dofFocus-edge-1"
+              },
+              "operation": {
+                "kind": "literal",
+                "value": "add"
+              }
+            },
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 560,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Neural Network-1760370435624:postProcessing:dofFocus-preset-2-scale",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 840,
-              "y": 0
-            },
-            "data": {
-              "definition": "Math",
-              "inputValues": {
-                "a": 0,
-                "b": 19.5,
-                "operation": "multiply"
+            "type": "Math",
+            "inputs": {
+              "a": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:postProcessing:dofFocus-preset-1-normalize",
+                "output": "result",
+                "edgeId": "layer-Neural Network-1760370435624:postProcessing:dofFocus-edge-2"
               },
-              "state": {}
+              "b": {
+                "kind": "literal",
+                "value": 19.5
+              },
+              "operation": {
+                "kind": "literal",
+                "value": "multiply"
+              }
+            },
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 840,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Neural Network-1760370435624:postProcessing:dofFocus-preset-3-offset",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1120,
-              "y": 0
-            },
-            "data": {
-              "definition": "Math",
-              "inputValues": {
-                "a": 1,
-                "b": 0,
-                "operation": "add"
+            "type": "Math",
+            "inputs": {
+              "a": {
+                "kind": "literal",
+                "value": 1
               },
-              "state": {}
+              "b": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:postProcessing:dofFocus-preset-2-scale",
+                "output": "result",
+                "edgeId": "layer-Neural Network-1760370435624:postProcessing:dofFocus-edge-3"
+              },
+              "operation": {
+                "kind": "literal",
+                "value": "add"
+              }
+            },
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1120,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Neural Network-1760370435624:postProcessing:dofFocus-output-node",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1400,
-              "y": 0
+            "type": "Output",
+            "inputs": {
+              "output": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:postProcessing:dofFocus-preset-3-offset",
+                "output": "result",
+                "edgeId": "layer-Neural Network-1760370435624:postProcessing:dofFocus-edge-4"
+              }
             },
-            "data": {
-              "definition": {
-                "label": "Output",
-                "type": "number"
-              },
-              "inputValues": {},
-              "state": {}
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1400,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer",
+                "outputType": "number"
+              }
             }
           }
         ],
-        "edges": [
+        "outputs": [
           {
-            "id": "layer-Neural Network-1760370435624:postProcessing:dofFocus-edge-0",
-            "source": "layer-Neural Network-1760370435624:postProcessing:dofFocus-input-node",
-            "sourceHandle": "time",
-            "target": "layer-Neural Network-1760370435624:postProcessing:dofFocus-preset-0-sine",
-            "targetHandle": "time"
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:postProcessing:dofFocus-edge-1",
-            "source": "layer-Neural Network-1760370435624:postProcessing:dofFocus-preset-0-sine",
-            "sourceHandle": "value",
-            "target": "layer-Neural Network-1760370435624:postProcessing:dofFocus-preset-1-normalize",
-            "targetHandle": "b"
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:postProcessing:dofFocus-edge-2",
-            "source": "layer-Neural Network-1760370435624:postProcessing:dofFocus-preset-1-normalize",
-            "sourceHandle": "result",
-            "target": "layer-Neural Network-1760370435624:postProcessing:dofFocus-preset-2-scale",
-            "targetHandle": "a"
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:postProcessing:dofFocus-edge-3",
-            "source": "layer-Neural Network-1760370435624:postProcessing:dofFocus-preset-2-scale",
-            "sourceHandle": "result",
-            "target": "layer-Neural Network-1760370435624:postProcessing:dofFocus-preset-3-offset",
-            "targetHandle": "b"
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:postProcessing:dofFocus-edge-4",
-            "source": "layer-Neural Network-1760370435624:postProcessing:dofFocus-preset-3-offset",
-            "sourceHandle": "result",
-            "target": "layer-Neural Network-1760370435624:postProcessing:dofFocus-output-node",
-            "targetHandle": "output"
+            "key": "value",
+            "nodeId": "layer-Neural Network-1760370435624:postProcessing:dofFocus-output-node",
+            "output": "value"
           }
-        ]
+        ],
+        "metadata": {
+          "vizEditor": {
+            "isMinimized": false
+          }
+        }
       },
-      "layer-Neural Network-1760370435624:trigger": {
+      {
+        "id": "layer-Neural Network-1760370435624:trigger",
         "name": "layer-Neural Network-1760370435624:trigger",
-        "isEnabled": true,
-        "isMinimized": false,
+        "enabled": true,
         "nodes": [
           {
             "id": "layer-Neural Network-1760370435624:trigger-input-node",
-            "type": "NodeRenderer",
-            "position": {
-              "x": -160,
-              "y": -2
-            },
-            "data": {
-              "definition": "Input",
-              "inputValues": {},
-              "state": {}
-            },
-            "measured": {
-              "width": 152,
-              "height": 154
-            },
-            "selected": false,
-            "dragging": false
+            "type": "Input",
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": -160,
+                  "y": -2
+                },
+                "nodeType": "NodeRenderer"
+              }
+            }
           },
           {
             "id": "layer-Neural Network-1760370435624:trigger-preset-0-kick_band",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 38,
-              "y": -22
-            },
-            "data": {
-              "definition": "Frequency Band",
-              "inputValues": {
-                "startFrequency": 104.50841852073115,
-                "endFrequency": 177.28669796058955
+            "type": "Frequency Band",
+            "inputs": {
+              "startFrequency": {
+                "kind": "literal",
+                "value": 104.50841852073115
               },
-              "state": {}
+              "endFrequency": {
+                "kind": "literal",
+                "value": 177.28669796058955
+              },
+              "frequencyAnalysis": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:trigger-input-node",
+                "output": "frequencyAnalysis",
+                "edgeId": "layer-Neural Network-1760370435624:trigger-edge-0"
+              }
             },
-            "measured": {
-              "width": 341,
-              "height": 266
-            },
-            "selected": false,
-            "dragging": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 38,
+                  "y": -22
+                },
+                "nodeType": "NodeRenderer"
+              }
+            }
           },
           {
             "id": "layer-Neural Network-1760370435624:trigger-preset-1-kick_info",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 472,
-              "y": -86
+            "type": "Band Info",
+            "inputs": {
+              "data": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:trigger-preset-0-kick_band",
+                "output": "bandData",
+                "edgeId": "layer-Neural Network-1760370435624:trigger-edge-1"
+              }
             },
-            "data": {
-              "definition": "Band Info",
-              "inputValues": {},
-              "state": {}
-            },
-            "measured": {
-              "width": 188,
-              "height": 194
-            },
-            "selected": false,
-            "dragging": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 472,
+                  "y": -86
+                },
+                "nodeType": "NodeRenderer"
+              }
+            }
           },
           {
             "id": "layer-Neural Network-1760370435624:trigger-preset-2-env",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 840,
-              "y": 0
-            },
-            "data": {
-              "definition": "Envelope Follower",
-              "inputValues": {
-                "attackMs": "0",
-                "releaseMs": 120
+            "type": "Envelope Follower",
+            "inputs": {
+              "attackMs": {
+                "kind": "literal",
+                "value": "0"
               },
-              "state": {}
+              "releaseMs": {
+                "kind": "literal",
+                "value": 120
+              },
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:trigger-preset-1-kick_info",
+                "output": "average",
+                "edgeId": "layer-Neural Network-1760370435624:trigger-edge-2"
+              }
             },
-            "measured": {
-              "width": 240,
-              "height": 234
-            },
-            "selected": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 840,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
+            }
           },
           {
             "id": "layer-Neural Network-1760370435624:trigger-preset-3-adapt",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1120,
-              "y": 0
-            },
-            "data": {
-              "definition": "Adaptive Normalize (Quantile)",
-              "inputValues": {
-                "windowMs": 4000,
-                "qLow": "0.8",
-                "qHigh": 0.98,
-                "freezeBelow": "130"
+            "type": "Adaptive Normalize (Quantile)",
+            "inputs": {
+              "windowMs": {
+                "kind": "literal",
+                "value": 4000
               },
-              "state": {}
+              "qLow": {
+                "kind": "literal",
+                "value": "0.8"
+              },
+              "qHigh": {
+                "kind": "literal",
+                "value": 0.98
+              },
+              "freezeBelow": {
+                "kind": "literal",
+                "value": "130"
+              },
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:trigger-preset-2-env",
+                "output": "env",
+                "edgeId": "layer-Neural Network-1760370435624:trigger-edge-3"
+              }
             },
-            "measured": {
-              "width": 256,
-              "height": 330
-            },
-            "selected": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1120,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
+            }
           },
           {
             "id": "layer-Neural Network-1760370435624:trigger-preset-4-gate",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1700.713018322083,
-              "y": 1.9761812921890112
-            },
-            "data": {
-              "definition": "Hysteresis Gate",
-              "inputValues": {
-                "low": 0.822996826171875,
-                "high": 0.932996826171875
+            "type": "Hysteresis Gate",
+            "inputs": {
+              "low": {
+                "kind": "literal",
+                "value": 0.822996826171875
               },
-              "state": {}
+              "high": {
+                "kind": "literal",
+                "value": 0.932996826171875
+              },
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:trigger-node-1760457852401-ru2qtdxi7",
+                "output": "env",
+                "edgeId": "xy-edge__layer-Neural Network-1760370435624:trigger-node-1760457852401-ru2qtdxi7env-layer-Neural Network-1760370435624:trigger-preset-4-gatevalue"
+              }
             },
-            "measured": {
-              "width": 234,
-              "height": 232
-            },
-            "selected": false,
-            "dragging": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1700.713018322083,
+                  "y": 1.9761812921890112
+                },
+                "nodeType": "NodeRenderer"
+              }
+            }
           },
           {
             "id": "layer-Neural Network-1760370435624:trigger-output-node",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 2059.165573770492,
-              "y": -4
+            "type": "Output",
+            "inputs": {
+              "output": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:trigger-preset-4-gate",
+                "output": "state",
+                "edgeId": "xy-edge__layer-Neural Network-1760370435624:trigger-preset-4-gatestate-layer-Neural Network-1760370435624:trigger-output-nodeoutput"
+              }
             },
-            "data": {
-              "definition": {
-                "label": "Output",
-                "type": "number"
-              },
-              "inputValues": {},
-              "state": {}
-            },
-            "measured": {
-              "width": 183,
-              "height": 74
-            },
-            "selected": false,
-            "dragging": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 2059.165573770492,
+                  "y": -4
+                },
+                "nodeType": "NodeRenderer",
+                "outputType": "number"
+              }
+            }
           },
           {
             "id": "layer-Neural Network-1760370435624:trigger-node-1760457852401-ru2qtdxi7",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1407.0410800385732,
-              "y": 11.857087753134039
-            },
-            "data": {
-              "definition": "Envelope Follower",
-              "inputValues": {
-                "attackMs": "0",
-                "releaseMs": "500"
+            "type": "Envelope Follower",
+            "inputs": {
+              "attackMs": {
+                "kind": "literal",
+                "value": "0"
               },
-              "state": {}
+              "releaseMs": {
+                "kind": "literal",
+                "value": "500"
+              },
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:trigger-preset-3-adapt",
+                "output": "result",
+                "edgeId": "xy-edge__layer-Neural Network-1760370435624:trigger-preset-3-adaptresult-layer-Neural Network-1760370435624:trigger-node-1760457852401-ru2qtdxi7value"
+              }
             },
-            "measured": {
-              "width": 240,
-              "height": 234
-            },
-            "selected": false,
-            "dragging": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1407.0410800385732,
+                  "y": 11.857087753134039
+                },
+                "nodeType": "NodeRenderer"
+              }
+            }
           }
         ],
-        "edges": [
+        "outputs": [
           {
-            "id": "layer-Neural Network-1760370435624:trigger-edge-0",
-            "source": "layer-Neural Network-1760370435624:trigger-input-node",
-            "sourceHandle": "frequencyAnalysis",
-            "target": "layer-Neural Network-1760370435624:trigger-preset-0-kick_band",
-            "targetHandle": "frequencyAnalysis",
-            "selected": false
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:trigger-edge-1",
-            "source": "layer-Neural Network-1760370435624:trigger-preset-0-kick_band",
-            "sourceHandle": "bandData",
-            "target": "layer-Neural Network-1760370435624:trigger-preset-1-kick_info",
-            "targetHandle": "data",
-            "selected": false
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:trigger-edge-2",
-            "source": "layer-Neural Network-1760370435624:trigger-preset-1-kick_info",
-            "sourceHandle": "average",
-            "target": "layer-Neural Network-1760370435624:trigger-preset-2-env",
-            "targetHandle": "value",
-            "selected": false
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:trigger-edge-3",
-            "source": "layer-Neural Network-1760370435624:trigger-preset-2-env",
-            "sourceHandle": "env",
-            "target": "layer-Neural Network-1760370435624:trigger-preset-3-adapt",
-            "targetHandle": "value",
-            "selected": false
-          },
-          {
-            "animated": true,
-            "style": {
-              "stroke": "white"
-            },
-            "source": "layer-Neural Network-1760370435624:trigger-preset-3-adapt",
-            "sourceHandle": "result",
-            "target": "layer-Neural Network-1760370435624:trigger-node-1760457852401-ru2qtdxi7",
-            "targetHandle": "value",
-            "id": "xy-edge__layer-Neural Network-1760370435624:trigger-preset-3-adaptresult-layer-Neural Network-1760370435624:trigger-node-1760457852401-ru2qtdxi7value",
-            "selected": false
-          },
-          {
-            "animated": true,
-            "style": {
-              "stroke": "white"
-            },
-            "source": "layer-Neural Network-1760370435624:trigger-node-1760457852401-ru2qtdxi7",
-            "sourceHandle": "env",
-            "target": "layer-Neural Network-1760370435624:trigger-preset-4-gate",
-            "targetHandle": "value",
-            "id": "xy-edge__layer-Neural Network-1760370435624:trigger-node-1760457852401-ru2qtdxi7env-layer-Neural Network-1760370435624:trigger-preset-4-gatevalue",
-            "selected": false
-          },
-          {
-            "animated": true,
-            "style": {
-              "stroke": "white"
-            },
-            "source": "layer-Neural Network-1760370435624:trigger-preset-4-gate",
-            "sourceHandle": "state",
-            "target": "layer-Neural Network-1760370435624:trigger-output-node",
-            "targetHandle": "output",
-            "id": "xy-edge__layer-Neural Network-1760370435624:trigger-preset-4-gatestate-layer-Neural Network-1760370435624:trigger-output-nodeoutput"
+            "key": "value",
+            "nodeId": "layer-Neural Network-1760370435624:trigger-output-node",
+            "output": "value"
           }
-        ]
+        ],
+        "metadata": {
+          "vizEditor": {
+            "isMinimized": false
+          }
+        }
       },
-      "layer-Neural Network-1760370435624:seed": {
+      {
+        "id": "layer-Neural Network-1760370435624:seed",
         "name": "layer-Neural Network-1760370435624:seed",
-        "isEnabled": true,
-        "isMinimized": false,
+        "enabled": true,
         "nodes": [
           {
             "id": "layer-Neural Network-1760370435624:seed-input-node",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 0,
-              "y": 0
-            },
-            "data": {
-              "definition": "Input",
-              "inputValues": {},
-              "state": {}
+            "type": "Input",
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 0,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Neural Network-1760370435624:seed-preset-0-snare_band",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 280,
-              "y": 0
-            },
-            "data": {
-              "definition": "Frequency Band",
-              "inputValues": {
-                "startFrequency": 50,
-                "endFrequency": 150
+            "type": "Frequency Band",
+            "inputs": {
+              "startFrequency": {
+                "kind": "literal",
+                "value": 50
               },
-              "state": {}
+              "endFrequency": {
+                "kind": "literal",
+                "value": 150
+              },
+              "frequencyAnalysis": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:seed-input-node",
+                "output": "frequencyAnalysis",
+                "edgeId": "layer-Neural Network-1760370435624:seed-edge-0"
+              }
+            },
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 280,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Neural Network-1760370435624:seed-preset-1-snare_info",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 560,
-              "y": 0
+            "type": "Band Info",
+            "inputs": {
+              "data": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:seed-preset-0-snare_band",
+                "output": "bandData",
+                "edgeId": "layer-Neural Network-1760370435624:seed-edge-1"
+              }
             },
-            "data": {
-              "definition": "Band Info",
-              "inputValues": {},
-              "state": {}
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 560,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Neural Network-1760370435624:seed-preset-2-env",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 840,
-              "y": 0
-            },
-            "data": {
-              "definition": "Envelope Follower",
-              "inputValues": {
-                "attackMs": 4,
-                "releaseMs": 140
+            "type": "Envelope Follower",
+            "inputs": {
+              "attackMs": {
+                "kind": "literal",
+                "value": 4
               },
-              "state": {}
+              "releaseMs": {
+                "kind": "literal",
+                "value": 140
+              },
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:seed-preset-1-snare_info",
+                "output": "average",
+                "edgeId": "layer-Neural Network-1760370435624:seed-edge-2"
+              }
+            },
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 840,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Neural Network-1760370435624:seed-preset-3-adapt",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1120,
-              "y": 0
-            },
-            "data": {
-              "definition": "Adaptive Normalize (Quantile)",
-              "inputValues": {
-                "windowMs": 4000,
-                "qLow": 0.5,
-                "qHigh": 0.95,
-                "freezeBelow": 90
+            "type": "Adaptive Normalize (Quantile)",
+            "inputs": {
+              "windowMs": {
+                "kind": "literal",
+                "value": 4000
               },
-              "state": {}
+              "qLow": {
+                "kind": "literal",
+                "value": 0.5
+              },
+              "qHigh": {
+                "kind": "literal",
+                "value": 0.95
+              },
+              "freezeBelow": {
+                "kind": "literal",
+                "value": 90
+              },
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:seed-preset-2-env",
+                "output": "env",
+                "edgeId": "layer-Neural Network-1760370435624:seed-edge-3"
+              }
+            },
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1120,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Neural Network-1760370435624:seed-preset-4-gate",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1400,
-              "y": 0
-            },
-            "data": {
-              "definition": "Hysteresis Gate",
-              "inputValues": {
-                "low": 0.06,
-                "high": 0.14
+            "type": "Hysteresis Gate",
+            "inputs": {
+              "low": {
+                "kind": "literal",
+                "value": 0.06
               },
-              "state": {}
+              "high": {
+                "kind": "literal",
+                "value": 0.14
+              },
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:seed-preset-3-adapt",
+                "output": "result",
+                "edgeId": "layer-Neural Network-1760370435624:seed-edge-4"
+              }
+            },
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1400,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Neural Network-1760370435624:seed-preset-5-counter",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1680,
-              "y": 0
-            },
-            "data": {
-              "definition": "Threshold Counter",
-              "inputValues": {
-                "threshold": 0.5,
-                "maxValue": 1000
+            "type": "Threshold Counter",
+            "inputs": {
+              "threshold": {
+                "kind": "literal",
+                "value": 0.5
               },
-              "state": {}
+              "maxValue": {
+                "kind": "literal",
+                "value": 1000
+              },
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:seed-preset-4-gate",
+                "output": "gated",
+                "edgeId": "layer-Neural Network-1760370435624:seed-edge-5"
+              }
+            },
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1680,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Neural Network-1760370435624:seed-preset-6-limiter",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1960,
-              "y": 0
-            },
-            "data": {
-              "definition": "Rate Limiter",
-              "inputValues": {
-                "minIntervalMs": 4000
+            "type": "Rate Limiter",
+            "inputs": {
+              "minIntervalMs": {
+                "kind": "literal",
+                "value": 4000
               },
-              "state": {}
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:seed-preset-5-counter",
+                "output": "count",
+                "edgeId": "layer-Neural Network-1760370435624:seed-edge-6"
+              }
+            },
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1960,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Neural Network-1760370435624:seed-output-node",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 2240,
-              "y": 0
+            "type": "Output",
+            "inputs": {
+              "output": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:seed-preset-6-limiter",
+                "output": "limited",
+                "edgeId": "layer-Neural Network-1760370435624:seed-edge-7"
+              }
             },
-            "data": {
-              "definition": {
-                "label": "Output",
-                "type": "number"
-              },
-              "inputValues": {},
-              "state": {}
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 2240,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer",
+                "outputType": "number"
+              }
             }
           }
         ],
-        "edges": [
+        "outputs": [
           {
-            "id": "layer-Neural Network-1760370435624:seed-edge-0",
-            "source": "layer-Neural Network-1760370435624:seed-input-node",
-            "sourceHandle": "frequencyAnalysis",
-            "target": "layer-Neural Network-1760370435624:seed-preset-0-snare_band",
-            "targetHandle": "frequencyAnalysis"
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:seed-edge-1",
-            "source": "layer-Neural Network-1760370435624:seed-preset-0-snare_band",
-            "sourceHandle": "bandData",
-            "target": "layer-Neural Network-1760370435624:seed-preset-1-snare_info",
-            "targetHandle": "data"
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:seed-edge-2",
-            "source": "layer-Neural Network-1760370435624:seed-preset-1-snare_info",
-            "sourceHandle": "average",
-            "target": "layer-Neural Network-1760370435624:seed-preset-2-env",
-            "targetHandle": "value"
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:seed-edge-3",
-            "source": "layer-Neural Network-1760370435624:seed-preset-2-env",
-            "sourceHandle": "env",
-            "target": "layer-Neural Network-1760370435624:seed-preset-3-adapt",
-            "targetHandle": "value"
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:seed-edge-4",
-            "source": "layer-Neural Network-1760370435624:seed-preset-3-adapt",
-            "sourceHandle": "result",
-            "target": "layer-Neural Network-1760370435624:seed-preset-4-gate",
-            "targetHandle": "value"
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:seed-edge-5",
-            "source": "layer-Neural Network-1760370435624:seed-preset-4-gate",
-            "sourceHandle": "gated",
-            "target": "layer-Neural Network-1760370435624:seed-preset-5-counter",
-            "targetHandle": "value"
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:seed-edge-6",
-            "source": "layer-Neural Network-1760370435624:seed-preset-5-counter",
-            "sourceHandle": "count",
-            "target": "layer-Neural Network-1760370435624:seed-preset-6-limiter",
-            "targetHandle": "value"
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:seed-edge-7",
-            "source": "layer-Neural Network-1760370435624:seed-preset-6-limiter",
-            "sourceHandle": "limited",
-            "target": "layer-Neural Network-1760370435624:seed-output-node",
-            "targetHandle": "output"
+            "key": "value",
+            "nodeId": "layer-Neural Network-1760370435624:seed-output-node",
+            "output": "value"
           }
-        ]
+        ],
+        "metadata": {
+          "vizEditor": {
+            "isMinimized": false
+          }
+        }
       },
-      "layer-Neural Network-1760370435624:signalSpeed": {
+      {
+        "id": "layer-Neural Network-1760370435624:signalSpeed",
         "name": "layer-Neural Network-1760370435624:signalSpeed",
-        "isEnabled": true,
-        "isMinimized": false,
+        "enabled": true,
         "nodes": [
           {
             "id": "layer-Neural Network-1760370435624:signalSpeed-input-node",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 0,
-              "y": 0
-            },
-            "data": {
-              "definition": "Input",
-              "inputValues": {},
-              "state": {}
-            },
-            "measured": {
-              "width": 152,
-              "height": 154
+            "type": "Input",
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 0,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Neural Network-1760370435624:signalSpeed-preset-0-energy_band",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 190,
-              "y": -4
-            },
-            "data": {
-              "definition": "Frequency Band",
-              "inputValues": {
-                "startFrequency": 60,
-                "endFrequency": 8000
+            "type": "Frequency Band",
+            "inputs": {
+              "startFrequency": {
+                "kind": "literal",
+                "value": 60
               },
-              "state": {}
+              "endFrequency": {
+                "kind": "literal",
+                "value": 8000
+              },
+              "frequencyAnalysis": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:signalSpeed-input-node",
+                "output": "frequencyAnalysis",
+                "edgeId": "layer-Neural Network-1760370435624:signalSpeed-edge-0"
+              }
             },
-            "measured": {
-              "width": 341,
-              "height": 266
-            },
-            "selected": false,
-            "dragging": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 190,
+                  "y": -4
+                },
+                "nodeType": "NodeRenderer"
+              }
+            }
           },
           {
             "id": "layer-Neural Network-1760370435624:signalSpeed-preset-1-energy_info",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 560,
-              "y": 0
+            "type": "Band Info",
+            "inputs": {
+              "data": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:signalSpeed-preset-0-energy_band",
+                "output": "bandData",
+                "edgeId": "layer-Neural Network-1760370435624:signalSpeed-edge-1"
+              }
             },
-            "data": {
-              "definition": "Band Info",
-              "inputValues": {},
-              "state": {}
-            },
-            "measured": {
-              "width": 188,
-              "height": 194
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 560,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Neural Network-1760370435624:signalSpeed-preset-2-env",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 840,
-              "y": 0
-            },
-            "data": {
-              "definition": "Envelope Follower",
-              "inputValues": {
-                "attackMs": 50,
-                "releaseMs": "500"
+            "type": "Envelope Follower",
+            "inputs": {
+              "attackMs": {
+                "kind": "literal",
+                "value": 50
               },
-              "state": {}
+              "releaseMs": {
+                "kind": "literal",
+                "value": "500"
+              },
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:signalSpeed-preset-1-energy_info",
+                "output": "average",
+                "edgeId": "layer-Neural Network-1760370435624:signalSpeed-edge-2"
+              }
             },
-            "measured": {
-              "width": 240,
-              "height": 234
-            },
-            "selected": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 840,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
+            }
           },
           {
             "id": "layer-Neural Network-1760370435624:signalSpeed-preset-3-adapt",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1120,
-              "y": 0
-            },
-            "data": {
-              "definition": "Adaptive Normalize (Quantile)",
-              "inputValues": {
-                "windowMs": 5000,
-                "qLow": "0.2",
-                "qHigh": "0.8",
-                "freezeBelow": 100
+            "type": "Adaptive Normalize (Quantile)",
+            "inputs": {
+              "windowMs": {
+                "kind": "literal",
+                "value": 5000
               },
-              "state": {}
+              "qLow": {
+                "kind": "literal",
+                "value": "0.2"
+              },
+              "qHigh": {
+                "kind": "literal",
+                "value": "0.8"
+              },
+              "freezeBelow": {
+                "kind": "literal",
+                "value": 100
+              },
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:signalSpeed-preset-2-env",
+                "output": "env",
+                "edgeId": "layer-Neural Network-1760370435624:signalSpeed-edge-3"
+              }
             },
-            "measured": {
-              "width": 256,
-              "height": 330
-            },
-            "selected": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1120,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
+            }
           },
           {
             "id": "layer-Neural Network-1760370435624:signalSpeed-preset-4-scale",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1400,
-              "y": 0
-            },
-            "data": {
-              "definition": "Math",
-              "inputValues": {
-                "a": 0,
-                "b": "30",
-                "operation": "multiply"
+            "type": "Math",
+            "inputs": {
+              "a": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:signalSpeed-preset-3-adapt",
+                "output": "result",
+                "edgeId": "layer-Neural Network-1760370435624:signalSpeed-edge-4"
               },
-              "state": {}
+              "b": {
+                "kind": "literal",
+                "value": "30"
+              },
+              "operation": {
+                "kind": "literal",
+                "value": "multiply"
+              }
             },
-            "measured": {
-              "width": 237,
-              "height": 154
-            },
-            "selected": true,
-            "dragging": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1400,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
+            }
           },
           {
             "id": "layer-Neural Network-1760370435624:signalSpeed-preset-5-offset",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1680,
-              "y": 0
-            },
-            "data": {
-              "definition": "Math",
-              "inputValues": {
-                "a": 0,
-                "b": 5,
-                "operation": "add"
+            "type": "Math",
+            "inputs": {
+              "a": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:signalSpeed-preset-4-scale",
+                "output": "result",
+                "edgeId": "layer-Neural Network-1760370435624:signalSpeed-edge-5"
               },
-              "state": {}
+              "b": {
+                "kind": "literal",
+                "value": 5
+              },
+              "operation": {
+                "kind": "literal",
+                "value": "add"
+              }
             },
-            "measured": {
-              "width": 237,
-              "height": 154
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1680,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Neural Network-1760370435624:signalSpeed-output-node",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1960,
-              "y": 0
+            "type": "Output",
+            "inputs": {
+              "output": {
+                "kind": "node-output",
+                "nodeId": "layer-Neural Network-1760370435624:signalSpeed-preset-5-offset",
+                "output": "result",
+                "edgeId": "layer-Neural Network-1760370435624:signalSpeed-edge-6"
+              }
             },
-            "data": {
-              "definition": {
-                "label": "Output",
-                "type": "number"
-              },
-              "inputValues": {},
-              "state": {}
-            },
-            "measured": {
-              "width": 183,
-              "height": 74
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1960,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer",
+                "outputType": "number"
+              }
             }
           }
         ],
-        "edges": [
+        "outputs": [
           {
-            "id": "layer-Neural Network-1760370435624:signalSpeed-edge-0",
-            "source": "layer-Neural Network-1760370435624:signalSpeed-input-node",
-            "sourceHandle": "frequencyAnalysis",
-            "target": "layer-Neural Network-1760370435624:signalSpeed-preset-0-energy_band",
-            "targetHandle": "frequencyAnalysis"
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:signalSpeed-edge-1",
-            "source": "layer-Neural Network-1760370435624:signalSpeed-preset-0-energy_band",
-            "sourceHandle": "bandData",
-            "target": "layer-Neural Network-1760370435624:signalSpeed-preset-1-energy_info",
-            "targetHandle": "data"
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:signalSpeed-edge-2",
-            "source": "layer-Neural Network-1760370435624:signalSpeed-preset-1-energy_info",
-            "sourceHandle": "average",
-            "target": "layer-Neural Network-1760370435624:signalSpeed-preset-2-env",
-            "targetHandle": "value"
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:signalSpeed-edge-3",
-            "source": "layer-Neural Network-1760370435624:signalSpeed-preset-2-env",
-            "sourceHandle": "env",
-            "target": "layer-Neural Network-1760370435624:signalSpeed-preset-3-adapt",
-            "targetHandle": "value"
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:signalSpeed-edge-4",
-            "source": "layer-Neural Network-1760370435624:signalSpeed-preset-3-adapt",
-            "sourceHandle": "result",
-            "target": "layer-Neural Network-1760370435624:signalSpeed-preset-4-scale",
-            "targetHandle": "a"
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:signalSpeed-edge-5",
-            "source": "layer-Neural Network-1760370435624:signalSpeed-preset-4-scale",
-            "sourceHandle": "result",
-            "target": "layer-Neural Network-1760370435624:signalSpeed-preset-5-offset",
-            "targetHandle": "a"
-          },
-          {
-            "id": "layer-Neural Network-1760370435624:signalSpeed-edge-6",
-            "source": "layer-Neural Network-1760370435624:signalSpeed-preset-5-offset",
-            "sourceHandle": "result",
-            "target": "layer-Neural Network-1760370435624:signalSpeed-output-node",
-            "targetHandle": "output"
+            "key": "value",
+            "nodeId": "layer-Neural Network-1760370435624:signalSpeed-output-node",
+            "output": "value"
           }
-        ]
+        ],
+        "metadata": {
+          "vizEditor": {
+            "isMinimized": false
+          }
+        }
       },
-      "layer-Strobe Light-1760375514040:strength": {
+      {
+        "id": "layer-Strobe Light-1760375514040:strength",
         "name": "layer-Strobe Light-1760375514040:strength",
-        "isEnabled": true,
-        "isMinimized": false,
+        "enabled": true,
         "nodes": [
           {
             "id": "layer-Strobe Light-1760375514040:strength-input-node",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 0,
-              "y": 0
-            },
-            "data": {
-              "definition": "Input",
-              "inputValues": {},
-              "state": {}
-            },
-            "measured": {
-              "width": 152,
-              "height": 154
+            "type": "Input",
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 0,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Strobe Light-1760375514040:strength-preset-0-band",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 186,
-              "y": -8
-            },
-            "data": {
-              "definition": "Frequency Band",
-              "inputValues": {
-                "startFrequency": 180,
-                "endFrequency": 4000
+            "type": "Frequency Band",
+            "inputs": {
+              "startFrequency": {
+                "kind": "literal",
+                "value": 180
               },
-              "state": {}
+              "endFrequency": {
+                "kind": "literal",
+                "value": 4000
+              },
+              "frequencyAnalysis": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:strength-input-node",
+                "output": "frequencyAnalysis",
+                "edgeId": "layer-Strobe Light-1760375514040:strength-edge-0"
+              }
             },
-            "measured": {
-              "width": 341,
-              "height": 266
-            },
-            "selected": true,
-            "dragging": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 186,
+                  "y": -8
+                },
+                "nodeType": "NodeRenderer"
+              }
+            }
           },
           {
             "id": "layer-Strobe Light-1760375514040:strength-preset-1-info",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 560,
-              "y": 0
+            "type": "Band Info",
+            "inputs": {
+              "data": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:strength-preset-0-band",
+                "output": "bandData",
+                "edgeId": "layer-Strobe Light-1760375514040:strength-edge-1"
+              }
             },
-            "data": {
-              "definition": "Band Info",
-              "inputValues": {},
-              "state": {}
-            },
-            "measured": {
-              "width": 188,
-              "height": 194
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 560,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Strobe Light-1760375514040:strength-preset-2-env",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 840,
-              "y": 0
-            },
-            "data": {
-              "definition": "Envelope Follower",
-              "inputValues": {
-                "attackMs": 4,
-                "releaseMs": "150"
+            "type": "Envelope Follower",
+            "inputs": {
+              "attackMs": {
+                "kind": "literal",
+                "value": 4
               },
-              "state": {}
+              "releaseMs": {
+                "kind": "literal",
+                "value": "150"
+              },
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:strength-preset-1-info",
+                "output": "average",
+                "edgeId": "layer-Strobe Light-1760375514040:strength-edge-2"
+              }
             },
-            "measured": {
-              "width": 240,
-              "height": 234
-            },
-            "selected": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 840,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
+            }
           },
           {
             "id": "layer-Strobe Light-1760375514040:strength-preset-3-adapt",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1120,
-              "y": 0
-            },
-            "data": {
-              "definition": "Adaptive Normalize (Quantile)",
-              "inputValues": {
-                "windowMs": 4000,
-                "qLow": 0.5,
-                "qHigh": 0.95,
-                "freezeBelow": "100"
+            "type": "Adaptive Normalize (Quantile)",
+            "inputs": {
+              "windowMs": {
+                "kind": "literal",
+                "value": 4000
               },
-              "state": {}
+              "qLow": {
+                "kind": "literal",
+                "value": 0.5
+              },
+              "qHigh": {
+                "kind": "literal",
+                "value": 0.95
+              },
+              "freezeBelow": {
+                "kind": "literal",
+                "value": "100"
+              },
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:strength-preset-2-env",
+                "output": "env",
+                "edgeId": "layer-Strobe Light-1760375514040:strength-edge-3"
+              }
             },
-            "measured": {
-              "width": 256,
-              "height": 330
-            },
-            "selected": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1120,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
+            }
           },
           {
             "id": "layer-Strobe Light-1760375514040:strength-preset-4-gate",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1704,
-              "y": -2
-            },
-            "data": {
-              "definition": "Hysteresis Gate",
-              "inputValues": {
-                "low": 0.255625,
-                "high": 0.335625
+            "type": "Hysteresis Gate",
+            "inputs": {
+              "low": {
+                "kind": "literal",
+                "value": 0.255625
               },
-              "state": {}
+              "high": {
+                "kind": "literal",
+                "value": 0.335625
+              },
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:strength-node-1760457322975",
+                "output": "env",
+                "edgeId": "xy-edge__layer-Strobe Light-1760375514040:strength-node-1760457322975env-layer-Strobe Light-1760375514040:strength-preset-4-gatevalue"
+              }
             },
-            "measured": {
-              "width": 234,
-              "height": 232
-            },
-            "selected": false,
-            "dragging": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1704,
+                  "y": -2
+                },
+                "nodeType": "NodeRenderer"
+              }
+            }
           },
           {
             "id": "layer-Strobe Light-1760375514040:strength-output-node",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 2008,
-              "y": 2
+            "type": "Output",
+            "inputs": {
+              "output": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:strength-preset-4-gate",
+                "output": "gated",
+                "edgeId": "layer-Strobe Light-1760375514040:strength-edge-5"
+              }
             },
-            "data": {
-              "definition": {
-                "label": "Output",
-                "type": "number"
-              },
-              "inputValues": {},
-              "state": {}
-            },
-            "measured": {
-              "width": 183,
-              "height": 74
-            },
-            "selected": false,
-            "dragging": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 2008,
+                  "y": 2
+                },
+                "nodeType": "NodeRenderer",
+                "outputType": "number"
+              }
+            }
           },
           {
             "id": "layer-Strobe Light-1760375514040:strength-node-1760457322975",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1431,
-              "y": 23
-            },
-            "data": {
-              "definition": "Envelope Follower",
-              "inputValues": {
-                "value": 0,
-                "attackMs": "0",
-                "releaseMs": "100"
+            "type": "Envelope Follower",
+            "inputs": {
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:strength-preset-3-adapt",
+                "output": "result",
+                "edgeId": "xy-edge__layer-Strobe Light-1760375514040:strength-preset-3-adaptresult-layer-Strobe Light-1760375514040:strength-node-1760457322975value"
               },
-              "state": {}
+              "attackMs": {
+                "kind": "literal",
+                "value": "0"
+              },
+              "releaseMs": {
+                "kind": "literal",
+                "value": "100"
+              }
             },
-            "measured": {
-              "width": 240,
-              "height": 234
-            },
-            "selected": false,
-            "dragging": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1431,
+                  "y": 23
+                },
+                "nodeType": "NodeRenderer"
+              }
+            }
           }
         ],
-        "edges": [
+        "outputs": [
           {
-            "id": "layer-Strobe Light-1760375514040:strength-edge-0",
-            "source": "layer-Strobe Light-1760375514040:strength-input-node",
-            "sourceHandle": "frequencyAnalysis",
-            "target": "layer-Strobe Light-1760375514040:strength-preset-0-band",
-            "targetHandle": "frequencyAnalysis"
-          },
-          {
-            "id": "layer-Strobe Light-1760375514040:strength-edge-1",
-            "source": "layer-Strobe Light-1760375514040:strength-preset-0-band",
-            "sourceHandle": "bandData",
-            "target": "layer-Strobe Light-1760375514040:strength-preset-1-info",
-            "targetHandle": "data"
-          },
-          {
-            "id": "layer-Strobe Light-1760375514040:strength-edge-2",
-            "source": "layer-Strobe Light-1760375514040:strength-preset-1-info",
-            "sourceHandle": "average",
-            "target": "layer-Strobe Light-1760375514040:strength-preset-2-env",
-            "targetHandle": "value"
-          },
-          {
-            "id": "layer-Strobe Light-1760375514040:strength-edge-3",
-            "source": "layer-Strobe Light-1760375514040:strength-preset-2-env",
-            "sourceHandle": "env",
-            "target": "layer-Strobe Light-1760375514040:strength-preset-3-adapt",
-            "targetHandle": "value"
-          },
-          {
-            "id": "layer-Strobe Light-1760375514040:strength-edge-5",
-            "source": "layer-Strobe Light-1760375514040:strength-preset-4-gate",
-            "sourceHandle": "gated",
-            "target": "layer-Strobe Light-1760375514040:strength-output-node",
-            "targetHandle": "output"
-          },
-          {
-            "animated": true,
-            "style": {
-              "stroke": "white"
-            },
-            "source": "layer-Strobe Light-1760375514040:strength-preset-3-adapt",
-            "sourceHandle": "result",
-            "target": "layer-Strobe Light-1760375514040:strength-node-1760457322975",
-            "targetHandle": "value",
-            "id": "xy-edge__layer-Strobe Light-1760375514040:strength-preset-3-adaptresult-layer-Strobe Light-1760375514040:strength-node-1760457322975value"
-          },
-          {
-            "animated": true,
-            "style": {
-              "stroke": "white"
-            },
-            "source": "layer-Strobe Light-1760375514040:strength-node-1760457322975",
-            "sourceHandle": "env",
-            "target": "layer-Strobe Light-1760375514040:strength-preset-4-gate",
-            "targetHandle": "value",
-            "id": "xy-edge__layer-Strobe Light-1760375514040:strength-node-1760457322975env-layer-Strobe Light-1760375514040:strength-preset-4-gatevalue"
+            "key": "value",
+            "nodeId": "layer-Strobe Light-1760375514040:strength-output-node",
+            "output": "value"
           }
-        ]
+        ],
+        "metadata": {
+          "vizEditor": {
+            "isMinimized": false
+          }
+        }
       },
-      "layer-Strobe Light-1760375514040:intensity": {
+      {
+        "id": "layer-Strobe Light-1760375514040:intensity",
         "name": "layer-Strobe Light-1760375514040:intensity",
-        "isEnabled": false,
-        "isMinimized": false,
+        "enabled": false,
         "nodes": [
           {
             "id": "layer-Strobe Light-1760375514040:intensity-input-node",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 0,
-              "y": 0
-            },
-            "data": {
-              "definition": "Input",
-              "inputValues": {},
-              "state": {}
-            },
-            "measured": {
-              "width": 152,
-              "height": 154
+            "type": "Input",
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 0,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Strobe Light-1760375514040:intensity-preset-0-kick_band",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 280,
-              "y": 0
-            },
-            "data": {
-              "definition": "Frequency Band",
-              "inputValues": {
-                "startFrequency": 80,
-                "endFrequency": 150
+            "type": "Frequency Band",
+            "inputs": {
+              "startFrequency": {
+                "kind": "literal",
+                "value": 80
               },
-              "state": {}
+              "endFrequency": {
+                "kind": "literal",
+                "value": 150
+              },
+              "frequencyAnalysis": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:intensity-input-node",
+                "output": "frequencyAnalysis",
+                "edgeId": "layer-Strobe Light-1760375514040:intensity-edge-0"
+              }
             },
-            "measured": {
-              "width": 341,
-              "height": 266
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 280,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Strobe Light-1760375514040:intensity-preset-1-kick_info",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 560,
-              "y": 0
+            "type": "Band Info",
+            "inputs": {
+              "data": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:intensity-preset-0-kick_band",
+                "output": "bandData",
+                "edgeId": "layer-Strobe Light-1760375514040:intensity-edge-1"
+              }
             },
-            "data": {
-              "definition": "Band Info",
-              "inputValues": {},
-              "state": {}
-            },
-            "measured": {
-              "width": 188,
-              "height": 194
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 560,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Strobe Light-1760375514040:intensity-preset-2-kick_adapt",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 840,
-              "y": 0
-            },
-            "data": {
-              "definition": "Adaptive Normalize (Quantile)",
-              "inputValues": {
-                "windowMs": 4000,
-                "qLow": 0.5,
-                "qHigh": 0.98,
-                "freezeBelow": 140
+            "type": "Adaptive Normalize (Quantile)",
+            "inputs": {
+              "windowMs": {
+                "kind": "literal",
+                "value": 4000
               },
-              "state": {}
+              "qLow": {
+                "kind": "literal",
+                "value": 0.5
+              },
+              "qHigh": {
+                "kind": "literal",
+                "value": 0.98
+              },
+              "freezeBelow": {
+                "kind": "literal",
+                "value": 140
+              },
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:intensity-preset-1-kick_info",
+                "output": "average",
+                "edgeId": "layer-Strobe Light-1760375514040:intensity-edge-2"
+              }
             },
-            "measured": {
-              "width": 256,
-              "height": 330
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 840,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Strobe Light-1760375514040:intensity-preset-3-bass_band",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 280,
-              "y": 120
-            },
-            "data": {
-              "definition": "Frequency Band",
-              "inputValues": {
-                "startFrequency": 20,
-                "endFrequency": 163
+            "type": "Frequency Band",
+            "inputs": {
+              "startFrequency": {
+                "kind": "literal",
+                "value": 20
               },
-              "state": {}
+              "endFrequency": {
+                "kind": "literal",
+                "value": 163
+              },
+              "frequencyAnalysis": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:intensity-input-node",
+                "output": "frequencyAnalysis",
+                "edgeId": "layer-Strobe Light-1760375514040:intensity-edge-3"
+              }
             },
-            "measured": {
-              "width": 341,
-              "height": 266
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 280,
+                  "y": 120
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Strobe Light-1760375514040:intensity-preset-4-bass_info",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 560,
-              "y": 120
+            "type": "Band Info",
+            "inputs": {
+              "data": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:intensity-preset-3-bass_band",
+                "output": "bandData",
+                "edgeId": "layer-Strobe Light-1760375514040:intensity-edge-4"
+              }
             },
-            "data": {
-              "definition": "Band Info",
-              "inputValues": {},
-              "state": {}
-            },
-            "measured": {
-              "width": 188,
-              "height": 194
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 560,
+                  "y": 120
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Strobe Light-1760375514040:intensity-preset-5-bass_adapt",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 840,
-              "y": 120
-            },
-            "data": {
-              "definition": "Adaptive Normalize (Quantile)",
-              "inputValues": {
-                "windowMs": 4000,
-                "qLow": 0.3,
-                "qHigh": 0.9,
-                "freezeBelow": 130
+            "type": "Adaptive Normalize (Quantile)",
+            "inputs": {
+              "windowMs": {
+                "kind": "literal",
+                "value": 4000
               },
-              "state": {}
+              "qLow": {
+                "kind": "literal",
+                "value": 0.3
+              },
+              "qHigh": {
+                "kind": "literal",
+                "value": 0.9
+              },
+              "freezeBelow": {
+                "kind": "literal",
+                "value": 130
+              },
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:intensity-preset-4-bass_info",
+                "output": "average",
+                "edgeId": "layer-Strobe Light-1760375514040:intensity-edge-5"
+              }
             },
-            "measured": {
-              "width": 256,
-              "height": 330
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 840,
+                  "y": 120
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Strobe Light-1760375514040:intensity-preset-6-combine",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1120,
-              "y": 0
-            },
-            "data": {
-              "definition": "Math",
-              "inputValues": {
-                "operation": "max"
+            "type": "Math",
+            "inputs": {
+              "operation": {
+                "kind": "literal",
+                "value": "max"
               },
-              "state": {}
+              "a": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:intensity-preset-2-kick_adapt",
+                "output": "result",
+                "edgeId": "layer-Strobe Light-1760375514040:intensity-edge-6"
+              },
+              "b": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:intensity-preset-5-bass_adapt",
+                "output": "result",
+                "edgeId": "layer-Strobe Light-1760375514040:intensity-edge-7"
+              }
             },
-            "measured": {
-              "width": 237,
-              "height": 154
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1120,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Strobe Light-1760375514040:intensity-preset-7-envelope",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1400,
-              "y": 0
-            },
-            "data": {
-              "definition": "Envelope Follower",
-              "inputValues": {
-                "attackMs": 5,
-                "releaseMs": 150
+            "type": "Envelope Follower",
+            "inputs": {
+              "attackMs": {
+                "kind": "literal",
+                "value": 5
               },
-              "state": {}
+              "releaseMs": {
+                "kind": "literal",
+                "value": 150
+              },
+              "value": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:intensity-preset-6-combine",
+                "output": "result",
+                "edgeId": "layer-Strobe Light-1760375514040:intensity-edge-8"
+              }
             },
-            "measured": {
-              "width": 240,
-              "height": 234
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1400,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
             }
           },
           {
             "id": "layer-Strobe Light-1760375514040:intensity-preset-8-scale",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1680,
-              "y": 0
-            },
-            "data": {
-              "definition": "Math",
-              "inputValues": {
-                "a": 1,
-                "b": "15",
-                "operation": "multiply"
+            "type": "Math",
+            "inputs": {
+              "a": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:intensity-preset-7-envelope",
+                "output": "env",
+                "edgeId": "layer-Strobe Light-1760375514040:intensity-edge-9"
               },
-              "state": {}
+              "b": {
+                "kind": "literal",
+                "value": "15"
+              },
+              "operation": {
+                "kind": "literal",
+                "value": "multiply"
+              }
             },
-            "measured": {
-              "width": 237,
-              "height": 154
-            },
-            "selected": false
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1680,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer"
+              }
+            }
           },
           {
             "id": "layer-Strobe Light-1760375514040:intensity-output-node",
-            "type": "NodeRenderer",
-            "position": {
-              "x": 1960,
-              "y": 0
+            "type": "Output",
+            "inputs": {
+              "output": {
+                "kind": "node-output",
+                "nodeId": "layer-Strobe Light-1760375514040:intensity-preset-8-scale",
+                "output": "result",
+                "edgeId": "layer-Strobe Light-1760375514040:intensity-edge-10"
+              }
             },
-            "data": {
-              "definition": {
-                "label": "Output",
-                "type": "number"
-              },
-              "inputValues": {},
-              "state": {}
-            },
-            "measured": {
-              "width": 183,
-              "height": 74
+            "metadata": {
+              "vizEditor": {
+                "position": {
+                  "x": 1960,
+                  "y": 0
+                },
+                "nodeType": "NodeRenderer",
+                "outputType": "number"
+              }
             }
           }
         ],
-        "edges": [
+        "outputs": [
           {
-            "id": "layer-Strobe Light-1760375514040:intensity-edge-0",
-            "source": "layer-Strobe Light-1760375514040:intensity-input-node",
-            "sourceHandle": "frequencyAnalysis",
-            "target": "layer-Strobe Light-1760375514040:intensity-preset-0-kick_band",
-            "targetHandle": "frequencyAnalysis"
-          },
-          {
-            "id": "layer-Strobe Light-1760375514040:intensity-edge-1",
-            "source": "layer-Strobe Light-1760375514040:intensity-preset-0-kick_band",
-            "sourceHandle": "bandData",
-            "target": "layer-Strobe Light-1760375514040:intensity-preset-1-kick_info",
-            "targetHandle": "data"
-          },
-          {
-            "id": "layer-Strobe Light-1760375514040:intensity-edge-2",
-            "source": "layer-Strobe Light-1760375514040:intensity-preset-1-kick_info",
-            "sourceHandle": "average",
-            "target": "layer-Strobe Light-1760375514040:intensity-preset-2-kick_adapt",
-            "targetHandle": "value"
-          },
-          {
-            "id": "layer-Strobe Light-1760375514040:intensity-edge-3",
-            "source": "layer-Strobe Light-1760375514040:intensity-input-node",
-            "sourceHandle": "frequencyAnalysis",
-            "target": "layer-Strobe Light-1760375514040:intensity-preset-3-bass_band",
-            "targetHandle": "frequencyAnalysis"
-          },
-          {
-            "id": "layer-Strobe Light-1760375514040:intensity-edge-4",
-            "source": "layer-Strobe Light-1760375514040:intensity-preset-3-bass_band",
-            "sourceHandle": "bandData",
-            "target": "layer-Strobe Light-1760375514040:intensity-preset-4-bass_info",
-            "targetHandle": "data"
-          },
-          {
-            "id": "layer-Strobe Light-1760375514040:intensity-edge-5",
-            "source": "layer-Strobe Light-1760375514040:intensity-preset-4-bass_info",
-            "sourceHandle": "average",
-            "target": "layer-Strobe Light-1760375514040:intensity-preset-5-bass_adapt",
-            "targetHandle": "value"
-          },
-          {
-            "id": "layer-Strobe Light-1760375514040:intensity-edge-6",
-            "source": "layer-Strobe Light-1760375514040:intensity-preset-2-kick_adapt",
-            "sourceHandle": "result",
-            "target": "layer-Strobe Light-1760375514040:intensity-preset-6-combine",
-            "targetHandle": "a"
-          },
-          {
-            "id": "layer-Strobe Light-1760375514040:intensity-edge-7",
-            "source": "layer-Strobe Light-1760375514040:intensity-preset-5-bass_adapt",
-            "sourceHandle": "result",
-            "target": "layer-Strobe Light-1760375514040:intensity-preset-6-combine",
-            "targetHandle": "b"
-          },
-          {
-            "id": "layer-Strobe Light-1760375514040:intensity-edge-8",
-            "source": "layer-Strobe Light-1760375514040:intensity-preset-6-combine",
-            "sourceHandle": "result",
-            "target": "layer-Strobe Light-1760375514040:intensity-preset-7-envelope",
-            "targetHandle": "value"
-          },
-          {
-            "id": "layer-Strobe Light-1760375514040:intensity-edge-9",
-            "source": "layer-Strobe Light-1760375514040:intensity-preset-7-envelope",
-            "sourceHandle": "env",
-            "target": "layer-Strobe Light-1760375514040:intensity-preset-8-scale",
-            "targetHandle": "a"
-          },
-          {
-            "id": "layer-Strobe Light-1760375514040:intensity-edge-10",
-            "source": "layer-Strobe Light-1760375514040:intensity-preset-8-scale",
-            "sourceHandle": "result",
-            "target": "layer-Strobe Light-1760375514040:intensity-output-node",
-            "targetHandle": "output"
+            "key": "value",
+            "nodeId": "layer-Strobe Light-1760375514040:intensity-output-node",
+            "output": "value"
           }
-        ]
+        ],
+        "metadata": {
+          "vizEditor": {
+            "isMinimized": false
+          }
+        }
       }
-    },
-    "openNetwork": "layer-Neural Network-1760370435624:trigger",
-    "areNetworksMinimized": false,
-    "shouldForceShowOverlay": false
+    ]
   },
-  "editorStore": {
-    "playerFPS": 60,
+  "nodeEditorUi": {
+    "openNetwork": "layer-Neural Network-1760370435624:trigger",
+    "areNetworksMinimized": false
+  },
+  "editorUi": {
     "ambientMode": false,
-    "resolutionMultiplier": 2
+    "resolutionMultiplier": 2,
+    "rhythmSelection": {
+      "start": 0,
+      "end": 0.2
+    },
+    "layerUi": {
+      "layer-Fullscreen Shader-1760370419586": {
+        "isExpanded": false,
+        "isDebugEnabled": false
+      },
+      "layer-Noise Shader-1760370465345": {
+        "isExpanded": false,
+        "isDebugEnabled": false
+      },
+      "layer-Neural Network-1760370435624": {
+        "isExpanded": false,
+        "isDebugEnabled": false
+      },
+      "layer-Strobe Light-1760375514040": {
+        "isExpanded": false,
+        "isDebugEnabled": false
+      }
+    }
   }
 }

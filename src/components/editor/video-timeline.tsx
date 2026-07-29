@@ -2,7 +2,8 @@
 
 import { Button } from '@/components/ui/button';
 import { DraggableRangeSelector } from '@/components/ui/draggable-range-selector';
-import useAudioStore from '@/lib/stores/audio-store';
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
+import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 import { cn } from '@/lib/utils';
 import {
   extractWaveform,
@@ -34,8 +35,8 @@ const VideoTimelineComponent = ({
   onTimeChange,
   className,
 }: VideoTimelineProps) => {
-  const audioElementRef = useAudioStore((s) => s.audioElementRef);
-  const currentTrackUrl = useAudioStore((s) => s.currentTrackUrl);
+  const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);
+  const currentTrackUrl = useEditorAudioSessionStore((s) => s.currentTrackUrl);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [waveformData, setWaveformData] = useState<WaveformData | null>(null);
   const [isLoadingWaveform, setIsLoadingWaveform] = useState(false);

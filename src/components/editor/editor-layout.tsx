@@ -1,3 +1,4 @@
+import editorControl from '@/lib/editor-control';
 import useEditorStore from '@/lib/stores/editor-store';
 import { cn } from '@/lib/utils';
 import { ReactNode, useEffect } from 'react';
@@ -20,16 +21,12 @@ export function EditorLayout({
   midRightChildren,
   bottomRightChildren,
 }: EditorLayoutProps) {
-  const setResolutionMultiplier = useEditorStore(
-    (state) => state.setResolutionMultiplier,
-  );
-
   // Set resolution multiplier to devicePixelRatio on mount and when DPR changes
   useEffect(() => {
     const update = () => {
       const dpr =
         typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
-      setResolutionMultiplier(dpr);
+      editorControl.ui.setResolutionMultiplier(dpr);
     };
     update();
     // Some browsers support 'change' event on matchMedia for DPR changes
@@ -45,7 +42,7 @@ export function EditorLayout({
       mq?.removeEventListener?.('change', update);
       window.removeEventListener('resize', update);
     };
-  }, [setResolutionMultiplier]);
+  }, []);
 
   return (
     <ResizablePanelGroup

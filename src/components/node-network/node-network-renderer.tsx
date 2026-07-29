@@ -20,9 +20,14 @@ import {
   useState,
 } from 'react';
 import '../../lib/css/xyflow.css';
+import editorControl from '../../lib/editor-control';
 import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
 import { useHistoryStore } from '../../lib/stores/history-store';
-import useNodeNetworkStore from '../node-network/node-network-store';
+import {
+  setEdgesInNetwork,
+  setNodesInNetwork,
+  useSpecificNetwork,
+} from '../node-network/node-network-store';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -49,25 +54,15 @@ const NodeNetworkRenderer = ({
   const finalReactFlowInstance = reactFlowInstance || localReactFlowInstance;
 
   // Get nodes and edges from the network store
-  const network = useNodeNetworkStore((state) => state.networks[nodeNetworkId]);
+  const network = useSpecificNetwork(nodeNetworkId);
   const nodes = network?.nodes || [];
   const edges = network?.edges || [];
-
-  // Get store functions
-  const setNodesInNetwork = useNodeNetworkStore(
-    (state) => state.setNodesInNetwork,
-  );
-  const setEdgesInNetwork = useNodeNetworkStore(
-    (state) => state.setEdgesInNetwork,
-  );
 
   // Wrapped setters that push to history
   const setNodes = useCallback(
     (newNodes: any[]) => {
       setNodesInNetwork(nodeNetworkId, newNodes);
-      useHistoryStore
-        .getState()
-        .pushNodeHistory(nodeNetworkId, newNodes, edges);
+      useHistoryStore.getState().pushNodeHistory(nodeNetworkId, newNodes, edges);
     },
     [nodeNetworkId, edges, setNodesInNetwork],
   );
@@ -84,11 +79,11 @@ const NodeNetworkRenderer = ({
 
   // History functions
   const undo = useCallback(() => {
-    useHistoryStore.getState().undoNodeEditor(nodeNetworkId);
+    editorControl.history.undoNodeEditor(nodeNetworkId);
   }, [nodeNetworkId]);
 
   const redo = useCallback(() => {
-    useHistoryStore.getState().redoNodeEditor(nodeNetworkId);
+    editorControl.history.redoNodeEditor(nodeNetworkId);
   }, [nodeNetworkId]);
 
   const canUndo = useHistoryStore(
@@ -99,11 +94,11 @@ const NodeNetworkRenderer = ({
   );
 
   const startDrag = useCallback(() => {
-    useHistoryStore.getState().startNodeDrag(nodeNetworkId);
+    editorControl.history.startNodeDrag(nodeNetworkId);
   }, [nodeNetworkId]);
 
   const endDrag = useCallback(() => {
-    useHistoryStore.getState().endNodeDrag(nodeNetworkId);
+    editorControl.history.endNodeDrag(nodeNetworkId);
   }, [nodeNetworkId]);
 
   // Initialize node history for this network

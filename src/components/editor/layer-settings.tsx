@@ -1,4 +1,5 @@
-import useLayerStore, { LayerData } from '@/lib/stores/layer-store';
+import { LayerData } from '@/lib/stores/editor-layer-projection-store';
+import editorControl from '@/lib/editor-control';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff } from 'lucide-react';
 import { useCallback, useEffect, useRef } from 'react';
@@ -47,9 +48,6 @@ interface LayerSettingsProps {
 }
 
 const LayerSettings = ({ layer }: LayerSettingsProps) => {
-  const updateLayerSettings = useLayerStore(
-    (state) => state.updateLayerSettings,
-  );
   const isInternalUpdateRef = useRef(false);
 
   const form = useForm({
@@ -74,9 +72,12 @@ const LayerSettings = ({ layer }: LayerSettingsProps) => {
       isInternalUpdateRef.current = true;
       originalOnChange(value);
       // Get current form values using ref
-      updateLayerSettings(layer.id, formRef.current.getValues());
+      editorControl.project.updateLayerSettings(
+        layer.id,
+        formRef.current.getValues(),
+      );
     },
-    [layer.id, updateLayerSettings],
+    [layer.id],
   );
 
   return (

@@ -1,5 +1,9 @@
 'use client';
 
+import {
+  createVizSessionRuntimePreviewFrame,
+  vizSessionActions,
+} from '@/lib/viz-session';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,8 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import useEditorStore from '@/lib/stores/editor-store';
-import useLayerStore from '@/lib/stores/layer-store';
+import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
 import {
   fastCaptureFrame,
   isTransparentBackground,
@@ -51,10 +54,10 @@ const ExportImageDialog = ({ open, onOpenChange }: ExportImageDialogProps) => {
   const [quality, setQuality] = useState(0.95);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const playerRef = useEditorStore((s) => s.playerRef);
-  const playerFPS = useEditorStore((s) => s.playerFPS);
-  const layerStore = useLayerStore();
-
+  const currentFrame = useEditorPreviewStore(
+    (state) => state.transport.currentFrame,
+  );
+  const playerFPS = useEditorPreviewStore((state) => state.transport.fps);
   // Clean up the image URL when dialog closes
   useEffect(() => {
     if (!open && imageUrl) {
@@ -88,14 +91,21 @@ const ExportImageDialog = ({ open, onOpenChange }: ExportImageDialogProps) => {
       ) as HTMLCanvasElement[];
 
       // Get current player time (in SECONDS) and dt based on the player's FPS
-      const currentFrame = playerRef.current?.getCurrentFrame?.() ?? 0;
       const fps = playerFPS > 0 ? playerFPS : 60;
       const currentTime = currentFrame / fps;
       const deltaTime = 1 / fps;
 
       // CRITICAL: Manually render all layers with current time
       // This ensures we have fresh rendering before capture
-      layerStore.renderAllLayers(currentTime, deltaTime);
+      const previewFrame = createVizSessionRuntimePreviewFrame({
+        currentFrame,
+        time: currentTime,
+        dt: deltaTime,
+        fps,
+        mode: 'export',
+      });
+
+      vizSessionActions.preview.renderRuntimePreviewFrame(previewFrame);
 
       // CRITICAL: Force WebGL to finish rendering before capture
       // WebGL commands are asynchronous - we need to ensure GPU completes work

@@ -1,10 +1,8 @@
 'use client';
 
 import { useHistoryStore } from '@/lib/stores/history-store';
-import useLayerStore from '@/lib/stores/layer-store';
-import useLayerValuesStore from '@/lib/stores/layer-values-store';
-import { useEffect, useRef } from 'react';
-import useNodeNetworkStore from '../node-network/node-network-store';
+import { useVizSessionSelector } from '@/lib/viz-session';
+import { useEffect } from 'react';
 
 /**
  * HistoryManager Component
@@ -14,9 +12,7 @@ import useNodeNetworkStore from '../node-network/node-network-store';
  * at the top level of the application.
  */
 export default function HistoryManager() {
-  const layers = useLayerStore((state) => state.layers);
-  const layerValues = useLayerValuesStore((state) => state.values);
-  const networks = useNodeNetworkStore((state) => state.networks);
+  const workingProject = useVizSessionSelector((state) => state.project.workingProject);
 
   const initializeLayerHistory = useHistoryStore(
     (state) => state.initializeLayerHistory,
@@ -26,14 +22,12 @@ export default function HistoryManager() {
     (state) => state.isBypassingHistory,
   );
 
-  const historyPresentRef = useRef<any>(null);
-
   // Initialize history with current state if empty
   useEffect(() => {
     initializeLayerHistory();
   }, [initializeLayerHistory]);
 
-  // Track changes to layers, values, and network enabled states
+  // Track changes to the complete canonical working project.
   useEffect(() => {
     if (isBypassingHistory) return;
 
@@ -41,32 +35,35 @@ export default function HistoryManager() {
     const currentPresent = useHistoryStore.getState().layerHistory.present;
 
     // Skip if we haven't initialized yet
-    if (currentPresent.layers.length === 0 && layers.length === 0) {
+    if (
+      currentPresent.project.layers.length === 0 &&
+      workingProject.layers.length === 0
+    ) {
       return;
     }
 
-    // Detect structural changes (add/remove/reorder layers or enable/disable networks)
+    const currentGraphStructure = (currentPresent.project.graphs ?? []).map(
+      (graph) => [graph.id, graph.enabled ?? true],
+    );
+    const nextGraphStructure = (workingProject.graphs ?? []).map((graph) => [
+      graph.id,
+      graph.enabled ?? true,
+    ]);
+
+    // Structural edits should enter history immediately. Parameter and node
+    // detail edits may still use the existing debounce behavior.
     const isStructuralChange =
-      layers.length !== currentPresent.layers.length ||
-      layers.some(
-        (layer, index) => layer.id !== currentPresent.layers[index]?.id,
-      ) ||
-      (() => {
-        // Check if network enabled states changed
-        const currentEnabledStates: Record<string, boolean> = {};
-        Object.entries(networks).forEach(([parameterId, network]) => {
-          if (network.isEnabled) {
-            currentEnabledStates[parameterId] = true;
-          }
-        });
-        return (
-          JSON.stringify(currentEnabledStates) !==
-          JSON.stringify(currentPresent.networkEnabledStates)
-        );
-      })();
+      JSON.stringify(workingProject.layerOrder) !==
+        JSON.stringify(currentPresent.project.layerOrder) ||
+      JSON.stringify(nextGraphStructure) !==
+        JSON.stringify(currentGraphStructure);
 
     pushLayerHistory(!isStructuralChange);
-  }, [layers, layerValues, networks, pushLayerHistory, isBypassingHistory]);
+  }, [
+    workingProject,
+    pushLayerHistory,
+    isBypassingHistory,
+  ]);
 
   // This component doesn't render anything
   return null;

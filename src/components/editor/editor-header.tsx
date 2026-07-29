@@ -1,3 +1,4 @@
+import editorControl from '@/lib/editor-control';
 import useEditorStore from '@/lib/stores/editor-store';
 import { cn } from '@/lib/utils';
 import { Github } from 'lucide-react';
@@ -14,13 +15,8 @@ import { InterfaceGuide } from './interface-guide';
 
 const EditorHeader = () => {
   const ambientMode = useEditorStore((s) => s.ambientMode);
-  const setAmbientMode = useEditorStore((s) => s.setAmbientMode);
   const resolutionMultiplier = useEditorStore((s) => s.resolutionMultiplier);
-  const setResolutionMultiplier = useEditorStore(
-    (s) => s.setResolutionMultiplier,
-  );
   const isRhythmLabOpen = useEditorStore((s) => s.isRhythmLabOpen);
-  const setIsRhythmLabOpen = useEditorStore((s) => s.setIsRhythmLabOpen);
 
   return (
     <div className="flex items-center px-4">
@@ -52,7 +48,7 @@ const EditorHeader = () => {
           id="airplane-mode"
           className="border border-white/5"
           checked={ambientMode}
-          onCheckedChange={setAmbientMode}
+          onCheckedChange={editorControl.ui.setAmbientMode}
         />
         <div className="flex items-center gap-x-2">
           <Label
@@ -67,7 +63,7 @@ const EditorHeader = () => {
               max={3}
               step={0.1}
               value={resolutionMultiplier}
-              onChange={setResolutionMultiplier}
+              onChange={editorControl.ui.setResolutionMultiplier}
             />
           </div>
           {/* <span className="w-8 text-xs text-white/30">
@@ -78,7 +74,7 @@ const EditorHeader = () => {
         <Button
           variant={isRhythmLabOpen ? 'default' : 'outline'}
           className="h-8"
-          onClick={() => setIsRhythmLabOpen(!isRhythmLabOpen)}>
+          onClick={() => editorControl.ui.setRhythmLabOpen(!isRhythmLabOpen)}>
           Rhythm Lab
         </Button>
         <ExportButton />

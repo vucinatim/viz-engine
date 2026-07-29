@@ -1,7 +1,7 @@
 import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
-import { GraphNodeData } from '../node-network-store';
+import type { GraphNodeData } from '../graph-types';
 
 interface SectionChangeDetectorBodyProps {
   id: string;

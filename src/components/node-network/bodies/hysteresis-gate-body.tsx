@@ -5,7 +5,8 @@ import { D3DragEvent, drag } from 'd3-drag';
 import { select } from 'd3-selection';
 import { memo, useEffect, useRef } from 'react';
 import { useRafLoop } from 'react-use';
-import { GraphNodeData, useNodeNetwork } from '../node-network-store';
+import type { GraphNodeData } from '../graph-types';
+import { useNodeNetwork } from '../node-network-store';
 
 type DragEvt = D3DragEvent<HTMLDivElement, unknown, unknown>;
 

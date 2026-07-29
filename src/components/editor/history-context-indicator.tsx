@@ -4,6 +4,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import useNodeNetworkStore from '@/components/node-network/node-network-store';
 import { useHistoryStore } from '@/lib/stores/history-store';
 import { Layers, Network } from 'lucide-react';
 import { memo } from 'react';
@@ -13,15 +14,17 @@ import { memo } from 'react';
  * This helps users understand what Ctrl+Z/Ctrl+Y will undo/redo.
  */
 const HistoryContextIndicator = () => {
-  const activeContext = useHistoryStore((state) => state.activeContext);
-  const openNodeNetwork = useHistoryStore((state) => state.openNodeNetwork);
+  const openNodeNetwork = useNodeNetworkStore((state) => state.openNetwork);
+  const isNodeEditorFocused = useHistoryStore(
+    (state) => state.isNodeEditorFocused,
+  );
 
   // Only show when node editor is open
   if (!openNodeNetwork) {
     return null;
   }
 
-  const isNodeContext = activeContext === 'node-editor';
+  const isNodeContext = isNodeEditorFocused;
 
   return (
     <TooltipProvider>

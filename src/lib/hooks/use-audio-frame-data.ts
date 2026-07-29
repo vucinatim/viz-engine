@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import useEditorStore from '../stores/editor-store';
+import useEditorPreviewStore from '../stores/editor-preview-store';
 import useExportStore from '../stores/export-store';
 
 interface UseAudioFrameDataProps {
@@ -76,7 +76,7 @@ const useAudioFrameData = ({
 
     // Drive update gating from global play state to match Remotion controls
     // Read fresh state directly from store to avoid callback recreation on play/pause
-    const isPlayingStore = useEditorStore.getState().isPlaying;
+    const isPlayingStore = useEditorPreviewStore.getState().transport.isPlaying;
     const isPlaying = !isFrozen || isPlayingStore;
 
     if (isPlaying) {

@@ -1,10 +1,10 @@
 'use client';
 
-import useAudioStore from '@/lib/stores/audio-store';
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import { useEffect, useRef } from 'react';
 
 const LiveWaveform = () => {
-  const audioAnalyzer = useAudioStore((s) => s.audioAnalyzer);
+  const audioAnalyzer = useAudioEngineStore((s) => s.audioAnalyzer);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {

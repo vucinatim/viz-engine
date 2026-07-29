@@ -1,4 +1,9 @@
 import { create } from 'zustand';
+import { getNodeNetworks } from '@/components/node-network/node-network-store';
+import {
+  registerNodeNetworkMetricSink,
+} from '@/lib/profiling/node-network-metrics';
+import useEditorLayerProjectionStore from '@/lib/stores/editor-layer-projection-store';
 
 // Performance metrics interfaces
 export interface FPSMetrics {
@@ -311,13 +316,11 @@ const useProfilerStore = create<ProfilerState>((set, get) => ({
     }),
 
   initializeExistingLayersAndNetworks: () => {
-    // This runs in the browser, so we can dynamically import stores
     if (typeof window === 'undefined') return;
 
     try {
       // Initialize existing layers
-      const { default: useLayerStore } = require('./layer-store');
-      const { layers } = useLayerStore.getState();
+      const { layers } = useEditorLayerProjectionStore.getState();
 
       // Create a fresh map and only add existing layers
       const layerIds = new Set(layers.map((layer: any) => layer.id));
@@ -345,10 +348,7 @@ const useProfilerStore = create<ProfilerState>((set, get) => ({
       });
 
       // Initialize existing enabled node networks
-      const {
-        default: useNodeNetworkStore,
-      } = require('@/components/node-network/node-network-store');
-      const { networks } = useNodeNetworkStore.getState();
+      const networks = getNodeNetworks();
 
       // Create a fresh map and only add enabled networks
       const enabledNetworkIds = new Set(
@@ -390,5 +390,19 @@ const useProfilerStore = create<ProfilerState>((set, get) => ({
     }
   },
 }));
+
+registerNodeNetworkMetricSink((metric) => {
+  const profiler = useProfilerStore.getState();
+  if (!profiler.enabled) {
+    return;
+  }
+
+  profiler.updateNodeNetwork(
+    metric.parameterId,
+    metric.parameterName,
+    metric.computeTime,
+    metric.nodeCount,
+  );
+});
 
 export default useProfilerStore;

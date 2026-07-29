@@ -11,14 +11,22 @@ import {
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useRafLoop } from 'react-use';
 import { toast } from 'sonner';
+import editorControl from '@/lib/editor-control';
 import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
 import { destructureParameterId } from '../../lib/id-utils';
 import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
+import useEditorGraphStore from '../../lib/stores/editor-graph-store';
 import { useHistoryStore } from '../../lib/stores/history-store';
-import useLayerStore from '../../lib/stores/layer-store';
+import useEditorLayerProjectionStore from '../../lib/stores/editor-layer-projection-store';
 import { cn } from '../../lib/utils';
 import { NodeHandleType } from '../config/node-types';
-import { useNodeNetworkStore } from '../node-network/node-network-store';
+import useNodeNetworkStore, {
+  applyPresetToNodeNetwork,
+  getNodeNetwork,
+  setEdgesInNetwork,
+  setNodesInNetwork,
+  useIsNetworkEnabled,
+} from '../node-network/node-network-store';
 import NodesSearch from '../node-network/nodes-search';
 import { getPresetsForType } from '../node-network/presets';
 import { Button } from '../ui/button';
@@ -39,11 +47,11 @@ const NodeEditorToolbar = ({
 
   // History functions
   const undo = useCallback(() => {
-    useHistoryStore.getState().undoNodeEditor(nodeNetworkId);
+    editorControl.history.undoNodeEditor(nodeNetworkId);
   }, [nodeNetworkId]);
 
   const redo = useCallback(() => {
-    useHistoryStore.getState().redoNodeEditor(nodeNetworkId);
+    editorControl.history.redoNodeEditor(nodeNetworkId);
   }, [nodeNetworkId]);
 
   const canUndo = useHistoryStore(
@@ -53,14 +61,7 @@ const NodeEditorToolbar = ({
     (state) => (state.nodeHistories[nodeNetworkId]?.future.length || 0) > 0,
   );
 
-  // Get store functions without subscribing to data that changes frequently
-  const setNodesInNetwork = useNodeNetworkStore(
-    (state) => state.setNodesInNetwork,
-  );
-  const setEdgesInNetwork = useNodeNetworkStore(
-    (state) => state.setEdgesInNetwork,
-  );
-  const layers = useLayerStore((state) => state.layers);
+  const layers = useEditorLayerProjectionStore((state) => state.layers);
 
   // Create wrapper functions to match the expected interface
   const setNodes = (newNodes: any[]) =>
@@ -70,9 +71,7 @@ const NodeEditorToolbar = ({
 
   // Get parameter info using the generic function
   // Only subscribe to isEnabled, not the entire network
-  const isNetworkEnabled = useNodeNetworkStore(
-    (state) => state.networks[nodeNetworkId]?.isEnabled ?? false,
-  );
+  const isNetworkEnabled = useIsNetworkEnabled(nodeNetworkId);
 
   // Compute parameter info from networkId and layers
   const parameterInfo = useMemo(() => {
@@ -86,9 +85,8 @@ const NodeEditorToolbar = ({
   }, [nodeNetworkId, layers, isNetworkEnabled]);
 
   const applyPreset = (presetId: string) => {
-    const store = useNodeNetworkStore.getState();
     // Derive output type from current Output node definition if present; fallback to number
-    const network = store.networks[nodeNetworkId];
+    const network = getNodeNetwork(nodeNetworkId);
     let outputType: NodeHandleType = 'number';
     const outputNode = network?.nodes.find((n) =>
       n.id.includes('-output-node'),
@@ -96,7 +94,7 @@ const NodeEditorToolbar = ({
     const typeFromNode = (outputNode?.data as any)?.definition?.inputs?.[0]
       ?.type as NodeHandleType | undefined;
     if (typeFromNode) outputType = typeFromNode;
-    store.applyPresetToNetwork(nodeNetworkId, presetId, outputType);
+    applyPresetToNodeNetwork(nodeNetworkId, presetId, outputType);
   };
 
   // Use clipboard hook for copy functionality
@@ -125,8 +123,7 @@ const NodeEditorToolbar = ({
     if (deletableNodeIds.length === 0) return;
 
     // Get current nodes and edges from store when needed
-    const store = useNodeNetworkStore.getState();
-    const network = store.networks[nodeNetworkId];
+    const network = getNodeNetwork(nodeNetworkId);
     if (!network) return;
 
     const { nodes, edges } = network;
@@ -162,8 +159,7 @@ const NodeEditorToolbar = ({
   };
 
   const handleCopyGraphJson = async () => {
-    const store = useNodeNetworkStore.getState();
-    const network = store.networks[nodeNetworkId];
+    const network = getNodeNetwork(nodeNetworkId);
     if (!network) return;
 
     const safeNodes = network.nodes.map((node) => {
@@ -317,7 +313,7 @@ const NodeEditorToolbar = ({
             size="icon"
             tooltip="Close"
             className="-mx-2"
-            onClick={() => useNodeNetworkStore.getState().setOpenNetwork(null)}>
+            onClick={() => editorControl.nodeEditor.closeNetwork()}>
             <Minus size={20} />
           </Button>
         </div>
@@ -369,8 +365,7 @@ const PresetsSelect = ({
   nodeNetworkId,
   onPresetSelect,
 }: PresetsSelectProps) => {
-  const store = useNodeNetworkStore.getState();
-  const network = store.networks[nodeNetworkId];
+  const network = useEditorGraphStore((state) => state.networks[nodeNetworkId]);
   const outType = (
     network?.nodes.find((n) => n.id.includes('-output-node'))?.data as any
   )?.definition?.inputs?.[0]?.type as NodeHandleType | undefined;

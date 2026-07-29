@@ -482,7 +482,10 @@ export const createVizThreeCompositorGraph = (
   renderPlan: VizRenderPlan,
 ): VizThreeCompositorGraph => {
   const compositeScene = new Scene();
-  compositeScene.background = new Color(renderPlan.viewport.backgroundColor ?? "#000000");
+  compositeScene.background =
+    renderPlan.viewport.backgroundColor === undefined
+      ? null
+      : new Color(renderPlan.viewport.backgroundColor);
   const compositeCamera = createOrthoCamera(renderPlan.viewport.width, renderPlan.viewport.height);
   const compositeRoot = new Group();
   compositeScene.add(compositeRoot);
@@ -511,7 +514,10 @@ export const createVizThreeCompositorGraph = (
 
 export const createVizThreeSceneGraph = (renderPlan: VizRenderPlan): VizThreeSceneGraph => {
   const scene = new Scene();
-  scene.background = new Color(renderPlan.viewport.backgroundColor ?? "#000000");
+  scene.background =
+    renderPlan.viewport.backgroundColor === undefined
+      ? null
+      : new Color(renderPlan.viewport.backgroundColor);
   const camera = createOrthoCamera(renderPlan.viewport.width, renderPlan.viewport.height);
   const rootGroup = new Group();
   scene.add(rootGroup);
@@ -683,10 +689,11 @@ export const createVizThreePreviewController = ({
     }
 
     renderer.setRenderTarget(null);
-    renderer.setClearColor(
-      new Color(currentRenderPlan.viewport.backgroundColor ?? "#000000"),
-      1,
-    );
+    if (currentRenderPlan.viewport.backgroundColor === undefined) {
+      renderer.setClearColor(0x000000, 0);
+    } else {
+      renderer.setClearColor(new Color(currentRenderPlan.viewport.backgroundColor), 1);
+    }
     renderer.clear(true, true, true);
     renderer.render(compositorGraph.compositeScene, compositorGraph.compositeCamera);
   };

@@ -3,7 +3,7 @@ import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
 import { cn } from '@/lib/utils';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
-import { GraphNodeData } from '../node-network-store';
+import type { GraphNodeData } from '../graph-types';
 
 interface ThresholdCounterBodyProps {
   id: string;

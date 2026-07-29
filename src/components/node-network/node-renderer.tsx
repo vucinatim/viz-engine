@@ -7,7 +7,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { destructureParameterId } from '@/lib/id-utils';
-import useLayerStore from '@/lib/stores/layer-store';
+import useEditorLayerProjectionStore from '@/lib/stores/editor-layer-projection-store';
 import { cn } from '@/lib/utils';
 import { Handle, Position, useConnection } from '@xyflow/react';
 import { Info } from 'lucide-react';
@@ -58,7 +58,7 @@ const NodeRenderer = ({
   // For output nodes, get the layer name from nodeNetworkId
   // Only read the layer name when needed, not the entire layers array
   const layerInfo = isOutputNode ? destructureParameterId(nodeNetworkId) : null;
-  const layerName = useLayerStore((state) => {
+  const layerName = useEditorLayerProjectionStore((state) => {
     if (!isOutputNode || !layerInfo) return null;
     const layer = state.layers.find((l) => l.id === layerInfo.layerId);
     return layer?.comp.name || layerInfo.componentName;

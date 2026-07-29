@@ -8,11 +8,15 @@ This is the entrypoint for VizEngine documentation during the V2 rewrite.
 - [current-state.md](./current-state.md)
 - [working-agreements.md](./working-agreements.md)
 - [visions/viz-engine-v2-vision.md](./visions/viz-engine-v2-vision.md)
+- [visions/v2-product-architecture-and-parity-alignment.md](./visions/v2-product-architecture-and-parity-alignment.md)
 - [plans/v2/v2-foundation-and-rewrite-plan.md](./plans/v2/v2-foundation-and-rewrite-plan.md)
+- [plans/v2/autonomous-development-operating-contract.md](./plans/v2/autonomous-development-operating-contract.md)
+- [parity/README.md](./parity/README.md)
 
 ## Active Direction
 
 - [visions/viz-engine-v2-vision.md](./visions/viz-engine-v2-vision.md)
+- [visions/v2-product-architecture-and-parity-alignment.md](./visions/v2-product-architecture-and-parity-alignment.md)
 - [visions/viz-cloud-and-integration-vision.md](./visions/viz-cloud-and-integration-vision.md)
 - [visions/agent-operated-live-editor-vision.md](./visions/agent-operated-live-editor-vision.md)
 - [visions/multi-renderer-and-backend-capability-vision.md](./visions/multi-renderer-and-backend-capability-vision.md)
@@ -24,6 +28,9 @@ This is the entrypoint for VizEngine documentation during the V2 rewrite.
 This is the current source of truth for where VizEngine is heading:
 
 - deterministic runtime
+- one canonical in-memory `VizSession`
+- measured UI, UX, capability, and performance parity with the established
+  pre-V2 editor
 - live editor plus headless render runtime
 - AI-native project model and action surface
 - agent-operated live editor collaboration
@@ -33,6 +40,7 @@ This is the current source of truth for where VizEngine is heading:
 ## V2 Specs
 
 - [specs/v2/viz-project-document.md](./specs/v2/viz-project-document.md)
+- [specs/v2/viz-session.md](./specs/v2/viz-session.md)
 - [specs/v2/component-contract.md](./specs/v2/component-contract.md)
 - [specs/v2/node-contract.md](./specs/v2/node-contract.md)
 - [specs/v2/bake-artifact-contract.md](./specs/v2/bake-artifact-contract.md)
@@ -76,6 +84,25 @@ This is the current source of truth for where VizEngine is heading:
 - [plans/v2/first-temporal-graph-execution-plan.md](./plans/v2/first-temporal-graph-execution-plan.md)
 - [plans/v2/agent-operated-live-editor-roadmap.md](./plans/v2/agent-operated-live-editor-roadmap.md)
 - [plans/v2/v1-editor-ux-preservation-and-v2-rebuild-map.md](./plans/v2/v1-editor-ux-preservation-and-v2-rebuild-map.md)
+- [plans/v2/real-editor-v2-rewire-execution-plan.md](./plans/v2/real-editor-v2-rewire-execution-plan.md)
+- [plans/v2/viz-session-transition-plan.md](./plans/v2/viz-session-transition-plan.md)
+- [plans/v2/autonomous-development-operating-contract.md](./plans/v2/autonomous-development-operating-contract.md)
+- [plans/v2/current-uncommitted-worktree-audit.md](./plans/v2/current-uncommitted-worktree-audit.md)
+- [plans/v2/editor-ownership-audit-and-phase-0-map.md](./plans/v2/editor-ownership-audit-and-phase-0-map.md)
+- [plans/v2/phase-1-layer-working-project-implementation.md](./plans/v2/phase-1-layer-working-project-implementation.md)
+- [plans/v2/phase-2-preview-transport-implementation.md](./plans/v2/phase-2-preview-transport-implementation.md)
+- [plans/v2/phase-3-audio-session-truth-implementation.md](./plans/v2/phase-3-audio-session-truth-implementation.md)
+- [plans/v2/phase-4-graph-truth-implementation.md](./plans/v2/phase-4-graph-truth-implementation.md)
+- [plans/v2/phase-5-canonical-history-cleanup.md](./plans/v2/phase-5-canonical-history-cleanup.md)
+- [plans/v2/phase-6-adapter-burn-down.md](./plans/v2/phase-6-adapter-burn-down.md)
+- [plans/v2/phase-7-layer-projection-burn-down.md](./plans/v2/phase-7-layer-projection-burn-down.md)
+- [plans/v2/phase-8-canonical-project-persistence-closeout.md](./plans/v2/phase-8-canonical-project-persistence-closeout.md)
+- [plans/v2/phase-9-bootstrap-and-history-cleanup.md](./plans/v2/phase-9-bootstrap-and-history-cleanup.md)
+- [plans/v2/phase-10-editor-control-plane-and-build-hygiene.md](./plans/v2/phase-10-editor-control-plane-and-build-hygiene.md)
+- [plans/v2/phase-11-runtime-driven-editor-rendering.md](./plans/v2/phase-11-runtime-driven-editor-rendering.md)
+- [plans/v2/phase-11-runtime-preview-store-cutover.md](./plans/v2/phase-11-runtime-preview-store-cutover.md)
+- [plans/v2/phase-12-canonical-viz-project-document-cutover.md](./plans/v2/phase-12-canonical-viz-project-document-cutover.md)
+- [plans/v2/phase-13-viz-session-runtime-preview-ownership.md](./plans/v2/phase-13-viz-session-runtime-preview-ownership.md)
 - [plans/v2/editor-session-foundation-implementation-plan.md](./plans/v2/editor-session-foundation-implementation-plan.md)
 - [plans/v2/live-preview-and-audio-session-foundation-plan.md](./plans/v2/live-preview-and-audio-session-foundation-plan.md)
 - [plans/v2/local-agent-control-surface-implementation-plan.md](./plans/v2/local-agent-control-surface-implementation-plan.md)
@@ -103,6 +130,10 @@ This is the current source of truth for where VizEngine is heading:
 - [architecture.md](./architecture.md)
 - [monorepo-operating-system.md](./monorepo-operating-system.md)
 - [structural-doctrine.md](./structural-doctrine.md)
+- [parity/README.md](./parity/README.md)
+- [parity/v1-v2-parity-matrix.json](./parity/v1-v2-parity-matrix.json)
+- [plans/v2/autonomous-development-operating-contract.md](./plans/v2/autonomous-development-operating-contract.md)
+- [plans/v2/current-uncommitted-worktree-audit.md](./plans/v2/current-uncommitted-worktree-audit.md)
 - [suggestions.md](./suggestions.md)
 - [work-ledger.md](./work-ledger.md)
 
@@ -118,6 +149,14 @@ Use these docs this way:
   Repo workflow and doc role definitions.
 - `structural-doctrine.md`
   Explicit rewrite and purge posture.
+- `parity/v1-v2-parity-matrix.json`
+  Executable capability, UI/UX, and performance parity backlog against the
+  immutable pre-V2 reference.
+- `plans/v2/autonomous-development-operating-contract.md`
+  Durable authority, recovery, quality-gate, and long-running goal protocol.
+- `plans/v2/current-uncommitted-worktree-audit.md`
+  Preservation risks and safe stabilization order for the current dirty
+  migration.
 - `suggestions.md`
   Durable high-impact follow-up ideas that should not get lost during the
   rewrite.

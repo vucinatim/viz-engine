@@ -1,44 +1,34 @@
-import { mirrorToCanvases } from '@/lib/comp-utils/mirror-to-canvases';
 import useAudioFrameData from '@/lib/hooks/use-audio-frame-data';
 import useDebug from '@/lib/hooks/use-debug';
 import { useLayerFPSTracker } from '@/lib/hooks/use-layer-fps-tracker';
 import useOnResize from '@/lib/hooks/use-on-resize';
-import useAudioStore from '@/lib/stores/audio-store';
-import useEditorStore from '@/lib/stores/editor-store';
-import useExportStore from '@/lib/stores/export-store';
-import useLayerStore, { LayerData } from '@/lib/stores/layer-store';
 import {
-  createDrawCallCounter,
-  DrawCallCounter,
-} from '@/lib/utils/webgl-draw-call-counter';
-import { forwardRef, memo, useCallback, useEffect, useRef } from 'react';
-import * as THREE from 'three';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-
-type RenderFunction = (data: {
-  dt: number;
-  time: number;
-  audioData: { dataArray: Uint8Array; analyzer: AnalyserNode };
-  config: Record<string, any>;
-}) => void;
+  createEditorRuntimePreviewAttachment,
+  EditorRuntimePreviewAttachment,
+} from '@/lib/editor-runtime-preview-attachment';
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
+import useEditorStore from '@/lib/stores/editor-store';
+import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
+import { LayerData } from '@/lib/stores/editor-layer-projection-store';
+import type { VizSessionRuntimePreviewFrame } from '@/lib/viz-session/types';
+import { forwardRef, memo, useEffect, useRef } from 'react';
 
 interface LayerRendererProps {
   layer: LayerData;
 }
 
 const LayerRenderer = ({ layer }: LayerRendererProps) => {
-  const audioAnalyzer = useAudioStore((s) => s.audioAnalyzer);
-  const audioElementRef = useAudioStore((s) => s.audioElementRef);
+  const emptyMirrorCanvasesRef = useRef<HTMLCanvasElement[]>([]);
+  const audioAnalyzer = useAudioEngineStore((s) => s.audioAnalyzer);
   const resolutionMultiplier = useEditorStore((s) => s.resolutionMultiplier);
-  const playerRef = useEditorStore((s) => s.playerRef);
-  const playerFPS = useEditorStore((s) => s.playerFPS);
-  const isExporting = useExportStore((s) => s.isExporting);
-  const registerLayerRenderFunction = useLayerStore(
+  const registerLayerRenderFunction = useEditorRuntimePreviewAttachmentStore(
     (s) => s.registerLayerRenderFunction,
   );
-  const unregisterLayerRenderFunction = useLayerStore(
+  const unregisterLayerRenderFunction = useEditorRuntimePreviewAttachmentStore(
     (s) => s.unregisterLayerRenderFunction,
+  );
+  const mirrorCanvases = useEditorRuntimePreviewAttachmentStore(
+    (state) => state.mirrorCanvasesByLayerId[layer.id] ?? [],
   );
 
   // Profiler tracking for this layer
@@ -47,67 +37,18 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   const debugCanvasRef = useRef<HTMLCanvasElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const layerCanvasRef = useRef<HTMLCanvasElement>(null);
-
-  // Time tracking
-  const lastFrameTimeRef = useRef(
-    typeof performance !== 'undefined' ? performance.now() : Date.now(),
+  const previewAttachmentRef = useRef<EditorRuntimePreviewAttachment | null>(
+    null,
   );
-  const rafIdRef = useRef<number | null>(null);
-
-  // Store the render function so export can call it manually
-  const manualRenderFunctionRef = useRef<
-    ((time: number, dt: number) => void) | null
-  >(null);
-
-  // 3D refs
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const sceneRef = useRef<THREE.Scene | null>(null);
-  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-
-  // Post-processing ref
-  const composerRef = useRef<EffectComposer | null>(null);
-
-  // Draw call counter for profiling
-  const drawCallCounterRef = useRef<DrawCallCounter | null>(null);
 
   // on panel resize, update canvas size
-  useOnResize(canvasContainerRef, (entries, element) => {
-    if (!layerCanvasRef.current) return;
+  useOnResize(canvasContainerRef, (entries) => {
+    const previewAttachment = previewAttachmentRef.current;
+    if (!previewAttachment) return;
     const newestEntry = entries[entries.length - 1];
 
     const { width, height } = newestEntry.contentRect;
-
-    // Calculate the new internal resolution based on the multiplier
-    const newWidth = Math.round(width * resolutionMultiplier);
-    const newHeight = Math.round(height * resolutionMultiplier);
-
-    // Set the canvas internal bitmap size (this is what changes with multiplier)
-    layerCanvasRef.current.width = newWidth;
-    layerCanvasRef.current.height = newHeight;
-
-    if (debugCanvasRef.current) {
-      debugCanvasRef.current.width = newWidth;
-      debugCanvasRef.current.height = newHeight;
-    }
-
-    if (sceneRef.current && cameraRef.current && rendererRef.current) {
-      // *** THE FIX ***
-      // The third parameter 'false' tells setSize NOT to update the canvas's CSS style.
-      // This allows our CSS classes ('h-full', 'w-full') to control the display size.
-      rendererRef.current.setSize(newWidth, newHeight, false);
-
-      const camera = cameraRef.current;
-      if (camera) {
-        // The camera's aspect ratio should always be based on the DISPLAY size.
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
-      }
-
-      // Update post-processing composer size if it exists
-      if (composerRef.current) {
-        composerRef.current.setSize(newWidth, newHeight);
-      }
-    }
+    previewAttachment.resize(width, height);
   });
 
   // Get the debug function
@@ -132,269 +73,47 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     layerDebugEnabledRef.current = layer.isDebugEnabled;
   }, [layer.isDebugEnabled]);
 
-  const setup3D = useCallback(() => {
-    if (!layer.comp.draw3D || !layerCanvasRef.current) return;
-
-    const renderer = new THREE.WebGLRenderer({
-      canvas: layerCanvasRef.current,
-      antialias: true,
-      alpha: true,
-      // CRITICAL for export: preserve drawing buffer so we can capture frames
-      preserveDrawingBuffer: true,
-    });
-
-    // CRITICAL for blend modes: Set clear color to transparent
-    // This ensures the canvas is cleared with alpha = 0, allowing blend modes like multiply to work correctly
-    renderer.setClearColor(0x000000, 0); // Black with 0 alpha (fully transparent)
-
-    // Improve color fidelity and contrast
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
-    // three@0.164+ defaults to physically correct; keep legacy off
-    (renderer as any).useLegacyLights = false;
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-    const containerWidth = layerCanvasRef.current.clientWidth;
-    const containerHeight = layerCanvasRef.current.clientHeight;
-
-    // Calculate the initial internal resolution based on the multiplier
-    const newWidth = Math.round(containerWidth * resolutionMultiplier);
-    const newHeight = Math.round(containerHeight * resolutionMultiplier);
-
-    // Set the canvas internal bitmap size
-    layerCanvasRef.current.width = newWidth;
-    layerCanvasRef.current.height = newHeight;
-
-    // *** THE FIX ***
-    // The third parameter 'false' tells setSize NOT to update the canvas's CSS style.
-    renderer.setSize(newWidth, newHeight, false);
-
-    const scene = new THREE.Scene();
-    if (layerDebugEnabledRef.current) {
-      const gridHelper = new THREE.GridHelper(10, 10);
-      scene.add(gridHelper);
-      const axesHelper = new THREE.AxesHelper(5);
-      scene.add(axesHelper);
-    }
-    const camera = new THREE.PerspectiveCamera(
-      75,
-      containerWidth / containerHeight, // Aspect ratio uses display size
-      0.1,
-      1000,
-    );
-    camera.position.set(0, 0, 0);
-    camera.lookAt(new THREE.Vector3(0, 0, 0));
-    // Use fallback time for initial setup - actual time is handled in render loop
-    const time = 0;
-
-    // Setup post-processing composer for 3D components
-    // Component can add its own passes in init3D
-    const composer = new EffectComposer(renderer);
-    const renderScene = new RenderPass(scene, camera);
-    composer.addPass(renderScene);
-    composerRef.current = composer;
-
-    layer.comp.init3D?.({
-      state: layerStateRef.current,
-      threeCtx: {
-        renderer,
-        scene,
-        camera,
-        composer,
-      },
-      config: layer.config.getValues({
-        audioSignal: new Uint8Array(),
-        frequencyAnalysis: {
-          frequencyData: new Uint8Array(),
-          sampleRate: audioAnalyzer?.context.sampleRate || 44100,
-          fftSize: audioAnalyzer?.fftSize || 2048,
-        },
-        time,
-      }),
-      debugEnabled: layerDebugEnabledRef.current,
-    });
-
-    // Store the renderer, scene and camera for later use
-    cameraRef.current = camera;
-    sceneRef.current = scene;
-    rendererRef.current = renderer;
-
-    // Setup draw call counter for profiling (wraps WebGL context)
-    const gl = renderer.getContext();
-    drawCallCounterRef.current = createDrawCallCounter(gl);
-  }, [
-    audioAnalyzer?.context.sampleRate,
-    audioAnalyzer?.fftSize,
-    layer.comp,
-    layer.config,
-    resolutionMultiplier,
-  ]);
-
-  // Use refs for frequently changing values that don't need to trigger full render setup recreation
-  const layerSettingsRef = useRef(layer.layerSettings);
-  const mirrorCanvasesRef = useRef(layer.mirrorCanvases);
+  const mirrorCanvasesRef = useRef<HTMLCanvasElement[]>([]);
 
   // Update refs when values change (but don't trigger effect recreation)
   useEffect(() => {
-    layerSettingsRef.current = layer.layerSettings;
-  }, [layer.layerSettings]);
-
-  useEffect(() => {
-    mirrorCanvasesRef.current = layer.mirrorCanvases;
-  }, [layer.mirrorCanvases]);
+    mirrorCanvasesRef.current = mirrorCanvases ?? emptyMirrorCanvasesRef.current;
+  }, [mirrorCanvases]);
 
   useEffect(() => {
     if (!audioAnalyzer || !layerCanvasRef.current) return;
+    const previewAttachment = createEditorRuntimePreviewAttachment({
+      layer,
+      canvas: layerCanvasRef.current,
+      debugCanvas: debugCanvasRef.current,
+      audioAnalyzer,
+      resolutionMultiplier,
+      getNextAudioFrame,
+      withDebug,
+      getLayerState: () => layerStateRef.current,
+      getDebugEnabled: () => layerDebugEnabledRef.current,
+      getMirrorCanvases: () => mirrorCanvasesRef.current,
+      profiler: layerFPSTracker,
+    });
+    previewAttachmentRef.current = previewAttachment;
 
-    let renderFunction: RenderFunction | null = null;
-
-    if (layer.comp.draw3D) {
-      // Setup the 3D renderer and the 3D draw function
-      setup3D();
-
-      renderFunction = (data) => {
-        if (!rendererRef.current || !sceneRef.current || !cameraRef.current) {
-          return;
-        }
-
-        layerFPSTracker.startRender();
-
-        // Reset draw call counter before rendering
-        drawCallCounterRef.current?.reset();
-
-        layer.comp.draw3D?.({
-          threeCtx: {
-            renderer: rendererRef.current,
-            scene: sceneRef.current,
-            camera: cameraRef.current,
-          },
-          state: layerStateRef.current,
-          debugEnabled: layerDebugEnabledRef.current,
-          ...data,
-        });
-
-        // Render with composer if available, otherwise use direct renderer
-        if (composerRef.current) {
-          composerRef.current.render();
-        } else {
-          // Fallback: render directly without post-processing
-          rendererRef.current.render(sceneRef.current, cameraRef.current);
-        }
-
-        // Get draw call count after rendering
-        const drawCalls = drawCallCounterRef.current?.getCount() || 0;
-        layerFPSTracker.endRender(drawCalls);
-      };
-    } else {
-      // Setup the 2D draw function
-      const ctx = layerCanvasRef.current.getContext('2d');
-      if (!ctx) return;
-      renderFunction = (data) => {
-        layerFPSTracker.startRender();
-
-        layer.comp.draw?.({
-          canvasCtx: ctx,
-          state: layerStateRef.current,
-          debugEnabled: layerDebugEnabledRef.current,
-          ...data,
-        });
-
-        layerFPSTracker.endRender();
-      };
+    const displayWidth = layerCanvasRef.current.clientWidth;
+    const displayHeight = layerCanvasRef.current.clientHeight;
+    if (displayWidth > 0 && displayHeight > 0) {
+      previewAttachment.resize(displayWidth, displayHeight);
     }
 
-    // Create manual render function that accepts explicit time and dt
-    // This is called by the export orchestrator for frame-accurate rendering
-    const manualRender = (explicitTime: number, explicitDt: number) => {
-      const { frequencyData, timeDomainData, sampleRate, fftSize } =
-        getNextAudioFrame();
-
-      const animInputData = {
-        audioSignal: timeDomainData,
-        frequencyData,
-        time: explicitTime, // Use explicit time passed in
-        frequencyAnalysis: {
-          frequencyData,
-          sampleRate,
-          fftSize,
-        },
-      };
-
-      const configValues = layer.config.getValues(animInputData);
-      withDebug(
-        () =>
-          renderFunction?.({
-            dt: explicitDt, // Use explicit dt passed in
-            time: explicitTime, // Use explicit time passed in
-            audioData: { dataArray: frequencyData, analyzer: audioAnalyzer },
-            config: configValues,
-          }),
-        {
-          dataArray: frequencyData,
-          config: configValues,
-          configSchema: layer.config,
-        },
-      );
-
-      // Mirror the rendered canvas to preview canvases
-      if (mirrorCanvasesRef.current && mirrorCanvasesRef.current.length > 0) {
-        mirrorToCanvases(layerCanvasRef.current, mirrorCanvasesRef.current);
-      }
-    };
-
-    // Store the manual render function for export to use
-    manualRenderFunctionRef.current = manualRender;
-
-    // Register the render function with the layer store so export can call it
-    registerLayerRenderFunction(layer.id, manualRender);
-
-    // Regular RAF loop for playback (paused during export)
-    const renderFrame = () => {
-      const now =
-        typeof performance !== 'undefined' ? performance.now() : Date.now();
-      const dt = (now - lastFrameTimeRef.current) / 1000.0; // time in seconds
-      lastFrameTimeRef.current = now; // update last frame time
-
-      // Prefer Remotion Player's clock to drive animation time; fallback to audio element
-      const frame = playerRef?.current?.getCurrentFrame?.() ?? null;
-      const time =
-        frame !== null && typeof frame === 'number' && playerFPS > 0
-          ? frame / playerFPS
-          : audioElementRef.current?.currentTime || 0;
-
-      // Use the manual render function with calculated time
-      manualRender(time, dt);
-
-      // CRITICAL: Only continue RAF loop if NOT exporting
-      if (!useExportStore.getState().isExporting) {
-        rafIdRef.current = requestAnimationFrame(renderFrame);
-      }
-    };
-
-    // Only start RAF loop if not currently exporting
-    if (!isExporting) {
-      rafIdRef.current = requestAnimationFrame(renderFrame);
-    }
+    // Register the render function with the preview store so live preview and export can call it
+    registerLayerRenderFunction(
+      layer.id,
+      (frame: VizSessionRuntimePreviewFrame) => ({
+        runtimeBacked: previewAttachment.render(frame),
+      }),
+    );
 
     return () => {
-      // Cleanup renderer and other three.js resources when component unmounts or before reinitializing
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current);
-        rafIdRef.current = null;
-      }
-      if (rendererRef.current) {
-        rendererRef.current.dispose();
-      }
-      // Cleanup draw call counter
-      if (drawCallCounterRef.current) {
-        drawCallCounterRef.current.cleanup();
-        drawCallCounterRef.current = null;
-      }
-      // Clear the manual render function
-      manualRenderFunctionRef.current = null;
-      // Unregister from layer store
+      previewAttachment.destroy();
+      previewAttachmentRef.current = null;
       unregisterLayerRenderFunction(layer.id);
     };
   }, [
@@ -403,11 +122,10 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     layer.id,
     layer.comp,
     layer.config,
-    setup3D,
+    layer,
+    layerFPSTracker,
+    resolutionMultiplier,
     withDebug,
-    playerRef,
-    playerFPS,
-    isExporting,
     registerLayerRenderFunction,
     unregisterLayerRenderFunction,
   ]);

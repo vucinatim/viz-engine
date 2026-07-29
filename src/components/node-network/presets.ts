@@ -7,7 +7,7 @@ import {
   createOutputNode,
 } from './animation-nodes';
 import { autoLayoutNodes } from './auto-layout';
-import { GraphNode } from './node-network-store';
+import { GraphNode } from './graph-types';
 
 // Aliases used inside presets to reference the network I/O nodes
 export const INPUT_ALIAS = 'INPUT';

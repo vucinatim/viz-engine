@@ -1,5 +1,5 @@
 import { Edge } from '@xyflow/react';
-import { GraphNode } from './node-network-store';
+import { GraphNode } from './graph-types';
 
 type LayoutOptions = {
   startX?: number;

@@ -2,7 +2,7 @@ import { useNodeLiveValuesStore } from '@/lib/stores/node-live-values-store';
 import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
-import { GraphNodeData } from '../node-network-store';
+import type { GraphNodeData } from '../graph-types';
 
 interface HSLColorBodyProps {
   id: string;

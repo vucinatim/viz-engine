@@ -1,4 +1,5 @@
-import useLayerStore, { LayerData } from '@/lib/stores/layer-store';
+import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
+import { LayerData } from '@/lib/stores/editor-layer-projection-store';
 import { useEffect, useRef } from 'react';
 import { LayerCanvas } from './layer-renderer';
 
@@ -8,8 +9,12 @@ interface LayerMirrorCanvasProps {
 
 const LayerMirrorCanvas = ({ layer }: LayerMirrorCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const registerMirrorCanvas = useLayerStore((s) => s.registerMirrorCanvas);
-  const unregisterMirrorCanvas = useLayerStore((s) => s.unregisterMirrorCanvas);
+  const registerMirrorCanvas = useEditorRuntimePreviewAttachmentStore(
+    (s) => s.registerMirrorCanvas,
+  );
+  const unregisterMirrorCanvas = useEditorRuntimePreviewAttachmentStore(
+    (s) => s.unregisterMirrorCanvas,
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;

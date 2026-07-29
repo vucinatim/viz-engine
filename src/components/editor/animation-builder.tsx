@@ -1,7 +1,7 @@
 import { destructureParameterId } from '@/lib/id-utils';
-import useEditorStore from '@/lib/stores/editor-store';
-import { useHistoryStore } from '@/lib/stores/history-store';
-import useLayerStore from '@/lib/stores/layer-store';
+import editorControl from '@/lib/editor-control';
+import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
+import useEditorLayerProjectionStore from '@/lib/stores/editor-layer-projection-store';
 import { cn } from '@/lib/utils';
 import { AudioLines } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -12,7 +12,7 @@ import useNodeNetworkStore, {
 import NodeEditorToolbar from './node-editor-toolbar';
 
 const AnimationBuilder = () => {
-  const isPlaying = useEditorStore((state) => state.isPlaying);
+  const isPlaying = useEditorPreviewStore((state) => state.transport.isPlaying);
   const nodeNetworkId = useNodeNetworkStore((state) => state.openNetwork);
   // Use optimized selector to only subscribe to the specific network we need
   const nodeNetwork = useSpecificNetwork(nodeNetworkId);
@@ -25,18 +25,7 @@ const AnimationBuilder = () => {
   const shouldForceShowOverlay = useNodeNetworkStore(
     (state) => state.shouldForceShowOverlay,
   );
-  const setShouldForceShowOverlay = useNodeNetworkStore(
-    (state) => state.setShouldForceShowOverlay,
-  );
-  const layers = useLayerStore((state) => state.layers);
-
-  // History context management
-  const setOpenNodeNetwork = useHistoryStore(
-    (state) => state.setOpenNodeNetwork,
-  );
-  const setNodeEditorFocused = useHistoryStore(
-    (state) => state.setNodeEditorFocused,
-  );
+  const layers = useEditorLayerProjectionStore((state) => state.layers);
 
   const [isHovering, setIsHovering] = useState(false);
   const [hasMouseEntered, setHasMouseEntered] = useState(false);
@@ -54,11 +43,6 @@ const AnimationBuilder = () => {
       })()
     : null;
 
-  // Sync open network with history context store
-  useEffect(() => {
-    setOpenNodeNetwork(nodeNetworkId);
-  }, [nodeNetworkId, setOpenNodeNetwork]);
-
   // When shouldForceShowOverlay changes to true, show the overlay immediately
   useEffect(() => {
     if (shouldForceShowOverlay) {
@@ -70,11 +54,11 @@ const AnimationBuilder = () => {
   // Update focus state based on hover (when user is interacting with node editor)
   useEffect(() => {
     if (nodeNetworkId && !areNetworksMinimized) {
-      setNodeEditorFocused(isHovering);
+      editorControl.history.setNodeEditorFocused(isHovering);
     } else {
-      setNodeEditorFocused(false);
+      editorControl.history.setNodeEditorFocused(false);
     }
-  }, [isHovering, nodeNetworkId, areNetworksMinimized, setNodeEditorFocused]);
+  }, [isHovering, nodeNetworkId, areNetworksMinimized]);
 
   return (
     <div
@@ -101,7 +85,7 @@ const AnimationBuilder = () => {
 
         // If we were force showing and mouse has entered, now clear the force show flag
         if (shouldForceShowOverlay && hasMouseEntered) {
-          setShouldForceShowOverlay(false);
+          editorControl.nodeEditor.setShouldForceShowOverlay(false);
           setHasMouseEntered(false);
         }
       }}

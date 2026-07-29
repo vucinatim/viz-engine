@@ -3,7 +3,8 @@
 import { PipelineStageDefinition } from '@/lib/rhythm-lab/analysis-graph';
 import { STAGE_COLORS } from '@/lib/rhythm-lab/stage-colors';
 import useRhythmLabStore from '@/lib/stores/rhythm-lab-store';
-import useAudioStore from '@/lib/stores/audio-store';
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
+import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { useEffect, useRef, useState } from 'react';
 import StageCard from './stage-card';
@@ -18,14 +19,16 @@ const OnsetCard = ({ stage }: OnsetCardProps) => {
   const onsetEnv = useRhythmLabStore((s) => s.onsetEnv);
   const analysisMeta = useRhythmLabStore((s) => s.analysisMeta);
   const enabled = useRhythmLabStore((s) => Boolean(s.enabledStages.onset));
-  const audioBuffer = useAudioStore((s) => s.audioBuffer);
-  const visualTimeRef = useRef(useAudioStore.getState().visualTime);
+  const audioBuffer = useAudioEngineStore((s) => s.audioBuffer);
+  const visualTimeRef = useRef(
+    useEditorAudioSessionStore.getState().visualTime,
+  );
   const rhythmSelection = useEditorStore((s) => s.rhythmSelection);
   const rafRef = useRef(0);
   const [level, setLevel] = useState(0);
 
   useEffect(() => {
-    const unsub = useAudioStore.subscribe((state) => {
+    const unsub = useEditorAudioSessionStore.subscribe((state) => {
       visualTimeRef.current = state.visualTime;
     });
     return () => unsub();

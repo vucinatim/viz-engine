@@ -1,4 +1,6 @@
-import useNodeNetworkStore from '@/components/node-network/node-network-store';
+import {
+  clearStaleNodeNetworks,
+} from '@/components/node-network/node-network-store';
 import useRecorderStore from '@/lib/stores/performance-recorder-store';
 import useProfilerStore from '@/lib/stores/profiler-store';
 import {
@@ -157,8 +159,6 @@ export function ProfilerPanel() {
   const setSampleRate = useRecorderStore((s) => s.setSampleRate);
 
   // Node network store actions
-  const clearStaleNetworks = useNodeNetworkStore((s) => s.clearStaleNetworks);
-
   // Local state
   const [recordingName, setRecordingName] = useState('');
   const [recordingDescription, setRecordingDescription] = useState('');
@@ -697,7 +697,7 @@ export function ProfilerPanel() {
                 ))}
                 <div className="border-t border-white/10 pt-2">
                   <Button
-                    onClick={clearStaleNetworks}
+                    onClick={clearStaleNodeNetworks}
                     variant="outline"
                     size="sm"
                     className="w-full text-xs">
@@ -712,7 +712,7 @@ export function ProfilerPanel() {
                   No active networks
                 </div>
                 <Button
-                  onClick={clearStaleNetworks}
+                  onClick={clearStaleNodeNetworks}
                   variant="outline"
                   size="sm"
                   className="w-full text-xs">

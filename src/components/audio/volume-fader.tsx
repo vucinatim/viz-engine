@@ -1,14 +1,17 @@
-import useAudioStore from '@/lib/stores/audio-store';
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
+import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 import { AUDIO_THEME } from '@/lib/theme/audio-theme';
 import * as SliderPrimitive from '@radix-ui/react-slider';
 import { useEffect, useRef } from 'react';
 
 const VolumeFader = () => {
-  const gainNode = useAudioStore((s) => s.gainNode);
-  const audioAnalyzer = useAudioStore((s) => s.audioAnalyzer);
-  const audioContext = useAudioStore((s) => s.audioContext);
-  const audioSource = useAudioStore((s) => s.audioSource);
-  const isCapturingTab = useAudioStore((s) => s.isCapturingTab);
+  const gainNode = useAudioEngineStore((s) => s.gainNode);
+  const audioAnalyzer = useAudioEngineStore((s) => s.audioAnalyzer);
+  const audioContext = useAudioEngineStore((s) => s.audioContext);
+  const audioSource = useAudioEngineStore((s) => s.audioSource);
+  const isCapturingTab = useEditorAudioSessionStore(
+    (s) => s.session.source?.kind === 'stream',
+  );
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number | null>(null);

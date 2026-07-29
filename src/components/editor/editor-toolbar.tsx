@@ -19,13 +19,8 @@ import {
   MenubarTrigger,
 } from '@/components/ui/menubar';
 import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts';
+import editorControl from '@/lib/editor-control';
 import { getBundledSampleProjects } from '@/lib/public-manifests';
-import {
-  loadProject,
-  loadProjectFromUrl,
-  resetProject,
-  saveProject,
-} from '@/lib/project-persistence';
 import { useHistoryStore } from '@/lib/stores/history-store';
 import useProfilerStore from '@/lib/stores/profiler-store';
 import {
@@ -55,28 +50,9 @@ const EditorToolbar = () => {
   const [projectName, setProjectName] = useState('my-viz-project');
 
   // Use unified history for context-aware undo/redo
-  const undo = useHistoryStore((state) => state.undo);
-  const redo = useHistoryStore((state) => state.redo);
   const canUndo = useHistoryStore((state) => state.canUndo());
   const canRedo = useHistoryStore((state) => state.canRedo());
-  const activeContext = useHistoryStore((state) => state.activeContext);
-
-  // Profiler controls
-  const profilerEnabled = useProfilerStore((s) => s.enabled);
   const profilerVisible = useProfilerStore((s) => s.visible);
-  const setProfilerEnabled = useProfilerStore((s) => s.setEnabled);
-  const setProfilerVisible = useProfilerStore((s) => s.setVisible);
-
-  const toggleProfiler = () => {
-    if (!profilerEnabled) {
-      // If enabling for the first time, enable and show
-      setProfilerEnabled(true);
-      setProfilerVisible(true);
-    } else {
-      // If already enabled, just toggle visibility
-      setProfilerVisible(!profilerVisible);
-    }
-  };
 
   // Track fullscreen state changes
   useEffect(() => {
@@ -106,9 +82,13 @@ const EditorToolbar = () => {
   // Add keyboard shortcuts for undo/redo and fullscreen
   useKeyboardShortcuts({
     shortcuts: [
-      toShortcutDefinition(SHORTCUTS.undo, undo, canUndo),
-      toShortcutDefinition(SHORTCUTS.redo, redo, canRedo),
-      toShortcutDefinition(SHORTCUTS.redoAlt, redo, canRedo),
+      toShortcutDefinition(SHORTCUTS.undo, editorControl.history.undo, canUndo),
+      toShortcutDefinition(SHORTCUTS.redo, editorControl.history.redo, canRedo),
+      toShortcutDefinition(
+        SHORTCUTS.redoAlt,
+        editorControl.history.redo,
+        canRedo,
+      ),
       toShortcutDefinition(SHORTCUTS.fullscreen, toggleFullscreen, true),
     ],
   });
@@ -126,7 +106,7 @@ const EditorToolbar = () => {
 
   const handleConfirmSave = () => {
     if (projectName.trim()) {
-      saveProject(projectName.trim());
+      editorControl.persistence.saveProject(projectName.trim());
       setIsSaveDialogOpen(false);
     }
   };
@@ -138,12 +118,12 @@ const EditorToolbar = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      loadProject(file);
+      editorControl.persistence.loadProject(file);
     }
   };
 
   const handleLoadSampleProject = (url: string) => {
-    loadProjectFromUrl(url);
+    editorControl.persistence.loadProjectFromUrl(url);
   };
 
   const handleResetProject = () => {
@@ -156,7 +136,7 @@ const EditorToolbar = () => {
       '[EditorToolbar] User confirmed reset, calling resetProject()...',
     );
     setIsResetDialogOpen(false);
-    await resetProject();
+    await editorControl.persistence.resetProject();
   };
 
   return (
@@ -184,13 +164,17 @@ const EditorToolbar = () => {
         <MenubarMenu>
           <MenubarTrigger>Edit</MenubarTrigger>
           <MenubarContent>
-            <MenubarItem onClick={undo} disabled={!canUndo}>
+            <MenubarItem
+              onClick={editorControl.history.undo}
+              disabled={!canUndo}>
               Undo{' '}
               <MenubarShortcut>
                 {formatShortcut(SHORTCUTS.undo)}
               </MenubarShortcut>
             </MenubarItem>
-            <MenubarItem onClick={redo} disabled={!canRedo}>
+            <MenubarItem
+              onClick={editorControl.history.redo}
+              disabled={!canRedo}>
               Redo{' '}
               <MenubarShortcut>
                 {formatShortcut(SHORTCUTS.redo)}
@@ -212,7 +196,7 @@ const EditorToolbar = () => {
               </MenubarShortcut>
             </MenubarItem>
             <MenubarSeparator />
-            <MenubarItem onClick={toggleProfiler}>
+            <MenubarItem onClick={editorControl.ui.toggleProfiler}>
               {profilerVisible ? '✓ ' : ''}Performance
             </MenubarItem>
           </MenubarContent>

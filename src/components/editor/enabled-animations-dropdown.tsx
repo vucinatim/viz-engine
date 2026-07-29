@@ -1,7 +1,8 @@
 'use client';
 
 import { destructureParameterId } from '@/lib/id-utils';
-import useLayerStore from '@/lib/stores/layer-store';
+import editorControl from '@/lib/editor-control';
+import useEditorLayerProjectionStore from '@/lib/stores/editor-layer-projection-store';
 import { useCallback, useMemo } from 'react';
 import useNodeNetworkStore, {
   useEnabledNetworkIds,
@@ -19,20 +20,16 @@ const EnabledAnimationsDropdown = () => {
   // Use optimized selector to only get enabled parameter IDs (not full networks)
   // This prevents rerenders when node positions change or disabled networks change
   const enabledNetworkIds = useEnabledNetworkIds();
-  const setOpenNetwork = useNodeNetworkStore((state) => state.setOpenNetwork);
   const openNetwork = useNodeNetworkStore((state) => state.openNetwork);
-  const setShouldForceShowOverlay = useNodeNetworkStore(
-    (state) => state.setShouldForceShowOverlay,
-  );
-  const layers = useLayerStore((state) => state.layers);
+  const layers = useEditorLayerProjectionStore((state) => state.layers);
 
   // Memoize the click handler
   const handleSelect = useCallback(
     (animation: any) => {
-      setOpenNetwork(animation.parameterId);
-      setShouldForceShowOverlay(true);
+      editorControl.nodeEditor.openNetwork(animation.parameterId);
+      editorControl.nodeEditor.setShouldForceShowOverlay(true);
     },
-    [setOpenNetwork, setShouldForceShowOverlay],
+    [],
   );
 
   // Check if animation is currently active

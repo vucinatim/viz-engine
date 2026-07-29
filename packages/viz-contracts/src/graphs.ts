@@ -17,6 +17,7 @@ export type VizGraphNodeInputBinding =
       kind: "node-output";
       nodeId: string;
       output: string;
+      edgeId?: string;
     };
 
 export interface VizNodeGraphNode {
@@ -35,6 +36,7 @@ export interface VizNodeGraphOutputBinding {
 export interface VizNodeGraphDocument {
   id: VizGraphId;
   name: string;
+  enabled?: boolean;
   inputs?: Record<string, VizGraphInputSource>;
   nodes: VizNodeGraphNode[];
   outputs: VizNodeGraphOutputBinding[];

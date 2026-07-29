@@ -4,10 +4,21 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
 
 ## Active Architectural Suggestions
 
-- Extract a canonical project document schema before large runtime rewrites
-  spread implicit scene state further across the app.
-- Split editor state from runtime state before adding more features on top of
-  the current Zustand-coupled rendering path.
+- Continue the classified adapter burn-down from
+  `phase-13-viz-session-runtime-preview-ownership.md`: replace each historical
+  component render path with a package-runtime implementation, then delete the
+  per-component runtime preview bridge when it has no consumers.
+- Keep `VizSession` one canonical engine while splitting its large internal
+  implementation into focused reducers, selectors, history, persistence, and
+  host-attachment modules. Internal modularity must not recreate multiple
+  sources of truth.
+- Add a repeatable browser parity smoke for sample loading, the animation/node
+  surface, Rhythm Lab, and playback. The 2026-07-29 manual calibration found
+  three product-blocking regressions that type checks, builds, and lower-level
+  tests did not detect.
+- Finish moving component render meaning out of browser/editor adapters now
+  that canonical document, runtime inspection, and browser attachment ownership
+  are separated.
 - Turn the standalone node evaluator into the basis of the real runtime instead
   of letting node execution remain editor-owned.
 - Define a render compatibility classification for components and nodes:
@@ -98,3 +109,44 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
 - Build the next layer-creation/editor-authoring step on top of the new
   component-catalog truth, so new layer flows stay registry-driven instead of
   hardcoding component knowledge into the UI.
+- Now that layer truth has an app-local canonical working project, the next
+  cleanup should be to teach layer history to snapshot and restore that
+  canonical project directly, so `history-store` no longer needs the temporary
+  legacy-store reimport bridge after undo/redo.
+- Now that preview transport truth has been split out of `editor-store`, the
+  next cleanup should move browser-media attachment details and audio-session
+  lifecycle behind an equally explicit audio-session owner, so preview
+  transport stays canonical without inheriting audio-element quirks directly.
+- Now that the audio session has been split from browser audio attachments, the
+  next cleanup should remove the remaining direct media-element time writes and
+  analyzer assumptions from waveform/export/legacy consumers so the graph and
+  renderer paths stop reaching around the canonical audio-session seam.
+- Now that graph truth and execution live in `editor-graph-store`, the next
+  cleanup should shrink `node-network-store` further until it holds only
+  explicit node-editor UI session state and no convenience graph ownership
+  logic.
+- Now that layer history snapshots canonical working-project truth directly,
+  the next cleanup should apply the same ruthless standard to remaining
+  history/context seams so no undo/redo path still depends on legacy store
+  reconstruction as hidden truth.
+## Next Cleanup Candidates
+
+- keep burning down editor-era convenience accessors that still encourage
+  treating adapter stores as canonical truth
+- make persistence/bootstrap stop depending on legacy-shaped projected store
+  hydration as the long-term source for editor startup
+- reduce remaining history/control duplication so undo/redo, editor driving,
+  and future agent tools converge on one cleaner control plane
+- now that the editor has one explicit local control plane, the next cleanup
+  should be to push more browser/runtime attachment internals behind that same
+  seam where it stays simple, so only truly low-level attachment code still
+  talks store-to-store directly
+- now that browser render attachment setup is behind
+  `editor-runtime-preview-attachment`, the next rendering step should be to
+  keep porting preserved-editor visuals into package-runtime components and
+  expand the runtime bridge layer-by-layer, instead of growing a second
+  long-lived render architecture inside `src/components/editor`
+- now that the mixed-import and chunking warnings are gone, keep the Vite build
+  posture intentionally simple: explicit vendor splits plus lazy boundaries for
+  hidden heavy surfaces, not a sprawling manual chunk map that becomes its own
+  maintenance problem

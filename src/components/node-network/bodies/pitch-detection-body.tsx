@@ -1,10 +1,10 @@
 import { Label } from '@/components/ui/label';
-import useAudioStore from '@/lib/stores/audio-store';
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import { useNodeLiveValuesStore } from '@/lib/stores/node-live-values-store';
 import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
 import { memo, useCallback, useRef, useState } from 'react';
 import { useRafLoop } from 'react-use';
-import { GraphNodeData } from '../node-network-store';
+import type { GraphNodeData } from '../graph-types';
 
 const MIN_FREQ = 20;
 const MAX_FREQ = 20000;
@@ -25,7 +25,7 @@ function PitchDetectionBody({
 }: PitchDetectionBodyProps) {
   const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
   const getLiveNodeValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
-  const audioAnalyzer = useAudioStore((s) => s.audioAnalyzer);
+  const audioAnalyzer = useAudioEngineStore((s) => s.audioAnalyzer);
 
   const [outputs, setOutputs] = useState<any>({});
   const [lastNote, setLastNote] = useState('');

@@ -218,6 +218,111 @@ It now also proves the first intentional studio chunk split:
 
 It now also proves the first hardened validation baseline:
 
+It now also proves the first real ownership swap under the preserved editor:
+
+- the real layer authoring surface now mutates a canonical app-local working
+  project instead of treating `layer-store` and `layer-values-store` as the
+  intended source of truth
+- the preserved layer panel UI remains intact while legacy layer stores are
+  updated as projections from the canonical working project
+- layer add/remove/duplicate/reorder/settings/value/preset flows now converge
+  on one mutation surface instead of direct component-level store writes
+- project save/load/reset now re-enter the same canonical layer project path
+  instead of treating persistence as a separate ownership channel
+- layer undo/redo no longer leaves the canonical layer project stale after
+  history application because history restore now re-imports layer truth into
+  the canonical working project
+
+It now also proves the first explicit editor control-plane consolidation:
+
+- the preserved editor now has one local explicit command/control facade over
+  canonical project, preview, audio-session, graph, history, and persistence
+  owners
+- user-facing editor commands no longer need to reach into multiple Zustand
+  stores directly for routine project/graph/audio/transport operations
+- this creates the cleanest current bridge between the preserved editor UI and
+  future agent/MCP command surfaces without inventing a parallel control plane
+
+It now also proves the first honest build-hygiene closeout for the Vite shell:
+
+- the old mixed static/dynamic import warnings around `export-store` and
+  `idb-file-store` are gone
+- `animation-builder` and `profiler-panel` now load behind lazy boundaries
+  instead of inflating the initial app chunk eagerly
+- the current chunk split is deliberate and warning-free without relying on the
+  previous noisy local chunk experiments
+
+It now also proves the first explicit preview transport swap under the
+preserved editor:
+
+- preview transport truth now lives in a dedicated canonical app-local preview
+  store instead of `editor-store`
+- the live player, playback controls, waveform seeking, renderer time reads,
+  and export pause/resume behavior now read from the same preview transport
+  brain
+- `editor-store` is narrower again and no longer owns `isPlaying`,
+  `playerRef`, or `playerFPS`
+- project reset now clears preview transport explicitly instead of treating the
+  player attachment as editor state
+- track navigation and restart now also reset preview position through the same
+  canonical transport store so audio and preview state do not drift apart
+
+It now also proves the first explicit audio-session truth split under the
+preserved editor:
+
+- canonical audio-session truth now lives in a dedicated app-local store backed
+  by `@viz-engine/editor-session`
+- source selection, track navigation, current/visual time, and capture-session
+  state are no longer mixed into the same store as browser refs and audio
+  nodes
+- browser audio attachments now live in a narrower audio-engine store:
+  - audio element ref
+
+It now also proves the first real adapter burn-down under the preserved node
+editor:
+
+- `node-network-store` no longer acts like a graph-truth owner
+- canonical graph truth, graph mutation, and graph execution are now exposed
+  through `editor-graph-store` plus thin helper exports instead of UI-store
+  methods
+- the node editor UI store is narrower again and much closer to pure
+  UI/session ownership
+- graph-facing editor consumers now read canonical graph truth directly or
+  through thin helper functions, rather than assuming the node-editor UI store
+  owns the graph document
+
+It now also proves the first real layer projection burn-down under the
+preserved editor:
+
+- `layer-store` no longer exposes layer CRUD or layer mutation semantics
+- `layer-values-store` no longer exposes direct value mutation semantics
+- canonical layer and value mutation now routes through `editor-project-store`
+- the remaining layer projection stores now read much more clearly as:
+  - projected editor/runtime data
+  - mirror-canvas attachment ownership
+  - manual render-function registration
+
+It now also proves the first canonical project-persistence closeout under the
+preserved editor:
+
+- `.vizengine.json` export now writes canonical:
+  - `project`
+  - `graphs`
+  - `nodeEditorUi`
+  - `editorUi`
+- load and reset now re-enter canonical project and graph ownership directly
+- bundled sample project files in `public/projects` now use the canonical
+  persistence shape instead of legacy store payloads
+  - audio context
+  - analyzer/gain/source nodes
+  - decoded audio buffer
+  - captured media stream
+- the real audio panel, audio loader, capture control, export audio-source
+  lookup, and rhythm-lab time followers now read the split stores through the
+  preserved UI instead of the old giant mixed audio store
+- the editor now has an explicit audio-session manager that reflects analyzer
+  availability and connected live input back into canonical session state
+
 - file-backed golden fixtures now pin canonical frame-plan outputs
 - file-backed golden fixtures now pin canonical render-plan outputs
 - file-backed golden fixtures now pin canonical SVG proof output
@@ -369,6 +474,26 @@ and component-catalog inspection were also part of that rolled-back path.
 - keep the underlying session/control concepts
 - do not treat the discarded V2 shell UI as the target editor surface
 
+The preserved real editor terrain now also proves the canonical-document
+cutover:
+
+- package-level `VizProjectDocument` is the source and working project owned by
+  `VizSession`
+- layer order, settings, timeline, viewport, graph bindings, and embedded graph
+  documents now share that one portable scene document
+- the former `EditorProjectDocument` / `EditorProjectLayer` model is deleted
+- project history snapshots the complete canonical project, including graphs
+- `editor-graph-store` is an executable V1 node-editor projection, not a
+  separately persisted graph owner
+- `.vizengine.json` persistence and bundled examples contain one canonical
+  `project` payload
+- editor-only layer expansion and debug preferences remain outside the project
+- `layer-values-store` is deleted, and the remaining layer projection store is
+  explicitly named `editor-layer-projection-store`
+
+The detailed adapter classification and deletion conditions live in
+[phase-12-canonical-viz-project-document-cutover.md](./phase-12-canonical-viz-project-document-cutover.md).
+
 ## What Is Still Missing
 
 The foundation is still not yet a real rendering/editor replacement.
@@ -437,3 +562,43 @@ package validation into stronger portability, deeper graph semantics, better
 compositor behavior, and more complete runtime inputs.
 
 That should now become the focus.
+
+## Latest Runtime Rendering Progress
+
+The runtime-preview ownership cutover inside the preserved editor is now real:
+
+- live preview and export dispatch their shared frame contract through
+  `VizSession`
+- runtime preview inspection now lives in
+  `VizSession.preview.runtimeInspection`
+- registered render callbacks, mirror canvases, and the Remotion player ref
+  live in one browser-only attachment registry
+- the former mixed runtime-preview store, editor preview controller, and
+  editor-local frame module are deleted
+- live preview timing/orchestration now runs through one explicit preview
+  driver instead of per-layer RAF loops inside `LayerRenderer`
+- browser render attachment setup/resize/render/cleanup now live behind one
+  explicit preview-attachment module instead of inside the React
+  `LayerRenderer` component
+- the first preserved-editor layer now derives scene meaning from the package
+  runtime/render-plan path:
+  - `Curve Spectrum` is ported into `@viz-engine/components-core`
+  - the editor preview bridge translates that layer into a one-layer
+    `VizProjectDocument`
+  - the package runtime plus package `Three` preview controller now render it
+    inside the preserved editor surface
+- the session inspection snapshot exposes `runtimeBackedLayerIds` so
+  runtime-backed editor preview layers are inspectable instead of implicit
+- canonical project sync feeds the compatibility layer projection and prunes
+  browser attachments without creating a second preview truth owner
+
+The main implementation trail for this slice is:
+
+- [phase-11-runtime-preview-store-cutover.md](./phase-11-runtime-preview-store-cutover.md)
+- [phase-13-viz-session-runtime-preview-ownership.md](./phase-13-viz-session-runtime-preview-ownership.md)
+
+Validation for this slice passed with:
+
+- `pnpm check:foundation`
+- live browser smoke on `http://localhost:4173/?allowSmallViewport=1`
+  proving transport advanced from `00:00.00` to `00:01.76`

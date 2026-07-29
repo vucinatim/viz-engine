@@ -7,6 +7,7 @@
 
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import useExportStore from '../stores/export-store';
 
 // Helper to add logs to the export store
 const log = (
@@ -15,11 +16,8 @@ const log = (
   details?: string,
   duration?: number,
 ) => {
-  // Import here to avoid circular dependency
-  import('../stores/export-store').then(({ default: useExportStore }) => {
-    const exportStore = useExportStore.getState();
-    exportStore.addLog({ type, message, details, duration });
-  });
+  const exportStore = useExportStore.getState();
+  exportStore.addLog({ type, message, details, duration });
 
   // Also log to console for debugging
   const prefix = `[Encoder]`;
@@ -141,10 +139,7 @@ export async function encodeVideo(
   const totalFrames = frames.length;
 
   // Helper to check for cancellation
-  const checkCancellation = async () => {
-    const { default: useExportStore } = await import('../stores/export-store');
-    return useExportStore.getState().shouldCancel;
-  };
+  const checkCancellation = () => useExportStore.getState().shouldCancel;
 
   try {
     // Write all frames to FFmpeg's virtual filesystem
@@ -157,7 +152,7 @@ export async function encodeVideo(
 
     for (let i = 0; i < frames.length; i++) {
       // Check for cancellation every 10 frames
-      if (i % 10 === 0 && (await checkCancellation())) {
+      if (i % 10 === 0 && checkCancellation()) {
         log('warning', 'Encoding cancelled during frame writing');
         throw new Error('Export cancelled by user');
       }

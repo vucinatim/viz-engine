@@ -1,7 +1,275 @@
 # Work Ledger
 
+## 2026-07-29
+
+- established the autonomous V2 calibration foundation:
+  - pinned the immutable final pre-V2 parity reference to
+    `e806fbc10980615588b52ff574bc923c6f00f35e`
+  - confirmed its direct successor is the first V2 foundation commit
+  - added a validated 41-capability V1→V2 parity matrix across UI, UX,
+    functionality, and performance
+  - added `pnpm parity:validate` to the root and made it the first part of
+    `pnpm check:foundation`
+  - documented honest `not-audited`, `gap`, `partial`, `verified`, and
+    `approved-change` evidence semantics
+- wrote the durable long-range execution setup:
+  - added `docs/plans/v2/autonomous-development-operating-contract.md`
+  - defined recovery order across compactions and tasks
+  - defined autonomous authority and ask-first boundaries
+  - defined milestone direction, architecture, correctness, parity,
+    performance, cleanup, and evidence gates
+  - made `/goal` plus repository evidence the continuity mechanism and rejected
+    overlapping mutating loops on one worktree
+- audited and preserved the large pre-existing dirty worktree:
+  - recorded branch, head, staged state, changed/untracked inventory, deletion,
+    coherent review slices, risks, and stabilization sequence
+  - did not reset, clean, stage, commit, push, or deploy the mixed work
+- browser-compared the pinned V1 editor and current V2 at a fixed desktop
+  viewport using the same `simple-example` project and bundled audio
+- found and fixed three browser-visible V2 regressions:
+  - stabilized `HistoryManager` graph-enabled selection so loading a sample no
+    longer enters a maximum-update-depth loop and blanks the editor
+  - added a jsdom regression test covering project history followed by an
+    unrelated history-state update
+  - replaced four Vite-incompatible CommonJS node-body loads with ESM imports,
+    restoring animation previews and the node graph surface
+  - restored `RhythmLabPanel` to the active Vite editor shell with the same
+    workspace replacement behavior as V1
+- clean-browser verified:
+  - sample project load and visible three-layer preview
+  - animation preview rendering including Hysteresis Gate
+  - node graph workspace
+  - Rhythm Lab open and close
+  - playback advance and pause
+  - no V2 console errors or warnings during the final run
+- recorded the first browser parity evidence in
+  `docs/parity/evidence/2026-07-29-calibration.md`
+- kept parity claims conservative:
+  - no row was marked `verified` from the smoke alone
+  - profiler parity was initially a known gap because browser-incompatible
+    optional CommonJS instrumentation remained
+  - performance parity remains unmeasured
+- completed the canonical `VizProjectDocument` cutover:
+  - deleted `EditorProjectDocument` and `EditorProjectLayer`
+  - made `VizSession` source/working project state use the package contract
+  - embedded canonical graph documents in the working project and turned
+    executable V1 `NodeNetwork` values into non-persisted editor projections
+  - preserved package-native graphs when the V1 node UI edits compatible graph
+    projections
+  - moved layer expansion/debug preferences into editor UI state
+  - made history snapshot the complete project document, including graphs
+  - migrated `.vizengine.json` persistence and all bundled sample projects to
+    one canonical `project` payload
+  - changed the runtime-preview bridge to begin from canonical session truth
+  - deleted `layer-values-store` and rewired parameter controls directly to
+    canonical layer settings
+  - renamed `layer-store` to `editor-layer-projection-store` so its adapter role
+    is explicit
+  - replaced optional CommonJS profiler lookups with a browser-safe metric sink
+  - documented every remaining adapter and its deletion condition in
+    `phase-12-canonical-viz-project-document-cutover.md`
+- browser-verified the canonical cutover in the preserved real editor:
+  - loaded the canonicalized `simple-example` through the Examples menu
+  - preserved the three-layer live preview, waveform, executable React Flow
+    graph surface, playback, and Rhythm Lab navigation
+  - observed no browser errors or warnings during the final run
+- reclassified profiler parity from `gap` to `partial` after replacing the
+  browser-incompatible CommonJS lookup path with an explicit metric sink;
+  profiler overhead remains unverified until a repeatable benchmark exists
+- validated the completed canonical cutover with the full
+  `pnpm check:foundation` gate:
+  - parity matrix valid with 41 capabilities
+  - package and studio type checks passed
+  - production studio build passed
+  - 29 foundation test files / 82 tests passed
+  - built-package consumer smoke passed
+  - agent creative-loop bundle roundtrip passed
+- completed the `VizSession` runtime-preview ownership cutover:
+  - moved requested/completed frame inspection, render cycles, rendered layer
+    ids, runtime-backed layer ids, and preview failure state into
+    `VizSession.preview.runtimeInspection`
+  - made live preview and image/video export dispatch frames through the same
+    `VizSession` command
+  - replaced the mixed runtime-preview store with a browser-only attachment
+    registry for render callbacks, mirror canvases, and the Remotion player ref
+  - moved the Remotion ref out of `VizSession`
+  - deleted the redundant editor preview controller and editor-local frame
+    contract modules
+  - kept the remaining per-component runtime bridge explicitly temporary
+    because deleting it before the component-runtime migration would regress
+    features or move scene meaning back into browser/React code
+- added focused runtime-preview ownership tests covering success, failure,
+  reset/attachment isolation, attachment pruning, and the local inspection
+  control surface
+- browser-verified the runtime-preview ownership cutover in the preserved real
+  editor:
+  - loaded the canonical `simple-example` project with its three-layer visual,
+    waveform, and executable React Flow graph
+  - advanced playback to `00:01.83` and confirmed the paused time remained
+    stable
+  - opened and closed Rhythm Lab
+  - opened and closed the video export configuration surface
+  - observed no browser errors or warnings
+- validated the completed cutover with `pnpm check:foundation`:
+  - parity matrix valid with 41 capabilities
+  - package and studio type checks passed
+  - production studio build passed
+  - 30 foundation test files / 86 tests passed
+  - built-package consumer smoke passed
+  - agent creative-loop bundle roundtrip passed
+
+## 2026-05-15
+
+- promoted `VizSession` to the explicit architectural target for the rewrite:
+  - added `docs/specs/v2/viz-session.md`
+  - defined `VizSession` as the one canonical in-memory session engine for:
+    - working project truth
+    - graph truth
+    - preview transport truth
+    - audio session truth
+    - history truth
+    - runtime inspection/preview state
+  - made the editor/runtime/agent relationship explicit:
+    - editor is a view/controller over `VizSession`
+    - runtime evaluates `VizSession`
+    - agents/tools mutate and inspect `VizSession`
+  - made the rewrite posture stricter:
+    - no new long-lived transitional ownership layers
+    - no more treating cleaner editor-local canonical stores as the end state
+    - direct convergence on `VizSession` from here forward
+  - updated the core source-of-truth docs:
+    - `docs/current-state.md`
+    - `docs/working-agreements.md`
+    - `docs/visions/viz-engine-v2-vision.md`
+    - `docs/plans/v2/real-editor-v2-rewire-execution-plan.md`
+    - `docs/docs-index.md`
+    - `docs/suggestions.md`
+- wrote the direct convergence plan for getting from the current partly
+  regutted editor architecture to a real `VizSession` architecture:
+  - added `docs/plans/v2/viz-session-transition-plan.md`
+  - defined the hard migration posture:
+    - no more “cleaner transitional glue” as the destination
+    - move current canonical-ish stores into `VizSession`
+    - rebind editor, runtime preview, and agents/tools to `VizSession`
+    - delete superseded stores and bridges aggressively after each cutover
+- documented the realtime UI-performance binding model for `VizSession`:
+  - `VizSession` should preserve the current external-store/selective-
+    subscription performance posture
+  - `VizSession` may use `zustand/vanilla` or an equivalent external-store core
+    internally
+  - React should subscribe to small slices only
+  - frame-driven preview/render/audio work should stay imperative instead of
+    causing broad React rerender loops
+  - updated:
+    - `docs/specs/v2/viz-session.md`
+    - `docs/plans/v2/viz-session-transition-plan.md`
+    - `docs/working-agreements.md`
+
 ## 2026-05-14
 
+- completed the first real hidden-brain swap under the preserved editor layer
+  panel:
+  - added a canonical app-local layer working-project store in
+    `src/lib/stores/editor-project-store.ts`
+  - made layer add/remove/duplicate/reorder/settings/value/preset mutations
+    flow through that canonical store instead of direct component-level writes
+    into `layer-store` and `layer-values-store`
+  - kept the visible layer panel intact by projecting canonical layer truth
+    back into the legacy layer/value stores for the current renderer and UI
+    surfaces
+  - added `src/components/editor/editor-project-manager.tsx` to bootstrap the
+    canonical layer project from current persisted editor state
+  - updated project save/load/reset so layer payload now re-enters the
+    canonical working-project path
+  - updated layer-history application so undo/redo re-imports restored layer
+    truth into the canonical layer project instead of silently forking a second
+    layer brain
+  - documented the slice in
+    `docs/plans/v2/phase-1-layer-working-project-implementation.md`
+  - revalidated the slice with `pnpm studio:typecheck` and then the full
+    `pnpm check:foundation` gate
+- completed the next real hidden-brain swap under the preserved playback UI:
+  - added a canonical app-local preview transport store in
+    `src/lib/stores/editor-preview-store.ts`
+  - backed that store with the existing transport controller semantics from
+    `@viz-engine/editor-session`
+  - rewired the real preview/playback cluster onto that store:
+    - `remotion-player`
+    - `custom-player-controls`
+    - `audio-panel`
+    - `capture-audio`
+    - `waveform-display`
+    - `animation-builder`
+    - `layer-renderer`
+    - `export-image-dialog`
+    - export orchestrator playback pause/resume handling
+  - narrowed `editor-store` so it no longer owns preview transport fields
+  - updated project reset/persistence so preview transport is no longer treated
+    as editor state
+  - updated track navigation and restart flows so they also reset preview
+    position through the canonical preview transport store
+  - added foundation coverage in
+    `tests/foundation/editor-preview-store.test.ts`
+  - documented the slice in
+    `docs/plans/v2/phase-2-preview-transport-implementation.md`
+  - revalidated the slice with `pnpm studio:typecheck` and the full
+    `pnpm check:foundation` gate
+- completed the next real hidden-brain swap under the preserved audio UI:
+  - split the old giant mixed audio store into:
+    - `src/lib/stores/editor-audio-session-store.ts`
+    - `src/lib/stores/audio-engine-store.ts`
+  - moved source selection, track navigation, capture-session truth, and
+    current/visual time onto the canonical audio-session store
+  - kept browser audio refs, analyzer/gain/source nodes, decoded buffers, and
+    captured streams in the narrower audio-engine store
+  - rewired the real audio panel, audio file loader, capture control, waveform
+    consumers, export audio-source lookup, and rhythm-lab visual-time readers
+    onto that split ownership model
+  - added `src/components/editor/editor-audio-session-manager.tsx` so analyzer
+    availability and connected-source status feed back into canonical
+    session truth
+  - added regression coverage in
+    `tests/foundation/editor-audio-session-store.test.ts`
+  - documented the slice in
+    `docs/plans/v2/phase-3-audio-session-truth-implementation.md`
+  - revalidated the slice with `pnpm studio:typecheck`, targeted foundation
+    tests, and the full `pnpm check:foundation` gate
+- completed the next real hidden-brain swap under the preserved node editor:
+  - added a canonical graph store in
+    `src/lib/stores/editor-graph-store.ts`
+  - moved graph network truth, graph execution, and graph persistence
+    serialization into that canonical store
+  - turned `src/components/node-network/node-network-store.ts` into a thin UI
+    adapter that mirrors canonical graph truth while retaining the same
+    component-facing API for the preserved node editor
+  - updated graph history application so node undo/redo restores nodes and
+    edges through the canonical graph path instead of mutating the UI adapter
+    store as if it were authoritative
+  - updated project save/load/reset so graph serialization and hydration now
+    re-enter canonical graph ownership
+  - updated layer duplication/default-network/preset flows so they also target
+    canonical graph ownership
+  - split shared graph node types into
+    `src/components/node-network/graph-types.ts` to prevent import-time cycles
+    between graph execution and the node-editor UI adapter
+  - added regression coverage in
+    `tests/foundation/editor-graph-store.test.ts`
+  - documented the slice in
+    `docs/plans/v2/phase-4-graph-truth-implementation.md`
+- completed the next cleanup pass on layer history ownership:
+  - changed `history-store` so layer undo/redo snapshots canonical
+    `EditorProjectDocument` truth directly instead of serializing legacy
+    `layer-store` and `layer-values-store` state
+  - changed layer history restore to call
+    `useEditorProjectStore.getState().importWorkingProject(...)` directly
+    instead of reconstructing canonical truth through legacy stores first
+  - rewired `history-manager` so it now watches canonical working-project
+    truth and canonical graph enabled-state truth instead of the old split
+    layer/value/network ownership path
+  - added regression coverage in
+    `tests/foundation/history-store.test.ts`
+  - documented the cleanup in
+    `docs/plans/v2/phase-5-canonical-history-cleanup.md`
 - completed the real shell cutover the right way:
   - deleted the old Next shell and API routes
   - turned `apps/viz-studio` into the real product shell instead of the
@@ -31,6 +299,46 @@
   - revalidated the full repo again with `pnpm check:foundation`
   - browser-verified the styled editor at
     `http://localhost:4173/?allowSmallViewport=1`
+- wrote the next real execution map for replacing hidden ownership under the
+  preserved editor UI:
+  - added `docs/plans/v2/real-editor-v2-rewire-execution-plan.md`
+  - defined the strict implementation order:
+    - ownership audit
+    - layer/working-head rewiring
+    - transport/preview rewiring
+    - audio-session rewiring
+    - node-editor rewiring
+    - agent-surface hardening
+    - legacy ownership burn-down
+  - made validation and “no UI drift” explicit phase gates
+- completed the detailed Phase 0 ownership audit for the real editor:
+  - added `docs/plans/v2/editor-ownership-audit-and-phase-0-map.md`
+  - mapped current ownership across:
+    - `editor-store`
+    - `layer-store`
+    - `layer-values-store`
+    - `node-network-store`
+    - `audio-store`
+    - `history-store`
+    - `comp-store`
+  - mapped current visible editor surfaces to the hidden stores behind them
+  - identified the exact first rewire seam:
+    - layer and working-project truth under the existing layer panel
+  - identified the exact later seams:
+    - transport/preview
+    - audio session
+    - graph truth
+- tightened the source-of-truth docs around the clean editor/runtime split:
+  - editor edits
+  - runtime runs
+  - React hosts the editor surface but does not define scene semantics
+  - explicit runtime session state is allowed, but hidden editor-owned runtime
+    semantics are not
+- made the canonical runtime-control rule explicit for agents and tools too:
+  - editor, local programmatic hosts, and future MCP/tools should all drive the
+    same runtime/session entry points
+  - agent tools should wrap the same canonical runtime controls the editor uses
+    instead of inventing a second control plane
 - cleaned the non-doc codebase naming so the rewrite no longer reads like a
   parallel “v2 app”:
   - renamed `tests/v2` -> `tests/foundation`
@@ -526,3 +834,118 @@
   - `pnpm test:foundation`
   - `pnpm viz:bundle:validate`
   - `pnpm check:foundation`
+# 2026-05-15
+
+- completed the first real node-editor adapter burn-down
+- reduced `node-network-store` to UI/session ownership and moved graph
+  mutation/execution access onto canonical graph helpers over
+  `editor-graph-store`
+- rewired graph-facing editor consumers onto that thinner split without
+  changing the visible editor surface
+- validated with focused graph/history/editor tests and the full
+  `pnpm check:foundation` gate
+- completed the first real layer-projection burn-down
+- removed layer/value mutation APIs from `layer-store` and
+  `layer-values-store`
+- rewired remaining editor-side layer value writes onto
+  `editor-project-store`
+- validated with focused project/history/graph tests and the full
+  `pnpm check:foundation` gate
+- completed the first canonical project-persistence closeout
+- changed `.vizengine.json` export/load/reset to use canonical
+  project/graph/editor UI state instead of legacy store payloads
+- migrated bundled sample project files in `public/projects` to the canonical
+  format
+- validated with focused persistence tests and the full
+  `pnpm check:foundation` gate
+- completed the bootstrap/history cleanup pass on top of the regutted editor
+- removed persistence from `layer-store` and `layer-values-store`, leaving
+  `editor-project-store` as the sole persisted project source
+- renamed the canonical project bootstrap entrypoint from
+  `initializeFromLegacy` to `initializeProjectState`
+- removed duplicated node-editor selection context from `history-store` so
+  undo/redo now reads the active graph from the node-editor UI store directly
+- validated with focused history/project/persistence tests, the full
+  `pnpm check:foundation` gate, and a browser sanity check on the real editor
+- completed the first explicit editor control-plane consolidation pass
+- added `src/lib/editor-control.ts` and rewired the preserved editor’s main
+  user-facing commands onto one explicit local control surface over canonical
+  project/graph/preview/audio/history/persistence ownership
+- removed the remaining mixed-import build warnings around `export-store` and
+  `idb-file-store`
+- moved `animation-builder` and `profiler-panel` behind lazy boundaries so the
+  Vite product shell no longer pays their cost eagerly on first load
+- validated with `pnpm studio:typecheck`, `pnpm studio:build`, and the full
+  `pnpm check:foundation` gate
+- added `docs/plans/v2/phase-11-runtime-driven-editor-rendering.md` to define
+  the next major regut phase: making the real editor host/configure the
+  runtime instead of still owning live render semantics
+- completed the first real rendering-ownership cutover under that phase
+- added `src/lib/stores/editor-runtime-preview-store.ts` so live preview,
+  render callbacks, mirror canvases, and export rendering no longer depend on
+  the general layer projection store
+- added `src/components/editor/editor-runtime-preview-driver.tsx` so the real
+  editor now has one centralized live preview loop instead of per-layer RAF
+  loops inside `layer-renderer`
+- added `src/lib/editor-runtime-preview-frame.ts` so live preview and export
+  now share one explicit preview-frame contract instead of loose time/dt calls
+- added `src/lib/editor-runtime-preview-controller.ts` plus preview-store
+  last-frame/render-cycle state so the runtime preview seam is now also a real
+  control and inspection surface
+- extracted `src/lib/editor-runtime-preview-attachment.ts` so browser render
+  attachment setup/resize/render/cleanup no longer live directly inside
+  `src/components/editor/layer-renderer.tsx`
+- added the first real runtime-backed editor preview bridge:
+  - ported `Curve Spectrum` into
+    `packages/viz-components-core/src/curve-spectrum.ts`
+  - added `src/lib/editor-runtime-preview-runtime-bridge.ts` to translate
+    supported editor layers into one-layer `VizProjectDocument` previews
+  - wired the preview attachment so supported layers now render through the
+    package runtime plus package `Three` preview controller instead of local
+    `draw` / `draw3D`
+  - made runtime-backed preview layers inspectable through
+    `runtimeBackedLayerIds` in the preview snapshot
+  - exposed the real mounted local control surface at
+    `window.__vizEditorDebug` in dev mode so browser-side agent checks can hit
+    the same live editor state instead of duplicate module instances
+- validated the slice with:
+  - `tests/foundation/editor-runtime-preview-store.test.ts`
+  - `tests/foundation/editor-runtime-preview-runtime-bridge.test.ts`
+  - the full `pnpm check:foundation` gate
+  - a live browser smoke where the real transport advanced from `00:00.00`
+    to `00:01.76`
+  - a live browser mutation through the mounted control surface that added a
+    `Curve Spectrum` layer and confirmed the preview snapshot reported
+    `layerCount: 1` plus a non-empty `runtimeBackedLayerIds`
+
+# 2026-07-29
+
+- added
+  `docs/visions/v2-product-architecture-and-parity-alignment.md` as the active
+  product and architecture alignment record for the V2 rewrite
+- made the preserved-editor requirement explicit as a measurable UI, UX,
+  capability, and performance parity contract rather than a visual-shell-only
+  goal
+- recorded that the exact pre-V2 parity baseline still needs to be pinned
+  because the repository currently uses `main` while the requested reference
+  was described as `master`, and this branch also contains later pre-rewrite UX
+  improvements
+- clarified the intended architectural relationship between:
+  - `VizProjectDocument`
+  - `VizSession`
+  - project actions
+  - session commands
+  - job requests
+  - runtime evaluation
+  - compositor and renderer backends
+- recorded the highest-impact architecture decisions that should be tightened
+  before the rewrite hardens:
+  - published execution dependency identity
+  - modular `VizSession` ownership
+  - explicit determinism levels
+  - custom-code and portable-bundle security
+  - portable versus backend-native component capability
+  - content-addressed asset and bake identity
+  - transactional agent mutation
+  - empirical hosted rendering validation
+- linked the alignment record into the active docs spine

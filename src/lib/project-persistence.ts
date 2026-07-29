@@ -1,53 +1,63 @@
-import useNodeNetworkStore, {
-  nodeNetworkStoreMerge,
-  nodeNetworkStorePartialize,
-} from '@/components/node-network/node-network-store';
+import useNodeNetworkStore from '@/components/node-network/node-network-store';
 import useEditorStore from '@/lib/stores/editor-store';
+import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
+import useEditorProjectStore from '@/lib/stores/editor-project-store';
 import { useHistoryStore } from '@/lib/stores/history-store';
-import useLayerStore, {
-  layerStoreMerge,
-  layerStorePartialize,
-} from '@/lib/stores/layer-store';
-import useLayerValuesStore from '@/lib/stores/layer-values-store';
+import {
+  VIZ_PROJECT_SCHEMA_VERSION,
+  type VizProjectDocument,
+} from '@viz-engine/contracts';
+import { assertValidProjectDocument } from '@viz-engine/runtime';
+import { createEmptyVizProjectDocument } from '@/lib/viz-session/project-adapters';
 
-const VIZ_ENGINE_PROJECT_VERSION = '1.0.0';
+const VIZ_ENGINE_PROJECT_VERSION = VIZ_PROJECT_SCHEMA_VERSION;
 
-interface ProjectFile {
+export interface ProjectFile {
   version: string;
-  layerStore: any;
-  layerValuesStore: any;
-  nodeNetworkStore: any;
-  editorStore: any;
+  project: VizProjectDocument;
+  nodeEditorUi: {
+    openNetwork: string | null;
+    areNetworksMinimized: boolean;
+  };
+  editorUi: {
+    ambientMode: boolean;
+    resolutionMultiplier: number;
+    rhythmSelection: { start: number; end: number };
+    layerUi: ReturnType<typeof useEditorStore.getState>['layerUi'];
+  };
+}
+
+const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
+
+export function buildProjectFile(): ProjectFile {
+  const editorProjectStore = useEditorProjectStore.getState();
+  const nodeNetworkStoreState = useNodeNetworkStore.getState();
+  const editorStoreState = useEditorStore.getState();
+  const workingProject = editorProjectStore.initialized
+    ? editorProjectStore.exportWorkingProject()
+    : (() => {
+        editorProjectStore.initializeProjectState();
+        return useEditorProjectStore.getState().exportWorkingProject();
+      })();
+
+  return {
+    version: VIZ_ENGINE_PROJECT_VERSION,
+    project: clone(workingProject),
+    nodeEditorUi: {
+      openNetwork: nodeNetworkStoreState.openNetwork,
+      areNetworksMinimized: nodeNetworkStoreState.areNetworksMinimized,
+    },
+    editorUi: {
+      ambientMode: editorStoreState.ambientMode,
+      resolutionMultiplier: editorStoreState.resolutionMultiplier,
+      rhythmSelection: clone(editorStoreState.rhythmSelection),
+      layerUi: clone(editorStoreState.layerUi),
+    },
+  };
 }
 
 export function saveProject(projectName: string = 'project') {
-  const layerStoreState = useLayerStore.getState();
-  const layerValuesStoreState = useLayerValuesStore.getState();
-  const nodeNetworkStoreState = useNodeNetworkStore.getState();
-  const editorStoreState = useEditorStore.getState();
-
-  // We need to manually call the partialize logic from the persist middleware
-  // to get a serializable version of the state.
-  const partializedLayerStore = layerStorePartialize(layerStoreState);
-  const partializedNodeNetworkStore = nodeNetworkStorePartialize(
-    nodeNetworkStoreState,
-  );
-
-  // Cherry-pick serializable editor settings
-  const partializedEditorStore = {
-    playerFPS: editorStoreState.playerFPS,
-    ambientMode: editorStoreState.ambientMode,
-    resolutionMultiplier: editorStoreState.resolutionMultiplier,
-    rhythmSelection: editorStoreState.rhythmSelection,
-  };
-
-  const projectFile: ProjectFile = {
-    version: VIZ_ENGINE_PROJECT_VERSION,
-    layerStore: partializedLayerStore,
-    layerValuesStore: layerValuesStoreState, // This store is fully serializable
-    nodeNetworkStore: partializedNodeNetworkStore,
-    editorStore: partializedEditorStore,
-  };
+  const projectFile = buildProjectFile();
 
   const json = JSON.stringify(projectFile, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
@@ -62,33 +72,31 @@ export function saveProject(projectName: string = 'project') {
   URL.revokeObjectURL(url);
 }
 
-async function hydrateProjectData(projectFile: ProjectFile) {
+export async function hydrateProjectData(projectFile: ProjectFile) {
   if (projectFile.version !== VIZ_ENGINE_PROJECT_VERSION) {
-    // Here you could handle migrating old project file versions
     console.warn(
       `Project file version (${projectFile.version}) does not match current version (${VIZ_ENGINE_PROJECT_VERSION}). There may be issues.`,
     );
   }
 
-  // Rehydrate stores
-  // For stores with custom merge logic, we manually call it
-  const mergedLayerStore = layerStoreMerge(
-    projectFile.layerStore,
-    useLayerStore.getState(),
-  );
-  useLayerStore.setState(mergedLayerStore);
+  assertValidProjectDocument(projectFile.project);
 
-  const mergedNodeNetworkStore = nodeNetworkStoreMerge(
-    projectFile.nodeNetworkStore,
-    useNodeNetworkStore.getState(),
-  );
-  useNodeNetworkStore.setState(mergedNodeNetworkStore);
+  useNodeNetworkStore.setState((state) => ({
+    ...state,
+    openNetwork: projectFile.nodeEditorUi.openNetwork,
+    areNetworksMinimized: projectFile.nodeEditorUi.areNetworksMinimized,
+    shouldForceShowOverlay: false,
+  }));
 
-  // For stores with serializable state, we can just set it
-  useLayerValuesStore.setState(projectFile.layerValuesStore);
-  useEditorStore.setState(projectFile.editorStore);
+  useEditorStore.setState({
+    ambientMode: projectFile.editorUi.ambientMode,
+    resolutionMultiplier: projectFile.editorUi.resolutionMultiplier,
+    rhythmSelection: projectFile.editorUi.rhythmSelection,
+    layerUi: clone(projectFile.editorUi.layerUi ?? {}),
+  });
+  useEditorProjectStore.getState().importWorkingProject(projectFile.project);
+  useEditorPreviewStore.getState().reset();
 
-  // Reset editor history when loading a project
   useHistoryStore.getState().resetLayerHistory();
 }
 
@@ -179,9 +187,13 @@ async function clearIndexedDB() {
  */
 function clearLocalStorage() {
   const keysToRemove = [
+    'viz-session-store',
+    `viz-session-${VIZ_PROJECT_SCHEMA_VERSION}`,
+    'editor-project-store',
     'layer-store',
     'layer-values-store',
     'node-network-store',
+    'node-network-ui-store',
     'editor-store',
     'editor-history-store',
   ];
@@ -206,41 +218,31 @@ export async function resetProject() {
     console.log('[resetProject] Clearing localStorage...');
     clearLocalStorage();
 
-    // Step 2: Reset all stores to their initial states
-    console.log('[resetProject] Resetting layer store...');
-    useLayerStore.setState({
-      layers: [],
-      layerRenderFunctions: new Map(),
-    });
-
-    console.log('[resetProject] Resetting layer values store...');
-    useLayerValuesStore.setState({
-      values: {},
-    });
-
-    console.log('[resetProject] Resetting node network store...');
+    // Step 2: Reset canonical stores first, then the editor adapters
     useNodeNetworkStore.setState({
-      networks: {},
       openNetwork: null,
       areNetworksMinimized: false,
+      shouldForceShowOverlay: false,
     });
 
-    console.log('[resetProject] Resetting editor store...');
-    // Preserve resolution multiplier (quality setting) and playerRef when resetting
-    // playerRef is a runtime reference that should not be reset
+    console.log('[resetProject] Resetting project state...');
+    useEditorProjectStore
+      .getState()
+      .importWorkingProject(createEmptyVizProjectDocument());
+
+    console.log('[resetProject] Resetting editor UI state...');
     const currentResolutionMultiplier =
       useEditorStore.getState().resolutionMultiplier;
-    const currentPlayerRef = useEditorStore.getState().playerRef;
     useEditorStore.setState({
-      isPlaying: false,
-      playerRef: currentPlayerRef, // Preserve the player ref
-      playerFPS: 60,
       ambientMode: false,
       dominantColor: '#fff',
       resolutionMultiplier: currentResolutionMultiplier,
+      isRhythmLabOpen: false,
+      rhythmSelection: { start: 0, end: 0.2 },
+      layerUi: {},
     });
+    useEditorPreviewStore.getState().reset();
 
-    // Reset editor history
     console.log('[resetProject] Resetting editor history...');
     useHistoryStore.getState().resetLayerHistory();
 

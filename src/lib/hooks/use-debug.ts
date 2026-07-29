@@ -9,13 +9,13 @@ import {
 } from '@/components/config/create-component';
 import React, { useCallback, useRef } from 'react';
 import { calculateAudioLevel } from '../comp-utils/audio-utils';
-import useAudioStore from '../stores/audio-store';
+import useAudioEngineStore from '../stores/audio-engine-store';
 
 function useDebug(
   debugCanvasRef: React.RefObject<HTMLCanvasElement>,
   resolutionMultiplier: number = 1,
 ) {
-  const audioElementRef = useAudioStore((s) => s.audioElementRef);
+  const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);
   // High-precision timing for FPS estimation
   const prevTsRef = useRef<number | null>(null);
   const smoothedFpsRef = useRef(0);

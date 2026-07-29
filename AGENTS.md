@@ -9,7 +9,10 @@ Start here:
 - [docs/current-state.md](./docs/current-state.md)
 - [docs/working-agreements.md](./docs/working-agreements.md)
 - [docs/visions/viz-engine-v2-vision.md](./docs/visions/viz-engine-v2-vision.md)
+- [docs/visions/v2-product-architecture-and-parity-alignment.md](./docs/visions/v2-product-architecture-and-parity-alignment.md)
 - [docs/plans/v2/v2-foundation-and-rewrite-plan.md](./docs/plans/v2/v2-foundation-and-rewrite-plan.md)
+- [docs/plans/v2/autonomous-development-operating-contract.md](./docs/plans/v2/autonomous-development-operating-contract.md)
+- [docs/parity/README.md](./docs/parity/README.md)
 
 ## Mission
 

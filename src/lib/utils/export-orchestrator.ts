@@ -5,13 +5,18 @@
  * Orchestrates the entire pipeline from audio extraction to video encoding.
  */
 
-import useAudioStore from '../stores/audio-store';
-import useEditorStore from '../stores/editor-store';
+import {
+  createVizSessionRuntimePreviewFrame,
+  vizSessionActions,
+} from '../viz-session';
+import useEditorAudioSessionStore from '../stores/editor-audio-session-store';
+import useEditorPreviewStore from '../stores/editor-preview-store';
+import useEditorRuntimePreviewAttachmentStore from '../stores/editor-runtime-preview-attachment-store';
+import { getProjectedLayers } from '../stores/editor-layer-projection-store';
 import useExportStore, {
   ExportLog,
   ExportSettings,
 } from '../stores/export-store';
-import useLayerStore from '../stores/layer-store';
 import { fastCaptureFrame } from './fast-frame-capture';
 import {
   BatchFrameWriter,
@@ -85,8 +90,8 @@ export async function exportVideo(
   });
 
   const exportStore = useExportStore.getState();
-  const audioStore = useAudioStore.getState();
-  const editorStore = useEditorStore.getState();
+  const audioSessionStore = useEditorAudioSessionStore.getState();
+  const previewStore = useEditorPreviewStore.getState();
 
   // Merge settings with defaults
   const finalSettings: ExportSettings = {
@@ -169,7 +174,7 @@ export async function exportVideo(
     });
 
     // Get audio URL
-    const audioUrl = audioStore.currentTrackUrl;
+    const audioUrl = audioSessionStore.currentTrackUrl;
     if (!audioUrl) {
       log('error', 'No audio file loaded');
       throw new Error('No audio file loaded');
@@ -246,10 +251,13 @@ export async function exportVideo(
     log('info', '🎬 Phase 2: Rendering frames');
 
     // Check how many layers and what types
-    const layerStore = useLayerStore.getState();
-    const numLayers = layerStore.layers.length;
-    const numRenderFunctions = layerStore.layerRenderFunctions.size;
-    const layerTypes = layerStore.layers
+    const runtimePreviewAttachments =
+      useEditorRuntimePreviewAttachmentStore.getState();
+    const previewLayers = getProjectedLayers();
+    const numLayers = previewLayers.length;
+    const numRenderFunctions =
+      runtimePreviewAttachments.layerRenderFunctions.size;
+    const layerTypes = previewLayers
       .map((l) => `${l.comp.name}(${l.comp.draw3D ? '3D' : '2D'})`)
       .join(', ');
 
@@ -267,9 +275,9 @@ export async function exportVideo(
     });
 
     // Pause playback during export
-    wasPlaying = editorStore.isPlaying;
+    wasPlaying = previewStore.transport.isPlaying;
     if (wasPlaying) {
-      editorStore.setIsPlaying(false);
+      previewStore.pause();
       log('info', 'Paused playback for export');
     }
 
@@ -393,7 +401,7 @@ export async function exportVideo(
 
     // Restore playback state
     if (wasPlaying) {
-      editorStore.setIsPlaying(true);
+      previewStore.play();
       log('info', 'Restored playback state');
     }
 
@@ -439,7 +447,7 @@ export async function exportVideo(
 
     // Restore playback state
     if (wasPlaying) {
-      editorStore.setIsPlaying(true);
+      previewStore.play();
       log('info', 'Restored playback state');
     }
   }
@@ -481,11 +489,12 @@ async function renderFrames(
 
   // Get stores
   const exportStore = useExportStore.getState();
-  const editorStore = useEditorStore.getState();
-  const layerStore = useLayerStore.getState();
+  const previewStore = useEditorPreviewStore.getState();
+  const runtimePreviewAttachments =
+    useEditorRuntimePreviewAttachmentStore.getState();
 
   // We need to manually drive the animation by setting the player time
-  const playerRef = editorStore.playerRef.current;
+  const playerRef = runtimePreviewAttachments.playerRef.current;
 
   if (!playerRef) {
     log('error', 'Player ref not available');
@@ -493,7 +502,7 @@ async function renderFrames(
   }
 
   // Validate that we have render functions registered
-  if (layerStore.layerRenderFunctions.size === 0) {
+  if (runtimePreviewAttachments.layerRenderFunctions.size === 0) {
     log(
       'warning',
       'No layer render functions registered - layers may not be initialized yet',
@@ -561,7 +570,15 @@ async function renderFrames(
 
       // CRITICAL FIX #3: Manually render all layers with explicit time and dt
       // This bypasses the RAF loop and gives us frame-perfect control
-      layerStore.renderAllLayers(currentTime, deltaTime);
+      const previewFrame = createVizSessionRuntimePreviewFrame({
+        currentFrame: frameIndex,
+        time: currentTime,
+        dt: deltaTime,
+        fps,
+        mode: 'export',
+      });
+
+      vizSessionActions.preview.renderRuntimePreviewFrame(previewFrame);
 
       // Also update the player to keep its time in sync (for UI/scrubbing)
       playerRef.seekTo(frameIndex);
@@ -643,7 +660,6 @@ async function renderFrames(
  */
 export function cancelExport(): void {
   const exportStore = useExportStore.getState();
-  const editorStore = useEditorStore.getState();
 
   log('warning', '🛑 Cancellation requested');
 

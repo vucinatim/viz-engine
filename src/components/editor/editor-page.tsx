@@ -1,29 +1,79 @@
 'use client';
 
+import { lazy, Suspense, useEffect } from 'react';
 import AudioPanel from '@/components/audio/audio-panel';
 import AmbientBackground from '@/components/editor/ambient-background';
-import AnimationBuilder from '@/components/editor/animation-builder';
+import EditorAudioSessionManager from '@/components/editor/editor-audio-session-manager';
+import EditorCompRegistryManager from '@/components/editor/editor-comp-registry-manager';
 import EditorHeader from '@/components/editor/editor-header';
 import EditorLayout, { EditorPanel } from '@/components/editor/editor-layout';
+import EditorProjectManager from '@/components/editor/editor-project-manager';
 import HistoryManager from '@/components/editor/history-manager';
 import LayersConfigPanel from '@/components/editor/layers-config-panel';
 import ProjectDropzone from '@/components/editor/project-dropzone';
-import { ProfilerPanel } from '@/components/editor/profiler-panel';
 import RemotionPlayer from '@/components/editor/remotion-player';
 import { useProfilerMonitors } from '@/lib/hooks/use-profiler-monitors';
+import editorControl from '@/lib/editor-control';
+import { vizSessionStore } from '@/lib/viz-session';
 import useBodyProps from '@/lib/stores/body-props-store';
 import useEditorStore from '@/lib/stores/editor-store';
+import useProfilerStore from '@/lib/stores/profiler-store';
+import useNodeNetworkStore from '@/components/node-network/node-network-store';
+
+declare global {
+  interface Window {
+    __vizEditorDebug?: {
+      editorControl: typeof editorControl;
+      vizSessionStore: typeof vizSessionStore;
+    };
+  }
+}
+
+const AnimationBuilder = lazy(() => import('@/components/editor/animation-builder'));
+const RhythmLabPanel = lazy(() => import('@/components/editor/rhythm-lab-panel'));
+const ProfilerPanel = lazy(async () => {
+  const module = await import('@/components/editor/profiler-panel');
+  return { default: module.ProfilerPanel };
+});
 
 export default function EditorPage() {
   const { props } = useBodyProps();
   const ambientMode = useEditorStore((s) => s.ambientMode);
+  const isRhythmLabOpen = useEditorStore((s) => s.isRhythmLabOpen);
+  const openNetwork = useNodeNetworkStore((s) => s.openNetwork);
+  const shouldForceShowOverlay = useNodeNetworkStore(
+    (s) => s.shouldForceShowOverlay,
+  );
+  const isProfilerVisible = useProfilerStore((s) => s.visible);
 
   useProfilerMonitors();
 
+  useEffect(() => {
+    if (!import.meta.env.DEV) {
+      return;
+    }
+
+    window.__vizEditorDebug = {
+      editorControl,
+      vizSessionStore,
+    };
+
+    return () => {
+      delete window.__vizEditorDebug;
+    };
+  }, []);
+
   return (
     <main className="relative h-screen w-screen" {...props}>
+      <EditorCompRegistryManager />
+      <EditorProjectManager />
+      <EditorAudioSessionManager />
       <HistoryManager />
-      <ProfilerPanel />
+      {isProfilerVisible && (
+        <Suspense fallback={null}>
+          <ProfilerPanel />
+        </Suspense>
+      )}
       <ProjectDropzone className="flex flex-col">
         <div className="absolute inset-0 bg-zinc-900">
           {ambientMode && <AmbientBackground />}
@@ -39,8 +89,20 @@ export default function EditorPage() {
           }
           topRightChildren={
             <EditorPanel>
-              <RemotionPlayer />
-              <AnimationBuilder />
+              {isRhythmLabOpen ? (
+                <Suspense fallback={null}>
+                  <RhythmLabPanel />
+                </Suspense>
+              ) : (
+                <>
+                  <RemotionPlayer />
+                  {(openNetwork || shouldForceShowOverlay) && (
+                    <Suspense fallback={null}>
+                      <AnimationBuilder />
+                    </Suspense>
+                  )}
+                </>
+              )}
             </EditorPanel>
           }
           bottomRightChildren={

@@ -1,6 +1,7 @@
+import editorControl from '@/lib/editor-control';
 import useSetBodyProps from '@/lib/hooks/use-set-body-props';
 import { getBundledAudioFiles } from '@/lib/public-manifests';
-import useAudioStore from '@/lib/stores/audio-store';
+import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 import { cn } from '@/lib/utils';
 import { AlertCircle, Folder, Music } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -17,13 +18,10 @@ export const DROPZONE_ACCEPTED_TYPES = {
 };
 
 const AudioFileLoader = () => {
-  const setAudioFile = useAudioStore((s) => s.setAudioFile);
-  const audioElementRef = useAudioStore((s) => s.audioElementRef);
-  const setCurrentTrackUrl = useAudioStore((s) => s.setCurrentTrackUrl);
-  const setTrackList = useAudioStore((s) => s.setTrackList);
-  const setCurrentTrackIndex = useAudioStore((s) => s.setCurrentTrackIndex);
-  const currentTrackIndex = useAudioStore((s) => s.currentTrackIndex);
-  const trackList = useAudioStore((s) => s.trackList);
+  const currentTrackIndex = useEditorAudioSessionStore(
+    (s) => s.currentTrackIndex,
+  );
+  const trackList = useEditorAudioSessionStore((s) => s.trackList);
 
   const [audioFiles, setAudioFiles] = useState<string[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -34,18 +32,11 @@ const AudioFileLoader = () => {
     (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
         const objectUrl = URL.createObjectURL(acceptedFiles[0]);
-        if (audioElementRef.current) {
-          audioElementRef.current.srcObject = null as any;
-          audioElementRef.current.src = objectUrl;
-          audioElementRef.current.muted = false;
-          audioElementRef.current.load();
-        }
-        setCurrentTrackUrl(objectUrl);
-        setAudioFile(acceptedFiles[0]);
+        editorControl.audio.attachLocalFile(acceptedFiles[0], objectUrl);
         setSelectedFile(acceptedFiles[0].name);
       }
     },
-    [audioElementRef, setAudioFile, setCurrentTrackUrl],
+    [],
   );
   const { getRootProps, isDragActive, isDragReject, fileRejections } =
     useDropzone({
@@ -61,23 +52,15 @@ const AudioFileLoader = () => {
   useEffect(() => {
     const files = getBundledAudioFiles();
     setAudioFiles(files);
-    setTrackList(files);
+    editorControl.audio.setTrackList(files);
     if (files.length > 0) {
       const defaultFile =
         files.find((f) => f === DEFAULT_AUDIO_FILE) || files[0];
       const defaultIndex = files.indexOf(defaultFile);
       setSelectedFile(defaultFile);
-      setCurrentTrackIndex(defaultIndex);
-      const url = `/music/${defaultFile}`;
-      if (audioElementRef.current) {
-        audioElementRef.current.srcObject = null as any;
-        audioElementRef.current.src = url;
-        audioElementRef.current.muted = false;
-        audioElementRef.current.load();
-      }
-      setCurrentTrackUrl(url);
+      editorControl.audio.attachBundledTrack(defaultFile, defaultIndex);
     }
-  }, [audioElementRef, setCurrentTrackUrl, setTrackList, setCurrentTrackIndex]);
+  }, []);
 
   // Sync selected file with current track index from store (e.g., when skip buttons are used)
   useEffect(() => {
@@ -93,14 +76,7 @@ const AudioFileLoader = () => {
     const file = event.target.files?.[0];
     if (file) {
       const objectUrl = URL.createObjectURL(file);
-      if (audioElementRef.current) {
-        audioElementRef.current.srcObject = null as any;
-        audioElementRef.current.src = objectUrl;
-        audioElementRef.current.muted = false;
-        audioElementRef.current.load();
-      }
-      setCurrentTrackUrl(objectUrl);
-      setAudioFile(file);
+      editorControl.audio.attachLocalFile(file, objectUrl);
     }
   };
 
@@ -140,17 +116,9 @@ const AudioFileLoader = () => {
         noItemsMessage="No audio files found."
         placeholder="Search audio files..."
         onSelect={(filename) => {
-          const objectUrl = `/music/${filename}`;
           const trackIndex = audioFiles.indexOf(filename);
-          if (audioElementRef.current) {
-            audioElementRef.current.srcObject = null as any;
-            audioElementRef.current.src = objectUrl;
-            audioElementRef.current.muted = false;
-            audioElementRef.current.load();
-          }
           setSelectedFile(filename);
-          setCurrentTrackIndex(trackIndex);
-          setCurrentTrackUrl(objectUrl);
+          editorControl.audio.attachBundledTrack(filename, trackIndex);
         }}
       />
       <input

@@ -33,6 +33,23 @@ The important part is:
 - this should happen through explicit contracts and tools
 - not through brittle browser-only automation
 
+One hard rule should be locked in now:
+
+- editor controls, programmatic hosts, and agent tools should all converge on
+  the same canonical runtime and working-head entry points wherever practical
+
+That means:
+
+- the editor is a client of those entry points
+- MCP/tools are clients of those entry points
+- local scripts or host apps are clients of those entry points
+
+Not:
+
+- one runtime path for the editor
+- one hidden path for local code
+- one separate path for agents
+
 ## Important Timing Rule
 
 This AI-native control model is absolutely part of the intended future.
@@ -64,6 +81,15 @@ AI-native should mean:
 - strong typed schemas
 - inspectable runtime and product state
 - shared human and agent operations where practical
+
+It should also mean runtime configurability in real time through those same
+shared operations:
+
+- project/working-head updates
+- preview/runtime session updates
+- transport updates
+- audio-session updates
+- inspection of evaluated runtime state
 
 ## Long-Term Goal
 
@@ -170,6 +196,18 @@ Examples:
 
 The important part is that these tools should wrap the same core contracts the
 product uses.
+
+That includes the runtime/session controls themselves.
+
+Agents should be able to manipulate canonical runtime-facing settings such as:
+
+- playback frame/time
+- play/pause/seek state
+- resolution or quality mode
+- live audio source/session choice
+- preview-mode vs render-mode selection where appropriate
+
+through the same underlying operations the editor uses.
 
 ## 5. Specialized AI Runner Layer
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import useAudioStore from '@/lib/stores/audio-store';
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
+import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 
 const DEFAULT_LEVELS = [512, 1024, 2048, 4096, 8192, 16384];
 
@@ -27,16 +28,24 @@ const computeRmsPeaks = (buffer: AudioBuffer, target: number) => {
 };
 
 const useAudioEngine = () => {
-  const audioElementRef = useAudioStore((s) => s.audioElementRef);
-  const audioSource = useAudioStore((s) => s.audioSource);
-  const audioContext = useAudioStore((s) => s.audioContext);
-  const audioAnalyzer = useAudioStore((s) => s.audioAnalyzer);
-  const gainNode = useAudioStore((s) => s.gainNode);
-  const setAudioContext = useAudioStore((s) => s.setAudioContext);
-  const setAnalyzer = useAudioStore((s) => s.setAnalyzer);
-  const setGainNode = useAudioStore((s) => s.setGainNode);
-  const setAudioBuffer = useAudioStore((s) => s.setAudioBuffer);
-  const isCapturingTab = useAudioStore((s) => s.isCapturingTab);
+  const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);
+  const audioSource = useAudioEngineStore((s) => s.audioSource);
+  const audioContext = useAudioEngineStore((s) => s.audioContext);
+  const audioAnalyzer = useAudioEngineStore((s) => s.audioAnalyzer);
+  const gainNode = useAudioEngineStore((s) => s.gainNode);
+  const setAudioContext = useAudioEngineStore((s) => s.setAudioContext);
+  const setAnalyzer = useAudioEngineStore((s) => s.setAnalyzer);
+  const setGainNode = useAudioEngineStore((s) => s.setGainNode);
+  const setAudioBuffer = useAudioEngineStore((s) => s.setAudioBuffer);
+  const isCapturingTab = useEditorAudioSessionStore(
+    (s) => s.session.source?.kind === 'stream',
+  );
+  const setAnalyzerState = useEditorAudioSessionStore(
+    (s) => s.setAnalyzerState,
+  );
+  const setLiveInputAvailable = useEditorAudioSessionStore(
+    (s) => s.setLiveInputAvailable,
+  );
 
   const [peaksLevels, setPeaksLevels] = useState<Float32Array[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -57,11 +66,21 @@ const useAudioEngine = () => {
     setAudioContext(ac);
     setAnalyzer(an);
     setGainNode(gn);
+    setAnalyzerState('idle');
+    setLiveInputAvailable(false);
 
     return () => {
+      setAnalyzerState('unavailable');
+      setLiveInputAvailable(false);
       ac.close();
     };
-  }, [setAnalyzer, setAudioContext, setGainNode]);
+  }, [
+    setAnalyzer,
+    setAnalyzerState,
+    setAudioContext,
+    setGainNode,
+    setLiveInputAvailable,
+  ]);
 
   useEffect(() => {
     const audio = audioElementRef.current;
@@ -78,11 +97,21 @@ const useAudioEngine = () => {
         source.connect(gainNode);
         gainNode.connect(audioContext.destination);
       }
+      setAnalyzerState('active');
+      setLiveInputAvailable(true);
     };
 
     audio.addEventListener('play', handlePlay);
     return () => audio.removeEventListener('play', handlePlay);
-  }, [audioAnalyzer, audioContext, audioElementRef, audioSource, gainNode]);
+  }, [
+    audioAnalyzer,
+    audioContext,
+    audioElementRef,
+    audioSource,
+    gainNode,
+    setAnalyzerState,
+    setLiveInputAvailable,
+  ]);
 
   useEffect(() => {
     const audio = audioElementRef.current;

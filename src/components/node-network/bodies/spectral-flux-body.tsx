@@ -2,7 +2,8 @@ import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
 import { cn } from '@/lib/utils';
 import { memo, useCallback, useRef } from 'react';
 import { useRafLoop } from 'react-use';
-import { GraphNodeData, useNodeNetwork } from '../node-network-store';
+import type { GraphNodeData } from '../graph-types';
+import { useNodeNetwork } from '../node-network-store';
 
 interface SpectralFluxBodyProps {
   id: string;

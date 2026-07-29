@@ -119,6 +119,66 @@ So the architectural move is:
 - move truth out of app-owned hidden state
 - keep the editor as the high-quality cockpit over that truth
 
+The simplest correct phrasing is:
+
+- the editor edits
+- the runtime runs
+- `VizSession` is the canonical live state engine
+
+The editor should remain the cockpit.
+
+The runtime should be the engine behind it.
+
+React is an appropriate host for the editor surface, but React component
+lifecycle should not define scene semantics.
+
+The missing architectural crystallization is now explicit:
+
+- one in-memory `VizSession`
+- one canonical command surface over that session
+- one canonical read/subscribe surface over that session
+- many clients over that same truth
+
+Those clients are:
+
+- the preserved editor UI
+- local programmatic hosts
+- future agent/MCP tooling
+- runtime preview and render attachments
+
+The runtime should be as pure as possible at its core:
+
+- project document
+- resolved assets/artifacts
+- explicit frame/time input
+- explicit mode/session input
+- evaluated result
+
+And where state is truly needed, it should live in explicit runtime session
+objects:
+
+- checkpoints
+- caches
+- materialized assets
+- live preview session state
+
+not in hidden editor-owned mutable behavior
+
+That same runtime should be controllable through canonical entry points from:
+
+- the editor
+- local programmatic hosts
+- future MCP/tool surfaces for agents
+
+The editor should not get a private runtime API that agents cannot use.
+
+Agents should not get a separate runtime API that bypasses the editor/runtime
+architecture.
+
+From this point forward, “cleaner editor glue” is not the goal.
+
+Direct convergence onto `VizSession` is the goal.
+
 ## Replacement Rewrite Principle
 
 VizEngine V2 should be built as a full replacement rewrite, not as a timid
@@ -276,6 +336,13 @@ VizEngine V2 should be designed so an AI agent can operate it through explicit
 contracts instead of UI imitation.
 
 This does not imply a different user-facing editor paradigm.
+
+The strongest form of that rule is now:
+
+- the agent mutates `VizSession`
+- the editor mutates `VizSession`
+- the runtime evaluates `VizSession`
+- the browser reflects `VizSession`
 
 The intended model is:
 

@@ -10,7 +10,8 @@ import {
 } from '@/components/ui/select';
 import { X } from 'lucide-react';
 import { useRef } from 'react';
-import { GraphNodeData, useNodeNetwork } from '../node-network-store';
+import type { GraphNodeData } from '../graph-types';
+import { useNodeNetwork } from '../node-network-store';
 
 interface ValueMapperBodyProps {
   id: string;

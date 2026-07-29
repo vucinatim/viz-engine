@@ -1,19 +1,25 @@
 'use client';
 
-import useAudioStore from '@/lib/stores/audio-store';
-import useEditorStore from '@/lib/stores/editor-store';
+import editorControl from '@/lib/editor-control';
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
+import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
+import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 
 const CaptureAudio = () => {
-  const audioContext = useAudioStore((s) => s.audioContext);
-  const audioAnalyzer = useAudioStore((s) => s.audioAnalyzer);
-  const setAudioSource = useAudioStore((s) => s.setAudioSource);
-  const tabCaptureStream = useAudioStore((s) => s.tabCaptureStream);
-  const setTabCaptureStream = useAudioStore((s) => s.setTabCaptureStream);
-  const isCapturingTab = useAudioStore((s) => s.isCapturingTab);
-  const setIsCapturingTab = useAudioStore((s) => s.setIsCapturingTab);
-  const captureLabel = useAudioStore((s) => s.captureLabel);
-  const setCaptureLabel = useAudioStore((s) => s.setCaptureLabel);
-  const audioElementRef = useAudioStore((s) => s.audioElementRef);
+  const audioContext = useAudioEngineStore((s) => s.audioContext);
+  const audioAnalyzer = useAudioEngineStore((s) => s.audioAnalyzer);
+  const setAudioSource = useAudioEngineStore((s) => s.setAudioSource);
+  const tabCaptureStream = useAudioEngineStore((s) => s.tabCaptureStream);
+  const setTabCaptureStream = useAudioEngineStore((s) => s.setTabCaptureStream);
+  const attachStreamToElement = useAudioEngineStore(
+    (s) => s.attachStreamToElement,
+  );
+  const isCapturingTab = useEditorAudioSessionStore(
+    (s) => s.session.source?.kind === 'stream',
+  );
+  const playerRef = useEditorRuntimePreviewAttachmentStore(
+    (state) => state.playerRef,
+  );
 
   const startTabCapture = async () => {
     try {
@@ -34,29 +40,13 @@ const CaptureAudio = () => {
       const source = audioContext.createMediaStreamSource(stream);
       source.connect(audioAnalyzer);
       setAudioSource(source);
-      // Route the captured stream into the hidden audio element for WaveSurfer visualization
-      const el = audioElementRef.current;
-      if (el) {
-        try {
-          // Rebind element to the live stream so WaveSurfer visualizes it
-          el.pause();
-          // Clear any previous src URL
-          el.removeAttribute('src');
-          (el as any).srcObject = stream;
-          el.muted = true; // prevent double playback
-          el.load();
-          await el.play().catch(() => {});
-        } catch {}
-      }
+      await attachStreamToElement(stream);
       setTabCaptureStream(stream);
-      setIsCapturingTab(true);
       const label = stream.getAudioTracks()[0]?.label || 'Captured Tab';
-      setCaptureLabel(label);
+      editorControl.audio.attachCapturedStream(label);
       // Immediately start the Remotion timeline
-      const playerRef = useEditorStore.getState().playerRef;
       if (playerRef.current && !playerRef.current.isPlaying()) {
-        playerRef.current.play();
-        useEditorStore.getState().setIsPlaying(true);
+        editorControl.preview.play();
       }
       stream.getAudioTracks().forEach((t: MediaStreamTrack) => {
         t.addEventListener('ended', () => {
@@ -65,13 +55,10 @@ const CaptureAudio = () => {
           } catch {}
           setAudioSource(null);
           setTabCaptureStream(null);
-          setIsCapturingTab(false);
-          setCaptureLabel(null);
+          editorControl.audio.detachCapturedStream();
           // Pause playback when capture ends unexpectedly
-          const playerRef = useEditorStore.getState().playerRef;
           if (playerRef.current && playerRef.current.isPlaying()) {
-            playerRef.current.pause();
-            useEditorStore.getState().setIsPlaying(false);
+            editorControl.preview.pause();
           }
         });
       });
@@ -80,13 +67,10 @@ const CaptureAudio = () => {
       console.warn('Tab capture failed', e);
       // Ensure UI exits capture state on failure/cancel
       setTabCaptureStream(null);
-      setIsCapturingTab(false);
-      setCaptureLabel(null);
+      editorControl.audio.detachCapturedStream();
       // Pause playback on capture failure
-      const playerRef = useEditorStore.getState().playerRef;
       if (playerRef.current && playerRef.current.isPlaying()) {
-        playerRef.current.pause();
-        useEditorStore.getState().setIsPlaying(false);
+        editorControl.preview.pause();
       }
     }
   };
@@ -95,32 +79,13 @@ const CaptureAudio = () => {
     if (!tabCaptureStream) return;
     // Stop all tracks; some browsers will fire track 'ended' listeners afterwards
     tabCaptureStream.getTracks().forEach((t) => t.stop());
-    const el = audioElementRef.current;
-    if (el) {
-      try {
-        el.pause();
-        (el as any).srcObject = null;
-        const url = useAudioStore.getState().currentTrackUrl;
-        if (url) {
-          el.src = url;
-          el.muted = false;
-          el.load();
-          // Don't auto-play, just restore the previous track
-        } else {
-          el.removeAttribute('src');
-          el.load();
-        }
-      } catch {}
-    }
+    setAudioSource(null);
     // Immediately clear capture state for UI
     setTabCaptureStream(null);
-    setIsCapturingTab(false);
-    setCaptureLabel(null);
+    editorControl.audio.detachCapturedStream();
     // Pause playback when exiting capture mode
-    const playerRef = useEditorStore.getState().playerRef;
     if (playerRef.current && playerRef.current.isPlaying()) {
-      playerRef.current.pause();
-      useEditorStore.getState().setIsPlaying(false);
+      editorControl.preview.pause();
     }
   };
 

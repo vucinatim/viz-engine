@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import useAudioStore from '@/lib/stores/audio-store';
+import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 import useExportStore from '@/lib/stores/export-store';
 import { cancelExport, exportVideo } from '@/lib/utils/export-orchestrator';
 import { Check, Download, Loader2 } from 'lucide-react';
@@ -11,7 +11,7 @@ import ExportDialog from './export-dialog';
 
 const ExportButton = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const audioUrl = useAudioStore((s) => s.currentTrackUrl);
+  const audioUrl = useEditorAudioSessionStore((s) => s.currentTrackUrl);
   const isExporting = useExportStore((s) => s.isExporting);
   const progress = useExportStore((s) => s.progress);
 

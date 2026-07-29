@@ -1,5 +1,10 @@
 import { useCallback, useRef } from 'react';
-import { useNodeNetworkStore } from '../../components/node-network/node-network-store';
+import {
+  getNodeNetworks,
+  setEdgesInNetwork,
+  setNodeNetwork,
+  setNodesInNetwork,
+} from '../../components/node-network/node-network-store';
 import { useKeyboardShortcuts } from '../hooks/use-keyboard-shortcuts';
 import { useNodeGraphClipboardStore } from '../stores/node-graph-clipboard-store';
 
@@ -140,8 +145,7 @@ export const useNodeGraphClipboard = ({
           }));
 
           // Get current network state from the store
-          const { networks } = useNodeNetworkStore.getState();
-          const currentNetwork = networks[parameterId];
+          const currentNetwork = getNodeNetworks()[parameterId];
 
           if (currentNetwork) {
             // Find the input and output nodes of the target network
@@ -210,9 +214,7 @@ export const useNodeGraphClipboard = ({
               edges: [...unselectedEdges, ...allNewEdges],
             };
 
-            useNodeNetworkStore
-              .getState()
-              .setNetwork(parameterId, updatedNetwork);
+            setNodeNetwork(parameterId, updatedNetwork);
 
             // Now select the newly pasted nodes and edges
             const finalNodes = updatedNetwork.nodes;
@@ -232,12 +234,8 @@ export const useNodeGraphClipboard = ({
               return { ...edge, selected: isNewlyPasted };
             });
 
-            useNodeNetworkStore
-              .getState()
-              .setNodesInNetwork(parameterId, newlySelectedNodes);
-            useNodeNetworkStore
-              .getState()
-              .setEdgesInNetwork(parameterId, newlySelectedEdges);
+            setNodesInNetwork(parameterId, newlySelectedNodes);
+            setEdgesInNetwork(parameterId, newlySelectedEdges);
           }
         }
       }

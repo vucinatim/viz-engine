@@ -35,6 +35,7 @@ The active architectural focus is VizEngine V2.
 That means the repo should move toward:
 
 - a versioned project document as the canonical source of truth
+- one canonical in-memory session engine: `VizSession`
 - a headless runtime that can evaluate frames deterministically
 - a clear split between editor state and runtime state
 - first-class baking and precomputation for heavy audio or simulation work
@@ -69,6 +70,9 @@ The repo now has:
 
 - a real V2 runtime/package spine
 - a real action-driven working-head foundation
+- a real preview transport foundation under the preserved editor
+- a real split between canonical audio-session truth and browser audio-engine
+  attachments
 - a real local operator surface
 - a separate dev-shell path for engine validation
 
@@ -76,6 +80,53 @@ So the current phase is no longer “invent V2”.
 
 The current phase is “rebuild the real editor experience over those V2 truth
 surfaces without regressing the V1 UX bar”.
+
+One important correction is now explicit:
+
+- the destination is not a collection of cleaner editor-local canonical stores
+- the destination is one canonical session engine called `VizSession`
+- editor stores may exist as UI adapters or subscribers
+- they are not the long-term architecture target
+
+The hidden-brain swap is now materially underway:
+
+- layer and working-project truth have been moved under a canonical app-local
+  working head
+- preview transport has been split out of `editor-store`
+- audio source/session truth has been split from browser audio-engine
+  attachment state
+- graph truth has been split from node-editor UI ownership
+- history truth has been split from legacy layer/value snapshot ownership
+
+The next clean seam is no longer basic ownership extraction.
+
+The next clean seam is collapsing these cleaned-up truths into `VizSession`
+directly and deleting the remaining bridges.
+
+The intended split is now explicit:
+
+- the editor edits
+- the runtime runs
+- `VizSession` holds the live scene/session truth shared by both
+
+In practice that means:
+
+- the editor should hold UI state
+- `VizSession` should hold working project, graph, preview, audio, and history
+  truth
+- the runtime should consume `VizSession` for scene evaluation and
+  preview/render semantics
+- React should host the editor surface, not define runtime truth
+
+That split is now materially reflected in the real editor terrain too:
+
+- canonical project truth exists
+- canonical preview truth exists
+- canonical audio-session truth exists
+- canonical graph truth exists
+- canonical history truth exists
+- a local explicit editor control plane now sits above them so the preserved
+  UI no longer needs to reach into many stores directly for routine commands
 
 One important correction was followed by the right shell migration:
 
@@ -88,6 +139,109 @@ One important correction was followed by the right shell migration:
   old Tailwind v3 plus PostCSS config path
 - V2 editor/session/control work remains foundation work until it is wired
   further under the preserved real editor UX
+- the runtime-preview ownership cutover is now materially in place too:
+  - general component/config projection still exists for preserved V1
+    consumers, but it is not preview truth
+  - live preview and export dispatch frames through `VizSession`
+  - `VizSession.preview.runtimeInspection` owns the last requested/completed
+    frame, render-cycle count, rendered layer ids, runtime-backed layer ids,
+    and failure state
+  - the browser-only attachment store owns only registered render callbacks,
+    mirror canvases, and the Remotion player ref
+  - live preview timing/orchestration now runs through one explicit preview
+    driver instead of per-layer loops
+  - live preview and export share the `VizSession` runtime-preview frame
+    contract and command surface
+  - the redundant editor preview controller, editor preview frame module, and
+    mixed runtime-preview store have been deleted
+  - browser render attachment setup/resize/render/cleanup now live behind one
+    explicit preview-attachment module instead of being owned directly by the
+    React `LayerRenderer`
+  - the first preserved-editor layer (`Curve Spectrum`) now gets its scene
+    meaning from the package runtime/render-plan path inside the real editor
+    preview instead of local `draw` / `draw3D`
+
+The app-local `VizSession` convergence is now materially implemented:
+
+- the package-level `VizProjectDocument` is now the working/source document
+  stored by the session
+- layer order, component settings, timeline, viewport, graph bindings, and
+  embedded graph documents now share that one portable scene truth
+- working project, graph projection, preview transport, audio session, and
+  history state are exposed through one session store and command surface
+- project history snapshots the complete canonical document, including graphs
+- `.vizengine.json` persistence and bundled projects now carry one canonical
+  `project` value instead of separate editor-shaped project and graph scene
+  payloads
+- the preserved editor still uses adapter stores where necessary for selective
+  subscriptions, executable V1 node definitions, instantiated component
+  configs, and browser attachments
+- the adapter names do not make them independent canonical owners
+
+The old `EditorProjectDocument` / `EditorProjectLayer` model is gone.
+Per-layer expansion/debug preferences are editor UI state outside the portable
+document, and the obsolete `layer-values-store` has been deleted.
+
+The remaining adapter classification and deletion conditions are recorded in:
+
+- [phase-12-canonical-viz-project-document-cutover.md](./plans/v2/phase-12-canonical-viz-project-document-cutover.md)
+- [phase-13-viz-session-runtime-preview-ownership.md](./plans/v2/phase-13-viz-session-runtime-preview-ownership.md)
+
+The biggest remaining architecture gaps are:
+
+- the preserved V1 node canvas still needs an executable `NodeNetwork`
+  projection over canonical graph documents until it consumes the package
+  graph model and execution registry directly
+- most preserved V1 components still render through their historical
+  `draw`/`draw3D` paths; `Curve Spectrum` is the first package-runtime-backed
+  editor proof, not the completed component migration
+- the temporary per-component runtime preview bridge remains necessary until
+  those historical render paths are replaced by package-runtime components
+
+## Autonomous Calibration Foundation
+
+The first autonomous calibration goal pinned the immutable product reference
+to:
+
+```text
+e806fbc10980615588b52ff574bc923c6f00f35e
+```
+
+That commit is the final pre-V2 editor state and includes the accepted waveform,
+window-control, and Rhythm Lab improvements that are newer than the current
+`main` head.
+
+The repository now also has:
+
+- a 41-capability executable V1→V2 parity matrix covering shell, layers,
+  parameters, nodes, audio, transport, preview, history, persistence, export,
+  debugging, Rhythm Lab, and performance
+- `pnpm parity:validate`, included in `pnpm check:foundation`
+- a durable autonomous development operating contract with authority,
+  recovery, quality-gate, and completion rules
+- a preservation audit for the large pre-existing dirty worktree
+- first browser comparison evidence against the pinned V1 reference
+
+The calibration browser run found and corrected three regressions:
+
+- sample project loading could blank V2 through a history feedback loop
+- animation previews could blank V2 because node bodies used CommonJS
+  `require(...)` in the Vite browser runtime
+- the active Vite editor shell no longer mounted Rhythm Lab
+
+The final clean V2 browser run loaded `simple-example`, rendered the preview and
+node surfaces, opened and closed Rhythm Lab, and advanced and paused playback
+without console errors or warnings.
+
+Parity is not complete. The matrix intentionally remains conservative:
+
+- 36 capabilities are `partial`
+- 5 capabilities are `not-audited`
+- 0 capabilities are currently classified as a known `gap`
+- 0 capabilities are yet certified `verified`
+
+Performance parity is still unmeasured and must not be inferred from this smoke
+run.
 
 ## Current V1 Truth
 
@@ -141,4 +295,10 @@ Preferred posture:
 
 - [working-agreements.md](./working-agreements.md)
 - [visions/viz-engine-v2-vision.md](./visions/viz-engine-v2-vision.md)
+- [visions/v2-product-architecture-and-parity-alignment.md](./visions/v2-product-architecture-and-parity-alignment.md)
+- [specs/v2/viz-session.md](./specs/v2/viz-session.md)
+- [plans/v2/autonomous-development-operating-contract.md](./plans/v2/autonomous-development-operating-contract.md)
+- [plans/v2/current-uncommitted-worktree-audit.md](./plans/v2/current-uncommitted-worktree-audit.md)
+- [parity/README.md](./parity/README.md)
+- [parity/evidence/2026-07-29-calibration.md](./parity/evidence/2026-07-29-calibration.md)
 - [suggestions.md](./suggestions.md)

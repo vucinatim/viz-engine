@@ -1,4 +1,4 @@
-import useNodeNetworkStore from '@/components/node-network/node-network-store';
+import { getNodeNetworks } from '@/components/node-network/node-network-store';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { destructureParameterId } from '@/lib/id-utils';
-import useLayerStore from '@/lib/stores/layer-store';
+import useEditorLayerProjectionStore from '@/lib/stores/editor-layer-projection-store';
 import { Bug, Check, Copy, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 
@@ -29,8 +29,8 @@ export function DebugInfoDialog() {
     }
 
     // Read store state directly instead of subscribing (only when function is called)
-    const layers = useLayerStore.getState().layers;
-    const networks = useNodeNetworkStore.getState().networks;
+    const layers = useEditorLayerProjectionStore.getState().layers;
+    const networks = getNodeNetworks();
 
     const info = {
       timestamp: new Date().toISOString(),

@@ -1,6 +1,9 @@
 'use client';
 
-import useAudioStore from '@/lib/stores/audio-store';
+import editorControl from '@/lib/editor-control';
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
+import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
+import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { AUDIO_THEME } from '@/lib/theme/audio-theme';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -167,8 +170,10 @@ const WaveformCanvas = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const width = useCanvasWidth(canvasRef);
-  const audioElementRef = useAudioStore((s) => s.audioElementRef);
-  const visualTimeRef = useRef(useAudioStore.getState().visualTime);
+  const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);
+  const visualTimeRef = useRef(
+    useEditorAudioSessionStore.getState().visualTime,
+  );
   const rafRef = useRef<number | null>(null);
   const hoverXRef = useRef<number | null>(null);
   const renderRef = useRef<() => void>(() => {});
@@ -225,7 +230,7 @@ const WaveformCanvas = ({
   ]);
 
   useEffect(() => {
-    const unsub = useAudioStore.subscribe((state) => {
+    const unsub = useEditorAudioSessionStore.subscribe((state) => {
       visualTimeRef.current = state.visualTime;
     });
     return () => unsub();
@@ -488,14 +493,15 @@ const WaveformDisplay = ({
   bufferDuration: number;
   isLoading: boolean;
 }) => {
-  const audioElementRef = useAudioStore((s) => s.audioElementRef);
-  const visualTimeRef = useRef(useAudioStore.getState().visualTime);
-  const playerRef = useEditorStore((s) => s.playerRef);
-  const playerFPS = useEditorStore((s) => s.playerFPS);
-  const isPlaying = useEditorStore((s) => s.isPlaying);
+  const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);
+  const visualTimeRef = useRef(
+    useEditorAudioSessionStore.getState().visualTime,
+  );
+  const isPlaying = useEditorPreviewStore(
+    (state) => state.transport.isPlaying,
+  );
   const isRhythmLabOpen = useEditorStore((s) => s.isRhythmLabOpen);
   const rhythmSelection = useEditorStore((s) => s.rhythmSelection);
-  const setRhythmSelection = useEditorStore((s) => s.setRhythmSelection);
   const [viewMode, setViewMode] = useState<'static' | 'follow'>('static');
   const selectionOverlayRef = useRef<HTMLDivElement>(null);
   const loopRef = useRef({
@@ -508,22 +514,8 @@ const WaveformDisplay = ({
   const handleSeek = (t: number) => {
     const audio = audioElementRef.current;
     if (!audio) return;
-    const wasPlaying = isPlaying;
     audio.currentTime = t;
-    const player = playerRef.current;
-    if (player && playerFPS > 0) {
-      player.seekTo(t * playerFPS);
-      if (wasPlaying) {
-        requestAnimationFrame(() => {
-          player.play();
-        });
-      }
-    }
-    if (wasPlaying) {
-      requestAnimationFrame(() => {
-        audio.play().catch(() => {});
-      });
-    }
+    editorControl.preview.seekToSeconds(t);
   };
 
   const minimapColors = useMemo(
@@ -555,7 +547,7 @@ const WaveformDisplay = ({
   }, [duration, viewEnd, viewMode, viewStart]);
 
   useEffect(() => {
-    const unsub = useAudioStore.subscribe((state) => {
+    const unsub = useEditorAudioSessionStore.subscribe((state) => {
       visualTimeRef.current = state.visualTime;
     });
     return () => unsub();
@@ -685,18 +677,27 @@ const WaveformDisplay = ({
           0,
           endAtDrag - MIN_SELECTION,
         );
-        setRhythmSelection({ start: newStart, end: endAtDrag });
+        editorControl.ui.setRhythmSelection({
+          start: newStart,
+          end: endAtDrag,
+        });
         return;
       }
       if (mode === 'right') {
         const newEnd = clamp(endAtDrag + delta, startAtDrag + MIN_SELECTION, 1);
-        setRhythmSelection({ start: startAtDrag, end: newEnd });
+        editorControl.ui.setRhythmSelection({
+          start: startAtDrag,
+          end: newEnd,
+        });
         return;
       }
       if (mode === 'move') {
         const width = endAtDrag - startAtDrag;
         const newStart = clamp(startAtDrag + delta, 0, 1 - width);
-        setRhythmSelection({ start: newStart, end: newStart + width });
+        editorControl.ui.setRhythmSelection({
+          start: newStart,
+          end: newStart + width,
+        });
         return;
       }
 
@@ -712,7 +713,7 @@ const WaveformDisplay = ({
         newEnd = 1;
         newStart = 1 - width;
       }
-      setRhythmSelection({ start: newStart, end: newEnd });
+      editorControl.ui.setRhythmSelection({ start: newStart, end: newEnd });
     };
 
     update(event.clientX);

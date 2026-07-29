@@ -1,4 +1,5 @@
 import { cssColorToLinearRGB } from '@/lib/color-utils';
+import { idbGetFile } from '@/lib/idb-file-store';
 import * as THREE from 'three';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import { Font, FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
@@ -672,18 +673,14 @@ async function loadModelPositions(
   let loadUrl = url;
   if (url.startsWith('idb:')) {
     const key = url.slice('idb:'.length);
-    const blob = await import('@/lib/idb-file-store').then((m) =>
-      m.idbGetFile(key),
-    );
+    const blob = await idbGetFile(key);
     if (!blob) throw new Error('Missing blob for idb key');
     loadUrl = URL.createObjectURL(blob);
   } else if (url.startsWith('blob:')) {
     // Try to resolve blob via IndexedDB using derived key
     const lastSlash = url.lastIndexOf('/') + 1;
     const key = `blob:${url.slice(lastSlash)}`;
-    const blob = await import('@/lib/idb-file-store').then((m) =>
-      m.idbGetFile(key),
-    );
+    const blob = await idbGetFile(key);
     if (blob) {
       loadUrl = URL.createObjectURL(blob);
     } else {

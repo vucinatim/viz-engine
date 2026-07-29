@@ -1,6 +1,5 @@
-import { AllComps } from '@/components/comps';
-import useCompStore from '@/lib/stores/comp-store';
-import useLayerStore, { LayerData } from '@/lib/stores/layer-store';
+import editorControl from '@/lib/editor-control';
+import useEditorLayerProjectionStore, { LayerData } from '@/lib/stores/editor-layer-projection-store';
 import {
   DndContext,
   DragEndEvent,
@@ -18,8 +17,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { ChevronsDown, ChevronsUp } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
-import { Comp } from '../config/create-component';
+import { useMemo } from 'react';
 import { Button } from '../ui/button';
 import EditorLayerSearch from './editor-layer-search';
 import LayerConfigCard from './layer-config-card';
@@ -27,26 +25,12 @@ import LayerConfigCard from './layer-config-card';
 const LayersConfigPanel = () => {
   // Parent rerenders when any layer changes (unavoidable with Zustand immutable updates)
   // But LayerConfigCard is memoized, so only the changed layer card actually rerenders
-  const layers = useLayerStore((s) => s.layers);
-  const setAllLayersExpanded = useLayerStore((s) => s.setAllLayersExpanded);
+  const layers = useEditorLayerProjectionStore((s) => s.layers);
 
   const areSomeLayersExpanded = useMemo(
     () => layers.some((layer) => layer.isExpanded),
     [layers],
   );
-
-  // Initialize the Comps in the CompStore
-  useEffect(() => {
-    // Add all components to the store
-    AllComps.forEach((comp) => useCompStore.getState().addComp(comp as Comp));
-
-    // Cleanup function to remove components from the store
-    return () => {
-      AllComps.forEach((comp) => useCompStore.getState().removeComp(comp.name));
-    };
-
-    // This makes it reactive to changes to any of the comp files
-  }, []);
 
   return (
     <div className="absolute inset-0 flex flex-col items-stretch justify-start">
@@ -56,7 +40,9 @@ const LayersConfigPanel = () => {
           size="icon"
           tooltip="Expand/Collapse All Layers"
           onClick={() => {
-            setAllLayersExpanded(areSomeLayersExpanded ? false : true);
+            editorControl.project.setAllLayersExpanded(
+              areSomeLayersExpanded ? false : true,
+            );
           }}>
           {areSomeLayersExpanded ? (
             <ChevronsUp className="scale-y-90" />
@@ -77,10 +63,6 @@ interface SortableLayersProps {
 }
 
 const SortableLayers = ({ layers }: SortableLayersProps) => {
-  const reorderLayers = useLayerStore((state) => state.reorderLayers);
-  const setAllLayersExpanded = useLayerStore(
-    (state) => state.setAllLayersExpanded,
-  );
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -89,7 +71,7 @@ const SortableLayers = ({ layers }: SortableLayersProps) => {
   );
 
   function handleDragStart(event: DragStartEvent) {
-    setAllLayersExpanded(false);
+    editorControl.project.setAllLayersExpanded(false);
   }
 
   function handleDragEnd(event: DragEndEvent) {
@@ -100,7 +82,10 @@ const SortableLayers = ({ layers }: SortableLayersProps) => {
 
     if (active.id !== over?.id) {
       console.log('Reordering layers');
-      reorderLayers(active.id.toString(), over.id.toString());
+      editorControl.project.reorderLayers(
+        active.id.toString(),
+        over.id.toString(),
+      );
     }
   }
 

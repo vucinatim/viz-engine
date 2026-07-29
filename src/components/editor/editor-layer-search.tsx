@@ -1,7 +1,7 @@
 'use client';
 
+import editorControl from '@/lib/editor-control';
 import useCompStore from '@/lib/stores/comp-store';
-import useLayerStore from '@/lib/stores/layer-store';
 import { Search } from 'lucide-react';
 import * as React from 'react';
 import SearchSelect from '../ui/search-select';
@@ -9,13 +9,11 @@ import LazyCompPreview from './lazy-comp-preview';
 
 const EditorLayerSearch = () => {
   const comps = useCompStore((state) => state.comps);
-  const addLayer = useLayerStore((state) => state.addLayer);
-  const updateComps = useLayerStore((state) => state.updateComps);
 
   // This is needed for instant changes on save when editing comp files
   React.useEffect(() => {
-    updateComps(comps);
-  }, [comps, updateComps]);
+    editorControl.project.refreshCompDefinitions();
+  }, [comps]);
 
   return (
     <SearchSelect
@@ -46,7 +44,7 @@ const EditorLayerSearch = () => {
       noItemsMessage="No comps avaliable."
       placeholder="Search visual compositions..."
       onSelect={(comp) => {
-        addLayer(comp);
+        editorControl.project.addLayer(comp);
       }}
     />
   );

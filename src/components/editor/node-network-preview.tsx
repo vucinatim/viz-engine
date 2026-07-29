@@ -4,7 +4,7 @@ import { ReactFlow } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import '../../lib/css/xyflow.css';
-import useNodeNetworkStore from '../node-network/node-network-store';
+import { useSpecificNetwork } from '../node-network/node-network-store';
 import NodeRenderer from '../node-network/node-renderer';
 
 interface NodeNetworkPreviewProps {
@@ -25,7 +25,7 @@ const NodeNetworkPreview = memo(
     height = 68,
     isHovered = false,
   }: NodeNetworkPreviewProps) => {
-    const network = useNodeNetworkStore((state) => state.networks[parameterId]);
+    const network = useSpecificNetwork(parameterId);
     const reactFlowInstance = useRef<any>(null);
     const [isReady, setIsReady] = useState(false);
 

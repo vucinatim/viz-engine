@@ -1,10 +1,11 @@
 'use client';
 
-import useAudioStore from '@/lib/stores/audio-store';
-import useEditorStore from '@/lib/stores/editor-store';
+import editorControl from '@/lib/editor-control';
+import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
+import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
 import { cn } from '@/lib/utils';
 import { Maximize2, Minimize2, Pause, Play } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '../ui/button';
 import CustomSeekerSlider from './custom-seeker-slider';
 
@@ -17,37 +18,26 @@ const CustomPlayerControls = ({
   className,
   durationInFrames,
 }: CustomPlayerControlsProps) => {
-  const isPlaying = useEditorStore((state) => state.isPlaying);
-  const setIsPlaying = useEditorStore((state) => state.setIsPlaying);
-  const playerRef = useEditorStore((state) => state.playerRef);
-
-  const audioElementRef = useAudioStore((s) => s.audioElementRef);
-  const isCapturingTab = useAudioStore((s) => s.isCapturingTab);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const isPlaying = useEditorPreviewStore(
+    (state) => state.transport.isPlaying,
+  );
+  const currentFrame = useEditorPreviewStore(
+    (state) => state.transport.currentFrame,
+  );
+  const fps = useEditorPreviewStore((state) => state.transport.fps);
+  const isCapturingTab = useEditorAudioSessionStore(
+    (s) => s.session.source?.kind === 'stream',
+  );
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-
-  // Update current time and duration from audio element
-  useEffect(() => {
-    const audioElement = audioElementRef.current;
-    if (!audioElement) return;
-
-    const updateTime = () => setCurrentTime(audioElement.currentTime);
-    const updateDuration = () => setDuration(audioElement.duration);
-
-    audioElement.addEventListener('timeupdate', updateTime);
-    audioElement.addEventListener('durationchange', updateDuration);
-
-    // Initial values
-    updateTime();
-    updateDuration();
-
-    return () => {
-      audioElement.removeEventListener('timeupdate', updateTime);
-      audioElement.removeEventListener('durationchange', updateDuration);
-    };
-  }, [audioElementRef]);
+  const currentTime = useMemo(
+    () => currentFrame / Math.max(1, fps),
+    [currentFrame, fps],
+  );
+  const duration = useMemo(
+    () => durationInFrames / Math.max(1, fps),
+    [durationInFrames, fps],
+  );
 
   // Update fullscreen state from document
   useEffect(() => {
@@ -103,26 +93,14 @@ const CustomPlayerControls = ({
   }, [isHovered]);
 
   const handlePlayPause = useCallback(() => {
-    setIsPlaying(!isPlaying);
-  }, [isPlaying, setIsPlaying]);
+    editorControl.preview.togglePlayback();
+  }, []);
 
   const handleSeek = useCallback(
     (newTime: number) => {
-      setCurrentTime(newTime);
-
-      const audioElement = audioElementRef.current;
-      if (audioElement) {
-        audioElement.currentTime = newTime;
-      }
-
-      // Also seek the Remotion player
-      const player = playerRef.current;
-      if (player && duration > 0 && durationInFrames > 0) {
-        const frame = Math.floor((newTime / duration) * durationInFrames);
-        player.seekTo(frame);
-      }
+      editorControl.preview.seekToSeconds(newTime);
     },
-    [audioElementRef, playerRef, duration, durationInFrames],
+    [],
   );
 
   const handleFullscreenToggle = useCallback(async () => {

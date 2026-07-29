@@ -1,6 +1,6 @@
-import { getParameterIdsFromConfig } from '@/lib/comp-utils/config-utils';
-import useLayerStore, { LayerData } from '@/lib/stores/layer-store';
-import useLayerValuesStore from '@/lib/stores/layer-values-store';
+import editorControl from '@/lib/editor-control';
+import { LayerData } from '@/lib/stores/editor-layer-projection-store';
+import { getVizSessionState } from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -15,11 +15,6 @@ import {
 } from 'lucide-react';
 import { memo, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { ConfigParam, GroupConfigOption } from '../config/config';
-import { UnknownConfig } from '../config/create-component';
-import { safeVTypeToNodeHandleType } from '../config/node-types';
-import { VType } from '../config/types';
-import { useNodeNetworkStore } from '../node-network/node-network-store';
 import { Button } from '../ui/button';
 import {
   Collapsible,
@@ -31,48 +26,18 @@ import LayerParameters from './layer-parameters';
 import LayerPreview from './layer-preview';
 import LayerSettings from './layer-settings';
 
-// Helper function to get parameter type from a config path
-function getParameterType(config: UnknownConfig, path: string): VType | null {
-  const parts = path.split('.');
-  let current: any = config.options;
-
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i];
-    const option = current[part];
-
-    if (!option) return null;
-
-    // If this is the last part, get the type
-    if (i === parts.length - 1) {
-      if (option instanceof ConfigParam) {
-        return option.type;
-      }
-      return null;
-    }
-
-    // Navigate into group
-    if (option instanceof GroupConfigOption) {
-      current = option.options;
-    } else {
-      return null;
-    }
-  }
-
-  return null;
-}
-
 interface LayerConfigCardProps {
   index: number;
   layer: LayerData;
 }
 
+const getCanonicalLayerValues = (layerId: string) =>
+  getVizSessionState().project.workingProject.layers.find(
+    (layer) => layer.id === layerId,
+  )?.settings;
+
 function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
   const comp = layer.comp;
-  const updateLayerComp = useLayerStore((state) => state.updateLayerComp);
-  const removeLayer = useLayerStore((state) => state.removeLayer);
-  const duplicateLayer = useLayerStore((state) => state.duplicateLayer);
-  const setIsLayerExpanded = useLayerStore((state) => state.setIsLayerExpanded);
-  const setDebugEnabled = useLayerStore((state) => state.setDebugEnabled);
   const [selectedPreset, setSelectedPreset] = useState<any | null>();
   const hasInitialized = useRef(false);
 
@@ -82,7 +47,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
   // Initialize layer values from store on mount
   useEffect(() => {
     if (hasInitialized.current) return;
-    const storeValues = useLayerValuesStore.getState().values[layer.id];
+    const storeValues = getCanonicalLayerValues(layer.id);
     const valuesToUse = storeValues ?? layer.comp.defaultValues;
     layer.config.setValues(valuesToUse);
     hasInitialized.current = true;
@@ -98,7 +63,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
     <Collapsible
       open={layer.isExpanded}
       onOpenChange={(open) => {
-        setIsLayerExpanded(layer.id, open);
+        editorControl.project.setLayerExpanded(layer.id, open);
       }}
       className="w-full">
       <div className="group relative">
@@ -144,7 +109,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                     variant="defaultLighter"
                     tooltip="Delete layer"
                     className="pointer-events-auto"
-                    onClick={() => removeLayer(layer.id)}>
+                    onClick={() => editorControl.project.removeLayer(layer.id)}>
                     <Trash className="h-6 w-6" />
                   </Button>
                   <Button
@@ -152,7 +117,9 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                     variant="defaultLighter"
                     tooltip="Duplicate layer"
                     className="pointer-events-auto"
-                    onClick={() => duplicateLayer(layer.id)}>
+                    onClick={() =>
+                      editorControl.project.duplicateLayer(layer.id)
+                    }>
                     <Layers2 className="h-6 w-6" />
                   </Button>
                   <Button
@@ -164,7 +131,10 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                       layer.isDebugEnabled ? 'border border-white' : '',
                     )}
                     onClick={() =>
-                      setDebugEnabled(layer.id, !layer.isDebugEnabled)
+                      editorControl.project.setLayerDebugEnabled(
+                        layer.id,
+                        !layer.isDebugEnabled,
+                      )
                     }>
                     <Bug className="h-6 w-6" />
                   </Button>
@@ -175,7 +145,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                     className="pointer-events-auto"
                     onClick={() => {
                       const currentValues =
-                        useLayerValuesStore.getState().values[layer.id] ??
+                        getCanonicalLayerValues(layer.id) ??
                         layer.comp.defaultValues;
                       const json = JSON.stringify(currentValues, null, 2);
                       navigator.clipboard.writeText(json);
@@ -222,83 +192,8 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                   noItemsMessage="No presets available."
                   keepOpenOnSelect={true}
                   onSelect={(preset) => {
-                    // Apply config values
-                    layer.config.setValues(preset.values);
                     setSelectedPreset(preset);
-                    useLayerValuesStore
-                      .getState()
-                      .setLayerValues(layer.id, preset.values);
-                    updateLayerComp(layer.id, {
-                      ...layer.comp,
-                      defaultValues: preset.values,
-                    });
-
-                    // Handle networks: clear existing ones and apply new preset networks
-                    // Defer to avoid setState during render
-                    setTimeout(() => {
-                      const networkStore = useNodeNetworkStore.getState();
-
-                      // Get all parameter IDs for this layer
-                      const allParameterIds = getParameterIdsFromConfig(
-                        layer.config,
-                      );
-
-                      // Build a set of parameter paths that should have networks after applying preset
-                      const presetNetworkPaths = new Set(
-                        preset.networks ? Object.keys(preset.networks) : [],
-                      );
-
-                      // Disable/remove networks that aren't in the preset
-                      allParameterIds.forEach((parameterId) => {
-                        // Extract the parameter path from the ID (format: "layerId:paramPath")
-                        const paramPath = parameterId
-                          .split(':')
-                          .slice(1)
-                          .join('.');
-
-                        // If this parameter's network isn't in the preset, disable it
-                        if (!presetNetworkPaths.has(paramPath)) {
-                          const existingNetwork =
-                            networkStore.networks[parameterId];
-                          if (existingNetwork) {
-                            networkStore.setNetwork(parameterId, {
-                              ...existingNetwork,
-                              isEnabled: false,
-                            });
-                          }
-                        }
-                      });
-
-                      // Apply network presets if defined
-                      if (preset.networks) {
-                        const applyPresetToNetwork =
-                          networkStore.applyPresetToNetwork;
-
-                        Object.entries(preset.networks).forEach(
-                          ([paramPath, presetId]) => {
-                            // Get the parameter type from the config
-                            const paramType = getParameterType(
-                              layer.config,
-                              paramPath,
-                            );
-
-                            if (paramType) {
-                              // Use colon separator to match parameter ID format
-                              // Replace dots with colons for nested paths (e.g., "group.param" -> "layerId:group:param")
-                              const parameterId = `${layer.id}:${paramPath.replace(/\./g, ':')}`;
-                              const nodeHandleType =
-                                safeVTypeToNodeHandleType(paramType);
-
-                              applyPresetToNetwork(
-                                parameterId,
-                                presetId as string,
-                                nodeHandleType,
-                              );
-                            }
-                          },
-                        );
-                      }
-                    }, 0);
+                    editorControl.project.applyLayerPreset(layer.id, preset);
                   }}
                 />
               )}
