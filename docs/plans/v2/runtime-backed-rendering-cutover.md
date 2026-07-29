@@ -49,7 +49,7 @@ The mixed fallback attachment is:
 | Morph Shapes | Three `init3D`/`draw3D` | persistent Three scene | Instancing, procedural/model/text sources, asset loading, custom material |
 | Neural Network | Three `init3D`/`draw3D` | persistent Three scene | Procedural seeded topology, custom shaders, activation motion, bloom and depth-of-field |
 | Noise Shader | package runtime | persistent shader scene | Complete: package-owned GLSL and deterministic grouped uniforms; historical callbacks removed |
-| Orbiting Cubes | Three `init3D`/`draw3D` | persistent Three scene | Instancing, lighting, camera and node-driven movement |
+| Orbiting Cubes | package runtime | persistent Three scene | Complete: seeded topology, retained instancing, lighting, canonical camera orbit, and node-driven parameters; historical callbacks removed |
 | Particle System | package runtime | persistent Three scene | Complete: analytic seeded instancing, physics, colors, and blend modes; historical callbacks removed |
 | Stage Scene | Three `init3D`/`draw3D` | persistent Three scene | Instancing, lighting, fog, camera path, bloom and feature-driven staging |
 | Fullscreen Shader | package runtime | persistent shader scene | Complete: package-owned shader selection and deterministic uniforms; historical callbacks removed |

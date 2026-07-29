@@ -101,6 +101,20 @@
     the new analytic program
   - recorded evidence in
     `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-6.md`
+- completed the deterministic Orbiting Cubes migration:
+  - moved all six seeded neuron-topology generators into package terrain
+  - added a retained Three program with one reusable instanced mesh, geometry,
+    material, three spotlights, ambient light, and camera
+  - made topology regeneration update the retained instance buffer instead of
+    rebuilding GPU resources
+  - derived structure rotation and multi-axis camera orbit from canonical time
+  - removed editor-owned procedural generation and Three callbacks while
+    preserving the Seed and Spacing node-network authoring definitions
+  - browser-verified initial output, orbit playback, paused seed regeneration,
+    synchronized thumbnail, Seed node workspace opening, and a clean console
+  - recorded a `0.30 kB` raw / `0.26 kB` gzip studio entry-chunk increase
+  - recorded evidence in
+    `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-7.md`
 - established the autonomous V2 calibration foundation:
   - pinned the immutable final pre-V2 parity reference to
     `e806fbc10980615588b52ff574bc923c6f00f35e`

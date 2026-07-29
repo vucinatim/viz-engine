@@ -5,6 +5,7 @@ import {
   featureExtractionBarsComponent,
   fullscreenShaderComponent,
   noiseShaderComponent,
+  orbitingCubesComponent,
   particleSystemComponent,
   simpleCubeComponent,
   strobeLightComponent,
@@ -556,6 +557,70 @@ describe("Viz component authoring foundation", () => {
       rotationX: 0.5,
       rotationY: 1,
       rotationZ: -0.25,
+    });
+  });
+
+  it("derives Orbiting Cubes scene state from canonical frame time", () => {
+    const project: VizProjectDocument = {
+      schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
+      projectId: "project-orbiting-cubes",
+      name: "Orbiting Cubes",
+      timeline: { fps: 60, durationInFrames: 180 },
+      viewport: { width: 1280, height: 720 },
+      layerOrder: ["layer-orbiting-cubes"],
+      layers: [
+        {
+          id: "layer-orbiting-cubes",
+          name: "Orbiting Cubes",
+          componentId: "orbiting-cubes",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          settings: {
+            seed: 3499,
+            maxCubes: 150,
+            fractalDepth: 5,
+            spacing: 0.8,
+            orbitSpeed: 0.4,
+            orbitRadius: 9,
+            rotationSpeed: 0.2,
+          },
+        },
+      ],
+    };
+    const session = createVizRuntimeSession({
+      project,
+      mode: "render",
+      seed: "orbiting-cubes-seed",
+    });
+    const createPlan = () =>
+      createVizRenderPlan({
+        session,
+        frame: 60,
+        registry: createCoreComponentRegistry(),
+      });
+    const plan = createPlan();
+
+    expect(
+      createCoreComponentRegistry().get(orbitingCubesComponent.id),
+    ).toBe(orbitingCubesComponent);
+    expect(plan).toEqual(createPlan());
+
+    const node = plan.layers[0]?.node;
+    if (!node || node.kind !== "three-program") {
+      throw new Error("Expected Orbiting Cubes Three program node.");
+    }
+
+    expect(node.programId).toBe("viz-core/orbiting-cubes/v1");
+    expect(node.parameters).toMatchObject({
+      time: 1,
+      seed: 3499,
+      maxCubes: 150,
+      fractalDepth: 5,
+      spacing: 0.8,
+      orbitSpeed: 0.4,
+      orbitRadius: 9,
+      rotationSpeed: 0.2,
     });
   });
 });

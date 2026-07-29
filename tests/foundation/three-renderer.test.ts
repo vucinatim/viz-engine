@@ -433,4 +433,98 @@ describe("Viz Three renderer proof", () => {
     expect((mesh as InstancedMesh).count).toBe(20);
     expect(instance?.root.rotation.y).toBe(2);
   });
+
+  it("retains Orbiting Cubes resources while deterministically regenerating structure data", () => {
+    const createOrbitPlan = (
+      time: number,
+      seed: number,
+      spacing: number,
+    ): VizRenderPlan => ({
+      frameContext: {
+        frame: Math.round(time * 60),
+        fps: 60,
+        durationInFrames: 180,
+        timeInSeconds: time,
+        deltaTimeSeconds: 1 / 60,
+        isFirstFrame: time === 0,
+        isLastFrame: false,
+        mode: "live",
+        seed: "orbiting-cubes",
+      },
+      viewport: { width: 1280, height: 720, backgroundColor: "#000000" },
+      materializedAssets: [],
+      issues: [],
+      layers: [
+        {
+          layerId: "layer-orbiting-cubes",
+          componentId: "orbiting-cubes",
+          rendererFamily: "three",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          resolvedInputs: {},
+          node: {
+            kind: "three-program",
+            programId: "viz-core/orbiting-cubes/v1",
+            parameters: {
+              time,
+              seed,
+              maxCubes: 150,
+              fractalDepth: 5,
+              cubeColor: "#1a1a2e",
+              cubeSize: 0.45,
+              metalness: 0.95,
+              roughness: 0.5,
+              light1Color: "#FF00FF",
+              light2Color: "#00FFFF",
+              light3Color: "#FFFF00",
+              lightIntensity: 500,
+              ambientBrightness: 185,
+              spacing,
+              orbitSpeed: 0.3,
+              orbitRadius: 8,
+              rotationSpeed: 0.1,
+            },
+          },
+        },
+      ],
+    });
+    const firstPlan = createOrbitPlan(1, 3499, 0.65);
+    const repeatedGraph = createVizThreeCompositorGraph(firstPlan);
+    const graph = createVizThreeCompositorGraph(firstPlan);
+    const layer = graph.layers[0]!;
+    const instance = layer.programInstance;
+    const cubes = instance?.root.userData.cubes as InstancedMesh;
+    const repeatedCubes = repeatedGraph.layers[0]!.programInstance?.root
+      .userData.cubes as InstancedMesh;
+    const geometry = cubes.geometry;
+    const material = cubes.material;
+    const initialMatrices = Array.from(
+      cubes.instanceMatrix.array.slice(0, cubes.count * 16),
+    );
+
+    expect(cubes.count).toBeGreaterThan(0);
+    expect(initialMatrices).toEqual(
+      Array.from(
+        repeatedCubes.instanceMatrix.array.slice(
+          0,
+          repeatedCubes.count * 16,
+        ),
+      ),
+    );
+    expect(
+      updateVizThreeCompositorGraph(
+        graph,
+        firstPlan,
+        createOrbitPlan(2, 3500, 0.8),
+      ),
+    ).toBe(true);
+    expect(layer.programInstance).toBe(instance);
+    expect(instance?.root.userData.cubes).toBe(cubes);
+    expect(cubes.geometry).toBe(geometry);
+    expect(cubes.material).toBe(material);
+    expect(instance?.root.userData.structure.rotation.y).toBe(0.2);
+    expect(Array.from(cubes.instanceMatrix.array.slice(0, cubes.count * 16))).not
+      .toEqual(initialMatrices);
+  });
 });
