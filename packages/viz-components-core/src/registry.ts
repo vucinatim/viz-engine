@@ -10,6 +10,7 @@ import { heartbeatMonitorComponent } from "./heartbeat-monitor.js";
 import { instancedSupercubeComponent } from "./instanced-supercube.js";
 import { lightTunnelComponent } from "./light-tunnel.js";
 import { morphShapesComponent } from "./morph-shapes.js";
+import { neuralNetworkComponent } from "./neural-network.js";
 import { noiseShaderComponent } from "./noise-shader.js";
 import { orbitingCubesComponent } from "./orbiting-cubes.js";
 import { particleSystemComponent } from "./particle-system.js";
@@ -35,6 +36,7 @@ export const coreComponents: VizComponentImplementation[] = [
   instancedSupercubeComponent,
   lightTunnelComponent,
   morphShapesComponent,
+  neuralNetworkComponent,
   noiseShaderComponent,
   orbitingCubesComponent,
   particleSystemComponent,

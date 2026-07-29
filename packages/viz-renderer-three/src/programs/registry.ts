@@ -8,6 +8,7 @@ import { createOrbitingCubesProgram } from "./orbiting-cubes.js";
 import { createInstancedSupercubeProgram } from "./instanced-supercube.js";
 import { createLightTunnelProgram } from "./light-tunnel.js";
 import { createMorphShapesProgram } from "./morph-shapes.js";
+import { createNeuralNetworkProgram } from "./neural-network.js";
 import type {
   VizThreeProgramFactory,
   VizThreeProgramInstance,
@@ -20,6 +21,7 @@ const programFactories = new Map<string, VizThreeProgramFactory>([
   ["viz-core/instanced-supercube/v1", createInstancedSupercubeProgram],
   ["viz-core/light-tunnel/v1", createLightTunnelProgram],
   ["viz-core/morph-shapes/v1", createMorphShapesProgram],
+  ["viz-core/neural-network/v1", createNeuralNetworkProgram],
 ]);
 
 export const createVizThreeProgramInstance = ({

@@ -8,6 +8,7 @@ export * from "./heartbeat-monitor.js";
 export * from "./instanced-supercube.js";
 export * from "./light-tunnel.js";
 export * from "./morph-shapes.js";
+export * from "./neural-network.js";
 export * from "./noise-shader.js";
 export * from "./orbiting-cubes.js";
 export * from "./particle-system.js";

@@ -13,12 +13,13 @@ import { LayerData } from '@/lib/stores/editor-layer-projection-store';
 import type { VizSessionRuntimePreviewFrame } from '@/lib/viz-session/types';
 import { forwardRef, memo, useEffect, useRef } from 'react';
 
+const EMPTY_MIRROR_CANVASES: HTMLCanvasElement[] = [];
+
 interface LayerRendererProps {
   layer: LayerData;
 }
 
 const LayerRenderer = ({ layer }: LayerRendererProps) => {
-  const emptyMirrorCanvasesRef = useRef<HTMLCanvasElement[]>([]);
   const audioAnalyzer = useAudioEngineStore((s) => s.audioAnalyzer);
   const resolutionMultiplier = useEditorStore((s) => s.resolutionMultiplier);
   const registerLayerRenderFunction = useEditorRuntimePreviewAttachmentStore(
@@ -28,7 +29,9 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     (s) => s.unregisterLayerRenderFunction,
   );
   const mirrorCanvases = useEditorRuntimePreviewAttachmentStore(
-    (state) => state.mirrorCanvasesByLayerId[layer.id] ?? [],
+    (state) =>
+      state.mirrorCanvasesByLayerId[layer.id] ??
+      EMPTY_MIRROR_CANVASES,
   );
 
   // Profiler tracking for this layer
@@ -77,7 +80,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
 
   // Update refs when values change (but don't trigger effect recreation)
   useEffect(() => {
-    mirrorCanvasesRef.current = mirrorCanvases ?? emptyMirrorCanvasesRef.current;
+    mirrorCanvasesRef.current = mirrorCanvases;
   }, [mirrorCanvases]);
 
   useEffect(() => {

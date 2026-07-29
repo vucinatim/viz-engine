@@ -3,6 +3,7 @@ import {
   type Camera,
   type Scene,
   ShaderMaterial,
+  type ToneMapping,
   UniformsUtils,
   Vector2,
   type WebGLRenderTarget,
@@ -24,6 +25,8 @@ export interface VizThreePostProcessingSettings {
   depthOfFieldFocus: number;
   depthOfFieldAperture: number;
   depthOfFieldMaxBlur: number;
+  toneMapping?: ToneMapping;
+  toneMappingExposure?: number;
 }
 
 export interface VizThreePostProcessingPipeline {
@@ -141,8 +144,10 @@ export const createVizThreePostProcessingPipeline = ({
     render(renderer, renderTarget) {
       const previousToneMapping = renderer.toneMapping;
       const previousExposure = renderer.toneMappingExposure;
-      renderer.toneMapping = ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.2;
+      renderer.toneMapping =
+        settings.toneMapping ?? ACESFilmicToneMapping;
+      renderer.toneMappingExposure =
+        settings.toneMappingExposure ?? 1.2;
 
       if (!settings.bloomEnabled && !settings.depthOfFieldEnabled) {
         renderer.setRenderTarget(renderTarget);

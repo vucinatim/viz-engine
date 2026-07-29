@@ -70,6 +70,10 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
   bake-time checkpoints land: fixed-step replay plus explicit runtime-session
   checkpoints first, then deliberate artifact-backed history optimizations,
   rather than random-access shortcuts that obscure scene semantics.
+- Move bounded event-heavy program state such as Neural Network signal waves
+  onto explicit bake/checkpoint artifacts when production scenes need dense
+  long-lived triggering. The retained live program deliberately caps visible
+  signal instances instead of recreating V1's unbounded mesh allocation.
 - Keep the new project action surface pure and shared across editor, CLI, and
   future agent tooling so undo/history, collaboration, and AI mutation do not
   fork into app-specific mutation paths.

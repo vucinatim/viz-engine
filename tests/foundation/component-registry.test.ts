@@ -8,6 +8,7 @@ import {
   instancedSupercubeComponent,
   lightTunnelComponent,
   morphShapesComponent,
+  neuralNetworkComponent,
   noiseShaderComponent,
   orbitingCubesComponent,
   particleSystemComponent,
@@ -1200,5 +1201,129 @@ describe("Viz component authoring foundation", () => {
       Math.cos(0.025 / 2),
       12,
     );
+  });
+
+  it("projects deterministic Neural Network topology and trigger history", () => {
+    const triggerNode: VizNodeImplementation = {
+      type: "test-neural-trigger",
+      name: "Test Neural Trigger",
+      category: "pure",
+      outputs: [{ key: "value", label: "Value" }],
+      evaluate: ({ frameContext }) => ({
+        value:
+          frameContext.frame === 1 ||
+          frameContext.frame === 2,
+      }),
+    };
+    const project: VizProjectDocument = {
+      schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
+      projectId: "project-neural-network",
+      name: "Neural Network",
+      timeline: { fps: 60, durationInFrames: 180 },
+      viewport: { width: 1280, height: 720 },
+      layerOrder: ["layer-neural"],
+      layers: [
+        {
+          id: "layer-neural",
+          name: "Neural Network",
+          componentId: "neural-network",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          settings: {
+            neuronCount: 6,
+            seed: 42,
+            tubeRadius: 0.25,
+            neuronColor: "#00ced1",
+            somaEmission: "#ff8ac9",
+            emissiveIntensity: 2,
+            metalness: 0,
+            roughness: 0.9,
+            fresnelPower: 3,
+            growth: 1,
+            dendriteReach: 40,
+            trigger: false,
+            signalSpeed: 20,
+            signalSize: 0.4,
+            activationDecay: 2,
+            postProcessing: {
+              bloom: true,
+              bloomStrength: 0.5,
+              bloomRadius: 0.8,
+              bloomThreshold: 0.3,
+              depthOfField: true,
+              dofFocus: 10,
+              dofAperture: 0.0005,
+            },
+          },
+          inputs: {
+            trigger: {
+              kind: "graph-output",
+              graphId: "graph-neural",
+              output: "value",
+            },
+          },
+        },
+      ],
+      graphs: [
+        {
+          id: "graph-neural",
+          name: "Neural trigger",
+          nodes: [
+            { id: "node-trigger", type: "test-neural-trigger" },
+          ],
+          outputs: [
+            {
+              key: "value",
+              nodeId: "node-trigger",
+              output: "value",
+            },
+          ],
+        },
+      ],
+    };
+    const session = createVizRuntimeSession({
+      project,
+      mode: "render",
+      seed: "neural-network-seed",
+    });
+    const createPlan = () =>
+      createVizRenderPlan({
+        session,
+        frame: 3,
+        registry: createCoreComponentRegistry(),
+        nodeRegistry: createVizNodeRegistry([triggerNode]),
+      });
+    const plan = createPlan();
+
+    expect(
+      createCoreComponentRegistry().get(neuralNetworkComponent.id),
+    ).toBe(neuralNetworkComponent);
+    expect(plan).toEqual(createPlan());
+    expect(plan.issues).toEqual([]);
+
+    const node = plan.layers[0]?.node;
+    if (!node || node.kind !== "three-program") {
+      throw new Error("Expected Neural Network Three program node.");
+    }
+    expect(node.programId).toBe("viz-core/neural-network/v1");
+    expect(node.parameters).toMatchObject({
+      time: 0.05,
+      neuronCount: 6,
+      seed: 42,
+      tubeRadius: 0.25,
+      dendriteReach: 40,
+      triggerEvents: [
+        {
+          age: 2 / 60,
+          speed: 20,
+          size: 0.4,
+          color: "#ff8ac9",
+        },
+      ],
+      activationDecay: 2,
+      bloomEnabled: true,
+      depthOfFieldEnabled: true,
+    });
   });
 });

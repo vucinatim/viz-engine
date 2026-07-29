@@ -1063,4 +1063,175 @@ describe("Viz Three renderer proof", () => {
     );
     expect(Math.max(...textTranslations)).toBeGreaterThan(3.5);
   });
+
+  it("retains the Neural Network scene while deterministically rebuilding topology and signals", () => {
+    const createNeuralPlan = ({
+      frame,
+      neuronCount,
+      growth,
+      triggerAge,
+    }: {
+      frame: number;
+      neuronCount: number;
+      growth: number;
+      triggerAge?: number;
+    }): VizRenderPlan => ({
+      frameContext: {
+        frame,
+        fps: 60,
+        durationInFrames: 180,
+        timeInSeconds: frame / 60,
+        deltaTimeSeconds: 1 / 60,
+        isFirstFrame: frame === 0,
+        isLastFrame: false,
+        mode: "render",
+        seed: "neural-network",
+      },
+      viewport: {
+        width: 1280,
+        height: 720,
+        backgroundColor: "#000000",
+      },
+      materializedAssets: [],
+      issues: [],
+      layers: [
+        {
+          layerId: "layer-neural",
+          componentId: "neural-network",
+          rendererFamily: "three",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          resolvedInputs: {},
+          node: {
+            kind: "three-program",
+            programId: "viz-core/neural-network/v1",
+            parameters: {
+              time: frame / 60,
+              neuronCount,
+              seed: 42,
+              tubeRadius: 0.25,
+              neuronColor: "#00ced1",
+              somaEmission: "#ff8ac9",
+              emissiveIntensity: 2,
+              metalness: 0,
+              roughness: 0.9,
+              fresnelPower: 3,
+              growth,
+              dendriteReach: 40,
+              triggerEvents:
+                triggerAge === undefined
+                  ? []
+                  : [
+                      {
+                        age: triggerAge,
+                        speed: 30,
+                        size: 0.2,
+                        color: "#ff8ac9",
+                      },
+                    ],
+              activationDecay: 2,
+              bloomEnabled: false,
+              bloomStrength: 0.2,
+              bloomRadius: 0.8,
+              bloomThreshold: 0.3,
+              depthOfFieldEnabled: false,
+              depthOfFieldFocus: 10,
+              depthOfFieldAperture: 0.0005,
+            },
+          },
+        },
+      ],
+    });
+    const firstPlan = createNeuralPlan({
+      frame: 0,
+      neuronCount: 4,
+      growth: 1,
+    });
+    const signalPlan = createNeuralPlan({
+      frame: 12,
+      neuronCount: 4,
+      growth: 1,
+      triggerAge: 0.2,
+    });
+    const structuralPlan = createNeuralPlan({
+      frame: 30,
+      neuronCount: 5,
+      growth: 0.5,
+      triggerAge: 0.5,
+    });
+    const graph = createVizThreeCompositorGraph(firstPlan);
+    const repeatedGraph = createVizThreeCompositorGraph(firstPlan);
+    const layer = graph.layers[0]!;
+    const instance = layer.programInstance!;
+    const dendrites = instance.root.userData
+      .dendriteMesh as InstancedMesh;
+    const somas = instance.root.userData
+      .somaInstances as InstancedMesh;
+    const signals = instance.root.userData
+      .signalInstances as InstancedMesh;
+    const repeated = repeatedGraph.layers[0]!.programInstance!;
+    const dendriteMaterial = dendrites.material;
+    const somaGeometry = somas.geometry;
+    const signalGeometry = signals.geometry;
+    const initialDendriteGeometry = dendrites.geometry;
+
+    expect(instance.programId).toBe("viz-core/neural-network/v1");
+    expect(somas.count).toBe(4);
+    expect(instance.root.userData.pathCount).toBeGreaterThan(0);
+    expect(instance.root.userData.neuronPositions).toEqual(
+      repeated.root.userData.neuronPositions,
+    );
+    expect(
+      Array.from(
+        dendrites.geometry.attributes.position!.array,
+      ),
+    ).toEqual(
+      Array.from(
+        (
+          repeated.root.userData.dendriteMesh as InstancedMesh
+        ).geometry.attributes.position!.array,
+      ),
+    );
+
+    expect(
+      updateVizThreeCompositorGraph(
+        graph,
+        firstPlan,
+        signalPlan,
+      ),
+    ).toBe(true);
+    expect(layer.programInstance).toBe(instance);
+    expect(instance.root.userData.dendriteMesh).toBe(dendrites);
+    expect(instance.root.userData.somaInstances).toBe(somas);
+    expect(instance.root.userData.signalInstances).toBe(signals);
+    expect(dendrites.geometry).toBe(initialDendriteGeometry);
+    expect(dendrites.material).toBe(dendriteMaterial);
+    expect(somas.geometry).toBe(somaGeometry);
+    expect(signals.geometry).toBe(signalGeometry);
+    expect(signals.count).toBeGreaterThan(0);
+    expect(instance.root.userData.activationLevel).toBeCloseTo(
+      0.9,
+      12,
+    );
+    expect(instance.root.rotation.y).toBeCloseTo(0.01, 12);
+
+    expect(
+      updateVizThreeCompositorGraph(
+        graph,
+        signalPlan,
+        structuralPlan,
+      ),
+    ).toBe(true);
+    expect(instance.root.userData.dendriteMesh).toBe(dendrites);
+    expect(instance.root.userData.somaInstances).toBe(somas);
+    expect(instance.root.userData.signalInstances).toBe(signals);
+    expect(dendrites.geometry).not.toBe(initialDendriteGeometry);
+    expect(dendrites.material).toBe(dendriteMaterial);
+    expect(somas.geometry).toBe(somaGeometry);
+    expect(signals.geometry).toBe(signalGeometry);
+    expect(somas.count).toBe(5);
+    expect(instance.root.userData.pathCount).toBeGreaterThan(0);
+    expect(instance.root.rotation.y).toBeCloseTo(0.025, 12);
+  });
 });

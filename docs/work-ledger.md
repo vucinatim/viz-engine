@@ -204,6 +204,35 @@
   - passed the full foundation gate with 31 test files and 121 tests
   - recorded evidence in
     `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-11.md`
+- completed the deterministic Neural Network migration:
+  - moved seeded neuron positioning, connection topology, organic dendrite
+    paths, materials, activation, traveling signals, rotation, bloom, and
+    depth-of-field semantics into package terrain
+  - replaced the historical per-neuron/per-path mesh and material fan-out with
+    one merged dendrite surface, one retained soma instance batch, one retained
+    activation batch, and fixed retained signal/halo batches
+  - reconstructed trigger rising edges from canonical resolved-setting history
+    and made orb travel, fading, activation decay, and network rotation direct
+    functions of canonical event age and frame time
+  - extended the shared post-processing pipeline with explicit tone-mapping
+    policy so Neural Network retains its intended linear tone mapping without
+    changing Light Tunnel
+  - removed all Neural Network editor-owned Three callbacks and helper logic
+  - caught and fixed two signal-shader compilation/blending defects through
+    real WebGL playback instead of accepting renderer-object tests alone
+  - caught and fixed a runtime-layer visibility loop by stabilizing the empty
+    mirror-canvas selector and profiler attachment identity
+  - added a regression test proving profiler attachment identity survives
+    unrelated React renders
+  - browser-verified default output, neuron-count and growth regeneration,
+    paused activation, visible traveling signals, playback, post-processing,
+    hide/show lifecycle, restored defaults, and a clean console
+  - observed the studio entry chunk change by `-0.69 kB` raw /
+    `-0.29 kB` gzip while the shared Three-extras chunk grew by `3.78 kB` raw /
+    `0.86 kB` gzip
+  - passed the full foundation gate with 32 test files and 124 tests
+  - recorded evidence in
+    `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-12.md`
 - established the autonomous V2 calibration foundation:
   - pinned the immutable final pre-V2 parity reference to
     `e806fbc10980615588b52ff574bc923c6f00f35e`

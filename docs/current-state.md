@@ -192,14 +192,14 @@ The biggest remaining architecture gaps are:
 - the preserved V1 node canvas still needs an executable `NodeNetwork`
   projection over canonical graph documents until it consumes the package
   graph model and execution registry directly
-- two preserved V1 components still render through their historical
-  `draw3D` paths; `Curve Spectrum`, `Debug Animation`,
+- one preserved V1 component still renders through its historical
+  `draw3D` path; `Curve Spectrum`, `Debug Animation`,
   `Feature Extraction Bars`, `Strobe Light`, `Simple Cube`, and
   `Fullscreen Shader`, `Noise Shader`, `Particle System`, and
   `Orbiting Cubes`, `Heartbeat Monitor`, `Instanced Supercube`, and
-  `Light Tunnel`, and `Morph Shapes` now have package-runtime-backed editor
-  paths, but `Neural Network` and `Stage Scene` still block the completed
-  component migration
+  `Light Tunnel`, `Morph Shapes`, and `Neural Network` now have
+  package-runtime-backed editor paths, but `Stage Scene` still blocks the
+  completed component migration
 - the temporary per-component runtime preview bridge remains necessary until
   those historical render paths are replaced by package-runtime components
 
@@ -227,7 +227,7 @@ The renderer contract also has a persistent Three program node:
   accumulated browser `dt`
 
 Runtime-backed component-catalog previews now use that same package registry
-and renderer attachment. All thirteen migrated editor definitions now contain
+and renderer attachment. All fourteen migrated editor definitions now contain
 only authoring metadata and parameter schemas; their visual semantics live
 entirely in package terrain. `Fullscreen Shader` GLSL source moved there as
 part of the same cutover.
@@ -272,6 +272,21 @@ rotation, material mode, and shape transforms are driven by deterministic
 render-plan data. The Three program can receive canonical materialized binary
 assets and explicitly invalidates paused previews when asynchronous shape
 generation finishes instead of depending on playback or polling.
+
+Neural Network now generates its seeded neuron topology in package terrain and
+collapses the historical per-neuron/per-dendrite material and mesh fan-out into
+one merged dendrite surface plus retained soma, activation, signal, and halo
+instance batches. Trigger edges are reconstructed from canonical resolved
+settings, traveling orbs and activation decay are direct functions of trigger
+age, and network rotation derives from canonical time. Its bloom and depth of
+field use the shared post-processing attachment with the scene's intended
+linear tone mapping.
+
+Browser validation of the Neural Network slice also exposed and fixed an
+attachment lifecycle regression: the layer renderer's empty mirror-canvas
+selector and profiler object are now referentially stable, so hiding and
+showing a runtime-backed layer no longer enters an unregister/re-register
+maximum-update-depth loop.
 
 ## Autonomous Calibration Foundation
 
