@@ -430,14 +430,14 @@ export const fullscreenShaderComponent: VizComponentImplementation = {
   name: 'Fullscreen Shader',
   rendererFamily: 'three',
   description: 'Deterministic package-runtime fullscreen GLSL shaders.',
-  render: ({ viewport, frameContext, layer }) => {
+  render: ({ viewport, frameContext, layer, settings }) => {
     const shaderName = asString(
-      layer.settings?.shader,
+      settings.shader,
       'Radial Ripple Grid',
     );
     const fragmentShader =
       fullscreenShaderPrograms[shaderName] ?? radialRippleGrid;
-    const speed = asNumber(layer.settings?.speed, 1);
+    const speed = asNumber(settings.speed, 1);
 
     return {
       kind: 'shader',
@@ -453,24 +453,24 @@ export const fullscreenShaderComponent: VizComponentImplementation = {
         uTime: frameContext.timeInSeconds * speed,
         uColor: {
           type: 'color',
-          value: asString(layer.settings?.color, '#00ffff'),
+          value: asString(settings.color, '#00ffff'),
         },
         uResolution: {
           type: 'vec2',
           value: [viewport.width, viewport.height],
         },
-        uScale: asNumber(layer.settings?.scale, 0.5),
-        uIntensity: asNumber(layer.settings?.intensity, 0.8),
+        uScale: asNumber(settings.scale, 0.5),
+        uIntensity: asNumber(settings.intensity, 0.8),
         uOffset: {
           type: 'vec2',
           value: [
-            asNumber(layer.settings?.offsetX, 0),
-            asNumber(layer.settings?.offsetY, 0),
+            asNumber(settings.offsetX, 0),
+            asNumber(settings.offsetY, 0),
           ],
         },
-        uSeed: asNumber(layer.settings?.seed, 0),
-        uScanIntensity: asNumber(layer.settings?.scanIntensity, 0.7),
-        uWaveIntensity: asNumber(layer.settings?.waveIntensity, 0.6),
+        uSeed: asNumber(settings.seed, 0),
+        uScanIntensity: asNumber(settings.scanIntensity, 0.7),
+        uWaveIntensity: asNumber(settings.waveIntensity, 0.6),
       },
     } satisfies VizRenderShaderNode;
   },

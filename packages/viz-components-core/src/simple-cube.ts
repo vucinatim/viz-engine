@@ -9,15 +9,15 @@ export const simpleCubeComponent: VizComponentImplementation = {
   name: "Simple Cube",
   rendererFamily: "three",
   description: "Deterministic package-runtime rotating cube scene.",
-  render: ({ frameContext, layer }) => {
-    const color = asString(layer.settings?.color, "#FF00FF");
-    const size = Math.max(0.1, asNumber(layer.settings?.size, 1.5));
+  render: ({ frameContext, layer, settings }) => {
+    const color = asString(settings.color, "#FF00FF");
+    const size = Math.max(0.1, asNumber(settings.size, 1.5));
     const rotationSpeedX = asNumber(
-      layer.settings?.rotationSpeedX,
+      settings.rotationSpeedX,
       1,
     );
     const rotationSpeedY = asNumber(
-      layer.settings?.rotationSpeedY,
+      settings.rotationSpeedY,
       1,
     );
 

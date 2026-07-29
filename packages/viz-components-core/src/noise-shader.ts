@@ -318,12 +318,12 @@ export const noiseShaderComponent: VizComponentImplementation = {
   name: "Noise Shader",
   rendererFamily: "three",
   description: "Deterministic package-runtime procedural noise shader.",
-  render: ({ viewport, frameContext, layer }) => {
-    const noise = asRecord(layer.settings?.noise);
-    const animation = asRecord(layer.settings?.animation);
-    const distortion = asRecord(layer.settings?.distortion);
-    const color = asRecord(layer.settings?.color);
-    const output = asRecord(layer.settings?.output);
+  render: ({ viewport, frameContext, layer, settings }) => {
+    const noise = asRecord(settings.noise);
+    const animation = asRecord(settings.animation);
+    const distortion = asRecord(settings.distortion);
+    const color = asRecord(settings.color);
+    const output = asRecord(settings.output);
     const noiseType = asString(noise.type, "fbm");
     const colorMode = asString(color.mode, "gradient");
 

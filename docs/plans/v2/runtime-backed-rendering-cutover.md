@@ -42,7 +42,7 @@ The mixed fallback attachment is:
 | Curve Spectrum | package runtime | primitive 2D scene | Historical callback removed; remove bridge-specific spectrum injection when all layers use one session render plan |
 | Debug Animation | package runtime | primitive 2D scene | Complete: rectangles plus reusable text primitive; historical callback removed |
 | Feature Extraction Bars | package runtime | primitive 2D scene | Complete: rectangles plus reusable text primitive and five node-driven values; historical callback removed |
-| Heartbeat Monitor | stateful Canvas `draw` | temporal 2D scene | Deterministic input history and reusable path/glow representation |
+| Heartbeat Monitor | package runtime | temporal 2D scene | Complete: deterministic resolved-setting history, portable polyline/glow, retained Three line resources, historical callback removed |
 | Simple Cube | package runtime | persistent Three scene | Complete: deterministic persistent scene; historical callbacks removed |
 | Instanced Supercube | Three `init3D`/`draw3D` | persistent Three scene | Instancing, shadows, custom material shader, audio/config motion |
 | Light Tunnel | Three `init3D`/`draw3D` | persistent Three scene | Instancing, fog, lights, line geometry, bloom and depth-of-field |
@@ -69,9 +69,16 @@ vocabulary should stay intentionally small and renderer-independent:
 - circle
 - image
 - text
-- path/polyline when the temporal waveform slice is implemented
+- polyline with explicit stroke and glow semantics
 
 These nodes remain directly renderable by the SVG and Three adapters.
+
+Package components receive resolved settings rather than raw static settings.
+Canonical layer inputs override settings through colon-delimited paths, and a
+deterministic frame sampler supports temporal views without browser-owned
+history. The preserved editor's legacy node evaluator still has to converge on
+the package node registry before the temporary bridge can provide full
+historical node sampling.
 
 ### Persistent Three programs
 

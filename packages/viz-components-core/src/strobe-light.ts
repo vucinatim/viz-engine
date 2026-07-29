@@ -79,24 +79,24 @@ export const strobeLightComponent: VizComponentImplementation = {
   rendererFamily: "three",
   description:
     "Deterministic package-runtime fullscreen strobe shader.",
-  render: ({ viewport, frameContext, layer }) => {
-    const mode = asString(layer.settings?.mode, "Intensity");
-    const color = asString(layer.settings?.color, "#ffffff");
+  render: ({ viewport, frameContext, layer, settings }) => {
+    const mode = asString(settings.mode, "Intensity");
+    const color = asString(settings.color, "#ffffff");
     const intensity = Math.max(
       0,
-      asNumber(layer.settings?.intensity, 1),
+      asNumber(settings.intensity, 1),
     );
     const strength = Math.max(
       0,
-      Math.min(1, asNumber(layer.settings?.strength, 1)),
+      Math.min(1, asNumber(settings.strength, 1)),
     );
     const dutyCycle = Math.max(
       0,
-      Math.min(1, asNumber(layer.settings?.dutyCycle, 0.5)),
+      Math.min(1, asNumber(settings.dutyCycle, 0.5)),
     );
     const flashRate = Math.max(
       0,
-      Math.min(1, asNumber(layer.settings?.flashRate, 0.3)),
+      Math.min(1, asNumber(settings.flashRate, 0.3)),
     );
     const finalStrength = getStrobeStrength({
       mode,

@@ -84,4 +84,60 @@ describe("Viz SVG proof renderer", () => {
     expect(markup).toContain('text-anchor="middle"');
     expect(markup).toContain("Value &lt; 50 &amp; rising");
   });
+
+  it("renders portable polylines with round strokes and a glow pass", () => {
+    const renderPlan: VizRenderPlan = {
+      frameContext: {
+        frame: 2,
+        fps: 60,
+        durationInFrames: 120,
+        timeInSeconds: 2 / 60,
+        deltaTimeSeconds: 1 / 60,
+        isFirstFrame: false,
+        isLastFrame: false,
+        mode: "render",
+        seed: "polyline-node",
+      },
+      viewport: { width: 640, height: 360 },
+      materializedAssets: [],
+      issues: [],
+      layers: [
+        {
+          layerId: "polyline-layer",
+          componentId: "polyline-proof",
+          rendererFamily: "three",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          resolvedInputs: {},
+          node: {
+            kind: "polyline",
+            points: [
+              { x: 0, y: 180 },
+              { x: 1, y: 120 },
+              { x: 2, y: 220 },
+            ],
+            lineCap: "round",
+            lineJoin: "round",
+            style: {
+              stroke: "#34d399",
+              strokeWidth: 2,
+            },
+            glow: {
+              color: "#34d399",
+              blur: 10,
+              opacity: 0.18,
+            },
+          },
+        },
+      ],
+    };
+
+    const markup = renderVizRenderPlanToSvgMarkup(renderPlan);
+
+    expect(markup.match(/<polyline /g)).toHaveLength(2);
+    expect(markup).toContain('stroke-width="22"');
+    expect(markup).toContain('stroke-linecap="round"');
+    expect(markup).toContain("points=\"0,180 1,120 2,220\"");
+  });
 });

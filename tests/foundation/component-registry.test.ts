@@ -4,6 +4,7 @@ import {
   featureChannelBarsComponent,
   featureExtractionBarsComponent,
   fullscreenShaderComponent,
+  heartbeatMonitorComponent,
   noiseShaderComponent,
   orbitingCubesComponent,
   particleSystemComponent,
@@ -12,12 +13,19 @@ import {
 } from "@viz-engine/components-core";
 import type {
   VizComponentImplementation,
+  VizNodeImplementation,
   VizProjectDocument,
 } from "@viz-engine/contracts";
 import {
   VIZ_PROJECT_SCHEMA_VERSION,
 } from "@viz-engine/contracts";
-import { createVizRenderPlan, createVizRuntimeSession, createVizComponentRegistry } from "@viz-engine/runtime";
+import { createCoreNodeRegistry } from "@viz-engine/nodes-core";
+import {
+  createVizComponentRegistry,
+  createVizNodeRegistry,
+  createVizRenderPlan,
+  createVizRuntimeSession,
+} from "@viz-engine/runtime";
 import { describe, expect, it } from "vitest";
 
 describe("Viz component authoring foundation", () => {
@@ -622,5 +630,167 @@ describe("Viz component authoring foundation", () => {
       orbitRadius: 9,
       rotationSpeed: 0.2,
     });
+  });
+
+  it("applies canonical graph outputs to component settings before rendering", () => {
+    const project: VizProjectDocument = {
+      schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
+      projectId: "project-node-driven-simple-cube",
+      name: "Node-driven Simple Cube",
+      timeline: { fps: 60, durationInFrames: 120 },
+      viewport: { width: 1280, height: 720 },
+      layerOrder: ["layer-cube"],
+      layers: [
+        {
+          id: "layer-cube",
+          name: "Simple Cube",
+          componentId: "simple-cube",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          settings: {
+            size: 1,
+          },
+          inputs: {
+            size: {
+              kind: "graph-output",
+              graphId: "graph-size",
+              output: "value",
+            },
+          },
+        },
+      ],
+      graphs: [
+        {
+          id: "graph-size",
+          name: "Size",
+          nodes: [
+            {
+              id: "node-size",
+              type: "multiply",
+              inputs: {
+                value: { kind: "literal", value: 2 },
+                factor: { kind: "literal", value: 1.5 },
+              },
+            },
+          ],
+          outputs: [
+            {
+              key: "value",
+              nodeId: "node-size",
+              output: "value",
+            },
+          ],
+        },
+      ],
+    };
+    const plan = createVizRenderPlan({
+      session: createVizRuntimeSession({
+        project,
+        mode: "render",
+        seed: "node-driven-component-seed",
+      }),
+      frame: 0,
+      registry: createCoreComponentRegistry(),
+      nodeRegistry: createCoreNodeRegistry(),
+    });
+
+    expect(plan.issues).toEqual([]);
+    const node = plan.layers[0]?.node;
+    if (!node || node.kind !== "three-program") {
+      throw new Error("Expected Simple Cube Three program node.");
+    }
+    expect(node.parameters.size).toBe(3);
+  });
+
+  it("samples Heartbeat Monitor history from deterministic canonical frames", () => {
+    const frameNode: VizNodeImplementation = {
+      type: "test-frame",
+      name: "Test Frame",
+      category: "pure",
+      outputs: [{ key: "value", label: "Value" }],
+      evaluate: ({ frameContext }) => ({
+        value: frameContext.frame,
+      }),
+    };
+    const project: VizProjectDocument = {
+      schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
+      projectId: "project-heartbeat",
+      name: "Heartbeat",
+      timeline: { fps: 60, durationInFrames: 120 },
+      viewport: { width: 4, height: 100 },
+      layerOrder: ["layer-heartbeat"],
+      layers: [
+        {
+          id: "layer-heartbeat",
+          name: "Heartbeat Monitor",
+          componentId: "heartbeat-monitor",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          settings: {
+            yPosition: 50,
+            lineColor: "#34d399",
+            lineWidth: 2,
+          },
+          inputs: {
+            yPosition: {
+              kind: "graph-output",
+              graphId: "graph-heartbeat",
+              output: "value",
+            },
+          },
+        },
+      ],
+      graphs: [
+        {
+          id: "graph-heartbeat",
+          name: "Heartbeat Position",
+          nodes: [{ id: "node-frame", type: "test-frame" }],
+          outputs: [
+            {
+              key: "value",
+              nodeId: "node-frame",
+              output: "value",
+            },
+          ],
+        },
+      ],
+    };
+    const session = createVizRuntimeSession({
+      project,
+      mode: "render",
+      seed: "heartbeat-seed",
+    });
+    const createPlan = () =>
+      createVizRenderPlan({
+        session,
+        frame: 5,
+        registry: createCoreComponentRegistry(),
+        nodeRegistry: createVizNodeRegistry([frameNode]),
+      });
+    const plan = createPlan();
+
+    expect(
+      createCoreComponentRegistry().get(heartbeatMonitorComponent.id),
+    ).toBe(heartbeatMonitorComponent);
+    expect(plan).toEqual(createPlan());
+    expect(plan.issues).toEqual([]);
+
+    const node = plan.layers[0]?.node;
+    if (!node || node.kind !== "group") {
+      throw new Error("Expected Heartbeat Monitor group node.");
+    }
+    const history = node.children[1];
+    if (!history || history.kind !== "polyline") {
+      throw new Error("Expected Heartbeat Monitor polyline.");
+    }
+
+    expect(history.points).toEqual([
+      { x: 0, y: 49.2 },
+      { x: 1, y: 48.8 },
+      { x: 2, y: 48.4 },
+      { x: 3, y: 48 },
+    ]);
   });
 });

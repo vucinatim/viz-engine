@@ -12,11 +12,11 @@ export const debugAnimationComponent: VizComponentImplementation = {
   rendererFamily: "three",
   description:
     "Runtime-backed diagnostic values, labels, and normalized value bar.",
-  render: ({ viewport, layer }) => {
-    const value = asNumber(layer.settings?.value, 50);
-    const midi = asNumber(layer.settings?.midi, 60);
-    const text = asString(layer.settings?.text, "");
-    const color = asString(layer.settings?.color, "#60a5fa");
+  render: ({ viewport, layer, settings }) => {
+    const value = asNumber(settings.value, 50);
+    const midi = asNumber(settings.midi, 60);
+    const text = asString(settings.text, "");
+    const color = asString(settings.color, "#60a5fa");
     const normalizedValue = Math.max(0, Math.min(100, value));
     const barHeight = 40;
     const barX = 40;

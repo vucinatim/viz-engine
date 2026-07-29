@@ -18,9 +18,9 @@ export const radialBloomComponent: VizComponentImplementation = {
       required: true,
     },
   ],
-  render: ({ viewport, layer, resolvedInputs }) => {
+  render: ({ viewport, layer, settings, resolvedInputs }) => {
     const intensity = Math.max(0, Math.min(asNumber(resolvedInputs.intensity?.value, 0), 1));
-    const color = asString(layer.settings?.color, "#3bd4ff");
+    const color = asString(settings.color, "#3bd4ff");
     const cx = viewport.width / 2;
     const cy = viewport.height * 0.42;
 

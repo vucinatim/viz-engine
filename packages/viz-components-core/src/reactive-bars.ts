@@ -24,11 +24,11 @@ export const reactiveBarsComponent: VizComponentImplementation = {
       required: true,
     },
   ],
-  render: ({ viewport, frameContext, layer, resolvedInputs }) => {
+  render: ({ viewport, frameContext, layer, settings, resolvedInputs }) => {
     const bass = Math.max(0, Math.min(asNumber(resolvedInputs.bass?.value, 0), 1));
     const loudness = Math.max(0, Math.min(asNumber(resolvedInputs.loudness?.value, 0), 1));
-    const barCount = Math.max(8, Math.min(96, Math.floor(asNumber(layer.settings?.barCount, 24))));
-    const accentColor = asString(layer.settings?.accentColor, "#88f3ff");
+    const barCount = Math.max(8, Math.min(96, Math.floor(asNumber(settings.barCount, 24))));
+    const accentColor = asString(settings.accentColor, "#88f3ff");
     const stageHeight = viewport.height * 0.34;
     const baseY = viewport.height - stageHeight - viewport.height * 0.08;
     const gap = 8;

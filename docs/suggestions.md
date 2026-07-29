@@ -4,10 +4,10 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
 
 ## Active Architectural Suggestions
 
-- Add stable render-node reuse and renderer-owned resource caches before
-  migrating more frequently changing primitive visuals. Recreating unchanged
-  text textures and geometry on every preview frame would undermine the
-  required responsiveness even though the render plans are deterministic.
+- Continue stable render-node reconciliation beyond the retained shader,
+  Three-program, and polyline paths. Frequently changing text and mixed
+  primitive groups can still recreate textures or geometry, which would
+  undermine required responsiveness even when plans are deterministic.
 - Continue the classified adapter burn-down from
   `phase-13-viz-session-runtime-preview-ownership.md`: replace each historical
   component render path with a package-runtime implementation, then delete the
@@ -23,8 +23,10 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
 - Finish moving component render meaning out of browser/editor adapters now
   that canonical document, runtime inspection, and browser attachment ownership
   are separated.
-- Turn the standalone node evaluator into the basis of the real runtime instead
-  of letting node execution remain editor-owned.
+- Move the preserved editor node projection onto the package execution registry
+  instead of letting node execution remain editor-owned. This is now required
+  not only for bridge deletion but for full historical sampling of
+  node-driven temporal visuals such as Heartbeat Monitor.
 - Define a render compatibility classification for components and nodes:
   `render-safe`, `bake-required`, `live-only`.
 - Introduce first-class baking contracts for audio features, simulation caches,

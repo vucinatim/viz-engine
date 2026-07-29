@@ -15,6 +15,7 @@ import {
 import { createVizRenderPlan, createVizRuntimeSession } from "@viz-engine/runtime";
 import {
   Group,
+  InterleavedBufferAttribute,
   InstancedMesh,
   Mesh,
   MeshBasicMaterial,
@@ -526,5 +527,94 @@ describe("Viz Three renderer proof", () => {
     expect(instance?.root.userData.structure.rotation.y).toBe(0.2);
     expect(Array.from(cubes.instanceMatrix.array.slice(0, cubes.count * 16))).not
       .toEqual(initialMatrices);
+  });
+
+  it("retains portable polyline resources while updating point positions", () => {
+    const createPolylinePlan = (middleY: number): VizRenderPlan => ({
+      frameContext: {
+        frame: middleY === 120 ? 0 : 1,
+        fps: 60,
+        durationInFrames: 120,
+        timeInSeconds: middleY === 120 ? 0 : 1 / 60,
+        deltaTimeSeconds: 1 / 60,
+        isFirstFrame: middleY === 120,
+        isLastFrame: false,
+        mode: "live",
+        seed: "persistent-polyline",
+      },
+      viewport: { width: 640, height: 360, backgroundColor: "#000000" },
+      materializedAssets: [],
+      issues: [],
+      layers: [
+        {
+          layerId: "layer-polyline",
+          componentId: "heartbeat-monitor",
+          rendererFamily: "three",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          resolvedInputs: {},
+          node: {
+            kind: "group",
+            children: [
+              {
+                kind: "rect",
+                x: 0,
+                y: 0,
+                width: 640,
+                height: 360,
+                style: { fill: "#18181b" },
+              },
+              {
+                kind: "polyline",
+                points: [
+                  { x: 0, y: 180 },
+                  { x: 1, y: middleY },
+                  { x: 2, y: 220 },
+                ],
+                lineCap: "round",
+                lineJoin: "round",
+                style: {
+                  stroke: "#34d399",
+                  strokeWidth: 2,
+                },
+                glow: {
+                  color: "#34d399",
+                  blur: 10,
+                  opacity: 0.18,
+                },
+              },
+            ],
+          },
+        },
+      ],
+    });
+    const firstPlan = createPolylinePlan(120);
+    const nextPlan = createPolylinePlan(80);
+    const graph = createVizThreeCompositorGraph(firstPlan);
+    const root = graph.layers[0]!.contentRoot.children[0] as Group;
+    const polyline = root.children[1] as Group;
+    const coreLine = polyline.children[1] as Mesh;
+    const geometry = coreLine.geometry;
+    const material = coreLine.material;
+    const before = Array.from(
+      (geometry.attributes.instanceStart as InterleavedBufferAttribute).data
+        .array,
+    );
+
+    expect(collectMeshes(root)).toHaveLength(3);
+    expect(
+      updateVizThreeCompositorGraph(graph, firstPlan, nextPlan),
+    ).toBe(true);
+    expect(graph.layers[0]!.contentRoot.children[0]).toBe(root);
+    expect((root.children[1] as Group).children[1]).toBe(coreLine);
+    expect(coreLine.geometry).toBe(geometry);
+    expect(coreLine.material).toBe(material);
+    expect(
+      Array.from(
+        (geometry.attributes.instanceStart as InterleavedBufferAttribute).data
+          .array,
+      ),
+    ).not.toEqual(before);
   });
 });

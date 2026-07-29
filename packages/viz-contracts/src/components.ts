@@ -29,8 +29,19 @@ export interface VizComponentRenderContext {
   frameContext: VizFrameContext;
   viewport: VizViewport;
   layer: VizLayer;
+  /**
+   * Canonical layer settings with resolved layer inputs applied by colon-delimited
+   * setting path (for example `appearance:scaleY`).
+   */
+  settings: Readonly<Record<string, unknown>>;
   resolvedInputs: Record<string, VizResolvedInputValue>;
   materializedAssets: ReadonlyMap<string, VizMaterializedAsset>;
+  /**
+   * Resolves the same component settings at an arbitrary canonical frame.
+   * Components with deterministic trails or other temporal views use this
+   * instead of retaining browser-owned render state.
+   */
+  sampleSettings(frame: number): Readonly<Record<string, unknown>>;
 }
 
 export interface VizComponentImplementation extends VizComponentDefinition {

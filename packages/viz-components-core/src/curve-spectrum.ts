@@ -133,11 +133,11 @@ export const curveSpectrumComponent: VizComponentImplementation = {
       required: true,
     },
   ],
-  render: ({ viewport, layer, resolvedInputs }) => {
-    const appearance = (layer.settings?.appearance ?? {}) as Record<string, unknown>;
-    const grid = (layer.settings?.grid ?? {}) as Record<string, unknown>;
-    const line = (layer.settings?.line ?? {}) as Record<string, unknown>;
-    const points = (layer.settings?.points ?? {}) as Record<string, unknown>;
+  render: ({ viewport, layer, settings, resolvedInputs }) => {
+    const appearance = (settings.appearance ?? {}) as Record<string, unknown>;
+    const grid = (settings.grid ?? {}) as Record<string, unknown>;
+    const line = (settings.line ?? {}) as Record<string, unknown>;
+    const points = (settings.points ?? {}) as Record<string, unknown>;
 
     const spectrum = asNumberArray(resolvedInputs.spectrum?.value);
     const sampleRate = Math.max(1, asNumber(resolvedInputs.sampleRate?.value, 44100));

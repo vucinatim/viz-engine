@@ -9,11 +9,11 @@ export const particleSystemComponent: VizComponentImplementation = {
   name: "Particle System",
   rendererFamily: "three",
   description: "Deterministic package-runtime instanced particle system.",
-  render: ({ frameContext, layer }) => {
-    const appearance = asRecord(layer.settings?.appearance);
-    const physics = asRecord(layer.settings?.physics);
-    const emission = asRecord(layer.settings?.emission);
-    const rotation = asRecord(layer.settings?.rotation);
+  render: ({ frameContext, layer, settings }) => {
+    const appearance = asRecord(settings.appearance);
+    const physics = asRecord(settings.physics);
+    const emission = asRecord(settings.emission);
+    const rotation = asRecord(settings.rotation);
 
     return {
       kind: "three-program",

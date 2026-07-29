@@ -7,6 +7,7 @@ import type {
   VizRenderImageNode,
   VizRenderNode,
   VizRenderPlan,
+  VizRenderPolylineNode,
   VizRenderRectNode,
   VizRenderStyle,
   VizRenderTextNode,
@@ -91,6 +92,25 @@ const renderCircleNode = (node: VizRenderCircleNode): string => {
   return `<circle cx="${node.cx}" cy="${node.cy}" r="${node.r}"${createStyleAttribute(node.style)} />`;
 };
 
+const renderPolylineNode = (node: VizRenderPolylineNode): string => {
+  if (node.points.length === 0) {
+    return "";
+  }
+
+  const points = escapeAttribute(
+    node.points.map((point) => `${point.x},${point.y}`).join(" "),
+  );
+  const lineCap = node.lineCap ?? "butt";
+  const lineJoin = node.lineJoin ?? "miter";
+  const strokeWidth = node.style?.strokeWidth ?? 1;
+  const glow = node.glow;
+  const glowMarkup = glow
+    ? `<polyline points="${points}" fill="none" stroke="${escapeAttribute(glow.color)}" stroke-width="${strokeWidth + Math.max(0, glow.blur) * 2}" stroke-linecap="${lineCap}" stroke-linejoin="${lineJoin}" opacity="${glow.opacity ?? 0.18}" />`
+    : "";
+
+  return `${glowMarkup}<polyline points="${points}" fill="none" stroke-linecap="${lineCap}" stroke-linejoin="${lineJoin}"${createStyleAttribute(node.style)} />`;
+};
+
 const renderImageNode = (
   node: VizRenderImageNode,
   materializedImageAssets: ReadonlyMap<string, VizMaterializedImageAsset>,
@@ -145,6 +165,10 @@ export const renderVizRenderNode = (
 
   if (node.kind === "circle") {
     return renderCircleNode(node);
+  }
+
+  if (node.kind === "polyline") {
+    return renderPolylineNode(node);
   }
 
   if (node.kind === "image") {

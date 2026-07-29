@@ -29,7 +29,7 @@ export const featureExtractionBarsComponent: VizComponentImplementation = {
       "literal",
     ] as const,
   })),
-  render: ({ viewport, layer, resolvedInputs }) => {
+  render: ({ viewport, layer, settings }) => {
     const padTop = Math.max(10, viewport.height * 0.05);
     const padBottom = Math.max(24, viewport.height * 0.12);
     const barAreaTop = padTop;
@@ -53,11 +53,7 @@ export const featureExtractionBarsComponent: VizComponentImplementation = {
     ];
 
     for (const [index, channel] of CHANNELS.entries()) {
-      const resolvedValue = resolvedInputs[channel.key]?.value;
-      const rawValue =
-        typeof resolvedValue === "number"
-          ? resolvedValue
-          : asNumber(layer.settings?.[channel.key], 0);
+      const rawValue = asNumber(settings[channel.key], 0);
       const value = Math.max(0, Math.min(1, rawValue));
       const x = index * columnAreaWidth + barMargin;
       const barHeight = value * barAreaHeight;

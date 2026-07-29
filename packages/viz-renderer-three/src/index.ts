@@ -7,6 +7,7 @@ import type {
   VizRenderImageNode,
   VizRenderNode,
   VizRenderPlan,
+  VizRenderPolylineNode,
   VizRenderRectNode,
   VizRenderShaderNode,
   VizRenderStyle,
@@ -21,6 +22,7 @@ import {
   CanvasTexture,
   Color,
   Group,
+  InterleavedBufferAttribute,
   LinearFilter,
   Mesh,
   MeshBasicMaterial,
@@ -43,6 +45,9 @@ import {
   type Material,
   type MeshBasicMaterialParameters,
 } from "three";
+import { Line2 } from "three/examples/jsm/lines/Line2.js";
+import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { createVizThreeProgramInstance } from "./programs/registry.js";
 import type { VizThreeProgramInstance } from "./programs/types.js";
 
@@ -87,6 +92,10 @@ interface VizImageMeshUserData {
 
 interface VizShaderMeshUserData {
   vizShaderProgramId?: string;
+}
+
+interface VizPolylineGroupUserData {
+  vizPolyline?: true;
 }
 
 interface VizInheritedRenderState {
@@ -334,6 +343,94 @@ const convertCircleToMesh = (
   return mesh;
 };
 
+const createPolylineLine = ({
+  node,
+  color,
+  width,
+  opacity,
+  inherited,
+  viewportWidth,
+  viewportHeight,
+}: {
+  node: VizRenderPolylineNode;
+  color: string;
+  width: number;
+  opacity: number;
+  inherited: VizInheritedRenderState;
+  viewportWidth: number;
+  viewportHeight: number;
+}): Line2 => {
+  const geometry = new LineGeometry();
+  geometry.setPositions(
+    node.points.flatMap((point) => [
+      point.x - viewportWidth / 2,
+      viewportHeight / 2 - point.y,
+      0,
+    ]),
+  );
+  const material = new LineMaterial({
+    color: new Color(color).getHex(),
+    linewidth: Math.max(0.01, width),
+    opacity: inherited.opacity * opacity,
+    transparent: inherited.opacity * opacity < 1,
+    blending: getThreeBlending(node.style?.blendMode ?? inherited.blendMode),
+    depthTest: false,
+    depthWrite: false,
+    worldUnits: false,
+    resolution: new Vector2(viewportWidth, viewportHeight),
+  });
+  const line = new Line2(geometry, material);
+  line.frustumCulled = false;
+  return line;
+};
+
+const convertPolylineToObject = (
+  node: VizRenderPolylineNode,
+  inherited: VizInheritedRenderState,
+  viewportWidth: number,
+  viewportHeight: number,
+): Group => {
+  const group = new Group();
+  group.userData = {
+    ...group.userData,
+    vizPolyline: true,
+  } satisfies VizPolylineGroupUserData;
+
+  if (node.points.length < 2) {
+    return group;
+  }
+
+  const stroke = node.style?.stroke ?? node.style?.fill ?? "#ffffff";
+  const strokeWidth = Math.max(0.01, node.style?.strokeWidth ?? 1);
+
+  if (node.glow && node.glow.blur > 0) {
+    const glow = createPolylineLine({
+      node,
+      color: node.glow.color,
+      width: strokeWidth + node.glow.blur * 2,
+      opacity: node.glow.opacity ?? 0.18,
+      inherited,
+      viewportWidth,
+      viewportHeight,
+    });
+    glow.position.z = -0.1;
+    group.add(glow);
+  }
+
+  group.add(
+    createPolylineLine({
+      node,
+      color: stroke,
+      width: strokeWidth,
+      opacity: node.style?.opacity ?? 1,
+      inherited,
+      viewportWidth,
+      viewportHeight,
+    }),
+  );
+  return group;
+};
+
 const convertImageToMesh = (
   node: VizRenderImageNode,
   inherited: VizInheritedRenderState,
@@ -519,6 +616,15 @@ const convertNodeToObject = (
 
   if (node.kind === "circle") {
     return convertCircleToMesh(node, inherited, viewportWidth, viewportHeight);
+  }
+
+  if (node.kind === "polyline") {
+    return convertPolylineToObject(
+      node,
+      inherited,
+      viewportWidth,
+      viewportHeight,
+    );
   }
 
   if (node.kind === "image") {
@@ -967,6 +1073,231 @@ const updateShaderMesh = (
   return true;
 };
 
+const updateMaterialStyle = (
+  material: MeshBasicMaterial | LineMaterial,
+  style: VizRenderStyle,
+  fallbackColor: string,
+): void => {
+  material.color.set(style.fill ?? style.stroke ?? fallbackColor);
+  material.opacity = style.opacity ?? 1;
+  material.transparent = material.opacity < 1;
+  material.blending = getThreeBlending(style.blendMode);
+};
+
+const updateLinePositions = (
+  line: Line2,
+  node: VizRenderPolylineNode,
+  viewportWidth: number,
+  viewportHeight: number,
+): void => {
+  const geometry = line.geometry as LineGeometry;
+  const positions = node.points.flatMap((point) => [
+    point.x - viewportWidth / 2,
+    viewportHeight / 2 - point.y,
+    0,
+  ]);
+  const startAttribute = geometry.attributes.instanceStart;
+  const segmentArray =
+    startAttribute instanceof InterleavedBufferAttribute
+      ? startAttribute.data.array
+      : undefined;
+  const expectedLength = Math.max(0, positions.length - 3) * 2;
+
+  if (
+    startAttribute instanceof InterleavedBufferAttribute &&
+    segmentArray &&
+    segmentArray.length === expectedLength
+  ) {
+    for (
+      let sourceOffset = 0, targetOffset = 0;
+      sourceOffset < positions.length - 3;
+      sourceOffset += 3, targetOffset += 6
+    ) {
+      segmentArray[targetOffset] = positions[sourceOffset]!;
+      segmentArray[targetOffset + 1] = positions[sourceOffset + 1]!;
+      segmentArray[targetOffset + 2] = positions[sourceOffset + 2]!;
+      segmentArray[targetOffset + 3] = positions[sourceOffset + 3]!;
+      segmentArray[targetOffset + 4] = positions[sourceOffset + 4]!;
+      segmentArray[targetOffset + 5] = positions[sourceOffset + 5]!;
+    }
+    startAttribute.data.needsUpdate = true;
+  } else {
+    geometry.setPositions(positions);
+  }
+};
+
+const updatePolylineObject = (
+  object: Group,
+  node: VizRenderPolylineNode,
+  inherited: VizInheritedRenderState,
+  viewportWidth: number,
+  viewportHeight: number,
+): boolean => {
+  const userData = object.userData as VizPolylineGroupUserData;
+  const expectedLineCount =
+    node.points.length < 2 ? 0 : node.glow && node.glow.blur > 0 ? 2 : 1;
+
+  if (
+    !userData.vizPolyline ||
+    object.children.length !== expectedLineCount
+  ) {
+    return false;
+  }
+
+  if (expectedLineCount === 0) {
+    return true;
+  }
+
+  const stroke = node.style?.stroke ?? node.style?.fill ?? "#ffffff";
+  const strokeWidth = Math.max(0.01, node.style?.strokeWidth ?? 1);
+  const coreLine = object.children.at(-1);
+
+  if (!(coreLine instanceof Line2)) {
+    return false;
+  }
+
+  updateLinePositions(coreLine, node, viewportWidth, viewportHeight);
+  const coreStyle = mergeRenderableStyle(inherited, {
+    ...node.style,
+    fill: stroke,
+  });
+  updateMaterialStyle(
+    coreLine.material as LineMaterial,
+    coreStyle,
+    stroke,
+  );
+  (coreLine.material as LineMaterial).linewidth = strokeWidth;
+  (coreLine.material as LineMaterial).resolution.set(
+    viewportWidth,
+    viewportHeight,
+  );
+
+  if (expectedLineCount === 2) {
+    const glowLine = object.children[0];
+    if (!(glowLine instanceof Line2) || !node.glow) {
+      return false;
+    }
+
+    updateLinePositions(glowLine, node, viewportWidth, viewportHeight);
+    const glowStyle = mergeRenderableStyle(inherited, {
+      fill: node.glow.color,
+      opacity: node.glow.opacity ?? 0.18,
+      ...(node.style?.blendMode === undefined
+        ? {}
+        : { blendMode: node.style.blendMode }),
+    });
+    updateMaterialStyle(
+      glowLine.material as LineMaterial,
+      glowStyle,
+      node.glow.color,
+    );
+    (glowLine.material as LineMaterial).linewidth =
+      strokeWidth + node.glow.blur * 2;
+    (glowLine.material as LineMaterial).resolution.set(
+      viewportWidth,
+      viewportHeight,
+    );
+  }
+
+  return true;
+};
+
+const resetAndApplyTransform = (
+  object: Group | Mesh,
+  transform: VizRenderTransform | undefined,
+): void => {
+  object.position.set(0, 0, 0);
+  object.scale.set(1, 1, 1);
+  object.rotation.set(0, 0, 0);
+  applyTransform(object, transform);
+};
+
+const updatePortableNodeObject = (
+  object: Group | Mesh,
+  previousNode: VizRenderNode,
+  nextNode: VizRenderNode,
+  inherited: VizInheritedRenderState,
+  viewportWidth: number,
+  viewportHeight: number,
+): boolean => {
+  if (previousNode.kind !== nextNode.kind) {
+    return false;
+  }
+
+  if (nextNode.kind === "polyline") {
+    return (
+      object instanceof Group &&
+      updatePolylineObject(
+        object,
+        nextNode,
+        inherited,
+        viewportWidth,
+        viewportHeight,
+      )
+    );
+  }
+
+  if (nextNode.kind === "rect" && previousNode.kind === "rect") {
+    const finalStyle = mergeRenderableStyle(inherited, nextNode.style);
+    const hasFill =
+      typeof finalStyle.fill === "string" && finalStyle.fill.length > 0;
+    const hasStroke =
+      typeof finalStyle.stroke === "string" &&
+      (finalStyle.strokeWidth ?? 0) > 0;
+
+    if (!(object instanceof Mesh) || !hasFill || hasStroke) {
+      return false;
+    }
+
+    const geometry = object.geometry as PlaneGeometry;
+    if (
+      geometry.parameters.width !== nextNode.width ||
+      geometry.parameters.height !== nextNode.height
+    ) {
+      geometry.dispose();
+      object.geometry = new PlaneGeometry(nextNode.width, nextNode.height);
+    }
+    object.position.x =
+      nextNode.x + nextNode.width / 2 - viewportWidth / 2;
+    object.position.y =
+      viewportHeight / 2 - (nextNode.y + nextNode.height / 2);
+    updateMaterialStyle(
+      object.material as MeshBasicMaterial,
+      finalStyle,
+      "#ffffff",
+    );
+    return true;
+  }
+
+  if (nextNode.kind === "group" && previousNode.kind === "group") {
+    if (!(object instanceof Group) || object.children.length !== nextNode.children.length) {
+      return false;
+    }
+
+    resetAndApplyTransform(object, nextNode.transform);
+    const nextInherited = composeInheritedRenderState(inherited, nextNode.style);
+
+    return nextNode.children.every((child, index) => {
+      const previousChild = previousNode.children[index];
+      const childObject = object.children[index];
+      return (
+        previousChild !== undefined &&
+        (childObject instanceof Group || childObject instanceof Mesh) &&
+        updatePortableNodeObject(
+          childObject,
+          previousChild,
+          child,
+          nextInherited,
+          viewportWidth,
+          viewportHeight,
+        )
+      );
+    });
+  }
+
+  return false;
+};
+
 export const updateVizThreeCompositorGraph = (
   graph: VizThreeCompositorGraph,
   previousPlan: VizRenderPlan,
@@ -986,14 +1317,14 @@ export const updateVizThreeCompositorGraph = (
     const nextLayer = nextPlan.layers[index];
     const previousNode = previousLayer?.node;
     const nextNode = nextLayer?.node;
-    const mesh = graphLayer.contentRoot.children[0];
+    const object = graphLayer.contentRoot.children[0];
 
     const updated =
       previousNode?.kind === "shader" &&
       nextNode?.kind === "shader" &&
-      mesh instanceof Mesh
+      object instanceof Mesh
         ? updateShaderMesh(
-            mesh,
+            object,
             nextNode,
             nextPlan.viewport.width,
             nextPlan.viewport.height,
@@ -1006,6 +1337,17 @@ export const updateVizThreeCompositorGraph = (
               graphLayer.programInstance.update(nextNode);
               return true;
             })()
+          : previousNode != null &&
+              nextNode != null &&
+              (object instanceof Group || object instanceof Mesh)
+            ? updatePortableNodeObject(
+                object,
+                previousNode,
+                nextNode,
+                { opacity: 1 },
+                nextPlan.viewport.width,
+                nextPlan.viewport.height,
+              )
           : false;
 
     if (
@@ -1044,7 +1386,6 @@ export const createVizThreePreviewController = ({
     antialias: true,
     alpha: false,
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.autoClear = true;
 
   let currentRenderPlan = renderPlan;

@@ -1,5 +1,6 @@
 export * from "./audio-feature-timeline.js";
 export * from "./component-registry.js";
+export * from "./component-settings.js";
 export * from "./frame-context.js";
 export * from "./frame-plan.js";
 export * from "./graph-evaluator.js";

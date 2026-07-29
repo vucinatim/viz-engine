@@ -17,8 +17,8 @@ export const solidColorComponent: VizComponentImplementation = {
       supportedSources: ["literal"],
     },
   ],
-  render: ({ viewport, layer, resolvedInputs }) => {
-    const color = asString(layer.settings?.color, "#000000");
+  render: ({ viewport, layer, settings, resolvedInputs }) => {
+    const color = asString(settings.color, "#000000");
     const glowValue = asNumber(resolvedInputs.glow?.value, 0);
     const overlayOpacity = Math.max(0, Math.min(glowValue, 0.35));
 

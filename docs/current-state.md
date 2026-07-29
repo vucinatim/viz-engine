@@ -196,8 +196,8 @@ The biggest remaining architecture gaps are:
   `draw`/`draw3D` paths; `Curve Spectrum`, `Debug Animation`,
   `Feature Extraction Bars`, `Strobe Light`, `Simple Cube`, and
   `Fullscreen Shader`, `Noise Shader`, `Particle System`, and
-  `Orbiting Cubes` now have package-runtime-backed editor paths, but this is
-  not the completed component migration
+  `Orbiting Cubes`, and `Heartbeat Monitor` now have package-runtime-backed
+  editor paths, but this is not the completed component migration
 - the temporary per-component runtime preview bridge remains necessary until
   those historical render paths are replaced by package-runtime components
 
@@ -225,7 +225,7 @@ The renderer contract also has a persistent Three program node:
   accumulated browser `dt`
 
 Runtime-backed component-catalog previews now use that same package registry
-and renderer attachment. All nine migrated editor definitions now contain only
+and renderer attachment. All ten migrated editor definitions now contain only
 authoring metadata and parameter schemas; their visual semantics live entirely
 in package terrain. `Fullscreen Shader` GLSL source moved there as part of the
 same cutover.
@@ -239,6 +239,17 @@ Orbiting Cubes now retains one instanced mesh across topology, spacing, and
 animation changes. Its seeded neuron topology, material, lights, structure
 rotation, and camera orbit are package-owned and derive from canonical frame
 state.
+
+Component settings now have one runtime resolution rule: resolved canonical
+layer inputs immutably override raw settings through colon-delimited parameter
+paths. This closes the direct-runtime/export gap where node bindings were
+previously visible in frame plans but most migrated components ignored them.
+
+Heartbeat Monitor now uses a portable polyline/glow node and samples its visible
+history from canonical frames. The SVG adapter renders the same path contract,
+while the Three adapter updates retained wide-line position buffers rather than
+rebuilding line resources per frame. Browser validation also corrected
+double-application of device pixel ratio in the Three preview controller.
 
 ## Autonomous Calibration Foundation
 

@@ -115,6 +115,28 @@
   - recorded a `0.30 kB` raw / `0.26 kB` gzip studio entry-chunk increase
   - recorded evidence in
     `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-7.md`
+- completed the deterministic Heartbeat Monitor migration and resolved-setting
+  foundation:
+  - made canonical resolved inputs override component settings through stable
+    colon-delimited parameter paths
+  - migrated all package components onto the resolved-setting render contract
+    so direct runtime and export no longer silently ignore graph-driven
+    parameters
+  - added deterministic arbitrary-frame setting sampling for temporal visuals
+  - added a portable polyline/glow render node with SVG and retained Three
+    adapters
+  - made compatible Three polyline updates retain their scene object, geometry,
+    material, and position buffer
+  - removed Heartbeat Monitor's editor-owned history state and Canvas callback
+  - browser-verified playback, Y Position response, node workspace and Sine
+    preset loading, intended `1748x924` quality-2 backing resolution, and a
+    clean console
+  - fixed double device-pixel-ratio application in the Three preview controller
+    after browser validation exposed compounding canvas dimensions
+  - recorded a `1.93 kB` raw / `0.80 kB` gzip studio entry-chunk increase
+  - passed the full foundation gate with 31 test files and 114 tests
+  - recorded evidence in
+    `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-8.md`
 - established the autonomous V2 calibration foundation:
   - pinned the immutable final pre-V2 parity reference to
     `e806fbc10980615588b52ff574bc923c6f00f35e`

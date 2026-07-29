@@ -46,6 +46,27 @@ export interface VizRenderCircleNode {
   style?: VizRenderStyle;
 }
 
+export interface VizRenderPoint {
+  x: number;
+  y: number;
+}
+
+export interface VizRenderPolylineGlow {
+  color: string;
+  blur: number;
+  opacity?: number;
+}
+
+export interface VizRenderPolylineNode {
+  kind: "polyline";
+  id?: string;
+  points: VizRenderPoint[];
+  lineCap?: "butt" | "round" | "square";
+  lineJoin?: "miter" | "round" | "bevel";
+  style?: VizRenderStyle;
+  glow?: VizRenderPolylineGlow;
+}
+
 export interface VizRenderImageNode {
   kind: "image";
   id?: string;
@@ -136,6 +157,7 @@ export type VizRenderNode =
   | VizRenderGroupNode
   | VizRenderRectNode
   | VizRenderCircleNode
+  | VizRenderPolylineNode
   | VizRenderImageNode
   | VizRenderTextNode
   | VizRenderShaderNode

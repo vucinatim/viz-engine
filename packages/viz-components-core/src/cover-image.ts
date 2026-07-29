@@ -19,17 +19,17 @@ export const coverImageComponent: VizComponentImplementation = {
       required: true,
     },
   ],
-  render: ({ viewport, layer, resolvedInputs }) => {
+  render: ({ viewport, layer, settings, resolvedInputs }) => {
     const asset = asMaterializedImageAsset(resolvedInputs.image?.value);
 
     if (!asset) {
       return null;
     }
 
-    const width = Math.min(viewport.width * 0.42, Math.max(240, asNumber(layer.settings?.width, 460)));
-    const height = Math.min(viewport.height * 0.42, Math.max(240, asNumber(layer.settings?.height, 460)));
-    const x = asNumber(layer.settings?.x, viewport.width * 0.08);
-    const y = asNumber(layer.settings?.y, viewport.height * 0.13);
+    const width = Math.min(viewport.width * 0.42, Math.max(240, asNumber(settings.width, 460)));
+    const height = Math.min(viewport.height * 0.42, Math.max(240, asNumber(settings.height, 460)));
+    const x = asNumber(settings.x, viewport.width * 0.08);
+    const y = asNumber(settings.y, viewport.height * 0.13);
 
     const matteRect: VizRenderRectNode = {
       kind: "rect",
