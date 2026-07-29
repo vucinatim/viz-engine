@@ -3,10 +3,15 @@ import { describe, expect, it } from 'vitest';
 import CurveSpectrum from '@/components/comps/curve-spectrum';
 import DebugAnimation from '@/components/comps/debug-animation';
 import FeatureExtractionBars from '@/components/comps/feature-extraction-bars';
+import FullscreenShader from '@/components/comps/fullscreen-shader';
 import SimpleCube from '@/components/comps/simple-cube';
 import StrobeLight from '@/components/comps/strobe-light';
 import { createVizSessionRuntimePreviewFrame } from '@/lib/viz-session';
-import { createRuntimeRenderPlanForEditorLayer } from '@/lib/editor-runtime-preview-runtime-bridge';
+import {
+  createRuntimeRenderPlanForEditorComponentPreview,
+  createRuntimeRenderPlanForEditorLayer,
+  isEditorComponentRuntimeBacked,
+} from '@/lib/editor-runtime-preview-runtime-bridge';
 import useCompStore from '@/lib/stores/comp-store';
 import useEditorProjectStore from '@/lib/stores/editor-project-store';
 import { getProjectedLayer } from '@/lib/stores/editor-layer-projection-store';
@@ -70,6 +75,7 @@ describe('Editor runtime preview runtime bridge', () => {
     [FeatureExtractionBars, 'feature-extraction-bars', 'group'],
     [StrobeLight, 'strobe-light', 'shader'],
     [SimpleCube, 'simple-cube', 'three-program'],
+    [FullscreenShader, 'fullscreen-shader', 'shader'],
   ])(
     'builds runtime plans for newly migrated preserved-editor components',
     (comp, componentId, expectedNodeKind) => {
@@ -119,4 +125,54 @@ describe('Editor runtime preview runtime bridge', () => {
       expect(renderPlan?.issues).toEqual([]);
     },
   );
+
+  it('builds component-catalog previews through the same runtime registry', () => {
+    const spectrum = Uint8Array.from({ length: 128 }, (_, index) => index);
+    const renderPlan = createRuntimeRenderPlanForEditorComponentPreview({
+      comp: FullscreenShader,
+      viewportWidth: 320,
+      viewportHeight: 180,
+      time: 0.5,
+      configValues: {
+        ...FullscreenShader.defaultValues,
+        shader: 'Cyber Grid',
+        speed: 2,
+      },
+      audioFrameData: {
+        frequencyData: spectrum,
+        sampleRate: 44100,
+        fftSize: 2048,
+      },
+    });
+
+    expect(isEditorComponentRuntimeBacked(FullscreenShader)).toBe(true);
+    expect(renderPlan?.issues).toEqual([]);
+
+    const node = renderPlan?.layers[0]?.node;
+    if (!node || node.kind !== 'shader') {
+      throw new Error('Expected catalog preview shader render node.');
+    }
+
+    expect(node.programId).toBe('viz-core/fullscreen-shader/Cyber Grid');
+    expect(node.uniforms.uTime).toBe(1);
+    expect(node.uniforms.uResolution).toEqual({
+      type: 'vec2',
+      value: [320, 180],
+    });
+  });
+
+  it('keeps migrated editor definitions free of historical render callbacks', () => {
+    for (const comp of [
+      CurveSpectrum,
+      DebugAnimation,
+      FeatureExtractionBars,
+      StrobeLight,
+      SimpleCube,
+      FullscreenShader,
+    ]) {
+      expect(comp).not.toHaveProperty('draw');
+      expect(comp).not.toHaveProperty('init3D');
+      expect(comp).not.toHaveProperty('draw3D');
+    }
+  });
 });

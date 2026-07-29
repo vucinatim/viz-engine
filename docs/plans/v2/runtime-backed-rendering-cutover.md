@@ -39,11 +39,11 @@ The mixed fallback attachment is:
 
 | Editor component | Current visual path | Runtime family | Migration requirements |
 | --- | --- | --- | --- |
-| Curve Spectrum | package runtime | primitive 2D scene | Remove bridge-specific special casing when all layers use one session render plan |
-| Debug Animation | Canvas `draw` | primitive 2D scene | Rectangles plus reusable text primitive |
-| Feature Extraction Bars | Canvas `draw` | primitive 2D scene | Rectangles plus reusable text primitive; preserve five node-driven values |
+| Curve Spectrum | package runtime | primitive 2D scene | Historical callback removed; remove bridge-specific spectrum injection when all layers use one session render plan |
+| Debug Animation | package runtime | primitive 2D scene | Complete: rectangles plus reusable text primitive; historical callback removed |
+| Feature Extraction Bars | package runtime | primitive 2D scene | Complete: rectangles plus reusable text primitive and five node-driven values; historical callback removed |
 | Heartbeat Monitor | stateful Canvas `draw` | temporal 2D scene | Deterministic input history and reusable path/glow representation |
-| Simple Cube | package runtime plus historical fallback | persistent Three scene | Runtime scene and deterministic rotation are implemented; remove historical callbacks after component-preview cutover |
+| Simple Cube | package runtime | persistent Three scene | Complete: deterministic persistent scene; historical callbacks removed |
 | Instanced Supercube | Three `init3D`/`draw3D` | persistent Three scene | Instancing, shadows, custom material shader, audio/config motion |
 | Light Tunnel | Three `init3D`/`draw3D` | persistent Three scene | Instancing, fog, lights, line geometry, bloom and depth-of-field |
 | Morph Shapes | Three `init3D`/`draw3D` | persistent Three scene | Instancing, procedural/model/text sources, asset loading, custom material |
@@ -52,8 +52,8 @@ The mixed fallback attachment is:
 | Orbiting Cubes | Three `init3D`/`draw3D` | persistent Three scene | Instancing, lighting, camera and node-driven movement |
 | Particle System | Three `init3D`/`draw3D` | persistent Three scene | Instancing, custom shader, seeded particle state and blend modes |
 | Stage Scene | Three `init3D`/`draw3D` | persistent Three scene | Instancing, lighting, fog, camera path, bloom and feature-driven staging |
-| Fullscreen Shader | Three `init3D`/`draw3D` | persistent shader scene | Shader selection and deterministic uniforms |
-| Strobe Light | package runtime plus historical fallback | persistent shader scene | Runtime shader and deterministic timing are implemented; remove historical callbacks after component-preview cutover |
+| Fullscreen Shader | package runtime | persistent shader scene | Complete: package-owned shader selection and deterministic uniforms; historical callbacks removed |
+| Strobe Light | package runtime | persistent shader scene | Complete: deterministic runtime shader; historical callbacks removed |
 
 ## Runtime Model
 
@@ -124,6 +124,11 @@ Every component slice must prove:
 Visual similarity is audited against the pinned V1 reference. Runtime-backed is
 an ownership claim, not a visual-parity claim; the two pieces of evidence must
 remain separate.
+
+Component-catalog previews now use the same package runtime registry for
+migrated components. This lets migrated editor schemas drop historical render
+callbacks immediately without blanking catalog thumbnails. The catalog still
+uses the historical path for unmigrated components until the final cutover.
 
 ## Final Deletion Conditions
 

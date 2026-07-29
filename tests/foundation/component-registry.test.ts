@@ -3,6 +3,7 @@ import {
   debugAnimationComponent,
   featureChannelBarsComponent,
   featureExtractionBarsComponent,
+  fullscreenShaderComponent,
   simpleCubeComponent,
   strobeLightComponent,
 } from "@viz-engine/components-core";
@@ -321,5 +322,69 @@ describe("Viz component authoring foundation", () => {
     expect(node.programId).toBe("viz-core/simple-cube/v1");
     expect(node.parameters.rotationX).toBe(1);
     expect(node.parameters.rotationY).toBe(-0.5);
+  });
+
+  it("derives Fullscreen Shader uniforms from canonical frame time", () => {
+    const project: VizProjectDocument = {
+      schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
+      projectId: "project-fullscreen-shader",
+      name: "Fullscreen Shader",
+      timeline: { fps: 60, durationInFrames: 120 },
+      viewport: { width: 1280, height: 720 },
+      layerOrder: ["layer-shader"],
+      layers: [
+        {
+          id: "layer-shader",
+          name: "Fullscreen Shader",
+          componentId: "fullscreen-shader",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          settings: {
+            shader: "Radial Ripple Grid",
+            color: "#00ffff",
+            speed: 2,
+            scale: 0.5,
+            intensity: 0.8,
+            offsetX: 0.1,
+            offsetY: -0.2,
+            seed: 3,
+            scanIntensity: 0.7,
+            waveIntensity: 0.6,
+          },
+        },
+      ],
+    };
+    const session = createVizRuntimeSession({
+      project,
+      mode: "render",
+      seed: "fullscreen-shader-seed",
+    });
+    const createPlan = () =>
+      createVizRenderPlan({
+        session,
+        frame: 30,
+        registry: createCoreComponentRegistry(),
+      });
+    const plan = createPlan();
+
+    expect(
+      createCoreComponentRegistry().get(fullscreenShaderComponent.id),
+    ).toBe(fullscreenShaderComponent);
+    expect(plan).toEqual(createPlan());
+
+    const node = plan.layers[0]?.node;
+    if (!node || node.kind !== "shader") {
+      throw new Error("Expected Fullscreen Shader render node.");
+    }
+
+    expect(node.programId).toBe(
+      "viz-core/fullscreen-shader/Radial Ripple Grid",
+    );
+    expect(node.uniforms.uTime).toBe(1);
+    expect(node.uniforms.uResolution).toEqual({
+      type: "vec2",
+      value: [1280, 720],
+    });
   });
 });

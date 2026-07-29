@@ -5,7 +5,12 @@ import {
   type VizValueSource,
 } from '@viz-engine/contracts';
 import { createVizRenderPlan, createVizRuntimeSession } from '@viz-engine/runtime';
+import type { Comp } from '@/components/config/create-component';
 import { LayerData } from '@/lib/editor-layer-types';
+import {
+  createEmptyVizProjectDocument,
+  toEditorComponentId,
+} from '@/lib/viz-session/project-adapters';
 import { vizSessionStore } from '@/lib/viz-session';
 import type { VizSessionRuntimePreviewFrame } from '@/lib/viz-session/types';
 
@@ -126,6 +131,81 @@ export const createRuntimeRenderPlanForEditorLayer = ({
   return createVizRenderPlan({
     session: runtimeSession,
     frame: frame.currentFrame,
+    registry: runtimeComponentRegistry,
+  });
+};
+
+export const isEditorComponentRuntimeBacked = (comp: Comp): boolean =>
+  Boolean(runtimeComponentRegistry.get(toEditorComponentId(comp.name)));
+
+export const createRuntimeRenderPlanForEditorComponentPreview = ({
+  comp,
+  viewportWidth,
+  viewportHeight,
+  time,
+  configValues,
+  audioFrameData,
+}: {
+  comp: Comp;
+  viewportWidth: number;
+  viewportHeight: number;
+  time: number;
+  configValues: Record<string, any>;
+  audioFrameData: RuntimeBridgeAudioFrameData;
+}): VizRenderPlan | null => {
+  const componentId = toEditorComponentId(comp.name);
+  if (!runtimeComponentRegistry.get(componentId)) {
+    return null;
+  }
+
+  const fps = 60;
+  const frame = Math.max(0, Math.floor(time * fps));
+  const layerId = `component-preview-${componentId}`;
+  const liveInputs: Record<string, VizValueSource> =
+    componentId === 'curve-spectrum'
+      ? {
+          spectrum: createLiteralInput(Array.from(audioFrameData.frequencyData)),
+          sampleRate: createLiteralInput(audioFrameData.sampleRate),
+          fftSize: createLiteralInput(audioFrameData.fftSize),
+        }
+      : {};
+  const project: VizProjectDocument = {
+    ...createEmptyVizProjectDocument({
+      projectId: `component-preview-${componentId}`,
+      name: `${comp.name} Preview`,
+      timeline: {
+        fps,
+        durationInFrames: Math.max(frame + 1, fps * 5),
+      },
+      viewport: {
+        width: viewportWidth,
+        height: viewportHeight,
+        backgroundColor: '#000000',
+      },
+    }),
+    layerOrder: [layerId],
+    layers: [
+      {
+        id: layerId,
+        name: comp.name,
+        componentId,
+        enabled: true,
+        opacity: 1,
+        blendMode: 'normal',
+        settings: structuredClone(configValues),
+        inputs: liveInputs,
+      },
+    ],
+  };
+  const runtimeSession = createVizRuntimeSession({
+    project,
+    mode: 'live',
+    seed: `component-preview-${componentId}`,
+  });
+
+  return createVizRenderPlan({
+    session: runtimeSession,
+    frame,
     registry: runtimeComponentRegistry,
   });
 };

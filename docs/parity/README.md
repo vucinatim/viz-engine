@@ -25,6 +25,7 @@ Browser comparison records live in [evidence](./evidence/). Start with:
 - [2026-07-29 runtime rendering cutover slice 1](./evidence/2026-07-29-runtime-rendering-cutover-slice-1.md)
 - [2026-07-29 runtime rendering cutover slice 2](./evidence/2026-07-29-runtime-rendering-cutover-slice-2.md)
 - [2026-07-29 runtime rendering cutover slice 3](./evidence/2026-07-29-runtime-rendering-cutover-slice-3.md)
+- [2026-07-29 runtime rendering cutover slice 4](./evidence/2026-07-29-runtime-rendering-cutover-slice-4.md)
 
 ## Pinned Reference
 

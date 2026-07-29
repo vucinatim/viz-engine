@@ -194,9 +194,9 @@ The biggest remaining architecture gaps are:
   graph model and execution registry directly
 - most preserved V1 components still render through their historical
   `draw`/`draw3D` paths; `Curve Spectrum`, `Debug Animation`,
-  `Feature Extraction Bars`, `Strobe Light`, and `Simple Cube` now have
-  package-runtime-backed editor paths, but this is not the completed component
-  migration
+  `Feature Extraction Bars`, `Strobe Light`, `Simple Cube`, and
+  `Fullscreen Shader` now have package-runtime-backed editor paths, but this
+  is not the completed component migration
 - the temporary per-component runtime preview bridge remains necessary until
   those historical render paths are replaced by package-runtime components
 
@@ -222,6 +222,12 @@ The renderer contract also has a persistent Three program node:
   resources
 - Simple Cube rotation now derives from canonical frame time rather than
   accumulated browser `dt`
+
+Runtime-backed component-catalog previews now use that same package registry
+and renderer attachment. All six migrated editor definitions now contain only
+authoring metadata and parameter schemas; their visual semantics live entirely
+in package terrain. `Fullscreen Shader` GLSL source moved there as part of the
+same cutover.
 
 ## Autonomous Calibration Foundation
 

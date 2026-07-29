@@ -2,6 +2,10 @@
 
 import { Comp } from '@/components/config/create-component';
 import {
+  createRuntimeRenderPlanForEditorComponentPreview,
+  isEditorComponentRuntimeBacked,
+} from '@/lib/editor-runtime-preview-runtime-bridge';
+import {
   StandaloneNetworkEvaluator,
   createDefaultNetworkEvaluators,
 } from '@/lib/utils/standalone-network-evaluator';
@@ -12,6 +16,10 @@ import {
   preloadAudioData,
 } from '@/lib/utils/synthetic-audio';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  createVizThreePreviewController,
+  type VizThreePreviewController,
+} from '@viz-engine/renderer-three';
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -43,6 +51,7 @@ const CompPreview = ({
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const composerRef = useRef<EffectComposer | null>(null);
+  const runtimeControllerRef = useRef<VizThreePreviewController | null>(null);
 
   const syntheticAnalyzer = useRef(createSyntheticAnalyzer());
 
@@ -86,7 +95,13 @@ const CompPreview = ({
 
   // Setup 3D if needed
   const setup3D = useCallback(() => {
-    if (!comp.draw3D || !canvasRef.current || rendererRef.current) return;
+    if (
+      isEditorComponentRuntimeBacked(comp) ||
+      !comp.draw3D ||
+      !canvasRef.current ||
+      rendererRef.current
+    )
+      return;
 
     const renderer = new THREE.WebGLRenderer({
       canvas: canvasRef.current,
@@ -206,6 +221,38 @@ const CompPreview = ({
         });
       }
 
+      const internalWidth = Math.round(width * PREVIEW_RESOLUTION);
+      const internalHeight = Math.round(height * PREVIEW_RESOLUTION);
+      const runtimeRenderPlan =
+        createRuntimeRenderPlanForEditorComponentPreview({
+          comp,
+          viewportWidth: internalWidth,
+          viewportHeight: internalHeight,
+          time: loopTime,
+          configValues,
+          audioFrameData: {
+            frequencyData,
+            sampleRate: syntheticAnalyzer.current.context.sampleRate,
+            fftSize: syntheticAnalyzer.current.fftSize,
+          },
+        });
+
+      if (runtimeRenderPlan) {
+        if (!runtimeControllerRef.current) {
+          canvasRef.current.width = internalWidth;
+          canvasRef.current.height = internalHeight;
+        }
+        if (runtimeControllerRef.current) {
+          runtimeControllerRef.current.update(runtimeRenderPlan);
+        } else {
+          runtimeControllerRef.current = createVizThreePreviewController({
+            canvas: canvasRef.current,
+            renderPlan: runtimeRenderPlan,
+          });
+        }
+        return;
+      }
+
       if (comp.draw3D) {
         if (!rendererRef.current || !sceneRef.current || !cameraRef.current) {
           setup3D();
@@ -251,7 +298,7 @@ const CompPreview = ({
         });
       }
     },
-    [comp, setup3D],
+    [comp, height, setup3D, width],
   );
 
   // Animation loop for hover state
@@ -286,7 +333,7 @@ const CompPreview = ({
 
   // Initial render when component mounts
   useEffect(() => {
-    if (comp.draw3D) {
+    if (comp.draw3D && !isEditorComponentRuntimeBacked(comp)) {
       setup3D();
     }
     renderFrame(0);
@@ -301,6 +348,8 @@ const CompPreview = ({
         rendererRef.current.dispose();
         rendererRef.current = null;
       }
+      runtimeControllerRef.current?.dispose();
+      runtimeControllerRef.current = null;
       sceneRef.current = null;
       cameraRef.current = null;
       composerRef.current = null;

@@ -3,6 +3,7 @@ export * from "./curve-spectrum.js";
 export * from "./debug-animation.js";
 export * from "./feature-channel-bars.js";
 export * from "./feature-extraction-bars.js";
+export * from "./fullscreen-shader.js";
 export * from "./radial-bloom.js";
 export * from "./reactive-bars.js";
 export * from "./registry.js";

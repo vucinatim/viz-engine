@@ -49,6 +49,25 @@
     clean console
   - recorded evidence in
     `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-3.md`
+- completed the first full component-renderer ownership removal:
+  - migrated `Fullscreen Shader` source and runtime semantics into
+    `@viz-engine/components-core`
+  - reduced its editor definition to authoring metadata and parameter schema,
+    with no `init3D` or `draw3D` callbacks
+  - made runtime-backed Add Layer catalog thumbnails use the same package
+    runtime registry and Three preview controller as live layer previews
+  - removed the now-dead historical render callbacks from all six migrated
+    editor components: Curve Spectrum, Debug Animation, Feature Extraction
+    Bars, Strobe Light, Simple Cube, and Fullscreen Shader
+  - retained the historical catalog path only for components that have not yet
+    migrated
+  - browser-verified runtime thumbnails, shader switching to Cyber Grid,
+    canonical-time playback, and a clean console
+  - observed the production studio entry chunk decrease from `393.49 kB`
+    (`117.13 kB` gzip) to `387.30 kB` (`115.00 kB` gzip) after dormant
+    callback removal
+  - recorded evidence in
+    `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-4.md`
 - established the autonomous V2 calibration foundation:
   - pinned the immutable final pre-V2 parity reference to
     `e806fbc10980615588b52ff574bc923c6f00f35e`
