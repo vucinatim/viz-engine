@@ -14,6 +14,10 @@ import type {
   VizThreeProgramFactory,
   VizThreeProgramInstance,
 } from "./types.js";
+import {
+  createVizThreeModelResourceManager,
+  type VizThreeModelResourceManager,
+} from "../model-resources.js";
 
 const programFactories = new Map<string, VizThreeProgramFactory>([
   ["viz-core/simple-cube/v1", createSimpleCubeProgram],
@@ -31,12 +35,14 @@ export const createVizThreeProgramInstance = ({
   width,
   height,
   materializedAssets,
+  modelResources,
   invalidate,
 }: {
   node: VizRenderThreeProgramNode;
   width: number;
   height: number;
   materializedAssets?: ReadonlyMap<string, VizMaterializedAsset>;
+  modelResources?: VizThreeModelResourceManager;
   invalidate?: () => void;
 }): VizThreeProgramInstance => {
   const factory = programFactories.get(node.programId);
@@ -50,6 +56,8 @@ export const createVizThreeProgramInstance = ({
     width,
     height,
     materializedAssets: materializedAssets ?? new Map(),
+    modelResources:
+      modelResources ?? createVizThreeModelResourceManager(),
     invalidate: invalidate ?? (() => undefined),
   });
 };

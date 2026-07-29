@@ -1306,3 +1306,53 @@
   `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md`;
   exact historical Stage FBX character appearance remains the sole product
   decision preventing final goal completion
+- resolved the Stage character product direction in favor of retaining
+  production-quality model-backed DJ and crowd visuals without restoring the
+  historical editor-owned FBX implementation
+- added
+  `docs/specs/v2/native-3d-model-character-and-performance-system.md` as the
+  canonical architecture for:
+  - generic native model assets and prepared derivatives
+  - renderer-owned model resources and readiness
+  - deterministic absolute-frame animation
+  - character rig and facial semantics
+  - scalable crowds
+  - future speech, singing, mocap, and retargeted performance
+- classified the current procedural Stage actors as a deterministic fallback
+  and migration placeholder rather than accepted final visual parity
+- added the critical `components.stage-model-characters` parity capability so
+  the matrix now records the unresolved implementation honestly as one known
+  gap instead of allowing the product decision to remain outside the
+  executable parity backlog
+- implemented and certified the first native model/character production slice:
+  - added canonical `model` assets, typed model manifests, playback contracts,
+    component default assets, and bundle extension/roundtrip support
+  - moved the four authored Stage FBX files into lazy content-pinned public
+    assets and attached them through generic Stage component inputs
+  - added renderer-scoped fetch/parse/cache/lease/cancellation/disposal
+    ownership with skeletal-safe instantiation and structured warnings
+  - restored the authored DJ through absolute-time clip sampling
+  - restored three real crowd archetypes through deterministic seeded
+    placement and per-archetype GPU bone-animation textures
+  - retained procedural actors only as immediate live loading/failure fallback
+  - made still and video capture await runtime model readiness and redraw the
+    requested deterministic frame
+  - treated the unavailable `male-cheer` normal map as an inspectable
+    non-critical warning after proving the mesh, rig, clip, and base material
+    remain valid
+  - fixed the embedded texture alpha mismatch that initially made valid GPU
+    crowd geometry transparent
+  - restored the Stage crowd default from the temporary 50-person procedural
+    value to the V1 reference density of 500
+  - browser-compared the retained V1 playground and preserved V2 editor across
+    hero, flyover, wide, and drone views
+  - observed real-time bounded playback with 500 and 1,000 animated characters
+    and no console or shader errors
+  - added focused model cache, manifest, warning, cancellation, absolute-seek,
+    deterministic crowd, lifecycle, readiness, default-asset override, and
+    portable-bundle tests
+  - promoted `components.stage-model-characters` from `gap` to `verified`
+  - passed the complete `pnpm check:foundation` gate with 42 valid parity
+    capabilities, 36 foundation test files / 144 tests, all type checks, both
+    production builds, built-package consumer smoke, and creative-loop bundle
+    roundtrip

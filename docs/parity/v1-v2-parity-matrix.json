@@ -150,6 +150,19 @@
       "validationEvidence": []
     },
     {
+      "id": "components.stage-model-characters",
+      "area": "components",
+      "capability": "Stage presents production-quality model-backed DJ and crowd characters with authored dance animation across its established cinematic camera paths.",
+      "importance": "critical",
+      "parityDimensions": ["visual", "functional", "performance"],
+      "referenceEvidence": ["playground/src/models/female-dj.fbx", "playground/src/models/female-dancer.fbx", "playground/src/models/male-dancer.fbx", "playground/src/models/male-cheer.fbx", "playground/src/scene/dj.ts", "playground/src/scene/crowd.ts"],
+      "v2Evidence": ["public/models/stage/female-dj.fbx", "public/models/stage/female-dancer.fbx", "public/models/stage/male-dancer.fbx", "public/models/stage/male-cheer.fbx", "packages/viz-contracts/src/models.ts", "packages/viz-components-core/src/stage-model-assets.ts", "packages/viz-renderer-three/src/model-resources.ts", "packages/viz-renderer-three/src/model-animation.ts", "packages/viz-renderer-three/src/programs/stage-characters.ts", "packages/viz-renderer-three/src/programs/stage-scene.ts", "tests/foundation/native-model-system.test.ts", "docs/specs/v2/native-3d-model-character-and-performance-system.md"],
+      "status": "verified",
+      "acceptance": ["The real DJ and dancer assets or visually approved prepared derivatives replace procedural actors in production Stage output.", "Embedded authored animation samples deterministically from canonical frame time and matches between direct seek, preview, and export.", "Crowd flyover, drone, and hero-DJ views preserve the intended actor fidelity and dance readability.", "Canonical model resolution, readiness, cancellation, disposal, and crowd performance satisfy the native 3D system specification."],
+      "validationMethods": ["browser", "visual", "integration", "benchmark"],
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
+    },
+    {
       "id": "nodes.editor-overlay",
       "area": "nodes",
       "capability": "The full node-graph editor opens from layer workflows and preserves the established spatial editing experience.",

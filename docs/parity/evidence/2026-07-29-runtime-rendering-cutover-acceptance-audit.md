@@ -33,9 +33,9 @@ e806fbc10980615588b52ff574bc923c6f00f35e
 | Still and video export use the migrated system | A 1920×1080 still preview and a real 1280×720 H.264/AAC MP4 were inspected. Start/middle/end MP4 frames were distinct and visibly contained the runtime grid and cube. | proven |
 | No material performance regression remains unexplained | The strict fixed-device comparator passed all 21 checks: V2 measured 119.899 mean FPS, 9.900 ms frame-time p95, and 92.512 MB mean heap versus V1's 74.915 FPS, 17.600 ms, and 230.086 MB. | proven |
 | Bounded longer playback remains stable | A 180-second, 362-sample soak crossed the complete bundled audio loop at 119.959 mean FPS and 12.200 ms frame-time p95. This is bounded playback evidence, not arbitrary edit-churn certification. | proven for cutover scope |
-| Full repository quality gate passes | `pnpm check:foundation` passed parity validation, all package/studio/tool type checks, two production studio builds, 35 test files / 132 tests, built-package consumer smoke, and the creative-loop bundle roundtrip. | proven |
+| Full repository quality gate passes | `pnpm check:foundation` passed parity validation, all package/studio/tool type checks, two production studio builds, 36 test files / 144 tests, built-package consumer smoke, and the creative-loop bundle roundtrip. | proven |
 | Documentation describes the resulting architecture | `current-state.md`, the cutover plan, evidence slices, parity matrix, work ledger, and suggestions describe the one-session runtime path and remaining limitations. | proven after this audit |
-| Preserved visuals remain faithful | Fourteen components have deterministic/browser evidence for their established scene structure, controls, animation, and visible output. Stage preserves the full stage/effect/DJ/crowd capability but intentionally replaces historical FBX character models with procedural retained actors. | product decision required |
+| Preserved visuals remain faithful | Fourteen components retain their prior deterministic/browser evidence. Stage now uses the same four authored DJ/dancer files as the immutable reference through canonical model assets, absolute-time authored animation, and a GPU crowd path. Direct legacy/V2 browser comparison covered the hero view, flyover/drone motion, 500-character reference density, and the 1,000-character limit. | proven |
 
 ## Component Evidence Map
 
@@ -55,7 +55,7 @@ e806fbc10980615588b52ff574bc923c6f00f35e
 | Light Tunnel | Slice 10 |
 | Morph Shapes | Slice 11 |
 | Neural Network | Slice 12 |
-| Stage Scene | Slice 13 |
+| Stage Scene | Slice 13 plus the native model certification below |
 
 Every slice includes focused deterministic tests and real preserved-editor
 browser evidence. The final shared-session, export, performance, seek, and
@@ -81,10 +81,10 @@ debug diagnostics, and mirror presentation still draw browser UI. They are not
 visual-component scene evaluation paths and therefore are not obsolete runtime
 ownership.
 
-## Remaining Product Decision
+## Stage Character Decision At Audit Time
 
-The only unmet completion condition is whether visual faithfulness requires the
-exact historical Stage character models.
+At the time of this audit, the only unmet completion condition was whether
+visual faithfulness required production-quality model-backed Stage characters.
 
 Current V2 deliberately does not restore:
 
@@ -101,7 +101,7 @@ It instead preserves:
 - portable preview/export behavior
 - retained renderer resources
 
-Recommended decision:
+The recommendation recorded at audit time was:
 
 - approve the retained procedural actors as the intentional V2 Stage character
   implementation for this cutover
@@ -111,3 +111,92 @@ Recommended decision:
 
 Until that decision is approved, the architecture cutover is proven complete
 but the goal's final visual-faithfulness condition remains open.
+
+## Subsequent Product Resolution
+
+The product decision was subsequently resolved in favor of retaining
+production-quality model-backed DJ and crowd characters.
+
+The procedural actors are now classified as a deterministic fallback and
+migration placeholder, not accepted final Stage parity. V2 will not restore the
+historical editor-bundled FBX path. It will restore the character experience
+through canonical model assets, explicit preparation and readiness,
+renderer-owned resources, deterministic absolute-frame animation, and a
+scalable crowd implementation.
+
+The accepted architecture lives in:
+
+- `docs/specs/v2/native-3d-model-character-and-performance-system.md`
+
+The runtime architecture cutover remained proven while this work was
+implemented.
+
+## Native Model And Stage Character Certification
+
+The accepted Stage restoration is now implemented without reviving the
+historical browser-owned loader:
+
+- `model` is a first-class asset kind with a typed model capability manifest
+- Stage layers receive four stable content-pinned model refs through generic
+  component default-asset application
+- bundle resolution materializes the assets only when a Stage layer requests
+  them
+- one renderer-scoped resource manager owns fetch, parse, content-identity
+  deduplication, skeletal cloning, warnings, cancellation, and disposal
+- the DJ pose is sampled from canonical absolute frame time
+- the crowd uses three actual dancer archetypes, deterministic model/placement/
+  phase selection, and one baked bone-animation texture per archetype rather
+  than one CPU mixer per person
+- procedural characters remain visible during live loading or recoverable
+  failure
+- still and video capture wait for required runtime resources and redraw the
+  requested frame before capture
+- portable bundle roundtrip preserves model kind, FBX extension, content
+  identity, format metadata, and bytes
+
+Real browser validation found and resolved two issues that unit tests could not
+prove:
+
+1. `male-cheer.fbx` references an unavailable external normal map. The mesh,
+   rig, authored clip, and base material remain usable, so dependency failure
+   is now an inspectable non-fatal warning instead of discarding the complete
+   production crowd.
+2. The embedded character textures expose unusable alpha for this scene. The
+   first GPU crowd material honored that alpha and made valid geometry
+   invisible. Matching the historical opaque material treatment restored the
+   intended silhouettes.
+
+The final browser evidence used the active 1280×720 preserved editor and the
+retained V1 playground:
+
+- V1 loaded the same four source files with its 500-person default and showed
+  the established dense foreground crowd
+- V2 showed the real DJ and three real crowd archetypes through the established
+  cinematic path, including wide, low-flyover, and high/drone compositions
+- 500 animated V2 characters advanced 3.27 seconds during a 3.00-second bounded
+  wall interval without a console or shader error
+- the 1,000-character limit advanced 3.20 seconds during a 3.00-second bounded
+  wall interval without a console or shader error
+- the V2 default crowd density was restored from the temporary procedural value
+  of 50 to the V1 reference value of 500
+
+Focused automated evidence covers:
+
+- model materialization and manifest inspection
+- content-identity cache deduplication
+- structured warning and cancellation behavior
+- seek-order-independent clip sampling
+- deterministic seeded crowd matrices
+- hide/show and disposal lifecycle
+- editor default-asset materialization and custom-asset override behavior
+- preview attachment readiness aggregation
+- portable model bundle roundtrip
+
+Direct content-pinned FBX is the first production runtime representation because
+it preserved the approved source appearance and animation in the measured
+browser slice. Prepared GLB remains a follow-up optimization and product
+surface decision; it is not allowed to replace the source merely for format
+preference without visual comparison.
+
+With this evidence, `components.stage-model-characters` is `verified` and the
+last cutover-specific visual-faithfulness condition is closed.

@@ -29,6 +29,7 @@ interface EditorRuntimePreviewAttachmentStore {
     audioFrameData: VizSessionRuntimePreviewAudioFrameData,
     renderPlan: VizRenderPlan,
   ) => string[];
+  whenRuntimeResourcesReady: () => Promise<void>;
   reset: () => void;
 }
 
@@ -137,6 +138,14 @@ const useEditorRuntimePreviewAttachmentStore =
       }
 
       return renderedLayerIds;
+    },
+    whenRuntimeResourcesReady: async () => {
+      await Promise.all(
+        [...get().layerAttachments.values()].map(
+          (attachment) =>
+            attachment.whenReady?.() ?? Promise.resolve(),
+        ),
+      );
     },
     reset: () =>
       set({

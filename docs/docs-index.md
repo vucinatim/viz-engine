@@ -61,6 +61,7 @@ This is the current source of truth for where VizEngine is heading:
 - [specs/v2/local-persistence-and-import-export-model.md](./specs/v2/local-persistence-and-import-export-model.md)
 - [specs/v2/asset-resolver-and-storage-abstraction-spec.md](./specs/v2/asset-resolver-and-storage-abstraction-spec.md)
 - [specs/v2/asset-lifecycle-and-derivation-job-model.md](./specs/v2/asset-lifecycle-and-derivation-job-model.md)
+- [specs/v2/native-3d-model-character-and-performance-system.md](./specs/v2/native-3d-model-character-and-performance-system.md)
 - [specs/v2/audio-feature-timeline-spec.md](./specs/v2/audio-feature-timeline-spec.md)
 - [specs/v2/package-build-publication-and-versioning-strategy.md](./specs/v2/package-build-publication-and-versioning-strategy.md)
 - [specs/v2/runtime-package-consumption-and-local-tarball-integration-plan.md](./specs/v2/runtime-package-consumption-and-local-tarball-integration-plan.md)

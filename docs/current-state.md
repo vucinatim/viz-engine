@@ -291,11 +291,16 @@ and commits its final pose through canonical project actions. Action buttons
 resolve to serializable `null` in project settings instead of leaking class
 instances and functions into runtime or persistence.
 
-The historical 27 MB FBX character attachment was replaced with retained
-procedural actors so preview/export remain portable and deterministic. DJ and
-crowd capability is preserved, but exact historical character-model appearance
-is still an explicit visual-parity gap pending canonical materialized character
-assets and bakeable animation sampling or product approval.
+The historical 27 MB Stage character content is now restored through the V2
+native model system rather than through the historical browser loader. The
+four content-pinned FBX files are canonical lazy bundle assets, renderer-owned
+resources expose capability manifests and explicit readiness, the hero DJ
+samples its authored clip from absolute frame time, and the three crowd
+archetypes use deterministic seeded placement plus GPU-baked skeletal animation
+textures. The retained procedural actors remain an immediate live-preview
+fallback during loading or failure; final capture waits for required model
+resources. This implements the first production slice of
+`docs/specs/v2/native-3d-model-character-and-performance-system.md`.
 
 The per-layer runtime-preview bridge has now been deleted. `VizSession`
 evaluates the complete canonical project into one render plan per frame through
@@ -383,7 +388,7 @@ Parity is not complete. The matrix intentionally remains conservative:
 - 38 capabilities are `partial`
 - 2 capabilities are `not-audited`
 - 0 capabilities are currently classified as a known `gap`
-- 1 capability is certified `verified`
+- 2 capabilities are certified `verified`
 
 The matching V2 candidate passes the fixed-device comparison contract and the
 bounded three-minute playback soak is recorded. Full parity remains
@@ -391,9 +396,12 @@ conservative because interaction-latency instrumentation and an edit-heavy
 long-session scenario are still outstanding.
 
 The final cutover acceptance audit also browser-verified waveform seeking,
-playback after seeking, and canonical parameter persistence across reload. All
-cutover requirements are now proven except the explicit product decision over
-exact historical Stage FBX character appearance.
+playback after seeking, canonical parameter persistence across reload, and the
+model-backed Stage at normal, 500-character, and 1,000-character crowd sizes.
+The architecture cutover requirements and the previously open Stage character
+visual-parity condition are now proven. The broader parity matrix remains
+conservative because unrelated interaction-latency and edit-heavy long-session
+work is still partial or not audited.
 
 ## Current V1 Truth
 

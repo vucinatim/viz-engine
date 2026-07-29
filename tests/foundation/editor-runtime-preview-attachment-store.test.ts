@@ -122,4 +122,29 @@ describe('Editor runtime preview attachment store', () => {
     expect(state.mirrorCanvasesByLayerId['layer-a']).toBeUndefined();
     expect(state.playerRef).toBe(playerRef);
   });
+
+  it('waits for every registered runtime resource boundary', async () => {
+    const store = useEditorRuntimePreviewAttachmentStore.getState();
+    const readyOrder: string[] = [];
+
+    store.registerLayerAttachment('layer-a', {
+      getViewport: () => ({ width: 1, height: 1 }),
+      render: vi.fn(),
+      whenReady: async () => {
+        await Promise.resolve();
+        readyOrder.push('a');
+      },
+    });
+    store.registerLayerAttachment('layer-b', {
+      getViewport: () => ({ width: 1, height: 1 }),
+      render: vi.fn(),
+      whenReady: async () => {
+        readyOrder.push('b');
+      },
+    });
+
+    await store.whenRuntimeResourcesReady();
+
+    expect(readyOrder.sort()).toEqual(['a', 'b']);
+  });
 });

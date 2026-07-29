@@ -1,9 +1,13 @@
 import type { Comp } from '@/components/config/create-component';
 import {
+  applyComponentDefaultAssets,
   createEmptyVizProjectDocument,
   toEditorComponentId,
 } from '@/lib/viz-session/project-adapters';
-import { createCoreComponentRegistry } from '@viz-engine/components-core';
+import {
+  createCoreComponentRegistry,
+  resolveBundledStageModelAssets,
+} from '@viz-engine/components-core';
 import type { VizProjectDocument, VizRenderPlan } from '@viz-engine/contracts';
 import { createVizRenderPlan, createVizRuntimeSession } from '@viz-engine/runtime';
 
@@ -43,7 +47,7 @@ export const createEditorComponentPreviewPlan = ({
   const fps = 60;
   const frame = Math.max(0, Math.floor(time * fps));
   const layerId = `component-preview-${componentId}`;
-  const project: VizProjectDocument = {
+  const baseProject: VizProjectDocument = {
     ...createEmptyVizProjectDocument({
       projectId: `component-preview-${componentId}`,
       name: `${comp.name} Preview`,
@@ -70,10 +74,17 @@ export const createEditorComponentPreviewPlan = ({
       },
     ],
   };
+  const project = applyComponentDefaultAssets(
+    baseProject,
+    (candidateId) => componentRegistry.get(candidateId),
+  );
   const session = createVizRuntimeSession({
     project,
     mode: 'live',
     seed: `component-preview-${componentId}`,
+    resolvedAssets: resolveBundledStageModelAssets(
+      project.assetRefs ?? [],
+    ),
   });
 
   return createVizRenderPlan({

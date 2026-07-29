@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
-import modelUrl from '../models/female-dj.fbx?url';
 import { modelCache } from '../utils/model-cache';
+
+const modelUrl = '/models/stage/female-dj.fbx';
 
 export function createDj(scene: THREE.Scene) {
   let mixer: THREE.AnimationMixer | null = null;

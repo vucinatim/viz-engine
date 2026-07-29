@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
-import femaleModelUrl from '../models/female-dancer.fbx?url';
-import maleCheerModelUrl from '../models/male-cheer.fbx?url';
-import maleDancerModelUrl from '../models/male-dancer.fbx?url';
 import { modelCache } from '../utils/model-cache';
+
+const femaleModelUrl = '/models/stage/female-dancer.fbx';
+const maleDancerModelUrl = '/models/stage/male-dancer.fbx';
+const maleCheerModelUrl = '/models/stage/male-cheer.fbx';
 
 export function createCrowd(
   scene: THREE.Scene,

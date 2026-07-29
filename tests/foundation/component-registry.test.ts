@@ -77,6 +77,40 @@ describe("Viz component authoring foundation", () => {
     ]);
   });
 
+  it("rejects a component default asset without an asset-ref input", () => {
+    const invalidComponent = {
+      ...featureChannelBarsComponent,
+      id: "invalid-default-asset-component",
+      inputs: [
+        {
+          key: "model",
+          label: "Model",
+          supportedSources: ["literal"],
+          defaultAsset: {
+            id: "default-model",
+            kind: "model",
+            source: "bundle",
+            label: "Default Model",
+          },
+        },
+      ],
+    } satisfies VizComponentImplementation;
+
+    expect(
+      createVizComponentRegistry([
+        invalidComponent,
+      ]).getValidationIssues(),
+    ).toEqual([
+      {
+        code: "invalid-default-asset",
+        componentId: "invalid-default-asset-component",
+        path: "invalid-default-asset-component.inputs.model.defaultAsset",
+        message:
+          'Component input "model" declares a default asset without supporting asset-ref sources.',
+      },
+    ]);
+  });
+
   it("renders the V1-derived feature-channel-bars component through the canonical runtime path", () => {
     const project: VizProjectDocument = {
       schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,

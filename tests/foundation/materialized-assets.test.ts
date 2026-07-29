@@ -22,4 +22,35 @@ describe("Viz asset materialization", () => {
       height: 720,
     });
   });
+
+  it("preserves native model bytes, source identity, and metadata", () => {
+    const [asset] = materializeVizResolvedAssets([
+      {
+        id: "asset-model-dancer",
+        kind: "model",
+        source: "bundle",
+        uri: "/models/dancer.fbx",
+        mimeType: "application/vnd.autodesk.fbx",
+        bytes: new Uint8Array([1, 2, 3]).buffer,
+        metadata: {
+          contentIdentity: "sha256:model",
+          modelFormat: "fbx",
+        },
+      },
+    ]);
+
+    expect(asset).toMatchObject({
+      id: "asset-model-dancer",
+      kind: "model",
+      modelSourceUri: "/models/dancer.fbx",
+      mimeType: "application/vnd.autodesk.fbx",
+      metadata: {
+        contentIdentity: "sha256:model",
+        modelFormat: "fbx",
+      },
+    });
+    expect(asset?.kind === "model" && asset.bytes).toEqual(
+      new Uint8Array([1, 2, 3]).buffer,
+    );
+  });
 });

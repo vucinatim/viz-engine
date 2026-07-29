@@ -583,6 +583,21 @@ async function renderFrames(
         audioFrameData,
       );
 
+      if (frameIndex === 0) {
+        log(
+          'info',
+          'Waiting for deterministic runtime resources',
+        );
+        await useEditorRuntimePreviewAttachmentStore
+          .getState()
+          .whenRuntimeResourcesReady();
+        vizSessionActions.preview.renderRuntimePreviewFrame(
+          previewFrame,
+          audioFrameData,
+        );
+        log('success', 'Runtime resources ready');
+      }
+
       // Also update the player to keep its time in sync (for UI/scrubbing)
       playerRef.seekTo(frameIndex);
 

@@ -1,5 +1,8 @@
 import { Comp } from '@/components/config/create-component';
 import {
+  createCoreComponentRegistry,
+} from '@viz-engine/components-core';
+import {
   NodeHandleType,
   safeVTypeToNodeHandleType,
 } from '@/components/config/node-types';
@@ -76,6 +79,7 @@ import {
 } from './runtime-preview-plan';
 import {
   applyEditorLayerSettings,
+  applyComponentDefaultAssets,
   attachGraphToLayerInput,
   createEmptyVizProjectDocument,
   createProjectedLayer,
@@ -89,6 +93,7 @@ import {
 const DEFAULT_FPS = 60;
 const DEFAULT_DURATION_FRAMES = 1;
 const MAX_HISTORY_SIZE = 50;
+const runtimeComponentRegistry = createCoreComponentRegistry();
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 
@@ -499,7 +504,12 @@ const updateProject = (
     syncGraphProjection?: boolean;
   } = {},
 ) => {
-  const canonicalProject = clone(nextProject);
+  const canonicalProject = clone(
+    applyComponentDefaultAssets(
+      nextProject,
+      (componentId) => runtimeComponentRegistry.get(componentId),
+    ),
+  );
   if (options.syncLayerProjections !== false) {
     syncProjectedStoresFromProject(canonicalProject);
   }
@@ -681,29 +691,47 @@ export const vizSessionActions = {
     initializeProjectState(force = false) {
       const state = getProjectState();
       if (state.initialized) {
-        syncProjectedStoresFromProject(state.workingProject);
+        const project = applyComponentDefaultAssets(
+          state.workingProject,
+          (componentId) =>
+            runtimeComponentRegistry.get(componentId),
+        );
+        syncProjectedStoresFromProject(project);
         replaceGraphState({
           networks: projectGraphsToNodeNetworks(
-            state.workingProject,
+            project,
             getGraphState().networks,
           ),
         });
         transportController.setDurationFrames(
-          state.workingProject.timeline.durationInFrames,
+          project.timeline.durationInFrames,
         );
-        if (force) {
+        if (force || project !== state.workingProject) {
           replaceProjectState({
             ...state,
             revision: state.revision + 1,
+            sourceProject:
+              state.sourceProject === null
+                ? null
+                : clone(
+                    applyComponentDefaultAssets(
+                      state.sourceProject,
+                      (componentId) =>
+                        runtimeComponentRegistry.get(componentId),
+                    ),
+                  ),
+            workingProject: clone(project),
           });
         }
         return;
       }
 
-      const project =
+      const project = applyComponentDefaultAssets(
         state.workingProject.schemaVersion === VIZ_PROJECT_SCHEMA_VERSION
           ? state.workingProject
-          : createEmptyVizProjectDocument();
+          : createEmptyVizProjectDocument(),
+        (componentId) => runtimeComponentRegistry.get(componentId),
+      );
       syncProjectedStoresFromProject(project);
       replaceGraphState({
         networks: projectGraphsToNodeNetworks(
@@ -721,21 +749,27 @@ export const vizSessionActions = {
     },
     importWorkingProject(project: VizProjectDocument) {
       assertValidProjectDocument(project);
-      syncProjectedStoresFromProject(project);
+      const canonicalProject = applyComponentDefaultAssets(
+        project,
+        (componentId) => runtimeComponentRegistry.get(componentId),
+      );
+      syncProjectedStoresFromProject(canonicalProject);
       replaceGraphState({
         networks: projectGraphsToNodeNetworks(
-          project,
+          canonicalProject,
           getGraphState().networks,
         ),
       });
       syncNetworkOpenState();
-      transportController.setDurationFrames(project.timeline.durationInFrames);
+      transportController.setDurationFrames(
+        canonicalProject.timeline.durationInFrames,
+      );
       const current = getProjectState();
       replaceProjectState({
         initialized: true,
         revision: current.revision + 1,
-        sourceProject: clone(project),
-        workingProject: clone(project),
+        sourceProject: clone(canonicalProject),
+        workingProject: clone(canonicalProject),
       });
     },
     exportWorkingProject() {

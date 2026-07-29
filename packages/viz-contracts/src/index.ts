@@ -7,6 +7,7 @@ export * from "./components.js";
 export * from "./component-registry.js";
 export * from "./graphs.js";
 export * from "./ids.js";
+export * from "./models.js";
 export * from "./project.js";
 export * from "./render-nodes.js";
 export * from "./runtime.js";

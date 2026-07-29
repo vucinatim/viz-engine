@@ -74,11 +74,11 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
   onto explicit bake/checkpoint artifacts when production scenes need dense
   long-lived triggering. The retained live program deliberately caps visible
   signal instances instead of recreating V1's unbounded mesh allocation.
-- Define the production Stage character contract as canonical materialized
-  character assets plus deterministic/bakeable animation sampling. The runtime
-  Stage deliberately uses retained procedural actors instead of restoring
-  roughly 27 MB of editor-bundled FBX URLs and browser-`dt` mixers, but exact
-  historical character appearance remains unapproved visual-parity work.
+- Continue the accepted native 3D roadmap after the now-complete Stage slice:
+  compare prepared GLB derivatives against the content-pinned FBX reference,
+  then expose the proven substrate through the generic `Model3D` product
+  surface with hierarchy, clip, material, and morph inspection. Do not pull
+  character, facial, or retargeting semantics into that generic component.
 - Move the preserved editor node-kernel catalog from app terrain into
   `@viz-engine/nodes-core` once this rendering cutover is certified. The
   current registry boundary removes duplicate evaluation and is canonical at
@@ -172,6 +172,7 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
   the next cleanup should apply the same ruthless standard to remaining
   history/context seams so no undo/redo path still depends on legacy store
   reconstruction as hidden truth.
+
 ## Next Cleanup Candidates
 
 - keep burning down editor-era convenience accessors that still encourage

@@ -38,6 +38,7 @@ export interface EditorRuntimePreviewAttachment {
     audioFrameData: VizSessionRuntimePreviewAudioFrameData;
     renderPlan: VizRenderPlan;
   }) => void;
+  whenReady: () => Promise<void>;
   activateFlyCameraMode: () => void;
   destroy: () => void;
 }
@@ -317,6 +318,8 @@ export const createEditorRuntimePreviewAttachment = ({
         mirrorToCanvases(canvas, mirrorCanvases);
       }
     },
+    whenReady: () =>
+      runtimePreviewController?.whenReady() ?? Promise.resolve(),
     activateFlyCameraMode,
     destroy: () => {
       deactivateFlyCamera();

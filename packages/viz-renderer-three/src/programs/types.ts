@@ -9,6 +9,9 @@ import type {
   WebGLRenderTarget,
   WebGLRenderer,
 } from "three";
+import type {
+  VizThreeModelResourceManager,
+} from "../model-resources.js";
 
 export interface VizThreeProgramInstance {
   readonly programId: string;
@@ -24,6 +27,7 @@ export interface VizThreeProgramInstance {
     renderer: WebGLRenderer,
     renderTarget: WebGLRenderTarget,
   ): void;
+  whenReady?(): Promise<void>;
   dispose(): void;
 }
 
@@ -32,5 +36,6 @@ export type VizThreeProgramFactory = (options: {
   width: number;
   height: number;
   materializedAssets: ReadonlyMap<string, VizMaterializedAsset>;
+  modelResources: VizThreeModelResourceManager;
   invalidate(): void;
 }) => VizThreeProgramInstance;

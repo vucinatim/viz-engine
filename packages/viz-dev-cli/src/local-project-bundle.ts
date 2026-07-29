@@ -92,6 +92,22 @@ const inferAssetExtension = (asset: VizResolvedAsset): string => {
     return ".video";
   }
 
+  if (asset.kind === "model") {
+    if (asset.mimeType === "model/gltf-binary") {
+      return ".glb";
+    }
+    if (asset.mimeType === "model/gltf+json") {
+      return ".gltf";
+    }
+    if (
+      asset.mimeType === "application/vnd.autodesk.fbx" ||
+      asset.uri.toLowerCase().endsWith(".fbx")
+    ) {
+      return ".fbx";
+    }
+    return ".model";
+  }
+
   return ".bin";
 };
 

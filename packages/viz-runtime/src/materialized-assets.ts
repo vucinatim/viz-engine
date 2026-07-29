@@ -59,6 +59,17 @@ export const materializeVizResolvedAsset = (
     };
   }
 
+  if (asset.kind === "model") {
+    return {
+      id: asset.id,
+      kind: "model",
+      source: asset.source,
+      ...createOptionalAssetFields(asset),
+      ...(asset.bytes === undefined ? {} : { bytes: asset.bytes }),
+      modelSourceUri: asset.uri,
+    };
+  }
+
   return {
     id: asset.id,
     kind: "binary",

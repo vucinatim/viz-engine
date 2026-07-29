@@ -3,7 +3,10 @@ import type { VizLayer } from "./project.js";
 import type { VizLayerId } from "./ids.js";
 import type { VizFrameContext, VizRendererFamily, VizViewport } from "./runtime.js";
 import type { VizRenderNode } from "./render-nodes.js";
-import type { VizMaterializedAsset } from "./assets.js";
+import type {
+  VizAssetRef,
+  VizMaterializedAsset,
+} from "./assets.js";
 
 export type VizComponentInputSourceKind = VizValueSource["kind"];
 
@@ -12,6 +15,7 @@ export interface VizComponentInputDefinition {
   label: string;
   supportedSources: VizComponentInputSourceKind[];
   required?: boolean;
+  defaultAsset?: VizAssetRef;
   description?: string;
 }
 

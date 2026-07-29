@@ -25,4 +25,5 @@ export interface LayerRuntimePreviewAttachment {
     audioFrameData: VizSessionRuntimePreviewAudioFrameData;
     renderPlan: VizRenderPlan;
   }) => void;
+  whenReady?: () => Promise<void>;
 }

@@ -51,11 +51,18 @@ import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { createVizThreeProgramInstance } from "./programs/registry.js";
 import type { VizThreeProgramInstance } from "./programs/types.js";
+import {
+  createVizThreeModelResourceManager,
+  type VizThreeModelResourceDiagnostic,
+  type VizThreeModelResourceManager,
+} from "./model-resources.js";
 
 export type {
   VizThreeProgramFactory,
   VizThreeProgramInstance,
 } from "./programs/types.js";
+export * from "./model-animation.js";
+export * from "./model-resources.js";
 
 export interface VizThreeSceneGraph {
   scene: Scene;
@@ -78,6 +85,8 @@ export interface VizThreeCompositorGraph {
   compositeCamera: OrthographicCamera;
   compositeRoot: Group;
   layers: VizThreeCompositorLayer[];
+  modelResources: VizThreeModelResourceManager;
+  ownsModelResources: boolean;
 }
 
 export interface VizThreePreviewController {
@@ -89,6 +98,8 @@ export interface VizThreePreviewController {
     layerId: string,
     pose: VizThreePreviewCameraPose | null,
   ): void;
+  whenReady(): Promise<void>;
+  getModelResourceDiagnostics(): VizThreeModelResourceDiagnostic[];
   dispose(): void;
 }
 
@@ -771,6 +782,7 @@ const createVizThreeCompositorLayer = (
   viewportWidth: number,
   viewportHeight: number,
   materializedAssets: ReadonlyMap<string, VizMaterializedAsset>,
+  modelResources: VizThreeModelResourceManager,
   invalidate: () => void,
 ): VizThreeCompositorLayer => {
   if (layer.node?.kind === "three-program") {
@@ -779,6 +791,7 @@ const createVizThreeCompositorLayer = (
       width: viewportWidth,
       height: viewportHeight,
       materializedAssets,
+      modelResources,
       invalidate,
     });
     const compositeSurface = createCompositeSurface(
@@ -829,6 +842,7 @@ const createVizThreeCompositorLayer = (
 export const createVizThreeCompositorGraph = (
   renderPlan: VizRenderPlan,
   invalidate: () => void = () => undefined,
+  providedModelResources?: VizThreeModelResourceManager,
 ): VizThreeCompositorGraph => {
   const compositeScene = new Scene();
   compositeScene.background =
@@ -841,6 +855,9 @@ export const createVizThreeCompositorGraph = (
   const materializedAssets = new Map(
     renderPlan.materializedAssets.map((asset) => [asset.id, asset]),
   );
+  const modelResources =
+    providedModelResources ??
+    createVizThreeModelResourceManager();
 
   const layers = renderPlan.layers
     .filter((layer) => Boolean(layer.node))
@@ -850,6 +867,7 @@ export const createVizThreeCompositorGraph = (
         renderPlan.viewport.width,
         renderPlan.viewport.height,
         materializedAssets,
+        modelResources,
         invalidate,
       ),
     );
@@ -863,6 +881,8 @@ export const createVizThreeCompositorGraph = (
     compositeCamera,
     compositeRoot,
     layers,
+    modelResources,
+    ownsModelResources: providedModelResources === undefined,
   };
 };
 
@@ -1000,6 +1020,9 @@ const disposeCompositorGraph = (graph: VizThreeCompositorGraph): void => {
   }
 
   clearRootGroup(graph.compositeRoot);
+  if (graph.ownsModelResources) {
+    graph.modelResources.dispose();
+  }
 };
 
 const updateShaderUniformValue = (
@@ -1420,9 +1443,11 @@ export const createVizThreePreviewController = ({
 
   let currentRenderPlan = renderPlan;
   let render = () => undefined;
+  const modelResources = createVizThreeModelResourceManager();
   let compositorGraph = createVizThreeCompositorGraph(
     renderPlan,
     () => render(),
+    modelResources,
   );
   const textureCache = new Map<string, Texture>();
   const pendingTextureLoads = new Set<string>();
@@ -1517,6 +1542,7 @@ export const createVizThreePreviewController = ({
       compositorGraph = createVizThreeCompositorGraph(
         nextRenderPlan,
         () => render(),
+        modelResources,
       );
       resize(nextRenderPlan.viewport.width, nextRenderPlan.viewport.height);
       hydrate();
@@ -1547,6 +1573,24 @@ export const createVizThreePreviewController = ({
         cameraPoseOverrides.delete(layerId);
       }
     },
+    async whenReady() {
+      for (;;) {
+        const graph = compositorGraph;
+        await Promise.all(
+          graph.layers.map(
+            (layer) =>
+              layer.programInstance?.whenReady?.() ??
+              Promise.resolve(),
+          ),
+        );
+        if (graph === compositorGraph) {
+          return;
+        }
+      }
+    },
+    getModelResourceDiagnostics() {
+      return modelResources.getDiagnostics();
+    },
     dispose() {
       disposeCompositorGraph(compositorGraph);
       for (const texture of textureCache.values()) {
@@ -1554,6 +1598,7 @@ export const createVizThreePreviewController = ({
       }
       textureCache.clear();
       cameraPoseOverrides.clear();
+      modelResources.dispose();
       renderer.dispose();
     },
   };

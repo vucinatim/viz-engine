@@ -2,7 +2,7 @@ import { exampleProjectBundleDirectoryUrl } from "@viz-engine/example-projects/n
 import { createCoreComponentRegistry } from "@viz-engine/components-core";
 import { createCoreNodeRegistry } from "@viz-engine/nodes-core";
 import { createVizRemotionSvgMarkup } from "@viz-engine/remotion-adapter";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -17,6 +17,7 @@ import {
   renderBundleSvg,
   validateBundleProject,
   validateExampleProject,
+  writeLocalVizProjectBundle,
 } from "@viz-engine/dev-cli";
 
 describe("Viz local-first CLI surface", () => {
@@ -125,6 +126,82 @@ describe("Viz local-first CLI surface", () => {
       expect(reloaded.project.graphs).toHaveLength(1);
       expect(svgOutput.ok).toBe(true);
       expect((svgOutput.payload as { svg: string }).svg).toContain("data-layer-id=\"layer-bars\"");
+    } finally {
+      rmSync(tempDirectory, { recursive: true, force: true });
+    }
+  });
+
+  it("roundtrips a native model asset through the portable bundle", () => {
+    const tempDirectory = mkdtempSync(
+      join(tmpdir(), "viz-model-bundle-roundtrip-"),
+    );
+    const modelBytes = Uint8Array.from([70, 66, 88, 0, 1, 2]);
+
+    try {
+      const project = {
+        schemaVersion: 1 as const,
+        projectId: "project-model-portability",
+        name: "Model portability",
+        timeline: { fps: 60, durationInFrames: 1 },
+        viewport: { width: 640, height: 360 },
+        layerOrder: [],
+        layers: [],
+        assetRefs: [
+          {
+            id: "asset-model-dancer",
+            kind: "model" as const,
+            source: "local" as const,
+            label: "Dancer",
+            mimeType: "application/vnd.autodesk.fbx",
+            originalFileName: "dancer.fbx",
+            metadata: {
+              contentIdentity: "sha256:model-portability",
+              modelFormat: "fbx",
+            },
+          },
+        ],
+      };
+      const written = writeLocalVizProjectBundle({
+        bundleDirectory: tempDirectory,
+        project,
+        resolvedAssets: [
+          {
+            id: "asset-model-dancer",
+            kind: "model",
+            source: "local",
+            uri: "memory://dancer.fbx",
+            mimeType: "application/vnd.autodesk.fbx",
+            bytes: modelBytes.buffer,
+            metadata: {
+              contentIdentity: "sha256:model-portability",
+              modelFormat: "fbx",
+            },
+          },
+        ],
+        resolvedArtifacts: [],
+      });
+      const loaded = loadLocalVizProjectBundle(tempDirectory);
+      const modelEntry = written.manifest.assetEntries[0]!;
+
+      expect(written.issues).toEqual([]);
+      expect(modelEntry).toMatchObject({
+        assetId: "asset-model-dancer",
+        kind: "model",
+        path: "assets/asset-model-dancer.fbx",
+        metadata: {
+          contentIdentity: "sha256:model-portability",
+          modelFormat: "fbx",
+        },
+      });
+      expect(loaded.issues).toEqual([]);
+      expect(loaded.resolvedAssets[0]).toMatchObject({
+        id: "asset-model-dancer",
+        kind: "model",
+        mimeType: "application/vnd.autodesk.fbx",
+      });
+      expect(
+        readFileSync(join(tempDirectory, modelEntry.path)),
+      ).toEqual(Buffer.from(modelBytes));
     } finally {
       rmSync(tempDirectory, { recursive: true, force: true });
     }

@@ -160,6 +160,7 @@ The first V2 design docs now exist:
 3. [V2 Node Contract](../../specs/v2/node-contract.md)
 4. [V2 Bake Artifact Contract](../../specs/v2/bake-artifact-contract.md)
 5. [V2 Runtime Package Split Plan](../../specs/v2/runtime-package-split-plan.md)
+6. [Native 3D Model, Character, And Performance System Spec](../../specs/v2/native-3d-model-character-and-performance-system.md)
 
 These should guide the next implementation planning pass.
 

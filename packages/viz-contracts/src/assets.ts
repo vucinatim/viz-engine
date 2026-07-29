@@ -1,6 +1,11 @@
 import type { VizArtifactId, VizAssetId } from "./ids.js";
 
-export type VizAssetKind = "audio" | "image" | "video" | "binary";
+export type VizAssetKind =
+  | "audio"
+  | "image"
+  | "video"
+  | "model"
+  | "binary";
 
 export type VizAssetSource =
   | "local"
@@ -63,6 +68,12 @@ export interface VizMaterializedVideoAsset extends VizMaterializedAssetBase {
   height?: number;
 }
 
+export interface VizMaterializedModelAsset extends VizMaterializedAssetBase {
+  kind: "model";
+  bytes?: ArrayBuffer;
+  modelSourceUri?: string;
+}
+
 export interface VizMaterializedBinaryAsset extends VizMaterializedAssetBase {
   kind: "binary";
   bytes?: ArrayBuffer;
@@ -73,4 +84,5 @@ export type VizMaterializedAsset =
   | VizMaterializedAudioAsset
   | VizMaterializedImageAsset
   | VizMaterializedVideoAsset
+  | VizMaterializedModelAsset
   | VizMaterializedBinaryAsset;

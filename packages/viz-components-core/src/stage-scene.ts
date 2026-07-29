@@ -8,6 +8,7 @@ import {
   asRecord,
   asString,
 } from "./shared.js";
+import { STAGE_MODEL_ASSET_DEFINITIONS } from "./stage-model-assets.js";
 
 const clamp = (value: number, minimum: number, maximum: number): number =>
   Math.min(maximum, Math.max(minimum, value));
@@ -45,7 +46,20 @@ export const stageSceneComponent: VizComponentImplementation = {
   rendererFamily: "three",
   description:
     "Deterministic retained EDM stage with a cinematic camera, crowd, lighting, lasers, beams, and shader wall.",
-  render: ({ frameContext, layer, settings }) => {
+  inputs: STAGE_MODEL_ASSET_DEFINITIONS.map((definition) => ({
+    key: definition.inputKey,
+    label: definition.asset.label,
+    supportedSources: ["asset-ref"],
+    required: true,
+    defaultAsset: definition.asset,
+    description: `Production Stage ${definition.role} model.`,
+  })),
+  render: ({
+    frameContext,
+    layer,
+    settings,
+    resolvedInputs,
+  }) => {
     const camera = asRecord(settings.camera);
     const shaderWall = asRecord(settings.shaderWall);
     const lighting = asRecord(settings.lighting);
@@ -61,6 +75,18 @@ export const stageSceneComponent: VizComponentImplementation = {
     const accentLights = asRecord(settings.accentLights);
     const characters = asRecord(settings.characters);
     const debug = asRecord(settings.debug);
+    const modelAssetIds = Object.fromEntries(
+      STAGE_MODEL_ASSET_DEFINITIONS.map((definition) => {
+        const input = resolvedInputs[definition.inputKey];
+        const asset = asRecord(input?.value);
+        return [
+          definition.role,
+          input?.status === "resolved" && asset.kind === "model"
+            ? asString(asset.id, "")
+            : "",
+        ];
+      }),
+    );
 
     return {
       kind: "three-program",
@@ -237,8 +263,19 @@ export const stageSceneComponent: VizComponentImplementation = {
           5,
         ),
         showDj: asBoolean(characters.showDj, true),
+        djModelAssetId: asString(modelAssetIds.dj, ""),
+        crowdModelAssetIds: [
+          asString(modelAssetIds.femaleDancer, ""),
+          asString(modelAssetIds.maleDancer, ""),
+          asString(modelAssetIds.maleCheer, ""),
+        ].filter(Boolean),
+        characterAnimationSpeed: clamp(
+          asNumber(characters.animationSpeed, 1),
+          0,
+          4,
+        ),
         crowdCount: Math.round(
-          clamp(asNumber(characters.crowdCount, 50), 0, 1_000),
+          clamp(asNumber(characters.crowdCount, 500), 0, 1_000),
         ),
         showHelpers: asBoolean(debug.showHelpers, false),
       },

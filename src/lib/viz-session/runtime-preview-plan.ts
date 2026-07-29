@@ -1,4 +1,7 @@
-import { createCoreComponentRegistry } from '@viz-engine/components-core';
+import {
+  createCoreComponentRegistry,
+  resolveBundledStageModelAssets,
+} from '@viz-engine/components-core';
 import { createEditorNodeRuntimeRegistry } from '@/lib/editor-node-runtime-registry';
 import type {
   VizExecutionMode,
@@ -103,6 +106,9 @@ const getRuntimeSession = (
     project: createSessionProject(options),
     mode,
     seed: 'editor-runtime-preview',
+    resolvedAssets: resolveBundledStageModelAssets(
+      options.project.assetRefs ?? [],
+    ),
   });
   sessionCache = {
     revision: options.projectRevision,

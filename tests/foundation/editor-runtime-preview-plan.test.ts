@@ -8,10 +8,12 @@ import {
   createEditorComponentPreviewPlan,
   isEditorComponentRuntimeBacked,
 } from '@/lib/editor-component-preview-plan';
+import { applyComponentDefaultAssets } from '@/lib/viz-session/project-adapters';
 import { createEditorNodeRuntimeRegistry } from '@/lib/editor-node-runtime-registry';
 import { createVizSessionRuntimePreviewFrame } from '@/lib/viz-session';
 import { createVizSessionRuntimePreviewPlan } from '@/lib/viz-session/runtime-preview-plan';
 import { createTestProject } from './viz-session-test-utils';
+import { createCoreComponentRegistry } from '@viz-engine/components-core';
 
 const audioFrameData = {
   frequencyData: Uint8Array.from(
@@ -246,5 +248,71 @@ describe('Editor runtime preview planning', () => {
   it('keeps editor action buttons out of canonical runtime settings', () => {
     expect(StageScene.defaultValues.camera.enterWasdMode).toBeNull();
     expect(() => structuredClone(StageScene.defaultValues)).not.toThrow();
+  });
+
+  it('attaches and materializes the canonical Stage character assets', () => {
+    const renderPlan = createEditorComponentPreviewPlan({
+      comp: StageScene,
+      viewportWidth: 640,
+      viewportHeight: 360,
+      time: 1.25,
+      configValues: StageScene.defaultValues,
+      audioFrameData,
+    });
+    const node = renderPlan.layers[0]?.node;
+    if (!node || node.kind !== 'three-program') {
+      throw new Error('Expected a Stage Three program node.');
+    }
+
+    expect(renderPlan.issues).toEqual([]);
+    expect(renderPlan.materializedAssets).toHaveLength(4);
+    expect(
+      renderPlan.materializedAssets.every(
+        (asset) => asset.kind === 'model',
+      ),
+    ).toBe(true);
+    expect(node.parameters).toMatchObject({
+      djModelAssetId: 'viz-builtin-stage-female-dj',
+      crowdModelAssetIds: [
+        'viz-builtin-stage-female-dancer',
+        'viz-builtin-stage-male-dancer',
+        'viz-builtin-stage-male-cheer',
+      ],
+      characterAnimationSpeed: 1,
+    });
+  });
+
+  it('does not attach a default model when a Stage input is customized', () => {
+    const project = createTestProject(StageScene, 'custom-stage-model');
+    project.assetRefs = [
+      {
+        id: 'custom-dj',
+        kind: 'model',
+        source: 'local',
+        label: 'Custom DJ',
+      },
+    ];
+    project.layers[0]!.inputs = {
+      djModel: {
+        kind: 'asset-ref',
+        assetId: 'custom-dj',
+      },
+    };
+    const registry = createCoreComponentRegistry();
+    const normalized = applyComponentDefaultAssets(
+      project,
+      (componentId) => registry.get(componentId),
+    );
+
+    expect(
+      normalized.assetRefs?.some(
+        (asset) => asset.id === 'viz-builtin-stage-female-dj',
+      ),
+    ).toBe(false);
+    expect(normalized.layers[0]?.inputs?.djModel).toEqual({
+      kind: 'asset-ref',
+      assetId: 'custom-dj',
+    });
+    expect(normalized.assetRefs).toHaveLength(4);
   });
 });

@@ -48,7 +48,7 @@ presentation attachment only.
 | Noise Shader | package runtime | persistent shader scene | Complete: package-owned GLSL and deterministic grouped uniforms; historical callbacks removed |
 | Orbiting Cubes | package runtime | persistent Three scene | Complete: seeded topology, retained instancing, lighting, canonical camera orbit, and node-driven parameters; historical callbacks removed |
 | Particle System | package runtime | persistent Three scene | Complete: analytic seeded instancing, physics, colors, and blend modes; historical callbacks removed |
-| Stage Scene | package runtime | persistent Three scene | Complete: retained stage/effect rig, deterministic camera/light/effect/crowd semantics, browser-hosted fly-camera attachment, fog and bloom; historical callbacks removed. Exact historical FBX character appearance remains a documented visual-parity gap |
+| Stage Scene | package runtime | persistent Three scene | Complete: retained stage/effect rig, deterministic camera/light/effect semantics, browser-hosted fly-camera attachment, fog and bloom, content-pinned authored DJ, and deterministic GPU-animated model crowd; procedural characters remain loading/failure fallback only |
 | Fullscreen Shader | package runtime | persistent shader scene | Complete: package-owned shader selection and deterministic uniforms; historical callbacks removed |
 | Strobe Light | package runtime | persistent shader scene | Complete: deterministic runtime shader; historical callbacks removed |
 
@@ -154,8 +154,10 @@ a real runtime-backed H.264/AAC export has been inspected. The final
 requirement-by-requirement record lives in
 `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md`.
 
-Only the explicitly recorded Stage character-asset visual decision remains
-open. The recommended product direction is to approve the deterministic
-retained procedural actors for this cutover and treat future production
-character fidelity as canonical materialized assets plus deterministic,
-bakeable animation rather than restoring the historical browser FBX path.
+The Stage character restoration is complete through the canonical native 3D
+system in
+`docs/specs/v2/native-3d-model-character-and-performance-system.md`: stable
+model asset refs, explicit readiness, renderer-owned resources, absolute-frame
+animation sampling, and a scalable deterministic crowd path. The historical
+browser FBX loader was not restored. Procedural actors remain only as a
+deterministic live loading/failure fallback.

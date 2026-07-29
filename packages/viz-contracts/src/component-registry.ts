@@ -16,7 +16,8 @@ export interface VizComponentValidationIssue {
     | "duplicate-component-id"
     | "duplicate-input-key"
     | "invalid-input-key"
-    | "empty-supported-sources";
+    | "empty-supported-sources"
+    | "invalid-default-asset";
   componentId?: string;
   path: string;
   message: string;
@@ -101,6 +102,18 @@ export const validateVizComponentImplementation = (
           message: `Component input "${input.key}" references unknown source kind "${String(sourceKind)}".`,
         });
       }
+    }
+
+    if (
+      input.defaultAsset !== undefined &&
+      !input.supportedSources.includes("asset-ref")
+    ) {
+      issues.push({
+        code: "invalid-default-asset",
+        componentId: component.id,
+        path: `${pathPrefix}.defaultAsset`,
+        message: `Component input "${input.key}" declares a default asset without supporting asset-ref sources.`,
+      });
     }
   }
 

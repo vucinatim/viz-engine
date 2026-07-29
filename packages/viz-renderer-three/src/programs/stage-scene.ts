@@ -1,4 +1,7 @@
-import type { VizRenderThreeProgramNode } from "@viz-engine/contracts";
+import type {
+  VizMaterializedAsset,
+  VizRenderThreeProgramNode,
+} from "@viz-engine/contracts";
 import {
   AdditiveBlending,
   AmbientLight,
@@ -35,6 +38,7 @@ import {
   type WebGLRenderer,
 } from "three";
 import { createVizThreePostProcessingPipeline } from "./post-processing.js";
+import { createVizStageCharacterController } from "./stage-characters.js";
 import type { VizThreeProgramFactory } from "./types.js";
 
 const PROGRAM_ID = "viz-core/stage-scene/v1";
@@ -99,6 +103,14 @@ const asBoolean = (value: unknown, fallback: boolean): boolean =>
 
 const asString = (value: unknown, fallback: string): string =>
   typeof value === "string" ? value : fallback;
+
+const asStringArray = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.filter(
+        (entry): entry is string =>
+          typeof entry === "string" && entry.length > 0,
+      )
+    : [];
 
 const asVector3 = (
   value: unknown,
@@ -441,6 +453,9 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   node,
   width,
   height,
+  materializedAssets: initialMaterializedAssets,
+  modelResources,
+  invalidate,
 }) => {
   assertProgram(node);
 
@@ -901,6 +916,15 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   root.userData.crowd = crowd;
   root.userData.dj = dj;
   root.userData.helpers = helpers;
+
+  let materializedAssets = initialMaterializedAssets;
+  const characterController = createVizStageCharacterController({
+    root,
+    fallbackDj: dj,
+    fallbackCrowd: crowd,
+    modelResources,
+    invalidate,
+  });
 
   let cameraPathName = "";
   let cameraCurve = createCameraCurve("Panoramic Sweep");
@@ -1441,8 +1465,17 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
     root.userData.activeStrobeIndex = active;
   };
 
-  const update = (nextNode: VizRenderThreeProgramNode): void => {
+  const update = (
+    nextNode: VizRenderThreeProgramNode,
+    nextMaterializedAssets?: ReadonlyMap<
+      string,
+      VizMaterializedAsset
+    >,
+  ): void => {
     assertProgram(nextNode);
+    if (nextMaterializedAssets) {
+      materializedAssets = nextMaterializedAssets;
+    }
     const parameters = nextNode.parameters;
     const time = Math.max(0, asNumber(parameters.time, 0));
     const seed = hashString(asString(parameters.seed, "stage-scene"));
@@ -1552,7 +1585,8 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
       asNumber(parameters.djSpotIntensity, 0.8),
     );
 
-    dj.visible = asBoolean(parameters.showDj, true);
+    const showDj = asBoolean(parameters.showDj, true);
+    dj.visible = showDj;
     dj.position.y = 5.5 + Math.max(0, Math.sin(time * 3.2)) * 0.12;
     dj.rotation.y = Math.sin(time * 0.8) * 0.12;
     leftArmPivot.rotation.z =
@@ -1564,10 +1598,25 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
       MAX_CROWD_COUNT,
       Math.max(
         0,
-        Math.round(asNumber(parameters.crowdCount, 50)),
+        Math.round(asNumber(parameters.crowdCount, 500)),
       ),
     );
     updateCrowd({ time, seed, count: crowdCount });
+    characterController.update({
+      time,
+      seed,
+      showDj,
+      crowdCount,
+      animationSpeed: Math.max(
+        0,
+        asNumber(parameters.characterAnimationSpeed, 1),
+      ),
+      djAssetId: asString(parameters.djModelAssetId, ""),
+      crowdAssetIds: asStringArray(
+        parameters.crowdModelAssetIds,
+      ),
+      materializedAssets,
+    });
 
     helpers.visible = asBoolean(parameters.showHelpers, false);
     postProcessing.update({
@@ -1629,7 +1678,11 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
     ) {
       postProcessing.render(renderer, renderTarget);
     },
+    whenReady() {
+      return characterController.whenReady();
+    },
     dispose() {
+      characterController.dispose();
       postProcessing.dispose();
       for (const geometry of geometries) {
         geometry.dispose();

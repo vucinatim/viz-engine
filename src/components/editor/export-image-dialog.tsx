@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
+import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import {
   fastCaptureFrame,
   isTransparentBackground,
@@ -105,6 +106,10 @@ const ExportImageDialog = ({ open, onOpenChange }: ExportImageDialogProps) => {
         mode: 'export',
       });
 
+      vizSessionActions.preview.renderRuntimePreviewFrame(previewFrame);
+      await useEditorRuntimePreviewAttachmentStore
+        .getState()
+        .whenRuntimeResourcesReady();
       vizSessionActions.preview.renderRuntimePreviewFrame(previewFrame);
 
       // CRITICAL: Force WebGL to finish rendering before capture
