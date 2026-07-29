@@ -50,6 +50,20 @@ The repo already has:
 - a first scripted agent-native creative-loop proof
 - validation and golden tests
 
+Phases 1 through 3 are now materially implemented in the preserved editor:
+
+- `VizProjectDocument` and `VizSession` own working scene truth
+- typed actions and `@viz-engine/editor-session` own mutation and history
+- preview, transport, audio-session, and graph evaluation use canonical
+  runtime/session paths
+- the app and package control surfaces expose structured project, graph,
+  runtime, asset, warning, and provenance inspection
+- browser validation confirms that Stage models, node graphs, live values,
+  undo/redo, persistence, playback, and export remain operational
+
+The next active frontier is therefore Phase 4, joined deliberately with the
+inspection work in Phase 5 where component authoring needs truthful feedback.
+
 That means this roadmap is not about inventing V2 from scratch.
 
 It is about turning the current V2 baseline into a genuinely operable live
@@ -522,10 +536,10 @@ proves the thing that phase claims to unlock.
 
 From where the repo stands today, the next best sequence is:
 
-1. Phase 1: working-head-driven editor foundation
-2. Phase 2: live preview and audio session loop
-3. Phase 3: local agent control surface
-4. Phase 4: live component authoring loop
+1. Phase 4: live component authoring loop
+2. Phase 5: rich scene authoring and debugging
+3. Phase 6: agent-native creative loop
+4. Phase 7: later cloud and runner expansion
 
 That is the minimum serious path to make the desired collaborative workflow
 feel real.

@@ -2,7 +2,10 @@ import editorControl from '@/lib/editor-control';
 import { cn } from '@/lib/utils';
 import { AudioLines, Info, Target, X } from 'lucide-react';
 import { UseFormReturn, useForm } from 'react-hook-form';
-import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
+import {
+  selectRuntimeGraphValue,
+  useVizSessionSelector,
+} from '@/lib/viz-session';
 import useNodeNetworkStore, {
   useIsNetworkEnabled,
   useNetworkEnabledMap,
@@ -213,12 +216,14 @@ const DynamicFormField = ({
                       );
                     },
                     () => {
-                      // On drag start - bypass history
-                      editorControl.history.setBypassHistory(true);
+                      editorControl.history.startGesture(
+                        `${layerId}:${name}`,
+                      );
                     },
                     () => {
-                      // On drag end - re-enable history
-                      editorControl.history.setBypassHistory(false);
+                      editorControl.history.endGesture(
+                        `${layerId}:${name}`,
+                      );
                     },
                   )}
                 </FormControl>
@@ -315,8 +320,8 @@ export const AnimatedLiveValue = ({
   parameterId: string;
   className?: string;
 }) => {
-  const value = useAnimationLiveValuesStore(
-    (state) => state.values[parameterId],
+  const value = useVizSessionSelector(
+    (state) => selectRuntimeGraphValue(state, parameterId),
   );
 
   if (value === undefined) return null;

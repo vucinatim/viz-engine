@@ -1,4 +1,7 @@
-import { useNodeLiveValuesStore } from '@/lib/stores/node-live-values-store';
+import {
+  getRuntimeNodeInput,
+  getRuntimeNodeState,
+} from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
@@ -11,8 +14,8 @@ interface RateLimiterBodyProps {
   nodeNetworkId: string;
 }
 
-const RateLimiterBody = ({ id: nodeId, data }: RateLimiterBodyProps) => {
-  const getNodeInputValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
+const RateLimiterBody = ({ id: nodeId }: RateLimiterBodyProps) => {
+  const getNodeInputValue = getRuntimeNodeInput;
 
   const countdownDisplayRef = useRef<HTMLDivElement>(null);
   const statusDisplayRef = useRef<HTMLDivElement>(null);
@@ -20,7 +23,9 @@ const RateLimiterBody = ({ id: nodeId, data }: RateLimiterBodyProps) => {
   const progressBarRef = useRef<HTMLDivElement>(null);
 
   useRafLoop(() => {
-    const state = data.state;
+    const state =
+      (getRuntimeNodeState(nodeId) as Record<string, unknown> | undefined) ??
+      {};
     const minIntervalMs = Number(
       getNodeInputValue(nodeId, 'minIntervalMs') ?? 250,
     );

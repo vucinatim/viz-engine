@@ -57,24 +57,47 @@ const NodeNetworkRenderer = ({
   const network = useSpecificNetwork(nodeNetworkId);
   const nodes = network?.nodes || [];
   const edges = network?.edges || [];
+  const [flowNodes, setFlowNodes] = useState<any[]>(nodes);
+  const flowNodesRef = useRef<any[]>(nodes);
+
+  useEffect(() => {
+    setFlowNodes((currentNodes) =>
+      nodes.map((node) => {
+        const current = currentNodes.find((candidate) => candidate.id === node.id);
+        return current
+          ? {
+              ...node,
+              ...(current.measured === undefined
+                ? {}
+                : { measured: current.measured }),
+              ...(current.width === undefined ? {} : { width: current.width }),
+              ...(current.height === undefined ? {} : { height: current.height }),
+              ...(current.selected === undefined
+                ? {}
+                : { selected: current.selected }),
+            }
+          : node;
+      }),
+    );
+  }, [nodes]);
+
+  useEffect(() => {
+    flowNodesRef.current = flowNodes;
+  }, [flowNodes]);
 
   // Wrapped setters that push to history
   const setNodes = useCallback(
     (newNodes: any[]) => {
       setNodesInNetwork(nodeNetworkId, newNodes);
-      useHistoryStore.getState().pushNodeHistory(nodeNetworkId, newNodes, edges);
     },
-    [nodeNetworkId, edges, setNodesInNetwork],
+    [nodeNetworkId, setNodesInNetwork],
   );
 
   const setEdges = useCallback(
     (newEdges: any[]) => {
       setEdgesInNetwork(nodeNetworkId, newEdges);
-      useHistoryStore
-        .getState()
-        .pushNodeHistory(nodeNetworkId, nodes, newEdges);
     },
-    [nodeNetworkId, nodes, setEdgesInNetwork],
+    [nodeNetworkId, setEdgesInNetwork],
   );
 
   // History functions
@@ -87,10 +110,10 @@ const NodeNetworkRenderer = ({
   }, [nodeNetworkId]);
 
   const canUndo = useHistoryStore(
-    (state) => (state.nodeHistories[nodeNetworkId]?.past.length || 0) > 0,
+    (state) => state.canUndo(),
   );
   const canRedo = useHistoryStore(
-    (state) => (state.nodeHistories[nodeNetworkId]?.future.length || 0) > 0,
+    (state) => state.canRedo(),
   );
 
   const startDrag = useCallback(() => {
@@ -99,11 +122,6 @@ const NodeNetworkRenderer = ({
 
   const endDrag = useCallback(() => {
     editorControl.history.endNodeDrag(nodeNetworkId);
-  }, [nodeNetworkId]);
-
-  // Initialize node history for this network
-  useEffect(() => {
-    useHistoryStore.getState().initializeNodeHistory(nodeNetworkId);
   }, [nodeNetworkId]);
 
   // Use the clipboard hook for copy/paste functionality
@@ -143,9 +161,9 @@ const NodeNetworkRenderer = ({
 
   const isValidConnection = useCallback(
     (connection: Connection | Edge) => {
-      return isConnectionValid(connection as Connection, nodes, edges);
+      return isConnectionValid(connection as Connection, flowNodes, edges);
     },
-    [nodes, edges],
+    [flowNodes, edges],
   );
 
   // Handle edge reconnection
@@ -198,7 +216,9 @@ const NodeNetworkRenderer = ({
                 inset
                 onClick={() => {
                   // Check if this is a protected node
-                  const node = nodes.find((n) => n.id === props.id);
+                  const node = flowNodesRef.current.find(
+                    (candidate) => candidate.id === props.id,
+                  );
                   const isProtected =
                     node &&
                     (node.data.definition.label === 'Input' ||
@@ -259,7 +279,7 @@ const NodeNetworkRenderer = ({
             panOnDrag={true}
             colorMode="dark"
             nodeTypes={nodeTypes}
-            nodes={nodes}
+            nodes={flowNodes}
             edges={edges}
             isValidConnection={isValidConnection}
             connectionRadius={40}
@@ -281,10 +301,6 @@ const NodeNetworkRenderer = ({
                 startDrag();
               }
 
-              if (isDragEnd) {
-                endDrag();
-              }
-
               // Filter out deletion changes for protected nodes (input/output)
               const filteredChanges = changes.filter((change) => {
                 if (change.type === 'remove') {
@@ -298,10 +314,27 @@ const NodeNetworkRenderer = ({
                 return true;
               });
 
-              // Only apply changes if there are any non-filtered changes
+              // React Flow measurement and selection are canvas-local UI state.
+              // Only durable graph edits are written back to the canonical document.
               if (filteredChanges.length > 0) {
-                const newNodes = applyNodeChanges(filteredChanges, nodes);
-                setNodes(newNodes);
+                const newNodes = applyNodeChanges(
+                  filteredChanges,
+                  flowNodes,
+                );
+                setFlowNodes(newNodes);
+                if (
+                  filteredChanges.some(
+                    (change) =>
+                      change.type !== 'dimensions' &&
+                      change.type !== 'select',
+                  )
+                ) {
+                  setNodes(newNodes);
+                }
+              }
+
+              if (isDragEnd) {
+                endDrag();
               }
             }}
             onSelectionChange={(elements) => {

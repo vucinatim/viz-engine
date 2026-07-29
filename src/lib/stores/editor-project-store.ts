@@ -74,29 +74,6 @@ const useEditorProjectStore = Object.assign(
     useStore(vizSessionStore, () => selector(selectEditorProjectStore())),
   {
     getState: () => selectEditorProjectStore(),
-    setState: (partial: Partial<EditorProjectStore>) => {
-      const projectPartial: Partial<{
-        initialized: boolean;
-        revision: number;
-        sourceProject: VizProjectDocument | null;
-        workingProject: VizProjectDocument;
-      }> = {};
-
-      if (partial.initialized !== undefined) {
-        projectPartial.initialized = partial.initialized;
-      }
-      if (partial.revision !== undefined) {
-        projectPartial.revision = partial.revision;
-      }
-      if (partial.sourceProject !== undefined) {
-        projectPartial.sourceProject = partial.sourceProject;
-      }
-      if (partial.workingProject !== undefined) {
-        projectPartial.workingProject = partial.workingProject;
-      }
-
-      vizSessionActions.project.setState(projectPartial);
-    },
     subscribe: (listener: EditorProjectListener) =>
       vizSessionStore.subscribe((state, previousState) =>
         listener(

@@ -1,9 +1,11 @@
 import editorControl from '@/lib/editor-control';
 import { cn } from '@/lib/utils';
-import { useVizSessionSelector } from '@/lib/viz-session';
+import {
+  selectRuntimeGraphValue,
+  useVizSessionSelector,
+} from '@/lib/viz-session';
 import { AudioLines, Info, Target, X } from 'lucide-react';
 import { memo } from 'react';
-import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
 import {
   ButtonConfigOption,
   ConfigParam,
@@ -209,12 +211,14 @@ const ParameterField = memo(
                 );
               },
               () => {
-                // On drag start - bypass history
-                editorControl.history.setBypassHistory(true);
+                editorControl.history.startGesture(
+                  `${layerId}:${paramPath.join('.')}`,
+                );
               },
               () => {
-                // On drag end - re-enable history
-                editorControl.history.setBypassHistory(false);
+                editorControl.history.endGesture(
+                  `${layerId}:${paramPath.join('.')}`,
+                );
               },
             )}
           </div>
@@ -300,8 +304,8 @@ export const AnimatedLiveValue = ({
   parameterId: string;
   className?: string;
 }) => {
-  const value = useAnimationLiveValuesStore(
-    (state) => state.values[parameterId],
+  const value = useVizSessionSelector(
+    (state) => selectRuntimeGraphValue(state, parameterId),
   );
 
   if (value === undefined) return null;

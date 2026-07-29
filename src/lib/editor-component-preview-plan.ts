@@ -1,6 +1,7 @@
 import type { Comp } from '@/components/config/create-component';
 import {
   applyComponentDefaultAssets,
+  applyEditorDefaultNetworks,
   createEmptyVizProjectDocument,
   toEditorComponentId,
 } from '@/lib/viz-session/project-adapters';
@@ -9,12 +10,15 @@ import {
   resolveBundledStageModelAssets,
 } from '@viz-engine/components-core';
 import type { VizProjectDocument, VizRenderPlan } from '@viz-engine/contracts';
+import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
 import { createVizRenderPlan, createVizRuntimeSession } from '@viz-engine/runtime';
 
 const componentRegistry = createCoreComponentRegistry();
+const nodeRegistry = createCoreNodeRegistry();
 
 export interface EditorComponentPreviewAudioFrameData {
   frequencyData: Uint8Array;
+  timeDomainData?: Uint8Array;
   sampleRate: number;
   fftSize: number;
 }
@@ -74,8 +78,13 @@ export const createEditorComponentPreviewPlan = ({
       },
     ],
   };
+  const projectWithNetworks = applyEditorDefaultNetworks({
+    project: baseProject,
+    layerId,
+    comp,
+  });
   const project = applyComponentDefaultAssets(
-    baseProject,
+    projectWithNetworks,
     (candidateId) => componentRegistry.get(candidateId),
   );
   const session = createVizRuntimeSession({
@@ -91,6 +100,22 @@ export const createEditorComponentPreviewPlan = ({
     session,
     frame,
     registry: componentRegistry,
+    nodeRegistry,
+    graphInputValues: Object.fromEntries(
+      (project.graphs ?? []).map((graph) => [
+        graph.id,
+        {
+          audioSignal:
+            audioFrameData.timeDomainData ?? new Uint8Array(),
+          frequencyAnalysis: {
+            frequencyData: audioFrameData.frequencyData,
+            sampleRate: audioFrameData.sampleRate,
+            fftSize: audioFrameData.fftSize,
+          },
+          time,
+        },
+      ]),
+    ),
     inputValues:
       componentId === 'curve-spectrum'
         ? {

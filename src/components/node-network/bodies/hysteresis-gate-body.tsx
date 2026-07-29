@@ -1,5 +1,7 @@
-import { useNodeLiveValuesStore } from '@/lib/stores/node-live-values-store';
-import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
+import {
+  getRuntimeNodeInput,
+  getRuntimeNodeOutput,
+} from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
 import { D3DragEvent, drag } from 'd3-drag';
 import { select } from 'd3-selection';
@@ -24,8 +26,8 @@ const HysteresisGateBody = ({
   data,
   nodeNetworkId,
 }: HysteresisGateBodyProps) => {
-  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
-  const getNodeInputValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
+  const getNodeOutput = getRuntimeNodeOutput;
+  const getNodeInputValue = getRuntimeNodeInput;
 
   const { updateInputValue } = useNodeNetwork(nodeNetworkId);
 

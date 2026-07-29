@@ -35,4 +35,6 @@ graph TD
 
     style D fill:#c9f,stroke:#333,stroke-width:2px
     style E fill:#9cf,stroke:#333,stroke-width:2px
-``` 
+```
+> Historical V1 reference only. The node output cache described here has been
+> deleted; live values now come from canonical runtime graph inspection.

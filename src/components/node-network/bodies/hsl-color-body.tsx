@@ -1,5 +1,7 @@
-import { useNodeLiveValuesStore } from '@/lib/stores/node-live-values-store';
-import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
+import {
+  getRuntimeNodeInput,
+  getRuntimeNodeOutput,
+} from '@/lib/viz-session';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
 import type { GraphNodeData } from '../graph-types';
@@ -13,8 +15,8 @@ interface HSLColorBodyProps {
 
 // Visual body for HSL Color node showing color swatch and HSL values
 const HSLColorBody = ({ id: nodeId }: HSLColorBodyProps) => {
-  const getNodeInputValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
-  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
+  const getNodeInputValue = getRuntimeNodeInput;
+  const getNodeOutput = getRuntimeNodeOutput;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const infoRef = useRef<HTMLDivElement>(null);

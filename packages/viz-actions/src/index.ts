@@ -4,11 +4,15 @@ import type {
   VizGraphInputSetAction,
   VizGraphNodeAddAction,
   VizGraphNodeInputSetAction,
+  VizGraphNodeRemoveAction,
   VizGraphOutputSetAction,
+  VizGraphRemoveAction,
+  VizGraphReplaceAction,
   VizLayerCreateAction,
   VizLayerInputSetAction,
   VizLayerMoveAction,
   VizLayerRemoveAction,
+  VizLayerReplaceAction,
   VizLayerSettingsSetAction,
   VizProjectAction,
   VizProjectActionResult,
@@ -173,6 +177,30 @@ const applyLayerMove = (
   return {
     ...project,
     layerOrder: nextLayerOrder,
+  };
+};
+
+const applyLayerReplace = (
+  project: VizProjectDocument,
+  action: VizLayerReplaceAction,
+  errors: VizActionError[],
+): VizProjectDocument => {
+  if (
+    action.payload.layer.id !== action.payload.layerId ||
+    !project.layers.some((layer) => layer.id === action.payload.layerId)
+  ) {
+    errors.push({
+      code: "missing-layer",
+      message: `Cannot replace missing layer "${action.payload.layerId}".`,
+    });
+    return project;
+  }
+
+  return {
+    ...project,
+    layers: project.layers.map((layer) =>
+      layer.id === action.payload.layerId ? action.payload.layer : layer,
+    ),
   };
 };
 
@@ -348,6 +376,61 @@ const applyGraphInputSet = (
   );
 };
 
+const applyGraphReplace = (
+  project: VizProjectDocument,
+  action: VizGraphReplaceAction,
+  errors: VizActionError[],
+): VizProjectDocument => {
+  if (
+    action.payload.graph.id !== action.payload.graphId ||
+    !(project.graphs ?? []).some((graph) => graph.id === action.payload.graphId)
+  ) {
+    errors.push({
+      code: "missing-graph",
+      message: `Cannot replace missing graph "${action.payload.graphId}".`,
+    });
+    return project;
+  }
+
+  return {
+    ...project,
+    graphs: (project.graphs ?? []).map((graph) =>
+      graph.id === action.payload.graphId ? action.payload.graph : graph,
+    ),
+  };
+};
+
+const applyGraphRemove = (
+  project: VizProjectDocument,
+  action: VizGraphRemoveAction,
+  errors: VizActionError[],
+): VizProjectDocument => {
+  if (!(project.graphs ?? []).some((graph) => graph.id === action.payload.graphId)) {
+    errors.push({
+      code: "missing-graph",
+      message: `Cannot remove missing graph "${action.payload.graphId}".`,
+    });
+    return project;
+  }
+
+  return {
+    ...project,
+    graphs: (project.graphs ?? []).filter(
+      (graph) => graph.id !== action.payload.graphId,
+    ),
+    layers: project.layers.map((layer) => ({
+      ...layer,
+      inputs: Object.fromEntries(
+        Object.entries(layer.inputs ?? {}).filter(
+          ([, source]) =>
+            source.kind !== "graph-output" ||
+            source.graphId !== action.payload.graphId,
+        ),
+      ),
+    })),
+  };
+};
+
 const applyGraphNodeAdd = (
   project: VizProjectDocument,
   action: VizGraphNodeAddAction,
@@ -441,6 +524,46 @@ const applyGraphNodeInputSet = (
   );
 };
 
+const applyGraphNodeRemove = (
+  project: VizProjectDocument,
+  action: VizGraphNodeRemoveAction,
+  errors: VizActionError[],
+): VizProjectDocument => {
+  return updateGraphById(
+    project,
+    action.payload.graphId,
+    (graph) => {
+      if (!graph.nodes.some((node) => node.id === action.payload.nodeId)) {
+        errors.push({
+          code: "missing-node",
+          message: `Cannot remove missing node "${action.payload.nodeId}" from graph "${action.payload.graphId}".`,
+        });
+        return graph;
+      }
+
+      return {
+        ...graph,
+        nodes: graph.nodes
+          .filter((node) => node.id !== action.payload.nodeId)
+          .map((node) => ({
+            ...node,
+            inputs: Object.fromEntries(
+              Object.entries(node.inputs ?? {}).filter(
+                ([, binding]) =>
+                  binding.kind !== "node-output" ||
+                  binding.nodeId !== action.payload.nodeId,
+              ),
+            ),
+          })),
+        outputs: graph.outputs.filter(
+          (output) => output.nodeId !== action.payload.nodeId,
+        ),
+      };
+    },
+    errors,
+  );
+};
+
 const applyGraphOutputSet = (
   project: VizProjectDocument,
   action: VizGraphOutputSetAction,
@@ -508,20 +631,38 @@ export const applyVizProjectAction = (
     case "layer.move":
       nextProject = applyLayerMove(nextProject, action, errors);
       break;
+    case "layer.replace":
+      nextProject = applyLayerReplace(nextProject, action, errors);
+      break;
     case "layer.settings.set":
       nextProject = applyLayerSettingsSet(nextProject, action, errors);
       break;
     case "layer.input.set":
       nextProject = applyLayerInputSet(nextProject, action, errors);
       break;
+    case "timeline.set":
+      nextProject = {
+        ...nextProject,
+        timeline: action.payload.timeline,
+      };
+      break;
     case "graph.create":
       nextProject = applyGraphCreate(nextProject, action.payload.name, action.payload.graphId, warnings);
+      break;
+    case "graph.replace":
+      nextProject = applyGraphReplace(nextProject, action, errors);
+      break;
+    case "graph.remove":
+      nextProject = applyGraphRemove(nextProject, action, errors);
       break;
     case "graph.input.set":
       nextProject = applyGraphInputSet(nextProject, action, errors);
       break;
     case "graph.node.add":
       nextProject = applyGraphNodeAdd(nextProject, action, warnings, errors);
+      break;
+    case "graph.node.remove":
+      nextProject = applyGraphNodeRemove(nextProject, action, errors);
       break;
     case "graph.node.input.set":
       nextProject = applyGraphNodeInputSet(nextProject, action, errors);

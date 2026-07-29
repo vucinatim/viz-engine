@@ -1,4 +1,4 @@
-import { useNodeLiveValuesStore } from '@/lib/stores/node-live-values-store';
+import { getRuntimeNodeInput } from '@/lib/viz-session';
 import { useRef } from 'react';
 import { useRafLoop } from 'react-use';
 
@@ -10,7 +10,7 @@ interface LiveValueProps {
 
 const LiveValue = ({ nodeId, inputId, type }: LiveValueProps) => {
   const ref = useRef<HTMLSpanElement>(null);
-  const { getNodeInputValue } = useNodeLiveValuesStore.getState();
+  const getNodeInputValue = getRuntimeNodeInput;
 
   useRafLoop(() => {
     if (!ref.current) return;

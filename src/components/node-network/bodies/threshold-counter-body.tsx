@@ -1,5 +1,7 @@
-import { useNodeLiveValuesStore } from '@/lib/stores/node-live-values-store';
-import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
+import {
+  getRuntimeNodeInput,
+  getRuntimeNodeOutput,
+} from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
@@ -16,8 +18,8 @@ const ThresholdCounterBody = ({
   id: nodeId,
   data,
 }: ThresholdCounterBodyProps) => {
-  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
-  const getNodeInputValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
+  const getNodeOutput = getRuntimeNodeOutput;
+  const getNodeInputValue = getRuntimeNodeInput;
 
   const countDisplayRef = useRef<HTMLDivElement>(null);
   const maxValueRef = useRef<HTMLDivElement>(null);

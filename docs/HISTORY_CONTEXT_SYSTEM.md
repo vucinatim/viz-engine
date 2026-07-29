@@ -347,3 +347,6 @@ src/
 - `docs/SYSTEM_ARCHITECTURE.md` - Overall app architecture
 - `docs/KEYBOARD_SHORTCUTS.md` - Complete shortcut reference
 - `docs/interactive-node-flow.md` - Node editor flow
+> Historical V1 reference only. The active history architecture is the
+> canonical `@viz-engine/editor-session` action history documented in
+> `docs/plans/v2/viz-session-convergence-and-editor-control-cutover.md`.

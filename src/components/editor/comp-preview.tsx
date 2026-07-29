@@ -5,10 +5,6 @@ import {
   createEditorComponentPreviewPlan,
 } from '@/lib/editor-component-preview-plan';
 import {
-  StandaloneNetworkEvaluator,
-  createDefaultNetworkEvaluators,
-} from '@/lib/utils/standalone-network-evaluator';
-import {
   createSyntheticAnalyzer,
   generateSyntheticFrequency,
   generateSyntheticTimeDomain,
@@ -45,12 +41,6 @@ const CompPreview = ({
 
   const syntheticAnalyzer = useRef(createSyntheticAnalyzer());
 
-  // Network evaluators for animated parameters
-  const networkEvaluatorsRef = useRef<Map<
-    string,
-    StandaloneNetworkEvaluator
-  > | null>(null);
-
   // Preload audio data (defer to not block initial render)
   useEffect(() => {
     // Use requestIdleCallback if available, otherwise setTimeout
@@ -68,15 +58,6 @@ const CompPreview = ({
       return () => clearTimeout(id);
     }
   }, []);
-
-  // Initialize network evaluators once
-  useEffect(() => {
-    if (comp.defaultNetworks && !networkEvaluatorsRef.current) {
-      networkEvaluatorsRef.current = createDefaultNetworkEvaluators(
-        comp.defaultNetworks,
-      );
-    }
-  }, [comp]);
 
   // Render a single frame (static or animated)
   const renderFrame = useCallback(
@@ -104,38 +85,6 @@ const CompPreview = ({
       // Get base config values
       const configValues = comp.config.getValues(animInputData);
 
-      // Apply network-driven values if evaluators exist
-      if (
-        networkEvaluatorsRef.current &&
-        networkEvaluatorsRef.current.size > 0
-      ) {
-        // Evaluate each network and override config values
-        networkEvaluatorsRef.current.forEach((evaluator, paramPath) => {
-          try {
-            // The Output node returns the value directly, not wrapped
-            const outputValue = evaluator.evaluate(animInputData);
-
-            if (outputValue !== undefined) {
-              // Handle nested paths (e.g., "group.param")
-              const parts = paramPath.split('.');
-              if (parts.length === 1) {
-                configValues[paramPath] = outputValue;
-              } else {
-                // Navigate to nested object and set the value
-                let current: any = configValues;
-                for (let i = 0; i < parts.length - 1; i++) {
-                  if (!current[parts[i]]) current[parts[i]] = {};
-                  current = current[parts[i]];
-                }
-                current[parts[parts.length - 1]] = outputValue;
-              }
-            }
-          } catch (error) {
-            console.warn(`[Preview] ${comp.name} - ${paramPath}:`, error);
-          }
-        });
-      }
-
       const internalWidth = Math.round(width * PREVIEW_RESOLUTION);
       const internalHeight = Math.round(height * PREVIEW_RESOLUTION);
       const runtimeRenderPlan = createEditorComponentPreviewPlan({
@@ -146,6 +95,7 @@ const CompPreview = ({
         configValues,
         audioFrameData: {
           frequencyData,
+          timeDomainData,
           sampleRate: syntheticAnalyzer.current.context.sampleRate,
           fftSize: syntheticAnalyzer.current.fftSize,
         },

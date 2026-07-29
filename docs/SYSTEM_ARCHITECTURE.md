@@ -3355,3 +3355,6 @@ export async function exportVideo(projectData: ProjectFile) {
 ```
 
 The Viz Engine's client-side architecture provides significant advantages for deployment and scalability. The current Next.js implementation offers flexibility for future server integration while maintaining the benefits of client-side execution. The planned video export functionality will introduce server-side processing while preserving the core client-side visualization capabilities.
+> Historical V1 reference. For active V2 ownership and session architecture,
+> start from `docs/current-state.md` and
+> `docs/plans/v2/viz-session-convergence-and-editor-control-cutover.md`.

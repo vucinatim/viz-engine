@@ -1,21 +1,75 @@
-import { LayerData } from '@/lib/editor-layer-types';
-import { create } from 'zustand';
+import useCompStore from '@/lib/stores/comp-store';
+import useEditorStore from '@/lib/stores/editor-store';
+import { vizSessionStore } from '@/lib/viz-session/store';
+import {
+  createProjectedLayer,
+  findEditorCompForLayer,
+} from '@/lib/viz-session/project-adapters';
+import type { LayerData } from '@/lib/editor-layer-types';
+import { useMemo } from 'react';
+import { useStore } from 'zustand';
 
-interface EditorLayerProjectionStore {
+interface EditorLayerProjection {
   layers: LayerData[];
 }
 
-const useEditorLayerProjectionStore = create<EditorLayerProjectionStore>(() => ({
-  layers: [],
-}));
+const projectLayers = (
+  project: ReturnType<typeof vizSessionStore.getState>['project']['workingProject'],
+  comps: ReturnType<typeof useCompStore.getState>['comps'],
+  layerUi: ReturnType<typeof useEditorStore.getState>['layerUi'],
+): LayerData[] => {
+  const layersById = new Map(project.layers.map((layer) => [layer.id, layer]));
+  const orderedLayers = [
+    ...project.layerOrder
+      .map((layerId) => layersById.get(layerId))
+      .filter((layer): layer is NonNullable<typeof layer> => layer !== undefined),
+    ...project.layers.filter((layer) => !project.layerOrder.includes(layer.id)),
+  ];
+
+  return orderedLayers.flatMap((layer) => {
+    const comp = findEditorCompForLayer(layer, comps);
+    return comp
+      ? [
+          createProjectedLayer({
+            layer,
+            comp,
+            uiState: layerUi[layer.id],
+          }),
+        ]
+      : [];
+  });
+};
 
 export const getProjectedLayers = () =>
-  useEditorLayerProjectionStore.getState().layers;
+  projectLayers(
+    vizSessionStore.getState().project.workingProject,
+    useCompStore.getState().comps,
+    useEditorStore.getState().layerUi,
+  );
 
 export const getProjectedLayer = (layerId: string) =>
-  useEditorLayerProjectionStore
-    .getState()
-    .layers.find((layer) => layer.id === layerId);
+  getProjectedLayers().find((layer) => layer.id === layerId);
+
+const useEditorLayerProjectionStore = Object.assign(
+  <T>(selector: (state: EditorLayerProjection) => T) => {
+    const project = useStore(
+      vizSessionStore,
+      (state) => state.project.workingProject,
+    );
+    const comps = useCompStore((state) => state.comps);
+    const layerUi = useEditorStore((state) => state.layerUi);
+    const layers = useMemo(
+      () => projectLayers(project, comps, layerUi),
+      [project, comps, layerUi],
+    );
+    return selector({ layers });
+  },
+  {
+    getState: (): EditorLayerProjection => ({
+      layers: getProjectedLayers(),
+    }),
+  },
+);
 
 export type { LayerData } from '@/lib/editor-layer-types';
 

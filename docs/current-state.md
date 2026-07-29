@@ -2,10 +2,8 @@
 
 ## Project Status
 
-VizEngine is at the boundary between:
-
-- a strong V1 prototype/editor
-- and a planned V2 rewrite into a deterministic runtime plus authoring system
+VizEngine is executing a V2 full-replacement rewrite beneath the preserved
+product-quality editor.
 
 One very important clarification:
 
@@ -24,9 +22,11 @@ The current codebase already proves several important ideas:
 - browser-native editing and preview
 - offline audio analysis and offline export direction
 
-But the current implementation is still fundamentally editor-first and
-browser-state-driven. It is not yet a clean deterministic runtime that can be
-reliably embedded into Remotion or other headless rendering systems.
+The package runtime, canonical project document, action surface, editor
+session, runtime-backed preview, and model asset substrate are now real. The
+remaining work is to finish replacing editor-era presentation adapters,
+expand the authoring/debugging experience over those contracts, and prove each
+remaining parity capability rather than assuming it.
 
 ## Active Focus
 
@@ -98,10 +98,16 @@ The hidden-brain swap is now materially underway:
 - graph truth has been split from node-editor UI ownership
 - history truth has been split from legacy layer/value snapshot ownership
 
-The next clean seam is no longer basic ownership extraction.
+The canonical-session convergence seam is now complete:
 
-The next clean seam is collapsing these cleaned-up truths into `VizSession`
-directly and deleting the remaining bridges.
+- the preserved editor and reusable control package use the same
+  `@viz-engine/editor-session` mutation/history kernel
+- all project mutations route through typed actions
+- undo/redo and continuous gesture grouping are session behavior
+- the React history observer and separate layer/node history stacks are gone
+- graph documents are canonical and `NodeNetwork` is an authoring projection
+- built-in executable nodes live in `@viz-engine/nodes-core`
+- IndexedDB stores one `VizProjectDocument`
 
 The intended split is now explicit:
 
@@ -145,7 +151,8 @@ One important correction was followed by the right shell migration:
   - live preview and export dispatch frames through `VizSession`
   - `VizSession.preview.runtimeInspection` owns the last requested/completed
     frame, render-cycle count, rendered layer ids, runtime-backed layer ids,
-    and failure state
+    graph/node results, resolved layer inputs, materialized assets, issues, and
+    failure state
   - the browser-only attachment store owns only registered render callbacks,
     mirror canvases, and the Remotion player ref
   - live preview timing/orchestration now runs through one explicit preview
@@ -169,14 +176,17 @@ The app-local `VizSession` convergence is now materially implemented:
   embedded graph documents now share that one portable scene truth
 - working project, graph projection, preview transport, audio session, and
   history state are exposed through one session store and command surface
-- project history snapshots the complete canonical document, including graphs
+- project history is owned by the package session and snapshots the complete
+  canonical document, including graphs
 - `.vizengine.json` persistence and bundled projects now carry one canonical
   `project` value instead of separate editor-shaped project and graph scene
   payloads
-- the preserved editor still uses adapter stores where necessary for selective
-  subscriptions, executable V1 node definitions, instantiated component
-  configs, and browser attachments
+- the preserved editor still uses hook-shaped adapters where necessary for
+  selective subscriptions, instantiated component configs, and browser
+  attachments
 - the adapter names do not make them independent canonical owners
+- executable node definitions no longer belong to those adapters
+- layer projections are computed views rather than a stateful store
 
 The old `EditorProjectDocument` / `EditorProjectLayer` model is gone.
 Per-layer expansion/debug preferences are editor UI state outside the portable
@@ -187,16 +197,21 @@ The remaining adapter classification and deletion conditions are recorded in:
 - [phase-12-canonical-viz-project-document-cutover.md](./plans/v2/phase-12-canonical-viz-project-document-cutover.md)
 - [phase-13-viz-session-runtime-preview-ownership.md](./plans/v2/phase-13-viz-session-runtime-preview-ownership.md)
 
-The biggest remaining architecture gaps are:
+The largest remaining architecture work is now beyond basic session
+convergence:
 
-- the preserved V1 node canvas still needs an executable `NodeNetwork`
-  projection over canonical graph documents until it consumes the package
-  graph model and execution registry directly
-- all 15 preserved editor components now render through package-runtime
-  implementations and none retains `draw`, `init3D`, or `draw3D` ownership
-- the temporary per-component runtime preview bridge is now the primary
-  deletion target: preview still creates one runtime session and plan per layer
-  instead of evaluating the canonical editor session once per frame
+- continue shrinking hook-shaped compatibility facades as concrete preserved
+  UI consumers can subscribe to `VizSession` directly
+- finish moving the preserved config presentation model onto portable
+  component input schemas without weakening the editor
+- turn the structured control/inspection surface into the agent-operated live
+  authoring loop
+- prepare legacy FBX source assets into cleaner derivatives so unsupported
+  material-map and excess-weight warnings do not remain runtime concerns
+
+The completed cutover and its exact boundaries are recorded in:
+
+- [viz-session-convergence-and-editor-control-cutover.md](./plans/v2/viz-session-convergence-and-editor-control-cutover.md)
 
 The active renderer cutover inventory and deletion map now lives in:
 

@@ -1356,3 +1356,33 @@
     capabilities, 36 foundation test files / 144 tests, all type checks, both
     production builds, built-package consumer smoke, and creative-loop bundle
     roundtrip
+- completed the canonical `VizSession` and editor-control convergence:
+  - moved all preserved built-in node authoring definitions and executable
+    kernels into `@viz-engine/nodes-core`
+  - deleted editor-local graph evaluators and graph/node live-value caches
+  - removed duplicated session-owned `NodeNetwork` graph truth
+  - made graph documents targeted typed-action mutations so sibling and
+    package-native graphs are not rewritten
+  - extended runtime graph results with per-node inputs, outputs, and temporal
+    state
+  - added exact resolved-input provenance, project/resource inspection, and
+    app/package graph-runtime inspection
+  - moved undo/redo and continuous gesture grouping into
+    `@viz-engine/editor-session`
+  - removed the React history observer and separate layer/node history stacks
+  - replaced the stateful layer projection store with a computed view
+  - changed IndexedDB persistence to store one canonical
+    `VizProjectDocument`
+  - preserved the Stage Scene, node graph, live values, undo/redo,
+    persistence, playback, and export workflow in browser validation
+  - found and fixed transient React Flow measurement being incorrectly routed
+    through canonical graph documents, which had hidden otherwise valid nodes
+  - measured canonical runtime-plan evaluation at 0.329 ms mean and 0.687 ms
+    p95 across 300 frames / 15 components at 1280×720
+  - passed the complete `pnpm check:foundation` gate with 42 valid parity
+    capabilities, 36 foundation test files / 148 tests, all type checks, both
+    production builds, built-package consumer smoke, and creative-loop bundle
+    roundtrip
+  - recorded the design and acceptance evidence in
+    `docs/plans/v2/viz-session-convergence-and-editor-control-cutover.md` and
+    `docs/parity/evidence/2026-07-29-viz-session-convergence-and-node-editor-parity.md`

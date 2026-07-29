@@ -116,5 +116,13 @@ export interface VizGraphEvaluationIssue {
 export interface VizGraphEvaluationResult {
   graphId: VizGraphId;
   values: Record<string, unknown>;
+  nodes: Record<
+    string,
+    {
+      inputs: Record<string, unknown>;
+      outputs: Record<string, unknown>;
+      state?: unknown;
+    }
+  >;
   issues: VizGraphEvaluationIssue[];
 }

@@ -21,12 +21,7 @@ describe('VizSession runtime preview inspection', () => {
       comps: Array.from(CompDefinitionMap.values()),
     });
     useEditorRuntimePreviewAttachmentStore.getState().reset();
-    vizSessionActions.project.setState({
-      initialized: false,
-      revision: 0,
-      sourceProject: null,
-      workingProject: createTestProject(),
-    });
+    vizSessionActions.project.importWorkingProject(createTestProject());
     vizSessionActions.preview.reset();
   });
 
@@ -52,16 +47,20 @@ describe('VizSession runtime preview inspection', () => {
     });
     vizSessionActions.preview.renderRuntimePreviewFrame(frame);
 
-    expect(vizSessionStore.getState().preview.runtimeInspection).toEqual({
+    expect(vizSessionStore.getState().preview.runtimeInspection).toMatchObject({
       status: 'idle',
       lastRequestedFrame: frame,
       lastCompletedFrame: frame,
       renderCycle: 1,
       lastRenderedLayerIds: ['runtime-layer'],
       runtimeBackedLayerIds: ['runtime-layer'],
+      lastGraphResults: [],
       lastPlanIssues: [],
       lastError: null,
     });
+    expect(
+      vizSessionStore.getState().preview.runtimeInspection.lastLayerSnapshots,
+    ).toHaveLength(1);
     expect(vizSessionActions.preview.inspectRuntimePreview()).toMatchObject({
       layerCount: 1,
       lastRenderedLayerIds: ['runtime-layer'],
@@ -138,6 +137,9 @@ describe('VizSession runtime preview inspection', () => {
       renderCycle: 0,
       lastRenderedLayerIds: [],
       runtimeBackedLayerIds: [],
+      lastGraphResults: [],
+      lastLayerSnapshots: [],
+      lastMaterializedAssets: [],
       lastPlanIssues: [],
       lastError: null,
     });

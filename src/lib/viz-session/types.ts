@@ -1,6 +1,8 @@
-import type { NodeNetwork } from '@/components/node-network/graph-types';
 import type {
   VizFramePlanIssue,
+  VizGraphEvaluationResult,
+  VizLayerRenderPlanEntry,
+  VizMaterializedAsset,
   VizProjectDocument,
 } from '@viz-engine/contracts';
 import type {
@@ -9,27 +11,6 @@ import type {
   VizEditorLiveInputDiagnostics,
   VizEditorTransportState,
 } from '@viz-engine/editor-session';
-
-export interface LayerEditorHistoryState {
-  project: VizProjectDocument;
-}
-
-export interface LayerEditorHistory {
-  past: LayerEditorHistoryState[];
-  present: LayerEditorHistoryState;
-  future: LayerEditorHistoryState[];
-}
-
-export interface NodeNetworkHistoryState {
-  nodes: any[];
-  edges: any[];
-}
-
-export interface NodeNetworkHistory {
-  past: NodeNetworkHistoryState[];
-  present: NodeNetworkHistoryState;
-  future: NodeNetworkHistoryState[];
-}
 
 export interface VizSessionProjectState {
   initialized: boolean;
@@ -67,6 +48,9 @@ export interface VizSessionRuntimeInspectionState {
   renderCycle: number;
   lastRenderedLayerIds: string[];
   runtimeBackedLayerIds: string[];
+  lastGraphResults: VizGraphEvaluationResult[];
+  lastLayerSnapshots: VizLayerRenderPlanEntry[];
+  lastMaterializedAssets: VizMaterializedAsset[];
   lastPlanIssues: VizFramePlanIssue[];
   lastError: VizSessionRuntimePreviewError | null;
 }
@@ -87,28 +71,15 @@ export interface VizSessionAudioState {
   visualTime: number;
 }
 
-export interface VizSessionGraphState {
-  /**
-   * Executable editor projection of `project.workingProject.graphs`.
-   * Canonical graph documents live only in VizProjectDocument.
-   */
-  networks: Record<string, NodeNetwork>;
-}
-
 export interface VizSessionHistoryState {
-  layerHistory: LayerEditorHistory;
-  nodeHistories: Record<string, NodeNetworkHistory>;
   isNodeEditorFocused: boolean;
-  isBypassingHistory: boolean;
-  nodeDragBypass: Record<string, boolean>;
-  debounceTimer: number | null;
+  activeGestureId: string | null;
 }
 
 export interface VizSessionState {
   project: VizSessionProjectState;
   preview: VizSessionPreviewState;
   audio: VizSessionAudioState;
-  graph: VizSessionGraphState;
   history: VizSessionHistoryState;
 }
 

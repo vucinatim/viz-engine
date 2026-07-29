@@ -8,7 +8,6 @@ import {
 } from '@/components/config/node-types';
 import { VType } from '@/components/config/types';
 import {
-  AnimInputData,
   InputNode,
   createOutputNode,
 } from '@/components/node-network/animation-nodes';
@@ -28,13 +27,14 @@ import {
 } from '@/lib/comp-utils/config-utils';
 import {
   createVizEditorAudioSessionController,
+  createVizEditorSession,
   createVizEditorTransportController,
   type VizEditorAudioAnalyzerState,
   type VizEditorAudioSource,
 } from '@viz-engine/editor-session';
-import { arrayMove } from '@dnd-kit/sortable';
 import {
   VIZ_PROJECT_SCHEMA_VERSION,
+  type VizProjectAction,
   type VizLayer,
   type VizProjectDocument,
 } from '@viz-engine/contracts';
@@ -50,21 +50,13 @@ import useCompStore from '@/lib/stores/comp-store';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import useEditorStore from '@/lib/stores/editor-store';
-import useEditorLayerProjectionStore from '@/lib/stores/editor-layer-projection-store';
-import { useNodeLiveValuesStore } from '@/lib/stores/node-live-values-store';
-import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
 import { generateLayerId } from '@/lib/id-utils';
 import { createIdbJsonStorage } from '@/lib/idb-json-storage';
 import { useNodeNetworkStore } from '@/components/node-network/node-network-store';
-import { reportNodeNetworkMetric } from '@/lib/profiling/node-network-metrics';
 import { toast } from 'sonner';
 
 import type {
-  LayerEditorHistory,
-  LayerEditorHistoryState,
-  NodeNetworkHistory,
   VizSessionAudioState,
-  VizSessionGraphState,
   VizSessionHistoryState,
   VizSessionPreviewState,
   VizSessionProjectState,
@@ -80,20 +72,35 @@ import {
 import {
   applyEditorLayerSettings,
   applyComponentDefaultAssets,
-  attachGraphToLayerInput,
-  createEmptyVizProjectDocument,
   createProjectedLayer,
   createVizLayerFromComp,
-  detachGraphFromLayerInput,
   findEditorCompForLayer,
+  isEditorAuthoredGraph,
   nodeNetworkToVizGraph,
-  projectGraphsToNodeNetworks,
 } from './project-adapters';
+import { createEmptyVizProjectDocument } from './project-document';
+import {
+  getProjectedNodeNetworks,
+  resetVizSessionSelectorCaches,
+} from './selectors';
 
 const DEFAULT_FPS = 60;
 const DEFAULT_DURATION_FRAMES = 1;
-const MAX_HISTORY_SIZE = 50;
 const runtimeComponentRegistry = createCoreComponentRegistry();
+const createProjectSession = (project: VizProjectDocument) =>
+  createVizEditorSession({
+    project,
+    actor: { kind: 'user', id: 'viz-studio' },
+    normalizeProject: (projectDocument) =>
+      applyComponentDefaultAssets(
+        projectDocument,
+        (componentId) => runtimeComponentRegistry.get(componentId),
+      ),
+  });
+let projectSession = createVizEditorSession({
+  project: createEmptyVizProjectDocument(),
+  actor: { kind: 'user', id: 'viz-studio' },
+});
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 
@@ -114,6 +121,9 @@ const createInitialRuntimeInspectionState =
     renderCycle: 0,
     lastRenderedLayerIds: [],
     runtimeBackedLayerIds: [],
+    lastGraphResults: [],
+    lastLayerSnapshots: [],
+    lastMaterializedAssets: [],
     lastPlanIssues: [],
     lastError: null,
   });
@@ -123,30 +133,9 @@ const createInitialPreviewState = (): VizSessionPreviewState => ({
   runtimeInspection: createInitialRuntimeInspectionState(),
 });
 
-const createEmptyLayerHistory = (): LayerEditorHistory => ({
-  past: [],
-  present: {
-    project: createEmptyVizProjectDocument(),
-  },
-  future: [],
-});
-
-const createEmptyNodeHistory = (): NodeNetworkHistory => ({
-  past: [],
-  present: {
-    nodes: [],
-    edges: [],
-  },
-  future: [],
-});
-
 const createInitialHistoryState = (): VizSessionHistoryState => ({
-  layerHistory: createEmptyLayerHistory(),
-  nodeHistories: {},
   isNodeEditorFocused: false,
-  isBypassingHistory: false,
-  nodeDragBypass: {},
-  debounceTimer: null,
+  activeGestureId: null,
 });
 
 const createInitialAudioController = () => createVizEditorAudioSessionController();
@@ -173,33 +162,6 @@ let transportController = createVizEditorTransportController({
 });
 
 let audioController = createInitialAudioController();
-
-const updateNestedValue = (
-  current: Record<string, any>,
-  path: (string | number)[],
-  value: any,
-): Record<string, any> => {
-  if (path.length === 0) {
-    return current;
-  }
-
-  const [head, ...rest] = path;
-  if (rest.length === 0) {
-    return {
-      ...current,
-      [head]: value,
-    };
-  }
-
-  const nestedValue = current[head];
-  const nextNested =
-    nestedValue && typeof nestedValue === 'object' ? nestedValue : {};
-
-  return {
-    ...current,
-    [head]: updateNestedValue(nextNested, rest, value),
-  };
-};
 
 const resolveComp = (layer: Pick<VizLayer, 'componentId' | 'name'>): Comp | null =>
   findEditorCompForLayer(layer, useCompStore.getState().comps);
@@ -256,9 +218,6 @@ const syncProjectedStoresFromProject = (project: VizProjectDocument) => {
     })
     .filter((layer): layer is NonNullable<typeof layer> => layer !== null);
 
-  useEditorLayerProjectionStore.setState({
-    layers: nextProjectedLayers,
-  });
   useEditorRuntimePreviewAttachmentStore
     .getState()
     .pruneLayerAttachments(nextProjectedLayers.map((layer) => layer.id));
@@ -367,10 +326,6 @@ const createInitialProjectState = (): VizSessionProjectState => ({
   workingProject: createEmptyVizProjectDocument(),
 });
 
-const createInitialGraphState = (): VizSessionGraphState => ({
-  networks: {},
-});
-
 const createInitialAudioState = (): VizSessionAudioState => ({
   session: audioController.getState(),
   diagnostics: audioController.getDiagnostics(),
@@ -386,34 +341,39 @@ const createInitialState = (): VizSessionState => ({
   project: createInitialProjectState(),
   preview: createInitialPreviewState(),
   audio: createInitialAudioState(),
-  graph: createInitialGraphState(),
   history: createInitialHistoryState(),
 });
 
+interface PersistedVizProjectState {
+  projectDocument: VizProjectDocument;
+}
+
 export const vizSessionStore = createStore<VizSessionState>()(
-  persist(
+  persist<VizSessionState, [], [], PersistedVizProjectState>(
     () => createInitialState(),
     {
-      name: `viz-session-${VIZ_PROJECT_SCHEMA_VERSION}`,
+      name: `viz-project-${VIZ_PROJECT_SCHEMA_VERSION}`,
       storage: createJSONStorage(createSessionStorage),
       partialize: (state) => ({
-        project: state.project,
+        projectDocument: state.project.workingProject,
       }),
       merge: (persistedState, currentState) => {
-        const persisted = (persistedState as Partial<VizSessionState>) ?? {};
+        const persistedDocument = (
+          persistedState as Partial<PersistedVizProjectState>
+        )?.projectDocument;
         const persistedProject =
-          persisted.project &&
-          validateProjectDocument(persisted.project.workingProject).ok
-            ? persisted.project
-            : currentState.project;
+          persistedDocument &&
+          validateProjectDocument(persistedDocument).ok
+            ? persistedDocument
+            : currentState.project.workingProject;
 
         return {
           ...currentState,
-          project: persistedProject,
-          graph: {
-            networks: projectGraphsToNodeNetworks(
-              persistedProject.workingProject,
-            ),
+          project: {
+            initialized: false,
+            revision: 0,
+            sourceProject: null,
+            workingProject: persistedProject,
           },
         };
       },
@@ -449,7 +409,8 @@ audioController = createVizEditorAudioSessionController({
 });
 
 const getProjectState = () => vizSessionStore.getState().project;
-const getGraphState = () => vizSessionStore.getState().graph;
+const getGraphNetworks = () =>
+  getProjectedNodeNetworks(vizSessionStore.getState());
 const getHistoryState = () => vizSessionStore.getState().history;
 const getPreviewState = () => vizSessionStore.getState().preview;
 const getAudioState = () => vizSessionStore.getState().audio;
@@ -458,13 +419,6 @@ const replaceProjectState = (project: VizSessionProjectState) => {
   vizSessionStore.setState((state) => ({
     ...state,
     project,
-  }));
-};
-
-const replaceGraphState = (graph: VizSessionGraphState) => {
-  vizSessionStore.setState((state) => ({
-    ...state,
-    graph,
   }));
 };
 
@@ -491,81 +445,155 @@ const replaceAudioState = (audio: VizSessionAudioState) => {
 
 const syncNetworkOpenState = () => {
   const openNetwork = useNodeNetworkStore.getState().openNetwork;
-  const networks = getGraphState().networks;
+  const networks = getGraphNetworks();
   if (openNetwork && !networks[openNetwork]) {
     useNodeNetworkStore.getState().setOpenNetwork(null);
   }
 };
 
-const updateProject = (
-  nextProject: VizProjectDocument,
+const applyProjectActions = (
+  actions: VizProjectAction[],
   options: {
     syncLayerProjections?: boolean;
-    syncGraphProjection?: boolean;
   } = {},
 ) => {
-  const canonicalProject = clone(
-    applyComponentDefaultAssets(
-      nextProject,
-      (componentId) => runtimeComponentRegistry.get(componentId),
-    ),
-  );
+  const result = projectSession.applyActions(actions);
+  if (!result.ok) {
+    throw new Error(
+      result.errors.map((error) => error.message).join('; ') ||
+        'Viz project action failed',
+    );
+  }
+
+  const canonicalProject = clone(result.project);
   if (options.syncLayerProjections !== false) {
     syncProjectedStoresFromProject(canonicalProject);
   }
-  if (options.syncGraphProjection) {
-    replaceGraphState({
-      networks: projectGraphsToNodeNetworks(
-        canonicalProject,
-        getGraphState().networks,
-      ),
-    });
-    syncNetworkOpenState();
-  }
-
   const projectState = getProjectState();
+  resetVizSessionSelectorCaches();
   replaceProjectState({
     initialized: true,
-    revision: projectState.revision + 1,
+    revision: projectSession.getSnapshot().revision,
     sourceProject: projectState.sourceProject ?? clone(canonicalProject),
     workingProject: canonicalProject,
   });
 };
 
-const commitGraphNetworks = (networks: Record<string, NodeNetwork>) => {
-  const previousProjectedGraphIds = new Set(
-    Object.keys(getGraphState().networks),
+const syncProjectSessionProject = () => {
+  const project = projectSession.exportWorkingProject();
+  syncProjectedStoresFromProject(project);
+  resetVizSessionSelectorCaches();
+  replaceProjectState({
+    ...getProjectState(),
+    initialized: true,
+    revision: projectSession.getSnapshot().revision,
+    workingProject: project,
+  });
+  syncNetworkOpenState();
+};
+
+const runProjectHistoryGroup = (mutation: () => void) => {
+  projectSession.beginHistoryGroup();
+  try {
+    mutation();
+  } finally {
+    projectSession.endHistoryGroup();
+    syncProjectSessionProject();
+  }
+};
+
+const createGraphUpsertActions = (
+  graphId: string,
+  network: NodeNetwork,
+): VizProjectAction[] => {
+  const graph = nodeNetworkToVizGraph(graphId, network);
+  const exists = (getProjectState().workingProject.graphs ?? []).some(
+    (candidate) => candidate.id === graphId,
   );
-  const nextNetworks = cloneNetworks(networks);
-  let project = getProjectState().workingProject;
-
-  for (const graphId of previousProjectedGraphIds) {
-    project = detachGraphFromLayerInput(project, graphId);
+  const actions: VizProjectAction[] = exists
+    ? [{ type: 'graph.replace', payload: { graphId, graph } }]
+    : [
+        {
+          type: 'graph.create',
+          payload: { graphId, name: graph.name },
+        },
+        { type: 'graph.replace', payload: { graphId, graph } },
+      ];
+  const separatorIndex = graphId.indexOf(':');
+  if (separatorIndex !== -1) {
+    const layerId = graphId.slice(0, separatorIndex);
+    const inputKey = graphId.slice(separatorIndex + 1);
+    if (
+      getProjectState().workingProject.layers.some(
+        (layer) => layer.id === layerId,
+      )
+    ) {
+      actions.push({
+        type: 'layer.input.set',
+        payload: {
+          layerId,
+          inputKey,
+          valueSource: {
+            kind: 'graph-output',
+            graphId,
+            output: 'value',
+          },
+        },
+      });
+    }
   }
+  return actions;
+};
 
-  project = {
-    ...project,
-    graphs: [
-      ...(project.graphs ?? []).filter(
-        (graph) => !previousProjectedGraphIds.has(graph.id),
-      ),
-      ...Object.entries(nextNetworks).map(([graphId, network]) =>
-        nodeNetworkToVizGraph(graphId, network),
-      ),
-    ],
-  };
-
-  for (const graphId of Object.keys(nextNetworks)) {
-    project = attachGraphToLayerInput(project, graphId);
-  }
-
-  replaceGraphState({ networks: nextNetworks });
-  updateProject(project, {
+const commitGraphNetwork = (graphId: string, network: NodeNetwork) => {
+  applyProjectActions(createGraphUpsertActions(graphId, network), {
     syncLayerProjections: false,
   });
   syncNetworkOpenState();
 };
 
+const removeGraphNetwork = (graphId: string) => {
+  if (
+    !(getProjectState().workingProject.graphs ?? []).some(
+      (graph) => graph.id === graphId,
+    )
+  ) {
+    return;
+  }
+  applyProjectActions(
+    [{ type: 'graph.remove', payload: { graphId } }],
+    { syncLayerProjections: false },
+  );
+  syncNetworkOpenState();
+};
+
+const commitGraphNetworks = (networks: Record<string, NodeNetwork>) => {
+  const nextNetworks = cloneNetworks(networks);
+  const nextIds = new Set(Object.keys(nextNetworks));
+  const actions: VizProjectAction[] = [];
+  const currentGraphs = getProjectState().workingProject.graphs ?? [];
+  const currentGraphsById = new Map(
+    currentGraphs.map((graph) => [graph.id, graph]),
+  );
+  for (const graph of currentGraphs) {
+    if (isEditorAuthoredGraph(graph) && !nextIds.has(graph.id)) {
+      actions.push({
+        type: 'graph.remove',
+        payload: { graphId: graph.id },
+      });
+    }
+  }
+  for (const [graphId, network] of Object.entries(nextNetworks)) {
+    const existingGraph = currentGraphsById.get(graphId);
+    if (!existingGraph || isEditorAuthoredGraph(existingGraph)) {
+      actions.push(...createGraphUpsertActions(graphId, network));
+    }
+  }
+  if (actions.length > 0) {
+    applyProjectActions(actions, { syncLayerProjections: false });
+  }
+  syncNetworkOpenState();
+};
 const createDefaultNetworksForLayer = (layer: VizLayer) => {
   const comp = resolveComp(layer);
   if (!comp?.defaultNetworks) {
@@ -633,7 +661,7 @@ const duplicateNetworksForLayer = (
 
   sourceParameterIds.forEach((sourceParameterId, index) => {
     const nextParameterId = nextParameterIds[index];
-    if (nextParameterId && getGraphState().networks[sourceParameterId]) {
+    if (nextParameterId && getGraphNetworks()[sourceParameterId]) {
       vizSessionActions.graph.duplicateNetwork(sourceParameterId, nextParameterId);
     }
   });
@@ -659,7 +687,7 @@ const applyPresetNetworksForLayer = (
   parameterIds.forEach((parameterId) => {
     const parameterPath = parameterId.split(':').slice(1).join('.');
     if (!presetNetworkPaths.has(parameterPath)) {
-      const existingNetwork = getGraphState().networks[parameterId];
+      const existingNetwork = getGraphNetworks()[parameterId];
       if (existingNetwork) {
         vizSessionActions.graph.setNetwork(parameterId, {
           ...existingNetwork,
@@ -680,13 +708,47 @@ const applyPresetNetworksForLayer = (
   });
 };
 
-const buildProjectHistoryState = (): LayerEditorHistoryState => ({
-  project: clone(vizSessionActions.project.exportWorkingProject()),
-});
-
 const buildBundledTrackUrl = (filename: string) => `/music/${filename}`;
 
 export const vizSessionActions = {
+  inspection: {
+    project() {
+      const snapshot = projectSession.getSnapshot();
+      return {
+        revision: snapshot.revision,
+        project: snapshot.workingProject,
+        validation: validateProjectDocument(snapshot.workingProject),
+        issues: snapshot.issues,
+        actionHistory: snapshot.actionHistory,
+        canUndo: snapshot.canUndo,
+        canRedo: snapshot.canRedo,
+      };
+    },
+    graph(graphId: string) {
+      const project = projectSession.getWorkingProject();
+      const graph = project.graphs?.find((candidate) => candidate.id === graphId);
+      const runtime = getPreviewState().runtimeInspection.lastGraphResults.find(
+        (result) => result.graphId === graphId,
+      );
+      return {
+        graph: graph ? structuredClone(graph) : undefined,
+        runtime: runtime ? structuredClone(runtime) : undefined,
+      };
+    },
+    runtime() {
+      return vizSessionActions.preview.inspectRuntimePreview();
+    },
+    assets() {
+      const project = projectSession.getWorkingProject();
+      return {
+        assetRefs: structuredClone(project.assetRefs ?? []),
+        artifactRefs: structuredClone(project.artifactRefs ?? []),
+        materializedAssets: structuredClone(
+          getPreviewState().runtimeInspection.lastMaterializedAssets,
+        ),
+      };
+    },
+  },
   project: {
     initializeProjectState(force = false) {
       const state = getProjectState();
@@ -697,15 +759,11 @@ export const vizSessionActions = {
             runtimeComponentRegistry.get(componentId),
         );
         syncProjectedStoresFromProject(project);
-        replaceGraphState({
-          networks: projectGraphsToNodeNetworks(
-            project,
-            getGraphState().networks,
-          ),
-        });
+        resetVizSessionSelectorCaches();
         transportController.setDurationFrames(
           project.timeline.durationInFrames,
         );
+        projectSession = createProjectSession(project);
         if (force || project !== state.workingProject) {
           replaceProjectState({
             ...state,
@@ -733,13 +791,9 @@ export const vizSessionActions = {
         (componentId) => runtimeComponentRegistry.get(componentId),
       );
       syncProjectedStoresFromProject(project);
-      replaceGraphState({
-        networks: projectGraphsToNodeNetworks(
-          project,
-          getGraphState().networks,
-        ),
-      });
+      resetVizSessionSelectorCaches();
       transportController.setDurationFrames(project.timeline.durationInFrames);
+      projectSession = createProjectSession(project);
       replaceProjectState({
         initialized: true,
         revision: force ? state.revision + 1 : state.revision,
@@ -754,16 +808,11 @@ export const vizSessionActions = {
         (componentId) => runtimeComponentRegistry.get(componentId),
       );
       syncProjectedStoresFromProject(canonicalProject);
-      replaceGraphState({
-        networks: projectGraphsToNodeNetworks(
-          canonicalProject,
-          getGraphState().networks,
-        ),
-      });
-      syncNetworkOpenState();
+      resetVizSessionSelectorCaches();
       transportController.setDurationFrames(
         canonicalProject.timeline.durationInFrames,
       );
+      projectSession = createProjectSession(canonicalProject);
       const current = getProjectState();
       replaceProjectState({
         initialized: true,
@@ -771,6 +820,7 @@ export const vizSessionActions = {
         sourceProject: clone(canonicalProject),
         workingProject: clone(canonicalProject),
       });
+      syncNetworkOpenState();
     },
     exportWorkingProject() {
       return clone(getProjectState().workingProject);
@@ -789,13 +839,18 @@ export const vizSessionActions = {
       const layer = createVizLayerFromComp(comp, generateLayerId(comp.name));
       useEditorStore.getState().setLayerExpanded(layer.id, true);
 
-      const project = getProjectState().workingProject;
-      updateProject({
-        ...project,
-        layerOrder: [...project.layerOrder, layer.id],
-        layers: [...project.layers, layer],
+      runProjectHistoryGroup(() => {
+        applyProjectActions([
+          {
+            type: 'layer.create',
+            payload: {
+              layerId: layer.id,
+              layer,
+            },
+          },
+        ]);
+        createDefaultNetworksForLayer(layer);
       });
-      createDefaultNetworksForLayer(layer);
     },
     removeLayer(layerId: string) {
       if (!getProjectState().initialized) {
@@ -809,17 +864,19 @@ export const vizSessionActions = {
         return;
       }
 
-      removeNetworksForLayer(currentLayer);
-      useEditorStore.getState().pruneLayerUi(
-        getProjectState().workingProject.layerOrder.filter(
-          (id) => id !== layerId,
-        ),
-      );
-      const project = getProjectState().workingProject;
-      updateProject({
-        ...project,
-        layerOrder: project.layerOrder.filter((id) => id !== layerId),
-        layers: project.layers.filter((layer) => layer.id !== layerId),
+      runProjectHistoryGroup(() => {
+        removeNetworksForLayer(currentLayer);
+        useEditorStore.getState().pruneLayerUi(
+          getProjectState().workingProject.layerOrder.filter(
+            (id) => id !== layerId,
+          ),
+        );
+        applyProjectActions([
+          {
+            type: 'layer.remove',
+            payload: { layerId },
+          },
+        ]);
       });
     },
     duplicateLayer(layerId: string) {
@@ -846,13 +903,18 @@ export const vizSessionActions = {
       };
       useEditorStore.getState().setLayerExpanded(duplicatedLayer.id, true);
 
-      const project = getProjectState().workingProject;
-      updateProject({
-        ...project,
-        layerOrder: [...project.layerOrder, duplicatedLayer.id],
-        layers: [...project.layers, duplicatedLayer],
+      runProjectHistoryGroup(() => {
+        applyProjectActions([
+          {
+            type: 'layer.create',
+            payload: {
+              layerId: duplicatedLayer.id,
+              layer: duplicatedLayer,
+            },
+          },
+        ]);
+        duplicateNetworksForLayer(sourceLayer, duplicatedLayer);
       });
-      duplicateNetworksForLayer(sourceLayer, duplicatedLayer);
     },
     reorderLayers(activeId: string, overId: string) {
       if (!getProjectState().initialized) {
@@ -868,10 +930,15 @@ export const vizSessionActions = {
       if (oldIndex === -1 || nextIndex === -1) {
         return;
       }
-      updateProject({
-        ...project,
-        layerOrder: arrayMove(project.layerOrder, oldIndex, nextIndex),
-      });
+      applyProjectActions([
+        {
+          type: 'layer.move',
+          payload: {
+            layerId: activeId,
+            index: nextIndex,
+          },
+        },
+      ]);
     },
     setLayerExpanded(layerId: string, isExpanded: boolean) {
       if (!getProjectState().initialized) {
@@ -905,15 +972,21 @@ export const vizSessionActions = {
       if (!getProjectState().initialized) {
         vizSessionActions.project.initializeProjectState();
       }
-      const project = getProjectState().workingProject;
-      updateProject({
-        ...project,
-        layers: project.layers.map((layer) =>
-          layer.id === layerId
-            ? applyEditorLayerSettings(layer, settings)
-            : layer,
-        ),
-      });
+      const layer = getProjectState().workingProject.layers.find(
+        (candidate) => candidate.id === layerId,
+      );
+      if (!layer) {
+        return;
+      }
+      applyProjectActions([
+        {
+          type: 'layer.replace',
+          payload: {
+            layerId,
+            layer: applyEditorLayerSettings(layer, settings),
+          },
+        },
+      ]);
     },
     updateLayerValue(
       layerId: string,
@@ -923,22 +996,16 @@ export const vizSessionActions = {
       if (!getProjectState().initialized) {
         vizSessionActions.project.initializeProjectState();
       }
-      const project = getProjectState().workingProject;
-      updateProject({
-        ...project,
-        layers: project.layers.map((layer) =>
-          layer.id === layerId
-            ? {
-                ...layer,
-                settings: updateNestedValue(
-                  layer.settings ?? {},
-                  path,
-                  value,
-                ),
-              }
-            : layer,
-        ),
-      });
+      applyProjectActions([
+        {
+          type: 'layer.settings.set',
+          payload: {
+            layerId,
+            path: path.join('.'),
+            value,
+          },
+        },
+      ]);
     },
     applyLayerPreset(
       layerId: string,
@@ -959,29 +1026,20 @@ export const vizSessionActions = {
         return;
       }
 
-      applyPresetNetworksForLayer(currentLayer, preset);
-      const project = getProjectState().workingProject;
-      updateProject({
-        ...project,
-        layers: project.layers.map((layer) =>
-          layer.id === layerId
-            ? { ...layer, settings: clone(preset.values) }
-            : layer,
-        ),
-      });
-    },
-    setState(partial: Partial<VizSessionProjectState>) {
-      const nextState = {
-        ...getProjectState(),
-        ...partial,
-      };
-      replaceProjectState(nextState);
-      syncProjectedStoresFromProject(nextState.workingProject);
-      replaceGraphState({
-        networks: projectGraphsToNodeNetworks(
-          nextState.workingProject,
-          getGraphState().networks,
-        ),
+      runProjectHistoryGroup(() => {
+        applyPresetNetworksForLayer(currentLayer, preset);
+        applyProjectActions([
+          {
+            type: 'layer.replace',
+            payload: {
+              layerId,
+              layer: {
+                ...currentLayer,
+                settings: clone(preset.values),
+              },
+            },
+          },
+        ]);
       });
     },
   },
@@ -993,19 +1051,19 @@ export const vizSessionActions = {
       vizSessionActions.graph.importNetworks(networks);
     },
     exportNetworks() {
-      return cloneNetworks(getGraphState().networks);
+      return cloneNetworks(getGraphNetworks());
     },
     reset() {
       commitGraphNetworks({});
     },
     setNetwork(parameterId: string, network: NodeNetwork) {
-      commitGraphNetworks({
-        ...getGraphState().networks,
-        [parameterId]: cloneNetworks({ [parameterId]: network })[parameterId],
-      });
+      commitGraphNetwork(
+        parameterId,
+        cloneNetworks({ [parameterId]: network })[parameterId],
+      );
     },
     setNetworkEnabled(parameterId: string, isEnabled: boolean, type: VType) {
-      if (!getGraphState().networks[parameterId]) {
+      if (!getGraphNetworks()[parameterId]) {
         if (!isEnabled) {
           return;
         }
@@ -1014,80 +1072,63 @@ export const vizSessionActions = {
         return;
       }
 
-      commitGraphNetworks({
-        ...getGraphState().networks,
-        [parameterId]: {
-          ...getGraphState().networks[parameterId],
-          isEnabled,
-        },
+      commitGraphNetwork(parameterId, {
+        ...getGraphNetworks()[parameterId],
+        isEnabled,
       });
     },
     addNodeToNetwork(parameterId: string, node: GraphNode) {
-      const existingNetwork = getGraphState().networks[parameterId];
+      const existingNetwork = getGraphNetworks()[parameterId];
       if (!existingNetwork) {
         return;
       }
 
-      commitGraphNetworks({
-        ...getGraphState().networks,
-        [parameterId]: {
-          ...existingNetwork,
-          nodes: [
-            ...existingNetwork.nodes,
-            {
-              ...node,
-              data: {
-                ...node.data,
-                inputValues: { ...node.data.inputValues },
-                state: { ...node.data.state },
-              },
+      commitGraphNetwork(parameterId, {
+        ...existingNetwork,
+        nodes: [
+          ...existingNetwork.nodes,
+          {
+            ...node,
+            data: {
+              ...node.data,
+              inputValues: { ...node.data.inputValues },
+              state: { ...node.data.state },
             },
-          ],
-        },
+          },
+        ],
       });
     },
     setNodesInNetwork(parameterId: string, nodes: GraphNode[]) {
-      const network = getGraphState().networks[parameterId];
+      const network = getGraphNetworks()[parameterId];
       if (!network) {
         return;
       }
 
-      commitGraphNetworks({
-        ...getGraphState().networks,
-        [parameterId]: {
-          ...network,
-          nodes,
-        },
+      commitGraphNetwork(parameterId, {
+        ...network,
+        nodes,
       });
     },
     setEdgesInNetwork(parameterId: string, edges: Edge[]) {
-      const network = getGraphState().networks[parameterId];
+      const network = getGraphNetworks()[parameterId];
       if (!network) {
         return;
       }
 
-      commitGraphNetworks({
-        ...getGraphState().networks,
-        [parameterId]: {
-          ...network,
-          edges,
-        },
+      commitGraphNetwork(parameterId, {
+        ...network,
+        edges,
       });
     },
     createNetworkForParameter(parameterId: string, type: VType) {
-      commitGraphNetworks({
-        ...getGraphState().networks,
-        [parameterId]: createEmptyNetwork(parameterId, type),
-      });
+      commitGraphNetwork(parameterId, createEmptyNetwork(parameterId, type));
     },
     removeNetworkForParameter(parameterId: string) {
-      if (!getGraphState().networks[parameterId]) {
+      if (!getGraphNetworks()[parameterId]) {
         return;
       }
 
-      const networks = { ...getGraphState().networks };
-      delete networks[parameterId];
-      commitGraphNetworks(networks);
+      removeGraphNetwork(parameterId);
     },
     applyPresetToNetwork(
       parameterId: string,
@@ -1121,164 +1162,57 @@ export const vizSessionActions = {
       inputId: string,
       value: any,
     ) {
-      const network = getGraphState().networks[parameterId];
+      const network = getGraphNetworks()[parameterId];
       if (!network) {
         return;
       }
 
-      commitGraphNetworks({
-        ...getGraphState().networks,
-        [parameterId]: {
-          ...network,
-          nodes: network.nodes.map((node) =>
-            node.id === nodeId
-              ? {
-                  ...node,
-                  data: {
-                    ...node.data,
-                    inputValues: {
-                      ...node.data.inputValues,
-                      [inputId]: value,
-                    },
+      commitGraphNetwork(parameterId, {
+        ...network,
+        nodes: network.nodes.map((node) =>
+          node.id === nodeId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  inputValues: {
+                    ...node.data.inputValues,
+                    [inputId]: value,
                   },
-                }
-              : node,
-          ),
-        },
-      });
-    },
-    computeNetworkOutput(parameterId: string, inputData: AnimInputData) {
-      const startTime = performance.now();
-      const network = getGraphState().networks[parameterId];
-
-      if (!network || !network.isEnabled) {
-        throw new Error('Network not found or not enabled');
-      }
-
-      const { setNodeOutput, setGlobalAnimData } = useNodeOutputCache.getState();
-      setGlobalAnimData(inputData);
-      const { setNodeInputValue } = useNodeLiveValuesStore.getState();
-      const nodeOutputs: Record<string, any> = {};
-
-      const computeNodeOutput = (node: GraphNode): any => {
-        if (node.id in nodeOutputs) {
-          return nodeOutputs[node.id];
-        }
-
-        if (node.data.definition.label === 'Input') {
-          const output = node.data.definition.computeSignal(inputData, inputData);
-          nodeOutputs[node.id] = output;
-          setNodeOutput(node.id, output);
-          return output;
-        }
-
-        const inputs = node.data.definition.inputs.reduce(
-          (acc, input) => {
-            const edge = network.edges.find(
-              (candidate) =>
-                candidate.target === node.id &&
-                candidate.targetHandle === input.id,
-            );
-
-            let resolvedValue;
-            if (edge) {
-              const sourceNode = network.nodes.find(
-                (candidate) => candidate.id === edge.source,
-              );
-
-              if (sourceNode) {
-                const sourceOutput = computeNodeOutput(sourceNode);
-                if (
-                  edge.sourceHandle &&
-                  sourceOutput?.[edge.sourceHandle] !== undefined
-                ) {
-                  resolvedValue = sourceOutput[edge.sourceHandle];
-                } else if (
-                  !edge.sourceHandle &&
-                  typeof sourceOutput === 'object' &&
-                  sourceOutput !== null
-                ) {
-                  resolvedValue = Object.values(sourceOutput)[0];
-                }
+                },
               }
-            } else {
-              resolvedValue = node.data.inputValues[input.id];
-              if (resolvedValue === undefined) {
-                if (input.id === 'audioSignal') {
-                  resolvedValue = (inputData as any)?.audioSignal;
-                } else if (input.id === 'frequencyAnalysis') {
-                  resolvedValue = (inputData as any)?.frequencyAnalysis;
-                }
-              }
-            }
-
-            if (input.type === 'number' && typeof resolvedValue === 'string') {
-              const parsed = parseFloat(resolvedValue);
-              acc[input.id] = Number.isNaN(parsed) ? 0 : parsed;
-            } else if (input.type === 'string') {
-              acc[input.id] = String(resolvedValue);
-            } else {
-              acc[input.id] = resolvedValue;
-            }
-
-            if (resolvedValue !== undefined) {
-              setNodeInputValue(node.id, input.id, acc[input.id]);
-            }
-
-            return acc;
-          },
-          {} as Record<string, any>,
-        );
-
-        const output = node.data.definition.computeSignal(inputs, inputData, node);
-        nodeOutputs[node.id] = output;
-        setNodeOutput(node.id, output);
-        return output;
-      };
-
-      const outputNode = network.nodes.find(
-        (node) => node.data.definition.label === 'Output',
-      );
-      if (!outputNode) {
-        throw new Error('Output node not found in network');
-      }
-
-      const output = computeNodeOutput(outputNode);
-      const computeTime = performance.now() - startTime;
-
-      reportNodeNetworkMetric({
-        parameterId,
-        parameterName: network.name || parameterId,
-        computeTime,
-        nodeCount: network.nodes.length,
+            : node,
+        ),
       });
-
-      return output;
     },
     duplicateNetwork(fromParameterId: string, toParameterId: string) {
-      const sourceNetwork = getGraphState().networks[fromParameterId];
+      const sourceNetwork = getGraphNetworks()[fromParameterId];
       if (!sourceNetwork) {
         return;
       }
 
-      commitGraphNetworks({
-        ...getGraphState().networks,
-        [toParameterId]: duplicateNetworkGraph(
+      commitGraphNetwork(
+        toParameterId,
+        duplicateNetworkGraph(
           fromParameterId,
           toParameterId,
           sourceNetwork,
         ),
-      });
+      );
     },
     clearStaleNetworks(validParameterIds?: Iterable<string>) {
       const validIds = new Set(validParameterIds ?? []);
 
       if (validIds.size === 0 && typeof window !== 'undefined') {
         try {
-          const { layers } = useEditorLayerProjectionStore.getState();
-          layers.forEach((layer: any) => {
-            if (layer.config?.options) {
-              const parameterIds = getParameterIdsFromConfig(layer.config);
+          getProjectState().workingProject.layers.forEach((layer) => {
+            const comp = resolveComp(layer);
+            if (comp) {
+              const config = assignDeterministicIdsToConfig(
+                layer.id,
+                comp.config.clone(),
+              );
+              const parameterIds = getParameterIdsFromConfig(config);
               parameterIds.forEach((parameterId: string) =>
                 validIds.add(parameterId),
               );
@@ -1291,16 +1225,11 @@ export const vizSessionActions = {
       }
 
       const nextNetworks = Object.fromEntries(
-        Object.entries(getGraphState().networks).filter(([parameterId]) =>
+        Object.entries(getGraphNetworks()).filter(([parameterId]) =>
           validIds.has(parameterId),
         ),
       );
       commitGraphNetworks(nextNetworks);
-    },
-    setState(partial: Partial<VizSessionGraphState>) {
-      if (partial.networks) {
-        commitGraphNetworks(partial.networks);
-      }
     },
   },
   preview: {
@@ -1337,17 +1266,19 @@ export const vizSessionActions = {
         durationFrames > 0 &&
         project.timeline.durationInFrames !== durationFrames
       ) {
-        updateProject(
-          {
-            ...project,
-            timeline: {
-            ...project.timeline,
-              durationInFrames: durationFrames,
+        applyProjectActions(
+          [
+            {
+              type: 'timeline.set',
+              payload: {
+                timeline: {
+                  ...project.timeline,
+                  durationInFrames: durationFrames,
+                },
+              },
             },
-          },
-          {
-            syncLayerProjections: false,
-          },
+          ],
+          { syncLayerProjections: false },
         );
       }
     },
@@ -1419,6 +1350,13 @@ export const vizSessionActions = {
             renderCycle: nextPreview.runtimeInspection.renderCycle + 1,
             lastRenderedLayerIds,
             runtimeBackedLayerIds,
+            lastGraphResults: structuredClone(
+              renderPlan.graphResults,
+            ),
+            lastLayerSnapshots: structuredClone(renderPlan.layers),
+            lastMaterializedAssets: structuredClone(
+              renderPlan.materializedAssets,
+            ),
             lastPlanIssues: structuredClone(renderPlan.issues),
             lastError: null,
           },
@@ -1455,6 +1393,15 @@ export const vizSessionActions = {
         runtimeBackedLayerIds: [
           ...state.preview.runtimeInspection.runtimeBackedLayerIds,
         ],
+        lastGraphResults: structuredClone(
+          state.preview.runtimeInspection.lastGraphResults,
+        ),
+        lastLayerSnapshots: structuredClone(
+          state.preview.runtimeInspection.lastLayerSnapshots,
+        ),
+        lastMaterializedAssets: structuredClone(
+          state.preview.runtimeInspection.lastMaterializedAssets,
+        ),
         lastPlanIssues: structuredClone(
           state.preview.runtimeInspection.lastPlanIssues,
         ),
@@ -1674,367 +1621,60 @@ export const vizSessionActions = {
     },
   },
   history: {
-    initializeLayerHistory() {
-      const state = getHistoryState();
-      if (!getProjectState().initialized) {
-        vizSessionActions.project.initializeProjectState();
-      }
-      const project = vizSessionActions.project.exportWorkingProject();
-
-      if (
-        state.layerHistory.present.project.layers.length === 0 &&
-        state.layerHistory.past.length === 0 &&
-        project.layers.length > 0
-      ) {
-        const initialState: LayerEditorHistoryState = {
-          project: clone(project),
-        };
-
-        replaceHistoryState({
-          ...state,
-          layerHistory: {
-            past: [],
-            present: initialState,
-            future: [],
-          },
-        });
-      }
-    },
-    pushLayerHistory(skipDebounce = false) {
-      const state = getHistoryState();
-      if (state.isBypassingHistory) {
+    undo() {
+      if (!projectSession.canUndo()) {
         return;
       }
-      if (state.debounceTimer !== null) {
-        clearTimeout(state.debounceTimer);
-        replaceHistoryState({
-          ...state,
-          debounceTimer: null,
-        });
-      }
-
-      const newState = buildProjectHistoryState();
-
-      const executePush = () => {
-        const currentState = getHistoryState();
-        if (
-          JSON.stringify(newState) ===
-          JSON.stringify(currentState.layerHistory.present)
-        ) {
-          return;
-        }
-
-        const newPast = [
-          ...currentState.layerHistory.past,
-          currentState.layerHistory.present,
-        ];
-        if (newPast.length > MAX_HISTORY_SIZE) {
-          newPast.shift();
-        }
-
-        replaceHistoryState({
-          ...currentState,
-          layerHistory: {
-            past: newPast,
-            present: newState,
-            future: [],
-          },
-          debounceTimer: null,
-        });
-      };
-
-      if (!skipDebounce) {
-        const timer = setTimeout(executePush, 300);
-        replaceHistoryState({
-          ...getHistoryState(),
-          debounceTimer: timer as any,
-        });
-      } else {
-        executePush();
-      }
+      projectSession.undo();
+      syncProjectSessionProject();
+      toast.success('Undo', { duration: 1500 });
     },
-    flushPendingLayerHistory() {
-      const state = getHistoryState();
-      if (state.debounceTimer === null) {
+    redo() {
+      if (!projectSession.canRedo()) {
         return;
       }
-
-      clearTimeout(state.debounceTimer);
-      const currentState = buildProjectHistoryState();
-
-      if (
-        JSON.stringify(currentState) !==
-        JSON.stringify(state.layerHistory.present)
-      ) {
-        const newPast = [...state.layerHistory.past, state.layerHistory.present];
-        if (newPast.length > MAX_HISTORY_SIZE) {
-          newPast.shift();
-        }
-        replaceHistoryState({
-          ...state,
-          layerHistory: {
-            past: newPast,
-            present: currentState,
-            future: [],
-          },
-          debounceTimer: null,
-        });
-        return;
-      }
-
-      replaceHistoryState({
-        ...state,
-        debounceTimer: null,
-      });
-    },
-    applyLayerHistoryState(state: LayerEditorHistoryState) {
-      vizSessionActions.project.importWorkingProject(clone(state.project));
-    },
-    undoLayerEditor() {
-      vizSessionActions.history.flushPendingLayerHistory();
-      const state = getHistoryState();
-      if (state.layerHistory.past.length === 0) {
-        return;
-      }
-      replaceHistoryState({
-        ...state,
-        isBypassingHistory: true,
-      });
-
-      const previous = state.layerHistory.past[state.layerHistory.past.length - 1];
-      const newPast = state.layerHistory.past.slice(0, -1);
-      const newFuture = [state.layerHistory.present, ...state.layerHistory.future];
-
-      replaceHistoryState({
-        ...getHistoryState(),
-        layerHistory: {
-          past: newPast,
-          present: previous,
-          future: newFuture,
-        },
-      });
-
-      vizSessionActions.history.applyLayerHistoryState(previous);
-      toast.success('Undo', {
-        description: `${newPast.length} step${newPast.length !== 1 ? 's' : ''} back available`,
-        duration: 1500,
-      });
-      setTimeout(() => {
-        replaceHistoryState({
-          ...getHistoryState(),
-          isBypassingHistory: false,
-        });
-      }, 0);
-    },
-    redoLayerEditor() {
-      vizSessionActions.history.flushPendingLayerHistory();
-      const state = getHistoryState();
-      if (state.layerHistory.future.length === 0) {
-        return;
-      }
-      replaceHistoryState({
-        ...state,
-        isBypassingHistory: true,
-      });
-      const next = state.layerHistory.future[0];
-      const newFuture = state.layerHistory.future.slice(1);
-      const newPast = [...state.layerHistory.past, state.layerHistory.present];
-      replaceHistoryState({
-        ...getHistoryState(),
-        layerHistory: {
-          past: newPast,
-          present: next,
-          future: newFuture,
-        },
-      });
-      vizSessionActions.history.applyLayerHistoryState(next);
-      toast.success('Redo', {
-        description: `${newFuture.length} step${newFuture.length !== 1 ? 's' : ''} forward available`,
-        duration: 1500,
-      });
-      setTimeout(() => {
-        replaceHistoryState({
-          ...getHistoryState(),
-          isBypassingHistory: false,
-        });
-      }, 0);
-    },
-    resetLayerHistory() {
-      replaceHistoryState({
-        ...getHistoryState(),
-        layerHistory: createEmptyLayerHistory(),
-      });
-    },
-    initializeNodeHistory(networkId: string) {
-      const state = getHistoryState();
-      if (!state.nodeHistories[networkId]) {
-        const network = getGraphState().networks[networkId];
-        if (network) {
-          replaceHistoryState({
-            ...state,
-            nodeHistories: {
-              ...state.nodeHistories,
-              [networkId]: {
-                past: [],
-                present: {
-                  nodes: network.nodes,
-                  edges: network.edges,
-                },
-                future: [],
-              },
-            },
-          });
-        }
-      }
-    },
-    pushNodeHistory(networkId: string, nodes: any[], edges: any[]) {
-      const state = getHistoryState();
-      if (state.nodeDragBypass[networkId]) {
-        return;
-      }
-      const history = state.nodeHistories[networkId];
-      if (!history) {
-        return;
-      }
-      const newState = { nodes, edges };
-      if (JSON.stringify(newState) === JSON.stringify(history.present)) {
-        return;
-      }
-      const newPast = [...history.past, history.present];
-      if (newPast.length > MAX_HISTORY_SIZE) {
-        newPast.shift();
-      }
-      replaceHistoryState({
-        ...state,
-        nodeHistories: {
-          ...state.nodeHistories,
-          [networkId]: {
-            past: newPast,
-            present: newState,
-            future: [],
-          },
-        },
-      });
+      projectSession.redo();
+      syncProjectSessionProject();
+      toast.success('Redo', { duration: 1500 });
     },
     undoNodeEditor(networkId: string) {
-      const state = getHistoryState();
-      const history = state.nodeHistories[networkId];
-      if (!history || history.past.length === 0) {
-        return;
-      }
-      const previous = history.past[history.past.length - 1];
-      const newPast = history.past.slice(0, -1);
-      const newFuture = [history.present, ...history.future];
-      replaceHistoryState({
-        ...state,
-        nodeHistories: {
-          ...state.nodeHistories,
-          [networkId]: {
-            past: newPast,
-            present: previous,
-            future: newFuture,
-          },
-        },
-      });
-      vizSessionActions.graph.setNodesInNetwork(networkId, previous.nodes);
-      vizSessionActions.graph.setEdgesInNetwork(networkId, previous.edges);
+      void networkId;
+      vizSessionActions.history.undo();
     },
     redoNodeEditor(networkId: string) {
-      const state = getHistoryState();
-      const history = state.nodeHistories[networkId];
-      if (!history || history.future.length === 0) {
-        return;
-      }
-      const next = history.future[0];
-      const newFuture = history.future.slice(1);
-      const newPast = [...history.past, history.present];
-      replaceHistoryState({
-        ...state,
-        nodeHistories: {
-          ...state.nodeHistories,
-          [networkId]: {
-            past: newPast,
-            present: next,
-            future: newFuture,
-          },
-        },
-      });
-      vizSessionActions.graph.setNodesInNetwork(networkId, next.nodes);
-      vizSessionActions.graph.setEdgesInNetwork(networkId, next.edges);
+      void networkId;
+      vizSessionActions.history.redo();
+    },
+    canUndo() {
+      return projectSession.canUndo();
+    },
+    canRedo() {
+      return projectSession.canRedo();
     },
     startNodeDrag(networkId: string) {
+      projectSession.beginHistoryGroup();
       replaceHistoryState({
         ...getHistoryState(),
-        nodeDragBypass: {
-          ...getHistoryState().nodeDragBypass,
-          [networkId]: true,
-        },
+        activeGestureId: networkId,
       });
     },
     endNodeDrag(networkId: string) {
+      if (getHistoryState().activeGestureId === networkId) {
+        projectSession.endHistoryGroup();
+        replaceHistoryState({
+          ...getHistoryState(),
+          activeGestureId: null,
+        });
+      }
+    },
+    setNodeEditorFocused(isNodeEditorFocused: boolean) {
       replaceHistoryState({
         ...getHistoryState(),
-        nodeDragBypass: {
-          ...getHistoryState().nodeDragBypass,
-          [networkId]: false,
-        },
+        isNodeEditorFocused,
       });
     },
-    setNodeEditorFocused(focused: boolean) {
-      replaceHistoryState({
-        ...getHistoryState(),
-        isNodeEditorFocused: focused,
-      });
-    },
-    undo() {
-      const state = getHistoryState();
-      const openNodeNetwork = useNodeNetworkStore.getState().openNetwork;
-      if (
-        openNodeNetwork &&
-        state.isNodeEditorFocused &&
-        state.nodeHistories[openNodeNetwork]?.past.length > 0
-      ) {
-        vizSessionActions.history.undoNodeEditor(openNodeNetwork);
-      } else if (state.layerHistory.past.length > 0) {
-        vizSessionActions.history.undoLayerEditor();
-      }
-    },
-    redo() {
-      const state = getHistoryState();
-      const openNodeNetwork = useNodeNetworkStore.getState().openNetwork;
-      if (
-        openNodeNetwork &&
-        state.isNodeEditorFocused &&
-        state.nodeHistories[openNodeNetwork]?.future.length > 0
-      ) {
-        vizSessionActions.history.redoNodeEditor(openNodeNetwork);
-      } else if (state.layerHistory.future.length > 0) {
-        vizSessionActions.history.redoLayerEditor();
-      }
-    },
-    canUndo() {
-      const state = getHistoryState();
-      const openNodeNetwork = useNodeNetworkStore.getState().openNetwork;
-      if (openNodeNetwork && state.isNodeEditorFocused) {
-        const history = state.nodeHistories[openNodeNetwork];
-        return history ? history.past.length > 0 : false;
-      }
-      return state.layerHistory.past.length > 0;
-    },
-    canRedo() {
-      const state = getHistoryState();
-      const openNodeNetwork = useNodeNetworkStore.getState().openNetwork;
-      if (openNodeNetwork && state.isNodeEditorFocused) {
-        const history = state.nodeHistories[openNodeNetwork];
-        return history ? history.future.length > 0 : false;
-      }
-      return state.layerHistory.future.length > 0;
-    },
-    setBypassHistory(bypass: boolean) {
-      replaceHistoryState({
-        ...getHistoryState(),
-        isBypassingHistory: bypass,
-      });
+    reset() {
+      replaceHistoryState(createInitialHistoryState());
     },
     setState(partial: Partial<VizSessionHistoryState>) {
       replaceHistoryState({

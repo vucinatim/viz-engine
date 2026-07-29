@@ -1,5 +1,7 @@
-import { useNodeLiveValuesStore } from '@/lib/stores/node-live-values-store';
-import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
+import {
+  getRuntimeNodeInput,
+  getRuntimeNodeOutput,
+} from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
@@ -15,8 +17,8 @@ interface TonalPresenceBodyProps {
 // Visual body for Tonal Presence
 // Shows: bar for peak, bar for (1 - flatness), and their product (presence) over time as a sparkline.
 const TonalPresenceBody = ({ id: nodeId }: TonalPresenceBodyProps) => {
-  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
-  const getNodeInputValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
+  const getNodeOutput = getRuntimeNodeOutput;
+  const getNodeInputValue = getRuntimeNodeInput;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const infoRef = useRef<HTMLDivElement>(null);

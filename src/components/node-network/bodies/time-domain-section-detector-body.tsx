@@ -1,4 +1,4 @@
-import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
+import { getRuntimeNodeOutput } from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
@@ -14,7 +14,7 @@ interface TimeDomainSectionDetectorBodyProps {
 const TimeDomainSectionDetectorBody = ({
   id: nodeId,
 }: TimeDomainSectionDetectorBodyProps) => {
-  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
+  const getNodeOutput = getRuntimeNodeOutput;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const triggerIndicatorRef = useRef<HTMLDivElement>(null);

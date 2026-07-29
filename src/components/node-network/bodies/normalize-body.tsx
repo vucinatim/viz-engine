@@ -1,5 +1,7 @@
-import { useNodeLiveValuesStore } from '@/lib/stores/node-live-values-store';
-import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
+import {
+  getRuntimeNodeInput,
+  getRuntimeNodeOutput,
+} from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
@@ -14,8 +16,8 @@ interface NormalizeBodyProps {
 
 // Custom body for Normalize node: sparkline preview only (inputs handled by core UI)
 const NormalizeBody = ({ id: nodeId }: NormalizeBodyProps) => {
-  const getNodeInputValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
-  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
+  const getNodeInputValue = getRuntimeNodeInput;
+  const getNodeOutput = getRuntimeNodeOutput;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const infoRef = useRef<HTMLDivElement>(null);

@@ -1,14 +1,13 @@
 import useNodeNetworkStore from '@/components/node-network/node-network-store';
 import useEditorStore from '@/lib/stores/editor-store';
-import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
-import useEditorProjectStore from '@/lib/stores/editor-project-store';
 import { useHistoryStore } from '@/lib/stores/history-store';
+import { vizSessionActions, vizSessionStore } from '@/lib/viz-session';
 import {
   VIZ_PROJECT_SCHEMA_VERSION,
   type VizProjectDocument,
 } from '@viz-engine/contracts';
 import { assertValidProjectDocument } from '@viz-engine/runtime';
-import { createEmptyVizProjectDocument } from '@/lib/viz-session/project-adapters';
+import { createEmptyVizProjectDocument } from '@/lib/viz-session/project-document';
 
 const VIZ_ENGINE_PROJECT_VERSION = VIZ_PROJECT_SCHEMA_VERSION;
 
@@ -30,14 +29,13 @@ export interface ProjectFile {
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 
 export function buildProjectFile(): ProjectFile {
-  const editorProjectStore = useEditorProjectStore.getState();
   const nodeNetworkStoreState = useNodeNetworkStore.getState();
   const editorStoreState = useEditorStore.getState();
-  const workingProject = editorProjectStore.initialized
-    ? editorProjectStore.exportWorkingProject()
+  const workingProject = vizSessionStore.getState().project.initialized
+    ? vizSessionActions.project.exportWorkingProject()
     : (() => {
-        editorProjectStore.initializeProjectState();
-        return useEditorProjectStore.getState().exportWorkingProject();
+        vizSessionActions.project.initializeProjectState();
+        return vizSessionActions.project.exportWorkingProject();
       })();
 
   return {
@@ -94,10 +92,10 @@ export async function hydrateProjectData(projectFile: ProjectFile) {
     rhythmSelection: projectFile.editorUi.rhythmSelection,
     layerUi: clone(projectFile.editorUi.layerUi ?? {}),
   });
-  useEditorProjectStore.getState().importWorkingProject(projectFile.project);
-  useEditorPreviewStore.getState().reset();
+  vizSessionActions.project.importWorkingProject(projectFile.project);
+  vizSessionActions.preview.reset();
 
-  useHistoryStore.getState().resetLayerHistory();
+  useHistoryStore.getState().reset();
 }
 
 export function loadProject(file: File) {
@@ -189,6 +187,7 @@ function clearLocalStorage() {
   const keysToRemove = [
     'viz-session-store',
     `viz-session-${VIZ_PROJECT_SCHEMA_VERSION}`,
+    `viz-project-${VIZ_PROJECT_SCHEMA_VERSION}`,
     'editor-project-store',
     'layer-store',
     'layer-values-store',
@@ -226,9 +225,9 @@ export async function resetProject() {
     });
 
     console.log('[resetProject] Resetting project state...');
-    useEditorProjectStore
-      .getState()
-      .importWorkingProject(createEmptyVizProjectDocument());
+    vizSessionActions.project.importWorkingProject(
+      createEmptyVizProjectDocument(),
+    );
 
     console.log('[resetProject] Resetting editor UI state...');
     const currentResolutionMultiplier =
@@ -241,10 +240,10 @@ export async function resetProject() {
       rhythmSelection: { start: 0, end: 0.2 },
       layerUi: {},
     });
-    useEditorPreviewStore.getState().reset();
+    vizSessionActions.preview.reset();
 
     console.log('[resetProject] Resetting editor history...');
-    useHistoryStore.getState().resetLayerHistory();
+    useHistoryStore.getState().reset();
 
     console.log('[resetProject] Project reset complete!');
   } catch (error) {

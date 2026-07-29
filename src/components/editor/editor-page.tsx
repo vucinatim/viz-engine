@@ -8,7 +8,6 @@ import EditorCompRegistryManager from '@/components/editor/editor-comp-registry-
 import EditorHeader from '@/components/editor/editor-header';
 import EditorLayout, { EditorPanel } from '@/components/editor/editor-layout';
 import EditorProjectManager from '@/components/editor/editor-project-manager';
-import HistoryManager from '@/components/editor/history-manager';
 import LayersConfigPanel from '@/components/editor/layers-config-panel';
 import ProjectDropzone from '@/components/editor/project-dropzone';
 import RemotionPlayer from '@/components/editor/remotion-player';
@@ -68,7 +67,6 @@ export default function EditorPage() {
       <EditorCompRegistryManager />
       <EditorProjectManager />
       <EditorAudioSessionManager />
-      <HistoryManager />
       {isProfilerVisible && (
         <Suspense fallback={null}>
           <ProfilerPanel />

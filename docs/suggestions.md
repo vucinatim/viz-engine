@@ -8,26 +8,17 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
   Three-program, and polyline paths. Frequently changing text and mixed
   primitive groups can still recreate textures or geometry, which would
   undermine required responsiveness even when plans are deterministic.
-- Continue the classified adapter burn-down from
-  `phase-13-viz-session-runtime-preview-ownership.md`: replace each historical
-  component render path with a package-runtime implementation, then delete the
-  per-component runtime preview bridge when it has no consumers.
 - Keep `VizSession` one canonical engine while splitting its large internal
   implementation into focused reducers, selectors, history, persistence, and
   host-attachment modules. Internal modularity must not recreate multiple
   sources of truth.
-- Add a repeatable browser parity smoke for sample loading, the animation/node
-  surface, Rhythm Lab, and playback. The 2026-07-29 manual calibration found
-  three product-blocking regressions that type checks, builds, and lower-level
-  tests did not detect.
+- Turn the now-repeatable browser parity procedure for layer creation,
+  animation/node graphs, live values, undo/redo, persistence, playback, and
+  export configuration into a checked automation. The convergence audit found
+  a React Flow measurement regression that lower-level tests could not detect.
 - Finish moving component render meaning out of browser/editor adapters now
   that canonical document, runtime inspection, and browser attachment ownership
   are separated.
-- Move the preserved editor node projection onto the package execution registry
-  instead of letting node execution remain editor-owned. This is now required
-  not only for bridge deletion but for full historical sampling of
-  node-driven temporal visuals such as Heartbeat Monitor and event-driven
-  visuals such as Light Tunnel.
 - Restore the preserved editor debug toggle through explicit renderer-owned
   diagnostic overlays (grid, axes, light helpers, and program inspection)
   rather than putting debug state back into deterministic component semantics.
@@ -79,11 +70,10 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
   then expose the proven substrate through the generic `Model3D` product
   surface with hierarchy, clip, material, and morph inspection. Do not pull
   character, facial, or retargeting semantics into that generic component.
-- Move the preserved editor node-kernel catalog from app terrain into
-  `@viz-engine/nodes-core` once this rendering cutover is certified. The
-  current registry boundary removes duplicate evaluation and is canonical at
-  runtime, but package ownership would let editor UI, CLI, agents, and renders
-  consume one portable built-in node catalog.
+- Add an offline model-preparation command that produces content-pinned GLB
+  derivatives with supported material maps and four-weight skinning. The
+  retained FBX path is functional, but repeated loader warnings should become
+  preparation-time diagnostics instead of runtime console noise.
 - Extend the new raw-recorder comparison CLI into a headless fixed-device
   browser recording command so V1/V2 frame pacing, interaction latency, memory,
   and long-session stability can be captured without temporary profiler UI
@@ -152,35 +142,10 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
 - Build the next layer-creation/editor-authoring step on top of the new
   component-catalog truth, so new layer flows stay registry-driven instead of
   hardcoding component knowledge into the UI.
-- Now that layer truth has an app-local canonical working project, the next
-  cleanup should be to teach layer history to snapshot and restore that
-  canonical project directly, so `history-store` no longer needs the temporary
-  legacy-store reimport bridge after undo/redo.
-- Now that preview transport truth has been split out of `editor-store`, the
-  next cleanup should move browser-media attachment details and audio-session
-  lifecycle behind an equally explicit audio-session owner, so preview
-  transport stays canonical without inheriting audio-element quirks directly.
-- Now that the audio session has been split from browser audio attachments, the
-  next cleanup should remove the remaining direct media-element time writes and
-  analyzer assumptions from waveform/export/legacy consumers so the graph and
-  renderer paths stop reaching around the canonical audio-session seam.
-- Now that graph truth and execution live in `editor-graph-store`, the next
-  cleanup should shrink `node-network-store` further until it holds only
-  explicit node-editor UI session state and no convenience graph ownership
-  logic.
-- Now that layer history snapshots canonical working-project truth directly,
-  the next cleanup should apply the same ruthless standard to remaining
-  history/context seams so no undo/redo path still depends on legacy store
-  reconstruction as hidden truth.
-
 ## Next Cleanup Candidates
 
 - keep burning down editor-era convenience accessors that still encourage
   treating adapter stores as canonical truth
-- make persistence/bootstrap stop depending on legacy-shaped projected store
-  hydration as the long-term source for editor startup
-- reduce remaining history/control duplication so undo/redo, editor driving,
-  and future agent tools converge on one cleaner control plane
 - now that the editor has one explicit local control plane, the next cleanup
   should be to push more browser/runtime attachment internals behind that same
   seam where it stays simple, so only truly low-level attachment code still

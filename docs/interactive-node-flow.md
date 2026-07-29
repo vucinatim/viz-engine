@@ -51,4 +51,6 @@ graph TD
     A -- "Triggers Re-computation" --> F
 
     style C fill:#9cf,stroke:#333,stroke-width:2px
-``` 
+```
+> Historical V1 reference only. The cache/evaluator flow described here has
+> been replaced by `@viz-engine/nodes-core` plus runtime graph inspection.

@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import editorControl from '@/lib/editor-control';
 import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
 import { destructureParameterId } from '../../lib/id-utils';
-import useAnimationLiveValuesStore from '../../lib/stores/animation-live-values-store';
+import { getRuntimeGraphValue } from '@/lib/viz-session';
 import useEditorGraphStore from '../../lib/stores/editor-graph-store';
 import { useHistoryStore } from '../../lib/stores/history-store';
 import useEditorLayerProjectionStore from '../../lib/stores/editor-layer-projection-store';
@@ -55,10 +55,10 @@ const NodeEditorToolbar = ({
   }, [nodeNetworkId]);
 
   const canUndo = useHistoryStore(
-    (state) => (state.nodeHistories[nodeNetworkId]?.past.length || 0) > 0,
+    (state) => state.canUndo(),
   );
   const canRedo = useHistoryStore(
-    (state) => (state.nodeHistories[nodeNetworkId]?.future.length || 0) > 0,
+    (state) => state.canRedo(),
   );
 
   const layers = useEditorLayerProjectionStore((state) => state.layers);
@@ -331,7 +331,7 @@ const LiveValueDisplay = ({ nodeNetworkId }: LiveValueDisplayProps) => {
 
   useRafLoop(() => {
     if (!ref.current) return;
-    const value = useAnimationLiveValuesStore.getState().values[nodeNetworkId];
+    const value = getRuntimeGraphValue(nodeNetworkId);
 
     if (value !== undefined) {
       if (typeof value === 'number') {

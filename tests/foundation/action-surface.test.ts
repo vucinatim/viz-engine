@@ -202,4 +202,57 @@ describe("Viz action surface", () => {
     expect(result.errors[0]?.code).toBe("missing-layer");
     expect(result.project).toBe(exampleProjectDocument);
   });
+
+  it("replaces and removes editor documents atomically without touching sibling graphs", () => {
+    const graph = exampleProjectDocument.graphs?.[0];
+    expect(graph).toBeDefined();
+
+    const replacement = {
+      ...graph!,
+      name: "Edited Graph",
+      nodes: graph!.nodes.slice(0, 1),
+      outputs: [],
+    };
+    const replaced = applyVizProjectActions(exampleProjectDocument, [
+      {
+        type: "graph.replace",
+        payload: {
+          graphId: graph!.id,
+          graph: replacement,
+        },
+      },
+      {
+        type: "timeline.set",
+        payload: {
+          timeline: {
+            ...exampleProjectDocument.timeline,
+            durationInFrames: 480,
+          },
+        },
+      },
+    ]);
+
+    expect(replaced.ok).toBe(true);
+    expect(replaced.project.graphs?.find((entry) => entry.id === graph!.id)).toEqual(
+      replacement,
+    );
+    expect(replaced.project.timeline.durationInFrames).toBe(480);
+
+    const removed = applyVizProjectAction(replaced.project, {
+      type: "graph.remove",
+      payload: { graphId: graph!.id },
+    });
+    expect(removed.ok).toBe(true);
+    expect(removed.project.graphs).not.toContainEqual(
+      expect.objectContaining({ id: graph!.id }),
+    );
+    expect(
+      removed.project.layers.flatMap((layer) => Object.values(layer.inputs ?? {})),
+    ).not.toContainEqual(
+      expect.objectContaining({
+        kind: "graph-output",
+        graphId: graph!.id,
+      }),
+    );
+  });
 });

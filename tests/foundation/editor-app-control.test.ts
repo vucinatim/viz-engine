@@ -61,12 +61,9 @@ describe('Local editor control facade', () => {
     });
     useEditorGraphStore.getState().reset();
     useEditorPreviewStore.getState().reset();
-    useEditorProjectStore.setState({
-      initialized: false,
-      revision: 0,
-      sourceProject: null,
-      workingProject: createTestProject(),
-    });
+    useEditorProjectStore
+      .getState()
+      .importWorkingProject(createTestProject());
     useEditorRuntimePreviewAttachmentStore.getState().reset();
     useNodeNetworkStore.setState({
       openNetwork: null,
@@ -107,6 +104,16 @@ describe('Local editor control facade', () => {
       vizSessionStore.getState().project.workingProject.layers[0]?.settings
         ?.testValue,
     ).toBe(123);
+
+    editorControl.history.undo();
+    expect(
+      useEditorProjectStore.getState().workingProject.layers[0]?.settings
+        ?.testValue,
+    ).toBeUndefined();
+    editorControl.history.undo();
+    expect(useEditorProjectStore.getState().workingProject.layers).toHaveLength(
+      0,
+    );
   });
 
   it('routes node-editor selection and animation enablement through one facade', () => {

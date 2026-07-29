@@ -11,12 +11,7 @@ import { createTestProject } from './viz-session-test-utils';
 describe('VizSession', () => {
   beforeEach(() => {
     useCompStore.setState({ comps: [] });
-    vizSessionActions.project.setState({
-      initialized: false,
-      revision: 0,
-      sourceProject: null,
-      workingProject: createTestProject(),
-    });
+    vizSessionActions.project.importWorkingProject(createTestProject());
     vizSessionActions.preview.reset();
     vizSessionActions.audio.reset();
   });

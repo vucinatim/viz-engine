@@ -221,11 +221,11 @@
       "importance": "critical",
       "parityDimensions": ["functional", "performance"],
       "referenceEvidence": ["src/components/node-network/node-network-store.ts", "src/components/editor/layer-renderer.tsx"],
-      "v2Evidence": ["src/lib/viz-session/store.ts", "src/lib/viz-session/runtime-preview-plan.ts", "src/lib/editor-node-runtime-registry.ts", "src/components/editor/editor-runtime-preview-driver.tsx"],
+      "v2Evidence": ["packages/viz-nodes-core/src/index.ts", "src/lib/viz-session/store.ts", "src/lib/viz-session/runtime-preview-plan.ts", "src/components/editor/editor-runtime-preview-driver.tsx"],
       "status": "partial",
       "acceptance": ["Equivalent inputs and time produce equivalent graph outputs.", "Graph evaluation follows runtime time rather than incidental UI timing.", "Graph-heavy scenes remain within the approved frame budget."],
       "validationMethods": ["integration", "unit", "browser", "benchmark"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-viz-session-convergence-and-node-editor-parity.md"]
     },
     {
       "id": "audio.file-loading",
@@ -364,11 +364,11 @@
       "importance": "critical",
       "parityDimensions": ["interaction", "functional"],
       "referenceEvidence": ["src/components/editor/history-manager.tsx", "src/lib/stores/history-store.ts"],
-      "v2Evidence": ["src/components/editor/history-manager.tsx", "src/lib/stores/history-store.ts", "src/lib/viz-session/store.ts"],
-      "status": "partial",
+      "v2Evidence": ["packages/viz-editor-session/src/index.ts", "src/lib/stores/history-store.ts", "src/lib/viz-session/store.ts"],
+      "status": "verified",
       "acceptance": ["Layer, parameter, graph, and project operations restore complete prior state.", "Continuous gestures are grouped into useful history entries.", "Redo is invalidated only by a new canonical mutation."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-viz-session-convergence-and-node-editor-parity.md"]
     },
     {
       "id": "history.context-feedback",
@@ -377,7 +377,7 @@
       "importance": "standard",
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/history-context-indicator.tsx", "src/components/editor/history-manager.tsx"],
-      "v2Evidence": ["src/components/editor/history-context-indicator.tsx", "src/components/editor/history-manager.tsx"],
+      "v2Evidence": ["src/components/editor/history-context-indicator.tsx", "src/lib/stores/history-store.ts"],
       "status": "partial",
       "acceptance": ["Available undo and redo actions are accurately described.", "Context feedback follows focus and selection.", "Disabled states never imply an action that will do nothing."],
       "validationMethods": ["browser", "integration"],

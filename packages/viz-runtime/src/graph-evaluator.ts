@@ -32,6 +32,7 @@ export type VizRuntimeGraphInputValues = Readonly<
 
 interface EvaluateGraphFrameResult {
   values: Record<string, unknown>;
+  nodes: VizGraphEvaluationResult["nodes"];
   issues: VizGraphEvaluationIssue[];
   nodeStates: Map<string, unknown>;
 }
@@ -228,12 +229,14 @@ const createGraphRuntimeCheckpoint = ({
   graphId,
   frame,
   values,
+  nodes,
   issues,
   nodeStates,
 }: {
   graphId: string;
   frame: number;
   values: Record<string, unknown>;
+  nodes: VizGraphEvaluationResult["nodes"];
   issues: VizGraphEvaluationIssue[];
   nodeStates: ReadonlyMap<string, unknown>;
 }): VizGraphRuntimeCheckpoint => {
@@ -241,6 +244,7 @@ const createGraphRuntimeCheckpoint = ({
     graphId,
     frame,
     values: structuredClone(values),
+    nodes: structuredClone(nodes),
     issues: structuredClone(issues),
     nodeStates: structuredClone(mapNodeStatesToRecord(nodeStates)),
   };
@@ -259,6 +263,7 @@ const evaluateGraphAtFrame = ({
   const issues: VizGraphEvaluationIssue[] = [];
   const nodeById = new Map(graph.nodes.map((node) => [node.id, node]));
   const nodeOutputs = new Map<string, Record<string, unknown>>();
+  const nodeInputs = new Map<string, Record<string, unknown>>();
   const nodeStates = new Map(previousNodeStates);
   const resolvedGraphInputs = new Map<string, VizResolvedGraphInputValue>();
   const frameContext = session.getFrameContext(frame);
@@ -317,8 +322,12 @@ const evaluateGraphAtFrame = ({
       return undefined;
     }
 
+    const inputKeys = new Set([
+      ...(implementation.inputs ?? []).map((input) => input.key),
+      ...Object.keys(node.inputs ?? {}),
+    ]);
     const resolvedInputs = Object.fromEntries(
-      Object.keys(node.inputs ?? {}).map((inputKey) => [
+      [...inputKeys].map((inputKey) => [
         inputKey,
         resolveNodeInputBinding(
           graph,
@@ -332,6 +341,7 @@ const evaluateGraphAtFrame = ({
         ),
       ]),
     );
+    nodeInputs.set(node.id, resolvedInputs);
 
     try {
       const outputs = evaluateNodeImplementation({
@@ -386,6 +396,18 @@ const evaluateGraphAtFrame = ({
 
   return {
     values,
+    nodes: Object.fromEntries(
+      [...nodeOutputs.entries()].map(([nodeId, outputs]) => [
+        nodeId,
+        {
+          inputs: structuredClone(nodeInputs.get(nodeId) ?? {}),
+          outputs: structuredClone(outputs),
+          ...(nodeStates.has(nodeId)
+            ? { state: structuredClone(nodeStates.get(nodeId)) }
+            : {}),
+        },
+      ]),
+    ),
     issues,
     nodeStates,
   };
@@ -469,6 +491,7 @@ export const evaluateSingleVizGraph = ({
     return {
       graphId: graph.id,
       values: result.values,
+      nodes: result.nodes,
       issues: result.issues,
     };
   }
@@ -480,6 +503,7 @@ export const evaluateSingleVizGraph = ({
     return {
       graphId: graph.id,
       values: checkpoint.values,
+      nodes: checkpoint.nodes,
       issues: checkpoint.issues,
     };
   }
@@ -488,6 +512,8 @@ export const evaluateSingleVizGraph = ({
     ? recordNodeStatesToMap(checkpoint.nodeStates)
     : new Map<string, unknown>();
   let currentValues: Record<string, unknown> = checkpoint?.values ?? {};
+  let currentNodes: VizGraphEvaluationResult["nodes"] =
+    checkpoint?.nodes ?? {};
   const issues: VizGraphEvaluationIssue[] = checkpoint?.issues
     ? structuredClone(checkpoint.issues)
     : [];
@@ -506,6 +532,7 @@ export const evaluateSingleVizGraph = ({
 
     currentNodeStates = result.nodeStates;
     currentValues = result.values;
+    currentNodes = result.nodes;
     issues.length = 0;
     mergeUniqueIssues(issues, result.issues);
 
@@ -515,6 +542,7 @@ export const evaluateSingleVizGraph = ({
           graphId: graph.id,
           frame: steppedFrame,
           values: currentValues,
+          nodes: currentNodes,
           issues,
           nodeStates: currentNodeStates,
         }),
@@ -525,6 +553,7 @@ export const evaluateSingleVizGraph = ({
   return {
     graphId: graph.id,
     values: currentValues,
+    nodes: currentNodes,
     issues,
   };
 };

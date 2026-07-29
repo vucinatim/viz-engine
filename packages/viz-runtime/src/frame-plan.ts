@@ -41,6 +41,7 @@ const resolveLiteralInput = (key: string, source: Extract<VizValueSource, { kind
   return {
     key,
     sourceKind: "literal",
+    source,
     status: "resolved",
     value: source.value,
   };
@@ -82,6 +83,7 @@ const resolveArtifactFeatureInput = (
     return {
       key,
       sourceKind: "artifact-feature",
+      source,
       status: "missing",
       message: `Missing resolved artifact "${source.artifactId}".`,
     };
@@ -102,6 +104,7 @@ const resolveArtifactFeatureInput = (
     return {
       key,
       sourceKind: "artifact-feature",
+      source,
       status: "missing",
       message: `Missing feature "${source.feature}" in artifact "${source.artifactId}".`,
     };
@@ -110,6 +113,7 @@ const resolveArtifactFeatureInput = (
   return {
     key,
     sourceKind: "artifact-feature",
+    source,
     status: "resolved",
     value: sampledValue,
   };
@@ -137,6 +141,7 @@ const resolveAssetRefInput = (
     return {
       key,
       sourceKind: "asset-ref",
+      source,
       status: "missing",
       message: `Missing resolved asset "${source.assetId}".`,
     };
@@ -145,6 +150,7 @@ const resolveAssetRefInput = (
   return {
     key,
     sourceKind: "asset-ref",
+    source,
     status: "resolved",
     value: asset satisfies VizMaterializedAsset,
   };
@@ -187,6 +193,7 @@ const resolveInputValue = (
       return {
         key,
         sourceKind: "graph-output",
+        source,
         status: "missing",
         message: `Missing graph "${source.graphId}".`,
       };
@@ -207,6 +214,7 @@ const resolveInputValue = (
       return {
         key,
         sourceKind: "graph-output",
+        source,
         status: "missing",
         message: `Missing graph output "${source.output}" from graph "${source.graphId}".`,
       };
@@ -215,6 +223,7 @@ const resolveInputValue = (
     return {
       key,
       sourceKind: "graph-output",
+      source,
       status: "resolved",
       value: graphOutput,
     };
@@ -281,6 +290,10 @@ export const createVizFramePlan = ({
           {
             key,
             sourceKind: "literal" as const,
+            source: {
+              kind: "literal" as const,
+              value,
+            },
             status: "resolved" as const,
             value,
           },
@@ -314,6 +327,7 @@ export const createVizFramePlan = ({
 
   return {
     frameContext,
+    graphResults: [...graphResults.values()],
     layers,
     issues,
   };

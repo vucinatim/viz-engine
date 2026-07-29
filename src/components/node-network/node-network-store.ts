@@ -3,7 +3,6 @@ import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 
 import {
-  type AnimInputData,
   NodeHandleType,
   canConnectTypes,
   getTypeColor,
@@ -159,11 +158,6 @@ export const updateNodeNetworkInputValue = (
     .updateNodeInputValue(parameterId, nodeId, inputId, value);
 };
 
-export const computeNodeNetworkOutput = (
-  parameterId: string,
-  inputData: AnimInputData,
-) => useEditorGraphStore.getState().computeNetworkOutput(parameterId, inputData);
-
 export const duplicateNodeNetwork = (
   fromParameterId: string,
   toParameterId: string,
@@ -192,8 +186,6 @@ export const useNodeNetwork = (parameterId: string) => {
     addNode: (node: GraphNode) => addNodeToNetwork(parameterId, node),
     updateInputValue: (nodeId: string, inputId: string, value: any) =>
       updateNodeNetworkInputValue(parameterId, nodeId, inputId, value),
-    computeOutput: (inputData: AnimInputData) =>
-      computeNodeNetworkOutput(parameterId, inputData),
   };
 };
 

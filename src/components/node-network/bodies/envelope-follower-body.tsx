@@ -1,5 +1,7 @@
-import { useNodeLiveValuesStore } from '@/lib/stores/node-live-values-store';
-import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
+import {
+  getRuntimeNodeInput,
+  getRuntimeNodeOutput,
+} from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
@@ -21,8 +23,8 @@ const EnvelopeFollowerBody = ({ id: nodeId }: EnvelopeFollowerBodyProps) => {
   const capacity = 160; // ~ last few seconds depending on frame rate
   const peakRef = useRef<number>(1);
 
-  const getNodeInputValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
-  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
+  const getNodeInputValue = getRuntimeNodeInput;
+  const getNodeOutput = getRuntimeNodeOutput;
 
   useRafLoop(() => {
     const canvas = canvasRef.current;

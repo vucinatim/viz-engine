@@ -150,4 +150,42 @@ describe('Editor graph store', () => {
     });
     expect(JSON.stringify(canonicalProject)).not.toContain('computeSignal');
   });
+
+  it('preserves package-native graphs during bulk editor-network replacement', () => {
+    const nativeGraph = {
+      id: 'runtime-native-graph',
+      name: 'Runtime Native Graph',
+      nodes: [
+        {
+          id: 'runtime-node',
+          type: 'runtime.native.node',
+          inputs: {
+            amount: {
+              kind: 'literal' as const,
+              value: 0.75,
+            },
+          },
+        },
+      ],
+      outputs: [
+        {
+          key: 'value',
+          nodeId: 'runtime-node',
+          output: 'value',
+        },
+      ],
+    };
+    const project = createTestProject();
+    project.graphs = [nativeGraph];
+    useEditorProjectStore.getState().importWorkingProject(project);
+    useEditorGraphStore
+      .getState()
+      .createNetworkForParameter('editor-graph', VType.Number);
+
+    useEditorGraphStore.getState().replaceNetworks({});
+
+    expect(
+      useEditorProjectStore.getState().exportWorkingProject().graphs,
+    ).toEqual([nativeGraph]);
+  });
 });

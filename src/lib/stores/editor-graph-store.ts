@@ -2,10 +2,14 @@ import { Edge } from '@xyflow/react';
 import { useStore } from 'zustand';
 
 import type { VType } from '@/components/config/types';
-import type { AnimInputData } from '@/components/node-network/animation-nodes';
 import type { GraphNode, NodeNetwork } from '@/components/node-network/graph-types';
 import type { NodeHandleType } from '@/components/config/node-types';
-import { vizSessionActions, vizSessionStore } from '@/lib/viz-session';
+import {
+  vizSessionActions,
+  vizSessionStore,
+  type VizSessionState,
+} from '@/lib/viz-session';
+import { selectProjectedNodeNetworks } from '@/lib/viz-session/selectors';
 
 export interface EditorGraphStore {
   networks: Record<string, NodeNetwork>;
@@ -31,16 +35,15 @@ export interface EditorGraphStore {
     inputId: string,
     value: any,
   ) => void;
-  computeNetworkOutput: (parameterId: string, inputData: AnimInputData) => any;
   duplicateNetwork: (fromParameterId: string, toParameterId: string) => void;
   clearStaleNetworks: (validParameterIds?: Iterable<string>) => void;
 }
 
-const selectEditorGraphStore = (): EditorGraphStore => {
-  const graph = vizSessionStore.getState().graph;
-
+const selectEditorGraphStore = (
+  state: VizSessionState,
+): EditorGraphStore => {
   return {
-    networks: graph.networks,
+    networks: selectProjectedNodeNetworks(state),
     importNetworks: vizSessionActions.graph.importNetworks,
     replaceNetworks: vizSessionActions.graph.replaceNetworks,
     exportNetworks: vizSessionActions.graph.exportNetworks,
@@ -54,7 +57,6 @@ const selectEditorGraphStore = (): EditorGraphStore => {
     removeNetworkForParameter: vizSessionActions.graph.removeNetworkForParameter,
     applyPresetToNetwork: vizSessionActions.graph.applyPresetToNetwork,
     updateNodeInputValue: vizSessionActions.graph.updateNodeInputValue,
-    computeNetworkOutput: vizSessionActions.graph.computeNetworkOutput,
     duplicateNetwork: vizSessionActions.graph.duplicateNetwork,
     clearStaleNetworks: vizSessionActions.graph.clearStaleNetworks,
   };
@@ -68,24 +70,22 @@ type EditorGraphListener = (
 
 const useEditorGraphStore = Object.assign(
   <T>(selector: EditorGraphSelector<T>) =>
-    useStore(vizSessionStore, () => selector(selectEditorGraphStore())),
+    useStore(vizSessionStore, (state) =>
+      selector(selectEditorGraphStore(state)),
+    ),
   {
-    getState: () => selectEditorGraphStore(),
-    setState: (partial: Partial<EditorGraphStore>) =>
-      vizSessionActions.graph.setState({
-        networks: partial.networks,
-      }),
+    getState: () =>
+      selectEditorGraphStore(vizSessionStore.getState()),
+    setState: (partial: Partial<EditorGraphStore>) => {
+      if (partial.networks) {
+        vizSessionActions.graph.replaceNetworks(partial.networks);
+      }
+    },
     subscribe: (listener: EditorGraphListener) =>
       vizSessionStore.subscribe((state, previousState) =>
         listener(
-          {
-            ...selectEditorGraphStore(),
-            networks: state.graph.networks,
-          },
-          {
-            ...selectEditorGraphStore(),
-            networks: previousState.graph.networks,
-          },
+          selectEditorGraphStore(state),
+          selectEditorGraphStore(previousState),
         ),
       ),
   },

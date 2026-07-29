@@ -29,10 +29,15 @@ export type VizProjectAction =
   | VizLayerCreateAction
   | VizLayerRemoveAction
   | VizLayerMoveAction
+  | VizLayerReplaceAction
   | VizLayerSettingsSetAction
   | VizLayerInputSetAction
+  | VizTimelineSetAction
   | VizGraphCreateAction
+  | VizGraphReplaceAction
+  | VizGraphRemoveAction
   | VizGraphNodeAddAction
+  | VizGraphNodeRemoveAction
   | VizGraphNodeInputSetAction
   | VizGraphOutputSetAction
   | VizGraphInputSetAction;
@@ -83,6 +88,14 @@ export interface VizLayerMoveAction {
   };
 }
 
+export interface VizLayerReplaceAction {
+  type: "layer.replace";
+  payload: {
+    layerId: VizLayerId;
+    layer: VizLayer;
+  };
+}
+
 export interface VizLayerSettingsSetAction {
   type: "layer.settings.set";
   payload: {
@@ -101,11 +114,33 @@ export interface VizLayerInputSetAction {
   };
 }
 
+export interface VizTimelineSetAction {
+  type: "timeline.set";
+  payload: {
+    timeline: import("./runtime.js").VizTimeline;
+  };
+}
+
 export interface VizGraphCreateAction {
   type: "graph.create";
   payload: {
     graphId?: VizGraphId;
     name: string;
+  };
+}
+
+export interface VizGraphReplaceAction {
+  type: "graph.replace";
+  payload: {
+    graphId: VizGraphId;
+    graph: import("./graphs.js").VizNodeGraphDocument;
+  };
+}
+
+export interface VizGraphRemoveAction {
+  type: "graph.remove";
+  payload: {
+    graphId: VizGraphId;
   };
 }
 
@@ -126,6 +161,14 @@ export interface VizGraphNodeAddAction {
     nodeType: string;
     initialInputs?: Record<string, VizGraphNodeInputBinding>;
     metadata?: VizNodeGraphNode["metadata"];
+  };
+}
+
+export interface VizGraphNodeRemoveAction {
+  type: "graph.node.remove";
+  payload: {
+    graphId: VizGraphId;
+    nodeId: string;
   };
 }
 

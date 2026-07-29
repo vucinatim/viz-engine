@@ -1,4 +1,4 @@
-import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
+import { getRuntimeNodeOutput } from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
 import { memo, useCallback, useRef } from 'react';
 import { useRafLoop } from 'react-use';
@@ -17,7 +17,7 @@ const SpectralFluxBody = ({
   nodeNetworkId,
   data,
 }: SpectralFluxBodyProps) => {
-  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
+  const getNodeOutput = getRuntimeNodeOutput;
 
   const { edges } = useNodeNetwork(nodeNetworkId);
   const canvasRef = useRef<HTMLCanvasElement>(null);

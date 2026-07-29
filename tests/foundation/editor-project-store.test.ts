@@ -17,12 +17,9 @@ describe('Editor project store', () => {
     useCompStore.setState({
       comps: Array.from(CompDefinitionMap.values()),
     });
-    useEditorProjectStore.setState({
-      initialized: false,
-      revision: 0,
-      sourceProject: null,
-      workingProject: createTestProject(),
-    });
+    useEditorProjectStore
+      .getState()
+      .importWorkingProject(createTestProject());
     useEditorRuntimePreviewAttachmentStore.getState().reset();
   });
 
@@ -68,12 +65,7 @@ describe('Editor project store', () => {
       ...project.layers[0],
       settings: { value: 1 },
     };
-    useEditorProjectStore.setState({
-      initialized: true,
-      revision: 1,
-      sourceProject: project,
-      workingProject: project,
-    });
+    useEditorProjectStore.getState().importWorkingProject(project);
 
     useEditorProjectStore.getState().initializeProjectState();
 

@@ -157,6 +157,45 @@ describe("Viz local editor control surface", () => {
       barsLoudness: expect.any(Number),
       bloomIntensity: expect.any(Number),
     });
+    expect(
+      graphRuntime.graphs[0]?.nodes["node-bars-bass-scale"]?.outputs.value,
+    ).toEqual(expect.any(Number));
     expect(graphRuntime.graphs[0]?.checkpoint?.frame).toBe(expectedFrame);
+
+    const projectInspection = control.inspectProject();
+    expect(projectInspection.validation.ok).toBe(true);
+    expect(projectInspection.assets.length).toBeGreaterThan(0);
+    expect(projectInspection.issues).toHaveLength(0);
+  });
+
+  it("undoes and redoes through the same canonical action session", () => {
+    const control = createVizEditorControl();
+    control.openExampleProject();
+    control.applyAction({
+      type: "layer.settings.set",
+      payload: {
+        layerId: "layer-background",
+        path: "color",
+        value: "#123456",
+      },
+    });
+
+    expect(
+      control.getWorkingProject().layers.find(
+        (layer) => layer.id === "layer-background",
+      )?.settings?.color,
+    ).toBe("#123456");
+    control.undo();
+    expect(
+      control.getWorkingProject().layers.find(
+        (layer) => layer.id === "layer-background",
+      )?.settings?.color,
+    ).not.toBe("#123456");
+    control.redo();
+    expect(
+      control.getWorkingProject().layers.find(
+        (layer) => layer.id === "layer-background",
+      )?.settings?.color,
+    ).toBe("#123456");
   });
 });

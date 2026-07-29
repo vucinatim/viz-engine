@@ -9,7 +9,7 @@ import {
   isEditorComponentRuntimeBacked,
 } from '@/lib/editor-component-preview-plan';
 import { applyComponentDefaultAssets } from '@/lib/viz-session/project-adapters';
-import { createEditorNodeRuntimeRegistry } from '@/lib/editor-node-runtime-registry';
+import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
 import { createVizSessionRuntimePreviewFrame } from '@/lib/viz-session';
 import { createVizSessionRuntimePreviewPlan } from '@/lib/viz-session/runtime-preview-plan';
 import { createTestProject } from './viz-session-test-utils';
@@ -194,7 +194,7 @@ describe('Editor runtime preview planning', () => {
   });
 
   it('registers every editor graph node kernel with the canonical runtime', () => {
-    const registry = createEditorNodeRuntimeRegistry();
+    const registry = createCoreNodeRegistry();
 
     for (const nodeType of NodeDefinitionMap.keys()) {
       expect(registry.get(nodeType), nodeType).toBeDefined();

@@ -1,7 +1,9 @@
 import { Label } from '@/components/ui/label';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import { useNodeLiveValuesStore } from '@/lib/stores/node-live-values-store';
-import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
+import {
+  getRuntimeNodeInput,
+  getRuntimeNodeOutput,
+} from '@/lib/viz-session';
 import { memo, useCallback, useRef, useState } from 'react';
 import { useRafLoop } from 'react-use';
 import type { GraphNodeData } from '../graph-types';
@@ -23,8 +25,8 @@ function PitchDetectionBody({
   data,
   nodeNetworkId,
 }: PitchDetectionBodyProps) {
-  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
-  const getLiveNodeValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
+  const getNodeOutput = getRuntimeNodeOutput;
+  const getLiveNodeValue = getRuntimeNodeInput;
   const audioAnalyzer = useAudioEngineStore((s) => s.audioAnalyzer);
 
   const [outputs, setOutputs] = useState<any>({});

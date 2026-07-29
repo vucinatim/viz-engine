@@ -42,6 +42,8 @@ export interface VizEditorSessionSnapshot {
   actionHistory: VizActionEnvelope[];
   issues: VizEditorSessionIssue[];
   revision: number;
+  canUndo: boolean;
+  canRedo: boolean;
 }
 
 export interface VizEditorSessionMutationResult {
@@ -57,6 +59,7 @@ export interface VizEditorSessionMutationResult {
 
 export interface CreateVizEditorSessionOptions {
   project: VizProjectDocument;
+  normalizeProject?: (project: VizProjectDocument) => VizProjectDocument;
   actor?: VizActionActor;
   uiState?: Partial<VizEditorUiState>;
   previewState?: Partial<VizEditorPreviewState>;
@@ -88,12 +91,23 @@ export interface VizEditorSession {
     actions: VizProjectAction[],
     options?: { actor?: VizActionActor },
   ): VizEditorSessionMutationResult;
+  undo(): VizEditorSessionSnapshot;
+  redo(): VizEditorSessionSnapshot;
+  canUndo(): boolean;
+  canRedo(): boolean;
+  beginHistoryGroup(): void;
+  endHistoryGroup(): VizEditorSessionSnapshot;
   replaceWorkingProject(
     project: VizProjectDocument,
-    options?: { actor?: VizActionActor; resetHistory?: boolean },
+    options?: {
+      actor?: VizActionActor;
+      resetHistory?: boolean;
+      recordHistory?: boolean;
+    },
   ): VizEditorSessionSnapshot;
   resetWorkingProject(): VizEditorSessionSnapshot;
   exportWorkingProject(): VizProjectDocument;
+  subscribe(listener: (snapshot: VizEditorSessionSnapshot) => void): () => void;
 }
 
 const cloneUnknown = <T>(value: T): T => {
@@ -237,8 +251,14 @@ const createSnapshot = (state: InternalSessionState): VizEditorSessionSnapshot =
     actionHistory: state.actionHistory.map((entry) => cloneEnvelope(entry)),
     issues: state.issues.map((issue) => cloneIssue(issue)),
     revision: state.revision,
+    canUndo: state.past.length > 0,
+    canRedo: state.future.length > 0,
   };
 };
+
+interface ProjectHistoryEntry {
+  project: VizProjectDocument;
+}
 
 interface InternalSessionState {
   sourceProject: VizProjectDocument;
@@ -250,27 +270,54 @@ interface InternalSessionState {
   revision: number;
   actionCounter: number;
   defaultActor: VizActionActor;
+  past: ProjectHistoryEntry[];
+  future: ProjectHistoryEntry[];
+  historyGroupStart: VizProjectDocument | undefined;
 }
+
+const MAX_PROJECT_HISTORY_SIZE = 100;
 
 export const createVizEditorSession = ({
   project,
+  normalizeProject,
   actor = { kind: "user" },
   uiState,
   previewState,
 }: CreateVizEditorSessionOptions): VizEditorSession => {
-  assertValidProjectDocument(project);
+  const normalize = (projectDocument: VizProjectDocument) =>
+    cloneProject(normalizeProject?.(cloneProject(projectDocument)) ?? projectDocument);
+  const initialProject = normalize(project);
+  assertValidProjectDocument(initialProject);
 
-  const sourceProject = cloneProject(project);
+  const sourceProject = cloneProject(initialProject);
   let state: InternalSessionState = {
     sourceProject,
-    workingProject: cloneProject(project),
-    uiState: createEditorUiState(project, uiState),
+    workingProject: cloneProject(initialProject),
+    uiState: createEditorUiState(initialProject, uiState),
     previewState: createEditorPreviewState(previewState),
     actionHistory: [],
     issues: [],
     revision: 0,
     actionCounter: 0,
     defaultActor: cloneUnknown(actor),
+    past: [],
+    future: [],
+    historyGroupStart: undefined,
+  };
+  const listeners = new Set<(snapshot: VizEditorSessionSnapshot) => void>();
+
+  const notify = () => {
+    const snapshot = createSnapshot(state);
+    for (const listener of listeners) {
+      listener(snapshot);
+    }
+  };
+
+  const pushPast = (projectDocument: VizProjectDocument): ProjectHistoryEntry[] => {
+    return [
+      ...state.past,
+      { project: cloneProject(projectDocument) },
+    ].slice(-MAX_PROJECT_HISTORY_SIZE);
   };
 
   const mutateProjects = ({
@@ -284,7 +331,8 @@ export const createVizEditorSession = ({
     warnings: VizActionWarning[];
     errors: VizActionError[];
   }): VizEditorSessionMutationResult => {
-    const validation = validateProjectDocument(nextProject);
+    const normalizedProject = normalize(nextProject);
+    const validation = validateProjectDocument(normalizedProject);
     const issues = createSessionIssues({
       warnings,
       errors,
@@ -297,6 +345,7 @@ export const createVizEditorSession = ({
         ...state,
         issues,
       };
+      notify();
 
       return {
         ok: false,
@@ -312,12 +361,18 @@ export const createVizEditorSession = ({
 
     state = {
       ...state,
-      workingProject: cloneProject(nextProject),
+      workingProject: normalizedProject,
       actionHistory: [...state.actionHistory, ...actionEnvelopes.map((entry) => cloneEnvelope(entry))],
       issues,
       revision: state.revision + 1,
       actionCounter: state.actionCounter + actionEnvelopes.length,
+      past:
+        state.historyGroupStart === undefined
+          ? pushPast(state.workingProject)
+          : state.past,
+      future: [],
     };
+    notify();
 
     return {
       ok: true,
@@ -343,6 +398,7 @@ export const createVizEditorSession = ({
         uiState: mergeUiState(state.uiState, next),
       };
 
+      notify();
       return createSnapshot(state);
     },
     setPreviewState: (next) => {
@@ -351,6 +407,7 @@ export const createVizEditorSession = ({
         previewState: mergePreviewState(state.previewState, next),
       };
 
+      notify();
       return createSnapshot(state);
     },
     applyAction: (action, options) => {
@@ -385,18 +442,93 @@ export const createVizEditorSession = ({
         errors: result.errors,
       });
     },
-    replaceWorkingProject: (projectDocument, options) => {
-      assertValidProjectDocument(projectDocument);
+    undo: () => {
+      const previous = state.past.at(-1);
+      if (!previous) {
+        return createSnapshot(state);
+      }
 
       state = {
         ...state,
-        workingProject: cloneProject(projectDocument),
+        workingProject: cloneProject(previous.project),
+        past: state.past.slice(0, -1),
+        future: [
+          { project: cloneProject(state.workingProject) },
+          ...state.future,
+        ],
+        issues: [],
+        revision: state.revision + 1,
+      };
+      notify();
+      return createSnapshot(state);
+    },
+    redo: () => {
+      const next = state.future[0];
+      if (!next) {
+        return createSnapshot(state);
+      }
+
+      state = {
+        ...state,
+        workingProject: cloneProject(next.project),
+        past: pushPast(state.workingProject),
+        future: state.future.slice(1),
+        issues: [],
+        revision: state.revision + 1,
+      };
+      notify();
+      return createSnapshot(state);
+    },
+    canUndo: () => state.past.length > 0,
+    canRedo: () => state.future.length > 0,
+    beginHistoryGroup: () => {
+      if (state.historyGroupStart === undefined) {
+        state = {
+          ...state,
+          historyGroupStart: cloneProject(state.workingProject),
+        };
+      }
+    },
+    endHistoryGroup: () => {
+      if (state.historyGroupStart !== undefined) {
+        const changed =
+          JSON.stringify(state.historyGroupStart) !==
+          JSON.stringify(state.workingProject);
+        state = {
+          ...state,
+          past: changed
+            ? [
+                ...state.past,
+                { project: cloneProject(state.historyGroupStart) },
+              ].slice(-MAX_PROJECT_HISTORY_SIZE)
+            : state.past,
+          historyGroupStart: undefined,
+        };
+        notify();
+      }
+      return createSnapshot(state);
+    },
+    replaceWorkingProject: (projectDocument, options) => {
+      const normalizedProject = normalize(projectDocument);
+      assertValidProjectDocument(normalizedProject);
+
+      state = {
+        ...state,
+        workingProject: normalizedProject,
         issues: [],
         revision: state.revision + 1,
         actionHistory: options?.resetHistory ? [] : state.actionHistory,
         actionCounter: options?.resetHistory ? 0 : state.actionCounter,
+        past: options?.resetHistory
+          ? []
+          : options?.recordHistory === false
+            ? state.past
+            : pushPast(state.workingProject),
+        future: [],
+        historyGroupStart: undefined,
       };
 
+      notify();
       return createSnapshot(state);
     },
     resetWorkingProject: () => {
@@ -407,10 +539,20 @@ export const createVizEditorSession = ({
         revision: state.revision + 1,
         actionHistory: [],
         actionCounter: 0,
+        past: [],
+        future: [],
+        historyGroupStart: undefined,
       };
 
+      notify();
       return createSnapshot(state);
     },
     exportWorkingProject: () => cloneProject(state.workingProject),
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
   };
 };

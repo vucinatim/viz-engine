@@ -1,5 +1,7 @@
-import { useNodeLiveValuesStore } from '@/lib/stores/node-live-values-store';
-import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
+import {
+  getRuntimeNodeInput,
+  getRuntimeNodeOutput,
+} from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
 import { D3DragEvent, drag } from 'd3-drag';
 import { select } from 'd3-selection';
@@ -27,8 +29,8 @@ const FrequencyBandBody = ({
   data,
   nodeNetworkId,
 }: FrequencyBandBodyProps) => {
-  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
-  const getLiveNodeValue = useNodeLiveValuesStore((s) => s.getNodeInputValue);
+  const getNodeOutput = getRuntimeNodeOutput;
+  const getLiveNodeValue = getRuntimeNodeInput;
 
   const { edges, updateInputValue } = useNodeNetwork(nodeNetworkId);
 

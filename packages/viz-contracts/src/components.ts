@@ -7,6 +7,7 @@ import type {
   VizAssetRef,
   VizMaterializedAsset,
 } from "./assets.js";
+import type { VizGraphEvaluationResult } from "./graphs.js";
 
 export type VizComponentInputSourceKind = VizValueSource["kind"];
 
@@ -57,6 +58,7 @@ export type VizResolvedInputStatus = "resolved" | "missing" | "unsupported";
 export interface VizResolvedInputValue {
   key: string;
   sourceKind: VizComponentInputSourceKind;
+  source: VizValueSource;
   status: VizResolvedInputStatus;
   value?: unknown;
   message?: string;
@@ -92,6 +94,7 @@ export interface VizLayerFrameSnapshot {
 
 export interface VizFramePlan {
   frameContext: VizFrameContext;
+  graphResults: VizGraphEvaluationResult[];
   layers: VizLayerFrameSnapshot[];
   issues: VizFramePlanIssue[];
 }
@@ -104,6 +107,7 @@ export interface VizRenderPlan {
   frameContext: VizFrameContext;
   viewport: VizViewport;
   materializedAssets: VizMaterializedAsset[];
+  graphResults: VizGraphEvaluationResult[];
   layers: VizLayerRenderPlanEntry[];
   issues: VizFramePlanIssue[];
 }

@@ -16,9 +16,7 @@ import useEditorStore from '@/lib/stores/editor-store';
 import useProfilerStore from '@/lib/stores/profiler-store';
 import type {
   VizSessionAudioState,
-  VizSessionHistoryState,
   VizSessionPreviewState,
-  VizSessionProjectState,
 } from '@/lib/viz-session';
 import type { VizEditorAudioAnalyzerState } from '@viz-engine/editor-session';
 import type { VizProjectDocument } from '@viz-engine/contracts';
@@ -30,6 +28,20 @@ type LayerPreset = {
 };
 
 export const editorControl = {
+  inspect: {
+    project() {
+      return vizSessionActions.inspection.project();
+    },
+    graph(graphId: string) {
+      return vizSessionActions.inspection.graph(graphId);
+    },
+    runtime() {
+      return vizSessionActions.inspection.runtime();
+    },
+    assets() {
+      return vizSessionActions.inspection.assets();
+    },
+  },
   project: {
     initialize() {
       vizSessionActions.project.initializeProjectState();
@@ -77,9 +89,6 @@ export const editorControl = {
     exportWorkingProject() {
       return vizSessionActions.project.exportWorkingProject();
     },
-    setState(partial: Partial<VizSessionProjectState>) {
-      vizSessionActions.project.setState(partial);
-    },
   },
   history: {
     undo() {
@@ -100,29 +109,23 @@ export const editorControl = {
     canRedo() {
       return vizSessionActions.history.canRedo();
     },
-    setBypassHistory(bypass: boolean) {
-      vizSessionActions.history.setBypassHistory(bypass);
-    },
     startNodeDrag(networkId: string) {
       vizSessionActions.history.startNodeDrag(networkId);
     },
     endNodeDrag(networkId: string) {
       vizSessionActions.history.endNodeDrag(networkId);
     },
+    startGesture(gestureId: string) {
+      vizSessionActions.history.startNodeDrag(gestureId);
+    },
+    endGesture(gestureId: string) {
+      vizSessionActions.history.endNodeDrag(gestureId);
+    },
     setNodeEditorFocused(focused: boolean) {
       vizSessionActions.history.setNodeEditorFocused(focused);
     },
-    initializeLayerHistory() {
-      vizSessionActions.history.initializeLayerHistory();
-    },
-    pushLayerHistory(skipDebounce?: boolean) {
-      vizSessionActions.history.pushLayerHistory(skipDebounce);
-    },
-    resetLayerHistory() {
-      vizSessionActions.history.resetLayerHistory();
-    },
-    setState(partial: Partial<VizSessionHistoryState>) {
-      vizSessionActions.history.setState(partial);
+    reset() {
+      vizSessionActions.history.reset();
     },
   },
   preview: {

@@ -1,4 +1,4 @@
-import { useNodeOutputCache } from '@/lib/stores/node-output-cache-store';
+import { getRuntimeNodeOutput } from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
@@ -12,7 +12,7 @@ interface SpectralCentroidBodyProps {
 }
 
 const SpectralCentroidBody = ({ id: nodeId }: SpectralCentroidBodyProps) => {
-  const getNodeOutput = useNodeOutputCache((s) => s.getNodeOutput);
+  const getNodeOutput = getRuntimeNodeOutput;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const centroidTextRef = useRef<HTMLDivElement>(null);

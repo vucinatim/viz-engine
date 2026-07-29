@@ -2,6 +2,7 @@ import { coreComponents, createCoreComponentRegistry } from "@viz-engine/compone
 import type {
   VizActionActor,
   VizGraphEvaluationIssue,
+  VizGraphEvaluationResult,
   VizGraphId,
   VizProjectAction,
   VizProjectDocument,
@@ -101,6 +102,17 @@ export interface VizEditorControlMutationResult {
   actionResult: ReturnType<VizEditorSession["applyActions"]>;
 }
 
+export interface VizEditorProjectInspection {
+  source: VizEditorControlSource;
+  revision: number;
+  project: VizProjectDocument;
+  validation: ReturnType<typeof validateProjectDocument>;
+  assets: VizResolvedAsset[];
+  artifacts: VizResolvedArtifact[];
+  issues: VizEditorControlSnapshot["session"]["issues"];
+  actionHistory: VizEditorControlSnapshot["session"]["actionHistory"];
+}
+
 export interface VizEditorGraphRuntimeInspection {
   source: VizEditorControlSource;
   revision: number;
@@ -109,6 +121,7 @@ export interface VizEditorGraphRuntimeInspection {
     graphId: VizGraphId;
     name: string;
     values: Record<string, unknown>;
+    nodes: VizGraphEvaluationResult["nodes"];
     issues: VizGraphEvaluationIssue[];
     checkpoint: VizGraphRuntimeCheckpoint | undefined;
   }>;
@@ -126,6 +139,7 @@ export interface VizEditorControl {
   getWorkingProject(): VizProjectDocument;
   getProjectResources(): VizEditorControlProjectResources;
   getUiState(): VizEditorControlSnapshot["session"]["uiState"];
+  inspectProject(): VizEditorProjectInspection;
   setUiState(
     next:
       | Partial<VizEditorControlSnapshot["session"]["uiState"]>
@@ -141,6 +155,8 @@ export interface VizEditorControl {
   inspectGraphRuntime(frame?: number): VizEditorGraphRuntimeInspection;
   applyAction(action: VizProjectAction, options?: { actor?: VizActionActor }): VizEditorControlMutationResult;
   applyActions(actions: VizProjectAction[], options?: { actor?: VizActionActor }): VizEditorControlMutationResult;
+  undo(): VizEditorControlSnapshot;
+  redo(): VizEditorControlSnapshot;
   inspectFrame(frame?: number): VizEditorControlFrameInspection;
   inspectRender(frame?: number): VizEditorControlRenderInspection;
   createDebugSnapshot(frame?: number): VizEditorControlDebugSnapshot;
@@ -414,6 +430,7 @@ export const createVizEditorControl = ({
         graphId: graph.id,
         name: graph.name,
         values: structuredClone(graphResults.get(graph.id)?.values ?? {}),
+        nodes: structuredClone(graphResults.get(graph.id)?.nodes ?? {}),
         issues: structuredClone(graphResults.get(graph.id)?.issues ?? []),
         checkpoint: runtimeSession.getGraphCheckpointBeforeOrAt(graph.id, selectedFrame),
       })),
@@ -432,6 +449,19 @@ export const createVizEditorControl = ({
       source: cloneUnknown(currentResources.source),
     }),
     getUiState: () => cloneUnknown(editorSession.getUiState()),
+    inspectProject: () => {
+      const snapshot = editorSession.getSnapshot();
+      return {
+        source: cloneUnknown(currentResources.source),
+        revision: snapshot.revision,
+        project: cloneUnknown(snapshot.workingProject),
+        validation: validateProjectDocument(snapshot.workingProject),
+        assets: cloneUnknown(currentResources.resolvedAssets),
+        artifacts: cloneUnknown(currentResources.resolvedArtifacts),
+        issues: cloneUnknown(snapshot.issues),
+        actionHistory: cloneUnknown(snapshot.actionHistory),
+      };
+    },
     setUiState: (next) => {
       editorSession.setUiState(next);
       return getSnapshot();
@@ -469,6 +499,16 @@ export const createVizEditorControl = ({
         snapshot: getSnapshot(),
         actionResult,
       };
+    },
+    undo: () => {
+      editorSession.undo();
+      rebuildControllers();
+      return getSnapshot();
+    },
+    redo: () => {
+      editorSession.redo();
+      rebuildControllers();
+      return getSnapshot();
     },
     inspectFrame: createFrameInspection,
     inspectRender: createRenderInspection,

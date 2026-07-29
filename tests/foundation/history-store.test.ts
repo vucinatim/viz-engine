@@ -12,8 +12,6 @@ import { vizSessionStore } from '@/lib/viz-session';
 import type { VizProjectDocument } from '@viz-engine/contracts';
 import { createTestProject } from './viz-session-test-utils';
 
-const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
-
 if (!(globalThis as any).window) {
   (globalThis as any).window = globalThis;
 }
@@ -55,36 +53,16 @@ describe('History store', () => {
       areNetworksMinimized: false,
       shouldForceShowOverlay: false,
     });
-    useHistoryStore.setState({
-      layerHistory: {
-        past: [],
-        present: {
-          project: createTestProject(),
-        },
-        future: [],
-      },
-      nodeHistories: {},
-      isNodeEditorFocused: false,
-      isBypassingHistory: false,
-      nodeDragBypass: {},
-      debounceTimer: null,
-    });
+    useHistoryStore.getState().reset();
   });
 
   it('snapshots canonical working-project truth for layer history', () => {
     const { project, layerId } = buildProject();
 
     useEditorProjectStore.getState().importWorkingProject(project);
-    useHistoryStore.getState().initializeLayerHistory();
-
-    const updated = clone(project);
-    updated.layers[0].settings = {
-      ...updated.layers[0].settings,
-      testMarker: 42,
-    };
-
-    useEditorProjectStore.getState().importWorkingProject(updated);
-    useHistoryStore.getState().pushLayerHistory(true);
+    useEditorProjectStore
+      .getState()
+      .updateLayerValue(layerId, ['testMarker'], 42);
     useHistoryStore.getState().undoLayerEditor();
 
     const restored = useEditorProjectStore.getState().exportWorkingProject();
@@ -94,9 +72,7 @@ describe('History store', () => {
       vizSessionStore.getState().project.workingProject.layers[0].settings
         ?.testMarker,
     ).toBeUndefined();
-    expect(useHistoryStore.getState().layerHistory.present.project.layers[0].id).toBe(
-      layerId,
-    );
+    expect(useHistoryStore.getState().canRedo()).toBe(true);
   });
 
   it('restores graph enabled-state changes through canonical graph truth', () => {
@@ -110,12 +86,9 @@ describe('History store', () => {
       .getState()
       .setNetworkEnabled(parameterId, false, VType.Number);
 
-    useHistoryStore.getState().initializeLayerHistory();
-
     useEditorGraphStore
       .getState()
       .setNetworkEnabled(parameterId, true, VType.Number);
-    useHistoryStore.getState().pushLayerHistory(true);
     useHistoryStore.getState().undoLayerEditor();
 
     expect(
@@ -137,7 +110,6 @@ describe('History store', () => {
       throw new Error('Expected node network to exist');
     }
 
-    useHistoryStore.getState().initializeNodeHistory(parameterId);
     useNodeNetworkStore.setState({ openNetwork: parameterId });
     useHistoryStore.getState().setNodeEditorFocused(true);
 
@@ -152,10 +124,6 @@ describe('History store', () => {
     ];
 
     graphStore.setNodesInNetwork(parameterId, updatedNodes);
-    useHistoryStore
-      .getState()
-      .pushNodeHistory(parameterId, updatedNodes, initialNetwork.edges);
-
     useHistoryStore.getState().undo();
 
     expect(

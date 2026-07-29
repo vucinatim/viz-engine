@@ -165,6 +165,7 @@ export const createVizRenderPlan = ({
     frameContext: framePlan.frameContext,
     viewport: session.project.viewport,
     materializedAssets: [...session.getMaterializedAssetMap().values()],
+    graphResults: framePlan.graphResults,
     layers,
     issues,
   };

@@ -2,7 +2,7 @@ import {
   createCoreComponentRegistry,
   resolveBundledStageModelAssets,
 } from '@viz-engine/components-core';
-import { createEditorNodeRuntimeRegistry } from '@/lib/editor-node-runtime-registry';
+import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
 import type {
   VizExecutionMode,
   VizProjectDocument,
@@ -43,7 +43,7 @@ interface CreateRuntimePreviewPlanOptions {
 }
 
 const componentRegistry = createCoreComponentRegistry();
-const nodeRegistry = createEditorNodeRuntimeRegistry();
+const nodeRegistry = createCoreNodeRegistry();
 const frozenAudioByLayerId = new Map<
   string,
   VizSessionRuntimePreviewAudioFrameData

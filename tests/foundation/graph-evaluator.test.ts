@@ -36,6 +36,12 @@ describe("Viz graph evaluation", () => {
     expect(typeof result.values.barsLoudness).toBe("number");
     expect(typeof result.values.bloomIntensity).toBe("number");
     expect(result.values.barsBass).not.toBe(result.values.barsLoudness);
+    expect(result.nodes["node-bars-bass-scale"]?.inputs).toMatchObject({
+      factor: 0.92,
+    });
+    expect(typeof result.nodes["node-bars-bass-scale"]?.outputs.value).toBe(
+      "number",
+    );
   });
 
   it("reports graph cycles explicitly instead of recursing forever", () => {

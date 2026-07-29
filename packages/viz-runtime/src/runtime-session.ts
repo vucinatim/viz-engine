@@ -2,6 +2,7 @@ import type {
   VizArtifactId,
   VizExecutionMode,
   VizFrameContext,
+  VizGraphEvaluationResult,
   VizGraphEvaluationIssue,
   VizGraphId,
   VizMaterializedAsset,
@@ -26,6 +27,7 @@ export interface VizGraphRuntimeCheckpoint {
   graphId: VizGraphId;
   frame: number;
   values: Record<string, unknown>;
+  nodes: VizGraphEvaluationResult["nodes"];
   issues: VizGraphEvaluationIssue[];
   nodeStates: Record<string, unknown>;
 }
@@ -59,6 +61,7 @@ const cloneGraphRuntimeCheckpoint = (
     graphId: checkpoint.graphId,
     frame: checkpoint.frame,
     values: cloneUnknown(checkpoint.values),
+    nodes: cloneUnknown(checkpoint.nodes),
     issues: cloneUnknown(checkpoint.issues),
     nodeStates: cloneUnknown(checkpoint.nodeStates),
   };

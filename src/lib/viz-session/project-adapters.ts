@@ -2,10 +2,12 @@ import type { Comp } from '@/components/config/create-component';
 import {
   NodeHandleType,
   isValidNodeHandleType,
+  safeVTypeToNodeHandleType,
 } from '@/components/config/node-types';
 import {
   NodeDefinitionMap,
   createOutputNode,
+  type AnimNode,
 } from '@/components/node-network/animation-nodes';
 import type {
   GraphNode,
@@ -17,10 +19,13 @@ import {
   type LayerSettings,
 } from '@/components/editor/layer-settings';
 import { assignDeterministicIdsToConfig } from '@/lib/comp-utils/config-utils';
+import {
+  getPresetById,
+  instantiatePreset,
+} from '@/components/node-network/presets';
 import type { LayerData } from '@/lib/editor-layer-types';
 import type { EditorLayerUiState } from '@/lib/stores/editor-store';
 import {
-  VIZ_PROJECT_SCHEMA_VERSION,
   type VizComponentDefinition,
   type VizBlendMode,
   type VizGraphNodeInputBinding,
@@ -30,12 +35,6 @@ import {
 } from '@viz-engine/contracts';
 import type { Edge } from '@xyflow/react';
 
-const DEFAULT_PROJECT_ID = 'viz-local-project';
-const DEFAULT_PROJECT_NAME = 'Untitled Viz Project';
-const DEFAULT_VIEWPORT_WIDTH = 1920;
-const DEFAULT_VIEWPORT_HEIGHT = 1080;
-const DEFAULT_FPS = 60;
-const DEFAULT_DURATION_FRAMES = 1;
 const DEFAULT_OUTPUT_HANDLE = '__viz_default_output__';
 const DEFAULT_INPUT_HANDLE = '__viz_default_input__';
 const EDITOR_NODE_METADATA_KEY = 'vizEditor';
@@ -68,36 +67,16 @@ const readEditorGraphMetadata = (
   return isRecord(value) ? (value as EditorGraphMetadata) : {};
 };
 
+export const isEditorAuthoredGraph = (
+  graph: VizNodeGraphDocument,
+): boolean => isRecord(graph.metadata?.[EDITOR_GRAPH_METADATA_KEY]);
+
 const toNodeHandleType = (value: unknown): NodeHandleType =>
   typeof value === 'string' && isValidNodeHandleType(value)
     ? (value as NodeHandleType)
     : 'number';
 
-export const createEmptyVizProjectDocument = (
-  overrides: Partial<
-    Pick<
-      VizProjectDocument,
-      'projectId' | 'name' | 'timeline' | 'viewport' | 'metadata'
-    >
-  > = {},
-): VizProjectDocument => ({
-  schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-  projectId: overrides.projectId ?? DEFAULT_PROJECT_ID,
-  name: overrides.name ?? DEFAULT_PROJECT_NAME,
-  timeline: overrides.timeline ?? {
-    fps: DEFAULT_FPS,
-    durationInFrames: DEFAULT_DURATION_FRAMES,
-  },
-  viewport: overrides.viewport ?? {
-    width: DEFAULT_VIEWPORT_WIDTH,
-    height: DEFAULT_VIEWPORT_HEIGHT,
-    backgroundColor: '#000000',
-  },
-  layerOrder: [],
-  layers: [],
-  graphs: [],
-  ...(overrides.metadata === undefined ? {} : { metadata: overrides.metadata }),
-});
+export { createEmptyVizProjectDocument } from './project-document';
 
 export const toEditorComponentId = (name: string) =>
   name
@@ -115,6 +94,48 @@ export const findEditorCompForLayer = (
       comp.name === layer.name ||
       toEditorComponentId(comp.name) === layer.componentId,
   ) ?? null;
+
+export const resolveEditorOptionByPath = (
+  comp: Comp,
+  layerId: string,
+  path: string,
+) => {
+  const config = assignDeterministicIdsToConfig(
+    layerId,
+    comp.config.clone(),
+  );
+  const segments = path.split('.');
+  let current: Record<string, any> = config.options;
+
+  for (let index = 0; index < segments.length; index += 1) {
+    const option = current[segments[index]!];
+
+    if (!option) {
+      return null;
+    }
+
+    if (
+      'options' in option &&
+      option.options &&
+      typeof option.options === 'object'
+    ) {
+      current = option.options;
+      continue;
+    }
+
+    if (
+      'type' in option &&
+      'getDefaultValue' in option &&
+      index === segments.length - 1
+    ) {
+      return option;
+    }
+
+    return null;
+  }
+
+  return null;
+};
 
 export const createVizLayerFromComp = (
   comp: Comp,
@@ -348,11 +369,16 @@ const resolveNodeDefinition = (node: VizNodeGraphDocument['nodes'][number]) => {
   }
 
   const definition = NodeDefinitionMap.get(node.type);
-  if (!definition) {
-    throw new Error(`Node definition not found for: ${node.type}`);
-  }
-
-  return definition;
+  return (
+    definition ??
+    ({
+      label: node.type,
+      description: `Unknown node type "${node.type}".`,
+      inputs: [],
+      outputs: [],
+      computeSignal: () => ({}),
+    } satisfies AnimNode)
+  );
 };
 
 const createProjectedGraphNode = (
@@ -431,11 +457,6 @@ export const projectGraphsToNodeNetworks = (
 ): Record<string, NodeNetwork> =>
   Object.fromEntries(
     (project.graphs ?? [])
-      .filter((graph) =>
-        graph.nodes.every(
-          (node) => node.type === 'Output' || NodeDefinitionMap.has(node.type),
-        ),
-      )
       .map((graph) => [
         graph.id,
         vizGraphToNodeNetwork(graph, previousNetworks[graph.id]),
@@ -489,3 +510,57 @@ export const detachGraphFromLayerInput = (
     ),
   })),
 });
+
+export const applyEditorDefaultNetworks = ({
+  project,
+  layerId,
+  comp,
+}: {
+  project: VizProjectDocument;
+  layerId: string;
+  comp: Comp;
+}): VizProjectDocument => {
+  let nextProject = project;
+
+  for (const [path, presetOrId] of Object.entries(
+    comp.defaultNetworks ?? {},
+  )) {
+    const option = resolveEditorOptionByPath(comp, layerId, path);
+    const preset =
+      typeof presetOrId === 'string'
+        ? getPresetById(presetOrId)
+        : presetOrId;
+
+    if (!option || !preset) {
+      continue;
+    }
+
+    const graphId = option.id;
+    const outputType = safeVTypeToNodeHandleType(option.type);
+    const { nodes, edges } = instantiatePreset(
+      preset,
+      graphId,
+      outputType,
+    );
+    const graph = nodeNetworkToVizGraph(graphId, {
+      name: graphId,
+      isEnabled: true,
+      isMinimized: false,
+      nodes,
+      edges,
+    });
+
+    nextProject = {
+      ...nextProject,
+      graphs: [
+        ...(nextProject.graphs ?? []).filter(
+          (candidate) => candidate.id !== graphId,
+        ),
+        graph,
+      ],
+    };
+    nextProject = attachGraphToLayerInput(nextProject, graphId);
+  }
+
+  return nextProject;
+};

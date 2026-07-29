@@ -1,4 +1,21 @@
-import type { VizNodeImplementation } from "@viz-engine/contracts";
+import type {
+  VizNodeEvaluateContext,
+  VizNodeImplementation,
+  VizNodeStepContext,
+} from "@viz-engine/contracts";
+import {
+  editorNodeAuthoringDefinitions,
+  inputNodeAuthoringDefinition,
+} from "./editor-nodes.js";
+import type {
+  VizNodeAnimationInput,
+  VizNodeAuthoringDefinition,
+  VizNodeAuthoringRuntimeRef,
+  VizNodeFrequencyAnalysis,
+} from "./authoring.js";
+
+export * from "./authoring.js";
+export * from "./editor-nodes.js";
 
 const asNumber = (value: unknown, fallback: number): number => {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
@@ -169,8 +186,194 @@ export const decayNode: VizNodeImplementation = {
   },
 };
 
+const TEMPORAL_EDITOR_NODE_TYPES = new Set([
+  "Spike",
+  "Adaptive Normalize (Quantile)",
+  "Pitch Detection",
+  "Band Info",
+  "Spectral Flux",
+  "Ducker",
+  "Harmonic Presence",
+  "Tonal Presence",
+  "Hysteresis Gate",
+  "Refractory Gate",
+  "Envelope Follower",
+  "Threshold Counter",
+  "Section Change Detector",
+  "Spectral Centroid",
+  "Adaptive Section Detector",
+  "Rate Limiter",
+]);
+
+const readGraphInput = (
+  context: VizNodeEvaluateContext,
+  key: string,
+): unknown => context.graphInputs[key]?.value;
+
+const createAnimationInput = (
+  context: VizNodeEvaluateContext,
+): VizNodeAnimationInput => {
+  const audioSignal = readGraphInput(context, "audioSignal");
+  const frequencyAnalysis = readGraphInput(
+    context,
+    "frequencyAnalysis",
+  );
+  const time = readGraphInput(context, "time");
+
+  return {
+    audioSignal:
+      audioSignal instanceof Uint8Array
+        ? audioSignal
+        : new Uint8Array(),
+    frequencyAnalysis:
+      frequencyAnalysis &&
+      typeof frequencyAnalysis === "object"
+        ? (frequencyAnalysis as VizNodeFrequencyAnalysis)
+        : {
+            frequencyData: new Uint8Array(),
+            sampleRate: 0,
+            fftSize: 0,
+          },
+    time:
+      typeof time === "number"
+        ? time
+        : context.frameContext.timeInSeconds,
+  };
+};
+
+const createAuthoringMetadata = (
+  definition: VizNodeAuthoringDefinition,
+) => ({
+  authoring: {
+    inputs: definition.inputs.map((input) => ({
+      key: input.id,
+      type: input.type,
+      ...(input.defaultValue === undefined
+        ? {}
+        : { defaultValue: input.defaultValue }),
+    })),
+    outputs: definition.outputs.map((output) => ({
+      key: output.id,
+      type: output.type,
+    })),
+  },
+});
+
+const createInputs = (
+  definition: VizNodeAuthoringDefinition,
+) =>
+  definition.inputs.map((input) => ({
+    key: input.id,
+    label: input.label,
+    required: false,
+  }));
+
+const createOutputs = (
+  definition: VizNodeAuthoringDefinition,
+) =>
+  definition.outputs.map((output) => ({
+    key: output.id,
+    label: output.label,
+  }));
+
+const createPureEditorNodeImplementation = (
+  definition: VizNodeAuthoringDefinition,
+): VizNodeImplementation => ({
+  type: definition.label,
+  name: definition.label,
+  category: "pure",
+  ...(definition.description === undefined
+    ? {}
+    : { description: definition.description }),
+  inputs: createInputs(definition),
+  outputs: createOutputs(definition),
+  metadata: createAuthoringMetadata(definition),
+  evaluate: (context) =>
+    definition.computeSignal(
+      context.inputs,
+      createAnimationInput(context),
+    ),
+});
+
+const createTemporalEditorNodeImplementation = (
+  definition: VizNodeAuthoringDefinition,
+): VizNodeImplementation => ({
+  type: definition.label,
+  name: definition.label,
+  category: "temporal",
+  ...(definition.description === undefined
+    ? {}
+    : { description: definition.description }),
+  inputs: createInputs(definition),
+  outputs: createOutputs(definition),
+  metadata: createAuthoringMetadata(definition),
+  createInitialState: () => ({}),
+  step: (context: VizNodeStepContext) => {
+    const state =
+      context.previousState &&
+      typeof context.previousState === "object" &&
+      !Array.isArray(context.previousState)
+        ? structuredClone(
+            context.previousState as Record<string, unknown>,
+          )
+        : {};
+    const runtimeRef: VizNodeAuthoringRuntimeRef = {
+      data: { state },
+    };
+    const outputs = definition.computeSignal(
+      context.inputs,
+      createAnimationInput(context),
+      runtimeRef,
+    );
+
+    return { state, outputs };
+  },
+});
+
+const inputEditorNodeImplementation =
+  createPureEditorNodeImplementation(inputNodeAuthoringDefinition);
+
+const outputEditorNodeImplementation: VizNodeImplementation = {
+  type: "Output",
+  name: "Output",
+  category: "pure",
+  inputs: [
+    {
+      key: "output",
+      label: "Output Value",
+      required: true,
+    },
+  ],
+  outputs: [
+    {
+      key: "value",
+      label: "Value",
+    },
+  ],
+  evaluate: ({ inputs }) => ({
+    value: inputs.output,
+  }),
+};
+
+export const editorNodeImplementations: VizNodeImplementation[] = [
+  inputEditorNodeImplementation,
+  ...editorNodeAuthoringDefinitions.map((definition) =>
+    TEMPORAL_EDITOR_NODE_TYPES.has(definition.label)
+      ? createTemporalEditorNodeImplementation(definition)
+      : createPureEditorNodeImplementation(definition),
+  ),
+  outputEditorNodeImplementation,
+];
+
 export const createCoreNodeRegistry = () => {
-  const nodes = [graphInputNode, multiplyNode, clampNode, addNode, decayNode];
+  const nodes = [
+    graphInputNode,
+    multiplyNode,
+    clampNode,
+    addNode,
+    decayNode,
+    ...editorNodeImplementations,
+  ];
   const nodeMap = new Map(nodes.map((node) => [node.type, node]));
 
   return {
