@@ -100,7 +100,6 @@ const CompPreview = ({
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.2;
-    (renderer as any).useLegacyLights = false;
     renderer.shadowMap.enabled = false; // Disable shadows for preview
 
     const internalWidth = Math.round(width * PREVIEW_RESOLUTION);

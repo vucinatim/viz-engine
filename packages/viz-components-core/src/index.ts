@@ -7,5 +7,6 @@ export * from "./radial-bloom.js";
 export * from "./reactive-bars.js";
 export * from "./registry.js";
 export * from "./shared.js";
+export * from "./simple-cube.js";
 export * from "./solid-color.js";
 export * from "./strobe-light.js";

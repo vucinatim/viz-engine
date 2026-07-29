@@ -35,6 +35,20 @@
     preserved editor
   - recorded evidence in
     `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-2.md`
+- completed the first persistent Three scene-program slice:
+  - added a typed serializable Three program render node
+  - added a package-owned Three program registry and explicit
+    update/resize/render/dispose lifecycle
+  - migrated Simple Cube into a deterministic runtime component and persistent
+    package Three scene
+  - replaced accumulated rotation with canonical frame-time evaluation
+  - proved compatible frame updates retain the program instance, cube,
+    geometry, and material
+  - removed the final obsolete component-preview `useLegacyLights` assignment
+  - browser-verified lit output, playback rotation, pause stability, and a
+    clean console
+  - recorded evidence in
+    `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-3.md`
 - established the autonomous V2 calibration foundation:
   - pinned the immutable final pre-V2 parity reference to
     `e806fbc10980615588b52ff574bc923c6f00f35e`

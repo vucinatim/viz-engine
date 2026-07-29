@@ -276,4 +276,70 @@ describe("Viz Three renderer proof", () => {
     expect(updatedMaterial).toBe(firstMaterial);
     expect(updatedMaterial.uniforms.uStrength?.value).toBe(0);
   });
+
+  it("updates persistent Three programs without rebuilding scene resources", () => {
+    const createProgramPlan = (
+      rotationX: number,
+      rotationY: number,
+    ): VizRenderPlan => ({
+      frameContext: {
+        frame: rotationX === 0 ? 0 : 30,
+        fps: 60,
+        durationInFrames: 120,
+        timeInSeconds: rotationX === 0 ? 0 : 0.5,
+        deltaTimeSeconds: 1 / 60,
+        isFirstFrame: rotationX === 0,
+        isLastFrame: false,
+        mode: "live",
+        seed: "persistent-program",
+      },
+      viewport: {
+        width: 1280,
+        height: 720,
+        backgroundColor: "#000000",
+      },
+      materializedAssets: [],
+      issues: [],
+      layers: [
+        {
+          layerId: "layer-cube",
+          componentId: "simple-cube",
+          rendererFamily: "three",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          resolvedInputs: {},
+          node: {
+            kind: "three-program",
+            programId: "viz-core/simple-cube/v1",
+            parameters: {
+              color: "#ff00ff",
+              size: 1.5,
+              rotationX,
+              rotationY,
+            },
+          },
+        },
+      ],
+    });
+    const firstPlan = createProgramPlan(0, 0);
+    const nextPlan = createProgramPlan(1, -0.5);
+    const graph = createVizThreeCompositorGraph(firstPlan);
+    const layer = graph.layers[0]!;
+    const instance = layer.programInstance;
+    const cube = instance?.root.children[0] as Mesh;
+    const material = cube.material;
+    const geometry = cube.geometry;
+
+    expect(instance?.programId).toBe("viz-core/simple-cube/v1");
+    expect(
+      updateVizThreeCompositorGraph(graph, firstPlan, nextPlan),
+    ).toBe(true);
+    expect(layer.programInstance).toBe(instance);
+    expect(instance?.root.children[0]).toBe(cube);
+    expect(cube.material).toBe(material);
+    expect(cube.geometry).toBe(geometry);
+    expect(cube.rotation.x).toBe(1);
+    expect(cube.rotation.y).toBe(-0.5);
+  });
 });

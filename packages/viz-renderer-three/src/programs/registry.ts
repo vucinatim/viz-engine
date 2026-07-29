@@ -1,0 +1,28 @@
+import type { VizRenderThreeProgramNode } from "@viz-engine/contracts";
+import { createSimpleCubeProgram } from "./simple-cube.js";
+import type {
+  VizThreeProgramFactory,
+  VizThreeProgramInstance,
+} from "./types.js";
+
+const programFactories = new Map<string, VizThreeProgramFactory>([
+  ["viz-core/simple-cube/v1", createSimpleCubeProgram],
+]);
+
+export const createVizThreeProgramInstance = ({
+  node,
+  width,
+  height,
+}: {
+  node: VizRenderThreeProgramNode;
+  width: number;
+  height: number;
+}): VizThreeProgramInstance => {
+  const factory = programFactories.get(node.programId);
+
+  if (!factory) {
+    throw new Error(`Unknown Viz Three program "${node.programId}".`);
+  }
+
+  return factory({ node, width, height });
+};

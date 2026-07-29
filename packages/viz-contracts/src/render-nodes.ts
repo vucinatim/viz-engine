@@ -115,10 +115,28 @@ export interface VizRenderShaderNode {
   blendMode?: VizBlendMode;
 }
 
+export type VizRenderProgramValue =
+  | null
+  | boolean
+  | number
+  | string
+  | VizRenderProgramValue[]
+  | {
+      [key: string]: VizRenderProgramValue;
+    };
+
+export interface VizRenderThreeProgramNode {
+  kind: "three-program";
+  id?: string;
+  programId: string;
+  parameters: Record<string, VizRenderProgramValue>;
+}
+
 export type VizRenderNode =
   | VizRenderGroupNode
   | VizRenderRectNode
   | VizRenderCircleNode
   | VizRenderImageNode
   | VizRenderTextNode
-  | VizRenderShaderNode;
+  | VizRenderShaderNode
+  | VizRenderThreeProgramNode;

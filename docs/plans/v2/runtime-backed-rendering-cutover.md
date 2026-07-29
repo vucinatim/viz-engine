@@ -43,7 +43,7 @@ The mixed fallback attachment is:
 | Debug Animation | Canvas `draw` | primitive 2D scene | Rectangles plus reusable text primitive |
 | Feature Extraction Bars | Canvas `draw` | primitive 2D scene | Rectangles plus reusable text primitive; preserve five node-driven values |
 | Heartbeat Monitor | stateful Canvas `draw` | temporal 2D scene | Deterministic input history and reusable path/glow representation |
-| Simple Cube | Three `init3D`/`draw3D` | persistent Three scene | Geometry, lighting, camera, deterministic frame-derived rotation |
+| Simple Cube | package runtime plus historical fallback | persistent Three scene | Runtime scene and deterministic rotation are implemented; remove historical callbacks after component-preview cutover |
 | Instanced Supercube | Three `init3D`/`draw3D` | persistent Three scene | Instancing, shadows, custom material shader, audio/config motion |
 | Light Tunnel | Three `init3D`/`draw3D` | persistent Three scene | Instancing, fog, lights, line geometry, bloom and depth-of-field |
 | Morph Shapes | Three `init3D`/`draw3D` | persistent Three scene | Instancing, procedural/model/text sources, asset loading, custom material |

@@ -194,7 +194,7 @@ The biggest remaining architecture gaps are:
   graph model and execution registry directly
 - most preserved V1 components still render through their historical
   `draw`/`draw3D` paths; `Curve Spectrum`, `Debug Animation`,
-  `Feature Extraction Bars`, and `Strobe Light` now have
+  `Feature Extraction Bars`, `Strobe Light`, and `Simple Cube` now have
   package-runtime-backed editor paths, but this is not the completed component
   migration
 - the temporary per-component runtime preview bridge remains necessary until
@@ -211,6 +211,17 @@ The renderer contract now has a persistent shader node:
   between frames
 - Strobe Light no longer accumulates editor-local time or calls
   `Math.random()` for runtime output
+
+The renderer contract also has a persistent Three program node:
+
+- runtime plans carry a stable program id and serializable deterministic
+  parameters
+- package Three program instances own GPU scenes and explicit
+  update/resize/render/dispose lifecycles
+- compatible updates retain scene, camera, geometry, material, and light
+  resources
+- Simple Cube rotation now derives from canonical frame time rather than
+  accumulated browser `dt`
 
 ## Autonomous Calibration Foundation
 

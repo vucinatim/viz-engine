@@ -155,7 +155,7 @@ export const renderVizRenderNode = (
     return renderTextNode(node);
   }
 
-  if (node.kind === "shader") {
+  if (node.kind === "shader" || node.kind === "three-program") {
     return "";
   }
 

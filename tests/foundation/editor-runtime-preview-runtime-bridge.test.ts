@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import CurveSpectrum from '@/components/comps/curve-spectrum';
 import DebugAnimation from '@/components/comps/debug-animation';
 import FeatureExtractionBars from '@/components/comps/feature-extraction-bars';
+import SimpleCube from '@/components/comps/simple-cube';
 import StrobeLight from '@/components/comps/strobe-light';
 import { createVizSessionRuntimePreviewFrame } from '@/lib/viz-session';
 import { createRuntimeRenderPlanForEditorLayer } from '@/lib/editor-runtime-preview-runtime-bridge';
@@ -68,6 +69,7 @@ describe('Editor runtime preview runtime bridge', () => {
     [DebugAnimation, 'debug-animation', 'group'],
     [FeatureExtractionBars, 'feature-extraction-bars', 'group'],
     [StrobeLight, 'strobe-light', 'shader'],
+    [SimpleCube, 'simple-cube', 'three-program'],
   ])(
     'builds runtime plans for newly migrated preserved-editor components',
     (comp, componentId, expectedNodeKind) => {

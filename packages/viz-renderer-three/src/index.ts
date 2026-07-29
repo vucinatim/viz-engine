@@ -11,6 +11,7 @@ import type {
   VizRenderShaderNode,
   VizRenderStyle,
   VizRenderTextNode,
+  VizRenderThreeProgramNode,
   VizRenderTransform,
   VizShaderUniformValue,
 } from "@viz-engine/contracts";
@@ -38,9 +39,17 @@ import {
   WebGLRenderTarget,
   WebGLRenderer,
   type Blending,
+  type Camera,
   type Material,
   type MeshBasicMaterialParameters,
 } from "three";
+import { createVizThreeProgramInstance } from "./programs/registry.js";
+import type { VizThreeProgramInstance } from "./programs/types.js";
+
+export type {
+  VizThreeProgramFactory,
+  VizThreeProgramInstance,
+} from "./programs/types.js";
 
 export interface VizThreeSceneGraph {
   scene: Scene;
@@ -51,10 +60,11 @@ export interface VizThreeSceneGraph {
 export interface VizThreeCompositorLayer {
   layer: VizLayerRenderPlanEntry;
   contentScene: Scene;
-  contentCamera: OrthographicCamera;
+  contentCamera: Camera;
   contentRoot: Group;
   compositeSurface: Mesh;
   renderTarget: WebGLRenderTarget;
+  programInstance?: VizThreeProgramInstance;
 }
 
 export interface VizThreeCompositorGraph {
@@ -528,6 +538,15 @@ const convertNodeToObject = (
     return convertShaderToMesh(node, viewportWidth, viewportHeight);
   }
 
+  if (node.kind === "three-program") {
+    const placeholder = new Group();
+    placeholder.userData = {
+      ...placeholder.userData,
+      vizThreeProgramId: node.programId,
+    };
+    return placeholder;
+  }
+
   const group = new Group();
   applyTransform(group, node.transform);
   const nextInherited = composeInheritedRenderState(inherited, node.style);
@@ -635,6 +654,36 @@ const createVizThreeCompositorLayer = (
   viewportWidth: number,
   viewportHeight: number,
 ): VizThreeCompositorLayer => {
+  if (layer.node?.kind === "three-program") {
+    const programInstance = createVizThreeProgramInstance({
+      node: layer.node,
+      width: viewportWidth,
+      height: viewportHeight,
+    });
+    const compositeSurface = createCompositeSurface(
+      layer,
+      viewportWidth,
+      viewportHeight,
+    );
+    const renderTarget = createLayerRenderTarget(
+      viewportWidth,
+      viewportHeight,
+    );
+    const material = compositeSurface.material as MeshBasicMaterial;
+    material.map = renderTarget.texture;
+    material.needsUpdate = true;
+
+    return {
+      layer,
+      contentScene: programInstance.scene,
+      contentCamera: programInstance.camera,
+      contentRoot: programInstance.root,
+      compositeSurface,
+      renderTarget,
+      programInstance,
+    };
+  }
+
   const contentScene = new Scene();
   const contentCamera = createOrthoCamera(viewportWidth, viewportHeight);
   const contentRoot = createLayerContentRoot(layer, viewportWidth, viewportHeight);
@@ -814,7 +863,11 @@ const hydrateImageTextures = ({
 
 const disposeCompositorGraph = (graph: VizThreeCompositorGraph): void => {
   for (const layer of graph.layers) {
-    clearRootGroup(layer.contentRoot);
+    if (layer.programInstance) {
+      layer.programInstance.dispose();
+    } else {
+      clearRootGroup(layer.contentRoot);
+    }
     layer.renderTarget.dispose();
     disposeObject(layer.compositeSurface);
   }
@@ -935,19 +988,31 @@ export const updateVizThreeCompositorGraph = (
     const nextNode = nextLayer?.node;
     const mesh = graphLayer.contentRoot.children[0];
 
+    const updated =
+      previousNode?.kind === "shader" &&
+      nextNode?.kind === "shader" &&
+      mesh instanceof Mesh
+        ? updateShaderMesh(
+            mesh,
+            nextNode,
+            nextPlan.viewport.width,
+            nextPlan.viewport.height,
+          )
+        : previousNode?.kind === "three-program" &&
+            nextNode?.kind === "three-program" &&
+            previousNode.programId === nextNode.programId &&
+            graphLayer.programInstance?.programId === nextNode.programId
+          ? (() => {
+              graphLayer.programInstance.update(nextNode);
+              return true;
+            })()
+          : false;
+
     if (
       !previousLayer ||
       !nextLayer ||
       previousLayer.layerId !== nextLayer.layerId ||
-      previousNode?.kind !== "shader" ||
-      nextNode?.kind !== "shader" ||
-      !(mesh instanceof Mesh) ||
-      !updateShaderMesh(
-        mesh,
-        nextNode,
-        nextPlan.viewport.width,
-        nextPlan.viewport.height,
-      )
+      !updated
     ) {
       return false;
     }
@@ -994,7 +1059,11 @@ export const createVizThreePreviewController = ({
 
     for (const layer of compositorGraph.layers) {
       layer.renderTarget.setSize(width, height);
-      updateOrthoCamera(layer.contentCamera, width, height);
+      if (layer.programInstance) {
+        layer.programInstance.resize(width, height);
+      } else if (layer.contentCamera instanceof OrthographicCamera) {
+        updateOrthoCamera(layer.contentCamera, width, height);
+      }
       const geometry = layer.compositeSurface.geometry as PlaneGeometry;
       geometry.dispose();
       layer.compositeSurface.geometry = new PlaneGeometry(width, height);
@@ -1008,7 +1077,11 @@ export const createVizThreePreviewController = ({
       renderer.setRenderTarget(layer.renderTarget);
       renderer.setClearColor(0x000000, 0);
       renderer.clear(true, true, true);
-      renderer.render(layer.contentScene, layer.contentCamera);
+      if (layer.programInstance) {
+        layer.programInstance.render(renderer, layer.renderTarget);
+      } else {
+        renderer.render(layer.contentScene, layer.contentCamera);
+      }
     }
 
     renderer.setRenderTarget(null);

@@ -3,6 +3,7 @@ import {
   debugAnimationComponent,
   featureChannelBarsComponent,
   featureExtractionBarsComponent,
+  simpleCubeComponent,
   strobeLightComponent,
 } from "@viz-engine/components-core";
 import type {
@@ -264,5 +265,61 @@ describe("Viz component authoring foundation", () => {
 
     expect(onNode.uniforms.uStrength).toBe(0.8);
     expect(offNode.uniforms.uStrength).toBe(0);
+  });
+
+  it("derives Simple Cube rotation from canonical frame time", () => {
+    const project: VizProjectDocument = {
+      schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
+      projectId: "project-simple-cube",
+      name: "Simple Cube",
+      timeline: { fps: 60, durationInFrames: 120 },
+      viewport: { width: 1280, height: 720 },
+      layerOrder: ["layer-cube"],
+      layers: [
+        {
+          id: "layer-cube",
+          name: "Simple Cube",
+          componentId: "simple-cube",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          settings: {
+            color: "#ff00ff",
+            size: 1.5,
+            rotationSpeedX: 2,
+            rotationSpeedY: -1,
+          },
+        },
+      ],
+    };
+    const session = createVizRuntimeSession({
+      project,
+      mode: "render",
+      seed: "simple-cube-seed",
+    });
+    const plan = createVizRenderPlan({
+      session,
+      frame: 30,
+      registry: createCoreComponentRegistry(),
+    });
+    const repeatedPlan = createVizRenderPlan({
+      session,
+      frame: 30,
+      registry: createCoreComponentRegistry(),
+    });
+
+    expect(createCoreComponentRegistry().get(simpleCubeComponent.id)).toBe(
+      simpleCubeComponent,
+    );
+    expect(plan).toEqual(repeatedPlan);
+
+    const node = plan.layers[0]?.node;
+    if (!node || node.kind !== "three-program") {
+      throw new Error("Expected Simple Cube Three program node.");
+    }
+
+    expect(node.programId).toBe("viz-core/simple-cube/v1");
+    expect(node.parameters.rotationX).toBe(1);
+    expect(node.parameters.rotationY).toBe(-0.5);
   });
 });
