@@ -9,11 +9,13 @@ import type {
   VizRenderPlan,
   VizRenderRectNode,
   VizRenderStyle,
+  VizRenderTextNode,
   VizRenderTransform,
 } from "@viz-engine/contracts";
 import {
   AdditiveBlending,
   CircleGeometry,
+  CanvasTexture,
   Color,
   Group,
   LinearFilter,
@@ -337,6 +339,94 @@ const convertImageToMesh = (
   return mesh;
 };
 
+const getTextOrigin = (
+  node: VizRenderTextNode,
+  width: number,
+  height: number,
+): { x: number; y: number } => {
+  const x =
+    node.anchor === "middle"
+      ? node.x - width / 2
+      : node.anchor === "end"
+        ? node.x - width
+        : node.x;
+  const y =
+    node.baseline === "middle"
+      ? node.y - height / 2
+      : node.baseline === "bottom" || node.baseline === "alphabetic"
+        ? node.y - height
+        : node.y;
+
+  return { x, y };
+};
+
+const convertTextToObject = (
+  node: VizRenderTextNode,
+  inherited: VizInheritedRenderState,
+  viewportWidth: number,
+  viewportHeight: number,
+): Group | Mesh => {
+  if (typeof document === "undefined") {
+    const placeholder = new Group();
+    placeholder.userData = {
+      ...placeholder.userData,
+      vizText: node.text,
+    };
+    return placeholder;
+  }
+
+  const fontSize = Math.max(1, node.fontSize);
+  const fontFamily = node.fontFamily ?? "sans-serif";
+  const fontWeight = node.fontWeight ?? "normal";
+  const textureScale = 2;
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    return new Group();
+  }
+
+  const font = `${fontWeight} ${fontSize * textureScale}px ${fontFamily}`;
+  context.font = font;
+  const measuredWidth = Math.ceil(context.measureText(node.text).width);
+  const textureWidth = Math.max(2, measuredWidth + 4 * textureScale);
+  const textureHeight = Math.max(
+    2,
+    Math.ceil(fontSize * 1.45 * textureScale),
+  );
+  canvas.width = textureWidth;
+  canvas.height = textureHeight;
+
+  context.clearRect(0, 0, textureWidth, textureHeight);
+  context.font = font;
+  context.textAlign = "left";
+  context.textBaseline = "middle";
+  context.fillStyle = node.style?.fill ?? "#ffffff";
+  context.fillText(node.text, 2 * textureScale, textureHeight / 2);
+
+  const texture = new CanvasTexture(canvas);
+  texture.colorSpace = SRGBColorSpace;
+  texture.needsUpdate = true;
+
+  const width = textureWidth / textureScale;
+  const height = textureHeight / textureScale;
+  const finalStyle = mergeRenderableStyle(inherited, node.style);
+  const material = createMaterial(finalStyle, "#ffffff", {
+    color: new Color("#ffffff"),
+    map: texture,
+    transparent: true,
+  });
+  const mesh = new Mesh(new PlaneGeometry(width, height), material);
+  const origin = getTextOrigin(node, width, height);
+  mesh.position.x = origin.x + width / 2 - viewportWidth / 2;
+  mesh.position.y = viewportHeight / 2 - (origin.y + height / 2);
+  mesh.userData = {
+    ...mesh.userData,
+    vizOwnedTexture: texture,
+  };
+  return mesh;
+};
+
 const convertNodeToObject = (
   node: VizRenderNode,
   inherited: VizInheritedRenderState,
@@ -355,6 +445,15 @@ const convertNodeToObject = (
     return convertImageToMesh(node, inherited, viewportWidth, viewportHeight);
   }
 
+  if (node.kind === "text") {
+    return convertTextToObject(
+      node,
+      inherited,
+      viewportWidth,
+      viewportHeight,
+    );
+  }
+
   const group = new Group();
   applyTransform(group, node.transform);
   const nextInherited = composeInheritedRenderState(inherited, node.style);
@@ -367,6 +466,11 @@ const convertNodeToObject = (
 };
 
 const disposeObject = (object: Group | Mesh): void => {
+  const ownedTexture = object.userData.vizOwnedTexture;
+  if (ownedTexture instanceof Texture) {
+    ownedTexture.dispose();
+  }
+
   if ("geometry" in object) {
     object.geometry.dispose();
   }

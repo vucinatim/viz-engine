@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import CurveSpectrum from '@/components/comps/curve-spectrum';
+import DebugAnimation from '@/components/comps/debug-animation';
+import FeatureExtractionBars from '@/components/comps/feature-extraction-bars';
 import { createVizSessionRuntimePreviewFrame } from '@/lib/viz-session';
 import { createRuntimeRenderPlanForEditorLayer } from '@/lib/editor-runtime-preview-runtime-bridge';
 import useCompStore from '@/lib/stores/comp-store';
@@ -60,4 +62,57 @@ describe('Editor runtime preview runtime bridge', () => {
     expect(renderPlan?.layers[0]?.node?.kind).toBe('group');
     expect(renderPlan?.issues).toEqual([]);
   });
+
+  it.each([
+    [DebugAnimation, 'debug-animation'],
+    [FeatureExtractionBars, 'feature-extraction-bars'],
+  ])(
+    'builds runtime plans for newly migrated preserved-editor components',
+    (comp, componentId) => {
+      const layerId = `layer-${componentId}`;
+      useCompStore.setState({ comps: [comp] });
+      useEditorProjectStore
+        .getState()
+        .importWorkingProject(createTestProject(comp, layerId));
+      const layer = getProjectedLayer(layerId);
+      if (!layer) {
+        throw new Error('Expected canonical layer projection.');
+      }
+      const frame = createVizSessionRuntimePreviewFrame({
+        currentFrame: 12,
+        time: 0.4,
+        dt: 1 / 30,
+        fps: 30,
+        mode: 'live',
+      });
+      const spectrum = new Uint8Array(128);
+      const configValues = layer.config.getValues({
+        audioSignal: spectrum,
+        frequencyData: spectrum,
+        time: frame.time,
+        frequencyAnalysis: {
+          frequencyData: spectrum,
+          sampleRate: 44100,
+          fftSize: 2048,
+        },
+      });
+
+      const renderPlan = createRuntimeRenderPlanForEditorLayer({
+        layer,
+        viewportWidth: 640,
+        viewportHeight: 360,
+        frame,
+        configValues,
+        audioFrameData: {
+          frequencyData: spectrum,
+          sampleRate: 44100,
+          fftSize: 2048,
+        },
+      });
+
+      expect(renderPlan?.layers[0]?.componentId).toBe(componentId);
+      expect(renderPlan?.layers[0]?.node?.kind).toBe('group');
+      expect(renderPlan?.issues).toEqual([]);
+    },
+  );
 });

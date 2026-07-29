@@ -1,4 +1,9 @@
-import { createCoreComponentRegistry, featureChannelBarsComponent } from "@viz-engine/components-core";
+import {
+  createCoreComponentRegistry,
+  debugAnimationComponent,
+  featureChannelBarsComponent,
+  featureExtractionBarsComponent,
+} from "@viz-engine/components-core";
 import type {
   VizComponentImplementation,
   VizProjectDocument,
@@ -109,5 +114,85 @@ describe("Viz component authoring foundation", () => {
     }
 
     expect(node.children).toHaveLength(10);
+  });
+
+  it("renders preserved-editor stateless Canvas components deterministically", () => {
+    const registry = createCoreComponentRegistry();
+    const renderComponent = (
+      componentId: string,
+      settings: Record<string, unknown>,
+    ) => {
+      const project: VizProjectDocument = {
+        schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
+        projectId: `project-${componentId}`,
+        name: componentId,
+        timeline: { fps: 60, durationInFrames: 120 },
+        viewport: { width: 1280, height: 720 },
+        layerOrder: ["layer"],
+        layers: [
+          {
+            id: "layer",
+            name: componentId,
+            componentId,
+            enabled: true,
+            opacity: 1,
+            blendMode: "normal",
+            settings,
+          },
+        ],
+      };
+
+      return createVizRenderPlan({
+        session: createVizRuntimeSession({
+          project,
+          mode: "render",
+          seed: "preserved-editor-component-seed",
+        }),
+        frame: 42,
+        registry,
+      });
+    };
+
+    expect(registry.get(debugAnimationComponent.id)).toBe(
+      debugAnimationComponent,
+    );
+    expect(registry.get(featureExtractionBarsComponent.id)).toBe(
+      featureExtractionBarsComponent,
+    );
+
+    const debugPlanA = renderComponent("debug-animation", {
+      value: 37,
+      midi: 64,
+      text: "E4",
+      color: "#60a5fa",
+    });
+    const debugPlanB = renderComponent("debug-animation", {
+      value: 37,
+      midi: 64,
+      text: "E4",
+      color: "#60a5fa",
+    });
+    const featurePlan = renderComponent("feature-extraction-bars", {
+      kick: 0.2,
+      snare: 0.4,
+      bass: 0.6,
+      melody: 0.8,
+      percussion: 1,
+    });
+
+    expect(debugPlanA.issues).toEqual([]);
+    expect(debugPlanA).toEqual(debugPlanB);
+    expect(debugPlanA.layers[0]?.node?.kind).toBe("group");
+    expect(featurePlan.issues).toEqual([]);
+    expect(featurePlan.layers[0]?.node?.kind).toBe("group");
+
+    const featureNode = featurePlan.layers[0]?.node;
+    if (!featureNode || featureNode.kind !== "group") {
+      throw new Error("Expected feature extraction group render node.");
+    }
+    expect(featureNode.children).toHaveLength(21);
+    expect(featureNode.children.filter((node) => node.kind === "text")).toHaveLength(
+      10,
+    );
   });
 });

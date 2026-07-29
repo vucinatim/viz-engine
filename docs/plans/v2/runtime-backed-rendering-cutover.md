@@ -1,0 +1,139 @@
+# Runtime-Backed Rendering Cutover
+
+## Goal
+
+Make the package runtime and `VizSession` the only owners of visual scene
+evaluation while preserving the real V1 editor product surface.
+
+This is a replacement cutover:
+
+- editor component definitions may retain authoring metadata and parameter
+  schemas
+- visual meaning must live in package runtime component implementations
+- browser code may own canvases, WebGL contexts, asset hydration, and other
+  host attachments
+- browser/editor code must not own component-specific scene behavior
+- temporary fallback dispatch is deleted when the final component is migrated
+
+## Evidence Baseline
+
+The immutable product reference is:
+
+```text
+e806fbc10980615588b52ff574bc923c6f00f35e
+```
+
+At the start of this cutover the preserved editor exposes 15 components.
+`Curve Spectrum` is the only one whose live editor output is currently produced
+through `@viz-engine/runtime` and `@viz-engine/renderer-three`.
+
+The temporary bridge is:
+
+- `src/lib/editor-runtime-preview-runtime-bridge.ts`
+
+The mixed fallback attachment is:
+
+- `src/lib/editor-runtime-preview-attachment.ts`
+
+## Component Inventory
+
+| Editor component | Current visual path | Runtime family | Migration requirements |
+| --- | --- | --- | --- |
+| Curve Spectrum | package runtime | primitive 2D scene | Remove bridge-specific special casing when all layers use one session render plan |
+| Debug Animation | Canvas `draw` | primitive 2D scene | Rectangles plus reusable text primitive |
+| Feature Extraction Bars | Canvas `draw` | primitive 2D scene | Rectangles plus reusable text primitive; preserve five node-driven values |
+| Heartbeat Monitor | stateful Canvas `draw` | temporal 2D scene | Deterministic input history and reusable path/glow representation |
+| Simple Cube | Three `init3D`/`draw3D` | persistent Three scene | Geometry, lighting, camera, deterministic frame-derived rotation |
+| Instanced Supercube | Three `init3D`/`draw3D` | persistent Three scene | Instancing, shadows, custom material shader, audio/config motion |
+| Light Tunnel | Three `init3D`/`draw3D` | persistent Three scene | Instancing, fog, lights, line geometry, bloom and depth-of-field |
+| Morph Shapes | Three `init3D`/`draw3D` | persistent Three scene | Instancing, procedural/model/text sources, asset loading, custom material |
+| Neural Network | Three `init3D`/`draw3D` | persistent Three scene | Procedural seeded topology, custom shaders, activation motion, bloom and depth-of-field |
+| Noise Shader | Three `init3D`/`draw3D` | persistent shader scene | Fullscreen shader program and deterministic uniforms |
+| Orbiting Cubes | Three `init3D`/`draw3D` | persistent Three scene | Instancing, lighting, camera and node-driven movement |
+| Particle System | Three `init3D`/`draw3D` | persistent Three scene | Instancing, custom shader, seeded particle state and blend modes |
+| Stage Scene | Three `init3D`/`draw3D` | persistent Three scene | Instancing, lighting, fog, camera path, bloom and feature-driven staging |
+| Fullscreen Shader | Three `init3D`/`draw3D` | persistent shader scene | Shader selection and deterministic uniforms |
+| Strobe Light | Three `init3D`/`draw3D` | persistent shader scene | Fullscreen shader and node-driven/manual intensity behavior |
+
+## Runtime Model
+
+Two runtime representation families are required.
+
+### Portable primitives
+
+Simple visuals should return ordinary typed render nodes. The primitive
+vocabulary should stay intentionally small and renderer-independent:
+
+- group
+- rectangle
+- circle
+- image
+- text
+- path/polyline when the temporal waveform slice is implemented
+
+These nodes remain directly renderable by the SVG and Three adapters.
+
+### Persistent Three programs
+
+Complex GPU visuals should not be flattened into thousands of lossy rectangles
+or reduced versions of the V1 product.
+
+The render contract needs a typed package-owned Three program node that:
+
+- identifies a stable renderer program
+- carries deterministic, serializable frame/config/input data
+- has no DOM, React, editor-store, or browser references
+- lets `@viz-engine/renderer-three` retain expensive geometry/material state
+  across frames
+- derives animation from canonical frame context and seeded state rather than
+  request-animation-frame accumulation
+- is consumed by preview and final-render adapters through the same contract
+
+Program implementations belong in package terrain. The editor host only
+attaches the resulting renderer to a canvas.
+
+## Slice Order
+
+1. Add missing portable primitives and migrate the two stateless Canvas proofs:
+   `Debug Animation` and `Feature Extraction Bars`.
+2. Add the persistent Three program contract and migrate the shader family:
+   `Fullscreen Shader`, `Noise Shader`, and `Strobe Light`.
+3. Migrate the simpler scene family: `Simple Cube`, `Particle System`, and
+   `Orbiting Cubes`.
+4. Establish deterministic temporal sampling and migrate `Heartbeat Monitor`.
+5. Migrate the large scene family: `Instanced Supercube`, `Light Tunnel`,
+   `Neural Network`, `Stage Scene`, and `Morph Shapes`.
+6. Replace per-layer runtime-plan creation with one VizSession-owned frame
+   evaluation and one compositor update per frame.
+7. Delete `draw`, `init3D`, `draw3D`, component-local render state, and the
+   temporary runtime preview bridge after their last consumers are removed.
+
+## Per-Slice Gates
+
+Every component slice must prove:
+
+- component registration under its canonical kebab-case id
+- deterministic render-plan output for fixed project/frame/seed/input
+- node-driven parameter propagation
+- browser rendering in the preserved editor
+- play, pause, and seek behavior
+- no new console errors or warnings
+- no unexplained material performance regression
+- successful focused tests and the complete foundation gate
+
+Visual similarity is audited against the pinned V1 reference. Runtime-backed is
+an ownership claim, not a visual-parity claim; the two pieces of evidence must
+remain separate.
+
+## Final Deletion Conditions
+
+The cutover is complete only when:
+
+- all 15 preserved-editor components are registered runtime implementations
+- the editor never calls component `draw`, `init3D`, or `draw3D`
+- the editor does not carry component render state
+- one VizSession frame evaluation produces the plan used by preview and export
+- the temporary runtime preview bridge is deleted
+- browser attachment code is component-agnostic
+- the preserved node graph still drives component parameters
+- browser parity and measured performance evidence are recorded

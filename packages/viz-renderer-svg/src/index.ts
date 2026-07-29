@@ -9,6 +9,7 @@ import type {
   VizRenderPlan,
   VizRenderRectNode,
   VizRenderStyle,
+  VizRenderTextNode,
   VizRenderTransform,
 } from "@viz-engine/contracts";
 
@@ -103,6 +104,27 @@ const renderImageNode = (
   return `<image href="${escapeAttribute(asset.imageSourceUri)}" x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}" preserveAspectRatio="${fitModeToPreserveAspectRatio(node.fitMode)}"${createStyleAttribute(node.style)} />`;
 };
 
+const renderTextNode = (node: VizRenderTextNode): string => {
+  const anchor =
+    node.anchor === "middle"
+      ? "middle"
+      : node.anchor === "end"
+        ? "end"
+        : "start";
+  const baseline =
+    node.baseline === "middle"
+      ? "middle"
+      : node.baseline === "top"
+        ? "hanging"
+        : node.baseline === "bottom"
+          ? "text-after-edge"
+          : "alphabetic";
+  const fontFamily = node.fontFamily ?? "sans-serif";
+  const fontWeight = node.fontWeight ?? "normal";
+
+  return `<text x="${node.x}" y="${node.y}" text-anchor="${anchor}" dominant-baseline="${baseline}" font-family="${escapeAttribute(fontFamily)}" font-size="${node.fontSize}" font-weight="${fontWeight}"${createStyleAttribute(node.style)}>${escapeAttribute(node.text)}</text>`;
+};
+
 const renderGroupNode = (
   node: VizRenderGroupNode,
   materializedImageAssets: ReadonlyMap<string, VizMaterializedImageAsset>,
@@ -127,6 +149,10 @@ export const renderVizRenderNode = (
 
   if (node.kind === "image") {
     return renderImageNode(node, materializedImageAssets);
+  }
+
+  if (node.kind === "text") {
+    return renderTextNode(node);
   }
 
   return renderGroupNode(node, materializedImageAssets);

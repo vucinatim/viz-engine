@@ -58,8 +58,31 @@ export interface VizRenderImageNode {
   style?: VizRenderStyle;
 }
 
+export type VizRenderTextAnchor = "start" | "middle" | "end";
+
+export type VizRenderTextBaseline =
+  | "top"
+  | "middle"
+  | "alphabetic"
+  | "bottom";
+
+export interface VizRenderTextNode {
+  kind: "text";
+  id?: string;
+  x: number;
+  y: number;
+  text: string;
+  fontSize: number;
+  fontFamily?: string;
+  fontWeight?: number | "normal" | "bold";
+  anchor?: VizRenderTextAnchor;
+  baseline?: VizRenderTextBaseline;
+  style?: VizRenderStyle;
+}
+
 export type VizRenderNode =
   | VizRenderGroupNode
   | VizRenderRectNode
   | VizRenderCircleNode
-  | VizRenderImageNode;
+  | VizRenderImageNode
+  | VizRenderTextNode;

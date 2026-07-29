@@ -2,6 +2,25 @@
 
 ## 2026-07-29
 
+- started the full runtime-backed component rendering cutover:
+  - inventoried all 15 preserved-editor visual components and classified them
+    into portable primitive, deterministic temporal, persistent Three scene,
+    and persistent shader families
+  - documented the runtime representation, slice order, evidence gates, and
+    final deletion conditions in
+    `docs/plans/v2/runtime-backed-rendering-cutover.md`
+  - added a portable typed `text` render node with SVG and Three adapters
+  - added strict package-runtime implementations for `Debug Animation` and
+    `Feature Extraction Bars`
+  - generalized the temporary editor bridge so any canonical component found
+    in the package registry can render through the runtime instead of relying
+    on a Curve Spectrum name check
+  - added deterministic component-plan, SVG text, and editor bridge tests
+  - browser-verified both components in the preserved editor with parameter
+    changes, five independent feature values, node-workspace opening,
+    playback, and no browser errors or warnings
+  - recorded conservative evidence in
+    `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-1.md`
 - established the autonomous V2 calibration foundation:
   - pinned the immutable final pre-V2 parity reference to
     `e806fbc10980615588b52ff574bc923c6f00f35e`

@@ -22,7 +22,7 @@ const createLiteralInput = (value: unknown): VizValueSource => ({
   value,
 });
 
-const buildCurveSpectrumRuntimeProject = ({
+const buildEditorLayerRuntimeProject = ({
   layer,
   viewportWidth,
   viewportHeight,
@@ -45,6 +45,15 @@ const buildCurveSpectrumRuntimeProject = ({
     throw new Error(`Missing canonical layer "${layer.id}" for runtime preview.`);
   }
 
+  const liveInputs: Record<string, VizValueSource> =
+    sourceLayer.componentId === 'curve-spectrum'
+      ? {
+          spectrum: createLiteralInput(Array.from(audioFrameData.frequencyData)),
+          sampleRate: createLiteralInput(audioFrameData.sampleRate),
+          fftSize: createLiteralInput(audioFrameData.fftSize),
+        }
+      : {};
+
   return {
     ...workingProject,
     timeline: {
@@ -64,9 +73,7 @@ const buildCurveSpectrumRuntimeProject = ({
         settings: structuredClone(configValues),
         inputs: {
           ...(sourceLayer.inputs ?? {}),
-          spectrum: createLiteralInput(Array.from(audioFrameData.frequencyData)),
-          sampleRate: createLiteralInput(audioFrameData.sampleRate),
-          fftSize: createLiteralInput(audioFrameData.fftSize),
+          ...liveInputs,
         },
       },
     ],
@@ -92,22 +99,23 @@ export const createRuntimeRenderPlanForEditorLayer = ({
   configValues: Record<string, any>;
   audioFrameData: RuntimeBridgeAudioFrameData;
 }): VizRenderPlan | null => {
-  let project: VizProjectDocument | null = null;
+  const workingProject = vizSessionStore.getState().project.workingProject;
+  const sourceLayer = workingProject.layers.find(
+    (candidate) => candidate.id === layer.id,
+  );
 
-  if (layer.comp.name === 'Curve Spectrum') {
-    project = buildCurveSpectrumRuntimeProject({
-      layer,
-      viewportWidth,
-      viewportHeight,
-      frame,
-      configValues,
-      audioFrameData,
-    });
-  }
-
-  if (!project) {
+  if (!sourceLayer || !runtimeComponentRegistry.get(sourceLayer.componentId)) {
     return null;
   }
+
+  const project = buildEditorLayerRuntimeProject({
+    layer,
+    viewportWidth,
+    viewportHeight,
+    frame,
+    configValues,
+    audioFrameData,
+  });
 
   const runtimeSession = createVizRuntimeSession({
     project,

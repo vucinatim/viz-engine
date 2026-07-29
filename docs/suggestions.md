@@ -4,6 +4,10 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
 
 ## Active Architectural Suggestions
 
+- Add stable render-node reuse and renderer-owned resource caches before
+  migrating more frequently changing primitive visuals. Recreating unchanged
+  text textures and geometry on every preview frame would undermine the
+  required responsiveness even though the render plans are deterministic.
 - Continue the classified adapter burn-down from
   `phase-13-viz-session-runtime-preview-ownership.md`: replace each historical
   component render path with a package-runtime implementation, then delete the
