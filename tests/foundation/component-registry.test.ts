@@ -4,6 +4,7 @@ import {
   featureChannelBarsComponent,
   featureExtractionBarsComponent,
   fullscreenShaderComponent,
+  noiseShaderComponent,
   simpleCubeComponent,
   strobeLightComponent,
 } from "@viz-engine/components-core";
@@ -385,6 +386,96 @@ describe("Viz component authoring foundation", () => {
     expect(node.uniforms.uResolution).toEqual({
       type: "vec2",
       value: [1280, 720],
+    });
+  });
+
+  it("derives Noise Shader uniforms from canonical frame state", () => {
+    const project: VizProjectDocument = {
+      schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
+      projectId: "project-noise-shader",
+      name: "Noise Shader",
+      timeline: { fps: 60, durationInFrames: 120 },
+      viewport: { width: 1280, height: 720 },
+      layerOrder: ["layer-noise"],
+      layers: [
+        {
+          id: "layer-noise",
+          name: "Noise Shader",
+          componentId: "noise-shader",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          settings: {
+            noise: {
+              type: "cellular",
+              scale: 4,
+              octaves: 6,
+              lacunarity: 2.5,
+              gain: 0.4,
+            },
+            animation: {
+              speed: 1.5,
+              flowX: 0.1,
+              flowY: -0.2,
+              rotationSpeed: 0.3,
+            },
+            distortion: {
+              enabled: true,
+              amount: 2,
+              scale: 1.25,
+            },
+            color: {
+              mode: "palette",
+              color1: "#112233",
+              color2: "#445566",
+              color3: "#778899",
+              hueShift: 0.75,
+              saturation: 1.2,
+            },
+            output: {
+              brightness: 1.1,
+              contrast: 1.3,
+              invert: true,
+              posterize: 5,
+            },
+          },
+        },
+      ],
+    };
+    const session = createVizRuntimeSession({
+      project,
+      mode: "render",
+      seed: "noise-shader-seed",
+    });
+    const createPlan = () =>
+      createVizRenderPlan({
+        session,
+        frame: 30,
+        registry: createCoreComponentRegistry(),
+      });
+    const plan = createPlan();
+
+    expect(createCoreComponentRegistry().get(noiseShaderComponent.id)).toBe(
+      noiseShaderComponent,
+    );
+    expect(plan).toEqual(createPlan());
+
+    const node = plan.layers[0]?.node;
+    if (!node || node.kind !== "shader") {
+      throw new Error("Expected Noise Shader render node.");
+    }
+
+    expect(node.programId).toBe("viz-core/noise-shader/v1");
+    expect(node.uniforms).toMatchObject({
+      u_time: 0.5,
+      u_resolution: { type: "vec2", value: [1280, 720] },
+      u_noiseType: 4,
+      u_scale: 4,
+      u_distortionEnabled: 1,
+      u_colorMode: 1,
+      u_color1: { type: "color", value: "#112233" },
+      u_invert: 1,
+      u_posterize: 5,
     });
   });
 });

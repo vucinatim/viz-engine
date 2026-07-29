@@ -48,7 +48,7 @@ The mixed fallback attachment is:
 | Light Tunnel | Three `init3D`/`draw3D` | persistent Three scene | Instancing, fog, lights, line geometry, bloom and depth-of-field |
 | Morph Shapes | Three `init3D`/`draw3D` | persistent Three scene | Instancing, procedural/model/text sources, asset loading, custom material |
 | Neural Network | Three `init3D`/`draw3D` | persistent Three scene | Procedural seeded topology, custom shaders, activation motion, bloom and depth-of-field |
-| Noise Shader | Three `init3D`/`draw3D` | persistent shader scene | Fullscreen shader program and deterministic uniforms |
+| Noise Shader | package runtime | persistent shader scene | Complete: package-owned GLSL and deterministic grouped uniforms; historical callbacks removed |
 | Orbiting Cubes | Three `init3D`/`draw3D` | persistent Three scene | Instancing, lighting, camera and node-driven movement |
 | Particle System | Three `init3D`/`draw3D` | persistent Three scene | Instancing, custom shader, seeded particle state and blend modes |
 | Stage Scene | Three `init3D`/`draw3D` | persistent Three scene | Instancing, lighting, fog, camera path, bloom and feature-driven staging |

@@ -6,6 +6,7 @@ import { debugAnimationComponent } from "./debug-animation.js";
 import { featureChannelBarsComponent } from "./feature-channel-bars.js";
 import { featureExtractionBarsComponent } from "./feature-extraction-bars.js";
 import { fullscreenShaderComponent } from "./fullscreen-shader.js";
+import { noiseShaderComponent } from "./noise-shader.js";
 import { radialBloomComponent } from "./radial-bloom.js";
 import { reactiveBarsComponent } from "./reactive-bars.js";
 import { simpleCubeComponent } from "./simple-cube.js";
@@ -24,6 +25,7 @@ export const coreComponents: VizComponentImplementation[] = [
   strobeLightComponent,
   simpleCubeComponent,
   fullscreenShaderComponent,
+  noiseShaderComponent,
 ];
 
 export const createCoreComponentRegistry = () => {

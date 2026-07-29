@@ -68,6 +68,22 @@
     callback removal
   - recorded evidence in
     `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-4.md`
+- completed the persistent shader-family migration:
+  - migrated Noise Shader GLSL and frame evaluation into
+    `@viz-engine/components-core`
+  - represented all grouped noise, animation, distortion, color, and output
+    settings as deterministic typed shader uniforms
+  - retained canonical transport time instead of browser-local accumulated
+    time
+  - removed the historical Three state, scene initialization, resize, and draw
+    callbacks from the editor component
+  - browser-verified the default output, Plasma Wave preset, playback, Noise
+    Type change from Simplex to Voronoi, synchronized thumbnail, and a clean
+    console
+  - observed the production studio entry chunk decrease from `387.30 kB`
+    (`115.00 kB` gzip) to `385.23 kB` (`114.50 kB` gzip)
+  - recorded evidence in
+    `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-5.md`
 - established the autonomous V2 calibration foundation:
   - pinned the immutable final pre-V2 parity reference to
     `e806fbc10980615588b52ff574bc923c6f00f35e`

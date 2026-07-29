@@ -11,6 +11,16 @@ export const asString = (value: unknown, fallback: string): string => {
   return typeof value === "string" && value.length > 0 ? value : fallback;
 };
 
+export const asBoolean = (value: unknown, fallback: boolean): boolean => {
+  return typeof value === "boolean" ? value : fallback;
+};
+
+export const asRecord = (value: unknown): Record<string, unknown> => {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+};
+
 export const asMaterializedAsset = (value: unknown): VizMaterializedAsset | undefined => {
   if (!value || typeof value !== "object") {
     return undefined;
