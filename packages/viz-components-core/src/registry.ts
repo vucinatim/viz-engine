@@ -7,6 +7,7 @@ import { featureChannelBarsComponent } from "./feature-channel-bars.js";
 import { featureExtractionBarsComponent } from "./feature-extraction-bars.js";
 import { fullscreenShaderComponent } from "./fullscreen-shader.js";
 import { heartbeatMonitorComponent } from "./heartbeat-monitor.js";
+import { instancedSupercubeComponent } from "./instanced-supercube.js";
 import { noiseShaderComponent } from "./noise-shader.js";
 import { orbitingCubesComponent } from "./orbiting-cubes.js";
 import { particleSystemComponent } from "./particle-system.js";
@@ -29,6 +30,7 @@ export const coreComponents: VizComponentImplementation[] = [
   simpleCubeComponent,
   fullscreenShaderComponent,
   heartbeatMonitorComponent,
+  instancedSupercubeComponent,
   noiseShaderComponent,
   orbitingCubesComponent,
   particleSystemComponent,

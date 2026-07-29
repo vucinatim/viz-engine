@@ -5,6 +5,7 @@ import {
   featureExtractionBarsComponent,
   fullscreenShaderComponent,
   heartbeatMonitorComponent,
+  instancedSupercubeComponent,
   noiseShaderComponent,
   orbitingCubesComponent,
   particleSystemComponent,
@@ -792,5 +793,141 @@ describe("Viz component authoring foundation", () => {
       { x: 2, y: 48.4 },
       { x: 3, y: 48 },
     ]);
+  });
+
+  it("derives Instanced Supercube response from canonical frame history", () => {
+    const project: VizProjectDocument = {
+      schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
+      projectId: "project-instanced-supercube",
+      name: "Instanced Supercube",
+      timeline: { fps: 60, durationInFrames: 180 },
+      viewport: { width: 1280, height: 720 },
+      layerOrder: ["layer-supercube"],
+      layers: [
+        {
+          id: "layer-supercube",
+          name: "Instanced Supercube",
+          componentId: "instanced-supercube",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          settings: {
+            color: "rgb(255, 0, 0)",
+            explosionFactor: 1.67,
+            rotationSpeed: 0.2,
+            animationSpeed: 0.08,
+            gridSize: 5,
+            spacing: 4,
+            explosionShift: 1,
+          },
+        },
+      ],
+    };
+    const session = createVizRuntimeSession({
+      project,
+      mode: "render",
+      seed: "instanced-supercube-seed",
+    });
+    const createPlan = () =>
+      createVizRenderPlan({
+        session,
+        frame: 60,
+        registry: createCoreComponentRegistry(),
+      });
+    const plan = createPlan();
+
+    expect(
+      createCoreComponentRegistry().get(instancedSupercubeComponent.id),
+    ).toBe(instancedSupercubeComponent);
+    expect(plan).toEqual(createPlan());
+    expect(plan.issues).toEqual([]);
+
+    const node = plan.layers[0]?.node;
+    if (!node || node.kind !== "three-program") {
+      throw new Error("Expected Instanced Supercube Three program node.");
+    }
+    expect(node.parameters).toMatchObject({
+      color: "rgb(255, 0, 0)",
+      explosionFactor: 1.67,
+      gridSize: 5,
+      spacing: 4,
+      rotation: 0.2,
+    });
+    expect(node.parameters.explosionShift).toBeCloseTo(
+      1 - Math.pow(0.92, 61),
+      12,
+    );
+  });
+
+  it("replays node-driven Supercube explosion smoothing across direct frames", () => {
+    const stepNode: VizNodeImplementation = {
+      type: "test-step",
+      name: "Test Step",
+      category: "pure",
+      outputs: [{ key: "value", label: "Value" }],
+      evaluate: ({ frameContext }) => ({
+        value: frameContext.frame >= 2 ? 1 : 0,
+      }),
+    };
+    const project: VizProjectDocument = {
+      schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
+      projectId: "project-node-driven-supercube",
+      name: "Node-driven Supercube",
+      timeline: { fps: 60, durationInFrames: 120 },
+      viewport: { width: 1280, height: 720 },
+      layerOrder: ["layer-supercube"],
+      layers: [
+        {
+          id: "layer-supercube",
+          name: "Instanced Supercube",
+          componentId: "instanced-supercube",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          settings: {
+            animationSpeed: 0.5,
+            explosionShift: 0,
+          },
+          inputs: {
+            explosionShift: {
+              kind: "graph-output",
+              graphId: "graph-explosion",
+              output: "value",
+            },
+          },
+        },
+      ],
+      graphs: [
+        {
+          id: "graph-explosion",
+          name: "Explosion",
+          nodes: [{ id: "node-step", type: "test-step" }],
+          outputs: [
+            {
+              key: "value",
+              nodeId: "node-step",
+              output: "value",
+            },
+          ],
+        },
+      ],
+    };
+    const plan = createVizRenderPlan({
+      session: createVizRuntimeSession({
+        project,
+        mode: "render",
+        seed: "node-driven-supercube-seed",
+      }),
+      frame: 3,
+      registry: createCoreComponentRegistry(),
+      nodeRegistry: createVizNodeRegistry([stepNode]),
+    });
+
+    expect(plan.issues).toEqual([]);
+    const node = plan.layers[0]?.node;
+    if (!node || node.kind !== "three-program") {
+      throw new Error("Expected Instanced Supercube Three program node.");
+    }
+    expect(node.parameters.explosionShift).toBe(0.75);
   });
 });

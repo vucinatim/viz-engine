@@ -2,6 +2,7 @@ import type { VizRenderThreeProgramNode } from "@viz-engine/contracts";
 import { createSimpleCubeProgram } from "./simple-cube.js";
 import { createParticleSystemProgram } from "./particle-system.js";
 import { createOrbitingCubesProgram } from "./orbiting-cubes.js";
+import { createInstancedSupercubeProgram } from "./instanced-supercube.js";
 import type {
   VizThreeProgramFactory,
   VizThreeProgramInstance,
@@ -11,6 +12,7 @@ const programFactories = new Map<string, VizThreeProgramFactory>([
   ["viz-core/simple-cube/v1", createSimpleCubeProgram],
   ["viz-core/particle-system/v1", createParticleSystemProgram],
   ["viz-core/orbiting-cubes/v1", createOrbitingCubesProgram],
+  ["viz-core/instanced-supercube/v1", createInstancedSupercubeProgram],
 ]);
 
 export const createVizThreeProgramInstance = ({

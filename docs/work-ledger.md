@@ -137,6 +137,25 @@
   - passed the full foundation gate with 31 test files and 114 tests
   - recorded evidence in
     `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-8.md`
+- completed the deterministic Instanced Supercube migration:
+  - moved its eight hollow edge-lattice cubes into a retained package Three
+    program with one 640-capacity instanced mesh
+  - preserved standard lighting, the shadow plane, soft shadows, color,
+    spacing, grid size, explosion factor, and explosion shift
+  - replaced accumulated browser rotation with canonical frame-time rotation
+  - reproduced explosion smoothing from canonical setting history, including
+    a direct-frame node-driven step proof
+  - removed the unused custom shader hook whose only visible purpose was live
+    diffuse color replacement
+  - removed all editor-owned Three state and callbacks
+  - browser-verified runtime output, playback rotation, Explosion Shift,
+    Grid Size 5 to 8, synchronized thumbnail, and the Explosion Shift node
+    workspace
+  - observed the studio entry change by `-0.59 kB` raw / `+0.04 kB` gzip
+  - passed the full foundation gate with 31 test files and 117 tests, including
+    the final focused historical-step assertion
+  - recorded evidence in
+    `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-9.md`
 - established the autonomous V2 calibration foundation:
   - pinned the immutable final pre-V2 parity reference to
     `e806fbc10980615588b52ff574bc923c6f00f35e`

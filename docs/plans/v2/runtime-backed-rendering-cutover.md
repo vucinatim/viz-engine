@@ -44,7 +44,7 @@ The mixed fallback attachment is:
 | Feature Extraction Bars | package runtime | primitive 2D scene | Complete: rectangles plus reusable text primitive and five node-driven values; historical callback removed |
 | Heartbeat Monitor | package runtime | temporal 2D scene | Complete: deterministic resolved-setting history, portable polyline/glow, retained Three line resources, historical callback removed |
 | Simple Cube | package runtime | persistent Three scene | Complete: deterministic persistent scene; historical callbacks removed |
-| Instanced Supercube | Three `init3D`/`draw3D` | persistent Three scene | Instancing, shadows, custom material shader, audio/config motion |
+| Instanced Supercube | package runtime | persistent Three scene | Complete: retained instancing, deterministic explosion replay and rotation, lights and shadows; historical callbacks removed |
 | Light Tunnel | Three `init3D`/`draw3D` | persistent Three scene | Instancing, fog, lights, line geometry, bloom and depth-of-field |
 | Morph Shapes | Three `init3D`/`draw3D` | persistent Three scene | Instancing, procedural/model/text sources, asset loading, custom material |
 | Neural Network | Three `init3D`/`draw3D` | persistent Three scene | Procedural seeded topology, custom shaders, activation motion, bloom and depth-of-field |

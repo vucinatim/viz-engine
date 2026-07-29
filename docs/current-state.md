@@ -196,8 +196,9 @@ The biggest remaining architecture gaps are:
   `draw`/`draw3D` paths; `Curve Spectrum`, `Debug Animation`,
   `Feature Extraction Bars`, `Strobe Light`, `Simple Cube`, and
   `Fullscreen Shader`, `Noise Shader`, `Particle System`, and
-  `Orbiting Cubes`, and `Heartbeat Monitor` now have package-runtime-backed
-  editor paths, but this is not the completed component migration
+  `Orbiting Cubes`, `Heartbeat Monitor`, and `Instanced Supercube` now have
+  package-runtime-backed editor paths, but this is not the completed component
+  migration
 - the temporary per-component runtime preview bridge remains necessary until
   those historical render paths are replaced by package-runtime components
 
@@ -225,7 +226,7 @@ The renderer contract also has a persistent Three program node:
   accumulated browser `dt`
 
 Runtime-backed component-catalog previews now use that same package registry
-and renderer attachment. All ten migrated editor definitions now contain only
+and renderer attachment. All eleven migrated editor definitions now contain only
 authoring metadata and parameter schemas; their visual semantics live entirely
 in package terrain. `Fullscreen Shader` GLSL source moved there as part of the
 same cutover.
@@ -250,6 +251,11 @@ history from canonical frames. The SVG adapter renders the same path contract,
 while the Three adapter updates retained wide-line position buffers rather than
 rebuilding line resources per frame. Browser validation also corrected
 double-application of device pixel ratio in the Three preview controller.
+
+Instanced Supercube now owns one fixed-capacity instanced mesh in package
+terrain. Its hollow-cube lattice, lighting, shadows, matrix updates, canonical
+rotation, and historical explosion smoothing no longer depend on editor-owned
+Three objects or render-call accumulation.
 
 ## Autonomous Calibration Foundation
 

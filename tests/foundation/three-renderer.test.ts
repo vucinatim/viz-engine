@@ -617,4 +617,87 @@ describe("Viz Three renderer proof", () => {
       ),
     ).not.toEqual(before);
   });
+
+  it("retains Instanced Supercube resources across structural updates", () => {
+    const createSupercubePlan = (
+      gridSize: number,
+      explosionShift: number,
+    ): VizRenderPlan => ({
+      frameContext: {
+        frame: explosionShift === 0 ? 0 : 60,
+        fps: 60,
+        durationInFrames: 180,
+        timeInSeconds: explosionShift === 0 ? 0 : 1,
+        deltaTimeSeconds: 1 / 60,
+        isFirstFrame: explosionShift === 0,
+        isLastFrame: false,
+        mode: "live",
+        seed: "persistent-supercube",
+      },
+      viewport: { width: 1280, height: 720, backgroundColor: "#000000" },
+      materializedAssets: [],
+      issues: [],
+      layers: [
+        {
+          layerId: "layer-supercube",
+          componentId: "instanced-supercube",
+          rendererFamily: "three",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          resolvedInputs: {},
+          node: {
+            kind: "three-program",
+            programId: "viz-core/instanced-supercube/v1",
+            parameters: {
+              color: explosionShift === 0 ? "#ff0000" : "#00ffff",
+              explosionFactor: 2,
+              gridSize,
+              spacing: 4,
+              explosionShift,
+              rotation: explosionShift * 0.2,
+            },
+          },
+        },
+      ],
+    });
+    const firstPlan = createSupercubePlan(5, 0);
+    const nextPlan = createSupercubePlan(6, 1);
+    const graph = createVizThreeCompositorGraph(firstPlan);
+    const repeatedGraph = createVizThreeCompositorGraph(firstPlan);
+    const layer = graph.layers[0]!;
+    const instance = layer.programInstance;
+    const cubes = instance?.root.children[0] as InstancedMesh;
+    const repeatedCubes = repeatedGraph.layers[0]!.programInstance?.root
+      .children[0] as InstancedMesh;
+    const geometry = cubes.geometry;
+    const material = cubes.material;
+    const initialMatrices = Array.from(
+      cubes.instanceMatrix.array.slice(0, cubes.count * 16),
+    );
+
+    expect(instance?.programId).toBe(
+      "viz-core/instanced-supercube/v1",
+    );
+    expect(cubes.count).toBe(352);
+    expect(initialMatrices).toEqual(
+      Array.from(
+        repeatedCubes.instanceMatrix.array.slice(
+          0,
+          repeatedCubes.count * 16,
+        ),
+      ),
+    );
+    expect(
+      updateVizThreeCompositorGraph(graph, firstPlan, nextPlan),
+    ).toBe(true);
+    expect(layer.programInstance).toBe(instance);
+    expect(instance?.root.children[0]).toBe(cubes);
+    expect(cubes.geometry).toBe(geometry);
+    expect(cubes.material).toBe(material);
+    expect(cubes.count).toBe(448);
+    expect(cubes.rotation.x).toBeCloseTo(0.2, 12);
+    expect(Array.from(cubes.instanceMatrix.array.slice(0, 352 * 16))).not
+      .toEqual(initialMatrices);
+  });
 });

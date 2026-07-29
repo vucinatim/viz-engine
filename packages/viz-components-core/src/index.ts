@@ -5,6 +5,7 @@ export * from "./feature-channel-bars.js";
 export * from "./feature-extraction-bars.js";
 export * from "./fullscreen-shader.js";
 export * from "./heartbeat-monitor.js";
+export * from "./instanced-supercube.js";
 export * from "./noise-shader.js";
 export * from "./orbiting-cubes.js";
 export * from "./particle-system.js";
