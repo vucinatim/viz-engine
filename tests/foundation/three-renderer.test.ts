@@ -21,6 +21,7 @@ import {
   MeshBasicMaterial,
   ShaderMaterial,
 } from "three";
+import { LineSegments2 } from "three/examples/jsm/lines/LineSegments2.js";
 import { describe, expect, it } from "vitest";
 
 const collectMeshes = (object: Group | Mesh): Mesh[] => {
@@ -699,5 +700,138 @@ describe("Viz Three renderer proof", () => {
     expect(cubes.rotation.x).toBeCloseTo(0.2, 12);
     expect(Array.from(cubes.instanceMatrix.array.slice(0, 352 * 16))).not
       .toEqual(initialMatrices);
+  });
+
+  it("retains Light Tunnel geometry while deterministically updating its scene", () => {
+    const createTunnelPlan = (
+      time: number,
+      tunnelDepth: number,
+      activeWaveAges: number[],
+    ): VizRenderPlan => ({
+      frameContext: {
+        frame: Math.round(time * 60),
+        fps: 60,
+        durationInFrames: 180,
+        timeInSeconds: time,
+        deltaTimeSeconds: 1 / 60,
+        isFirstFrame: time === 0,
+        isLastFrame: false,
+        mode: "live",
+        seed: "light-tunnel",
+      },
+      viewport: { width: 1280, height: 720, backgroundColor: "#000000" },
+      materializedAssets: [],
+      issues: [],
+      layers: [
+        {
+          layerId: "layer-light-tunnel",
+          componentId: "light-tunnel",
+          rendererFamily: "three",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          resolvedInputs: {},
+          node: {
+            kind: "three-program",
+            programId: "viz-core/light-tunnel/v1",
+            parameters: {
+              time,
+              seed: "light-tunnel-seed",
+              cubeSize: 2.5,
+              spacing: 1.3,
+              tunnelDepth,
+              renderMode: "Solid",
+              colorMode: "Random",
+              edgeColor: "#00ffff",
+              colorPalette: ["#ff00ff", "#00ffff"],
+              edgeThickness: 5.5,
+              glowIntensity: 1.8,
+              solidCubeColor: "#0a0a0a",
+              solidEmissiveColor: "#000000",
+              solidEmissiveIntensity: 0,
+              metalness: 0.7,
+              roughness: 0.77,
+              envMapIntensity: 0,
+              enableLights: true,
+              lightCount: 6,
+              lightCircleRadius: 7,
+              lightCircleDistance: 7,
+              lightIntensity: 100,
+              lightDistance: 100,
+              lightRotationSpeed: 0.15,
+              tunnelSpeed: 0.5,
+              rotationSpeed: 0.05,
+              activeWaveAges,
+              waveSpeed: 8.5,
+              waveAmplitude: 1,
+              waveDuration: 0.4,
+              fogDensity: 0.095,
+              bloomEnabled: true,
+              bloomStrength: 0.5,
+              bloomRadius: 0.8,
+              bloomThreshold: 0.1,
+              depthOfFieldEnabled: false,
+              depthOfFieldFocus: 1,
+              depthOfFieldAperture: 0.0011,
+            },
+          },
+        },
+      ],
+    });
+    const firstPlan = createTunnelPlan(0, 13, []);
+    const nextPlan = createTunnelPlan(1, 14, [0.2]);
+    const graph = createVizThreeCompositorGraph(firstPlan);
+    const repeatedGraph = createVizThreeCompositorGraph(firstPlan);
+    const layer = graph.layers[0]!;
+    const instance = layer.programInstance!;
+    const edgeLines = instance.root.userData.edgeLines as LineSegments2;
+    const solidCubes = instance.root.userData
+      .solidCubes as InstancedMesh;
+    const repeatedEdges = repeatedGraph.layers[0]!.programInstance!.root
+      .userData.edgeLines as LineSegments2;
+    const edgeGeometry = edgeLines.geometry;
+    const edgeMaterial = edgeLines.material;
+    const solidGeometry = solidCubes.geometry;
+    const solidMaterial = solidCubes.material;
+    const initialEdgePositions = Array.from(
+      (
+        edgeGeometry.attributes
+          .instanceStart as InterleavedBufferAttribute
+      ).data.array,
+    );
+
+    expect(instance.programId).toBe("viz-core/light-tunnel/v1");
+    expect(solidCubes.count).toBe(13 * 8);
+    expect(edgeGeometry.instanceCount).toBe(13 * 8 * 12);
+    expect(initialEdgePositions).toEqual(
+      Array.from(
+        (
+          repeatedEdges.geometry.attributes
+            .instanceStart as InterleavedBufferAttribute
+        ).data.array,
+      ),
+    );
+
+    expect(
+      updateVizThreeCompositorGraph(graph, firstPlan, nextPlan),
+    ).toBe(true);
+    expect(layer.programInstance).toBe(instance);
+    expect(instance.root.userData.edgeLines).toBe(edgeLines);
+    expect(instance.root.userData.solidCubes).toBe(solidCubes);
+    expect(edgeLines.geometry).toBe(edgeGeometry);
+    expect(edgeLines.material).toBe(edgeMaterial);
+    expect(solidCubes.geometry).toBe(solidGeometry);
+    expect(solidCubes.material).toBe(solidMaterial);
+    expect(solidCubes.count).toBe(14 * 8);
+    expect(edgeGeometry.instanceCount).toBe(14 * 8 * 12);
+    expect(instance.root.rotation.z).toBeCloseTo(0.05, 12);
+    expect(
+      Array.from(
+        (
+          edgeGeometry.attributes
+            .instanceStart as InterleavedBufferAttribute
+        ).data.array,
+      ),
+    ).not.toEqual(initialEdgePositions);
   });
 });

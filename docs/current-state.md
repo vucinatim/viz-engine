@@ -196,9 +196,9 @@ The biggest remaining architecture gaps are:
   `draw`/`draw3D` paths; `Curve Spectrum`, `Debug Animation`,
   `Feature Extraction Bars`, `Strobe Light`, `Simple Cube`, and
   `Fullscreen Shader`, `Noise Shader`, `Particle System`, and
-  `Orbiting Cubes`, `Heartbeat Monitor`, and `Instanced Supercube` now have
-  package-runtime-backed editor paths, but this is not the completed component
-  migration
+  `Orbiting Cubes`, `Heartbeat Monitor`, `Instanced Supercube`, and
+  `Light Tunnel` now have package-runtime-backed editor paths, but this is not
+  the completed component migration
 - the temporary per-component runtime preview bridge remains necessary until
   those historical render paths are replaced by package-runtime components
 
@@ -226,10 +226,10 @@ The renderer contract also has a persistent Three program node:
   accumulated browser `dt`
 
 Runtime-backed component-catalog previews now use that same package registry
-and renderer attachment. All eleven migrated editor definitions now contain only
-authoring metadata and parameter schemas; their visual semantics live entirely
-in package terrain. `Fullscreen Shader` GLSL source moved there as part of the
-same cutover.
+and renderer attachment. All twelve migrated editor definitions now contain
+only authoring metadata and parameter schemas; their visual semantics live
+entirely in package terrain. `Fullscreen Shader` GLSL source moved there as
+part of the same cutover.
 
 Particle System is now an analytic deterministic simulation. Each visible
 particle is derived from canonical frame time, session seed, emission index,
@@ -256,6 +256,13 @@ Instanced Supercube now owns one fixed-capacity instanced mesh in package
 terrain. Its hollow-cube lattice, lighting, shadows, matrix updates, canonical
 rotation, and historical explosion smoothing no longer depend on editor-owned
 Three objects or render-call accumulation.
+
+Light Tunnel now reduces the old per-cube/per-ring scene to one retained solid
+instance batch and one retained wide-line edge batch. Tunnel movement, rotation,
+palette selection, light motion, and rising-edge wave events derive from
+canonical frame time, seed, and setting history. Bloom and depth of field now
+run through one reusable renderer-owned post-processing pipeline that can be
+shared by the remaining large Three scenes.
 
 ## Autonomous Calibration Foundation
 

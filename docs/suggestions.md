@@ -26,7 +26,11 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
 - Move the preserved editor node projection onto the package execution registry
   instead of letting node execution remain editor-owned. This is now required
   not only for bridge deletion but for full historical sampling of
-  node-driven temporal visuals such as Heartbeat Monitor.
+  node-driven temporal visuals such as Heartbeat Monitor and event-driven
+  visuals such as Light Tunnel.
+- Restore the preserved editor debug toggle through explicit renderer-owned
+  diagnostic overlays (grid, axes, light helpers, and program inspection)
+  rather than putting debug state back into deterministic component semantics.
 - Define a render compatibility classification for components and nodes:
   `render-safe`, `bake-required`, `live-only`.
 - Introduce first-class baking contracts for audio features, simulation caches,

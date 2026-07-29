@@ -6,6 +6,7 @@ import {
   fullscreenShaderComponent,
   heartbeatMonitorComponent,
   instancedSupercubeComponent,
+  lightTunnelComponent,
   noiseShaderComponent,
   orbitingCubesComponent,
   particleSystemComponent,
@@ -929,5 +930,117 @@ describe("Viz component authoring foundation", () => {
       throw new Error("Expected Instanced Supercube Three program node.");
     }
     expect(node.parameters.explosionShift).toBe(0.75);
+  });
+
+  it("derives Light Tunnel motion and wave events from canonical frame history", () => {
+    const triggerNode: VizNodeImplementation = {
+      type: "test-trigger",
+      name: "Test Trigger",
+      category: "pure",
+      outputs: [{ key: "value", label: "Value" }],
+      evaluate: ({ frameContext }) => ({
+        value: frameContext.frame === 2,
+      }),
+    };
+    const project: VizProjectDocument = {
+      schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
+      projectId: "project-light-tunnel",
+      name: "Light Tunnel",
+      timeline: { fps: 60, durationInFrames: 180 },
+      viewport: { width: 1280, height: 720 },
+      layerOrder: ["layer-light-tunnel"],
+      layers: [
+        {
+          id: "layer-light-tunnel",
+          name: "Light Tunnel",
+          componentId: "light-tunnel",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          settings: {
+            structure: {
+              cubeSize: 2.5,
+              spacing: 1.3,
+              tunnelDepth: 13,
+            },
+            appearance: {
+              renderMode: "Solid",
+              colorMode: "Random",
+              edgeColor: "#00ffff",
+              colorPalette: ["#ff00ff", "#00ffff"],
+            },
+            animation: {
+              tunnelSpeed: 0.5,
+              rotationSpeed: 0.05,
+            },
+            wave: {
+              triggerWave: false,
+              waveSpeed: 8.5,
+              waveAmplitude: 1,
+              waveDuration: 0.4,
+            },
+          },
+          inputs: {
+            "wave:triggerWave": {
+              kind: "graph-output",
+              graphId: "graph-wave",
+              output: "value",
+            },
+          },
+        },
+      ],
+      graphs: [
+        {
+          id: "graph-wave",
+          name: "Wave trigger",
+          nodes: [{ id: "node-trigger", type: "test-trigger" }],
+          outputs: [
+            {
+              key: "value",
+              nodeId: "node-trigger",
+              output: "value",
+            },
+          ],
+        },
+      ],
+    };
+    const session = createVizRuntimeSession({
+      project,
+      mode: "render",
+      seed: "light-tunnel-seed",
+    });
+    const createPlan = () =>
+      createVizRenderPlan({
+        session,
+        frame: 3,
+        registry: createCoreComponentRegistry(),
+        nodeRegistry: createVizNodeRegistry([triggerNode]),
+      });
+    const plan = createPlan();
+
+    expect(
+      createCoreComponentRegistry().get(lightTunnelComponent.id),
+    ).toBe(lightTunnelComponent);
+    expect(plan).toEqual(createPlan());
+    expect(plan.issues).toEqual([]);
+
+    const node = plan.layers[0]?.node;
+    if (!node || node.kind !== "three-program") {
+      throw new Error("Expected Light Tunnel Three program node.");
+    }
+
+    expect(node.programId).toBe("viz-core/light-tunnel/v1");
+    expect(node.parameters).toMatchObject({
+      time: 0.05,
+      seed: "light-tunnel-seed",
+      cubeSize: 2.5,
+      spacing: 1.3,
+      tunnelDepth: 13,
+      renderMode: "Solid",
+      colorMode: "Random",
+      activeWaveAges: [1 / 60],
+      tunnelSpeed: 0.5,
+      rotationSpeed: 0.05,
+    });
   });
 });

@@ -156,6 +156,30 @@
     the final focused historical-step assertion
   - recorded evidence in
     `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-9.md`
+- completed the deterministic Light Tunnel migration:
+  - moved tunnel semantics into a package component and retained Three program
+  - replaced up to 320 independent thick-line objects with one retained
+    3,840-segment wide-line batch
+  - replaced per-ring solid meshes with one retained 320-capacity instanced
+    mesh
+  - retained a fixed pool of point lights and helper resources across updates
+  - derived tunnel travel, wrapping, rotation, and light-circle rotation from
+    canonical frame time
+  - replaced `Math.random()` palette selection with stable seed/ring/cube
+    hashing
+  - reconstructed overlapping wave events from canonical resolved-setting
+    rising-edge history
+  - added a reusable renderer-owned bloom and depth-of-field pipeline for the
+    remaining large Three scenes
+  - removed all Light Tunnel editor-owned Three callbacks and helper logic
+  - browser-verified the catalog path, thumbnail, playback, speed control,
+    Solid/Hollow modes, bloom on/off, depth of field, and a clean console
+  - recorded the remaining temporary-bridge limitation for historical V1 node
+    pulses and the separate renderer-debug-overlay follow-up
+  - observed a `+0.91 kB` raw / `+0.68 kB` gzip studio entry-chunk increase
+  - passed the full foundation gate with 31 test files and 119 tests
+  - recorded evidence in
+    `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-10.md`
 - established the autonomous V2 calibration foundation:
   - pinned the immutable final pre-V2 parity reference to
     `e806fbc10980615588b52ff574bc923c6f00f35e`
