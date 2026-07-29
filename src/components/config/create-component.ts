@@ -1,5 +1,3 @@
-import * as THREE from 'three';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { NodeNetworkPreset } from '../node-network/presets';
 import { InferValues, VConfig, v } from './config';
 
@@ -14,45 +12,6 @@ type Preset<T> = {
   networks?: Record<string, string>; // Optional map of parameter paths to network preset IDs
 };
 
-type AudioDrawData = {
-  dataArray: Uint8Array;
-  analyzer: AnalyserNode;
-};
-
-type ThreeContext = {
-  renderer: THREE.WebGLRenderer;
-  scene: THREE.Scene;
-  camera: THREE.Camera;
-  composer?: EffectComposer;
-};
-
-type DrawFunction<T, UT> = (params: {
-  canvasCtx: CanvasRenderingContext2D;
-  audioData: AudioDrawData;
-  config: T;
-  dt: number;
-  time: number;
-  state: UT;
-  debugEnabled: boolean;
-}) => void;
-
-type Init3DFunction<T, UT> = (params: {
-  threeCtx: ThreeContext;
-  config: T;
-  state: UT;
-  debugEnabled: boolean;
-}) => void;
-
-type Draw3DFunction<T, UT> = (params: {
-  threeCtx: ThreeContext;
-  audioData: AudioDrawData;
-  config: T;
-  dt: number;
-  time: number;
-  state: UT;
-  debugEnabled: boolean;
-}) => void;
-
 export interface Comp {
   id: string;
   name: string;
@@ -62,23 +21,15 @@ export interface Comp {
   presets?: Preset<UnknownConfigValues>[];
   // Map of config parameter path (e.g., "size" or "groupA.height") to a default node network preset
   defaultNetworks?: Record<string, NodeNetworkPreset>;
-  createState?: () => unknown;
-  draw?: DrawFunction<UnknownConfigValues, unknown>;
-  init3D?: Init3DFunction<UnknownConfigValues, unknown>;
-  draw3D?: Draw3DFunction<UnknownConfigValues, unknown>;
 }
 
 // Create the component
-export function createComponent<TConfig extends VConfig<any>, UT>(definition: {
+export function createComponent<TConfig extends VConfig<any>>(definition: {
   name: string;
   description: string;
   config: TConfig; // VConfig with options
   presets?: Preset<InferValues<TConfig>>[]; // Optional array of presets
   defaultNetworks?: Record<string, NodeNetworkPreset | string>; // Optional default node networks per parameter path (preset object or preset ID)
-  createState?: () => UT; // Optional state factory
-  draw?: DrawFunction<InferValues<TConfig>, UT>; // Draw function using inferred config values
-  init3D?: Init3DFunction<InferValues<TConfig>, UT>; // Optional init3D function
-  draw3D?: Draw3DFunction<InferValues<TConfig>, UT>; // Optional draw3D function
 }) {
   return {
     id: `${definition.name}-${new Date().getTime()}`,
@@ -132,14 +83,4 @@ export const testComp = createComponent({
       },
     ),
   }),
-  draw: ({ config, state }) => {
-    console.log('Drawing with config', config);
-    config.appearance.color;
-  },
-  init3D: ({ config, state }) => {
-    console.log('Initializing 3D with config', config);
-  },
-  draw3D: ({ config, state }) => {
-    console.log('Drawing 3D with config', config);
-  },
 });

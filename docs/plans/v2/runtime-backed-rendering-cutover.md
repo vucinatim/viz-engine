@@ -24,22 +24,19 @@ e806fbc10980615588b52ff574bc923c6f00f35e
 ```
 
 At the start of this cutover the preserved editor exposed 15 components.
-All 15 now have package-runtime implementations; the remaining work is the
-one-session preview/export convergence and deletion of the temporary bridge.
+All 15 now have package-runtime implementations. One cached runtime session
+evaluates the complete canonical project once per frame, and preview plus
+export present sliced layer plans from that shared evaluation.
 
-The temporary bridge is:
-
-- `src/lib/editor-runtime-preview-runtime-bridge.ts`
-
-The mixed fallback attachment is:
-
-- `src/lib/editor-runtime-preview-attachment.ts`
+The temporary per-layer bridge and mixed callback fallback have been deleted.
+`src/lib/editor-runtime-preview-attachment.ts` is now a runtime-plan
+presentation attachment only.
 
 ## Component Inventory
 
 | Editor component | Current visual path | Runtime family | Migration requirements |
 | --- | --- | --- | --- |
-| Curve Spectrum | package runtime | primitive 2D scene | Historical callback removed; remove bridge-specific spectrum injection when all layers use one session render plan |
+| Curve Spectrum | package runtime | primitive 2D scene | Complete: shared frame audio enters as explicit runtime input values; historical callback and per-layer bridge removed |
 | Debug Animation | package runtime | primitive 2D scene | Complete: rectangles plus reusable text primitive; historical callback removed |
 | Feature Extraction Bars | package runtime | primitive 2D scene | Complete: rectangles plus reusable text primitive and five node-driven values; historical callback removed |
 | Heartbeat Monitor | package runtime | temporal 2D scene | Complete: deterministic resolved-setting history, portable polyline/glow, retained Three line resources, historical callback removed |
@@ -76,9 +73,10 @@ These nodes remain directly renderable by the SVG and Three adapters.
 Package components receive resolved settings rather than raw static settings.
 Canonical layer inputs override settings through colon-delimited paths, and a
 deterministic frame sampler supports temporal views without browser-owned
-history. The preserved editor's legacy node evaluator still has to converge on
-the package node registry before the temporary bridge can provide full
-historical node sampling.
+history. The runtime receives frame-scoped graph inputs and executes every
+preserved editor node kernel through its node-registry extension boundary.
+Graph traversal, checkpoints, input resolution, and setting projection now
+belong to the package runtime.
 
 ### Persistent Three programs
 
@@ -110,10 +108,12 @@ attaches the resulting renderer to a canvas.
 4. Establish deterministic temporal sampling and migrate `Heartbeat Monitor`.
 5. Migrate the large scene family: `Instanced Supercube`, `Light Tunnel`,
    `Neural Network`, `Stage Scene`, and `Morph Shapes`.
-6. Replace per-layer runtime-plan creation with one VizSession-owned frame
-   evaluation and one compositor update per frame.
-7. Delete `draw`, `init3D`, `draw3D`, component-local render state, and the
-   temporary runtime preview bridge after their last consumers are removed.
+6. Complete: replace per-layer runtime-plan creation with one
+   VizSession-owned frame evaluation whose layer plans feed the existing
+   stacked browser surfaces.
+7. Complete: delete `draw`, `init3D`, `draw3D`, component-local render state,
+   the temporary runtime preview bridge, and the duplicated offline-audio
+   handoff.
 
 ## Per-Slice Gates
 
@@ -132,10 +132,8 @@ Visual similarity is audited against the pinned V1 reference. Runtime-backed is
 an ownership claim, not a visual-parity claim; the two pieces of evidence must
 remain separate.
 
-Component-catalog previews now use the same package runtime registry for
-migrated components. This lets migrated editor schemas drop historical render
-callbacks immediately without blanking catalog thumbnails. The catalog still
-uses the historical path for unmigrated components until the final cutover.
+Component-catalog previews use the same package runtime registry for every
+preserved component. No historical catalog render fallback remains.
 
 ## Final Deletion Conditions
 
@@ -149,3 +147,7 @@ The cutover is complete only when:
 - browser attachment code is component-agnostic
 - the preserved node graph still drives component parameters
 - browser parity and measured performance evidence are recorded
+
+All architecture deletion conditions are now met. Product completion remains
+open for the pinned-reference browser performance comparison, long-session
+evidence, and the explicitly recorded Stage character-asset visual decision.

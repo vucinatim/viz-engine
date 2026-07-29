@@ -208,11 +208,11 @@
       "importance": "critical",
       "parityDimensions": ["functional", "performance"],
       "referenceEvidence": ["src/components/node-network/node-network-store.ts", "src/components/editor/layer-renderer.tsx"],
-      "v2Evidence": ["src/lib/viz-session/store.ts", "src/components/editor/editor-runtime-preview-driver.tsx"],
+      "v2Evidence": ["src/lib/viz-session/store.ts", "src/lib/viz-session/runtime-preview-plan.ts", "src/lib/editor-node-runtime-registry.ts", "src/components/editor/editor-runtime-preview-driver.tsx"],
       "status": "partial",
       "acceptance": ["Equivalent inputs and time produce equivalent graph outputs.", "Graph evaluation follows runtime time rather than incidental UI timing.", "Graph-heavy scenes remain within the approved frame budget."],
       "validationMethods": ["integration", "unit", "browser", "benchmark"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md"]
     },
     {
       "id": "audio.file-loading",
@@ -312,11 +312,11 @@
       "importance": "critical",
       "parityDimensions": ["visual", "functional", "performance"],
       "referenceEvidence": ["src/components/editor/renderer.tsx", "src/components/editor/layer-renderer.tsx"],
-      "v2Evidence": ["src/components/editor/editor-runtime-preview-driver.tsx", "src/lib/editor-runtime-preview-runtime-bridge.ts", "src/lib/stores/editor-runtime-preview-attachment-store.ts", "src/lib/viz-session/store.ts"],
+      "v2Evidence": ["src/components/editor/editor-runtime-preview-driver.tsx", "src/lib/viz-session/runtime-preview-plan.ts", "src/lib/stores/editor-runtime-preview-attachment-store.ts", "src/lib/viz-session/store.ts"],
       "status": "partial",
       "acceptance": ["The preview image is produced from the canonical project and runtime inputs.", "Project changes update without stale adapters or duplicate ownership.", "Representative scenes meet the approved interactive frame budget."],
       "validationMethods": ["browser", "visual", "integration", "benchmark"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-viz-session-runtime-preview-ownership.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-viz-session-runtime-preview-ownership.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md"]
     },
     {
       "id": "preview.multi-layer-compositing",
@@ -329,7 +329,7 @@
       "status": "partial",
       "acceptance": ["A parity fixture produces the expected ordered composite.", "Hidden, frozen, and transparent layers have the documented behavior.", "Preview and export share compatible scene semantics."],
       "validationMethods": ["visual", "integration", "browser"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md"]
     },
     {
       "id": "preview.layer-mirror",
@@ -381,7 +381,7 @@
       "status": "partial",
       "acceptance": ["A saved project round-trips without semantic loss.", "Invalid documents fail validation without damaging the active project.", "Reset produces the documented clean starting project."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md"]
     },
     {
       "id": "persistence.drag-drop-import",
@@ -420,7 +420,7 @@
       "status": "partial",
       "acceptance": ["The exported image matches the chosen runtime frame and project state.", "Size and transparency options are honored.", "Export does not mutate playback or the active project."],
       "validationMethods": ["browser", "visual", "integration"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md"]
     },
     {
       "id": "export.video",
@@ -507,11 +507,11 @@
       "importance": "critical",
       "parityDimensions": ["performance", "visual", "functional"],
       "referenceEvidence": ["src/components/editor/layer-renderer.tsx", "src/components/editor/profiler-panel.tsx"],
-      "v2Evidence": [],
+      "v2Evidence": ["tools/foundation/runtime-preview-plan-benchmark.ts"],
       "status": "not-audited",
       "acceptance": ["A fixed device, viewport, scene, audio source, and observation window define the benchmark.", "V2 frame pacing and interaction latency meet the approved baseline-relative budget.", "The benchmark records warm-up, median, tail behavior, and visible correctness."],
       "validationMethods": ["benchmark", "browser", "visual"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md"]
     },
     {
       "id": "performance.editor-responsiveness",
@@ -520,11 +520,11 @@
       "importance": "critical",
       "parityDimensions": ["performance", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/editor-layout.tsx", "src/components/node-network/node-network-renderer.tsx", "src/components/config/dynamic-form.tsx"],
-      "v2Evidence": [],
+      "v2Evidence": ["tools/foundation/runtime-preview-plan-benchmark.ts"],
       "status": "not-audited",
       "acceptance": ["A representative multi-layer and graph fixture defines the workload.", "Input-to-visible-update latency meets the approved baseline-relative budget.", "No primary interaction causes an avoidable long task or full application stall."],
       "validationMethods": ["benchmark", "browser"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md"]
     },
     {
       "id": "performance.long-session-stability",

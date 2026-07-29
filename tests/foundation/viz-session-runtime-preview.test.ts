@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CompDefinitionMap } from '@/components/comps';
 import useCompStore from '@/lib/stores/comp-store';
@@ -9,6 +9,11 @@ import {
   vizSessionStore,
 } from '@/lib/viz-session';
 import { createTestProject } from './viz-session-test-utils';
+
+const createAttachment = (render = vi.fn()) => ({
+  getViewport: () => ({ width: 640, height: 360 }),
+  render,
+});
 
 describe('VizSession runtime preview inspection', () => {
   beforeEach(() => {
@@ -36,9 +41,7 @@ describe('VizSession runtime preview inspection', () => {
     );
     useEditorRuntimePreviewAttachmentStore
       .getState()
-      .registerLayerRenderFunction('runtime-layer', () => ({
-        runtimeBacked: true,
-      }));
+      .registerLayerAttachment('runtime-layer', createAttachment());
 
     const frame = createVizSessionRuntimePreviewFrame({
       currentFrame: 30,
@@ -56,6 +59,7 @@ describe('VizSession runtime preview inspection', () => {
       renderCycle: 1,
       lastRenderedLayerIds: ['runtime-layer'],
       runtimeBackedLayerIds: ['runtime-layer'],
+      lastPlanIssues: [],
       lastError: null,
     });
     expect(vizSessionActions.preview.inspectRuntimePreview()).toMatchObject({
@@ -66,11 +70,21 @@ describe('VizSession runtime preview inspection', () => {
   });
 
   it('records a failed frame without claiming it completed', () => {
+    const comp = CompDefinitionMap.values().next().value;
+    if (!comp) {
+      throw new Error('Expected at least one component definition');
+    }
+    vizSessionActions.project.importWorkingProject(
+      createTestProject(comp, 'broken-layer'),
+    );
     useEditorRuntimePreviewAttachmentStore
       .getState()
-      .registerLayerRenderFunction('broken-layer', () => {
-        throw new Error('render failed');
-      });
+      .registerLayerAttachment(
+        'broken-layer',
+        createAttachment(() => {
+          throw new Error('render failed');
+        }),
+      );
     const frame = createVizSessionRuntimePreviewFrame({
       currentFrame: 12,
       time: 0.2,
@@ -96,11 +110,16 @@ describe('VizSession runtime preview inspection', () => {
   });
 
   it('resets session inspection without deleting mounted browser attachments', () => {
+    const comp = CompDefinitionMap.values().next().value;
+    if (!comp) {
+      throw new Error('Expected at least one component definition');
+    }
+    vizSessionActions.project.importWorkingProject(
+      createTestProject(comp, 'mounted-layer'),
+    );
     useEditorRuntimePreviewAttachmentStore
       .getState()
-      .registerLayerRenderFunction('mounted-layer', () => ({
-        runtimeBacked: false,
-      }));
+      .registerLayerAttachment('mounted-layer', createAttachment());
     const frame = createVizSessionRuntimePreviewFrame({
       currentFrame: 1,
       time: 1 / 60,
@@ -119,10 +138,11 @@ describe('VizSession runtime preview inspection', () => {
       renderCycle: 0,
       lastRenderedLayerIds: [],
       runtimeBackedLayerIds: [],
+      lastPlanIssues: [],
       lastError: null,
     });
     expect(
-      useEditorRuntimePreviewAttachmentStore.getState().layerRenderFunctions
+      useEditorRuntimePreviewAttachmentStore.getState().layerAttachments
         .size,
     ).toBe(1);
   });

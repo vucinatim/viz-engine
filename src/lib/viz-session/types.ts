@@ -1,5 +1,8 @@
 import type { NodeNetwork } from '@/components/node-network/graph-types';
-import type { VizProjectDocument } from '@viz-engine/contracts';
+import type {
+  VizFramePlanIssue,
+  VizProjectDocument,
+} from '@viz-engine/contracts';
 import type {
   VizEditorAudioAnalyzerState,
   VizEditorAudioSessionState,
@@ -45,8 +48,11 @@ export interface VizSessionRuntimePreviewFrame {
   mode: VizSessionRuntimePreviewMode;
 }
 
-export interface VizSessionRuntimePreviewLayerResult {
-  runtimeBacked: boolean;
+export interface VizSessionRuntimePreviewAudioFrameData {
+  frequencyData: Uint8Array;
+  timeDomainData: Uint8Array;
+  sampleRate: number;
+  fftSize: number;
 }
 
 export interface VizSessionRuntimePreviewError {
@@ -61,6 +67,7 @@ export interface VizSessionRuntimeInspectionState {
   renderCycle: number;
   lastRenderedLayerIds: string[];
   runtimeBackedLayerIds: string[];
+  lastPlanIssues: VizFramePlanIssue[];
   lastError: VizSessionRuntimePreviewError | null;
 }
 

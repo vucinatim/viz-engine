@@ -255,17 +255,17 @@ export async function exportVideo(
       useEditorRuntimePreviewAttachmentStore.getState();
     const previewLayers = getProjectedLayers();
     const numLayers = previewLayers.length;
-    const numRenderFunctions =
-      runtimePreviewAttachments.layerRenderFunctions.size;
+    const numRenderAttachments =
+      runtimePreviewAttachments.layerAttachments.size;
     const layerTypes = previewLayers
-      .map((l) => `${l.comp.name}(${l.comp.draw3D ? '3D' : '2D'})`)
+      .map((l) => `${l.comp.name}(runtime)`)
       .join(', ');
 
     log('info', 'Layer configuration', `${numLayers} layers: ${layerTypes}`);
     log(
       'info',
-      'Render functions registered',
-      `${numRenderFunctions} of ${numLayers} layers`,
+      'Runtime attachments registered',
+      `${numRenderAttachments} of ${numLayers} layers`,
     );
 
     exportStore.setProgress({
@@ -465,7 +465,7 @@ export async function exportVideo(
  * THE SOLUTION:
  * 1. Pause all RAF loops during export (done in layer-renderer.tsx)
  * 2. Calculate explicit time and dt for each frame
- * 3. Manually call renderAllLayers() with exact time/dt values
+ * 3. Evaluate one runtime plan and present every layer with exact frame data
  * 4. Components use the passed time parameter instead of accumulating internal state
  *
  * This ensures frame-perfect synchronization between export and playback.
@@ -502,7 +502,7 @@ async function renderFrames(
   }
 
   // Validate that we have render functions registered
-  if (runtimePreviewAttachments.layerRenderFunctions.size === 0) {
+  if (runtimePreviewAttachments.layerAttachments.size === 0) {
     log(
       'warning',
       'No layer render functions registered - layers may not be initialized yet',
@@ -561,7 +561,6 @@ async function renderFrames(
             `Sample: [${freqSample}...]\nMin: ${freqMin}, Max: ${freqMax}, Avg: ${freqAvg.toFixed(1)}`,
           );
         }
-        exportStore.setCurrentOfflineAudioData(audioFrameData);
       } else {
         console.warn(
           `[ExportOrchestrator] No audio data for frame ${frameIndex}`,
@@ -570,15 +569,19 @@ async function renderFrames(
 
       // CRITICAL FIX #3: Manually render all layers with explicit time and dt
       // This bypasses the RAF loop and gives us frame-perfect control
+      const runtimeFrame = Math.max(0, Math.round(currentTime * fps));
       const previewFrame = createVizSessionRuntimePreviewFrame({
-        currentFrame: frameIndex,
+        currentFrame: runtimeFrame,
         time: currentTime,
         dt: deltaTime,
         fps,
         mode: 'export',
       });
 
-      vizSessionActions.preview.renderRuntimePreviewFrame(previewFrame);
+      vizSessionActions.preview.renderRuntimePreviewFrame(
+        previewFrame,
+        audioFrameData,
+      );
 
       // Also update the player to keep its time in sync (for UI/scrubbing)
       playerRef.seekTo(frameIndex);
@@ -650,8 +653,6 @@ async function renderFrames(
     frameWriter.close();
     log('info', 'Batch frame writer closed');
 
-    // Clear offline audio data after export
-    exportStore.setCurrentOfflineAudioData(null);
   }
 }
 

@@ -29,14 +29,6 @@ export interface ExportLog {
   duration?: number; // milliseconds for performance logs
 }
 
-// Audio frame data for offline rendering
-export interface ExportAudioFrameData {
-  frequencyData: Uint8Array;
-  timeDomainData: Uint8Array;
-  sampleRate: number;
-  fftSize: number;
-}
-
 interface ExportStore {
   // Export state
   isExporting: boolean;
@@ -55,9 +47,6 @@ interface ExportStore {
   // Logging
   logs: ExportLog[];
 
-  // Offline audio data for current frame
-  currentOfflineAudioData: ExportAudioFrameData | null;
-
   // Actions
   setIsExporting: (isExporting: boolean) => void;
   setProgress: (progress: Partial<ExportProgress>) => void;
@@ -66,7 +55,6 @@ interface ExportStore {
   clearCapturedFrames: () => void;
   setError: (error: string | null) => void;
   setShouldCancel: (shouldCancel: boolean) => void;
-  setCurrentOfflineAudioData: (data: ExportAudioFrameData | null) => void;
   resetExport: () => void;
   addLog: (log: Omit<ExportLog, 'id' | 'timestamp'>) => void;
   clearLogs: () => void;
@@ -99,7 +87,6 @@ const useExportStore = create<ExportStore>((set, get) => ({
   error: null,
   shouldCancel: false,
   logs: [],
-  currentOfflineAudioData: null,
 
   setIsExporting: (isExporting) => set({ isExporting }),
 
@@ -165,9 +152,6 @@ const useExportStore = create<ExportStore>((set, get) => ({
 
   setShouldCancel: (shouldCancel) => set({ shouldCancel }),
 
-  setCurrentOfflineAudioData: (currentOfflineAudioData) =>
-    set({ currentOfflineAudioData }),
-
   addLog: (log) => {
     const newLog: ExportLog = {
       ...log,
@@ -189,7 +173,6 @@ const useExportStore = create<ExportStore>((set, get) => ({
       error: null,
       shouldCancel: false,
       logs: [],
-      currentOfflineAudioData: null,
     }),
 }));
 

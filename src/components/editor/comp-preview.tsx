@@ -2,9 +2,8 @@
 
 import { Comp } from '@/components/config/create-component';
 import {
-  createRuntimeRenderPlanForEditorComponentPreview,
-  isEditorComponentRuntimeBacked,
-} from '@/lib/editor-runtime-preview-runtime-bridge';
+  createEditorComponentPreviewPlan,
+} from '@/lib/editor-component-preview-plan';
 import {
   StandaloneNetworkEvaluator,
   createDefaultNetworkEvaluators,
@@ -20,9 +19,6 @@ import {
   createVizThreePreviewController,
   type VizThreePreviewController,
 } from '@viz-engine/renderer-three';
-import * as THREE from 'three';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 
 interface CompPreviewProps {
   comp: Comp;
@@ -43,14 +39,8 @@ const CompPreview = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafIdRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
-  const stateRef = useRef<any>(null);
   const [audioLoaded, setAudioLoaded] = useState(false);
 
-  // 3D refs
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const sceneRef = useRef<THREE.Scene | null>(null);
-  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-  const composerRef = useRef<EffectComposer | null>(null);
   const runtimeControllerRef = useRef<VizThreePreviewController | null>(null);
 
   const syntheticAnalyzer = useRef(createSyntheticAnalyzer());
@@ -79,89 +69,14 @@ const CompPreview = ({
     }
   }, []);
 
-  // Initialize state and network evaluators once
+  // Initialize network evaluators once
   useEffect(() => {
-    if (comp.createState && !stateRef.current) {
-      stateRef.current = comp.createState();
-    }
-
-    // Initialize network evaluators from defaultNetworks
     if (comp.defaultNetworks && !networkEvaluatorsRef.current) {
       networkEvaluatorsRef.current = createDefaultNetworkEvaluators(
         comp.defaultNetworks,
       );
     }
   }, [comp]);
-
-  // Setup 3D if needed
-  const setup3D = useCallback(() => {
-    if (
-      isEditorComponentRuntimeBacked(comp) ||
-      !comp.draw3D ||
-      !canvasRef.current ||
-      rendererRef.current
-    )
-      return;
-
-    const renderer = new THREE.WebGLRenderer({
-      canvas: canvasRef.current,
-      antialias: false, // Disable for performance
-      alpha: true,
-    });
-
-    // Set clear color to transparent for proper blend mode support
-    renderer.setClearColor(0x000000, 0); // Black with 0 alpha (fully transparent)
-
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
-    renderer.shadowMap.enabled = false; // Disable shadows for preview
-
-    const internalWidth = Math.round(width * PREVIEW_RESOLUTION);
-    const internalHeight = Math.round(height * PREVIEW_RESOLUTION);
-
-    canvasRef.current.width = internalWidth;
-    canvasRef.current.height = internalHeight;
-    renderer.setSize(internalWidth, internalHeight, false);
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    camera.position.set(0, 0, 0);
-    camera.lookAt(new THREE.Vector3(0, 0, 0));
-
-    const composer = new EffectComposer(renderer);
-    const renderScene = new RenderPass(scene, camera);
-    composer.addPass(renderScene);
-    composerRef.current = composer;
-
-    // Initialize with default config
-    const frequencyData = generateSyntheticFrequency(0, LOOP_DURATION);
-    const timeDomainData = generateSyntheticTimeDomain(0, LOOP_DURATION);
-
-    comp.init3D?.({
-      state: stateRef.current,
-      threeCtx: {
-        renderer,
-        scene,
-        camera,
-        composer,
-      },
-      config: comp.config.getValues({
-        audioSignal: timeDomainData,
-        frequencyAnalysis: {
-          frequencyData,
-          sampleRate: syntheticAnalyzer.current.context.sampleRate,
-          fftSize: syntheticAnalyzer.current.fftSize,
-        },
-        time: 0,
-      }),
-      debugEnabled: false,
-    });
-
-    cameraRef.current = camera;
-    sceneRef.current = scene;
-    rendererRef.current = renderer;
-  }, [comp, width, height]);
 
   // Render a single frame (static or animated)
   const renderFrame = useCallback(
@@ -223,82 +138,32 @@ const CompPreview = ({
 
       const internalWidth = Math.round(width * PREVIEW_RESOLUTION);
       const internalHeight = Math.round(height * PREVIEW_RESOLUTION);
-      const runtimeRenderPlan =
-        createRuntimeRenderPlanForEditorComponentPreview({
-          comp,
-          viewportWidth: internalWidth,
-          viewportHeight: internalHeight,
-          time: loopTime,
-          configValues,
-          audioFrameData: {
-            frequencyData,
-            sampleRate: syntheticAnalyzer.current.context.sampleRate,
-            fftSize: syntheticAnalyzer.current.fftSize,
-          },
-        });
-
-      if (runtimeRenderPlan) {
-        if (!runtimeControllerRef.current) {
-          canvasRef.current.width = internalWidth;
-          canvasRef.current.height = internalHeight;
-        }
-        if (runtimeControllerRef.current) {
-          runtimeControllerRef.current.update(runtimeRenderPlan);
-        } else {
-          runtimeControllerRef.current = createVizThreePreviewController({
-            canvas: canvasRef.current,
-            renderPlan: runtimeRenderPlan,
-          });
-        }
-        return;
+      const runtimeRenderPlan = createEditorComponentPreviewPlan({
+        comp,
+        viewportWidth: internalWidth,
+        viewportHeight: internalHeight,
+        time: loopTime,
+        configValues,
+        audioFrameData: {
+          frequencyData,
+          sampleRate: syntheticAnalyzer.current.context.sampleRate,
+          fftSize: syntheticAnalyzer.current.fftSize,
+        },
+      });
+      if (!runtimeControllerRef.current) {
+        canvasRef.current.width = internalWidth;
+        canvasRef.current.height = internalHeight;
       }
-
-      if (comp.draw3D) {
-        if (!rendererRef.current || !sceneRef.current || !cameraRef.current) {
-          setup3D();
-          if (!rendererRef.current || !sceneRef.current || !cameraRef.current)
-            return;
-        }
-
-        comp.draw3D({
-          threeCtx: {
-            renderer: rendererRef.current,
-            scene: sceneRef.current,
-            camera: cameraRef.current,
-          },
-          state: stateRef.current,
-          debugEnabled: false,
-          dt: 0.016, // Assume ~60fps
-          time: loopTime,
-          audioData: {
-            dataArray: frequencyData,
-            analyzer: syntheticAnalyzer.current as any,
-          },
-          config: configValues,
-        });
-
-        if (composerRef.current) {
-          composerRef.current.render();
-        }
-      } else if (comp.draw) {
-        const ctx = canvasRef.current.getContext('2d');
-        if (!ctx) return;
-
-        comp.draw({
-          canvasCtx: ctx,
-          state: stateRef.current,
-          debugEnabled: false,
-          dt: 0.016,
-          time: loopTime,
-          audioData: {
-            dataArray: frequencyData,
-            analyzer: syntheticAnalyzer.current as any,
-          },
-          config: configValues,
+      if (runtimeControllerRef.current) {
+        runtimeControllerRef.current.update(runtimeRenderPlan);
+      } else {
+        runtimeControllerRef.current = createVizThreePreviewController({
+          canvas: canvasRef.current,
+          renderPlan: runtimeRenderPlan,
         });
       }
     },
-    [comp, height, setup3D, width],
+    [comp, height, width],
   );
 
   // Animation loop for hover state
@@ -333,9 +198,6 @@ const CompPreview = ({
 
   // Initial render when component mounts
   useEffect(() => {
-    if (comp.draw3D && !isEditorComponentRuntimeBacked(comp)) {
-      setup3D();
-    }
     renderFrame(0);
 
     return () => {
@@ -344,17 +206,10 @@ const CompPreview = ({
         cancelAnimationFrame(rafIdRef.current);
         rafIdRef.current = null;
       }
-      if (rendererRef.current) {
-        rendererRef.current.dispose();
-        rendererRef.current = null;
-      }
       runtimeControllerRef.current?.dispose();
       runtimeControllerRef.current = null;
-      sceneRef.current = null;
-      cameraRef.current = null;
-      composerRef.current = null;
     };
-  }, [comp, setup3D, renderFrame]);
+  }, [comp, renderFrame]);
 
   // Re-render when audio loads
   useEffect(() => {

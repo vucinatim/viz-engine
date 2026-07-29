@@ -78,4 +78,39 @@ describe("Viz frame planning", () => {
     expect(coverLayer?.node?.kind).toBe("group");
     expect(barsLayer?.node?.kind).toBe("group");
   });
+
+  it("applies frame-scoped runtime input values without mutating the project", () => {
+    const session = createVizRuntimeSession({
+      project: exampleProjectDocument,
+      mode: "live",
+      resolvedAssets: exampleResolvedAssets,
+      resolvedArtifacts: exampleResolvedArtifacts,
+      seed: "frame-input-seed",
+    });
+    const originalBassInput = structuredClone(
+      exampleProjectDocument.layers.find((layer) => layer.id === "layer-bars")?.inputs?.bass,
+    );
+
+    const framePlan = createVizFramePlan({
+      session,
+      frame: 12,
+      registry: createCoreComponentRegistry(),
+      nodeRegistry,
+      inputValues: {
+        "layer-bars": {
+          bass: 0.875,
+        },
+      },
+    });
+
+    const barsLayer = framePlan.layers.find((layer) => layer.layerId === "layer-bars");
+    expect(barsLayer?.resolvedInputs.bass).toMatchObject({
+      sourceKind: "literal",
+      status: "resolved",
+      value: 0.875,
+    });
+    expect(
+      exampleProjectDocument.layers.find((layer) => layer.id === "layer-bars")?.inputs?.bass,
+    ).toEqual(originalBassInput);
+  });
 });

@@ -1,24 +1,34 @@
-import type { LayerRenderFunction } from '@/lib/editor-layer-types';
+import type { LayerRuntimePreviewAttachment } from '@/lib/editor-layer-types';
 import type {
+  VizSessionRuntimePreviewAudioFrameData,
   VizSessionRuntimePreviewFrame,
-  VizSessionRuntimePreviewLayerResult,
 } from '@/lib/viz-session/types';
+import type { VizRenderPlan } from '@viz-engine/contracts';
 import type { PlayerRef } from '@remotion/player';
 import { create } from 'zustand';
 
 interface EditorRuntimePreviewAttachmentStore {
-  layerRenderFunctions: Map<string, LayerRenderFunction>;
+  layerAttachments: Map<string, LayerRuntimePreviewAttachment>;
   mirrorCanvasesByLayerId: Record<string, HTMLCanvasElement[]>;
   playerRef: { current: PlayerRef | null };
   registerMirrorCanvas: (id: string, canvas: HTMLCanvasElement) => void;
   unregisterMirrorCanvas: (id: string, canvas: HTMLCanvasElement) => void;
-  registerLayerRenderFunction: (id: string, fn: LayerRenderFunction) => void;
-  unregisterLayerRenderFunction: (id: string) => void;
+  registerLayerAttachment: (
+    id: string,
+    attachment: LayerRuntimePreviewAttachment,
+  ) => void;
+  unregisterLayerAttachment: (id: string) => void;
   setPlayerRef: (playerRef: { current: PlayerRef | null }) => void;
   pruneLayerAttachments: (activeLayerIds: string[]) => void;
-  renderAllLayers: (
+  getPreviewViewport: () => {
+    width: number;
+    height: number;
+  } | null;
+  renderRuntimePlan: (
     frame: VizSessionRuntimePreviewFrame,
-  ) => Record<string, VizSessionRuntimePreviewLayerResult>;
+    audioFrameData: VizSessionRuntimePreviewAudioFrameData,
+    renderPlan: VizRenderPlan,
+  ) => string[];
   reset: () => void;
 }
 
@@ -32,24 +42,24 @@ const filterActiveLayerEntries = <T>(
 
 const useEditorRuntimePreviewAttachmentStore =
   create<EditorRuntimePreviewAttachmentStore>((set, get) => ({
-    layerRenderFunctions: new Map(),
+    layerAttachments: new Map(),
     mirrorCanvasesByLayerId: {},
     playerRef: { current: null },
-    registerLayerRenderFunction: (id, fn) =>
+    registerLayerAttachment: (id, attachment) =>
       set((state) => {
-        const layerRenderFunctions = new Map(state.layerRenderFunctions);
-        layerRenderFunctions.set(id, fn);
-        return { layerRenderFunctions };
+        const layerAttachments = new Map(state.layerAttachments);
+        layerAttachments.set(id, attachment);
+        return { layerAttachments };
       }),
-    unregisterLayerRenderFunction: (id) =>
+    unregisterLayerAttachment: (id) =>
       set((state) => {
-        if (!state.layerRenderFunctions.has(id)) {
+        if (!state.layerAttachments.has(id)) {
           return state;
         }
 
-        const layerRenderFunctions = new Map(state.layerRenderFunctions);
-        layerRenderFunctions.delete(id);
-        return { layerRenderFunctions };
+        const layerAttachments = new Map(state.layerAttachments);
+        layerAttachments.delete(id);
+        return { layerAttachments };
       }),
     registerMirrorCanvas: (id, canvas) =>
       set((state) => {
@@ -86,32 +96,51 @@ const useEditorRuntimePreviewAttachmentStore =
     pruneLayerAttachments: (activeLayerIds) =>
       set((state) => {
         const activeLayerIdSet = new Set(activeLayerIds);
-        const layerRenderFunctions = new Map(state.layerRenderFunctions);
+        const layerAttachments = new Map(state.layerAttachments);
 
-        for (const layerId of layerRenderFunctions.keys()) {
+        for (const layerId of layerAttachments.keys()) {
           if (!activeLayerIdSet.has(layerId)) {
-            layerRenderFunctions.delete(layerId);
+            layerAttachments.delete(layerId);
           }
         }
 
         return {
-          layerRenderFunctions,
+          layerAttachments,
           mirrorCanvasesByLayerId: filterActiveLayerEntries(
             state.mirrorCanvasesByLayerId,
             activeLayerIdSet,
           ),
         };
       }),
-    renderAllLayers: (frame) =>
-      Object.fromEntries(
-        [...get().layerRenderFunctions.entries()].map(([layerId, render]) => [
-          layerId,
-          render(frame),
-        ]),
-      ),
+    getPreviewViewport: () => {
+      const firstAttachment = get().layerAttachments.values().next().value;
+      return firstAttachment?.getViewport() ?? null;
+    },
+    renderRuntimePlan: (frame, audioFrameData, renderPlan) => {
+      const renderedLayerIds: string[] = [];
+
+      for (const layerPlan of renderPlan.layers) {
+        const attachment = get().layerAttachments.get(layerPlan.layerId);
+        if (!attachment) {
+          continue;
+        }
+
+        attachment.render({
+          frame,
+          audioFrameData,
+          renderPlan: {
+            ...renderPlan,
+            layers: [layerPlan],
+          },
+        });
+        renderedLayerIds.push(layerPlan.layerId);
+      }
+
+      return renderedLayerIds;
+    },
     reset: () =>
       set({
-        layerRenderFunctions: new Map(),
+        layerAttachments: new Map(),
         mirrorCanvasesByLayerId: {},
         playerRef: { current: null },
       }),

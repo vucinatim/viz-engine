@@ -8,12 +8,16 @@ import type { VizComponentRegistry } from "./component-registry.js";
 import type { VizNodeRegistry } from "./node-registry.js";
 import type { VizRuntimeSession } from "./runtime-session.js";
 import { resolveVizComponentSettings } from "./component-settings.js";
+import type { VizRuntimeFrameInputValues } from "./frame-plan.js";
+import type { VizRuntimeGraphInputValues } from "./graph-evaluator.js";
 
 export interface CreateVizRenderPlanOptions {
   session: VizRuntimeSession;
   frame: number;
   registry: VizComponentRegistry;
   nodeRegistry?: VizNodeRegistry;
+  inputValues?: VizRuntimeFrameInputValues;
+  graphInputValues?: VizRuntimeGraphInputValues;
 }
 
 const createRenderIssue = (
@@ -57,6 +61,8 @@ export const createVizRenderPlan = ({
   frame,
   registry,
   nodeRegistry,
+  inputValues,
+  graphInputValues,
 }: CreateVizRenderPlanOptions): VizRenderPlan => {
   const framePlanCache = new Map<number, ReturnType<typeof createVizFramePlan>>();
   const getFramePlan = (requestedFrame: number) => {
@@ -72,6 +78,8 @@ export const createVizRenderPlan = ({
       frame: normalizedFrame,
       registry,
       ...(nodeRegistry === undefined ? {} : { nodeRegistry }),
+      ...(inputValues === undefined ? {} : { inputValues }),
+      ...(graphInputValues === undefined ? {} : { graphInputValues }),
     });
     framePlanCache.set(normalizedFrame, nextFramePlan);
     return nextFramePlan;

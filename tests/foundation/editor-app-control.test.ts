@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CompDefinitionMap } from '@/components/comps';
 import { VType } from '@/components/config/types';
@@ -144,11 +144,19 @@ describe('Local editor control facade', () => {
   });
 
   it('exposes runtime preview inspection through the local control facade', () => {
+    const comp = CompDefinitionMap.values().next().value;
+    if (!comp) {
+      throw new Error('Expected at least one component definition');
+    }
+    useEditorProjectStore
+      .getState()
+      .importWorkingProject(createTestProject(comp, 'runtime-layer'));
     const attachmentStore =
       useEditorRuntimePreviewAttachmentStore.getState();
-    attachmentStore.registerLayerRenderFunction('runtime-layer', () => ({
-      runtimeBacked: true,
-    }));
+    attachmentStore.registerLayerAttachment('runtime-layer', {
+      getViewport: () => ({ width: 640, height: 360 }),
+      render: vi.fn(),
+    });
     const frame = createVizSessionRuntimePreviewFrame({
       currentFrame: 48,
       time: 0.8,
@@ -160,7 +168,7 @@ describe('Local editor control facade', () => {
     vizSessionActions.preview.renderRuntimePreviewFrame(frame);
 
     expect(editorControl.preview.inspectRuntimePreview()).toMatchObject({
-      layerCount: 0,
+      layerCount: 1,
       status: 'idle',
       lastRenderedLayerIds: ['runtime-layer'],
       runtimeBackedLayerIds: ['runtime-layer'],

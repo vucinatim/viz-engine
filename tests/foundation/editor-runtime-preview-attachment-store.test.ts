@@ -2,6 +2,44 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createVizSessionRuntimePreviewFrame } from '@/lib/viz-session';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
+import type { VizRenderPlan } from '@viz-engine/contracts';
+
+const audioFrameData = {
+  frequencyData: new Uint8Array(),
+  timeDomainData: new Uint8Array(),
+  sampleRate: 44100,
+  fftSize: 2048,
+};
+
+const createRenderPlan = (...layerIds: string[]): VizRenderPlan => ({
+  frameContext: {
+    frame: 90,
+    fps: 60,
+    durationInFrames: 120,
+    timeInSeconds: 1.5,
+    deltaTimeSeconds: 1 / 60,
+    isFirstFrame: false,
+    isLastFrame: false,
+    mode: 'live',
+    seed: 'test',
+  },
+  viewport: {
+    width: 640,
+    height: 360,
+    backgroundColor: '#000000',
+  },
+  materializedAssets: [],
+  layers: layerIds.map((layerId) => ({
+    layerId,
+    componentId: 'test-component',
+    rendererFamily: 'three',
+    enabled: true,
+    opacity: 1,
+    blendMode: 'normal',
+    resolvedInputs: {},
+  })),
+  issues: [],
+});
 
 describe('Editor runtime preview attachment store', () => {
   beforeEach(() => {
@@ -11,11 +49,14 @@ describe('Editor runtime preview attachment store', () => {
   it('owns browser callbacks, mirrors, and the player ref without scene or inspection state', () => {
     const attachmentStore =
       useEditorRuntimePreviewAttachmentStore.getState();
-    const renderLayerA = vi.fn(() => ({ runtimeBacked: true }));
+    const renderLayerA = vi.fn();
     const mirrorCanvas = {} as HTMLCanvasElement;
     const playerRef = { current: { seekTo: vi.fn() } } as any;
 
-    attachmentStore.registerLayerRenderFunction('layer-a', renderLayerA);
+    attachmentStore.registerLayerAttachment('layer-a', {
+      getViewport: () => ({ width: 640, height: 360 }),
+      render: renderLayerA,
+    });
     attachmentStore.registerMirrorCanvas('layer-a', mirrorCanvas);
     attachmentStore.setPlayerRef(playerRef);
 
@@ -27,10 +68,23 @@ describe('Editor runtime preview attachment store', () => {
       mode: 'live',
     });
 
-    expect(attachmentStore.renderAllLayers(frame)).toEqual({
-      'layer-a': { runtimeBacked: true },
+    const renderPlan = createRenderPlan('layer-a');
+    expect(
+      attachmentStore.renderRuntimePlan(
+        frame,
+        audioFrameData,
+        renderPlan,
+      ),
+    ).toEqual(['layer-a']);
+    expect(renderLayerA).toHaveBeenCalledWith({
+      frame,
+      audioFrameData,
+      renderPlan,
     });
-    expect(renderLayerA).toHaveBeenCalledWith(frame);
+    expect(attachmentStore.getPreviewViewport()).toEqual({
+      width: 640,
+      height: 360,
+    });
     expect(
       useEditorRuntimePreviewAttachmentStore.getState()
         .mirrorCanvasesByLayerId['layer-a'],
@@ -51,18 +105,20 @@ describe('Editor runtime preview attachment store', () => {
     const store = useEditorRuntimePreviewAttachmentStore.getState();
     const playerRef = { current: { seekTo: vi.fn() } } as any;
 
-    store.registerLayerRenderFunction('layer-a', () => ({
-      runtimeBacked: false,
-    }));
-    store.registerLayerRenderFunction('layer-b', () => ({
-      runtimeBacked: true,
-    }));
+    store.registerLayerAttachment('layer-a', {
+      getViewport: () => ({ width: 1, height: 1 }),
+      render: vi.fn(),
+    });
+    store.registerLayerAttachment('layer-b', {
+      getViewport: () => ({ width: 1, height: 1 }),
+      render: vi.fn(),
+    });
     store.registerMirrorCanvas('layer-a', {} as HTMLCanvasElement);
     store.setPlayerRef(playerRef);
     store.pruneLayerAttachments(['layer-b']);
 
     const state = useEditorRuntimePreviewAttachmentStore.getState();
-    expect([...state.layerRenderFunctions.keys()]).toEqual(['layer-b']);
+    expect([...state.layerAttachments.keys()]).toEqual(['layer-b']);
     expect(state.mirrorCanvasesByLayerId['layer-a']).toBeUndefined();
     expect(state.playerRef).toBe(playerRef);
   });

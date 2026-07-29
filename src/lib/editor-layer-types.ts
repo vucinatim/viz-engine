@@ -1,20 +1,28 @@
 import { Comp, UnknownConfig } from '@/components/config/create-component';
 import { LayerSettings } from '@/components/editor/layer-settings';
 import type {
+  VizSessionRuntimePreviewAudioFrameData,
   VizSessionRuntimePreviewFrame,
-  VizSessionRuntimePreviewLayerResult,
 } from '@/lib/viz-session/types';
+import type { VizRenderPlan } from '@viz-engine/contracts';
 
 export interface LayerData {
   id: string;
   comp: Comp;
   config: UnknownConfig;
-  state: unknown;
   isExpanded: boolean;
   isDebugEnabled: boolean;
   layerSettings: LayerSettings;
 }
 
-export type LayerRenderFunction = (
-  frame: VizSessionRuntimePreviewFrame,
-) => VizSessionRuntimePreviewLayerResult;
+export interface LayerRuntimePreviewAttachment {
+  getViewport: () => {
+    width: number;
+    height: number;
+  };
+  render: (input: {
+    frame: VizSessionRuntimePreviewFrame;
+    audioFrameData: VizSessionRuntimePreviewAudioFrameData;
+    renderPlan: VizRenderPlan;
+  }) => void;
+}

@@ -297,6 +297,28 @@ crowd capability is preserved, but exact historical character-model appearance
 is still an explicit visual-parity gap pending canonical materialized character
 assets and bakeable animation sampling or product approval.
 
+The per-layer runtime-preview bridge has now been deleted. `VizSession`
+evaluates the complete canonical project into one render plan per frame through
+one cached runtime session. The browser attachment store only slices that plan
+for the existing stacked canvases, mirrors, and export capture surface; it no
+longer creates runtime sessions, resolves component settings, samples audio, or
+dispatches `draw`, `init3D`, or `draw3D`.
+
+Live analyzer data and offline export data now enter as one explicit
+frame-scoped runtime input snapshot. Curve Spectrum consumes that snapshot
+without mutating the project document. Graphs receive the same audio/time
+snapshot through the runtime graph-input contract, and all preserved editor
+node kernels are registered behind the canonical node-registry extension
+point.
+
+Browser validation covered two stacked runtime layers, play/pause, layer
+visibility, a live Sine graph, canonical JSON save, and a 1920×1080 still-image
+export preview without new warnings or errors. The repeatable 15-component
+plan benchmark measured a 0.352 ms mean and 0.674 ms p95 for the one-session
+path versus 0.908 ms mean and 1.962 ms p95 for the former per-layer evaluation
+shape on the same machine. This is plan-evaluation evidence, not yet the
+required pinned-V1 browser frame-pacing comparison.
+
 ## Autonomous Calibration Foundation
 
 The first autonomous calibration goal pinned the immutable product reference

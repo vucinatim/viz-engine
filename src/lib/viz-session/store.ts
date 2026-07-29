@@ -65,10 +65,15 @@ import type {
   VizSessionHistoryState,
   VizSessionPreviewState,
   VizSessionProjectState,
+  VizSessionRuntimePreviewAudioFrameData,
   VizSessionRuntimeInspectionState,
   VizSessionRuntimePreviewFrame,
   VizSessionState,
 } from './types';
+import {
+  createVizSessionRuntimePreviewPlan,
+  resetVizSessionRuntimePreviewPlanCache,
+} from './runtime-preview-plan';
 import {
   applyEditorLayerSettings,
   attachGraphToLayerInput,
@@ -104,6 +109,7 @@ const createInitialRuntimeInspectionState =
     renderCycle: 0,
     lastRenderedLayerIds: [],
     runtimeBackedLayerIds: [],
+    lastPlanIssues: [],
     lastError: null,
   });
 
@@ -221,11 +227,6 @@ const resolveOptionByPath = (comp: Comp, layerId: string, path: string) => {
 };
 
 const syncProjectedStoresFromProject = (project: VizProjectDocument) => {
-  const currentPreviewLayersById = new Map(
-    useEditorLayerProjectionStore
-      .getState()
-      .layers.map((layer) => [layer.id, layer]),
-  );
   const layerUi = useEditorStore.getState().layerUi;
   const layersById = new Map(project.layers.map((layer) => [layer.id, layer]));
   const orderedLayers = [
@@ -245,7 +246,6 @@ const syncProjectedStoresFromProject = (project: VizProjectDocument) => {
             layer,
             comp,
             uiState: layerUi[layer.id],
-            currentLayer: currentPreviewLayersById.get(layer.id),
           })
         : null;
     })
@@ -1326,17 +1326,53 @@ export const vizSessionActions = {
         transport: transportController.getState(),
         runtimeInspection: createInitialRuntimeInspectionState(),
       });
+      resetVizSessionRuntimePreviewPlanCache();
     },
-    renderRuntimePreviewFrame(frame: VizSessionRuntimePreviewFrame) {
+    renderRuntimePreviewFrame(
+      frame: VizSessionRuntimePreviewFrame,
+      providedAudioFrameData?: VizSessionRuntimePreviewAudioFrameData,
+    ) {
       try {
-        const layerResults =
-          useEditorRuntimePreviewAttachmentStore
-            .getState()
-            .renderAllLayers(frame);
-        const lastRenderedLayerIds = Object.keys(layerResults);
-        const runtimeBackedLayerIds = Object.entries(layerResults)
-          .filter(([, result]) => result.runtimeBacked)
-          .map(([layerId]) => layerId);
+        const attachmentStore =
+          useEditorRuntimePreviewAttachmentStore.getState();
+        const projectState = getProjectState();
+        const analyzer = useAudioEngineStore.getState().audioAnalyzer;
+        const audioFrameData =
+          providedAudioFrameData ??
+          (() => {
+            const frequencyData = new Uint8Array(
+              analyzer?.frequencyBinCount ?? 0,
+            );
+            const timeDomainData = new Uint8Array(
+              analyzer?.frequencyBinCount ?? 0,
+            );
+            analyzer?.getByteFrequencyData(frequencyData);
+            analyzer?.getByteTimeDomainData(timeDomainData);
+            return {
+              frequencyData,
+              timeDomainData,
+              sampleRate: analyzer?.context.sampleRate ?? 44100,
+              fftSize: analyzer?.fftSize ?? 2048,
+            };
+          })();
+        const viewport = attachmentStore.getPreviewViewport() ?? {
+          width: projectState.workingProject.viewport.width,
+          height: projectState.workingProject.viewport.height,
+        };
+        const renderPlan = createVizSessionRuntimePreviewPlan({
+          project: projectState.workingProject,
+          projectRevision: projectState.revision,
+          frame,
+          viewport,
+          audioFrameData,
+          isPlaying: getPreviewState().transport.isPlaying,
+        });
+        const lastRenderedLayerIds = attachmentStore.renderRuntimePlan(
+          frame,
+          audioFrameData,
+          renderPlan,
+        );
+        const runtimeBackedLayerIds = [...lastRenderedLayerIds];
         const nextPreview = getPreviewState();
 
         replacePreviewState({
@@ -1349,6 +1385,7 @@ export const vizSessionActions = {
             renderCycle: nextPreview.runtimeInspection.renderCycle + 1,
             lastRenderedLayerIds,
             runtimeBackedLayerIds,
+            lastPlanIssues: structuredClone(renderPlan.issues),
             lastError: null,
           },
         });
@@ -1384,6 +1421,9 @@ export const vizSessionActions = {
         runtimeBackedLayerIds: [
           ...state.preview.runtimeInspection.runtimeBackedLayerIds,
         ],
+        lastPlanIssues: structuredClone(
+          state.preview.runtimeInspection.lastPlanIssues,
+        ),
       };
     },
     setState(partial: Partial<VizSessionPreviewState>) {

@@ -170,12 +170,10 @@ export const createProjectedLayer = ({
   layer,
   comp,
   uiState,
-  currentLayer,
 }: {
   layer: VizLayer;
   comp: Comp;
   uiState: EditorLayerUiState | undefined;
-  currentLayer: LayerData | undefined;
 }): LayerData => {
   const config = assignDeterministicIdsToConfig(layer.id, comp.config.clone());
   config.setValues(getEditorLayerValues(layer));
@@ -184,12 +182,6 @@ export const createProjectedLayer = ({
     id: layer.id,
     comp,
     config,
-    state:
-      currentLayer && currentLayer.comp.name === comp.name
-        ? currentLayer.state
-        : comp.createState
-          ? comp.createState()
-          : undefined,
     isExpanded: uiState?.isExpanded ?? false,
     isDebugEnabled: uiState?.isDebugEnabled ?? false,
     layerSettings: getEditorLayerSettings(layer),

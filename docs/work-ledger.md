@@ -1175,6 +1175,26 @@
 
 # 2026-07-29
 
+- completed the one-session runtime-preview and export convergence slice
+- added frame-scoped layer and graph input values to `@viz-engine/runtime`
+  without mutating canonical project documents
+- changed `VizSession` to evaluate the complete canonical project once per
+  frame through one cached runtime session
+- changed browser attachments to present sliced layer plans only, preserving
+  stacked canvases, mirrors, Fly Mode, debugging, and export capture
+- deleted the temporary per-layer bridge, historical component render
+  contracts and state, the per-layer audio hook, and the export store's
+  duplicated offline-audio handoff
+- registered every preserved editor node kernel behind the runtime node
+  registry so canonical graphs now drive runtime component settings
+- added `pnpm benchmark:runtime-preview`; the 15-component 300-frame fixture
+  measured 0.352 ms mean / 0.674 ms p95 for the canonical session path and
+  0.908 ms mean / 1.962 ms p95 for the former per-layer shape
+- browser-validated two stacked runtime layers, playback, visibility, a live
+  Sine graph, canonical JSON save, and 1920×1080 still export with no new
+  warnings or errors
+- recorded the slice in
+  `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md`
 - added
   `docs/visions/v2-product-architecture-and-parity-alignment.md` as the active
   product and architecture alignment record for the V2 rewrite

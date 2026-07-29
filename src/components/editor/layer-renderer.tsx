@@ -1,4 +1,3 @@
-import useAudioFrameData from '@/lib/hooks/use-audio-frame-data';
 import useDebug from '@/lib/hooks/use-debug';
 import { useLayerFPSTracker } from '@/lib/hooks/use-layer-fps-tracker';
 import useOnResize from '@/lib/hooks/use-on-resize';
@@ -7,11 +6,9 @@ import {
   EditorRuntimePreviewAttachment,
 } from '@/lib/editor-runtime-preview-attachment';
 import { installEditorRuntimeHostAttachments } from '@/lib/editor-runtime-host-attachments';
-import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import { LayerData } from '@/lib/stores/editor-layer-projection-store';
-import type { VizSessionRuntimePreviewFrame } from '@/lib/viz-session/types';
 import { forwardRef, memo, useEffect, useRef } from 'react';
 
 const EMPTY_MIRROR_CANVASES: HTMLCanvasElement[] = [];
@@ -21,13 +18,12 @@ interface LayerRendererProps {
 }
 
 const LayerRenderer = ({ layer }: LayerRendererProps) => {
-  const audioAnalyzer = useAudioEngineStore((s) => s.audioAnalyzer);
   const resolutionMultiplier = useEditorStore((s) => s.resolutionMultiplier);
-  const registerLayerRenderFunction = useEditorRuntimePreviewAttachmentStore(
-    (s) => s.registerLayerRenderFunction,
+  const registerLayerAttachment = useEditorRuntimePreviewAttachmentStore(
+    (s) => s.registerLayerAttachment,
   );
-  const unregisterLayerRenderFunction = useEditorRuntimePreviewAttachmentStore(
-    (s) => s.unregisterLayerRenderFunction,
+  const unregisterLayerAttachment = useEditorRuntimePreviewAttachmentStore(
+    (s) => s.unregisterLayerAttachment,
   );
   const mirrorCanvases = useEditorRuntimePreviewAttachmentStore(
     (state) =>
@@ -58,25 +54,6 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   // Get the debug function
   const withDebug = useDebug(debugCanvasRef, resolutionMultiplier);
 
-  // Get the function to get the next data array
-  const getNextAudioFrame = useAudioFrameData({
-    isFrozen: layer.layerSettings.freeze,
-    analyzer: audioAnalyzer,
-  });
-
-  // Use refs for frequently changing values that don't need to trigger full 3D recreation
-  const layerStateRef = useRef(layer.state);
-  const layerDebugEnabledRef = useRef(layer.isDebugEnabled);
-
-  // Update refs when values change (but don't trigger callback recreation)
-  useEffect(() => {
-    layerStateRef.current = layer.state;
-  }, [layer.state]);
-
-  useEffect(() => {
-    layerDebugEnabledRef.current = layer.isDebugEnabled;
-  }, [layer.isDebugEnabled]);
-
   const mirrorCanvasesRef = useRef<HTMLCanvasElement[]>([]);
 
   // Update refs when values change (but don't trigger effect recreation)
@@ -85,17 +62,13 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   }, [mirrorCanvases]);
 
   useEffect(() => {
-    if (!audioAnalyzer || !layerCanvasRef.current) return;
+    if (!layerCanvasRef.current) return;
     const previewAttachment = createEditorRuntimePreviewAttachment({
       layer,
       canvas: layerCanvasRef.current,
       debugCanvas: debugCanvasRef.current,
-      audioAnalyzer,
       resolutionMultiplier,
-      getNextAudioFrame,
       withDebug,
-      getLayerState: () => layerStateRef.current,
-      getDebugEnabled: () => layerDebugEnabledRef.current,
       getMirrorCanvases: () => mirrorCanvasesRef.current,
       profiler: layerFPSTracker,
     });
@@ -111,23 +84,15 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       previewAttachment.resize(displayWidth, displayHeight);
     }
 
-    // Register the render function with the preview store so live preview and export can call it
-    registerLayerRenderFunction(
-      layer.id,
-      (frame: VizSessionRuntimePreviewFrame) => ({
-        runtimeBacked: previewAttachment.render(frame),
-      }),
-    );
+    registerLayerAttachment(layer.id, previewAttachment);
 
     return () => {
       removeHostAttachments();
       previewAttachment.destroy();
       previewAttachmentRef.current = null;
-      unregisterLayerRenderFunction(layer.id);
+      unregisterLayerAttachment(layer.id);
     };
   }, [
-    audioAnalyzer,
-    getNextAudioFrame,
     layer.id,
     layer.comp,
     layer.config,
@@ -135,8 +100,8 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     layerFPSTracker,
     resolutionMultiplier,
     withDebug,
-    registerLayerRenderFunction,
-    unregisterLayerRenderFunction,
+    registerLayerAttachment,
+    unregisterLayerAttachment,
   ]);
 
   return (

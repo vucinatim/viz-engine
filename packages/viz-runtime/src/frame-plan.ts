@@ -13,6 +13,7 @@ import type {
 import { getAudioFeatureTimelineArtifact, sampleAudioFeatureValue } from "./audio-feature-timeline.js";
 import type { VizComponentRegistry } from "./component-registry.js";
 import { evaluateVizGraphs } from "./graph-evaluator.js";
+import type { VizRuntimeGraphInputValues } from "./graph-evaluator.js";
 import type { VizNodeRegistry } from "./node-registry.js";
 import type { VizRuntimeSession } from "./runtime-session.js";
 
@@ -21,7 +22,13 @@ export interface CreateVizFramePlanOptions {
   frame: number;
   registry?: VizComponentRegistry;
   nodeRegistry?: VizNodeRegistry;
+  inputValues?: VizRuntimeFrameInputValues;
+  graphInputValues?: VizRuntimeGraphInputValues;
 }
+
+export type VizRuntimeFrameInputValues = Readonly<
+  Record<string, Readonly<Record<string, unknown>>>
+>;
 
 const getDefaultRendererFamily = (
   layer: VizLayer,
@@ -232,6 +239,8 @@ export const createVizFramePlan = ({
   frame,
   registry,
   nodeRegistry,
+  inputValues = {},
+  graphInputValues,
 }: CreateVizFramePlanOptions): VizFramePlan => {
   const frameContext = session.getFrameContext(frame);
   const issues: VizFramePlanIssue[] = [];
@@ -239,6 +248,7 @@ export const createVizFramePlan = ({
     session,
     frame: frameContext.frame,
     ...(nodeRegistry === undefined ? {} : { registry: nodeRegistry }),
+    ...(graphInputValues === undefined ? {} : { inputValues: graphInputValues }),
   });
 
   for (const result of graphResults.values()) {
@@ -259,12 +269,27 @@ export const createVizFramePlan = ({
     .filter((layer) => shouldIncludeLayer(layer, session.mode))
     .map((layer) => {
       const component = registry?.get(layer.componentId);
-      const resolvedInputs = Object.fromEntries(
+      const resolvedProjectInputs = Object.fromEntries(
         Object.entries(layer.inputs ?? {}).map(([key, source]) => [
           key,
           resolveInputValue(key, source, session, frameContext.frame, issues, layer.id, graphResults),
         ]),
       );
+      const resolvedRuntimeInputs = Object.fromEntries(
+        Object.entries(inputValues[layer.id] ?? {}).map(([key, value]) => [
+          key,
+          {
+            key,
+            sourceKind: "literal" as const,
+            status: "resolved" as const,
+            value,
+          },
+        ]),
+      );
+      const resolvedInputs = {
+        ...resolvedProjectInputs,
+        ...resolvedRuntimeInputs,
+      };
 
       const snapshot: VizLayerFrameSnapshot = {
         layerId: layer.id,
