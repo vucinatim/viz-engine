@@ -3,6 +3,7 @@ import type {
   VizRenderThreeProgramNode,
 } from "@viz-engine/contracts";
 import { createSimpleCubeProgram } from "./simple-cube.js";
+import { createStageSceneProgram } from "./stage-scene.js";
 import { createParticleSystemProgram } from "./particle-system.js";
 import { createOrbitingCubesProgram } from "./orbiting-cubes.js";
 import { createInstancedSupercubeProgram } from "./instanced-supercube.js";
@@ -22,6 +23,7 @@ const programFactories = new Map<string, VizThreeProgramFactory>([
   ["viz-core/light-tunnel/v1", createLightTunnelProgram],
   ["viz-core/morph-shapes/v1", createMorphShapesProgram],
   ["viz-core/neural-network/v1", createNeuralNetworkProgram],
+  ["viz-core/stage-scene/v1", createStageSceneProgram],
 ]);
 
 export const createVizThreeProgramInstance = ({

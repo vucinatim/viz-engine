@@ -8,6 +8,7 @@ import NoiseShader from '@/components/comps/noise-shader';
 import OrbitingCubes from '@/components/comps/orbiting-cubes';
 import ParticleSystem from '@/components/comps/particle-system';
 import SimpleCube from '@/components/comps/simple-cube';
+import StageScene from '@/components/comps/stage-scene';
 import StrobeLight from '@/components/comps/strobe-light';
 import { createVizSessionRuntimePreviewFrame } from '@/lib/viz-session';
 import {
@@ -82,6 +83,7 @@ describe('Editor runtime preview runtime bridge', () => {
     [NoiseShader, 'noise-shader', 'shader'],
     [OrbitingCubes, 'orbiting-cubes', 'three-program'],
     [ParticleSystem, 'particle-system', 'three-program'],
+    [StageScene, 'stage-scene', 'three-program'],
   ])(
     'builds runtime plans for newly migrated preserved-editor components',
     (comp, componentId, expectedNodeKind) => {
@@ -178,10 +180,16 @@ describe('Editor runtime preview runtime bridge', () => {
       NoiseShader,
       OrbitingCubes,
       ParticleSystem,
+      StageScene,
     ]) {
       expect(comp).not.toHaveProperty('draw');
       expect(comp).not.toHaveProperty('init3D');
       expect(comp).not.toHaveProperty('draw3D');
     }
+  });
+
+  it('keeps editor action buttons out of canonical runtime settings', () => {
+    expect(StageScene.defaultValues.camera.enterWasdMode).toBeNull();
+    expect(() => structuredClone(StageScene.defaultValues)).not.toThrow();
   });
 });

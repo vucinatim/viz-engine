@@ -6,6 +6,7 @@ import {
   createEditorRuntimePreviewAttachment,
   EditorRuntimePreviewAttachment,
 } from '@/lib/editor-runtime-preview-attachment';
+import { installEditorRuntimeHostAttachments } from '@/lib/editor-runtime-host-attachments';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
@@ -99,6 +100,10 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       profiler: layerFPSTracker,
     });
     previewAttachmentRef.current = previewAttachment;
+    const removeHostAttachments = installEditorRuntimeHostAttachments({
+      layer,
+      preview: previewAttachment,
+    });
 
     const displayWidth = layerCanvasRef.current.clientWidth;
     const displayHeight = layerCanvasRef.current.clientHeight;
@@ -115,6 +120,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     );
 
     return () => {
+      removeHostAttachments();
       previewAttachment.destroy();
       previewAttachmentRef.current = null;
       unregisterLayerRenderFunction(layer.id);

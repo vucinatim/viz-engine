@@ -192,16 +192,11 @@ The biggest remaining architecture gaps are:
 - the preserved V1 node canvas still needs an executable `NodeNetwork`
   projection over canonical graph documents until it consumes the package
   graph model and execution registry directly
-- one preserved V1 component still renders through its historical
-  `draw3D` path; `Curve Spectrum`, `Debug Animation`,
-  `Feature Extraction Bars`, `Strobe Light`, `Simple Cube`, and
-  `Fullscreen Shader`, `Noise Shader`, `Particle System`, and
-  `Orbiting Cubes`, `Heartbeat Monitor`, `Instanced Supercube`, and
-  `Light Tunnel`, `Morph Shapes`, and `Neural Network` now have
-  package-runtime-backed editor paths, but `Stage Scene` still blocks the
-  completed component migration
-- the temporary per-component runtime preview bridge remains necessary until
-  those historical render paths are replaced by package-runtime components
+- all 15 preserved editor components now render through package-runtime
+  implementations and none retains `draw`, `init3D`, or `draw3D` ownership
+- the temporary per-component runtime preview bridge is now the primary
+  deletion target: preview still creates one runtime session and plan per layer
+  instead of evaluating the canonical editor session once per frame
 
 The active renderer cutover inventory and deletion map now lives in:
 
@@ -227,7 +222,7 @@ The renderer contract also has a persistent Three program node:
   accumulated browser `dt`
 
 Runtime-backed component-catalog previews now use that same package registry
-and renderer attachment. All fourteen migrated editor definitions now contain
+and renderer attachment. All fifteen editor definitions now contain
 only authoring metadata and parameter schemas; their visual semantics live
 entirely in package terrain. `Fullscreen Shader` GLSL source moved there as
 part of the same cutover.
@@ -287,6 +282,20 @@ attachment lifecycle regression: the layer renderer's empty mirror-canvas
 selector and profiler object are now referentially stable, so hiding and
 showing a runtime-backed layer no longer enters an unregister/re-register
 maximum-update-depth loop.
+
+Stage Scene now owns its complete retained stage/effect rig in package terrain.
+Cinematic camera smoothing, beams, lasers, moving lights, strobes, blinders,
+accents, shader wall, DJ, and crowd derive from canonical frame time and seed.
+Fly Mode is a browser host attachment over an explicit preview camera-pose seam
+and commits its final pose through canonical project actions. Action buttons
+resolve to serializable `null` in project settings instead of leaking class
+instances and functions into runtime or persistence.
+
+The historical 27 MB FBX character attachment was replaced with retained
+procedural actors so preview/export remain portable and deterministic. DJ and
+crowd capability is preserved, but exact historical character-model appearance
+is still an explicit visual-parity gap pending canonical materialized character
+assets and bakeable animation sampling or product approval.
 
 ## Autonomous Calibration Foundation
 

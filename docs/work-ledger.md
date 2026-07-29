@@ -233,6 +233,30 @@
   - passed the full foundation gate with 32 test files and 124 tests
   - recorded evidence in
     `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-12.md`
+- completed the deterministic Stage Scene migration:
+  - moved the stage, shader wall, cinematic camera, beams, lasers, moving
+    lights, stage/wash/accent lighting, strobes, blinders, fog, bloom, DJ, and
+    crowd into one retained package Three program
+  - replaced browser-`dt`, `Math.random()`, `setTimeout()`, and mutable mixer
+    semantics with canonical frame-time and seeded evaluation
+  - preserved DJ/crowd capability with bounded retained procedural actors and
+    documented exact historical FBX appearance as an unresolved visual-parity
+    gap rather than restoring non-portable editor URL imports
+  - added an explicit renderer preview camera-pose seam and browser host
+    attachment for Stage Fly Mode; exiting commits manual camera values through
+    canonical project actions
+  - made editor action-button values serialize as `null`, fixing the real
+    Add Layer catalog crash caused by cloning button functions
+  - removed the final preserved-component `init3D` and `draw3D` callbacks
+  - browser-verified catalog creation, thumbnail, stage output, settings,
+    DJ/crowd/laser controls, playback, hide/show, Fly Mode exit, restored
+    defaults, and a clean final log
+  - observed the studio entry chunk decrease by `11.52 kB` raw / `3.35 kB`
+    gzip and the Three-extras chunk decrease by `48.37 kB` raw / `15.40 kB`
+    gzip; the production build no longer emits the four historical FBX files
+  - passed the full foundation gate with 32 test files and 128 tests
+  - recorded evidence in
+    `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-13.md`
 - established the autonomous V2 calibration foundation:
   - pinned the immutable final pre-V2 parity reference to
     `e806fbc10980615588b52ff574bc923c6f00f35e`

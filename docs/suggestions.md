@@ -74,6 +74,11 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
   onto explicit bake/checkpoint artifacts when production scenes need dense
   long-lived triggering. The retained live program deliberately caps visible
   signal instances instead of recreating V1's unbounded mesh allocation.
+- Define the production Stage character contract as canonical materialized
+  character assets plus deterministic/bakeable animation sampling. The runtime
+  Stage deliberately uses retained procedural actors instead of restoring
+  roughly 27 MB of editor-bundled FBX URLs and browser-`dt` mixers, but exact
+  historical character appearance remains unapproved visual-parity work.
 - Keep the new project action surface pure and shared across editor, CLI, and
   future agent tooling so undo/history, collaboration, and AI mutation do not
   fork into app-specific mutation paths.

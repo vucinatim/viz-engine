@@ -18,6 +18,7 @@ import { radialBloomComponent } from "./radial-bloom.js";
 import { reactiveBarsComponent } from "./reactive-bars.js";
 import { simpleCubeComponent } from "./simple-cube.js";
 import { solidColorComponent } from "./solid-color.js";
+import { stageSceneComponent } from "./stage-scene.js";
 import { strobeLightComponent } from "./strobe-light.js";
 
 export const coreComponents: VizComponentImplementation[] = [
@@ -40,6 +41,7 @@ export const coreComponents: VizComponentImplementation[] = [
   noiseShaderComponent,
   orbitingCubesComponent,
   particleSystemComponent,
+  stageSceneComponent,
 ];
 
 export const createCoreComponentRegistry = () => {

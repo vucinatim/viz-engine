@@ -1,4 +1,9 @@
-import { createVizThreePreviewController, type VizThreePreviewController } from '@viz-engine/renderer-three';
+import {
+  createVizThreePreviewController,
+  type VizThreePreviewCameraPose,
+  type VizThreePreviewController,
+} from '@viz-engine/renderer-three';
+import editorControl from '@/lib/editor-control';
 import { LayerData } from '@/lib/editor-layer-types';
 import { createRuntimeRenderPlanForEditorLayer } from '@/lib/editor-runtime-preview-runtime-bridge';
 import type { VizSessionRuntimePreviewFrame } from '@/lib/viz-session/types';
@@ -42,6 +47,7 @@ type LayerProfiler = {
 export interface EditorRuntimePreviewAttachment {
   resize: (displayWidth: number, displayHeight: number) => void;
   render: (frame: VizSessionRuntimePreviewFrame) => boolean;
+  activateFlyCameraMode: () => void;
   destroy: () => void;
 }
 
@@ -89,6 +95,187 @@ export const createEditorRuntimePreviewAttachment = ({
   let drawCallCounter: DrawCallCounter | null = null;
   let renderFunction: ((data: LayerRenderInput) => void) | null = null;
   let runtimePreviewController: VizThreePreviewController | null = null;
+  let flyCameraPose: VizThreePreviewCameraPose | null = null;
+  let flyCameraActive = false;
+  const flyKeys = new Set<string>();
+
+  const removeFlyListeners = () => {
+    document.removeEventListener('keydown', onFlyKeyDown);
+    document.removeEventListener('keyup', onFlyKeyUp);
+    document.removeEventListener('mousemove', onFlyMouseMove);
+    document.removeEventListener('pointerlockchange', onPointerLockChange);
+    flyKeys.clear();
+  };
+
+  const commitFlyCameraPose = () => {
+    if (!flyCameraPose) {
+      return;
+    }
+    const [x, y, z] = flyCameraPose.position;
+    const [rotationX, rotationY, rotationZ] = flyCameraPose.rotation;
+    editorControl.project.updateLayerValue(
+      layer.id,
+      ['camera', 'cinematicMode'],
+      false,
+    );
+    editorControl.project.updateLayerValue(
+      layer.id,
+      ['camera', 'position'],
+      { x, y, z },
+    );
+    editorControl.project.updateLayerValue(
+      layer.id,
+      ['camera', 'rotation'],
+      { x: rotationX, y: rotationY, z: rotationZ },
+    );
+  };
+
+  const deactivateFlyCamera = () => {
+    if (!flyCameraActive) {
+      return;
+    }
+    flyCameraActive = false;
+    removeFlyListeners();
+    runtimePreviewController?.setLayerCameraPose(layer.id, null);
+    commitFlyCameraPose();
+  };
+
+  function onFlyKeyDown(event: KeyboardEvent) {
+    const key = event.key.toLowerCase();
+    if (!['w', 'a', 's', 'd', ' ', 'shift', 'escape'].includes(key)) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    if (key === 'escape') {
+      deactivateFlyCamera();
+      return;
+    }
+    flyKeys.add(key);
+  }
+
+  function onFlyKeyUp(event: KeyboardEvent) {
+    const key = event.key.toLowerCase();
+    if (!['w', 'a', 's', 'd', ' ', 'shift'].includes(key)) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    flyKeys.delete(key);
+  }
+
+  function onFlyMouseMove(event: MouseEvent) {
+    if (
+      !flyCameraActive ||
+      !flyCameraPose ||
+      document.pointerLockElement !== canvas
+    ) {
+      return;
+    }
+    const cameraSettings = (layer.config.getValues({
+        audioSignal: new Uint8Array(),
+        frequencyAnalysis: {
+          frequencyData: new Uint8Array(),
+          sampleRate: audioAnalyzer.context.sampleRate,
+          fftSize: audioAnalyzer.fftSize,
+        },
+        time: 0,
+      }).camera ?? {}) as Record<string, unknown>;
+    const lookSpeed =
+      typeof cameraSettings.lookSpeed === 'number'
+        ? cameraSettings.lookSpeed
+        : 0.002;
+    flyCameraPose.rotation[1] -= event.movementX * lookSpeed;
+    flyCameraPose.rotation[0] = Math.max(
+      -Math.PI / 2,
+      Math.min(
+        Math.PI / 2,
+        flyCameraPose.rotation[0] - event.movementY * lookSpeed,
+      ),
+    );
+  }
+
+  function onPointerLockChange() {
+    if (flyCameraActive && document.pointerLockElement !== canvas) {
+      deactivateFlyCamera();
+    }
+  }
+
+  const activateFlyCameraMode = () => {
+    if (flyCameraActive || !runtimePreviewController) {
+      return;
+    }
+    flyCameraPose =
+      runtimePreviewController.getLayerCameraPose(layer.id);
+    if (!flyCameraPose) {
+      return;
+    }
+    flyCameraActive = true;
+    document.addEventListener('keydown', onFlyKeyDown);
+    document.addEventListener('keyup', onFlyKeyUp);
+    document.addEventListener('mousemove', onFlyMouseMove);
+    document.addEventListener('pointerlockchange', onPointerLockChange);
+    runtimePreviewController.setLayerCameraPose(layer.id, flyCameraPose);
+    try {
+      const request = canvas.requestPointerLock() as unknown;
+      if (
+        request &&
+        typeof (request as Promise<void>).catch === 'function'
+      ) {
+        void (request as Promise<void>).catch(() => {
+          // Keyboard controls remain useful if pointer lock is denied.
+        });
+      }
+    } catch {
+      // Keyboard controls remain useful if pointer lock is denied.
+    }
+  };
+
+  const updateFlyCamera = (
+    dt: number,
+    configValues: Record<string, any>,
+  ) => {
+    if (!flyCameraActive || !flyCameraPose) {
+      return;
+    }
+    const moveSpeed =
+      typeof configValues.camera?.moveSpeed === 'number'
+        ? configValues.camera.moveSpeed
+        : 20;
+    const distance = Math.max(0, dt) * moveSpeed;
+    const rotation = new THREE.Euler(
+      flyCameraPose.rotation[0],
+      flyCameraPose.rotation[1],
+      flyCameraPose.rotation[2],
+      'YXZ',
+    );
+    const movement = new THREE.Vector3();
+    if (flyKeys.has('w')) {
+      movement.add(new THREE.Vector3(0, 0, -1).applyEuler(rotation));
+    }
+    if (flyKeys.has('s')) {
+      movement.add(new THREE.Vector3(0, 0, 1).applyEuler(rotation));
+    }
+    if (flyKeys.has('a')) {
+      movement.add(new THREE.Vector3(-1, 0, 0).applyEuler(rotation));
+    }
+    if (flyKeys.has('d')) {
+      movement.add(new THREE.Vector3(1, 0, 0).applyEuler(rotation));
+    }
+    if (flyKeys.has(' ')) {
+      movement.y += 1;
+    }
+    if (flyKeys.has('shift')) {
+      movement.y -= 1;
+    }
+    if (movement.lengthSq() > 0) {
+      movement.normalize().multiplyScalar(distance);
+      flyCameraPose.position[0] += movement.x;
+      flyCameraPose.position[1] += movement.y;
+      flyCameraPose.position[2] += movement.z;
+    }
+    runtimePreviewController?.setLayerCameraPose(layer.id, flyCameraPose);
+  };
 
   const ensure2DRenderer = () => {
     if (layer.comp.draw3D || renderFunction) {
@@ -261,6 +448,7 @@ export const createEditorRuntimePreviewAttachment = ({
       };
 
       const configValues = layer.config.getValues(animInputData);
+      updateFlyCamera(frame.dt, configValues);
 
       const runtimeRenderPlan = createRuntimeRenderPlanForEditorLayer({
         layer,
@@ -344,7 +532,10 @@ export const createEditorRuntimePreviewAttachment = ({
       }
       return false;
     },
+    activateFlyCameraMode,
     destroy: () => {
+      deactivateFlyCamera();
+      removeFlyListeners();
       runtimePreviewController?.dispose();
       renderer?.dispose();
       drawCallCounter?.cleanup();

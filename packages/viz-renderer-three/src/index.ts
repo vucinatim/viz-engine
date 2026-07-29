@@ -84,7 +84,17 @@ export interface VizThreePreviewController {
   update(renderPlan: VizRenderPlan): void;
   resize(width: number, height: number): void;
   render(): void;
+  getLayerCameraPose(layerId: string): VizThreePreviewCameraPose | null;
+  setLayerCameraPose(
+    layerId: string,
+    pose: VizThreePreviewCameraPose | null,
+  ): void;
   dispose(): void;
+}
+
+export interface VizThreePreviewCameraPose {
+  position: [number, number, number];
+  rotation: [number, number, number];
 }
 
 interface VizImageMeshUserData {
@@ -1415,6 +1425,10 @@ export const createVizThreePreviewController = ({
   const pendingTextureLoads = new Set<string>();
   const textureLoader = typeof window === "undefined" ? null : new TextureLoader();
   let materializedImageAssets = createMaterializedImageAssetMap(renderPlan);
+  const cameraPoseOverrides = new Map<
+    string,
+    VizThreePreviewCameraPose
+  >();
 
   const resize = (width: number, height: number) => {
     renderer.setSize(width, height, false);
@@ -1436,6 +1450,12 @@ export const createVizThreePreviewController = ({
 
   render = () => {
     for (const layer of compositorGraph.layers) {
+      const cameraPose = cameraPoseOverrides.get(layer.layer.layerId);
+      if (cameraPose) {
+        layer.contentCamera.position.set(...cameraPose.position);
+        layer.contentCamera.rotation.set(...cameraPose.rotation);
+        layer.contentCamera.updateMatrixWorld();
+      }
       renderer.setRenderTarget(layer.renderTarget);
       renderer.setClearColor(0x000000, 0);
       renderer.clear(true, true, true);
@@ -1501,12 +1521,36 @@ export const createVizThreePreviewController = ({
     },
     resize,
     render,
+    getLayerCameraPose(layerId) {
+      const layer = compositorGraph.layers.find(
+        (candidate) => candidate.layer.layerId === layerId,
+      );
+      if (!layer) {
+        return null;
+      }
+      return {
+        position: layer.contentCamera.position.toArray(),
+        rotation: [
+          layer.contentCamera.rotation.x,
+          layer.contentCamera.rotation.y,
+          layer.contentCamera.rotation.z,
+        ],
+      };
+    },
+    setLayerCameraPose(layerId, pose) {
+      if (pose) {
+        cameraPoseOverrides.set(layerId, pose);
+      } else {
+        cameraPoseOverrides.delete(layerId);
+      }
+    },
     dispose() {
       disposeCompositorGraph(compositorGraph);
       for (const texture of textureCache.values()) {
         texture.dispose();
       }
       textureCache.clear();
+      cameraPoseOverrides.clear();
       renderer.dispose();
     },
   };

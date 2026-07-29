@@ -18,4 +18,5 @@ export * from "./registry.js";
 export * from "./shared.js";
 export * from "./simple-cube.js";
 export * from "./solid-color.js";
+export * from "./stage-scene.js";
 export * from "./strobe-light.js";

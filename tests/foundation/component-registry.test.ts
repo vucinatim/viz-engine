@@ -13,6 +13,7 @@ import {
   orbitingCubesComponent,
   particleSystemComponent,
   simpleCubeComponent,
+  stageSceneComponent,
   strobeLightComponent,
 } from "@viz-engine/components-core";
 import type {
@@ -1324,6 +1325,145 @@ describe("Viz component authoring foundation", () => {
       activationDecay: 2,
       bloomEnabled: true,
       depthOfFieldEnabled: true,
+    });
+  });
+
+  it("projects the complete Stage Scene contract from canonical frame state", () => {
+    const project: VizProjectDocument = {
+      schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
+      projectId: "project-stage-scene",
+      name: "Stage Scene",
+      timeline: { fps: 60, durationInFrames: 3_600 },
+      viewport: { width: 1280, height: 720 },
+      layerOrder: ["layer-stage"],
+      layers: [
+        {
+          id: "layer-stage",
+          name: "Stage Scene",
+          componentId: "stage-scene",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          settings: {
+            camera: {
+              position: { x: 1, y: 9, z: 42 },
+              rotation: { x: 0.1, y: 0.2, z: 0.3 },
+              cinematicMode: true,
+              cinematicPath: "Stage Circle",
+              cinematicDuration: 45,
+              cinematicLookAt: { x: 0, y: 4, z: -2 },
+              cinematicLerpSpeed: 0.2,
+            },
+            shaderWall: {
+              enabled: true,
+              scale: 2.5,
+              rotationSpeed: 1.2,
+              colorSpeed: 2,
+              travelSpeed: 0.8,
+              brightness: 3,
+            },
+            lighting: {
+              hemisphereIntensity: 1.5,
+              ambientIntensity: 0.4,
+            },
+            postProcessing: {
+              bloom: true,
+              bloomStrength: 0.7,
+              bloomRadius: 0.6,
+              bloomThreshold: 0.4,
+            },
+            lasers: {
+              enabled: true,
+              mode: "4",
+              colorMode: "single",
+              singleColor: "#ff2200",
+              rotationSpeed: 1.5,
+              maxConcurrentLasers: 8,
+            },
+            movingLights: {
+              enabled: true,
+              mode: "2",
+              colorMode: "multi",
+              singleColor: "#ffffff",
+              intensity: 7,
+              speed: 1.25,
+            },
+            beams: {
+              enabled: true,
+              mode: "6",
+              colorMode: "single",
+              singleColor: "#88aaff",
+              intensity: 2,
+            },
+            stageLights: { enabled: true, color: "#8844ff" },
+            stageWash: { enabled: true, intensity: 12 },
+            strobes: {
+              enabled: true,
+              intensity: 750,
+              flashRate: 0.6,
+            },
+            blinders: {
+              enabled: true,
+              mode: "controlled",
+              intensity: 0.8,
+            },
+            overheadBlinder: { enabled: true, intensity: 50 },
+            accentLights: {
+              enabled: true,
+              light1Color: "#ff00ff",
+              light2Color: "#00ffff",
+              djSpotIntensity: 2,
+            },
+            characters: { showDj: true, crowdCount: 250 },
+            debug: { showHelpers: true },
+          },
+        },
+      ],
+    };
+    const session = createVizRuntimeSession({
+      project,
+      mode: "render",
+      seed: "stage-scene-seed",
+    });
+    const createPlan = () =>
+      createVizRenderPlan({
+        session,
+        frame: 90,
+        registry: createCoreComponentRegistry(),
+      });
+    const plan = createPlan();
+
+    expect(
+      createCoreComponentRegistry().get(stageSceneComponent.id),
+    ).toBe(stageSceneComponent);
+    expect(plan).toEqual(createPlan());
+    expect(plan.issues).toEqual([]);
+
+    const node = plan.layers[0]?.node;
+    if (!node || node.kind !== "three-program") {
+      throw new Error("Expected Stage Scene Three program node.");
+    }
+    expect(node.programId).toBe("viz-core/stage-scene/v1");
+    expect(node.parameters).toMatchObject({
+      frame: 90,
+      fps: 60,
+      time: 1.5,
+      seed: "stage-scene-seed",
+      cameraPosition: [1, 9, 42],
+      cameraRotation: [0.1, 0.2, 0.3],
+      cinematicPath: "Stage Circle",
+      cinematicDuration: 45,
+      cinematicLookAt: [0, 4, -2],
+      cinematicLerpSpeed: 0.2,
+      shaderWallScale: 2.5,
+      laserMode: "4",
+      maximumLaserCount: 8,
+      movingLightMode: "2",
+      beamMode: "6",
+      stageLightColor: "#8844ff",
+      blinderIntensity: 0.8,
+      crowdCount: 250,
+      showHelpers: true,
     });
   });
 });

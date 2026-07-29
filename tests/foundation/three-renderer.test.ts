@@ -1234,4 +1234,174 @@ describe("Viz Three renderer proof", () => {
     expect(instance.root.userData.pathCount).toBeGreaterThan(0);
     expect(instance.root.rotation.y).toBeCloseTo(0.025, 12);
   });
+
+  it("retains the deterministic Stage Scene while updating its full effect rig", () => {
+    const createStagePlan = ({
+      frame,
+      crowdCount,
+      beamMode,
+      laserMode,
+    }: {
+      frame: number;
+      crowdCount: number;
+      beamMode: string;
+      laserMode: string;
+    }): VizRenderPlan => ({
+      frameContext: {
+        frame,
+        fps: 60,
+        durationInFrames: 3_600,
+        timeInSeconds: frame / 60,
+        deltaTimeSeconds: 1 / 60,
+        isFirstFrame: frame === 0,
+        isLastFrame: false,
+        mode: "render",
+        seed: "stage-scene",
+      },
+      viewport: {
+        width: 1280,
+        height: 720,
+        backgroundColor: "#000000",
+      },
+      materializedAssets: [],
+      issues: [],
+      layers: [
+        {
+          layerId: "layer-stage",
+          componentId: "stage-scene",
+          rendererFamily: "three",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          resolvedInputs: {},
+          node: {
+            kind: "three-program",
+            programId: "viz-core/stage-scene/v1",
+            parameters: {
+              frame,
+              fps: 60,
+              time: frame / 60,
+              seed: "stage-scene-seed",
+              cameraPosition: [0, 8, 40],
+              cameraRotation: [0, 0, 0],
+              cinematicMode: true,
+              cinematicPath: "Panoramic Sweep",
+              cinematicDuration: 60,
+              cinematicLookAt: [0, 5, 0],
+              cinematicLerpSpeed: 0.05,
+              shaderWallEnabled: true,
+              shaderWallScale: 2,
+              shaderWallRotationSpeed: 1,
+              shaderWallColorSpeed: 3,
+              shaderWallTravelSpeed: 1,
+              shaderWallBrightness: 2,
+              hemisphereIntensity: 2,
+              ambientIntensity: 1,
+              bloomEnabled: false,
+              bloomStrength: 0.5,
+              bloomRadius: 0.8,
+              bloomThreshold: 0.6,
+              lasersEnabled: true,
+              laserMode,
+              laserColorMode: "multi",
+              laserColor: "#ff0000",
+              laserRotationSpeed: 1,
+              maximumLaserCount: 12,
+              movingLightsEnabled: true,
+              movingLightMode: "auto",
+              movingLightColorMode: "multi",
+              movingLightColor: "#ffffff",
+              movingLightIntensity: 5,
+              movingLightSpeed: 1,
+              beamsEnabled: true,
+              beamMode,
+              beamColorMode: "multi",
+              beamColor: "#88aaff",
+              beamIntensity: 1,
+              stageLightsEnabled: true,
+              stageLightColor: "#8888ff",
+              stageWashEnabled: true,
+              stageWashIntensity: 5,
+              strobesEnabled: true,
+              strobeIntensity: 500,
+              strobeFlashRate: 0.3,
+              blindersEnabled: true,
+              blinderMode: "controlled",
+              blinderIntensity: 0,
+              overheadBlinderEnabled: true,
+              overheadBlinderIntensity: 0,
+              accentLightsEnabled: true,
+              accentLight1Color: "#ff00ff",
+              accentLight2Color: "#00ffff",
+              djSpotIntensity: 0.8,
+              showDj: true,
+              crowdCount,
+              showHelpers: false,
+            },
+          },
+        },
+      ],
+    });
+    const firstPlan = createStagePlan({
+      frame: 0,
+      crowdCount: 50,
+      beamMode: "0",
+      laserMode: "0",
+    });
+    const nextPlan = createStagePlan({
+      frame: 120,
+      crowdCount: 120,
+      beamMode: "6",
+      laserMode: "4",
+    });
+    const graph = createVizThreeCompositorGraph(firstPlan);
+    const repeatedGraph = createVizThreeCompositorGraph(firstPlan);
+    const layer = graph.layers[0]!;
+    const instance = layer.programInstance!;
+    const repeated = repeatedGraph.layers[0]!.programInstance!;
+    const crowd = instance.root.userData.crowd as InstancedMesh;
+    const repeatedCrowd = repeated.root.userData
+      .crowd as InstancedMesh;
+    const beams = instance.root.userData.beams as Group;
+    const lasers = instance.root.userData.lasers as Group;
+    const crowdGeometry = crowd.geometry;
+    const crowdMaterial = crowd.material;
+    const initialMatrices = Array.from(
+      crowd.instanceMatrix.array.slice(0, crowd.count * 16),
+    );
+
+    expect(instance.programId).toBe("viz-core/stage-scene/v1");
+    expect(crowd.count).toBe(50);
+    expect(instance.root.userData.crowdCount).toBe(50);
+    expect(instance.root.userData.beamMode).toBe(0);
+    expect(instance.root.userData.laserMode).toBe(0);
+    expect(initialMatrices).toEqual(
+      Array.from(
+        repeatedCrowd.instanceMatrix.array.slice(
+          0,
+          repeatedCrowd.count * 16,
+        ),
+      ),
+    );
+    expect(instance.camera.position.toArray()).toEqual(
+      repeated.camera.position.toArray(),
+    );
+
+    expect(
+      updateVizThreeCompositorGraph(graph, firstPlan, nextPlan),
+    ).toBe(true);
+    expect(layer.programInstance).toBe(instance);
+    expect(instance.root.userData.crowd).toBe(crowd);
+    expect(instance.root.userData.beams).toBe(beams);
+    expect(instance.root.userData.lasers).toBe(lasers);
+    expect(crowd.geometry).toBe(crowdGeometry);
+    expect(crowd.material).toBe(crowdMaterial);
+    expect(crowd.count).toBe(120);
+    expect(instance.root.userData.crowdCount).toBe(120);
+    expect(instance.root.userData.beamMode).toBe(6);
+    expect(instance.root.userData.laserMode).toBe(4);
+    expect(
+      Array.from(crowd.instanceMatrix.array.slice(0, 50 * 16)),
+    ).not.toEqual(initialMatrices);
+  });
 });

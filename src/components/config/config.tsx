@@ -517,9 +517,9 @@ export class GroupConfigOption<
     for (const key in this.options) {
       if (this.options.hasOwnProperty(key)) {
         const option = this.options[key];
-        // For buttons, return the instance itself, not its value
+        // Buttons are editor actions, not runtime or persisted values.
         if (option instanceof ButtonConfigOption) {
-          values[key] = option;
+          values[key] = null;
         } else {
           values[key] = option.getValue(inputData);
         }
@@ -541,9 +541,9 @@ export class GroupConfigOption<
     for (const key in this.options) {
       if (this.options.hasOwnProperty(key)) {
         const option = this.options[key];
-        // For buttons, return the instance itself, not its value
+        // Buttons are editor actions, not runtime or persisted values.
         if (option instanceof ButtonConfigOption) {
-          defaults[key] = option;
+          defaults[key] = null;
         } else {
           defaults[key] = option.getDefaultValue();
         }
@@ -634,9 +634,9 @@ export class VConfig<T extends Record<string, BaseConfigOption<any>>> {
     for (const key in this.options) {
       if (this.options.hasOwnProperty(key)) {
         const option = this.options[key];
-        // For buttons, return the instance itself, not its value
+        // Buttons are editor actions, not runtime or persisted values.
         if (option instanceof ButtonConfigOption) {
-          values[key] = option as any;
+          values[key] = null as any;
         } else {
           values[key] = option.getValue(inputData);
         }
@@ -658,9 +658,9 @@ export class VConfig<T extends Record<string, BaseConfigOption<any>>> {
     for (const key in this.options) {
       if (this.options.hasOwnProperty(key)) {
         const option = this.options[key];
-        // For buttons, return the instance itself, not its value
+        // Buttons are editor actions, not runtime or persisted values.
         if (option instanceof ButtonConfigOption) {
-          defaults[key] = option as any;
+          defaults[key] = null as any;
         } else {
           defaults[key] = option.getDefaultValue();
         }
@@ -677,7 +677,7 @@ export type InferValues<T> =
         [K in keyof U]: U[K] extends GroupConfigOption<infer G>
           ? InferValues<VConfig<G>>
           : U[K] extends ButtonConfigOption
-            ? ButtonConfigOption
+            ? null
             : U[K] extends BaseConfigOption<infer V>
               ? V
               : never;

@@ -23,9 +23,9 @@ The immutable product reference is:
 e806fbc10980615588b52ff574bc923c6f00f35e
 ```
 
-At the start of this cutover the preserved editor exposes 15 components.
-`Curve Spectrum` is the only one whose live editor output is currently produced
-through `@viz-engine/runtime` and `@viz-engine/renderer-three`.
+At the start of this cutover the preserved editor exposed 15 components.
+All 15 now have package-runtime implementations; the remaining work is the
+one-session preview/export convergence and deletion of the temporary bridge.
 
 The temporary bridge is:
 
@@ -51,7 +51,7 @@ The mixed fallback attachment is:
 | Noise Shader | package runtime | persistent shader scene | Complete: package-owned GLSL and deterministic grouped uniforms; historical callbacks removed |
 | Orbiting Cubes | package runtime | persistent Three scene | Complete: seeded topology, retained instancing, lighting, canonical camera orbit, and node-driven parameters; historical callbacks removed |
 | Particle System | package runtime | persistent Three scene | Complete: analytic seeded instancing, physics, colors, and blend modes; historical callbacks removed |
-| Stage Scene | Three `init3D`/`draw3D` | persistent Three scene | Instancing, lighting, fog, camera path, bloom and feature-driven staging |
+| Stage Scene | package runtime | persistent Three scene | Complete: retained stage/effect rig, deterministic camera/light/effect/crowd semantics, browser-hosted fly-camera attachment, fog and bloom; historical callbacks removed. Exact historical FBX character appearance remains a documented visual-parity gap |
 | Fullscreen Shader | package runtime | persistent shader scene | Complete: package-owned shader selection and deterministic uniforms; historical callbacks removed |
 | Strobe Light | package runtime | persistent shader scene | Complete: deterministic runtime shader; historical callbacks removed |
 
