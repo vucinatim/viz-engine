@@ -84,10 +84,10 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
   current registry boundary removes duplicate evaluation and is canonical at
   runtime, but package ownership would let editor UI, CLI, agents, and renders
   consume one portable built-in node catalog.
-- Add a headless fixed-device browser benchmark command around the existing
-  profiler recorder so V1/V2 frame pacing, interaction latency, memory, and
-  long-session stability can be compared without temporary profiler UI changes
-  or manual hover behavior.
+- Extend the new raw-recorder comparison CLI into a headless fixed-device
+  browser recording command so V1/V2 frame pacing, interaction latency, memory,
+  and long-session stability can be captured without temporary profiler UI
+  changes or manual hover behavior.
 - Keep the new project action surface pure and shared across editor, CLI, and
   future agent tooling so undo/history, collaboration, and AI mutation do not
   fork into app-specific mutation paths.

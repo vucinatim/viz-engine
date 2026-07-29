@@ -1224,3 +1224,14 @@
   - transactional agent mutation
   - empirical hosted rendering validation
 - linked the alignment record into the active docs spine
+- captured a fixed-device 30-second profiler baseline from immutable V1 commit
+  `e806fbc10980615588b52ff574bc923c6f00f35e` using the preserved
+  `simple-example` project, quality 2, bundled HipHop track, three layers, and
+  three active node networks
+- recorded 74.915 mean FPS, 17.600 ms frame-time p95, and 230.086 MB mean JS
+  heap without promoting any V2 performance-parity claim
+- added `pnpm compare:runtime-performance`, which recomputes statistics from
+  raw recorder snapshots and enforces fixed environment, fixture, duration,
+  FPS, frame-time, and memory budgets
+- added focused comparison tests plus the durable V1 summary and methodology in
+  `docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md`

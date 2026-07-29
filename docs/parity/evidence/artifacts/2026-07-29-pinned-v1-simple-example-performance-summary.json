@@ -1,0 +1,51 @@
+{
+  "baselineCommit": "e806fbc10980615588b52ff574bc923c6f00f35e",
+  "recording": {
+    "durationMs": 30034,
+    "name": "Pinned V1 simple-example 30s",
+    "sampleCount": 62,
+    "sampleRateMs": 500
+  },
+  "environment": {
+    "browser": "Chrome 150.0.0.0",
+    "devicePixelRatio": 2,
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Pro, Unspecified Version)",
+    "physicalResolution": "3024x1964",
+    "platform": "MacOS",
+    "screenResolution": "1512x982",
+    "viewport": "1280x720"
+  },
+  "fixture": {
+    "activeLayerCount": 3,
+    "activeNodeNetworkCount": 3,
+    "audio": "[HipHop] 808 Rap.mp3",
+    "layerNames": [
+      "Fullscreen Shader",
+      "Noise Shader",
+      "Simple Cube"
+    ],
+    "project": "simple-example",
+    "quality": 2
+  },
+  "metrics": {
+    "fps": {
+      "mean": 74.91509375705175,
+      "median": 75.26242820271618,
+      "min": 68.87052341355471,
+      "p05": 70.03495679484837
+    },
+    "frameTimeMs": {
+      "max": 27.399999976158142,
+      "mean": 13.347161290333156,
+      "p95": 17.599999994039536
+    },
+    "memoryMB": {
+      "end": 274.95389556884766,
+      "growth": 64.93715381622314,
+      "mean": 230.08644348575223,
+      "slopePerMinute": 24.099921558978814,
+      "start": 210.0167417526245
+    }
+  },
+  "sourceExport": "Pinned_V1_simple-example_30s_session_1785354064478_dt7gb0r.json"
+}

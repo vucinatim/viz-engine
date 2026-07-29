@@ -212,7 +212,7 @@
       "status": "partial",
       "acceptance": ["Equivalent inputs and time produce equivalent graph outputs.", "Graph evaluation follows runtime time rather than incidental UI timing.", "Graph-heavy scenes remain within the approved frame budget."],
       "validationMethods": ["integration", "unit", "browser", "benchmark"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md"]
     },
     {
       "id": "audio.file-loading",
@@ -329,7 +329,7 @@
       "status": "partial",
       "acceptance": ["A parity fixture produces the expected ordered composite.", "Hidden, frozen, and transparent layers have the documented behavior.", "Preview and export share compatible scene semantics."],
       "validationMethods": ["visual", "integration", "browser"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md"]
     },
     {
       "id": "preview.layer-mirror",
@@ -533,11 +533,11 @@
       "importance": "critical",
       "parityDimensions": ["performance", "functional"],
       "referenceEvidence": ["src/components/editor/renderer.tsx", "src/components/audio/audio-panel.tsx"],
-      "v2Evidence": [],
+      "v2Evidence": ["tools/foundation/compare-performance-recordings.ts"],
       "status": "not-audited",
       "acceptance": ["A repeatable soak scenario exercises playback, project edits, audio changes, and tool panels.", "Memory, graphics resources, audio nodes, and listeners return to bounded steady state.", "Responsiveness and output remain correct at the end of the run."],
       "validationMethods": ["benchmark", "browser", "manual"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md"]
     }
   ]
 }

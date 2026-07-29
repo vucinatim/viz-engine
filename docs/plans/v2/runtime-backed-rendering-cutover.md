@@ -148,6 +148,9 @@ The cutover is complete only when:
 - the preserved node graph still drives component parameters
 - browser parity and measured performance evidence are recorded
 
-All architecture deletion conditions are now met. Product completion remains
-open for the pinned-reference browser performance comparison, long-session
-evidence, and the explicitly recorded Stage character-asset visual decision.
+All architecture deletion conditions are now met. The pinned V1 half of the
+fixed-device browser performance comparison is now recorded, and
+`pnpm compare:runtime-performance` enforces environment, fixture, frame-pacing,
+and memory budgets over raw profiler exports. Product completion remains open
+for the matching V2 recording, long-session evidence, full video-export proof,
+and the explicitly recorded Stage character-asset visual decision.

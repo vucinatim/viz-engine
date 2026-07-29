@@ -319,6 +319,14 @@ path versus 0.908 ms mean and 1.962 ms p95 for the former per-layer evaluation
 shape on the same machine. This is plan-evaluation evidence, not yet the
 required pinned-V1 browser frame-pacing comparison.
 
+The immutable V1 half of that browser comparison is now recorded for the
+three-layer `simple-example` fixture. A 30-second run on the Apple M1 Pro
+measured 74.915 mean FPS, 17.600 ms frame-time p95, and 230.086 MB mean JS
+heap. `pnpm compare:runtime-performance` now rejects mismatched devices,
+fixtures, shortened runs, and material FPS, frame-time, or memory regressions.
+The matching V2 run and a longer soak are still required; the baseline alone
+does not prove parity.
+
 ## Autonomous Calibration Foundation
 
 The first autonomous calibration goal pinned the immutable product reference
@@ -361,8 +369,9 @@ Parity is not complete. The matrix intentionally remains conservative:
 - 0 capabilities are currently classified as a known `gap`
 - 0 capabilities are yet certified `verified`
 
-Performance parity is still unmeasured and must not be inferred from this smoke
-run.
+The pinned V1 performance baseline is measured, but V2 performance parity is
+still unproven until the matching candidate recording and long-session soak
+pass the comparison contract.
 
 ## Current V1 Truth
 
