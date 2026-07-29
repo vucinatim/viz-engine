@@ -78,6 +78,7 @@ const ExportDialog = ({
       settings.width,
       settings.height,
       settings.quality,
+      settings.fps,
     );
   }, [
     duration,

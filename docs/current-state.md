@@ -327,6 +327,14 @@ fixtures, shortened runs, and material FPS, frame-time, or memory regressions.
 The matching V2 run and a longer soak are still required; the baseline alone
 does not prove parity.
 
+The browser video encoder has also been hardened around the shared runtime
+frame path. Per-export handlers and timers now clean up deterministically,
+successful encodes remove every virtual file, failed/cancelled encodes terminate
+the worker and discard partial state, WebM no longer receives MP4-only flags,
+and size estimates respect the selected FPS. Command-level tests cover MP4 and
+WebM, but a downloaded playable browser artifact is still required before
+video-export parity can be certified.
+
 ## Autonomous Calibration Foundation
 
 The first autonomous calibration goal pinned the immutable product reference

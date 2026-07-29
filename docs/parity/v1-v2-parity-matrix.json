@@ -433,7 +433,7 @@
       "status": "partial",
       "acceptance": ["Supported export settings produce a playable artifact with the intended duration and dimensions.", "Every frame is derived from deterministic runtime inputs.", "Progress, cancellation, errors, and resource cleanup remain responsive during a representative export."],
       "validationMethods": ["browser", "visual", "integration", "benchmark"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-video-export-resource-hardening.md"]
     },
     {
       "id": "debugging.layer-debug-info",

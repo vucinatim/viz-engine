@@ -1235,3 +1235,12 @@
   FPS, frame-time, and memory budgets
 - added focused comparison tests plus the durable V1 summary and methodology in
   `docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md`
+- hardened browser video-export lifecycle behavior after the runtime cutover:
+  per-export handlers and timeouts are cleared, successful virtual files are
+  deleted in one finalizer, and failed/cancelled encodes terminate and reset
+  the singleton worker instead of retaining partial state
+- extracted a pure FFmpeg command contract, removed MP4-only flags from WebM,
+  made file-size estimates FPS-aware, and added focused MP4/WebM tests
+- recorded the conservative automated evidence in
+  `docs/parity/evidence/2026-07-29-video-export-resource-hardening.md`; a real
+  playable browser artifact is still required

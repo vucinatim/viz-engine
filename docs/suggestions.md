@@ -88,6 +88,10 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
   browser recording command so V1/V2 frame pacing, interaction latency, memory,
   and long-session stability can be captured without temporary profiler UI
   changes or manual hover behavior.
+- Add a small repeatable browser video-export certification fixture that
+  validates the downloaded container with media metadata and frame/audio probes,
+  so MP4/WebM duration, dimensions, FPS, codecs, and synchronization stop
+  depending on manual inspection.
 - Keep the new project action surface pure and shared across editor, CLI, and
   future agent tooling so undo/history, collaboration, and AI mutation do not
   fork into app-specific mutation paths.

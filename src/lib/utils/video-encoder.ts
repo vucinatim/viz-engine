@@ -61,24 +61,13 @@ let ffmpeg: FFmpeg | null = null;
 /**
  * Initialize FFmpeg (only once)
  */
-export async function initFFmpeg(
-  onProgress?: (progress: number) => void,
-): Promise<void> {
+export async function initFFmpeg(): Promise<void> {
   if (ffmpeg) return;
 
   log('info', 'Initializing FFmpeg WASM');
   const initTimer = new PerfTimer('FFmpeg initialization');
 
   ffmpeg = new FFmpeg();
-
-  // Set up progress logging
-  if (onProgress) {
-    ffmpeg.on('progress', ({ progress }) => {
-      const progressPercent = progress * 100;
-      log('perf', `FFmpeg encoding progress`, `${progressPercent.toFixed(1)}%`);
-      onProgress(progressPercent);
-    });
-  }
 
   ffmpeg.on('log', ({ message }) => {
     // Only log important FFmpeg messages to avoid spam
@@ -105,9 +94,56 @@ export async function initFFmpeg(
 
     initTimer.end('FFmpeg WASM loaded successfully');
   } catch (error) {
+    const failedEncoder = ffmpeg;
+    failedEncoder?.terminate();
+    if (ffmpeg === failedEncoder) {
+      ffmpeg = null;
+    }
     log('error', 'FFmpeg load failed', String(error));
     throw new Error(`Failed to load FFmpeg: ${error}`);
   }
+}
+
+export interface VideoEncodingOptions {
+  fps: number;
+  width: number;
+  height: number;
+  format: 'mp4' | 'webm';
+  quality: 'high' | 'medium' | 'low';
+  audioStartTime?: number;
+  audioDuration?: number;
+}
+
+export function buildVideoEncodingCommand(
+  options: VideoEncodingOptions,
+  hasAudio: boolean,
+): string[] {
+  const { fps, format, quality, audioStartTime, audioDuration } = options;
+
+  return [
+    '-framerate',
+    String(fps),
+    '-pattern_type',
+    'glob',
+    '-i',
+    'frame*.jpg',
+    ...(hasAudio && audioStartTime !== undefined
+      ? ['-ss', String(audioStartTime)]
+      : []),
+    ...(hasAudio && audioDuration !== undefined
+      ? ['-t', String(audioDuration)]
+      : []),
+    ...(hasAudio ? ['-i', 'audio.mp3'] : []),
+    '-c:v',
+    format === 'mp4' ? 'libx264' : 'libvpx-vp9',
+    ...getQualitySettings(quality, format),
+    ...(hasAudio ? ['-c:a', format === 'mp4' ? 'aac' : 'libopus'] : []),
+    ...(hasAudio ? ['-shortest'] : []),
+    '-pix_fmt',
+    'yuv420p',
+    ...(format === 'mp4' ? ['-movflags', '+faststart'] : []),
+    `output.${format}`,
+  ];
 }
 
 /**
@@ -116,27 +152,23 @@ export async function initFFmpeg(
 export async function encodeVideo(
   frames: Blob[],
   audioUrl: string | null,
-  options: {
-    fps: number;
-    width: number;
-    height: number;
-    format: 'mp4' | 'webm';
-    quality: 'high' | 'medium' | 'low';
-    audioStartTime?: number; // Start time in seconds for audio trimming
-    audioDuration?: number; // Duration in seconds for audio trimming
-  },
+  options: VideoEncodingOptions,
   onProgress?: (progress: number) => void,
 ): Promise<Blob> {
   if (!ffmpeg) {
-    await initFFmpeg(onProgress);
+    await initFFmpeg();
   }
 
   if (!ffmpeg) {
     throw new Error('FFmpeg not initialized');
   }
 
-  const { fps, format, quality, audioStartTime, audioDuration } = options;
+  const encoder = ffmpeg;
+  const { format, quality, audioStartTime, audioDuration } = options;
   const totalFrames = frames.length;
+  const outputFile = `output.${format}`;
+  const virtualFiles: string[] = [];
+  let failed = false;
 
   // Helper to check for cancellation
   const checkCancellation = () => useExportStore.getState().shouldCancel;
@@ -158,10 +190,9 @@ export async function encodeVideo(
       }
 
       const frameData = await fetchFile(frames[i]);
-      await ffmpeg.writeFile(
-        `frame${String(i).padStart(6, '0')}.jpg`,
-        frameData,
-      );
+      const frameFile = `frame${String(i).padStart(6, '0')}.jpg`;
+      await encoder.writeFile(frameFile, frameData);
+      virtualFiles.push(frameFile);
 
       // Progress reporting removed - will be done by FFmpeg log handler
       // to avoid conflicting progress updates
@@ -178,7 +209,8 @@ export async function encodeVideo(
       log('info', 'Loading audio file');
       const audioTimer = new PerfTimer('Load audio file');
       const audioData = await fetchFile(audioUrl);
-      await ffmpeg.writeFile('audio.mp3', audioData);
+      await encoder.writeFile('audio.mp3', audioData);
+      virtualFiles.push('audio.mp3');
 
       // Log audio trimming info if provided
       if (audioStartTime !== undefined || audioDuration !== undefined) {
@@ -194,38 +226,11 @@ export async function encodeVideo(
     }
 
     // Determine encoding settings based on quality
-    const qualitySettings = getQualitySettings(quality, format);
     log('info', 'Encoding settings', `${quality} quality, ${format} format`);
 
     // Build FFmpeg command
-    const outputFile = `output.${format}`;
-    const command = [
-      '-framerate',
-      String(fps),
-      '-pattern_type',
-      'glob',
-      '-i',
-      'frame*.jpg',
-      // Audio input with optional trimming
-      // Use -ss BEFORE -i for faster seeking (input seeking vs output seeking)
-      ...(hasAudio && audioStartTime !== undefined
-        ? ['-ss', String(audioStartTime)]
-        : []),
-      ...(hasAudio && audioDuration !== undefined
-        ? ['-t', String(audioDuration)]
-        : []),
-      ...(hasAudio ? ['-i', 'audio.mp3'] : []),
-      '-c:v',
-      format === 'mp4' ? 'libx264' : 'libvpx-vp9',
-      ...qualitySettings,
-      ...(hasAudio ? ['-c:a', format === 'mp4' ? 'aac' : 'libopus'] : []),
-      ...(hasAudio ? ['-shortest'] : []), // Stop encoding when shortest stream ends
-      '-pix_fmt',
-      'yuv420p', // Compatibility with most players
-      '-movflags',
-      '+faststart', // Enable streaming for MP4
-      outputFile,
-    ];
+    const command = buildVideoEncodingCommand(options, hasAudio);
+    virtualFiles.push(outputFile);
 
     log('info', 'FFmpeg command', command.join(' '));
 
@@ -252,16 +257,17 @@ export async function encodeVideo(
     };
 
     // Attach the progress handler
-    ffmpeg.on('log', progressHandler);
+    encoder.on('log', progressHandler);
 
     // Track intervals for cleanup
     let cancellationChecker: NodeJS.Timeout | null = null;
     let checkLoop: NodeJS.Timeout | null = null;
+    let encodingTimeoutHandle: NodeJS.Timeout | null = null;
 
     try {
       // Set up a timeout for encoding (15 minutes max)
       const encodingTimeout = new Promise((_, reject) => {
-        setTimeout(
+        encodingTimeoutHandle = setTimeout(
           () => {
             reject(new Error('FFmpeg encoding timeout after 15 minutes'));
           },
@@ -271,14 +277,14 @@ export async function encodeVideo(
 
       // Set up cancellation checker (polls every 500ms)
       let cancelled = false;
-      cancellationChecker = setInterval(async () => {
-        if (await checkCancellation()) {
+      cancellationChecker = setInterval(() => {
+        if (checkCancellation()) {
           cancelled = true;
         }
       }, 500);
 
       // Race between encoding, timeout, and cancellation
-      const encodingPromise = ffmpeg.exec(command);
+      const encodingPromise = encoder.exec(command);
       const cancellationPromise = new Promise<void>((_, reject) => {
         checkLoop = setInterval(() => {
           if (cancelled) {
@@ -298,7 +304,8 @@ export async function encodeVideo(
       // Clean up all intervals and handlers
       if (cancellationChecker) clearInterval(cancellationChecker);
       if (checkLoop) clearInterval(checkLoop);
-      ffmpeg.off('log', progressHandler);
+      if (encodingTimeoutHandle) clearTimeout(encodingTimeoutHandle);
+      encoder.off('log', progressHandler);
     }
 
     if (onProgress) {
@@ -308,22 +315,8 @@ export async function encodeVideo(
     // Read the output file
     log('info', 'Reading encoded video file');
     const readTimer = new PerfTimer('Read output file');
-    const data = await ffmpeg.readFile(outputFile);
+    const data = await encoder.readFile(outputFile);
     readTimer.end('Output file read');
-
-    // Clean up files from virtual filesystem
-    log('info', 'Cleaning up virtual filesystem');
-    const cleanupTimer = new PerfTimer('Cleanup virtual filesystem');
-
-    for (let i = 0; i < frames.length; i++) {
-      await ffmpeg.deleteFile(`frame${String(i).padStart(6, '0')}.jpg`);
-    }
-    if (hasAudio) {
-      await ffmpeg.deleteFile('audio.mp3');
-    }
-    await ffmpeg.deleteFile(outputFile);
-
-    cleanupTimer.end(`${frames.length} frame files + audio cleaned up`);
 
     // Convert to blob
     const mimeType = format === 'mp4' ? 'video/mp4' : 'video/webm';
@@ -340,9 +333,33 @@ export async function encodeVideo(
     );
     return blob;
   } catch (error) {
+    failed = true;
     const errorMessage = error instanceof Error ? error.message : String(error);
     log('error', 'Video encoding failed', errorMessage);
     throw new Error(`Video encoding failed: ${errorMessage}`);
+  } finally {
+    if (failed) {
+      encoder.terminate();
+      if (ffmpeg === encoder) {
+        ffmpeg = null;
+      }
+      log('info', 'Reset FFmpeg after failed encoding');
+    } else if (virtualFiles.length > 0) {
+      log('info', 'Cleaning up virtual filesystem');
+      const cleanupTimer = new PerfTimer('Cleanup virtual filesystem');
+      let deletedFiles = 0;
+
+      for (const file of virtualFiles) {
+        try {
+          await encoder.deleteFile(file);
+          deletedFiles += 1;
+        } catch {
+          // Missing partial outputs are already clean.
+        }
+      }
+
+      cleanupTimer.end(`${deletedFiles} virtual files cleaned up`);
+    }
   }
 }
 
@@ -410,10 +427,11 @@ export function estimateVideoSize(
   width: number,
   height: number,
   quality: 'high' | 'medium' | 'low',
+  fps = 60,
 ): number {
   // Rough estimation based on typical bitrates
   const pixels = width * height;
-  const durationInSeconds = frameCount / 60; // Assuming 60 fps
+  const durationInSeconds = frameCount / fps;
 
   let bitrate: number; // in Mbps
 
