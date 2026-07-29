@@ -7,6 +7,7 @@ import {
   heartbeatMonitorComponent,
   instancedSupercubeComponent,
   lightTunnelComponent,
+  morphShapesComponent,
   noiseShaderComponent,
   orbitingCubesComponent,
   particleSystemComponent,
@@ -1042,5 +1043,162 @@ describe("Viz component authoring foundation", () => {
       tunnelSpeed: 0.5,
       rotationSpeed: 0.05,
     });
+  });
+
+  it("projects node-driven Morph Shapes history and rotation deterministically", () => {
+    const stepNode: VizNodeImplementation = {
+      type: "test-morph-step",
+      name: "Test Morph Step",
+      category: "pure",
+      outputs: [{ key: "value", label: "Value" }],
+      evaluate: ({ frameContext }) => ({
+        value: frameContext.frame >= 2 ? 1 : 0,
+      }),
+    };
+    const project: VizProjectDocument = {
+      schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
+      projectId: "project-morph-shapes",
+      name: "Morph Shapes",
+      timeline: { fps: 60, durationInFrames: 180 },
+      viewport: { width: 1280, height: 720 },
+      assetRefs: [
+        {
+          id: "asset-morph-model",
+          kind: "binary",
+          source: "local",
+          label: "Morph model",
+          mimeType: "model/gltf-binary",
+        },
+      ],
+      layerOrder: ["layer-morph"],
+      layers: [
+        {
+          id: "layer-morph",
+          name: "Morph Shapes",
+          componentId: "morph-shapes",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          settings: {
+            morphT: 0,
+            explosionShift: 0,
+            animationSpeed: 0.2,
+            color: "#00c8ff",
+            gridSize: 5,
+            modelPointCount: 100,
+            modelEvenness: 0.7,
+            sphereSize: 0.15,
+            additiveGlow: false,
+            glowIntensity: 1,
+            rotation: {
+              axis: { x: 0, y: 1, z: 0 },
+              speed: 0.5,
+            },
+            shapeASettings: {
+              shape: "model",
+              modelUrl: "asset:asset-morph-model",
+              position: { x: 0, y: 0, z: 0 },
+              rotation: { x: 0, y: 0, z: 0 },
+            },
+            shapeBSettings: {
+              shape: "pyramid",
+              modelUrl: "",
+              position: { x: 0, y: 0, z: 0 },
+              rotation: { x: 0, y: 0, z: 0 },
+            },
+          },
+          inputs: {
+            morphT: {
+              kind: "graph-output",
+              graphId: "graph-morph",
+              output: "value",
+            },
+          },
+        },
+      ],
+      graphs: [
+        {
+          id: "graph-morph",
+          name: "Morph step",
+          nodes: [{ id: "node-step", type: "test-morph-step" }],
+          outputs: [
+            {
+              key: "value",
+              nodeId: "node-step",
+              output: "value",
+            },
+          ],
+        },
+      ],
+    };
+    const session = createVizRuntimeSession({
+      project,
+      mode: "render",
+      seed: "morph-shapes-seed",
+      resolvedAssets: [
+        {
+          id: "asset-morph-model",
+          kind: "binary",
+          source: "local",
+          uri: "memory://morph-model.glb",
+          mimeType: "model/gltf-binary",
+          bytes: new ArrayBuffer(8),
+        },
+      ],
+    });
+    const createPlan = () =>
+      createVizRenderPlan({
+        session,
+        frame: 3,
+        registry: createCoreComponentRegistry(),
+        nodeRegistry: createVizNodeRegistry([stepNode]),
+      });
+    const plan = createPlan();
+
+    expect(
+      createCoreComponentRegistry().get(morphShapesComponent.id),
+    ).toBe(morphShapesComponent);
+    expect(plan).toEqual(createPlan());
+    expect(plan.issues).toEqual([]);
+
+    const node = plan.layers[0]?.node;
+    if (!node || node.kind !== "three-program") {
+      throw new Error("Expected Morph Shapes Three program node.");
+    }
+
+    expect(node.programId).toBe("viz-core/morph-shapes/v1");
+    expect(node.parameters).toMatchObject({
+      frame: 3,
+      seed: "morph-shapes-seed",
+      morphT: 1,
+      explosionShift: 0,
+      animationSpeed: 0.2,
+      morphHistory: [
+        [0, 0, 0.2],
+        [0, 0, 0.2],
+        [1, 0, 0.2],
+        [1, 0, 0.2],
+      ],
+      gridSize: 5,
+      sphereSize: 0.15,
+      shapeA: {
+        shape: "model",
+        modelUrl: "",
+        modelAssetId: "asset-morph-model",
+      },
+    });
+    const rotationQuaternion = node.parameters.rotationQuaternion;
+    expect(Array.isArray(rotationQuaternion)).toBe(true);
+    if (!Array.isArray(rotationQuaternion)) {
+      throw new Error("Expected Morph Shapes rotation quaternion.");
+    }
+    expect(rotationQuaternion[1]).toBeCloseTo(
+      Math.sin(0.025 / 2),
+      12,
+    );
+    expect(rotationQuaternion[3]).toBeCloseTo(
+      Math.cos(0.025 / 2),
+      12,
+    );
   });
 });

@@ -46,6 +46,11 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
 - Split renderer preview-time asset hydration from future server/render-time
   asset materialization behind a cleaner shared material resolver once the
   first asset-backed proof is stable.
+- Replace preserved-editor `FileInput` values that still persist browser-local
+  `idb:` URIs with canonical asset references and host materialization. Morph
+  Shapes now proves the package renderer can consume materialized binary
+  assets, but the preserved browse control is not portable until this editor
+  attachment seam is completed.
 - Continue from the current inherited-style cleanup toward a pass-based
   compositor model in the `Three` path so preview and final-render semantics
   can eventually align for opacity, blend isolation, and later masks/effects.

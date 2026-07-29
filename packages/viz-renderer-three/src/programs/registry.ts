@@ -1,9 +1,13 @@
-import type { VizRenderThreeProgramNode } from "@viz-engine/contracts";
+import type {
+  VizMaterializedAsset,
+  VizRenderThreeProgramNode,
+} from "@viz-engine/contracts";
 import { createSimpleCubeProgram } from "./simple-cube.js";
 import { createParticleSystemProgram } from "./particle-system.js";
 import { createOrbitingCubesProgram } from "./orbiting-cubes.js";
 import { createInstancedSupercubeProgram } from "./instanced-supercube.js";
 import { createLightTunnelProgram } from "./light-tunnel.js";
+import { createMorphShapesProgram } from "./morph-shapes.js";
 import type {
   VizThreeProgramFactory,
   VizThreeProgramInstance,
@@ -15,16 +19,21 @@ const programFactories = new Map<string, VizThreeProgramFactory>([
   ["viz-core/orbiting-cubes/v1", createOrbitingCubesProgram],
   ["viz-core/instanced-supercube/v1", createInstancedSupercubeProgram],
   ["viz-core/light-tunnel/v1", createLightTunnelProgram],
+  ["viz-core/morph-shapes/v1", createMorphShapesProgram],
 ]);
 
 export const createVizThreeProgramInstance = ({
   node,
   width,
   height,
+  materializedAssets,
+  invalidate,
 }: {
   node: VizRenderThreeProgramNode;
   width: number;
   height: number;
+  materializedAssets?: ReadonlyMap<string, VizMaterializedAsset>;
+  invalidate?: () => void;
 }): VizThreeProgramInstance => {
   const factory = programFactories.get(node.programId);
 
@@ -32,5 +41,11 @@ export const createVizThreeProgramInstance = ({
     throw new Error(`Unknown Viz Three program "${node.programId}".`);
   }
 
-  return factory({ node, width, height });
+  return factory({
+    node,
+    width,
+    height,
+    materializedAssets: materializedAssets ?? new Map(),
+    invalidate: invalidate ?? (() => undefined),
+  });
 };

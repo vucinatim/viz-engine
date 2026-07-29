@@ -1,6 +1,7 @@
 import type {
   VizBlendMode,
   VizLayerRenderPlanEntry,
+  VizMaterializedAsset,
   VizMaterializedImageAsset,
   VizRenderCircleNode,
   VizRenderGroupNode,
@@ -759,12 +760,16 @@ const createVizThreeCompositorLayer = (
   layer: VizLayerRenderPlanEntry,
   viewportWidth: number,
   viewportHeight: number,
+  materializedAssets: ReadonlyMap<string, VizMaterializedAsset>,
+  invalidate: () => void,
 ): VizThreeCompositorLayer => {
   if (layer.node?.kind === "three-program") {
     const programInstance = createVizThreeProgramInstance({
       node: layer.node,
       width: viewportWidth,
       height: viewportHeight,
+      materializedAssets,
+      invalidate,
     });
     const compositeSurface = createCompositeSurface(
       layer,
@@ -813,6 +818,7 @@ const createVizThreeCompositorLayer = (
 
 export const createVizThreeCompositorGraph = (
   renderPlan: VizRenderPlan,
+  invalidate: () => void = () => undefined,
 ): VizThreeCompositorGraph => {
   const compositeScene = new Scene();
   compositeScene.background =
@@ -822,6 +828,9 @@ export const createVizThreeCompositorGraph = (
   const compositeCamera = createOrthoCamera(renderPlan.viewport.width, renderPlan.viewport.height);
   const compositeRoot = new Group();
   compositeScene.add(compositeRoot);
+  const materializedAssets = new Map(
+    renderPlan.materializedAssets.map((asset) => [asset.id, asset]),
+  );
 
   const layers = renderPlan.layers
     .filter((layer) => Boolean(layer.node))
@@ -830,6 +839,8 @@ export const createVizThreeCompositorGraph = (
         layer,
         renderPlan.viewport.width,
         renderPlan.viewport.height,
+        materializedAssets,
+        invalidate,
       ),
     );
 
@@ -1310,6 +1321,9 @@ export const updateVizThreeCompositorGraph = (
   ) {
     return false;
   }
+  const materializedAssets = new Map(
+    nextPlan.materializedAssets.map((asset) => [asset.id, asset]),
+  );
 
   for (let index = 0; index < graph.layers.length; index += 1) {
     const graphLayer = graph.layers[index]!;
@@ -1334,7 +1348,10 @@ export const updateVizThreeCompositorGraph = (
             previousNode.programId === nextNode.programId &&
             graphLayer.programInstance?.programId === nextNode.programId
           ? (() => {
-              graphLayer.programInstance.update(nextNode);
+              graphLayer.programInstance.update(
+                nextNode,
+                materializedAssets,
+              );
               return true;
             })()
           : previousNode != null &&
@@ -1389,7 +1406,11 @@ export const createVizThreePreviewController = ({
   renderer.autoClear = true;
 
   let currentRenderPlan = renderPlan;
-  let compositorGraph = createVizThreeCompositorGraph(renderPlan);
+  let render = () => undefined;
+  let compositorGraph = createVizThreeCompositorGraph(
+    renderPlan,
+    () => render(),
+  );
   const textureCache = new Map<string, Texture>();
   const pendingTextureLoads = new Set<string>();
   const textureLoader = typeof window === "undefined" ? null : new TextureLoader();
@@ -1413,7 +1434,7 @@ export const createVizThreePreviewController = ({
     updateOrthoCamera(compositorGraph.compositeCamera, width, height);
   };
 
-  const render = () => {
+  render = () => {
     for (const layer of compositorGraph.layers) {
       renderer.setRenderTarget(layer.renderTarget);
       renderer.setClearColor(0x000000, 0);
@@ -1470,7 +1491,10 @@ export const createVizThreePreviewController = ({
       currentRenderPlan = nextRenderPlan;
       materializedImageAssets = createMaterializedImageAssetMap(nextRenderPlan);
       disposeCompositorGraph(compositorGraph);
-      compositorGraph = createVizThreeCompositorGraph(nextRenderPlan);
+      compositorGraph = createVizThreeCompositorGraph(
+        nextRenderPlan,
+        () => render(),
+      );
       resize(nextRenderPlan.viewport.width, nextRenderPlan.viewport.height);
       hydrate();
       render();

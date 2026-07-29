@@ -192,13 +192,14 @@ The biggest remaining architecture gaps are:
 - the preserved V1 node canvas still needs an executable `NodeNetwork`
   projection over canonical graph documents until it consumes the package
   graph model and execution registry directly
-- most preserved V1 components still render through their historical
-  `draw`/`draw3D` paths; `Curve Spectrum`, `Debug Animation`,
+- two preserved V1 components still render through their historical
+  `draw3D` paths; `Curve Spectrum`, `Debug Animation`,
   `Feature Extraction Bars`, `Strobe Light`, `Simple Cube`, and
   `Fullscreen Shader`, `Noise Shader`, `Particle System`, and
   `Orbiting Cubes`, `Heartbeat Monitor`, `Instanced Supercube`, and
-  `Light Tunnel` now have package-runtime-backed editor paths, but this is not
-  the completed component migration
+  `Light Tunnel`, and `Morph Shapes` now have package-runtime-backed editor
+  paths, but `Neural Network` and `Stage Scene` still block the completed
+  component migration
 - the temporary per-component runtime preview bridge remains necessary until
   those historical render paths are replaced by package-runtime components
 
@@ -226,7 +227,7 @@ The renderer contract also has a persistent Three program node:
   accumulated browser `dt`
 
 Runtime-backed component-catalog previews now use that same package registry
-and renderer attachment. All twelve migrated editor definitions now contain
+and renderer attachment. All thirteen migrated editor definitions now contain
 only authoring metadata and parameter schemas; their visual semantics live
 entirely in package terrain. `Fullscreen Shader` GLSL source moved there as
 part of the same cutover.
@@ -263,6 +264,14 @@ palette selection, light motion, and rising-edge wave events derive from
 canonical frame time, seed, and setting history. Bloom and depth of field now
 run through one reusable renderer-owned post-processing pipeline that can be
 shared by the remaining large Three scenes.
+
+Morph Shapes now owns one retained 60,000-capacity instanced point-cloud mesh
+in package terrain. Procedural cube/pyramid shapes, seeded model-surface
+sampling, embedded-font or TTF text sampling, morph smoothing, explosion,
+rotation, material mode, and shape transforms are driven by deterministic
+render-plan data. The Three program can receive canonical materialized binary
+assets and explicitly invalidates paused previews when asynchronous shape
+generation finishes instead of depending on playback or polling.
 
 ## Autonomous Calibration Foundation
 

@@ -1,4 +1,7 @@
-import type { VizRenderThreeProgramNode } from "@viz-engine/contracts";
+import type {
+  VizMaterializedAsset,
+  VizRenderThreeProgramNode,
+} from "@viz-engine/contracts";
 import type {
   Camera,
   Group,
@@ -12,7 +15,10 @@ export interface VizThreeProgramInstance {
   readonly scene: Scene;
   readonly camera: Camera;
   readonly root: Group;
-  update(node: VizRenderThreeProgramNode): void;
+  update(
+    node: VizRenderThreeProgramNode,
+    materializedAssets?: ReadonlyMap<string, VizMaterializedAsset>,
+  ): void;
   resize(width: number, height: number): void;
   render(
     renderer: WebGLRenderer,
@@ -25,4 +31,6 @@ export type VizThreeProgramFactory = (options: {
   node: VizRenderThreeProgramNode;
   width: number;
   height: number;
+  materializedAssets: ReadonlyMap<string, VizMaterializedAsset>;
+  invalidate(): void;
 }) => VizThreeProgramInstance;

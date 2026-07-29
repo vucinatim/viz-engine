@@ -180,6 +180,30 @@
   - passed the full foundation gate with 31 test files and 119 tests
   - recorded evidence in
     `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-10.md`
+- completed the deterministic Morph Shapes migration:
+  - moved morph, explosion, procedural shape, model, text, transform, material,
+    and rotation semantics into a package component and retained Three program
+  - retained one 60,000-capacity instanced mesh, geometry, material, camera,
+    and light rig across frame and structure updates
+  - replaced accumulated editor rotation and mutable per-instance morph state
+    with canonical rotation and deterministic direct-frame smoothing, while
+    retaining a fast sequential-frame update path
+  - made custom text generation deterministic with an embedded default font
+    and optional TTF source
+  - added deterministic seeded GLTF surface sampling through canonical
+    materialized binary assets or explicit external sources
+  - taught Three programs to receive updated materialized assets and invalidate
+    paused previews when asynchronous resources finish
+  - made a previously failed model source retry when its canonical asset later
+    materializes
+  - removed all Morph Shapes editor-owned Three callbacks and helper logic
+  - browser-verified default procedural shapes, morph, explosion, point/grid
+    structure, additive material mode, playback, and paused custom-text repaint
+    with a clean console
+  - observed a `+1.32 kB` raw / `+0.58 kB` gzip studio entry-chunk increase
+  - passed the full foundation gate with 31 test files and 121 tests
+  - recorded evidence in
+    `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-11.md`
 - established the autonomous V2 calibration foundation:
   - pinned the immutable final pre-V2 parity reference to
     `e806fbc10980615588b52ff574bc923c6f00f35e`

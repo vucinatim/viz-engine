@@ -17,6 +17,7 @@ import {
   Group,
   InterleavedBufferAttribute,
   InstancedMesh,
+  Matrix4,
   Mesh,
   MeshBasicMaterial,
   ShaderMaterial,
@@ -833,5 +834,233 @@ describe("Viz Three renderer proof", () => {
         ).data.array,
       ),
     ).not.toEqual(initialEdgePositions);
+  });
+
+  it("retains Morph Shapes instances across morph, structure, and text-source updates", async () => {
+    const createMorphPlan = ({
+      frame,
+      gridSize,
+      morphT,
+      explosionShift,
+      additiveGlow,
+      shapeB = "pyramid",
+      text = "",
+      modelPointCount = 100,
+    }: {
+      frame: number;
+      gridSize: number;
+      morphT: number;
+      explosionShift: number;
+      additiveGlow: boolean;
+      shapeB?: string;
+      text?: string;
+      modelPointCount?: number;
+    }): VizRenderPlan => ({
+      frameContext: {
+        frame,
+        fps: 60,
+        durationInFrames: 180,
+        timeInSeconds: frame / 60,
+        deltaTimeSeconds: 1 / 60,
+        isFirstFrame: frame === 0,
+        isLastFrame: false,
+        mode: "live",
+        seed: "morph-shapes",
+      },
+      viewport: { width: 1280, height: 720, backgroundColor: "#000000" },
+      materializedAssets: [],
+      issues: [],
+      layers: [
+        {
+          layerId: "layer-morph",
+          componentId: "morph-shapes",
+          rendererFamily: "three",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          resolvedInputs: {},
+          node: {
+            kind: "three-program",
+            programId: "viz-core/morph-shapes/v1",
+            parameters: {
+              frame,
+              seed: "morph-shapes-seed",
+              shapeA: {
+                shape: "cube",
+                modelUrl: "",
+                modelAssetId: "",
+                text: "",
+                textSize: 1,
+                textDepth: 0.2,
+                textFontUrl: "",
+                position: [0, 0, 0],
+                rotationDegrees: [0, 0, 0],
+              },
+              shapeB: {
+                shape: shapeB,
+                modelUrl: "",
+                modelAssetId: "",
+                text,
+                textSize: 1,
+                textDepth: 0.2,
+                textFontUrl: "",
+                position: [0, 0, 0],
+                rotationDegrees: [0, 0, 0],
+              },
+              morphT,
+              explosionShift,
+              animationSpeed: 0.08,
+              color: "#00c8ff",
+              gridSize,
+              modelPointCount,
+              modelEvenness: 0.7,
+              sphereSize: 0.15,
+              additiveGlow,
+              glowIntensity: 1,
+              rotationQuaternion: [
+                0,
+                Math.sin((frame / 120) * 0.5),
+                0,
+                Math.cos((frame / 120) * 0.5),
+              ],
+            },
+          },
+        },
+      ],
+    });
+    const firstPlan = createMorphPlan({
+      frame: 0,
+      gridSize: 5,
+      morphT: 0,
+      explosionShift: 0,
+      additiveGlow: false,
+    });
+    const nextPlan = createMorphPlan({
+      frame: 1,
+      gridSize: 5,
+      morphT: 1,
+      explosionShift: 2,
+      additiveGlow: true,
+    });
+    const structuralPlan = createMorphPlan({
+      frame: 10,
+      gridSize: 6,
+      morphT: 0.5,
+      explosionShift: 1,
+      additiveGlow: false,
+    });
+    let invalidationCount = 0;
+    const graph = createVizThreeCompositorGraph(
+      firstPlan,
+      () => {
+        invalidationCount += 1;
+      },
+    );
+    const repeatedGraph = createVizThreeCompositorGraph(firstPlan);
+    const layer = graph.layers[0]!;
+    const instance = layer.programInstance!;
+    const instances = instance.root.userData.instances as InstancedMesh;
+    const repeatedInstances = repeatedGraph.layers[0]!.programInstance!.root
+      .userData.instances as InstancedMesh;
+    const geometry = instances.geometry;
+    const material = instances.material;
+    const initialMatrices = Array.from(
+      instances.instanceMatrix.array.slice(0, instances.count * 16),
+    );
+
+    expect(instance.programId).toBe("viz-core/morph-shapes/v1");
+    expect(instances.count).toBe(44);
+    expect(initialMatrices).toEqual(
+      Array.from(
+        repeatedInstances.instanceMatrix.array.slice(
+          0,
+          repeatedInstances.count * 16,
+        ),
+      ),
+    );
+
+    expect(
+      updateVizThreeCompositorGraph(graph, firstPlan, nextPlan),
+    ).toBe(true);
+    expect(layer.programInstance).toBe(instance);
+    expect(instance.root.userData.instances).toBe(instances);
+    expect(instances.geometry).toBe(geometry);
+    expect(instances.material).toBe(material);
+    expect(instances.count).toBe(44);
+    expect(instances.material.blending).not.toBeUndefined();
+    expect(
+      Array.from(
+        instances.instanceMatrix.array.slice(0, instances.count * 16),
+      ),
+    ).not.toEqual(initialMatrices);
+
+    expect(
+      updateVizThreeCompositorGraph(
+        graph,
+        nextPlan,
+        structuralPlan,
+      ),
+    ).toBe(true);
+    expect(instances.geometry).toBe(geometry);
+    expect(instances.material).toBe(material);
+    expect(instances.count).toBe(56);
+    expect(instance.root.quaternion.y).toBeCloseTo(
+      Math.sin((10 / 120) * 0.5),
+      12,
+    );
+
+    const textPlan = createMorphPlan({
+      frame: 11,
+      gridSize: 20,
+      morphT: 1,
+      explosionShift: 0,
+      additiveGlow: false,
+      shapeB: "custom-text",
+      text: "VIZ",
+      modelPointCount: 500,
+    });
+    expect(
+      updateVizThreeCompositorGraph(
+        graph,
+        structuralPlan,
+        textPlan,
+      ),
+    ).toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(invalidationCount).toBeGreaterThan(0);
+    const resolvedTextPlan = createMorphPlan({
+      frame: 12,
+      gridSize: 20,
+      morphT: 1,
+      explosionShift: 0,
+      additiveGlow: false,
+      shapeB: "custom-text",
+      text: "VIZ",
+      modelPointCount: 500,
+    });
+    expect(
+      updateVizThreeCompositorGraph(
+        graph,
+        textPlan,
+        resolvedTextPlan,
+      ),
+    ).toBe(true);
+    expect(instances.count).toBe(500);
+    expect(instances.geometry).toBe(geometry);
+    expect(instances.material).toBe(material);
+    expect(instance.root.userData.targetBounds.b).toBeGreaterThan(4);
+    const textTranslations = Array.from(
+      { length: instances.count },
+      (_, index) => {
+        const instanceMatrix = new Matrix4();
+        instances.getMatrixAt(index, instanceMatrix);
+        return Math.max(
+          Math.abs(instanceMatrix.elements[12]),
+          Math.abs(instanceMatrix.elements[13]),
+          Math.abs(instanceMatrix.elements[14]),
+        );
+      },
+    );
+    expect(Math.max(...textTranslations)).toBeGreaterThan(3.5);
   });
 });

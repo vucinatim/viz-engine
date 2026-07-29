@@ -46,7 +46,7 @@ The mixed fallback attachment is:
 | Simple Cube | package runtime | persistent Three scene | Complete: deterministic persistent scene; historical callbacks removed |
 | Instanced Supercube | package runtime | persistent Three scene | Complete: retained instancing, deterministic explosion replay and rotation, lights and shadows; historical callbacks removed |
 | Light Tunnel | package runtime | persistent Three scene | Complete: retained solid/edge batches and lights, deterministic movement/palette/wave replay, fog, reusable bloom/depth-of-field pipeline; historical callbacks removed |
-| Morph Shapes | Three `init3D`/`draw3D` | persistent Three scene | Instancing, procedural/model/text sources, asset loading, custom material |
+| Morph Shapes | package runtime | persistent Three scene | Complete: retained instancing, deterministic procedural/model/text point clouds, canonical asset delivery, direct-frame morph/rotation semantics, paused async invalidation; historical callbacks removed |
 | Neural Network | Three `init3D`/`draw3D` | persistent Three scene | Procedural seeded topology, custom shaders, activation motion, bloom and depth-of-field |
 | Noise Shader | package runtime | persistent shader scene | Complete: package-owned GLSL and deterministic grouped uniforms; historical callbacks removed |
 | Orbiting Cubes | package runtime | persistent Three scene | Complete: seeded topology, retained instancing, lighting, canonical camera orbit, and node-driven parameters; historical callbacks removed |
