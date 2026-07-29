@@ -160,7 +160,7 @@
       "status": "partial",
       "acceptance": ["The graph opens for the selected layer with the correct graph loaded.", "Pan, zoom, selection, and close behavior feel equivalent to V1.", "Graph changes update runtime parameter evaluation through stable contracts."],
       "validationMethods": ["browser", "visual", "integration"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
     },
     {
       "id": "nodes.create-delete-search",
@@ -238,7 +238,7 @@
       "status": "partial",
       "acceptance": ["Playhead position and waveform time mapping remain accurate at every zoom level.", "Seeking is immediate and does not fight playback synchronization.", "Zooming and scrolling remain responsive on a representative full-length track."],
       "validationMethods": ["browser", "visual", "integration", "benchmark"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
     },
     {
       "id": "audio.bundled-track-selection",
@@ -290,7 +290,7 @@
       "status": "partial",
       "acceptance": ["Transport state, displayed time, audio time, and rendered frame stay synchronized.", "Seeking while playing and paused has deterministic results.", "Loop boundaries do not drift or double-trigger."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
     },
     {
       "id": "transport.timeline",
@@ -303,7 +303,7 @@
       "status": "partial",
       "acceptance": ["Timeline visuals agree with the canonical transport state.", "Pointer and keyboard seeking reach the intended time.", "Duration changes do not leave stale ranges or markers."],
       "validationMethods": ["browser", "visual", "integration"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
     },
     {
       "id": "preview.live-rendering",
@@ -316,7 +316,7 @@
       "status": "partial",
       "acceptance": ["The preview image is produced from the canonical project and runtime inputs.", "Project changes update without stale adapters or duplicate ownership.", "Representative scenes meet the approved interactive frame budget."],
       "validationMethods": ["browser", "visual", "integration", "benchmark"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-viz-session-runtime-preview-ownership.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-viz-session-runtime-preview-ownership.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
     },
     {
       "id": "preview.multi-layer-compositing",
@@ -329,7 +329,7 @@
       "status": "partial",
       "acceptance": ["A parity fixture produces the expected ordered composite.", "Hidden, frozen, and transparent layers have the documented behavior.", "Preview and export share compatible scene semantics."],
       "validationMethods": ["visual", "integration", "browser"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
     },
     {
       "id": "preview.layer-mirror",
@@ -381,7 +381,7 @@
       "status": "partial",
       "acceptance": ["A saved project round-trips without semantic loss.", "Invalid documents fail validation without damaging the active project.", "Reset produces the documented clean starting project."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
     },
     {
       "id": "persistence.drag-drop-import",

@@ -1287,3 +1287,22 @@
   - 35 foundation test files / 132 tests passed
   - built-package consumer smoke passed
   - agent creative-loop bundle roundtrip passed
+- completed the final requirement-by-requirement runtime rendering cutover
+  audit:
+  - matched the current 15-component inventory to the immutable V1 reference
+  - confirmed all editor definitions are runtime-backed and callback-free
+  - confirmed the temporary bridge/controller/audio handoff files are absent
+  - confirmed preview and export call the same `VizSession` frame action
+  - confirmed component-specific browser behavior is isolated to the Stage
+    Fly Mode host attachment rather than scene evaluation
+- closed the missing browser-level seek and reload-persistence evidence:
+  - sought the real bundled-audio waveform from 0:00 to 12.03 and observed an
+    immediate changed runtime frame
+  - resumed playback to 13.45 and paused
+  - changed Noise Shader Scale from 7.2 to 8.3, reloaded, and recovered the
+    three-layer/three-network project with the changed canonical value
+  - restored Scale to 7.2 after the audit
+- recorded the acceptance table in
+  `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md`;
+  exact historical Stage FBX character appearance remains the sole product
+  decision preventing final goal completion

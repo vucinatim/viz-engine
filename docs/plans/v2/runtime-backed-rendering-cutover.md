@@ -148,9 +148,14 @@ The cutover is complete only when:
 - the preserved node graph still drives component parameters
 - browser parity and measured performance evidence are recorded
 
-All architecture deletion conditions are now met. The pinned V1 half of the
-fixed-device browser performance comparison is now recorded, and
-`pnpm compare:runtime-performance` enforces environment, fixture, frame-pacing,
-and memory budgets over raw profiler exports. Product completion remains open
-for the matching V2 recording, long-session evidence, full video-export proof,
-and the explicitly recorded Stage character-asset visual decision.
+All architecture deletion conditions are now met. The fixed-device V1/V2
+comparison passes all 21 checks, the bounded three-minute soak is recorded, and
+a real runtime-backed H.264/AAC export has been inspected. The final
+requirement-by-requirement record lives in
+`docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md`.
+
+Only the explicitly recorded Stage character-asset visual decision remains
+open. The recommended product direction is to approve the deterministic
+retained procedural actors for this cutover and treat future production
+character fidelity as canonical materialized assets plus deterministic,
+bakeable animation rather than restoring the historical browser FBX path.

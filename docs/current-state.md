@@ -301,8 +301,10 @@ The per-layer runtime-preview bridge has now been deleted. `VizSession`
 evaluates the complete canonical project into one render plan per frame through
 one cached runtime session. The browser attachment store only slices that plan
 for the existing stacked canvases, mirrors, and export capture surface; it no
-longer creates runtime sessions, resolves component settings, samples audio, or
-dispatches `draw`, `init3D`, or `draw3D`.
+longer creates runtime sessions, resolves settings for scene output, samples
+audio, or dispatches `draw`, `init3D`, or `draw3D`. Generic debug presentation
+may inspect projected settings, and the isolated Stage Fly Mode host attachment
+may inspect camera-control values; neither defines deterministic scene output.
 
 Live analyzer data and offline export data now enter as one explicit
 frame-scoped runtime input snapshot. Curve Spectrum consumes that snapshot
@@ -387,6 +389,11 @@ The matching V2 candidate passes the fixed-device comparison contract and the
 bounded three-minute playback soak is recorded. Full parity remains
 conservative because interaction-latency instrumentation and an edit-heavy
 long-session scenario are still outstanding.
+
+The final cutover acceptance audit also browser-verified waveform seeking,
+playback after seeking, and canonical parameter persistence across reload. All
+cutover requirements are now proven except the explicit product decision over
+exact historical Stage FBX character appearance.
 
 ## Current V1 Truth
 
