@@ -5,6 +5,7 @@ import DebugAnimation from '@/components/comps/debug-animation';
 import FeatureExtractionBars from '@/components/comps/feature-extraction-bars';
 import FullscreenShader from '@/components/comps/fullscreen-shader';
 import NoiseShader from '@/components/comps/noise-shader';
+import ParticleSystem from '@/components/comps/particle-system';
 import SimpleCube from '@/components/comps/simple-cube';
 import StrobeLight from '@/components/comps/strobe-light';
 import { createVizSessionRuntimePreviewFrame } from '@/lib/viz-session';
@@ -78,6 +79,7 @@ describe('Editor runtime preview runtime bridge', () => {
     [SimpleCube, 'simple-cube', 'three-program'],
     [FullscreenShader, 'fullscreen-shader', 'shader'],
     [NoiseShader, 'noise-shader', 'shader'],
+    [ParticleSystem, 'particle-system', 'three-program'],
   ])(
     'builds runtime plans for newly migrated preserved-editor components',
     (comp, componentId, expectedNodeKind) => {
@@ -172,6 +174,7 @@ describe('Editor runtime preview runtime bridge', () => {
       SimpleCube,
       FullscreenShader,
       NoiseShader,
+      ParticleSystem,
     ]) {
       expect(comp).not.toHaveProperty('draw');
       expect(comp).not.toHaveProperty('init3D');

@@ -5,6 +5,7 @@ import {
   featureExtractionBarsComponent,
   fullscreenShaderComponent,
   noiseShaderComponent,
+  particleSystemComponent,
   simpleCubeComponent,
   strobeLightComponent,
 } from "@viz-engine/components-core";
@@ -476,6 +477,85 @@ describe("Viz component authoring foundation", () => {
       u_color1: { type: "color", value: "#112233" },
       u_invert: 1,
       u_posterize: 5,
+    });
+  });
+
+  it("derives Particle System simulation inputs from canonical frame state", () => {
+    const project: VizProjectDocument = {
+      schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
+      projectId: "project-particle-system",
+      name: "Particle System",
+      timeline: { fps: 60, durationInFrames: 180 },
+      viewport: { width: 1280, height: 720 },
+      layerOrder: ["layer-particles"],
+      layers: [
+        {
+          id: "layer-particles",
+          name: "Particle System",
+          componentId: "particle-system",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          settings: {
+            appearance: {
+              startColor: "#ff00ff",
+              endColor: "#00ffff",
+              particleSize: 0.25,
+              blending: "additive",
+            },
+            physics: {
+              emissionRate: 10,
+              lifetime: 2,
+              useGravity: true,
+              gravityStrength: 9.8,
+              initialSpeed: 2,
+              spread: 0.5,
+            },
+            emission: {
+              emitterShape: "sphere",
+              emitterSize: 0.75,
+            },
+            rotation: {
+              rotationSpeedX: 0.5,
+              rotationSpeedY: 1,
+              rotationSpeedZ: -0.25,
+            },
+          },
+        },
+      ],
+    };
+    const session = createVizRuntimeSession({
+      project,
+      mode: "render",
+      seed: "particle-system-seed",
+    });
+    const createPlan = () =>
+      createVizRenderPlan({
+        session,
+        frame: 60,
+        registry: createCoreComponentRegistry(),
+      });
+    const plan = createPlan();
+
+    expect(
+      createCoreComponentRegistry().get(particleSystemComponent.id),
+    ).toBe(particleSystemComponent);
+    expect(plan).toEqual(createPlan());
+
+    const node = plan.layers[0]?.node;
+    if (!node || node.kind !== "three-program") {
+      throw new Error("Expected Particle System Three program node.");
+    }
+
+    expect(node.programId).toBe("viz-core/particle-system/v1");
+    expect(node.parameters).toMatchObject({
+      time: 1,
+      seed: "particle-system-seed",
+      emissionRate: 10,
+      emitterShape: "sphere",
+      rotationX: 0.5,
+      rotationY: 1,
+      rotationZ: -0.25,
     });
   });
 });

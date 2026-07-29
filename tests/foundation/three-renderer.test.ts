@@ -13,7 +13,13 @@ import {
   updateVizThreeCompositorGraph,
 } from "@viz-engine/renderer-three";
 import { createVizRenderPlan, createVizRuntimeSession } from "@viz-engine/runtime";
-import { Group, Mesh, MeshBasicMaterial, ShaderMaterial } from "three";
+import {
+  Group,
+  InstancedMesh,
+  Mesh,
+  MeshBasicMaterial,
+  ShaderMaterial,
+} from "three";
 import { describe, expect, it } from "vitest";
 
 const collectMeshes = (object: Group | Mesh): Mesh[] => {
@@ -341,5 +347,90 @@ describe("Viz Three renderer proof", () => {
     expect(cube.geometry).toBe(geometry);
     expect(cube.rotation.x).toBe(1);
     expect(cube.rotation.y).toBe(-0.5);
+  });
+
+  it("evaluates deterministic particle frames on a retained instanced mesh", () => {
+    const createParticlePlan = (frame: number): VizRenderPlan => ({
+      frameContext: {
+        frame,
+        fps: 60,
+        durationInFrames: 180,
+        timeInSeconds: frame / 60,
+        deltaTimeSeconds: 1 / 60,
+        isFirstFrame: frame === 0,
+        isLastFrame: false,
+        mode: "live",
+        seed: "persistent-particles",
+      },
+      viewport: {
+        width: 1280,
+        height: 720,
+        backgroundColor: "#000000",
+      },
+      materializedAssets: [],
+      issues: [],
+      layers: [
+        {
+          layerId: "layer-particles",
+          componentId: "particle-system",
+          rendererFamily: "three",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          resolvedInputs: {},
+          node: {
+            kind: "three-program",
+            programId: "viz-core/particle-system/v1",
+            parameters: {
+              time: frame / 60,
+              seed: "persistent-particles",
+              startColor: "#ff00ff",
+              endColor: "#00ffff",
+              particleSize: 0.2,
+              blending: "additive",
+              emissionRate: 10,
+              lifetime: 2,
+              useGravity: true,
+              gravityStrength: 9.8,
+              initialSpeed: 2,
+              spread: 0.5,
+              emitterShape: "sphere",
+              emitterSize: 0.5,
+              rotationX: 0,
+              rotationY: frame / 60,
+              rotationZ: 0,
+            },
+          },
+        },
+      ],
+    });
+    const firstPlan = createParticlePlan(60);
+    const nextPlan = createParticlePlan(120);
+    const graph = createVizThreeCompositorGraph(firstPlan);
+    const repeatedGraph = createVizThreeCompositorGraph(firstPlan);
+    const layer = graph.layers[0]!;
+    const instance = layer.programInstance;
+    const mesh = instance?.root.children[0];
+    const repeatedMesh =
+      repeatedGraph.layers[0]!.programInstance?.root.children[0];
+
+    expect(instance?.programId).toBe("viz-core/particle-system/v1");
+    expect(mesh).toBeInstanceOf(InstancedMesh);
+    expect((mesh as InstancedMesh).count).toBe(10);
+    expect(repeatedMesh).toBeInstanceOf(InstancedMesh);
+    expect(
+      Array.from((mesh as InstancedMesh).instanceMatrix.array.slice(0, 160)),
+    ).toEqual(
+      Array.from(
+        (repeatedMesh as InstancedMesh).instanceMatrix.array.slice(0, 160),
+      ),
+    );
+    expect(
+      updateVizThreeCompositorGraph(graph, firstPlan, nextPlan),
+    ).toBe(true);
+    expect(layer.programInstance).toBe(instance);
+    expect(instance?.root.children[0]).toBe(mesh);
+    expect((mesh as InstancedMesh).count).toBe(20);
+    expect(instance?.root.rotation.y).toBe(2);
   });
 });

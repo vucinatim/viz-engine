@@ -84,6 +84,23 @@
     (`115.00 kB` gzip) to `385.23 kB` (`114.50 kB` gzip)
   - recorded evidence in
     `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-5.md`
+- completed the deterministic Particle System migration:
+  - added a package-runtime component and retained Three program with one
+    persistent instanced mesh, geometry, shader material, and color buffer
+  - replaced mutable emission pools, accumulated `dt`, and `Math.random()` with
+    analytic particles derived from canonical time, session seed, and emission
+    index
+  - derived gravity, emitter shapes, velocity spread, lifetime colors, blend
+    modes, and group rotation without frame-history dependence
+  - disabled stale instanced-mesh frustum bounds after browser validation
+    exposed the time-zero-to-active transition
+  - removed the historical editor-owned particle state and Three callbacks
+  - browser-verified deterministic playback, paused-frame stability, Point to
+    Sphere emitter changes, synchronized thumbnail, and a clean console
+  - recorded a `0.66 kB` raw / `0.41 kB` gzip studio entry-chunk increase for
+    the new analytic program
+  - recorded evidence in
+    `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-6.md`
 - established the autonomous V2 calibration foundation:
   - pinned the immutable final pre-V2 parity reference to
     `e806fbc10980615588b52ff574bc923c6f00f35e`

@@ -50,7 +50,7 @@ The mixed fallback attachment is:
 | Neural Network | Three `init3D`/`draw3D` | persistent Three scene | Procedural seeded topology, custom shaders, activation motion, bloom and depth-of-field |
 | Noise Shader | package runtime | persistent shader scene | Complete: package-owned GLSL and deterministic grouped uniforms; historical callbacks removed |
 | Orbiting Cubes | Three `init3D`/`draw3D` | persistent Three scene | Instancing, lighting, camera and node-driven movement |
-| Particle System | Three `init3D`/`draw3D` | persistent Three scene | Instancing, custom shader, seeded particle state and blend modes |
+| Particle System | package runtime | persistent Three scene | Complete: analytic seeded instancing, physics, colors, and blend modes; historical callbacks removed |
 | Stage Scene | Three `init3D`/`draw3D` | persistent Three scene | Instancing, lighting, fog, camera path, bloom and feature-driven staging |
 | Fullscreen Shader | package runtime | persistent shader scene | Complete: package-owned shader selection and deterministic uniforms; historical callbacks removed |
 | Strobe Light | package runtime | persistent shader scene | Complete: deterministic runtime shader; historical callbacks removed |
