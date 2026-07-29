@@ -3,6 +3,7 @@ import {
   debugAnimationComponent,
   featureChannelBarsComponent,
   featureExtractionBarsComponent,
+  strobeLightComponent,
 } from "@viz-engine/components-core";
 import type {
   VizComponentImplementation,
@@ -194,5 +195,74 @@ describe("Viz component authoring foundation", () => {
     expect(featureNode.children.filter((node) => node.kind === "text")).toHaveLength(
       10,
     );
+  });
+
+  it("derives strobe frames deterministically instead of accumulating time or using Math.random", () => {
+    const createStrobePlan = (
+      frame: number,
+      settings: Record<string, unknown>,
+    ) => {
+      const project: VizProjectDocument = {
+        schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
+        projectId: "project-strobe",
+        name: "Strobe",
+        timeline: { fps: 60, durationInFrames: 120 },
+        viewport: { width: 1280, height: 720 },
+        layerOrder: ["layer-strobe"],
+        layers: [
+          {
+            id: "layer-strobe",
+            name: "Strobe Light",
+            componentId: "strobe-light",
+            enabled: true,
+            opacity: 1,
+            blendMode: "normal",
+            settings,
+          },
+        ],
+      };
+
+      return createVizRenderPlan({
+        session: createVizRuntimeSession({
+          project,
+          mode: "render",
+          seed: "strobe-seed",
+        }),
+        frame,
+        registry: createCoreComponentRegistry(),
+      });
+    };
+    const settings = {
+      mode: "Intensity",
+      color: "#ffffff",
+      intensity: 1,
+      strength: 0.8,
+      dutyCycle: 0.5,
+      flashRate: 0.3,
+    };
+    const onPlan = createStrobePlan(0, settings);
+    const repeatedOnPlan = createStrobePlan(0, settings);
+    const offPlan = createStrobePlan(45, settings);
+
+    expect(createCoreComponentRegistry().get(strobeLightComponent.id)).toBe(
+      strobeLightComponent,
+    );
+    expect(onPlan).toEqual(repeatedOnPlan);
+    expect(onPlan.layers[0]?.node?.kind).toBe("shader");
+    expect(offPlan.layers[0]?.node?.kind).toBe("shader");
+
+    const onNode = onPlan.layers[0]?.node;
+    const offNode = offPlan.layers[0]?.node;
+    if (
+      !onNode ||
+      onNode.kind !== "shader" ||
+      !offNode ||
+      offNode.kind !== "shader"
+    ) {
+      throw new Error("Expected strobe shader render nodes.");
+    }
+
+    expect(onNode.uniforms.uStrength).toBe(0.8);
+    expect(offNode.uniforms.uStrength).toBe(0);
   });
 });

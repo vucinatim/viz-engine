@@ -80,9 +80,45 @@ export interface VizRenderTextNode {
   style?: VizRenderStyle;
 }
 
+export type VizShaderUniformValue =
+  | number
+  | boolean
+  | {
+      type: "color";
+      value: string;
+    }
+  | {
+      type: "vec2";
+      value: [number, number];
+    }
+  | {
+      type: "vec3";
+      value: [number, number, number];
+    }
+  | {
+      type: "vec4";
+      value: [number, number, number, number];
+    };
+
+export interface VizRenderShaderNode {
+  kind: "shader";
+  id?: string;
+  programId: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  vertexShader: string;
+  fragmentShader: string;
+  uniforms: Record<string, VizShaderUniformValue>;
+  transparent?: boolean;
+  blendMode?: VizBlendMode;
+}
+
 export type VizRenderNode =
   | VizRenderGroupNode
   | VizRenderRectNode
   | VizRenderCircleNode
   | VizRenderImageNode
-  | VizRenderTextNode;
+  | VizRenderTextNode
+  | VizRenderShaderNode;

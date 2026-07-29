@@ -21,6 +21,20 @@
     playback, and no browser errors or warnings
   - recorded conservative evidence in
     `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-1.md`
+- completed the first persistent GPU shader slice:
+  - added a typed serializable shader render node with explicit shader source,
+    typed uniforms, transparency, and blend semantics
+  - taught the Three compositor to reconcile compatible shader nodes in place
+    without rebuilding mesh, geometry, or material resources every frame
+  - added the package-runtime `Strobe Light` implementation
+  - replaced V1 accumulated-time and `Math.random()` strobe behavior with
+    canonical-time and seeded-frame evaluation
+  - removed the obsolete `useLegacyLights` browser attachment assignment that
+    produced Three deprecation warnings
+  - browser-verified Manual strength updates and Intensity playback in the
+    preserved editor
+  - recorded evidence in
+    `docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-2.md`
 - established the autonomous V2 calibration foundation:
   - pinned the immutable final pre-V2 parity reference to
     `e806fbc10980615588b52ff574bc923c6f00f35e`

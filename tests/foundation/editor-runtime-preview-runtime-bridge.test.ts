@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import CurveSpectrum from '@/components/comps/curve-spectrum';
 import DebugAnimation from '@/components/comps/debug-animation';
 import FeatureExtractionBars from '@/components/comps/feature-extraction-bars';
+import StrobeLight from '@/components/comps/strobe-light';
 import { createVizSessionRuntimePreviewFrame } from '@/lib/viz-session';
 import { createRuntimeRenderPlanForEditorLayer } from '@/lib/editor-runtime-preview-runtime-bridge';
 import useCompStore from '@/lib/stores/comp-store';
@@ -64,11 +65,12 @@ describe('Editor runtime preview runtime bridge', () => {
   });
 
   it.each([
-    [DebugAnimation, 'debug-animation'],
-    [FeatureExtractionBars, 'feature-extraction-bars'],
+    [DebugAnimation, 'debug-animation', 'group'],
+    [FeatureExtractionBars, 'feature-extraction-bars', 'group'],
+    [StrobeLight, 'strobe-light', 'shader'],
   ])(
     'builds runtime plans for newly migrated preserved-editor components',
-    (comp, componentId) => {
+    (comp, componentId, expectedNodeKind) => {
       const layerId = `layer-${componentId}`;
       useCompStore.setState({ comps: [comp] });
       useEditorProjectStore
@@ -111,7 +113,7 @@ describe('Editor runtime preview runtime bridge', () => {
       });
 
       expect(renderPlan?.layers[0]?.componentId).toBe(componentId);
-      expect(renderPlan?.layers[0]?.node?.kind).toBe('group');
+      expect(renderPlan?.layers[0]?.node?.kind).toBe(expectedNodeKind);
       expect(renderPlan?.issues).toEqual([]);
     },
   );

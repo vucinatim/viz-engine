@@ -53,7 +53,7 @@ The mixed fallback attachment is:
 | Particle System | Three `init3D`/`draw3D` | persistent Three scene | Instancing, custom shader, seeded particle state and blend modes |
 | Stage Scene | Three `init3D`/`draw3D` | persistent Three scene | Instancing, lighting, fog, camera path, bloom and feature-driven staging |
 | Fullscreen Shader | Three `init3D`/`draw3D` | persistent shader scene | Shader selection and deterministic uniforms |
-| Strobe Light | Three `init3D`/`draw3D` | persistent shader scene | Fullscreen shader and node-driven/manual intensity behavior |
+| Strobe Light | package runtime plus historical fallback | persistent shader scene | Runtime shader and deterministic timing are implemented; remove historical callbacks after component-preview cutover |
 
 ## Runtime Model
 

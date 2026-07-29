@@ -10,9 +10,10 @@ import {
   createVizThreeCompositorGraph,
   createVizThreeSceneGraph,
   summarizeVizThreeSceneGraph,
+  updateVizThreeCompositorGraph,
 } from "@viz-engine/renderer-three";
 import { createVizRenderPlan, createVizRuntimeSession } from "@viz-engine/runtime";
-import { Group, Mesh, MeshBasicMaterial } from "three";
+import { Group, Mesh, MeshBasicMaterial, ShaderMaterial } from "three";
 import { describe, expect, it } from "vitest";
 
 const collectMeshes = (object: Group | Mesh): Mesh[] => {
@@ -205,5 +206,74 @@ describe("Viz Three renderer proof", () => {
     expect(layerObject).toBeInstanceOf(Group);
     expect(meshes).toHaveLength(4);
     expect(meshes.every((mesh) => mesh.material.opacity === 0.5)).toBe(true);
+  });
+
+  it("updates persistent shader programs without rebuilding their material or geometry", () => {
+    const createShaderPlan = (strength: number): VizRenderPlan => ({
+      frameContext: {
+        frame: strength > 0 ? 0 : 45,
+        fps: 60,
+        durationInFrames: 120,
+        timeInSeconds: strength > 0 ? 0 : 0.75,
+        deltaTimeSeconds: 1 / 60,
+        isFirstFrame: strength > 0,
+        isLastFrame: false,
+        mode: "live",
+        seed: "persistent-shader",
+      },
+      viewport: {
+        width: 1280,
+        height: 720,
+        backgroundColor: "#000000",
+      },
+      materializedAssets: [],
+      issues: [],
+      layers: [
+        {
+          layerId: "layer-shader",
+          componentId: "strobe-light",
+          rendererFamily: "three",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          resolvedInputs: {},
+          node: {
+            kind: "shader",
+            programId: "test/strobe/v1",
+            x: 0,
+            y: 0,
+            width: 1280,
+            height: 720,
+            vertexShader:
+              "void main() { gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+            fragmentShader:
+              "uniform float uStrength; void main() { gl_FragColor = vec4(vec3(uStrength), uStrength); }",
+            uniforms: {
+              uStrength: strength,
+              uColor: { type: "color", value: "#ffffff" },
+            },
+            transparent: true,
+            blendMode: "add",
+          },
+        },
+      ],
+    });
+    const firstPlan = createShaderPlan(1);
+    const nextPlan = createShaderPlan(0);
+    const graph = createVizThreeCompositorGraph(firstPlan);
+    const firstMesh = graph.layers[0]!.contentRoot.children[0] as Mesh;
+    const firstMaterial = firstMesh.material as ShaderMaterial;
+    const firstGeometry = firstMesh.geometry;
+
+    expect(
+      updateVizThreeCompositorGraph(graph, firstPlan, nextPlan),
+    ).toBe(true);
+
+    const updatedMesh = graph.layers[0]!.contentRoot.children[0] as Mesh;
+    const updatedMaterial = updatedMesh.material as ShaderMaterial;
+    expect(updatedMesh).toBe(firstMesh);
+    expect(updatedMesh.geometry).toBe(firstGeometry);
+    expect(updatedMaterial).toBe(firstMaterial);
+    expect(updatedMaterial.uniforms.uStrength?.value).toBe(0);
   });
 });

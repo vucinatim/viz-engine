@@ -8,6 +8,7 @@ import { featureExtractionBarsComponent } from "./feature-extraction-bars.js";
 import { radialBloomComponent } from "./radial-bloom.js";
 import { reactiveBarsComponent } from "./reactive-bars.js";
 import { solidColorComponent } from "./solid-color.js";
+import { strobeLightComponent } from "./strobe-light.js";
 
 export const coreComponents: VizComponentImplementation[] = [
   solidColorComponent,
@@ -18,6 +19,7 @@ export const coreComponents: VizComponentImplementation[] = [
   reactiveBarsComponent,
   radialBloomComponent,
   featureChannelBarsComponent,
+  strobeLightComponent,
 ];
 
 export const createCoreComponentRegistry = () => {

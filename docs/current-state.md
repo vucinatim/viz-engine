@@ -193,15 +193,24 @@ The biggest remaining architecture gaps are:
   projection over canonical graph documents until it consumes the package
   graph model and execution registry directly
 - most preserved V1 components still render through their historical
-  `draw`/`draw3D` paths; `Curve Spectrum`, `Debug Animation`, and
-  `Feature Extraction Bars` now have package-runtime-backed editor paths, but
-  this is not the completed component migration
+  `draw`/`draw3D` paths; `Curve Spectrum`, `Debug Animation`,
+  `Feature Extraction Bars`, and `Strobe Light` now have
+  package-runtime-backed editor paths, but this is not the completed component
+  migration
 - the temporary per-component runtime preview bridge remains necessary until
   those historical render paths are replaced by package-runtime components
 
 The active renderer cutover inventory and deletion map now lives in:
 
 - [runtime-backed-rendering-cutover.md](./plans/v2/runtime-backed-rendering-cutover.md)
+
+The renderer contract now has a persistent shader node:
+
+- shader source and typed uniforms are deterministic render-plan data
+- the Three adapter retains compatible GPU material and geometry resources
+  between frames
+- Strobe Light no longer accumulates editor-local time or calls
+  `Math.random()` for runtime output
 
 ## Autonomous Calibration Foundation
 

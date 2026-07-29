@@ -8,9 +8,11 @@ import type {
   VizRenderNode,
   VizRenderPlan,
   VizRenderRectNode,
+  VizRenderShaderNode,
   VizRenderStyle,
   VizRenderTextNode,
   VizRenderTransform,
+  VizShaderUniformValue,
 } from "@viz-engine/contracts";
 import {
   AdditiveBlending,
@@ -26,9 +28,13 @@ import {
   PlaneGeometry,
   RGBAFormat,
   Scene,
+  ShaderMaterial,
   SRGBColorSpace,
   Texture,
   TextureLoader,
+  Vector2,
+  Vector3,
+  Vector4,
   WebGLRenderTarget,
   WebGLRenderer,
   type Blending,
@@ -67,6 +73,10 @@ export interface VizThreePreviewController {
 
 interface VizImageMeshUserData {
   vizImageAssetId?: string;
+}
+
+interface VizShaderMeshUserData {
+  vizShaderProgramId?: string;
 }
 
 interface VizInheritedRenderState {
@@ -427,6 +437,66 @@ const convertTextToObject = (
   return mesh;
 };
 
+const convertShaderUniformValue = (
+  value: VizShaderUniformValue,
+): number | boolean | Color | Vector2 | Vector3 | Vector4 => {
+  if (typeof value === "number" || typeof value === "boolean") {
+    return value;
+  }
+
+  if (value.type === "color") {
+    return new Color(value.value);
+  }
+
+  if (value.type === "vec2") {
+    return new Vector2(...value.value);
+  }
+
+  if (value.type === "vec3") {
+    return new Vector3(...value.value);
+  }
+
+  return new Vector4(...value.value);
+};
+
+const createShaderUniforms = (
+  uniforms: Record<string, VizShaderUniformValue>,
+) =>
+  Object.fromEntries(
+    Object.entries(uniforms).map(([key, value]) => [
+      key,
+      { value: convertShaderUniformValue(value) },
+    ]),
+  );
+
+const convertShaderToMesh = (
+  node: VizRenderShaderNode,
+  viewportWidth: number,
+  viewportHeight: number,
+): Mesh => {
+  const material = new ShaderMaterial({
+    uniforms: createShaderUniforms(node.uniforms),
+    vertexShader: node.vertexShader,
+    fragmentShader: node.fragmentShader,
+    transparent: node.transparent ?? false,
+    blending: getThreeBlending(node.blendMode),
+    depthTest: false,
+    depthWrite: false,
+  });
+  const mesh = new Mesh(
+    new PlaneGeometry(node.width, node.height),
+    material,
+  );
+  mesh.position.x = node.x + node.width / 2 - viewportWidth / 2;
+  mesh.position.y =
+    viewportHeight / 2 - (node.y + node.height / 2);
+  mesh.userData = {
+    ...mesh.userData,
+    vizShaderProgramId: node.programId,
+  } satisfies VizShaderMeshUserData;
+  return mesh;
+};
+
 const convertNodeToObject = (
   node: VizRenderNode,
   inherited: VizInheritedRenderState,
@@ -452,6 +522,10 @@ const convertNodeToObject = (
       viewportWidth,
       viewportHeight,
     );
+  }
+
+  if (node.kind === "shader") {
+    return convertShaderToMesh(node, viewportWidth, viewportHeight);
   }
 
   const group = new Group();
@@ -748,6 +822,151 @@ const disposeCompositorGraph = (graph: VizThreeCompositorGraph): void => {
   clearRootGroup(graph.compositeRoot);
 };
 
+const updateShaderUniformValue = (
+  currentValue: unknown,
+  nextValue: VizShaderUniformValue,
+): unknown => {
+  if (typeof nextValue === "number" || typeof nextValue === "boolean") {
+    return nextValue;
+  }
+
+  if (nextValue.type === "color" && currentValue instanceof Color) {
+    currentValue.set(nextValue.value);
+    return currentValue;
+  }
+
+  if (nextValue.type === "vec2" && currentValue instanceof Vector2) {
+    currentValue.set(...nextValue.value);
+    return currentValue;
+  }
+
+  if (nextValue.type === "vec3" && currentValue instanceof Vector3) {
+    currentValue.set(...nextValue.value);
+    return currentValue;
+  }
+
+  if (nextValue.type === "vec4" && currentValue instanceof Vector4) {
+    currentValue.set(...nextValue.value);
+    return currentValue;
+  }
+
+  return convertShaderUniformValue(nextValue);
+};
+
+const updateShaderMesh = (
+  mesh: Mesh,
+  node: VizRenderShaderNode,
+  viewportWidth: number,
+  viewportHeight: number,
+): boolean => {
+  const userData = mesh.userData as VizShaderMeshUserData;
+  const material = mesh.material;
+
+  if (
+    userData.vizShaderProgramId !== node.programId ||
+    !(material instanceof ShaderMaterial)
+  ) {
+    return false;
+  }
+
+  const shaderChanged =
+    material.vertexShader !== node.vertexShader ||
+    material.fragmentShader !== node.fragmentShader;
+  material.vertexShader = node.vertexShader;
+  material.fragmentShader = node.fragmentShader;
+  material.transparent = node.transparent ?? false;
+  material.blending = getThreeBlending(node.blendMode);
+
+  for (const [key, nextValue] of Object.entries(node.uniforms)) {
+    const uniform = material.uniforms[key];
+    if (uniform) {
+      uniform.value = updateShaderUniformValue(uniform.value, nextValue);
+    } else {
+      material.uniforms[key] = {
+        value: convertShaderUniformValue(nextValue),
+      };
+    }
+  }
+
+  for (const key of Object.keys(material.uniforms)) {
+    if (!(key in node.uniforms)) {
+      delete material.uniforms[key];
+    }
+  }
+
+  if (shaderChanged) {
+    material.needsUpdate = true;
+  }
+
+  const geometry = mesh.geometry as PlaneGeometry;
+  const geometryParameters = geometry.parameters;
+  if (
+    geometryParameters.width !== node.width ||
+    geometryParameters.height !== node.height
+  ) {
+    geometry.dispose();
+    mesh.geometry = new PlaneGeometry(node.width, node.height);
+  }
+
+  mesh.position.x = node.x + node.width / 2 - viewportWidth / 2;
+  mesh.position.y =
+    viewportHeight / 2 - (node.y + node.height / 2);
+  return true;
+};
+
+export const updateVizThreeCompositorGraph = (
+  graph: VizThreeCompositorGraph,
+  previousPlan: VizRenderPlan,
+  nextPlan: VizRenderPlan,
+): boolean => {
+  if (
+    previousPlan.viewport.width !== nextPlan.viewport.width ||
+    previousPlan.viewport.height !== nextPlan.viewport.height ||
+    graph.layers.length !== nextPlan.layers.length
+  ) {
+    return false;
+  }
+
+  for (let index = 0; index < graph.layers.length; index += 1) {
+    const graphLayer = graph.layers[index]!;
+    const previousLayer = previousPlan.layers[index];
+    const nextLayer = nextPlan.layers[index];
+    const previousNode = previousLayer?.node;
+    const nextNode = nextLayer?.node;
+    const mesh = graphLayer.contentRoot.children[0];
+
+    if (
+      !previousLayer ||
+      !nextLayer ||
+      previousLayer.layerId !== nextLayer.layerId ||
+      previousNode?.kind !== "shader" ||
+      nextNode?.kind !== "shader" ||
+      !(mesh instanceof Mesh) ||
+      !updateShaderMesh(
+        mesh,
+        nextNode,
+        nextPlan.viewport.width,
+        nextPlan.viewport.height,
+      )
+    ) {
+      return false;
+    }
+
+    graphLayer.layer = nextLayer;
+    const compositeMaterial =
+      graphLayer.compositeSurface.material as MeshBasicMaterial;
+    compositeMaterial.opacity = nextLayer.opacity;
+    compositeMaterial.transparent = nextLayer.opacity < 1;
+    compositeMaterial.blending = getThreeBlending(nextLayer.blendMode);
+  }
+
+  graph.compositeScene.background =
+    nextPlan.viewport.backgroundColor === undefined
+      ? null
+      : new Color(nextPlan.viewport.backgroundColor);
+  return true;
+};
+
 export const createVizThreePreviewController = ({
   canvas,
   renderPlan,
@@ -819,6 +1038,21 @@ export const createVizThreePreviewController = ({
 
   return {
     update(nextRenderPlan) {
+      if (
+        updateVizThreeCompositorGraph(
+          compositorGraph,
+          currentRenderPlan,
+          nextRenderPlan,
+        )
+      ) {
+        currentRenderPlan = nextRenderPlan;
+        materializedImageAssets =
+          createMaterializedImageAssetMap(nextRenderPlan);
+        hydrate();
+        render();
+        return;
+      }
+
       currentRenderPlan = nextRenderPlan;
       materializedImageAssets = createMaterializedImageAssetMap(nextRenderPlan);
       disposeCompositorGraph(compositorGraph);

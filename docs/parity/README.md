@@ -23,6 +23,7 @@ Browser comparison records live in [evidence](./evidence/). Start with:
 - [2026-07-29 canonical-document cutover](./evidence/2026-07-29-canonical-document-cutover.md)
 - [2026-07-29 VizSession runtime-preview ownership](./evidence/2026-07-29-viz-session-runtime-preview-ownership.md)
 - [2026-07-29 runtime rendering cutover slice 1](./evidence/2026-07-29-runtime-rendering-cutover-slice-1.md)
+- [2026-07-29 runtime rendering cutover slice 2](./evidence/2026-07-29-runtime-rendering-cutover-slice-2.md)
 
 ## Pinned Reference
 

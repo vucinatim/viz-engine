@@ -155,6 +155,10 @@ export const renderVizRenderNode = (
     return renderTextNode(node);
   }
 
+  if (node.kind === "shader") {
+    return "";
+  }
+
   return renderGroupNode(node, materializedImageAssets);
 };
 
