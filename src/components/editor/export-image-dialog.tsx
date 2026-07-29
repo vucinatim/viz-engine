@@ -127,11 +127,6 @@ const ExportImageDialog = ({ open, onOpenChange }: ExportImageDialogProps) => {
         }
       }
 
-      // Use double RAF to ensure DOM and canvas are fully painted
-      // This gives the browser time to flush all rendering commands
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-
       let blob: Blob;
 
       if (format === 'jpeg') {

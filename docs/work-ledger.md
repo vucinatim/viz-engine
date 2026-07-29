@@ -1243,4 +1243,47 @@
   made file-size estimates FPS-aware, and added focused MP4/WebM tests
 - recorded the conservative automated evidence in
   `docs/parity/evidence/2026-07-29-video-export-resource-hardening.md`; a real
-  playable browser artifact is still required
+  playable browser artifact was still required at that checkpoint
+- completed the fixed-device V1/V2 runtime comparison on the preserved
+  three-layer `simple-example` fixture:
+  - final capture-safe V2 measured 119.899 mean FPS versus V1's 74.915
+  - V2 frame-time p95 measured 9.900 ms versus V1's 17.600 ms
+  - V2 mean JS heap measured 92.512 MB versus V1's 230.086 MB
+  - all 21 environment, fixture, duration, frame-pacing, and memory checks
+    passed
+- found and removed the persistence leak exposed by the first candidate run:
+  - unchanged canonical JSON writes now deduplicate
+  - sustained changes flush on a bounded throttle rather than perpetually
+    resetting one debounce
+  - per-key writes serialize and pending removals cannot resurrect stale state
+  - focused IndexedDB tests cover deduplication, sustained change, and removal
+- ran a 180-second V2 playback soak across the complete bundled audio loop:
+  - 119.959 mean FPS
+  - 12.200 ms frame-time p95
+  - 205.117 MB mean heap
+  - 16.123 MB/min bounded-run heap trend
+- completed real browser video-export certification:
+  - bundled pinned FFmpeg core JavaScript/WASM instead of relying on a CDN
+  - excluded the FFmpeg package worker from incompatible Vite optimization
+  - made editor runtime attachments capture-safe without imposing retained
+    drawing buffers on catalog/thumbnail renderers
+  - removed the double-animation-frame capture delay that produced repeated
+    black WebGL frames
+  - produced and visually inspected a 1280×720, 30 FPS H.264/AAC MP4 with 88
+    runtime-driven video frames and trimmed stereo audio
+  - verified development initialization, visible progress, cancellation,
+    batch-writer closure, and partial-frame cleanup
+- recorded compact checksummed performance, soak, and media evidence in
+  `artifacts/` and the full certification narrative in
+  `docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md`
+- promoted `export.video` to `verified`; moved playback smoothness, editor
+  responsiveness, and long-session stability from `not-audited` to `partial`
+  without overstating unmeasured interaction latency or unlimited-session
+  behavior
+- passed the complete `pnpm check:foundation` gate:
+  - parity matrix valid with 41 capabilities
+  - package, studio, and tool type checks passed
+  - production studio build passed with lazy bundled FFmpeg assets
+  - 35 foundation test files / 132 tests passed
+  - built-package consumer smoke passed
+  - agent creative-loop bundle roundtrip passed

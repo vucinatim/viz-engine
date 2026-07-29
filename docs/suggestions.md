@@ -88,10 +88,16 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
   browser recording command so V1/V2 frame pacing, interaction latency, memory,
   and long-session stability can be captured without temporary profiler UI
   changes or manual hover behavior.
-- Add a small repeatable browser video-export certification fixture that
-  validates the downloaded container with media metadata and frame/audio probes,
-  so MP4/WebM duration, dimensions, FPS, codecs, and synchronization stop
-  depending on manual inspection.
+- Automate the now-proven browser video-export certification workflow: run the
+  small runtime fixture, probe the downloaded container, sample multiple frames,
+  and assert non-black/non-identical output so future MP4/WebM coverage no
+  longer needs manual orchestration.
+- Treat the bundled FFmpeg core as a large lazy production asset: serve its
+  roughly 32 MB WASM payload with immutable caching and compression where the
+  deployment platform supports it, and keep it outside initial studio startup.
+- Extend the three-minute playback soak into a scripted edit-churn scenario
+  covering layer add/remove, graph edits, panel toggles, track changes, and
+  repeated exports before promoting long-session stability to `verified`.
 - Keep the new project action surface pure and shared across editor, CLI, and
   future agent tooling so undo/history, collaboration, and AI mutation do not
   fork into app-specific mutation paths.

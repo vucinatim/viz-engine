@@ -7,8 +7,9 @@ Date: 2026-07-29
 Audit the preserved browser video exporter after preview and export converged
 on the same `VizSession` frame-evaluation path.
 
-This is automated contract and lifecycle evidence. It does not replace the
-required browser proof of a playable encoded artifact.
+This began as automated contract and lifecycle evidence. The required browser
+artifact proof is now recorded in
+`2026-07-29-v2-performance-and-video-certification.md`.
 
 ## Findings And Fixes
 
@@ -50,14 +51,18 @@ The encoder now:
 
 Studio typechecking and the complete foundation gate remain required.
 
-## Remaining Product Evidence
+## Completed Product Evidence
 
-`export.video` remains `partial`. Completion still requires a real browser
-export whose downloaded artifact is inspected for:
+The real browser certification now covers:
 
-- playable container and codecs
-- requested dimensions, FPS, and duration
-- synchronized trimmed audio
-- deterministic visible frame sequence
-- responsive progress and cancellation
-- bounded resources after success and cancellation
+- a playable 1280×720, 30 FPS H.264/AAC MP4
+- requested dimensions, FPS, and trimmed duration
+- distinct visually inspected start, middle, and end frames
+- three runtime-backed layers driven by offline audio frames
+- visible progress and responsive cancellation
+- successful and cancelled virtual-file cleanup
+- production and development delivery of the bundled FFmpeg core
+
+`export.video` is therefore classified `verified` for its recorded acceptance
+criteria. Broader browser/codec combinations remain normal compatibility work,
+not a blocker to this representative workflow.

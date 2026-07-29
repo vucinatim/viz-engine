@@ -14,8 +14,9 @@ The reference revision is:
 e806fbc10980615588b52ff574bc923c6f00f35e
 ```
 
-This document is baseline evidence only. The V2 candidate recording is still
-required before any performance matrix row can move out of `not-audited`.
+This document establishes the baseline half of the comparison. The matching V2
+candidate and bounded soak are now recorded in
+`2026-07-29-v2-performance-and-video-certification.md`.
 
 ## Controlled Fixture
 
@@ -82,16 +83,15 @@ pnpm compare:runtime-performance \
 Focused tests prove equivalent recordings pass and device, FPS, frame-time,
 and memory regressions fail.
 
-## Remaining Evidence
+## Completed Comparison
 
-The controlled V2 recorder run was interrupted after switching local servers,
-so no candidate numbers are recorded here. The next browser run must:
+The final capture-safe V2 configuration passed all 21 strict comparison checks:
 
-1. load the same `simple-example` fixture at the same viewport and quality
-2. record 30 seconds with the same profiler settings
-3. export the raw V2 JSON
-4. run the comparison command and retain its complete result
-5. follow with a longer soak scenario before claiming long-session stability
+- 119.899 mean FPS
+- 118.824 p05 FPS
+- 9.900 ms frame-time p95
+- 92.512 MB mean heap
+- -9.205 MB heap growth over 30 seconds
 
-This preserves the distinction between a real V1 baseline and an unproven V2
-performance claim.
+A separate 180-second soak crossed the complete bundled audio loop at 119.959
+mean FPS. See the certification record for exact scope and limitations.

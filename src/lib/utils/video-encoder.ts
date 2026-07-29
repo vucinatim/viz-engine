@@ -6,7 +6,9 @@
  */
 
 import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import ffmpegCoreURL from '@ffmpeg/core?url';
+import ffmpegWasmURL from '@ffmpeg/core/wasm?url';
+import { fetchFile } from '@ffmpeg/util';
 import useExportStore from '../stores/export-store';
 
 // Helper to add logs to the export store
@@ -80,16 +82,10 @@ export async function initFFmpeg(): Promise<void> {
     }
   });
 
-  // Load FFmpeg WASM files from CDN
-  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-
   try {
     await ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(
-        `${baseURL}/ffmpeg-core.wasm`,
-        'application/wasm',
-      ),
+      coreURL: ffmpegCoreURL,
+      wasmURL: ffmpegWasmURL,
     });
 
     initTimer.end('FFmpeg WASM loaded successfully');

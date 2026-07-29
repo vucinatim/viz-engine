@@ -112,6 +112,11 @@ removes repeated per-layer config/session work.
 
 ## Remaining Product Evidence
 
+Later status: the fixed-device comparison, bounded soak, and real video-export
+artifact were completed in
+`2026-07-29-v2-performance-and-video-certification.md`. The list below records
+what remained at the Slice 14 checkpoint.
+
 This slice does not certify the complete product:
 
 - fixed-device browser frame pacing and interaction latency still need direct

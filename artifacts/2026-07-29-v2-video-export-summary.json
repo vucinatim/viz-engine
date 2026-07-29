@@ -1,0 +1,31 @@
+{
+  "artifactSha256": "dc7f2c2b5284176e5fd58d48a7fd4c4d9abd1f45b7287a86d16bd3563197d639",
+  "container": "mov,mp4,m4a,3gp,3g2,mj2",
+  "sizeBytes": 1439302,
+  "durationSeconds": 2.933333,
+  "video": {
+    "codec": "h264",
+    "width": 1280,
+    "height": 720,
+    "pixelFormat": "yuv420p",
+    "framesPerSecond": 30,
+    "durationSeconds": 2.933333,
+    "frameCount": 88
+  },
+  "audio": {
+    "codec": "aac",
+    "sampleRateHz": 48000,
+    "channels": 2,
+    "durationSeconds": 2.9,
+    "frameCount": 137
+  },
+  "sampledFrameSha256": {
+    "start": "893c3307c12cda4d433fc5cfb17060d77b3eb972116e901a3bbb0d13895d11b3",
+    "middle": "a857845dec848e6a3863ff1408917e452169445a3a7778163b8fdceb04efa8a2",
+    "end": "16d44f5f12702bee8d098f6ae3319075249008887fce29d9ed462bda96d26e23"
+  },
+  "runtimeLayerCount": 3,
+  "virtualFilesCleaned": 90,
+  "exportElapsedSeconds": 6.1,
+  "inspection": "ffprobe metadata plus visual inspection of distinct start, middle, and end frames."
+}

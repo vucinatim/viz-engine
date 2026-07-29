@@ -105,6 +105,9 @@ function createPublicManifestPlugin() {
 export default defineConfig({
   plugins: [react(), tailwindcss(), createPublicManifestPlugin()],
   publicDir: publicRoot,
+  optimizeDeps: {
+    exclude: ['@ffmpeg/ffmpeg'],
+  },
   build: {
     chunkSizeWarningLimit: 650,
     rollupOptions: {

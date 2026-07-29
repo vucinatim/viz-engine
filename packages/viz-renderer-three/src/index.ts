@@ -1404,14 +1404,17 @@ export const updateVizThreeCompositorGraph = (
 export const createVizThreePreviewController = ({
   canvas,
   renderPlan,
+  preserveDrawingBuffer = false,
 }: {
   canvas: HTMLCanvasElement;
   renderPlan: VizRenderPlan;
+  preserveDrawingBuffer?: boolean;
 }): VizThreePreviewController => {
   const renderer = new WebGLRenderer({
     canvas,
     antialias: true,
     alpha: false,
+    preserveDrawingBuffer,
   });
   renderer.autoClear = true;
 

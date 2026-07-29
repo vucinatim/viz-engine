@@ -316,24 +316,30 @@ visibility, a live Sine graph, canonical JSON save, and a 1920×1080 still-image
 export preview without new warnings or errors. The repeatable 15-component
 plan benchmark measured a 0.352 ms mean and 0.674 ms p95 for the one-session
 path versus 0.908 ms mean and 1.962 ms p95 for the former per-layer evaluation
-shape on the same machine. This is plan-evaluation evidence, not yet the
+shape on the same machine. This plan-only result is now supplemented by the
 required pinned-V1 browser frame-pacing comparison.
 
-The immutable V1 half of that browser comparison is now recorded for the
-three-layer `simple-example` fixture. A 30-second run on the Apple M1 Pro
-measured 74.915 mean FPS, 17.600 ms frame-time p95, and 230.086 MB mean JS
-heap. `pnpm compare:runtime-performance` now rejects mismatched devices,
-fixtures, shortened runs, and material FPS, frame-time, or memory regressions.
-The matching V2 run and a longer soak are still required; the baseline alone
-does not prove parity.
+The immutable V1 and final V2 recordings now cover the same three-layer
+`simple-example` fixture on the same Apple M1 Pro browser environment. V2
+passed all 21 strict comparison checks with 119.899 mean FPS versus 74.915,
+9.900 ms frame-time p95 versus 17.600 ms, and 92.512 MB mean heap versus
+230.086 MB. A separate three-minute V2 soak held 119.959 mean FPS across the
+complete bundled audio loop. The soak is bounded playback evidence; edit-heavy
+and unlimited-session stability remain broader parity work.
 
-The browser video encoder has also been hardened around the shared runtime
-frame path. Per-export handlers and timers now clean up deterministically,
-successful encodes remove every virtual file, failed/cancelled encodes terminate
-the worker and discard partial state, WebM no longer receives MP4-only flags,
-and size estimates respect the selected FPS. Command-level tests cover MP4 and
-WebM, but a downloaded playable browser artifact is still required before
-video-export parity can be certified.
+That measurement exposed and removed an IndexedDB persistence leak. Continuous
+preview notifications had kept resetting the storage debounce while unresolved
+serialized project writes accumulated. Persistence now deduplicates unchanged
+values, flushes sustained changes on a bounded cadence, serializes per-key
+writes, and safely cancels pending writes on removal.
+
+The browser video encoder is now both lifecycle-hardened and product-certified
+for the representative MP4 workflow. FFmpeg core JavaScript/WASM assets are
+bundled instead of fetched from a CDN, development optimization preserves the
+package worker, and editor preview WebGL buffers remain capturable. A real
+three-runtime-layer export produced a visually changing 1280×720 H.264/AAC
+artifact at 30 FPS, while development cancellation closed its frame batch and
+cleaned partial state.
 
 ## Autonomous Calibration Foundation
 
@@ -372,14 +378,15 @@ without console errors or warnings.
 
 Parity is not complete. The matrix intentionally remains conservative:
 
-- 36 capabilities are `partial`
-- 5 capabilities are `not-audited`
+- 38 capabilities are `partial`
+- 2 capabilities are `not-audited`
 - 0 capabilities are currently classified as a known `gap`
-- 0 capabilities are yet certified `verified`
+- 1 capability is certified `verified`
 
-The pinned V1 performance baseline is measured, but V2 performance parity is
-still unproven until the matching candidate recording and long-session soak
-pass the comparison contract.
+The matching V2 candidate passes the fixed-device comparison contract and the
+bounded three-minute playback soak is recorded. Full parity remains
+conservative because interaction-latency instrumentation and an edit-heavy
+long-session scenario are still outstanding.
 
 ## Current V1 Truth
 

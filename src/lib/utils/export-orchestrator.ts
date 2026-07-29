@@ -600,13 +600,9 @@ async function renderFrames(
         }
       }
 
-      // Use double RAF to ensure DOM and canvas are fully painted
-      // This gives the browser time to flush all rendering commands
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-
-      // Capture the frame using fast direct canvas compositing
-      // This is 10-50x faster than html2canvas
+      // Runtime attachments render synchronously and retain their drawing
+      // buffers for capture. Capture immediately after gl.finish() so each
+      // encoded frame corresponds exactly to the requested runtime frame.
       const frameBlob = await fastCaptureFrame(rendererContainer, {
         width,
         height,

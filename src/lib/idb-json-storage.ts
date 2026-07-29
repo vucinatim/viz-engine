@@ -4,7 +4,10 @@ export type IdbJsonStorageOptions = {
   throttleMs?: number;
 };
 
-type Resolver = () => void;
+type PendingWrite = {
+  resolve: () => void;
+  reject: (reason?: unknown) => void;
+};
 
 export const createIdbJsonStorage = (opts: IdbJsonStorageOptions = {}) => {
   const dbName = opts.dbName ?? 'viz-engine';
@@ -30,7 +33,9 @@ export const createIdbJsonStorage = (opts: IdbJsonStorageOptions = {}) => {
 
   const writeTimers = new Map<string, number>();
   const pendingValues = new Map<string, string>();
-  const pendingResolvers = new Map<string, Resolver[]>();
+  const pendingWrites = new Map<string, PendingWrite[]>();
+  const latestValues = new Map<string, string>();
+  const writeChains = new Map<string, Promise<void>>();
 
   const flushKey = async (key: string, value: string) => {
     const db = await getDb();
@@ -43,46 +48,109 @@ export const createIdbJsonStorage = (opts: IdbJsonStorageOptions = {}) => {
     });
   };
 
+  const flushPendingKey = async (key: string) => {
+    writeTimers.delete(key);
+    const value = pendingValues.get(key);
+    const writes = pendingWrites.get(key) ?? [];
+    pendingValues.delete(key);
+    pendingWrites.delete(key);
+
+    if (value === undefined) {
+      writes.forEach(({ resolve }) => resolve());
+      return;
+    }
+
+    const previousWrite = writeChains.get(key) ?? Promise.resolve();
+    const nextWrite = previousWrite
+      .catch(() => undefined)
+      .then(() => flushKey(key, value));
+    writeChains.set(key, nextWrite);
+
+    try {
+      await nextWrite;
+      writes.forEach(({ resolve }) => resolve());
+    } catch (error) {
+      if (
+        latestValues.get(key) === value &&
+        !pendingValues.has(key)
+      ) {
+        latestValues.delete(key);
+      }
+      writes.forEach(({ reject }) => reject(error));
+    } finally {
+      if (writeChains.get(key) === nextWrite) {
+        writeChains.delete(key);
+      }
+    }
+  };
+
   return {
     getItem: async (key: string): Promise<string | null> => {
       const db = await getDb();
-      return await new Promise<string | null>((resolve, reject) => {
+      const value = await new Promise<string | null>((resolve, reject) => {
         const tx = db.transaction(storeName, 'readonly');
         const store = tx.objectStore(storeName);
         const req = store.get(key);
         req.onsuccess = () => resolve((req.result as string) ?? null);
         req.onerror = () => reject(req.error);
       });
+      if (value === null) {
+        latestValues.delete(key);
+      } else {
+        latestValues.set(key, value);
+      }
+      return value;
     },
     setItem: async (key: string, value: string): Promise<void> => {
-      if (throttleMs <= 0) {
-        await flushKey(key, value);
+      if (latestValues.get(key) === value) {
         return;
       }
-      pendingValues.set(key, value);
-      if (writeTimers.has(key)) {
-        window.clearTimeout(writeTimers.get(key)!);
-      }
-      const promise = new Promise<void>((resolve) => {
-        const list = pendingResolvers.get(key) ?? [];
-        list.push(resolve);
-        pendingResolvers.set(key, list);
-      });
-      const timer = window.setTimeout(async () => {
-        writeTimers.delete(key);
-        const latest = pendingValues.get(key);
-        pendingValues.delete(key);
-        if (latest !== undefined) {
-          await flushKey(key, latest);
+      latestValues.set(key, value);
+
+      if (throttleMs <= 0) {
+        try {
+          await flushKey(key, value);
+        } catch (error) {
+          if (latestValues.get(key) === value) {
+            latestValues.delete(key);
+          }
+          throw error;
         }
-        const resolvers = pendingResolvers.get(key) ?? [];
-        pendingResolvers.delete(key);
-        resolvers.forEach((r) => r());
-      }, throttleMs);
-      writeTimers.set(key, timer);
+        return;
+      }
+
+      pendingValues.set(key, value);
+      const promise = new Promise<void>((resolve, reject) => {
+        const writes = pendingWrites.get(key) ?? [];
+        writes.push({ resolve, reject });
+        pendingWrites.set(key, writes);
+      });
+
+      if (!writeTimers.has(key)) {
+        const timer = window.setTimeout(() => {
+          void flushPendingKey(key);
+        }, throttleMs);
+        writeTimers.set(key, timer);
+      }
+
       await promise;
     },
     removeItem: async (key: string): Promise<void> => {
+      const timer = writeTimers.get(key);
+      if (timer !== undefined) {
+        window.clearTimeout(timer);
+        writeTimers.delete(key);
+      }
+      pendingValues.delete(key);
+      const writes = pendingWrites.get(key) ?? [];
+      pendingWrites.delete(key);
+      latestValues.delete(key);
+
+      const previousWrite = writeChains.get(key);
+      if (previousWrite) {
+        await previousWrite.catch(() => undefined);
+      }
+
       const db = await getDb();
       await new Promise<void>((resolve, reject) => {
         const tx = db.transaction(storeName, 'readwrite');
@@ -91,6 +159,7 @@ export const createIdbJsonStorage = (opts: IdbJsonStorageOptions = {}) => {
         req.onsuccess = () => resolve();
         req.onerror = () => reject(req.error);
       });
+      writes.forEach(({ resolve }) => resolve());
     },
   } as unknown as Storage;
 };

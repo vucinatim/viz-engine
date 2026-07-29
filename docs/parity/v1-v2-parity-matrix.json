@@ -429,11 +429,11 @@
       "importance": "critical",
       "parityDimensions": ["visual", "interaction", "functional", "performance"],
       "referenceEvidence": ["src/components/editor/export-dialog.tsx", "src/lib/utils/export-orchestrator.ts", "src/lib/utils/video-encoder.ts"],
-      "v2Evidence": ["src/components/editor/export-dialog.tsx", "src/lib/utils/export-orchestrator.ts", "src/lib/utils/video-encoder.ts"],
-      "status": "partial",
+      "v2Evidence": ["src/components/editor/export-dialog.tsx", "src/lib/utils/export-orchestrator.ts", "src/lib/utils/video-encoder.ts", "packages/viz-renderer-three/src/index.ts", "artifacts/2026-07-29-v2-video-export-summary.json"],
+      "status": "verified",
       "acceptance": ["Supported export settings produce a playable artifact with the intended duration and dimensions.", "Every frame is derived from deterministic runtime inputs.", "Progress, cancellation, errors, and resource cleanup remain responsive during a representative export."],
       "validationMethods": ["browser", "visual", "integration", "benchmark"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-video-export-resource-hardening.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-video-export-resource-hardening.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md"]
     },
     {
       "id": "debugging.layer-debug-info",
@@ -507,11 +507,11 @@
       "importance": "critical",
       "parityDimensions": ["performance", "visual", "functional"],
       "referenceEvidence": ["src/components/editor/layer-renderer.tsx", "src/components/editor/profiler-panel.tsx"],
-      "v2Evidence": ["tools/foundation/runtime-preview-plan-benchmark.ts"],
-      "status": "not-audited",
+      "v2Evidence": ["tools/foundation/runtime-preview-plan-benchmark.ts", "tools/foundation/compare-performance-recordings.ts", "artifacts/2026-07-29-v2-runtime-performance-summary.json"],
+      "status": "partial",
       "acceptance": ["A fixed device, viewport, scene, audio source, and observation window define the benchmark.", "V2 frame pacing and interaction latency meet the approved baseline-relative budget.", "The benchmark records warm-up, median, tail behavior, and visible correctness."],
       "validationMethods": ["benchmark", "browser", "visual"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md"]
     },
     {
       "id": "performance.editor-responsiveness",
@@ -521,10 +521,10 @@
       "parityDimensions": ["performance", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/editor-layout.tsx", "src/components/node-network/node-network-renderer.tsx", "src/components/config/dynamic-form.tsx"],
       "v2Evidence": ["tools/foundation/runtime-preview-plan-benchmark.ts"],
-      "status": "not-audited",
+      "status": "partial",
       "acceptance": ["A representative multi-layer and graph fixture defines the workload.", "Input-to-visible-update latency meets the approved baseline-relative budget.", "No primary interaction causes an avoidable long task or full application stall."],
       "validationMethods": ["benchmark", "browser"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md"]
     },
     {
       "id": "performance.long-session-stability",
@@ -533,11 +533,11 @@
       "importance": "critical",
       "parityDimensions": ["performance", "functional"],
       "referenceEvidence": ["src/components/editor/renderer.tsx", "src/components/audio/audio-panel.tsx"],
-      "v2Evidence": ["tools/foundation/compare-performance-recordings.ts"],
-      "status": "not-audited",
+      "v2Evidence": ["tools/foundation/compare-performance-recordings.ts", "src/lib/idb-json-storage.ts", "artifacts/2026-07-29-v2-runtime-soak-summary.json"],
+      "status": "partial",
       "acceptance": ["A repeatable soak scenario exercises playback, project edits, audio changes, and tool panels.", "Memory, graphics resources, audio nodes, and listeners return to bounded steady state.", "Responsiveness and output remain correct at the end of the run."],
       "validationMethods": ["benchmark", "browser", "manual"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md"]
     }
   ]
 }

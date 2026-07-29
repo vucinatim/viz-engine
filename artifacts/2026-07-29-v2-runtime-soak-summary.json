@@ -1,0 +1,26 @@
+{
+  "name": "V2 simple-example 3min soak fixed",
+  "rawRecordingSha256": "171b7be5226eeec6215c7d6dff902ba417104770f0ba97a98a7971a26779de16",
+  "durationMs": 180008,
+  "sampleCount": 362,
+  "sampleRateMs": 500,
+  "fps": {
+    "mean": 119.95863901732722,
+    "minimum": 112,
+    "p05": 119.25708699902249,
+    "median": 119.95201918803498
+  },
+  "frameTimeMs": {
+    "mean": 8.336607734794775,
+    "p95": 12.199999988079071,
+    "maximum": 39.599999994039536
+  },
+  "memoryMB": {
+    "start": 151.7912836074829,
+    "end": 229.42649173736572,
+    "growth": 77.63520812988281,
+    "mean": 205.11673087704906,
+    "slopePerMinute": 16.123287641140543
+  },
+  "scope": "Bounded three-minute playback soak crossing the complete 144.96-second bundled audio loop; not an unlimited-session or edit-churn certification."
+}

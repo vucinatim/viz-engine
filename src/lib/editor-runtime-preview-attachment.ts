@@ -300,6 +300,7 @@ export const createEditorRuntimePreviewAttachment = ({
             runtimePreviewController = createVizThreePreviewController({
               canvas,
               renderPlan,
+              preserveDrawingBuffer: true,
             });
           }
           profiler.endRender();
