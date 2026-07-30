@@ -3,7 +3,6 @@ import * as ContextMenuPrimitive from '@radix-ui/react-context-menu';
 import * as React from 'react';
 
 const ContextMenu = ContextMenuPrimitive.Root;
-const ContextMenuTrigger = ContextMenuPrimitive.Trigger;
 
 const ContextMenuContent = React.forwardRef<
   React.ElementRef<typeof ContextMenuPrimitive.Content>,
@@ -40,4 +39,4 @@ const ContextMenuItem = React.forwardRef<
 ));
 ContextMenuItem.displayName = ContextMenuPrimitive.Item.displayName;
 
-export { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger };
+export { ContextMenu, ContextMenuContent, ContextMenuItem };

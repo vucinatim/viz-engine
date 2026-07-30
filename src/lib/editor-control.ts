@@ -30,7 +30,7 @@ type LayerPreset = {
   networks?: Record<string, string>;
 };
 
-export const editorControl = {
+const editorControl = {
   inspect: {
     project() {
       return vizSessionActions.inspection.project();

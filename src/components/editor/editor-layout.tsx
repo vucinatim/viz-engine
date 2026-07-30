@@ -15,7 +15,7 @@ interface EditorLayoutProps {
   bottomRightChildren: ReactNode;
 }
 
-export function EditorLayout({
+function EditorLayout({
   leftChildren,
   topRightChildren,
   midRightChildren,

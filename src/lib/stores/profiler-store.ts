@@ -1,5 +1,4 @@
 import { getNodeNetworks } from '@/components/node-network/node-network-store';
-import { registerNodeNetworkMetricSink } from '@/lib/profiling/node-network-metrics';
 import { getProjectedLayers } from '@/lib/projected-layers';
 import { create } from 'zustand';
 
@@ -388,19 +387,5 @@ const useProfilerStore = create<ProfilerState>((set, get) => ({
     }
   },
 }));
-
-registerNodeNetworkMetricSink((metric) => {
-  const profiler = useProfilerStore.getState();
-  if (!profiler.enabled) {
-    return;
-  }
-
-  profiler.updateNodeNetwork(
-    metric.parameterId,
-    metric.parameterName,
-    metric.computeTime,
-    metric.nodeCount,
-  );
-});
 
 export default useProfilerStore;

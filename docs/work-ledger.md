@@ -1877,3 +1877,21 @@
     protocol tests, and the visible nonblank 1280×720 PNG journey
   - moved production source to 67,720 lines, a reduction of 7,804 lines from
     the immutable Goal Two baseline
+- completed the Goal Two dead-surface and public-surface audit:
+  - verified candidate files and exports against package manifests, package
+    entrypoints, repository scripts, tests, and all import sites rather than
+    accepting static-analysis false positives
+  - removed the duplicated animated live-value implementation and reused the
+    canonical editor component
+  - removed a profiler metric sink that had no producer anywhere in the
+    repository; any future graph timing must originate in the canonical
+    runtime evaluator instead of an editor-only side channel
+  - stopped exporting app-internal UI variants, helper components, monitor
+    hooks, registry composition arrays, and implementation helpers with no
+    external callers
+  - retained deliberate Node/package entrypoints and test seams reported by a
+    production-only static audit
+  - passed strict lint, studio type checking, and focused editor, profiler,
+    runtime-preview, and resource tests
+  - moved production source to 67,645 lines and 349 files, a reduction of
+    7,879 lines and 22 files from the immutable Goal Two baseline

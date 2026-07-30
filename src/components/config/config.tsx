@@ -81,7 +81,7 @@ export const findComponentSetting = (
   return setting;
 };
 
-export const listComponentSettingPaths = (
+const listComponentSettingPaths = (
   group: VizComponentGroupSetting,
   prefix = '',
 ): string[] =>

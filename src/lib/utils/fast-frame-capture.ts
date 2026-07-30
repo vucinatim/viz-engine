@@ -10,7 +10,7 @@ import Color from 'color';
 /**
  * Check if a CSS background color is effectively transparent (alpha = 0)
  */
-export function isTransparentBackground(
+function isTransparentBackground(
   background: string | null | undefined,
 ): boolean {
   if (!background || background === 'transparent') return true;

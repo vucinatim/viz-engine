@@ -10,7 +10,7 @@ const CPU_UPDATE_INTERVAL = 100; // Update CPU estimate every 100ms (increased f
  * Hook to monitor memory usage using Performance API
  * Only works in Chrome/Edge with performance.memory available
  */
-export function useMemoryMonitor() {
+function useMemoryMonitor() {
   const updateMemory = useProfilerStore((s) => s.updateMemory);
   const enabled = useProfilerStore((s) => s.enabled);
 
@@ -52,7 +52,7 @@ export function useMemoryMonitor() {
 /**
  * Hook to monitor IndexedDB storage usage
  */
-export function useIndexedDBMonitor() {
+function useIndexedDBMonitor() {
   const updateIndexedDB = useProfilerStore((s) => s.updateIndexedDB);
   const enabled = useProfilerStore((s) => s.enabled);
 
@@ -99,7 +99,7 @@ export function useIndexedDBMonitor() {
  * Note: Does not track real-time GPU usage (not available in WebGL)
  * Only provides static GPU info
  */
-export function useGPUMonitor() {
+function useGPUMonitor() {
   const updateGPU = useProfilerStore((s) => s.updateGPU);
   const enabled = useProfilerStore((s) => s.enabled);
 
@@ -158,7 +158,7 @@ export function useGPUMonitor() {
  * Note: Real CPU usage % is not available in browsers for security reasons.
  * Instead, we measure main thread blocking time and frame budget utilization.
  */
-export function useCPUMonitor() {
+function useCPUMonitor() {
   const updateCPU = useProfilerStore((s) => s.updateCPU);
   const updateFrameTimes = useProfilerStore((s) => s.updateFrameTimes);
   const enabled = useProfilerStore((s) => s.enabled);
@@ -284,7 +284,7 @@ export function useCPUMonitor() {
 /**
  * Hook to monitor editor FPS (main render loop)
  */
-export function useEditorFPSMonitor() {
+function useEditorFPSMonitor() {
   const updateEditorFPS = useProfilerStore((s) => s.updateEditorFPS);
   const enabled = useProfilerStore((s) => s.enabled);
   const lastFrameTimeRef = useRef(performance.now());

@@ -21,7 +21,7 @@ import {
  * same registries so a project-local pack cannot exist in only part of the
  * product.
  */
-export const studioCapabilityPacks = [
+const studioCapabilityPacks = [
   coreComponentCapabilityPack,
   signalCathedralCapabilityPack,
 ] as const;
@@ -38,7 +38,7 @@ export const studioCatalogComponents = [
   signalCathedralComponent,
 ];
 
-export const studioThreeRendererExtensions = [
+const studioThreeRendererExtensions = [
   coreVizThreeRendererExtension,
   signalCathedralThreeRendererExtension,
 ] as const;

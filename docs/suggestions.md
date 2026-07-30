@@ -49,6 +49,9 @@ already requirements of the active goal.
 
 - Preserve the established editor UX as the product reference while replacing
   hidden architecture.
+- If per-graph compute timing is restored in the profiler, emit it from the
+  canonical runtime evaluator or inspection contract. Do not recreate an
+  editor-only metric sink with no runtime producer.
 - Keep the shared project action surface pure across editor, CLI, live control,
   and future agent tooling.
 - Keep `@viz-engine/editor-control` small and durable; add operations only for

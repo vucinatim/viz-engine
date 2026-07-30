@@ -4,7 +4,7 @@
  */
 
 // Detect platform
-export const isMac = () =>
+const isMac = () =>
   typeof navigator !== 'undefined' &&
   navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
