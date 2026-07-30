@@ -1,5 +1,6 @@
 // Performance Recorder Utility Functions
 
+import { destructureParameterId } from '@/lib/id-utils';
 import type {
   LayerSnapshot,
   NodeNetworkSnapshot,
@@ -344,6 +345,95 @@ export function computeSessionStatistics(
     },
   };
 }
+
+/**
+ * Builds the canonical data projection shared by the on-screen report,
+ * downloadable report data, and chart exporters.
+ */
+export function computePerformanceBreakdown(session: RecordingSession) {
+  const startTime = session.snapshots[0]?.timestamp ?? 0;
+  const timeSeries = session.snapshots.map((snapshot) => ({
+    time: Number(((snapshot.timestamp - startTime) / 1000).toFixed(1)),
+    timeLabel: `${((snapshot.timestamp - startTime) / 1000).toFixed(1)}s`,
+    fps: Number(snapshot.editorFPS.toFixed(1)),
+    avgFps: Number(snapshot.editorAvgFPS.toFixed(1)),
+    memory: Number(snapshot.memoryUsedMB.toFixed(1)),
+    frameBudget: Number(snapshot.cpuUsage.toFixed(1)),
+    layers: snapshot.activeLayerCount,
+    nodeNetworks: snapshot.activeNodeNetworkCount,
+  }));
+
+  const layerSamples = new Map<
+    string,
+    { drawCalls: number[]; renderTimes: number[] }
+  >();
+  const networkSamples = new Map<
+    string,
+    { computeTimes: number[]; nodeCounts: number[] }
+  >();
+
+  for (const snapshot of session.snapshots) {
+    for (const layer of snapshot.layers) {
+      const samples = layerSamples.get(layer.layerId) ?? {
+        drawCalls: [],
+        renderTimes: [],
+      };
+      samples.renderTimes.push(layer.renderTime);
+      samples.drawCalls.push(layer.drawCalls);
+      layerSamples.set(layer.layerId, samples);
+    }
+    for (const network of snapshot.nodeNetworks) {
+      const samples = networkSamples.get(network.parameterId) ?? {
+        computeTimes: [],
+        nodeCounts: [],
+      };
+      samples.computeTimes.push(network.computeTime);
+      samples.nodeCounts.push(network.nodeCount);
+      networkSamples.set(network.parameterId, samples);
+    }
+  }
+
+  const minimumFps = Math.min(
+    ...session.snapshots.map((snapshot) => snapshot.editorFPS),
+  );
+  const maximumFrameTime = minimumFps > 0 ? 1000 / minimumFps : Infinity;
+  const layers = Array.from(layerSamples, ([layerId, samples]) => {
+    const rawAvgRenderTime = mean(samples.renderTimes);
+    const rawMaxRenderTime = Math.max(...samples.renderTimes);
+    return {
+      layerId,
+      name:
+        session.snapshots[0]?.layers.find((layer) => layer.layerId === layerId)
+          ?.layerName ?? layerId,
+      avgRenderTime: Number(rawAvgRenderTime.toFixed(2)),
+      maxRenderTime: Number(
+        Math.min(rawMaxRenderTime, maximumFrameTime).toFixed(2),
+      ),
+      rawAvgRenderTime,
+      rawMaxRenderTime,
+      avgDrawCalls: Math.round(mean(samples.drawCalls)),
+    };
+  });
+  const nodeNetworks = Array.from(networkSamples, ([parameterId, samples]) => {
+    const { componentName, displayName } = destructureParameterId(parameterId);
+    const rawAvgComputeTime = mean(samples.computeTimes);
+    return {
+      parameterId,
+      name: displayName,
+      layerName: componentName,
+      avgComputeTime: Number(rawAvgComputeTime.toFixed(3)),
+      maxComputeTime: Number(Math.max(...samples.computeTimes).toFixed(3)),
+      rawAvgComputeTime,
+      nodeCount: Math.round(mean(samples.nodeCounts)),
+    };
+  });
+
+  return { layers, nodeNetworks, timeSeries };
+}
+
+export type PerformanceBreakdown = ReturnType<
+  typeof computePerformanceBreakdown
+>;
 
 // ============================================
 // Export Utilities

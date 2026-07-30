@@ -1,6 +1,6 @@
 import { Edge, Node } from '@xyflow/react';
 
-import type { AnimNode } from '../config/create-node';
+import type { AnimNode } from './animation-nodes';
 
 export type GraphNodeData = {
   definition: AnimNode;

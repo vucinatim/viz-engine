@@ -6,7 +6,6 @@ import {
 } from '@viz-engine/nodes-core';
 import type { ComponentType } from 'react';
 
-import type { AnimNode } from '../config/create-node';
 import type { NodeHandleType } from '../config/node-types';
 import AdaptiveNormalizeQuantileBody from './bodies/adaptive-normalize-quantile-body';
 import EnvelopeFollowerBody from './bodies/envelope-follower-body';
@@ -26,7 +25,9 @@ import TimeDomainSectionDetectorBody from './bodies/time-domain-section-detector
 import TonalPresenceBody from './bodies/tonal-presence-body';
 import ValueMapperBody from './bodies/value-mapper-body';
 
-export type { AnimNode } from '../config/create-node';
+export type AnimNode = Omit<VizNodeAuthoringDefinition, 'computeSignal'> & {
+  customBody?: ComponentType<any>;
+};
 
 const customBodies: Readonly<Record<string, ComponentType<any>>> = {
   'Adaptive Normalize (Quantile)': AdaptiveNormalizeQuantileBody,
@@ -48,12 +49,14 @@ const customBodies: Readonly<Record<string, ComponentType<any>>> = {
   'HSL Color': HSLColorBody,
 };
 
-const toEditorNode = (definition: VizNodeAuthoringDefinition): AnimNode => ({
+const toEditorNode = ({
+  computeSignal: _computeSignal,
+  ...definition
+}: VizNodeAuthoringDefinition): AnimNode => ({
   ...definition,
   inputs: definition.inputs as AnimNode['inputs'],
   outputs: definition.outputs as AnimNode['outputs'],
   customBody: customBodies[definition.label],
-  computeSignal: definition.computeSignal as AnimNode['computeSignal'],
 });
 
 export const InputNode = toEditorNode(inputNodeAuthoringDefinition);

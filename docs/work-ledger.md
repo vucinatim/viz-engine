@@ -1809,3 +1809,26 @@
   - passed strict lint and studio type checking plus 29 focused session,
     projection, persistence, audio, transport, history, graph, and
     editor-control tests
+- completed the Goal Two editor-node and performance-report ownership
+  checkpoint:
+  - removed the editor's executable node-kernel projection and dummy compute
+    functions so the runtime registry alone owns evaluation while the editor
+    consumes only portable node metadata and visual bodies
+  - removed the duplicate editor handle-value vocabulary in favor of the
+    canonical node-core handle contract
+  - consolidated the diagnostics report charts and detailed tables behind
+    typed presentation primitives while preserving their dimensions,
+    spacing, labels, colors, metadata layout, and export controls
+  - introduced one typed performance-breakdown projection shared by the
+    on-screen report and offscreen chart exports, removing duplicate layer and
+    node-network aggregation and the report's untyped data boundaries
+  - added regression coverage for exact time-series projection, stable
+    layer/network identity, raw versus frame-capped render maxima, and empty
+    recordings
+  - moved production source to 69,568 lines and combined maintained code to
+    84,878 lines, reductions of 5,956 and 5,749 lines from the immutable Goal
+    Two baseline
+  - passed the complete foundation gate: parity and architecture validation,
+    strict formatting, lint and type checks, 54 files / 228 foundation tests,
+    all 7 real-browser journeys, all package and studio builds, and both
+    built-consumer smoke scenarios

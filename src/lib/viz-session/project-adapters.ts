@@ -193,9 +193,6 @@ const resolveNodeDefinition = (node: VizNodeGraphDocument['nodes'][number]) => {
           ? {}
           : { defaultValue: clone(output.defaultValue) }),
       })),
-      // Evaluation remains owned by the canonical runtime registry. This
-      // projection only supplies editor affordances and port metadata.
-      computeSignal: () => ({}),
     } satisfies AnimNode;
   }
 
@@ -204,7 +201,6 @@ const resolveNodeDefinition = (node: VizNodeGraphDocument['nodes'][number]) => {
     description: `Unknown node type "${node.type}".`,
     inputs: [],
     outputs: [],
-    computeSignal: () => ({}),
   } satisfies AnimNode;
 };
 

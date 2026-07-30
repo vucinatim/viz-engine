@@ -1,6 +1,12 @@
-import { destructureParameterId } from '@/lib/id-utils';
-import type { RecordingSession } from '@/lib/stores/performance-recorder-types';
-import { computeSessionStatistics } from '@/lib/stores/performance-recorder-utils';
+import type {
+  RecordingSession,
+  SessionStatistics,
+} from '@/lib/stores/performance-recorder-types';
+import {
+  computePerformanceBreakdown,
+  computeSessionStatistics,
+  type PerformanceBreakdown,
+} from '@/lib/stores/performance-recorder-utils';
 import {
   downloadAllChartsAsZip,
   downloadChartAsPNG,
@@ -15,13 +21,12 @@ import { Download, Image as ImageIcon } from 'lucide-react';
 import { memo, useMemo, useState, type ReactNode } from 'react';
 import {
   Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
+  ComposedChart,
   Legend,
   Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -42,12 +47,18 @@ interface PerformanceStatsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const chartTooltipStyle = {
+  backgroundColor: '#1a1a1a',
+  border: '1px solid #444',
+  borderRadius: '8px',
+  color: '#fff',
+};
+
 // Generate comprehensive JSON report with all statistics and data
 function generateJSONReport(
   session: RecordingSession,
-  stats: any,
-  layerPerformanceData: any[],
-  nodeNetworkPerformanceData: any[],
+  stats: SessionStatistics,
+  performance: PerformanceBreakdown,
 ): string {
   const report = {
     reportMetadata: {
@@ -156,8 +167,8 @@ function generateJSONReport(
     },
 
     layerPerformance:
-      layerPerformanceData.length > 0
-        ? layerPerformanceData.map((layer) => ({
+      performance.layers.length > 0
+        ? performance.layers.map((layer) => ({
             layerName: layer.name,
             averageRenderTimeMs: Number(layer.avgRenderTime.toFixed(3)),
             maxRenderTimeMs: Number(layer.maxRenderTime.toFixed(3)),
@@ -166,8 +177,8 @@ function generateJSONReport(
         : [],
 
     nodeNetworkPerformance:
-      nodeNetworkPerformanceData.length > 0
-        ? nodeNetworkPerformanceData.map((network) => ({
+      performance.nodeNetworks.length > 0
+        ? performance.nodeNetworks.map((network) => ({
             parameterName: network.name,
             averageComputeTimeMs: Number(network.avgComputeTime.toFixed(3)),
             maxComputeTimeMs: Number(network.maxComputeTime.toFixed(3)),
@@ -182,9 +193,7 @@ function generateJSONReport(
 // Generate simplified chart data export (CSV-like format for plotting tools)
 function generateChartDataExport(
   session: RecordingSession,
-  timeSeriesData: any[],
-  layerPerformanceData: any[],
-  nodeNetworkPerformanceData: any[],
+  performance: PerformanceBreakdown,
 ): string {
   const chartData = {
     metadata: {
@@ -208,7 +217,7 @@ function generateChartDataExport(
         'layer_count',
         'node_network_count',
       ],
-      data: timeSeriesData.map((d) => [
+      data: performance.timeSeries.map((d) => [
         d.time,
         d.fps,
         d.avgFps,
@@ -228,7 +237,7 @@ function generateChartDataExport(
         'max_render_ms',
         'avg_draw_calls',
       ],
-      data: layerPerformanceData.map((l) => [
+      data: performance.layers.map((l) => [
         l.name,
         Number(l.avgRenderTime.toFixed(3)),
         Number(l.maxRenderTime.toFixed(3)),
@@ -245,7 +254,7 @@ function generateChartDataExport(
         'max_compute_ms',
         'node_count',
       ],
-      data: nodeNetworkPerformanceData.map((n) => [
+      data: performance.nodeNetworks.map((n) => [
         n.name,
         Number(n.avgComputeTime.toFixed(3)),
         Number(n.maxComputeTime.toFixed(3)),
@@ -309,109 +318,13 @@ const PerformanceStatsDialogComponent = ({
     [session],
   );
 
-  // Prepare chart data
-  const timeSeriesData = useMemo(() => {
-    if (!session) return [];
-    const startTime = session.snapshots[0]?.timestamp || 0;
-    const data = session.snapshots.map((snapshot) => ({
-      time: Number(((snapshot.timestamp - startTime) / 1000).toFixed(1)), // Convert to seconds as number
-      timeLabel: `${((snapshot.timestamp - startTime) / 1000).toFixed(1)}s`,
-      fps: Number(snapshot.editorFPS.toFixed(1)),
-      avgFps: Number(snapshot.editorAvgFPS.toFixed(1)),
-      memory: Number(snapshot.memoryUsedMB.toFixed(1)),
-      frameBudget: Number(snapshot.cpuUsage.toFixed(1)),
-      layers: snapshot.activeLayerCount,
-      nodeNetworks: snapshot.activeNodeNetworkCount,
-    }));
-    return data;
-  }, [session]);
-
-  // Layer performance data (aggregate by layer)
-  const layerPerformanceData = useMemo(() => {
-    if (!session) return [];
-    const layerMap = new Map<
-      string,
-      { renderTimes: number[]; drawCalls: number[] }
-    >();
-
-    session.snapshots.forEach((snapshot) => {
-      snapshot.layers.forEach((layer) => {
-        if (!layerMap.has(layer.layerId)) {
-          layerMap.set(layer.layerId, { renderTimes: [], drawCalls: [] });
-        }
-        const data = layerMap.get(layer.layerId)!;
-        data.renderTimes.push(layer.renderTime);
-        data.drawCalls.push(layer.drawCalls);
-      });
-    });
-
-    return Array.from(layerMap.entries()).map(([layerId, data]) => {
-      const layer = session.snapshots[0].layers.find(
-        (l) => l.layerId === layerId,
-      );
-      const avgRenderTime =
-        data.renderTimes.reduce((a, b) => a + b, 0) / data.renderTimes.length;
-      const avgDrawCalls =
-        data.drawCalls.reduce((a, b) => a + b, 0) / data.drawCalls.length;
-
-      // Cap max render time to be logically consistent with frame times
-      // A layer cannot take longer to render than the entire frame
-      // This prevents measurement artifacts where layer render times exceed frame times
-      const rawMaxRenderTime = Math.max(...data.renderTimes);
-      const maxFrameTime =
-        1000 / Math.min(...session.snapshots.map((s) => s.editorFPS));
-      const maxRenderTime = Math.min(rawMaxRenderTime, maxFrameTime);
-
-      return {
-        name: layer?.layerName || layerId,
-        avgRenderTime: Number(avgRenderTime.toFixed(2)),
-        maxRenderTime: Number(maxRenderTime.toFixed(2)),
-        avgDrawCalls: Math.round(avgDrawCalls),
-      };
-    });
-  }, [session]);
-
-  // Node network performance data
-  const nodeNetworkPerformanceData = useMemo(() => {
-    if (!session) return [];
-    const networkMap = new Map<
-      string,
-      { computeTimes: number[]; nodeCounts: number[] }
-    >();
-
-    session.snapshots.forEach((snapshot) => {
-      snapshot.nodeNetworks.forEach((network) => {
-        if (!networkMap.has(network.parameterId)) {
-          networkMap.set(network.parameterId, {
-            computeTimes: [],
-            nodeCounts: [],
-          });
-        }
-        const data = networkMap.get(network.parameterId)!;
-        data.computeTimes.push(network.computeTime);
-        data.nodeCounts.push(network.nodeCount);
-      });
-    });
-
-    return Array.from(networkMap.entries()).map(([parameterId, data]) => {
-      const avgComputeTime =
-        data.computeTimes.reduce((a, b) => a + b, 0) / data.computeTimes.length;
-      const maxComputeTime = Math.max(...data.computeTimes);
-      const avgNodeCount =
-        data.nodeCounts.reduce((a, b) => a + b, 0) / data.nodeCounts.length;
-
-      // Use destructureParameterId to get proper display names
-      const paramInfo = destructureParameterId(parameterId);
-
-      return {
-        name: paramInfo.displayName,
-        layerName: paramInfo.componentName,
-        avgComputeTime: Number(avgComputeTime.toFixed(3)),
-        maxComputeTime: Number(maxComputeTime.toFixed(3)),
-        nodeCount: Math.round(avgNodeCount),
-      };
-    });
-  }, [session]);
+  const performance = useMemo(
+    () => (session ? computePerformanceBreakdown(session) : null),
+    [session],
+  );
+  const timeSeriesData = performance?.timeSeries ?? [];
+  const layerPerformanceData = performance?.layers ?? [];
+  const nodeNetworkPerformanceData = performance?.nodeNetworks ?? [];
 
   const formatDuration = (ms: number) => {
     const seconds = Math.floor(ms / 1000);
@@ -422,14 +335,9 @@ const PerformanceStatsDialogComponent = ({
 
   // Download comprehensive JSON report
   const handleDownloadReport = () => {
-    if (!session || !stats) return;
+    if (!session || !stats || !performance) return;
 
-    const jsonReport = generateJSONReport(
-      session,
-      stats,
-      layerPerformanceData,
-      nodeNetworkPerformanceData,
-    );
+    const jsonReport = generateJSONReport(session, stats, performance);
 
     // Create blob and download
     const blob = new Blob([jsonReport], { type: 'application/json' });
@@ -443,14 +351,9 @@ const PerformanceStatsDialogComponent = ({
 
   // Download simplified chart data for plotting tools
   const handleDownloadChartData = () => {
-    if (!session) return;
+    if (!session || !performance) return;
 
-    const chartData = generateChartDataExport(
-      session,
-      timeSeriesData,
-      layerPerformanceData,
-      nodeNetworkPerformanceData,
-    );
+    const chartData = generateChartDataExport(session, performance);
 
     // Create blob and download
     const blob = new Blob([chartData], { type: 'application/json' });
@@ -626,71 +529,25 @@ const PerformanceStatsDialogComponent = ({
             />
             <div className="rounded-lg border border-white/10 bg-black/40 p-4">
               {timeSeriesData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart
-                    data={timeSeriesData}
-                    margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
-                    <defs>
-                      <linearGradient id="colorFps" x1="0" y1="0" x2="0" y2="1">
-                        <stop
-                          offset="5%"
-                          stopColor="#10b981"
-                          stopOpacity={0.3}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="#10b981"
-                          stopOpacity={0.05}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                    <XAxis
-                      dataKey="time"
-                      stroke="#999"
-                      type="number"
-                      domain={['dataMin', 'dataMax']}
-                      tick={{ fill: '#999' }}
-                    />
-                    <YAxis
-                      stroke="#999"
-                      domain={[0, 'auto']}
-                      tick={{ fill: '#999' }}
-                      label={{
-                        value: 'FPS',
-                        angle: -90,
-                        position: 'insideLeft',
-                        style: { fill: '#999' },
-                      }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#1a1a1a',
-                        border: '1px solid #444',
-                        borderRadius: '8px',
-                        color: '#fff',
-                      }}
-                    />
-                    <Legend wrapperStyle={{ paddingTop: '10px' }} />
-                    <Area
-                      type="monotone"
-                      dataKey="fps"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#colorFps)"
-                      name="Current FPS"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="avgFps"
-                      stroke="#3b82f6"
-                      strokeWidth={2}
-                      dot={false}
-                      name="Rolling Avg"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <TimeSeriesChart
+                  data={timeSeriesData}
+                  height={300}
+                  yLabel="FPS"
+                  series={[
+                    {
+                      dataKey: 'fps',
+                      name: 'Current FPS',
+                      color: '#10b981',
+                      kind: 'area',
+                      fillId: 'colorFps',
+                    },
+                    {
+                      dataKey: 'avgFps',
+                      name: 'Rolling Avg',
+                      color: '#3b82f6',
+                    },
+                  ]}
+                />
               ) : (
                 <div className="flex h-[300px] items-center justify-center text-muted-foreground">
                   No data available
@@ -708,42 +565,19 @@ const PerformanceStatsDialogComponent = ({
                 onExport={() => exportChart('memory', exportMemoryChart)}
               />
               <div className="rounded-lg border border-white/10 bg-black/40 p-4">
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart
-                    data={timeSeriesData}
-                    margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                    <XAxis
-                      dataKey="time"
-                      stroke="#999"
-                      type="number"
-                      domain={['dataMin', 'dataMax']}
-                      tick={{ fill: '#999' }}
-                    />
-                    <YAxis
-                      stroke="#999"
-                      domain={[0, 'auto']}
-                      tick={{ fill: '#999' }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#1a1a1a',
-                        border: '1px solid #444',
-                        borderRadius: '8px',
-                        color: '#fff',
-                      }}
-                    />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="memory"
-                      stroke="#a855f7"
-                      strokeWidth={2}
-                      dot={false}
-                      name="Memory (MB)"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <TimeSeriesChart
+                  data={timeSeriesData}
+                  height={200}
+                  margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+                  paddedLegend={false}
+                  series={[
+                    {
+                      dataKey: 'memory',
+                      name: 'Memory (MB)',
+                      color: '#a855f7',
+                    },
+                  ]}
+                />
               </div>
             </div>
 
@@ -756,42 +590,20 @@ const PerformanceStatsDialogComponent = ({
                 }
               />
               <div className="rounded-lg border border-white/10 bg-black/40 p-4">
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart
-                    data={timeSeriesData}
-                    margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                    <XAxis
-                      dataKey="time"
-                      stroke="#999"
-                      type="number"
-                      domain={['dataMin', 'dataMax']}
-                      tick={{ fill: '#999' }}
-                    />
-                    <YAxis
-                      stroke="#999"
-                      domain={[0, 100]}
-                      tick={{ fill: '#999' }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#1a1a1a',
-                        border: '1px solid #444',
-                        borderRadius: '8px',
-                        color: '#fff',
-                      }}
-                    />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="frameBudget"
-                      stroke="#f97316"
-                      strokeWidth={2}
-                      dot={false}
-                      name="Frame Budget (%)"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <TimeSeriesChart
+                  data={timeSeriesData}
+                  height={200}
+                  margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+                  paddedLegend={false}
+                  yDomain={[0, 100]}
+                  series={[
+                    {
+                      dataKey: 'frameBudget',
+                      name: 'Frame Budget (%)',
+                      color: '#f97316',
+                    },
+                  ]}
+                />
               </div>
             </div>
           </div>
@@ -807,38 +619,21 @@ const PerformanceStatsDialogComponent = ({
                 }
               />
               <div className="rounded-lg border border-white/10 bg-black/40 p-4">
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart
-                    data={layerPerformanceData}
-                    margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                    <XAxis
-                      dataKey="name"
-                      stroke="#999"
-                      tick={{ fill: '#999' }}
-                    />
-                    <YAxis stroke="#999" tick={{ fill: '#999' }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#1a1a1a',
-                        border: '1px solid #444',
-                        borderRadius: '8px',
-                        color: '#fff',
-                      }}
-                    />
-                    <Legend />
-                    <Bar
-                      dataKey="avgRenderTime"
-                      fill="#3b82f6"
-                      name="Avg Render Time (ms)"
-                    />
-                    <Bar
-                      dataKey="maxRenderTime"
-                      fill="#ef4444"
-                      name="Max Render Time (ms)"
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+                <PerformanceBarChart
+                  data={layerPerformanceData}
+                  bars={[
+                    {
+                      dataKey: 'avgRenderTime',
+                      name: 'Avg Render Time (ms)',
+                      color: '#3b82f6',
+                    },
+                    {
+                      dataKey: 'maxRenderTime',
+                      name: 'Max Render Time (ms)',
+                      color: '#ef4444',
+                    },
+                  ]}
+                />
               </div>
             </div>
           )}
@@ -857,44 +652,26 @@ const PerformanceStatsDialogComponent = ({
                 }
               />
               <div className="rounded-lg border border-white/10 bg-black/40 p-4">
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart
-                    data={nodeNetworkPerformanceData}
-                    margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                    <XAxis
-                      dataKey="name"
-                      stroke="#999"
-                      tick={{ fill: '#999', fontSize: 12 }}
-                      tickFormatter={(value, index) => {
-                        const item = nodeNetworkPerformanceData[index];
-                        return item
-                          ? `${item.name} (${item.layerName})`
-                          : value;
-                      }}
-                    />
-                    <YAxis stroke="#999" tick={{ fill: '#999' }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#1a1a1a',
-                        border: '1px solid #444',
-                        borderRadius: '8px',
-                        color: '#fff',
-                      }}
-                    />
-                    <Legend />
-                    <Bar
-                      dataKey="avgComputeTime"
-                      fill="#10b981"
-                      name="Avg Compute Time (ms)"
-                    />
-                    <Bar
-                      dataKey="maxComputeTime"
-                      fill="#f59e0b"
-                      name="Max Compute Time (ms)"
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+                <PerformanceBarChart
+                  data={nodeNetworkPerformanceData}
+                  tickFontSize={12}
+                  tickFormatter={(value, index) => {
+                    const item = nodeNetworkPerformanceData[index];
+                    return item ? `${item.name} (${item.layerName})` : value;
+                  }}
+                  bars={[
+                    {
+                      dataKey: 'avgComputeTime',
+                      name: 'Avg Compute Time (ms)',
+                      color: '#10b981',
+                    },
+                    {
+                      dataKey: 'maxComputeTime',
+                      name: 'Max Compute Time (ms)',
+                      color: '#f59e0b',
+                    },
+                  ]}
+                />
               </div>
             </div>
           )}
@@ -986,187 +763,92 @@ const PerformanceStatsDialogComponent = ({
               ]}
             />
 
-            {/* Per-Layer Detailed Breakdown */}
             {layerPerformanceData.length > 0 && (
-              <div className="mb-4">
-                <h4 className="mb-2 text-sm font-semibold text-indigo-400">
-                  Per-Layer Performance Breakdown
-                </h4>
-                <div className="overflow-hidden rounded-lg border border-white/10">
-                  <table className="w-full text-sm">
-                    <thead className="bg-white/5">
-                      <tr>
-                        <th className="border-b border-white/10 px-4 py-2 text-left text-white">
-                          Layer Name
-                        </th>
-                        <th className="border-b border-white/10 px-4 py-2 text-right text-white">
-                          Avg Render (ms)
-                        </th>
-                        <th className="border-b border-white/10 px-4 py-2 text-right text-white">
-                          Max Render (ms)
-                        </th>
-                        <th className="border-b border-white/10 px-4 py-2 text-right text-white">
-                          Avg Draw Calls
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-black/40">
-                      {layerPerformanceData.map((layer, idx) => (
-                        <tr key={idx}>
-                          <td
-                            className={`px-4 py-2 text-white ${idx < layerPerformanceData.length - 1 ? 'border-b border-white/5' : ''}`}>
-                            {layer.name}
-                          </td>
-                          <td
-                            className={`px-4 py-2 text-right font-mono text-white ${idx < layerPerformanceData.length - 1 ? 'border-b border-white/5' : ''}`}>
-                            {layer.avgRenderTime.toFixed(3)}
-                          </td>
-                          <td
-                            className={`px-4 py-2 text-right font-mono text-white ${idx < layerPerformanceData.length - 1 ? 'border-b border-white/5' : ''}`}>
-                            {layer.maxRenderTime.toFixed(3)}
-                          </td>
-                          <td
-                            className={`px-4 py-2 text-right font-mono text-white ${idx < layerPerformanceData.length - 1 ? 'border-b border-white/5' : ''}`}>
-                            {layer.avgDrawCalls}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <BreakdownTable
+                title="Per-Layer Performance Breakdown"
+                titleColor="text-indigo-400"
+                rows={layerPerformanceData}
+                getKey={(layer) => layer.layerId}
+                columns={[
+                  {
+                    heading: 'Layer Name',
+                    align: 'left',
+                    value: (layer) => layer.name,
+                  },
+                  {
+                    heading: 'Avg Render (ms)',
+                    value: (layer) => layer.avgRenderTime.toFixed(3),
+                  },
+                  {
+                    heading: 'Max Render (ms)',
+                    value: (layer) => layer.maxRenderTime.toFixed(3),
+                  },
+                  {
+                    heading: 'Avg Draw Calls',
+                    value: (layer) => layer.avgDrawCalls,
+                  },
+                ]}
+              />
             )}
 
-            {/* Per-Network Detailed Breakdown */}
             {nodeNetworkPerformanceData.length > 0 && (
-              <div className="mb-4">
-                <h4 className="mb-2 text-sm font-semibold text-emerald-400">
-                  Per-Node-Network Performance Breakdown
-                </h4>
-                <div className="overflow-hidden rounded-lg border border-white/10">
-                  <table className="w-full text-sm">
-                    <thead className="bg-white/5">
-                      <tr>
-                        <th className="border-b border-white/10 px-4 py-2 text-left text-white">
-                          Parameter Name
-                        </th>
-                        <th className="border-b border-white/10 px-4 py-2 text-right text-white">
-                          Avg Compute (ms)
-                        </th>
-                        <th className="border-b border-white/10 px-4 py-2 text-right text-white">
-                          Max Compute (ms)
-                        </th>
-                        <th className="border-b border-white/10 px-4 py-2 text-right text-white">
-                          Node Count
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-black/40">
-                      {nodeNetworkPerformanceData.map((network, idx) => (
-                        <tr key={idx}>
-                          <td
-                            className={`px-4 py-2 text-white ${idx < nodeNetworkPerformanceData.length - 1 ? 'border-b border-white/5' : ''}`}>
-                            <div>
-                              <div className="font-medium">{network.name}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {network.layerName}
-                              </div>
-                            </div>
-                          </td>
-                          <td
-                            className={`px-4 py-2 text-right font-mono text-white ${idx < nodeNetworkPerformanceData.length - 1 ? 'border-b border-white/5' : ''}`}>
-                            {network.avgComputeTime.toFixed(3)}
-                          </td>
-                          <td
-                            className={`px-4 py-2 text-right font-mono text-white ${idx < nodeNetworkPerformanceData.length - 1 ? 'border-b border-white/5' : ''}`}>
-                            {network.maxComputeTime.toFixed(3)}
-                          </td>
-                          <td
-                            className={`px-4 py-2 text-right font-mono text-white ${idx < nodeNetworkPerformanceData.length - 1 ? 'border-b border-white/5' : ''}`}>
-                            {network.nodeCount}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <BreakdownTable
+                title="Per-Node-Network Performance Breakdown"
+                titleColor="text-emerald-400"
+                rows={nodeNetworkPerformanceData}
+                getKey={(network) => network.parameterId}
+                columns={[
+                  {
+                    heading: 'Parameter Name',
+                    align: 'left',
+                    value: (network) => (
+                      <div>
+                        <div className="font-medium">{network.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {network.layerName}
+                        </div>
+                      </div>
+                    ),
+                  },
+                  {
+                    heading: 'Avg Compute (ms)',
+                    value: (network) => network.avgComputeTime.toFixed(3),
+                  },
+                  {
+                    heading: 'Max Compute (ms)',
+                    value: (network) => network.maxComputeTime.toFixed(3),
+                  },
+                  {
+                    heading: 'Node Count',
+                    value: (network) => network.nodeCount,
+                  },
+                ]}
+              />
             )}
           </div>
 
-          {/* System Metadata */}
-          <div>
-            <h3 className="mb-3 text-lg font-semibold text-white">
-              Test Environment (Metadata)
-            </h3>
-            <div className="overflow-hidden rounded-lg border border-white/10">
-              <table className="w-full text-sm">
-                <tbody className="bg-black/40">
-                  <tr>
-                    <td className="border-b border-white/5 px-4 py-2 font-semibold text-muted-foreground">
-                      Browser
-                    </td>
-                    <td className="border-b border-white/5 px-4 py-2 font-mono text-white">
-                      {session.metadata.browser}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border-b border-white/5 px-4 py-2 font-semibold text-muted-foreground">
-                      Platform
-                    </td>
-                    <td className="border-b border-white/5 px-4 py-2 font-mono text-white">
-                      {session.metadata.platform}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border-b border-white/5 px-4 py-2 font-semibold text-muted-foreground">
-                      GPU
-                    </td>
-                    <td className="border-b border-white/5 px-4 py-2 font-mono text-white">
-                      {session.metadata.gpu}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border-b border-white/5 px-4 py-2 font-semibold text-muted-foreground">
-                      CSS Resolution
-                    </td>
-                    <td className="border-b border-white/5 px-4 py-2 font-mono text-white">
-                      {session.metadata.screenResolution}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border-b border-white/5 px-4 py-2 font-semibold text-muted-foreground">
-                      Device Pixel Ratio
-                    </td>
-                    <td className="border-b border-white/5 px-4 py-2 font-mono text-white">
-                      {session.metadata.devicePixelRatio}x
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border-b border-white/5 px-4 py-2 font-semibold text-muted-foreground">
-                      Physical Resolution
-                    </td>
-                    <td className="border-b border-white/5 px-4 py-2 font-mono text-white">
-                      {session.metadata.physicalResolution}{' '}
-                      <span className="text-xs text-muted-foreground">
-                        (GPU render target)
-                      </span>
-                    </td>
-                  </tr>
-                  {session.description && (
-                    <tr>
-                      <td className="px-4 py-2 font-semibold text-muted-foreground">
-                        Description
-                      </td>
-                      <td className="px-4 py-2 text-white">
-                        {session.description}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <StatisticsTable
+            title="Test Environment (Metadata)"
+            titleColor="text-white"
+            largeTitle
+            labelClassName="font-semibold text-muted-foreground"
+            showHeader={false}
+            valueClassName="font-mono text-white"
+            rows={[
+              ['Browser', session.metadata.browser],
+              ['Platform', session.metadata.platform],
+              ['GPU', session.metadata.gpu],
+              ['CSS Resolution', session.metadata.screenResolution],
+              ['Device Pixel Ratio', `${session.metadata.devicePixelRatio}x`],
+              [
+                'Physical Resolution',
+                `${session.metadata.physicalResolution} (GPU render target)`,
+              ],
+              ...(session.description
+                ? ([['Description', session.description]] as const)
+                : []),
+            ]}
+          />
         </div>
       </DialogContent>
     </Dialog>
@@ -1186,6 +868,208 @@ export const PerformanceStatsDialog = memo(
 );
 
 PerformanceStatsDialog.displayName = 'PerformanceStatsDialog';
+
+type TimeSeriesDefinition = {
+  dataKey: string;
+  name: string;
+  color: string;
+  kind?: 'area' | 'line';
+  fillId?: string;
+};
+
+function TimeSeriesChart({
+  data,
+  height,
+  series,
+  margin = { top: 10, right: 30, left: 0, bottom: 20 },
+  paddedLegend = true,
+  yDomain = [0, 'auto'],
+  yLabel,
+}: {
+  data: Record<string, unknown>[];
+  height: number;
+  series: TimeSeriesDefinition[];
+  margin?: { top: number; right: number; left: number; bottom: number };
+  paddedLegend?: boolean;
+  yDomain?: [number, number | 'auto'];
+  yLabel?: string;
+}) {
+  const areaSeries = series.filter(({ kind }) => kind === 'area');
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <ComposedChart data={data} margin={margin}>
+        {areaSeries.length > 0 && (
+          <defs>
+            {areaSeries.map(({ color, fillId }) => (
+              <linearGradient
+                key={fillId}
+                id={fillId}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1">
+                <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={color} stopOpacity={0.05} />
+              </linearGradient>
+            ))}
+          </defs>
+        )}
+        <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+        <XAxis
+          dataKey="time"
+          stroke="#999"
+          type="number"
+          domain={['dataMin', 'dataMax']}
+          tick={{ fill: '#999' }}
+        />
+        <YAxis
+          stroke="#999"
+          domain={yDomain}
+          tick={{ fill: '#999' }}
+          {...(yLabel
+            ? {
+                label: {
+                  value: yLabel,
+                  angle: -90,
+                  position: 'insideLeft' as const,
+                  style: { fill: '#999' },
+                },
+              }
+            : {})}
+        />
+        <Tooltip contentStyle={chartTooltipStyle} />
+        <Legend
+          {...(paddedLegend ? { wrapperStyle: { paddingTop: '10px' } } : {})}
+        />
+        {series.map(({ dataKey, name, color, kind, fillId }) =>
+          kind === 'area' ? (
+            <Area
+              key={dataKey}
+              type="monotone"
+              dataKey={dataKey}
+              stroke={color}
+              strokeWidth={2}
+              fillOpacity={1}
+              fill={`url(#${fillId})`}
+              name={name}
+            />
+          ) : (
+            <Line
+              key={dataKey}
+              type="monotone"
+              dataKey={dataKey}
+              stroke={color}
+              strokeWidth={2}
+              dot={false}
+              name={name}
+            />
+          ),
+        )}
+      </ComposedChart>
+    </ResponsiveContainer>
+  );
+}
+
+function PerformanceBarChart({
+  data,
+  bars,
+  tickFontSize,
+  tickFormatter,
+}: {
+  data: Record<string, unknown>[];
+  bars: Array<{ dataKey: string; name: string; color: string }>;
+  tickFontSize?: number;
+  tickFormatter?: (value: string, index: number) => string;
+}) {
+  return (
+    <ResponsiveContainer width="100%" height={250}>
+      <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+        <XAxis
+          dataKey="name"
+          stroke="#999"
+          tick={{
+            fill: '#999',
+            ...(tickFontSize ? { fontSize: tickFontSize } : {}),
+          }}
+          {...(tickFormatter ? { tickFormatter } : {})}
+        />
+        <YAxis stroke="#999" tick={{ fill: '#999' }} />
+        <Tooltip contentStyle={chartTooltipStyle} />
+        <Legend />
+        {bars.map(({ dataKey, name, color }) => (
+          <Bar key={dataKey} dataKey={dataKey} fill={color} name={name} />
+        ))}
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function BreakdownTable<T>({
+  title,
+  titleColor,
+  rows,
+  columns,
+  getKey,
+}: {
+  title: string;
+  titleColor: string;
+  rows: T[];
+  columns: Array<{
+    heading: string;
+    value: (row: T) => ReactNode;
+    align?: 'left' | 'right';
+  }>;
+  getKey: (row: T) => string;
+}) {
+  return (
+    <div className="mb-4">
+      <h4 className={`mb-2 text-sm font-semibold ${titleColor}`}>{title}</h4>
+      <div className="overflow-hidden rounded-lg border border-white/10">
+        <table className="w-full text-sm">
+          <thead className="bg-white/5">
+            <tr>
+              {columns.map(({ heading, align = 'right' }) => (
+                <th
+                  key={heading}
+                  className={`border-b border-white/10 px-4 py-2 text-white ${
+                    align === 'left' ? 'text-left' : 'text-right'
+                  }`}>
+                  {heading}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="bg-black/40">
+            {rows.map((row, index) => {
+              const border =
+                index < rows.length - 1 ? 'border-b border-white/5' : '';
+              return (
+                <tr key={getKey(row)}>
+                  {columns.map(
+                    ({ heading, value, align = 'right' }, columnIndex) => (
+                      <td
+                        key={heading}
+                        className={`${border} px-4 py-2 ${
+                          align === 'left' ? 'text-left' : 'text-right'
+                        } ${
+                          columnIndex === 0
+                            ? 'text-white'
+                            : 'font-mono text-white'
+                        }`}>
+                        {value(row)}
+                      </td>
+                    ),
+                  )}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 // Helper component for stat cards
 interface StatCardProps {
@@ -1247,39 +1131,52 @@ function StatisticsTable({
   title,
   titleColor,
   rows,
+  largeTitle = false,
+  labelClassName = 'text-muted-foreground',
+  showHeader = true,
   valueHeading = 'Value',
+  valueClassName = 'text-right font-mono text-white',
 }: {
   title: string;
   titleColor: string;
   rows: Array<readonly [label: string, value: ReactNode]>;
+  largeTitle?: boolean;
+  labelClassName?: string;
+  showHeader?: boolean;
   valueHeading?: string;
+  valueClassName?: string;
 }) {
   return (
     <div className="mb-4 flex flex-col">
-      <h4 className={`mb-2 text-sm font-semibold ${titleColor}`}>{title}</h4>
+      {largeTitle ? (
+        <h3 className={`mb-3 text-lg font-semibold ${titleColor}`}>{title}</h3>
+      ) : (
+        <h4 className={`mb-2 text-sm font-semibold ${titleColor}`}>{title}</h4>
+      )}
       <div className="flex-1 overflow-hidden rounded-lg border border-white/10">
         <table className="w-full text-sm">
-          <thead className="bg-white/5">
-            <tr>
-              <th className="border-b border-white/10 px-4 py-2 text-left text-white">
-                Metric
-              </th>
-              <th className="border-b border-white/10 px-4 py-2 text-right text-white">
-                {valueHeading}
-              </th>
-            </tr>
-          </thead>
+          {showHeader && (
+            <thead className="bg-white/5">
+              <tr>
+                <th className="border-b border-white/10 px-4 py-2 text-left text-white">
+                  Metric
+                </th>
+                <th className="border-b border-white/10 px-4 py-2 text-right text-white">
+                  {valueHeading}
+                </th>
+              </tr>
+            </thead>
+          )}
           <tbody className="bg-black/40">
             {rows.map(([label, value], index) => {
               const border =
                 index < rows.length - 1 ? 'border-b border-white/5' : '';
               return (
                 <tr key={label}>
-                  <td className={`${border} px-4 py-2 text-muted-foreground`}>
+                  <td className={`${border} px-4 py-2 ${labelClassName}`}>
                     {label}
                   </td>
-                  <td
-                    className={`${border} px-4 py-2 text-right font-mono text-white`}>
+                  <td className={`${border} px-4 py-2 ${valueClassName}`}>
                     {value}
                   </td>
                 </tr>

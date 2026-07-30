@@ -1,8 +1,8 @@
 // Chart Export Utility
 // Renders charts in offscreen canvas and exports as PNG
 
-import { destructureParameterId } from '@/lib/id-utils';
 import type { RecordingSession } from '@/lib/stores/performance-recorder-types';
+import { computePerformanceBreakdown } from '@/lib/stores/performance-recorder-utils';
 import JSZip from 'jszip';
 
 export interface ChartExportOptions {
@@ -17,30 +17,6 @@ export interface ChartExportOptions {
   fontSize?: number;
   titleFontSize?: number;
   padding?: number;
-}
-
-export interface ChartData {
-  timeSeries: Array<{
-    time: number;
-    fps: number;
-    avgFps: number;
-    memory: number;
-    frameBudget: number;
-    layers: number;
-    nodeNetworks: number;
-  }>;
-  layerPerformance: Array<{
-    name: string;
-    avgRenderTime: number;
-    maxRenderTime: number;
-    avgDrawCalls: number;
-  }>;
-  nodeNetworkPerformance: Array<{
-    name: string;
-    avgComputeTime: number;
-    maxComputeTime: number;
-    nodeCount: number;
-  }>;
 }
 
 // Default export options
@@ -870,20 +846,10 @@ export const exportLayerPerformanceChart = (
   session: RecordingSession,
   options: ChartExportOptions = {},
 ): Promise<Blob> => {
-  const layers = new Map<string, number[]>();
-  for (const snapshot of session.snapshots) {
-    for (const layer of snapshot.layers) {
-      const times = layers.get(layer.layerId) ?? [];
-      times.push(layer.renderTime);
-      layers.set(layer.layerId, times);
-    }
-  }
-  const data = Array.from(layers, ([layerId, times]) => ({
-    name:
-      session.snapshots[0]?.layers.find((layer) => layer.layerId === layerId)
-        ?.layerName ?? layerId,
-    avgValue: times.reduce((sum, value) => sum + value, 0) / times.length,
-    maxValue: Math.max(...times),
+  const data = computePerformanceBreakdown(session).layers.map((layer) => ({
+    name: layer.name,
+    avgValue: layer.rawAvgRenderTime,
+    maxValue: layer.rawMaxRenderTime,
   }));
   return exportGroupedChart(session, options, data, {
     title: 'Layer Performance Breakdown',
@@ -898,22 +864,13 @@ export const exportNodeNetworkPerformanceChart = (
   session: RecordingSession,
   options: ChartExportOptions = {},
 ): Promise<Blob> => {
-  const networks = new Map<string, number[]>();
-  for (const snapshot of session.snapshots) {
-    for (const network of snapshot.nodeNetworks) {
-      const times = networks.get(network.parameterId) ?? [];
-      times.push(network.computeTime);
-      networks.set(network.parameterId, times);
-    }
-  }
-  const data = Array.from(networks, ([parameterId, times]) => {
-    const { displayName, componentName } = destructureParameterId(parameterId);
-    return {
-      name: `${displayName} (${componentName})`,
-      avgValue: times.reduce((sum, value) => sum + value, 0) / times.length,
-      maxValue: Math.max(...times),
-    };
-  });
+  const data = computePerformanceBreakdown(session).nodeNetworks.map(
+    (network) => ({
+      name: `${network.name} (${network.layerName})`,
+      avgValue: network.rawAvgComputeTime,
+      maxValue: network.maxComputeTime,
+    }),
+  );
   return exportGroupedChart(session, options, data, {
     title: 'Node Network Computation Time',
     xLabel: 'Parameter',
