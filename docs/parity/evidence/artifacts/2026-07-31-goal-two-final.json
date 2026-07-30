@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "goal": "viz-engine-v2-behavior-preserving-minimization",
+  "capturedAt": "2026-07-31",
+  "git": {
+    "baselineCommit": "6f4529b824d38a60cf3363b1cd646e55b4339227",
+    "certifiedCodeCommit": "c2dc5ee6f69fb8cb7f1c47bfd74a7aa7d882366a",
+    "branch": "codex/viz-engine-v2"
+  },
+  "source": {
+    "production": {
+      "baselineFiles": 371,
+      "finalFiles": 349,
+      "baselineLines": 75524,
+      "finalLines": 67645,
+      "lineReduction": 7879,
+      "reductionPercent": 10.432439223682566,
+      "diffAdditions": 5499,
+      "diffDeletions": 13356
+    },
+    "tools": {
+      "baselineFiles": 13,
+      "finalFiles": 13,
+      "baselineLines": 2466,
+      "finalLines": 2457,
+      "diffAdditions": 1,
+      "diffDeletions": 10
+    },
+    "tests": {
+      "baselineFiles": 54,
+      "finalFiles": 57,
+      "baselineLines": 12637,
+      "finalLines": 12893,
+      "diffAdditions": 520,
+      "diffDeletions": 267
+    },
+    "combinedMaintained": {
+      "baselineFiles": 438,
+      "finalFiles": 419,
+      "baselineLines": 90627,
+      "finalLines": 82995,
+      "lineReduction": 7632,
+      "diffAdditions": 6020,
+      "diffDeletions": 13633
+    }
+  },
+  "targets": {
+    "hardNetNegativeProduction": true,
+    "hardNetNegativeCombinedMaintained": true,
+    "seriousProductionLineTarget": 65524,
+    "seriousTargetReached": false,
+    "remainingToSeriousTarget": 2121,
+    "stoppedAtHonestSimplificationFrontier": true
+  },
+  "architecture": {
+    "packageCount": 17,
+    "declaredEntrypointCount": 21,
+    "packageSourceFileCount": 149,
+    "packageExportDeclarationCount": 774,
+    "upwardDependencies": 0,
+    "cycles": 0,
+    "undeclaredWorkspaceImports": 0,
+    "nodeEntrypointLeaks": 0
+  },
+  "tests": {
+    "vitestFiles": 55,
+    "vitestTests": 232,
+    "browserJourneyCount": 7,
+    "browserDurationMinutes": 4,
+    "parityCapabilityCount": 42
+  },
+  "performance": {
+    "runtimePlan": {
+      "componentCount": 15,
+      "measuredFrames": 300,
+      "warmupFrames": 30,
+      "baselineMeanMs": 0.30220696666666563,
+      "finalMeanMs": 0.28505189999999914,
+      "baselineMedianMs": 0.2697080000000369,
+      "finalMedianMs": 0.26462500000002365,
+      "baselineP95Ms": 0.44583299999999326,
+      "finalP95Ms": 0.38441599999998743,
+      "formerToCanonicalMeanRatio": 1.3948956312867684
+    },
+    "audioArtifactContainer": {
+      "legacyJsonBytes": 3133447,
+      "containerBytes": 2337004,
+      "reductionPercent": 25.417471557680727,
+      "baselineContainerDecodeMedianMs": 0.7261250000000246,
+      "finalContainerDecodeMedianMs": 0.7080829999999878,
+      "finalLegacyDecodeMedianMs": 2.3172500000000014,
+      "packedValuesPreserved": 2211840
+    }
+  },
+  "signalCathedral": {
+    "projectIdentity": "sha256:c0085922cb268a69b8306898b167a1e2386675fdcf96778a832c258e75bf9223",
+    "audioIdentity": "sha256:d13f1a0f9fe2af8cb088d08320f24822a8ecafddde4801143a52972fc4bc9dcd",
+    "bakeExecutionIdentity": "viz-bake.audio-feature-timeline.v1:c27288b9",
+    "semanticAudioPayloadIdentical": true,
+    "finalVideoSha256": "a835883cafa005dc38851ea6cbb2e5adbf0abfd10137fa59bc6583383b2fcfb2",
+    "contactSheetSha256": "852419d591a4139b31f5e43071f3512d3b1dee028932b23701d389cb4c5ff372"
+  },
+  "certification": {
+    "command": "pnpm check:foundation",
+    "passed": true,
+    "includes": [
+      "parity",
+      "architecture",
+      "format",
+      "lint",
+      "types",
+      "deterministic tests",
+      "browser acceptance",
+      "package builds",
+      "studio build",
+      "packed consumer",
+      "built creative loop"
+    ]
+  }
+}

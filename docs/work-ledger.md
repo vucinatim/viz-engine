@@ -1895,3 +1895,27 @@
     runtime-preview, and resource tests
   - moved production source to 67,645 lines and 349 files, a reduction of
     7,879 lines and 22 files from the immutable Goal Two baseline
+- completed and certified Goal Two behavior-preserving minimization and final
+  polish:
+  - repaired the runtime-plan benchmark after the canonical authoring cutover
+    by comparing the former per-layer shape with canonical projected defaults
+    instead of the deleted editor config facade
+  - reproduced Signal Cathedral's exact project, audio, and bake execution
+    identities and all 2,211,840 packed semantic audio values in an isolated
+    prepare/bake/finalize/validate cycle
+  - retained the exact certified final-video and contact-sheet hashes
+  - measured the 15-component canonical runtime-plan mean at 0.285 ms and p95
+    at 0.384 ms, both better than the Goal Two baseline
+  - measured the versioned audio container at 25.42% smaller than legacy JSON
+    with 0.708 ms median decode versus 2.317 ms for JSON
+  - passed the complete foundation gate: 42 parity capabilities, clean
+    dependency architecture, formatting, lint, all type checks, 55 files /
+    232 tests, all seven browser journeys in 4.0 minutes, all package and
+    studio builds, packed-consumer smoke, and the built creative loop
+  - finished at 67,645 production lines and 82,995 combined maintained lines,
+    reductions of 7,879 and 7,632 respectively
+  - stopped at the honest simplification frontier rather than weakening
+    readability, types, diagnostics, visual behavior, tests, or performance
+    to force the 10,000-line serious target
+  - recorded the complete result in
+    `docs/parity/evidence/2026-07-31-behavior-preserving-minimization-and-final-polish.md`

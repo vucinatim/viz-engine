@@ -12,21 +12,10 @@
       "capability": "The complete editor shell presents the established header, layer controls, preview, timeline, and secondary tools as one coherent workspace.",
       "importance": "critical",
       "parityDimensions": ["visual", "interaction", "functional"],
-      "referenceEvidence": [
-        "src/app/page.tsx",
-        "src/components/editor/editor-layout.tsx"
-      ],
-      "v2Evidence": [
-        "apps/viz-studio/src/App.tsx",
-        "src/components/editor/editor-page.tsx",
-        "src/components/editor/editor-layout.tsx"
-      ],
+      "referenceEvidence": ["src/app/page.tsx", "src/components/editor/editor-layout.tsx"],
+      "v2Evidence": ["apps/viz-studio/src/App.tsx", "src/components/editor/editor-page.tsx", "src/components/editor/editor-layout.tsx"],
       "status": "partial",
-      "acceptance": [
-        "All primary V1 work areas are reachable without navigation dead ends.",
-        "Panel placement, hierarchy, and resizing preserve an efficient editing workflow.",
-        "The shell remains usable at the supported desktop viewport sizes."
-      ],
+      "acceptance": ["All primary V1 work areas are reachable without navigation dead ends.", "Panel placement, hierarchy, and resizing preserve an efficient editing workflow.", "The shell remains usable at the supported desktop viewport sizes."],
       "validationMethods": ["browser", "visual", "integration"],
       "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md"]
     },
@@ -36,20 +25,10 @@
       "capability": "Typography, density, colors, controls, spacing, and feedback retain the recognizable editor visual language.",
       "importance": "high",
       "parityDimensions": ["visual", "interaction"],
-      "referenceEvidence": [
-        "src/app/globals.css",
-        "src/components/editor/editor-layout.tsx"
-      ],
-      "v2Evidence": [
-        "src/styles/globals.css",
-        "src/components/editor/editor-layout.tsx"
-      ],
+      "referenceEvidence": ["src/app/globals.css", "src/components/editor/editor-layout.tsx"],
+      "v2Evidence": ["src/styles/globals.css", "src/components/editor/editor-layout.tsx"],
       "status": "partial",
-      "acceptance": [
-        "Core screens are visually equivalent or intentionally improved without losing information density.",
-        "Hover, focus, selected, disabled, and error states remain legible.",
-        "No unapproved generic replacement UI appears in primary workflows."
-      ],
+      "acceptance": ["Core screens are visually equivalent or intentionally improved without losing information density.", "Hover, focus, selected, disabled, and error states remain legible.", "No unapproved generic replacement UI appears in primary workflows."],
       "validationMethods": ["browser", "visual", "manual"],
       "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md"]
     },
@@ -62,11 +41,7 @@
       "referenceEvidence": ["src/components/editor/editor-layout.tsx"],
       "v2Evidence": ["src/components/editor/editor-layout.tsx"],
       "status": "partial",
-      "acceptance": [
-        "Dragging dividers updates panels continuously without layout corruption.",
-        "Minimum sizes protect important controls.",
-        "Preview interaction remains responsive while resizing."
-      ],
+      "acceptance": ["Dragging dividers updates panels continuously without layout corruption.", "Minimum sizes protect important controls.", "Preview interaction remains responsive while resizing."],
       "validationMethods": ["browser", "visual", "benchmark"],
       "validationEvidence": []
     },
@@ -76,20 +51,10 @@
       "capability": "Established keyboard shortcuts work in the right contexts without stealing text-entry input.",
       "importance": "high",
       "parityDimensions": ["interaction", "functional"],
-      "referenceEvidence": [
-        "src/lib/utils/keyboard-shortcuts.ts",
-        "src/app/page.tsx"
-      ],
-      "v2Evidence": [
-        "src/lib/utils/keyboard-shortcuts.ts",
-        "src/components/editor/editor-page.tsx"
-      ],
+      "referenceEvidence": ["src/lib/utils/keyboard-shortcuts.ts", "src/app/page.tsx"],
+      "v2Evidence": ["src/lib/utils/keyboard-shortcuts.ts", "src/components/editor/editor-page.tsx"],
       "status": "partial",
-      "acceptance": [
-        "Playback, undo, redo, save, and editor shortcuts match the documented bindings.",
-        "Focused inputs and editable controls are not disrupted.",
-        "Shortcuts invoke the canonical V2 command path."
-      ],
+      "acceptance": ["Playback, undo, redo, save, and editor shortcuts match the documented bindings.", "Focused inputs and editable controls are not disrupted.", "Shortcuts invoke the canonical V2 command path."],
       "validationMethods": ["browser", "integration"],
       "validationEvidence": []
     },
@@ -99,21 +64,10 @@
       "capability": "Users can add, remove, duplicate, and reorder visualization layers.",
       "importance": "critical",
       "parityDimensions": ["interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/layers-config-panel.tsx",
-        "src/components/editor/layer-config-card.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/editor/layers-config-panel.tsx",
-        "src/components/editor/layer-config-card.tsx",
-        "src/lib/viz-session/store.ts"
-      ],
+      "referenceEvidence": ["src/components/editor/layers-config-panel.tsx", "src/components/editor/layer-config-card.tsx"],
+      "v2Evidence": ["src/components/editor/layers-config-panel.tsx", "src/components/editor/layer-config-card.tsx", "src/lib/viz-session/store.ts"],
       "status": "partial",
-      "acceptance": [
-        "Every operation updates the canonical project exactly once.",
-        "Reordering is reflected immediately in rendering and persistence.",
-        "Undo and redo restore the complete operation."
-      ],
+      "acceptance": ["Every operation updates the canonical project exactly once.", "Reordering is reflected immediately in rendering and persistence.", "Undo and redo restore the complete operation."],
       "validationMethods": ["browser", "integration", "unit"],
       "validationEvidence": []
     },
@@ -123,20 +77,10 @@
       "capability": "Users can efficiently discover visualization types, add them, and keep a clear active-layer selection.",
       "importance": "high",
       "parityDimensions": ["visual", "interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/editor-layer-search.tsx",
-        "src/components/editor/layers-config-panel.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/editor/editor-layer-search.tsx",
-        "src/components/editor/layers-config-panel.tsx"
-      ],
+      "referenceEvidence": ["src/components/editor/editor-layer-search.tsx", "src/components/editor/layers-config-panel.tsx"],
+      "v2Evidence": ["src/components/editor/editor-layer-search.tsx", "src/components/editor/layers-config-panel.tsx"],
       "status": "partial",
-      "acceptance": [
-        "Search filters registered components predictably.",
-        "Adding a result selects and reveals the new layer.",
-        "Selection remains synchronized across panels and preview affordances."
-      ],
+      "acceptance": ["Search filters registered components predictably.", "Adding a result selects and reveals the new layer.", "Selection remains synchronized across panels and preview affordances."],
       "validationMethods": ["browser", "integration"],
       "validationEvidence": []
     },
@@ -146,22 +90,10 @@
       "capability": "Layer visibility, opacity, blend mode, freeze, debug, and related compositing controls remain available.",
       "importance": "critical",
       "parityDimensions": ["visual", "interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/layer-settings.tsx",
-        "src/components/editor/layer-renderer.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/editor/layer-settings.tsx",
-        "src/components/editor/layer-renderer.tsx",
-        "src/lib/projected-layers.ts",
-        "src/lib/stores/editor-runtime-preview-attachment-store.ts"
-      ],
+      "referenceEvidence": ["src/components/editor/layer-settings.tsx", "src/components/editor/layer-renderer.tsx"],
+      "v2Evidence": ["src/components/editor/layer-settings.tsx", "src/components/editor/layer-renderer.tsx", "src/lib/projected-layers.ts", "src/lib/stores/editor-runtime-preview-attachment-store.ts"],
       "status": "partial",
-      "acceptance": [
-        "Each control changes the intended rendered layer immediately.",
-        "Values serialize and restore without semantic drift.",
-        "Unsupported combinations fail clearly rather than silently."
-      ],
+      "acceptance": ["Each control changes the intended rendered layer immediately.", "Values serialize and restore without semantic drift.", "Unsupported combinations fail clearly rather than silently."],
       "validationMethods": ["browser", "visual", "integration"],
       "validationEvidence": []
     },
@@ -174,11 +106,7 @@
       "referenceEvidence": ["src/components/editor/layer-config-card.tsx"],
       "v2Evidence": ["src/components/editor/layer-config-card.tsx"],
       "status": "partial",
-      "acceptance": [
-        "Expanded and collapsed cards expose the same essential information as V1.",
-        "Contextual actions are discoverable and keyboard accessible.",
-        "Large layer lists remain organized and scannable."
-      ],
+      "acceptance": ["Expanded and collapsed cards expose the same essential information as V1.", "Contextual actions are discoverable and keyboard accessible.", "Large layer lists remain organized and scannable."],
       "validationMethods": ["browser", "visual"],
       "validationEvidence": []
     },
@@ -188,21 +116,10 @@
       "capability": "Component schemas generate complete, usable parameter editors.",
       "importance": "critical",
       "parityDimensions": ["visual", "interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/layer-parameters.tsx",
-        "src/components/config/config.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/editor/layer-parameters.tsx",
-        "src/components/config/config.tsx",
-        "packages/viz-components-core/src/registry.ts"
-      ],
+      "referenceEvidence": ["src/components/editor/layer-parameters.tsx", "src/components/config/config.tsx"],
+      "v2Evidence": ["src/components/editor/layer-parameters.tsx", "src/components/config/config.tsx", "packages/viz-components-core/src/registry.ts"],
       "status": "partial",
-      "acceptance": [
-        "Every supported schema field renders an appropriate control.",
-        "Edits update canonical layer configuration and preview deterministically.",
-        "Defaults, bounds, optional fields, and nested values retain their meaning."
-      ],
+      "acceptance": ["Every supported schema field renders an appropriate control.", "Edits update canonical layer configuration and preview deterministically.", "Defaults, bounds, optional fields, and nested values retain their meaning."],
       "validationMethods": ["browser", "integration", "unit"],
       "validationEvidence": []
     },
@@ -212,20 +129,10 @@
       "capability": "Layer presets and reset behavior remain available and predictable.",
       "importance": "high",
       "parityDimensions": ["interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/layer-config-card.tsx",
-        "src/components/editor/layer-parameters.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/editor/layer-config-card.tsx",
-        "src/components/editor/layer-parameters.tsx"
-      ],
+      "referenceEvidence": ["src/components/editor/layer-config-card.tsx", "src/components/editor/layer-parameters.tsx"],
+      "v2Evidence": ["src/components/editor/layer-config-card.tsx", "src/components/editor/layer-parameters.tsx"],
       "status": "partial",
-      "acceptance": [
-        "Applying a preset produces its complete documented configuration.",
-        "Reset restores the component default without stale values.",
-        "Preset and reset changes participate in history."
-      ],
+      "acceptance": ["Applying a preset produces its complete documented configuration.", "Reset restores the component default without stale values.", "Preset and reset changes participate in history."],
       "validationMethods": ["browser", "integration"],
       "validationEvidence": []
     },
@@ -235,20 +142,10 @@
       "capability": "Dragging and typing parameter values updates the preview quickly and smoothly.",
       "importance": "critical",
       "parityDimensions": ["interaction", "functional", "performance"],
-      "referenceEvidence": [
-        "src/components/editor/layer-parameters.tsx",
-        "src/components/editor/layer-renderer.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/editor/layer-parameters.tsx",
-        "src/components/editor/editor-runtime-preview-driver.tsx"
-      ],
+      "referenceEvidence": ["src/components/editor/layer-parameters.tsx", "src/components/editor/layer-renderer.tsx"],
+      "v2Evidence": ["src/components/editor/layer-parameters.tsx", "src/components/editor/editor-runtime-preview-driver.tsx"],
       "status": "not-audited",
-      "acceptance": [
-        "Continuous controls do not visibly lag behind input.",
-        "One gesture creates an intelligible history result rather than excessive snapshots.",
-        "Editing does not trigger avoidable full-editor rerenders."
-      ],
+      "acceptance": ["Continuous controls do not visibly lag behind input.", "One gesture creates an intelligible history result rather than excessive snapshots.", "Editing does not trigger avoidable full-editor rerenders."],
       "validationMethods": ["browser", "benchmark", "integration"],
       "validationEvidence": []
     },
@@ -258,39 +155,12 @@
       "capability": "Stage presents production-quality model-backed DJ and crowd characters with authored dance animation across its established cinematic camera paths.",
       "importance": "critical",
       "parityDimensions": ["visual", "functional", "performance"],
-      "referenceEvidence": [
-        "playground/src/models/female-dj.fbx",
-        "playground/src/models/female-dancer.fbx",
-        "playground/src/models/male-dancer.fbx",
-        "playground/src/models/male-cheer.fbx",
-        "playground/src/scene/dj.ts",
-        "playground/src/scene/crowd.ts"
-      ],
-      "v2Evidence": [
-        "public/models/stage/female-dj.fbx",
-        "public/models/stage/female-dancer.fbx",
-        "public/models/stage/male-dancer.fbx",
-        "public/models/stage/male-cheer.fbx",
-        "packages/viz-contracts/src/models.ts",
-        "packages/viz-components-core/src/stage-model-assets.ts",
-        "packages/viz-renderer-three/src/model-resources.ts",
-        "packages/viz-renderer-three/src/model-animation.ts",
-        "packages/viz-renderer-three/src/programs/stage-characters.ts",
-        "packages/viz-renderer-three/src/programs/stage-scene.ts",
-        "tests/foundation/native-model-system.test.ts",
-        "docs/specs/v2/native-3d-model-character-and-performance-system.md"
-      ],
+      "referenceEvidence": ["playground/src/models/female-dj.fbx", "playground/src/models/female-dancer.fbx", "playground/src/models/male-dancer.fbx", "playground/src/models/male-cheer.fbx", "playground/src/scene/dj.ts", "playground/src/scene/crowd.ts"],
+      "v2Evidence": ["public/models/stage/female-dj.fbx", "public/models/stage/female-dancer.fbx", "public/models/stage/male-dancer.fbx", "public/models/stage/male-cheer.fbx", "packages/viz-contracts/src/models.ts", "packages/viz-components-core/src/stage-model-assets.ts", "packages/viz-renderer-three/src/model-resources.ts", "packages/viz-renderer-three/src/model-animation.ts", "packages/viz-renderer-three/src/programs/stage-characters.ts", "packages/viz-renderer-three/src/programs/stage-scene.ts", "tests/foundation/native-model-system.test.ts", "docs/specs/v2/native-3d-model-character-and-performance-system.md"],
       "status": "verified",
-      "acceptance": [
-        "The real DJ and dancer assets or visually approved prepared derivatives replace procedural actors in production Stage output.",
-        "Embedded authored animation samples deterministically from canonical frame time and matches between direct seek, preview, and export.",
-        "Crowd flyover, drone, and hero-DJ views preserve the intended actor fidelity and dance readability.",
-        "Canonical model resolution, readiness, cancellation, disposal, and crowd performance satisfy the native 3D system specification."
-      ],
+      "acceptance": ["The real DJ and dancer assets or visually approved prepared derivatives replace procedural actors in production Stage output.", "Embedded authored animation samples deterministically from canonical frame time and matches between direct seek, preview, and export.", "Crowd flyover, drone, and hero-DJ views preserve the intended actor fidelity and dance readability.", "Canonical model resolution, readiness, cancellation, disposal, and crowd performance satisfy the native 3D system specification."],
       "validationMethods": ["browser", "visual", "integration", "benchmark"],
-      "validationEvidence": [
-        "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"
-      ]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
     },
     {
       "id": "nodes.editor-overlay",
@@ -298,27 +168,12 @@
       "capability": "The full node-graph editor opens from layer workflows and preserves the established spatial editing experience.",
       "importance": "critical",
       "parityDimensions": ["visual", "interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/animation-builder.tsx",
-        "src/components/node-network/node-network-renderer.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/editor/animation-builder.tsx",
-        "src/components/node-network/node-network-renderer.tsx",
-        "src/components/node-network/node-network-store.ts",
-        "src/lib/viz-session/graph-authoring-actions.ts"
-      ],
+      "referenceEvidence": ["src/components/editor/animation-builder.tsx", "src/components/node-network/node-network-renderer.tsx"],
+      "v2Evidence": ["src/components/editor/animation-builder.tsx", "src/components/node-network/node-network-renderer.tsx", "src/components/node-network/node-network-store.ts", "src/lib/viz-session/graph-authoring-actions.ts"],
       "status": "partial",
-      "acceptance": [
-        "The graph opens for the selected layer with the correct graph loaded.",
-        "Pan, zoom, selection, and close behavior feel equivalent to V1.",
-        "Graph changes update runtime parameter evaluation through stable contracts."
-      ],
+      "acceptance": ["The graph opens for the selected layer with the correct graph loaded.", "Pan, zoom, selection, and close behavior feel equivalent to V1.", "Graph changes update runtime parameter evaluation through stable contracts."],
       "validationMethods": ["browser", "visual", "integration"],
-      "validationEvidence": [
-        "docs/parity/evidence/2026-07-29-calibration.md",
-        "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"
-      ]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
     },
     {
       "id": "nodes.create-delete-search",
@@ -326,20 +181,10 @@
       "capability": "Users can search for, create, select, move, and delete all supported node types.",
       "importance": "critical",
       "parityDimensions": ["interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/node-network/nodes-search.tsx",
-        "src/components/node-network/node-network-renderer.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/node-network/nodes-search.tsx",
-        "src/components/node-network/node-network-renderer.tsx"
-      ],
+      "referenceEvidence": ["src/components/node-network/nodes-search.tsx", "src/components/node-network/node-network-renderer.tsx"],
+      "v2Evidence": ["src/components/node-network/nodes-search.tsx", "src/components/node-network/node-network-renderer.tsx"],
       "status": "partial",
-      "acceptance": [
-        "The search catalog reflects the supported registry.",
-        "Create and delete operations preserve a valid graph.",
-        "Node positions and selection serialize and restore."
-      ],
+      "acceptance": ["The search catalog reflects the supported registry.", "Create and delete operations preserve a valid graph.", "Node positions and selection serialize and restore."],
       "validationMethods": ["browser", "integration", "unit"],
       "validationEvidence": []
     },
@@ -349,21 +194,10 @@
       "capability": "Connections provide clear type compatibility, feedback, replacement, and invalid-edge handling.",
       "importance": "critical",
       "parityDimensions": ["visual", "interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/node-network/connection-validator.tsx",
-        "src/components/node-network/node-network-renderer.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/node-network/connection-validator.tsx",
-        "src/components/node-network/node-network-renderer.tsx",
-        "src/components/node-network/graph-types.ts"
-      ],
+      "referenceEvidence": ["src/components/node-network/connection-validator.tsx", "src/components/node-network/node-network-renderer.tsx"],
+      "v2Evidence": ["src/components/node-network/connection-validator.tsx", "src/components/node-network/node-network-renderer.tsx", "src/components/node-network/graph-types.ts"],
       "status": "partial",
-      "acceptance": [
-        "Valid edges connect and evaluate.",
-        "Invalid edges are prevented with understandable feedback.",
-        "Loading malformed graph data cannot corrupt the active project."
-      ],
+      "acceptance": ["Valid edges connect and evaluate.", "Invalid edges are prevented with understandable feedback.", "Loading malformed graph data cannot corrupt the active project."],
       "validationMethods": ["browser", "integration", "unit"],
       "validationEvidence": []
     },
@@ -373,20 +207,10 @@
       "capability": "Graph presets and copy/paste workflows retain their productive V1 behavior.",
       "importance": "high",
       "parityDimensions": ["interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/node-network/presets.ts",
-        "src/lib/hooks/use-node-graph-clipboard.ts"
-      ],
-      "v2Evidence": [
-        "src/components/node-network/presets.ts",
-        "src/lib/hooks/use-node-graph-clipboard.ts"
-      ],
+      "referenceEvidence": ["src/components/node-network/presets.ts", "src/lib/hooks/use-node-graph-clipboard.ts"],
+      "v2Evidence": ["src/components/node-network/presets.ts", "src/lib/hooks/use-node-graph-clipboard.ts"],
       "status": "partial",
-      "acceptance": [
-        "Presets create valid deterministic graphs.",
-        "Copied subgraphs paste with new stable identifiers and intact internal edges.",
-        "Clipboard failures are non-destructive and visible."
-      ],
+      "acceptance": ["Presets create valid deterministic graphs.", "Copied subgraphs paste with new stable identifiers and intact internal edges.", "Clipboard failures are non-destructive and visible."],
       "validationMethods": ["browser", "integration", "unit"],
       "validationEvidence": []
     },
@@ -396,28 +220,12 @@
       "capability": "Node graphs evaluate continuously from transport, audio, and parameter inputs and drive visible layer values.",
       "importance": "critical",
       "parityDimensions": ["functional", "performance"],
-      "referenceEvidence": [
-        "src/components/node-network/node-network-store.ts",
-        "src/components/editor/layer-renderer.tsx"
-      ],
-      "v2Evidence": [
-        "packages/viz-nodes-core/src/index.ts",
-        "src/lib/viz-session/store.ts",
-        "src/lib/viz-session/runtime-preview-plan.ts",
-        "src/components/editor/editor-runtime-preview-driver.tsx"
-      ],
+      "referenceEvidence": ["src/components/node-network/node-network-store.ts", "src/components/editor/layer-renderer.tsx"],
+      "v2Evidence": ["packages/viz-nodes-core/src/index.ts", "src/lib/viz-session/store.ts", "src/lib/viz-session/runtime-preview-plan.ts", "src/components/editor/editor-runtime-preview-driver.tsx"],
       "status": "partial",
-      "acceptance": [
-        "Equivalent inputs and time produce equivalent graph outputs.",
-        "Graph evaluation follows runtime time rather than incidental UI timing.",
-        "Graph-heavy scenes remain within the approved frame budget."
-      ],
+      "acceptance": ["Equivalent inputs and time produce equivalent graph outputs.", "Graph evaluation follows runtime time rather than incidental UI timing.", "Graph-heavy scenes remain within the approved frame budget."],
       "validationMethods": ["integration", "unit", "browser", "benchmark"],
-      "validationEvidence": [
-        "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md",
-        "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md",
-        "docs/parity/evidence/2026-07-29-viz-session-convergence-and-node-editor-parity.md"
-      ]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-viz-session-convergence-and-node-editor-parity.md"]
     },
     {
       "id": "audio.file-loading",
@@ -425,21 +233,10 @@
       "capability": "Users can load supported local audio files and receive clear progress or error feedback.",
       "importance": "critical",
       "parityDimensions": ["visual", "interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/audio/audio-file-loader.tsx",
-        "src/components/audio/audio-panel.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/audio/audio-file-loader.tsx",
-        "src/components/audio/audio-panel.tsx",
-        "src/components/editor/editor-audio-session-manager.tsx"
-      ],
+      "referenceEvidence": ["src/components/audio/audio-file-loader.tsx", "src/components/audio/audio-panel.tsx"],
+      "v2Evidence": ["src/components/audio/audio-file-loader.tsx", "src/components/audio/audio-panel.tsx", "src/components/editor/editor-audio-session-manager.tsx"],
       "status": "partial",
-      "acceptance": [
-        "A supported file becomes the active audio source exactly once.",
-        "Unsupported or failed loads preserve the previous valid session and explain the error.",
-        "Loaded metadata, duration, and waveform agree."
-      ],
+      "acceptance": ["A supported file becomes the active audio source exactly once.", "Unsupported or failed loads preserve the previous valid session and explain the error.", "Loaded metadata, duration, and waveform agree."],
       "validationMethods": ["browser", "integration"],
       "validationEvidence": []
     },
@@ -448,30 +245,13 @@
       "area": "audio",
       "capability": "Waveform display, zoom, scroll, playhead, and seek interactions remain precise and smooth.",
       "importance": "critical",
-      "parityDimensions": [
-        "visual",
-        "interaction",
-        "functional",
-        "performance"
-      ],
-      "referenceEvidence": [
-        "src/components/audio/waveform-display.tsx",
-        "src/components/editor/video-timeline.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/audio/waveform-display.tsx",
-        "src/components/editor/video-timeline.tsx"
-      ],
+      "parityDimensions": ["visual", "interaction", "functional", "performance"],
+      "referenceEvidence": ["src/components/audio/waveform-display.tsx", "src/components/editor/video-timeline.tsx"],
+      "v2Evidence": ["src/components/audio/waveform-display.tsx", "src/components/editor/video-timeline.tsx"],
       "status": "partial",
-      "acceptance": [
-        "Playhead position and waveform time mapping remain accurate at every zoom level.",
-        "Seeking is immediate and does not fight playback synchronization.",
-        "Zooming and scrolling remain responsive on a representative full-length track."
-      ],
+      "acceptance": ["Playhead position and waveform time mapping remain accurate at every zoom level.", "Seeking is immediate and does not fight playback synchronization.", "Zooming and scrolling remain responsive on a representative full-length track."],
       "validationMethods": ["browser", "visual", "integration", "benchmark"],
-      "validationEvidence": [
-        "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"
-      ]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
     },
     {
       "id": "audio.bundled-track-selection",
@@ -480,16 +260,9 @@
       "importance": "high",
       "parityDimensions": ["interaction", "functional"],
       "referenceEvidence": ["src/components/audio/audio-panel.tsx"],
-      "v2Evidence": [
-        "src/components/audio/audio-panel.tsx",
-        "src/components/editor/editor-audio-session-manager.tsx"
-      ],
+      "v2Evidence": ["src/components/audio/audio-panel.tsx", "src/components/editor/editor-audio-session-manager.tsx"],
       "status": "partial",
-      "acceptance": [
-        "Selecting a bundled track loads the intended source and metadata.",
-        "Previous and next navigation has deterministic boundary behavior.",
-        "Changing tracks keeps transport and analysis state coherent."
-      ],
+      "acceptance": ["Selecting a bundled track loads the intended source and metadata.", "Previous and next navigation has deterministic boundary behavior.", "Changing tracks keeps transport and analysis state coherent."],
       "validationMethods": ["browser", "integration"],
       "validationEvidence": []
     },
@@ -500,16 +273,9 @@
       "importance": "high",
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/audio/capture-audio.tsx"],
-      "v2Evidence": [
-        "src/components/audio/capture-audio.tsx",
-        "src/components/editor/editor-audio-session-manager.tsx"
-      ],
+      "v2Evidence": ["src/components/audio/capture-audio.tsx", "src/components/editor/editor-audio-session-manager.tsx"],
       "status": "partial",
-      "acceptance": [
-        "Permission is requested only from a user action.",
-        "Starting, stopping, and switching input clean up all resources.",
-        "Denied or unavailable input leaves the editor functional with clear feedback."
-      ],
+      "acceptance": ["Permission is requested only from a user action.", "Starting, stopping, and switching input clean up all resources.", "Denied or unavailable input leaves the editor functional with clear feedback."],
       "validationMethods": ["browser", "manual", "integration"],
       "validationEvidence": []
     },
@@ -520,16 +286,9 @@
       "importance": "standard",
       "parityDimensions": ["interaction", "functional"],
       "referenceEvidence": ["src/components/audio/volume-fader.tsx"],
-      "v2Evidence": [
-        "src/components/audio/volume-fader.tsx",
-        "src/lib/stores/audio-engine-store.ts"
-      ],
+      "v2Evidence": ["src/components/audio/volume-fader.tsx", "src/lib/stores/audio-engine-store.ts"],
       "status": "partial",
-      "acceptance": [
-        "The displayed value matches audible gain.",
-        "Keyboard and pointer control work across the supported range.",
-        "Project or session transitions do not create gain jumps."
-      ],
+      "acceptance": ["The displayed value matches audible gain.", "Keyboard and pointer control work across the supported range.", "Project or session transitions do not create gain jumps."],
       "validationMethods": ["browser", "integration"],
       "validationEvidence": []
     },
@@ -539,26 +298,12 @@
       "capability": "Play, pause, seek, restart, and loop controls retain precise V1 behavior.",
       "importance": "critical",
       "parityDimensions": ["visual", "interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/custom-player-controls.tsx",
-        "src/components/editor/remotion-player.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/editor/custom-player-controls.tsx",
-        "src/components/editor/remotion-player.tsx",
-        "src/lib/viz-session/store.ts"
-      ],
+      "referenceEvidence": ["src/components/editor/custom-player-controls.tsx", "src/components/editor/remotion-player.tsx"],
+      "v2Evidence": ["src/components/editor/custom-player-controls.tsx", "src/components/editor/remotion-player.tsx", "src/lib/viz-session/store.ts"],
       "status": "partial",
-      "acceptance": [
-        "Transport state, displayed time, audio time, and rendered frame stay synchronized.",
-        "Seeking while playing and paused has deterministic results.",
-        "Loop boundaries do not drift or double-trigger."
-      ],
+      "acceptance": ["Transport state, displayed time, audio time, and rendered frame stay synchronized.", "Seeking while playing and paused has deterministic results.", "Loop boundaries do not drift or double-trigger."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": [
-        "docs/parity/evidence/2026-07-29-calibration.md",
-        "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"
-      ]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
     },
     {
       "id": "transport.timeline",
@@ -566,24 +311,12 @@
       "capability": "The timeline communicates duration and playhead state and supports direct navigation.",
       "importance": "high",
       "parityDimensions": ["visual", "interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/video-timeline.tsx",
-        "src/components/editor/custom-player-controls.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/editor/video-timeline.tsx",
-        "src/components/editor/custom-player-controls.tsx"
-      ],
+      "referenceEvidence": ["src/components/editor/video-timeline.tsx", "src/components/editor/custom-player-controls.tsx"],
+      "v2Evidence": ["src/components/editor/video-timeline.tsx", "src/components/editor/custom-player-controls.tsx"],
       "status": "partial",
-      "acceptance": [
-        "Timeline visuals agree with the canonical transport state.",
-        "Pointer and keyboard seeking reach the intended time.",
-        "Duration changes do not leave stale ranges or markers."
-      ],
+      "acceptance": ["Timeline visuals agree with the canonical transport state.", "Pointer and keyboard seeking reach the intended time.", "Duration changes do not leave stale ranges or markers."],
       "validationMethods": ["browser", "visual", "integration"],
-      "validationEvidence": [
-        "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"
-      ]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
     },
     {
       "id": "preview.live-rendering",
@@ -591,29 +324,12 @@
       "capability": "The editor preview continuously renders the canonical scene through the V2 runtime contract.",
       "importance": "critical",
       "parityDimensions": ["visual", "functional", "performance"],
-      "referenceEvidence": [
-        "src/components/editor/renderer.tsx",
-        "src/components/editor/layer-renderer.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/editor/editor-runtime-preview-driver.tsx",
-        "src/lib/viz-session/runtime-preview-plan.ts",
-        "src/lib/stores/editor-runtime-preview-attachment-store.ts",
-        "src/lib/viz-session/store.ts"
-      ],
+      "referenceEvidence": ["src/components/editor/renderer.tsx", "src/components/editor/layer-renderer.tsx"],
+      "v2Evidence": ["src/components/editor/editor-runtime-preview-driver.tsx", "src/lib/viz-session/runtime-preview-plan.ts", "src/lib/stores/editor-runtime-preview-attachment-store.ts", "src/lib/viz-session/store.ts"],
       "status": "partial",
-      "acceptance": [
-        "The preview image is produced from the canonical project and runtime inputs.",
-        "Project changes update without stale adapters or duplicate ownership.",
-        "Representative scenes meet the approved interactive frame budget."
-      ],
+      "acceptance": ["The preview image is produced from the canonical project and runtime inputs.", "Project changes update without stale adapters or duplicate ownership.", "Representative scenes meet the approved interactive frame budget."],
       "validationMethods": ["browser", "visual", "integration", "benchmark"],
-      "validationEvidence": [
-        "docs/parity/evidence/2026-07-29-viz-session-runtime-preview-ownership.md",
-        "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md",
-        "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md",
-        "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"
-      ]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-viz-session-runtime-preview-ownership.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
     },
     {
       "id": "preview.multi-layer-compositing",
@@ -621,28 +337,12 @@
       "capability": "Multiple layers composite in order with their intended visibility, opacity, and blend semantics.",
       "importance": "critical",
       "parityDimensions": ["visual", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/renderer.tsx",
-        "src/components/editor/layer-renderer.tsx",
-        "src/components/editor/layer-settings.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/editor/layer-renderer.tsx",
-        "src/components/editor/editor-runtime-preview-driver.tsx"
-      ],
+      "referenceEvidence": ["src/components/editor/renderer.tsx", "src/components/editor/layer-renderer.tsx", "src/components/editor/layer-settings.tsx"],
+      "v2Evidence": ["src/components/editor/layer-renderer.tsx", "src/components/editor/editor-runtime-preview-driver.tsx"],
       "status": "partial",
-      "acceptance": [
-        "A parity fixture produces the expected ordered composite.",
-        "Hidden, frozen, and transparent layers have the documented behavior.",
-        "Preview and export share compatible scene semantics."
-      ],
+      "acceptance": ["A parity fixture produces the expected ordered composite.", "Hidden, frozen, and transparent layers have the documented behavior.", "Preview and export share compatible scene semantics."],
       "validationMethods": ["visual", "integration", "browser"],
-      "validationEvidence": [
-        "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md",
-        "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md",
-        "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md",
-        "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"
-      ]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
     },
     {
       "id": "preview.layer-mirror",
@@ -650,20 +350,10 @@
       "capability": "Layer-level preview or mirror tooling remains available for focused editing.",
       "importance": "standard",
       "parityDimensions": ["visual", "interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/layer-preview.tsx",
-        "src/components/editor/layer-mirror-canvas.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/editor/layer-preview.tsx",
-        "src/components/editor/layer-mirror-canvas.tsx"
-      ],
+      "referenceEvidence": ["src/components/editor/layer-preview.tsx", "src/components/editor/layer-mirror-canvas.tsx"],
+      "v2Evidence": ["src/components/editor/layer-preview.tsx", "src/components/editor/layer-mirror-canvas.tsx"],
       "status": "partial",
-      "acceptance": [
-        "The focused preview represents the selected layer at the canonical time.",
-        "Opening and closing it does not create a second source of scene truth.",
-        "Resource cleanup occurs when the mirror is no longer visible."
-      ],
+      "acceptance": ["The focused preview represents the selected layer at the canonical time.", "Opening and closing it does not create a second source of scene truth.", "Resource cleanup occurs when the mirror is no longer visible."],
       "validationMethods": ["browser", "visual", "integration"],
       "validationEvidence": []
     },
@@ -673,25 +363,12 @@
       "capability": "Undo and redo cover meaningful editor operations with correct grouping and deterministic restoration.",
       "importance": "critical",
       "parityDimensions": ["interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/history-manager.tsx",
-        "src/lib/stores/history-store.ts"
-      ],
-      "v2Evidence": [
-        "packages/viz-editor-session/src/index.ts",
-        "src/lib/viz-session/history-actions.ts",
-        "src/lib/viz-session/store.ts"
-      ],
+      "referenceEvidence": ["src/components/editor/history-manager.tsx", "src/lib/stores/history-store.ts"],
+      "v2Evidence": ["packages/viz-editor-session/src/index.ts", "src/lib/viz-session/history-actions.ts", "src/lib/viz-session/store.ts"],
       "status": "verified",
-      "acceptance": [
-        "Layer, parameter, graph, and project operations restore complete prior state.",
-        "Continuous gestures are grouped into useful history entries.",
-        "Redo is invalidated only by a new canonical mutation."
-      ],
+      "acceptance": ["Layer, parameter, graph, and project operations restore complete prior state.", "Continuous gestures are grouped into useful history entries.", "Redo is invalidated only by a new canonical mutation."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": [
-        "docs/parity/evidence/2026-07-29-viz-session-convergence-and-node-editor-parity.md"
-      ]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-viz-session-convergence-and-node-editor-parity.md"]
     },
     {
       "id": "history.context-feedback",
@@ -699,21 +376,10 @@
       "capability": "The UI communicates whether history applies to layer, graph, or broader project context.",
       "importance": "standard",
       "parityDimensions": ["visual", "interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/history-context-indicator.tsx",
-        "src/components/editor/history-manager.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/editor/history-context-indicator.tsx",
-        "src/lib/viz-session/react.ts",
-        "src/lib/viz-session/store.ts"
-      ],
+      "referenceEvidence": ["src/components/editor/history-context-indicator.tsx", "src/components/editor/history-manager.tsx"],
+      "v2Evidence": ["src/components/editor/history-context-indicator.tsx", "src/lib/viz-session/react.ts", "src/lib/viz-session/store.ts"],
       "status": "partial",
-      "acceptance": [
-        "Available undo and redo actions are accurately described.",
-        "Context feedback follows focus and selection.",
-        "Disabled states never imply an action that will do nothing."
-      ],
+      "acceptance": ["Available undo and redo actions are accurately described.", "Context feedback follows focus and selection.", "Disabled states never imply an action that will do nothing."],
       "validationMethods": ["browser", "integration"],
       "validationEvidence": []
     },
@@ -723,26 +389,12 @@
       "capability": "Projects save, load, and reset through the canonical V2 document contract.",
       "importance": "critical",
       "parityDimensions": ["interaction", "functional"],
-      "referenceEvidence": [
-        "src/lib/project-persistence.ts",
-        "src/components/editor/editor-toolbar.tsx"
-      ],
-      "v2Evidence": [
-        "src/lib/project-persistence.ts",
-        "src/components/editor/editor-project-manager.tsx",
-        "src/lib/viz-session/store.ts"
-      ],
+      "referenceEvidence": ["src/lib/project-persistence.ts", "src/components/editor/editor-toolbar.tsx"],
+      "v2Evidence": ["src/lib/project-persistence.ts", "src/components/editor/editor-project-manager.tsx", "src/lib/viz-session/store.ts"],
       "status": "partial",
-      "acceptance": [
-        "A saved project round-trips without semantic loss.",
-        "Invalid documents fail validation without damaging the active project.",
-        "Reset produces the documented clean starting project."
-      ],
+      "acceptance": ["A saved project round-trips without semantic loss.", "Invalid documents fail validation without damaging the active project.", "Reset produces the documented clean starting project."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": [
-        "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md",
-        "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"
-      ]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
     },
     {
       "id": "persistence.drag-drop-import",
@@ -750,20 +402,10 @@
       "capability": "Users can drag or select a project document for import with clear validation feedback.",
       "importance": "high",
       "parityDimensions": ["visual", "interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/project-dropzone.tsx",
-        "src/lib/project-persistence.ts"
-      ],
-      "v2Evidence": [
-        "src/components/editor/project-dropzone.tsx",
-        "src/lib/project-persistence.ts"
-      ],
+      "referenceEvidence": ["src/components/editor/project-dropzone.tsx", "src/lib/project-persistence.ts"],
+      "v2Evidence": ["src/components/editor/project-dropzone.tsx", "src/lib/project-persistence.ts"],
       "status": "partial",
-      "acceptance": [
-        "A valid canonical document imports and becomes visible.",
-        "Malformed, unsupported, or wrong file types explain the problem.",
-        "Failed imports leave the current project unchanged."
-      ],
+      "acceptance": ["A valid canonical document imports and becomes visible.", "Malformed, unsupported, or wrong file types explain the problem.", "Failed imports leave the current project unchanged."],
       "validationMethods": ["browser", "integration", "unit"],
       "validationEvidence": []
     },
@@ -773,21 +415,10 @@
       "capability": "Bundled sample projects remain discoverable and valid canonical examples.",
       "importance": "high",
       "parityDimensions": ["interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/editor-toolbar.tsx",
-        "public/projects/simple-example.vizengine.json"
-      ],
-      "v2Evidence": [
-        "src/components/editor/editor-toolbar.tsx",
-        "public/projects/simple-example.vizengine.json",
-        "tests/foundation/public-sample-projects.test.ts"
-      ],
+      "referenceEvidence": ["src/components/editor/editor-toolbar.tsx", "public/projects/simple-example.vizengine.json"],
+      "v2Evidence": ["src/components/editor/editor-toolbar.tsx", "public/projects/simple-example.vizengine.json", "tests/foundation/public-sample-projects.test.ts"],
       "status": "partial",
-      "acceptance": [
-        "Every published sample passes canonical validation.",
-        "Loading each sample produces its intended visible scene.",
-        "Samples exercise supported V2 contracts rather than legacy-only shapes."
-      ],
+      "acceptance": ["Every published sample passes canonical validation.", "Loading each sample produces its intended visible scene.", "Samples exercise supported V2 contracts rather than legacy-only shapes."],
       "validationMethods": ["browser", "integration", "unit"],
       "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md"]
     },
@@ -797,62 +428,25 @@
       "capability": "Users can export a still image from the intended scene, frame, size, and background settings.",
       "importance": "high",
       "parityDimensions": ["visual", "interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/export-image-dialog.tsx",
-        "src/components/editor/renderer.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/editor/export-image-dialog.tsx",
-        "src/lib/viz-session/browser-job-services.ts",
-        "src/lib/utils/browser-render-executor.ts",
-        "packages/viz-render/src/index.ts"
-      ],
+      "referenceEvidence": ["src/components/editor/export-image-dialog.tsx", "src/components/editor/renderer.tsx"],
+      "v2Evidence": ["src/components/editor/export-image-dialog.tsx", "src/lib/viz-session/browser-job-services.ts", "src/lib/utils/browser-render-executor.ts", "packages/viz-render/src/index.ts"],
       "status": "partial",
-      "acceptance": [
-        "The exported image matches the chosen runtime frame and project state.",
-        "Size and transparency options are honored.",
-        "Export does not mutate playback or the active project."
-      ],
+      "acceptance": ["The exported image matches the chosen runtime frame and project state.", "Size and transparency options are honored.", "Export does not mutate playback or the active project."],
       "validationMethods": ["browser", "visual", "integration"],
-      "validationEvidence": [
-        "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md"
-      ]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md"]
     },
     {
       "id": "export.video",
       "area": "export",
       "capability": "Video export retains configuration, progress, cancellation, and deterministic scene rendering.",
       "importance": "critical",
-      "parityDimensions": [
-        "visual",
-        "interaction",
-        "functional",
-        "performance"
-      ],
-      "referenceEvidence": [
-        "src/components/editor/export-dialog.tsx",
-        "src/lib/utils/video-encoder.ts"
-      ],
-      "v2Evidence": [
-        "src/components/editor/export-button.tsx",
-        "src/components/editor/export-dialog.tsx",
-        "src/lib/viz-session/browser-job-services.ts",
-        "src/lib/utils/browser-render-executor.ts",
-        "src/lib/utils/video-encoder.ts",
-        "packages/viz-render/src/index.ts",
-        "artifacts/2026-07-29-v2-video-export-summary.json"
-      ],
+      "parityDimensions": ["visual", "interaction", "functional", "performance"],
+      "referenceEvidence": ["src/components/editor/export-dialog.tsx", "src/lib/utils/video-encoder.ts"],
+      "v2Evidence": ["src/components/editor/export-button.tsx", "src/components/editor/export-dialog.tsx", "src/lib/viz-session/browser-job-services.ts", "src/lib/utils/browser-render-executor.ts", "src/lib/utils/video-encoder.ts", "packages/viz-render/src/index.ts", "artifacts/2026-07-29-v2-video-export-summary.json"],
       "status": "verified",
-      "acceptance": [
-        "Supported export settings produce a playable artifact with the intended duration and dimensions.",
-        "Every frame is derived from deterministic runtime inputs.",
-        "Progress, cancellation, errors, and resource cleanup remain responsive during a representative export."
-      ],
+      "acceptance": ["Supported export settings produce a playable artifact with the intended duration and dimensions.", "Every frame is derived from deterministic runtime inputs.", "Progress, cancellation, errors, and resource cleanup remain responsive during a representative export."],
       "validationMethods": ["browser", "visual", "integration", "benchmark"],
-      "validationEvidence": [
-        "docs/parity/evidence/2026-07-29-video-export-resource-hardening.md",
-        "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md"
-      ]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-video-export-resource-hardening.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md"]
     },
     {
       "id": "debugging.layer-debug-info",
@@ -860,20 +454,10 @@
       "capability": "Debug overlays and layer diagnostics remain accessible without contaminating normal output.",
       "importance": "high",
       "parityDimensions": ["visual", "interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/debug-info-dialog.tsx",
-        "src/components/editor/layer-renderer.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/editor/debug-info-dialog.tsx",
-        "src/components/editor/layer-renderer.tsx"
-      ],
+      "referenceEvidence": ["src/components/editor/debug-info-dialog.tsx", "src/components/editor/layer-renderer.tsx"],
+      "v2Evidence": ["src/components/editor/debug-info-dialog.tsx", "src/components/editor/layer-renderer.tsx"],
       "status": "partial",
-      "acceptance": [
-        "Debug information corresponds to current canonical runtime state.",
-        "Toggling diagnostics does not alter scene semantics.",
-        "Export excludes editor-only diagnostics unless explicitly requested."
-      ],
+      "acceptance": ["Debug information corresponds to current canonical runtime state.", "Toggling diagnostics does not alter scene semantics.", "Export excludes editor-only diagnostics unless explicitly requested."],
       "validationMethods": ["browser", "visual", "integration"],
       "validationEvidence": []
     },
@@ -883,26 +467,12 @@
       "capability": "The profiler exposes useful render and component timing for diagnosing scene performance.",
       "importance": "high",
       "parityDimensions": ["visual", "functional", "performance"],
-      "referenceEvidence": [
-        "src/components/editor/profiler-panel.tsx",
-        "src/lib/stores/profiler-store.ts"
-      ],
-      "v2Evidence": [
-        "src/components/editor/profiler-panel.tsx",
-        "src/lib/stores/profiler-store.ts",
-        "src/lib/hooks/use-layer-fps-tracker.ts"
-      ],
+      "referenceEvidence": ["src/components/editor/profiler-panel.tsx", "src/lib/stores/profiler-store.ts"],
+      "v2Evidence": ["src/components/editor/profiler-panel.tsx", "src/lib/stores/profiler-store.ts", "src/lib/hooks/use-layer-fps-tracker.ts"],
       "status": "partial",
-      "acceptance": [
-        "Measurements identify the active layer or runtime work they describe.",
-        "Profiler overhead is measured and bounded.",
-        "Opening, resetting, and closing the profiler works throughout playback."
-      ],
+      "acceptance": ["Measurements identify the active layer or runtime work they describe.", "Profiler overhead is measured and bounded.", "Opening, resetting, and closing the profiler works throughout playback."],
       "validationMethods": ["browser", "benchmark", "integration"],
-      "validationEvidence": [
-        "docs/parity/evidence/2026-07-29-calibration.md",
-        "docs/parity/evidence/2026-07-29-canonical-document-cutover.md"
-      ]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-29-canonical-document-cutover.md"]
     },
     {
       "id": "debugging.performance-stats",
@@ -910,16 +480,10 @@
       "capability": "Live performance statistics remain available and accurate enough for editor feedback.",
       "importance": "standard",
       "parityDimensions": ["visual", "functional", "performance"],
-      "referenceEvidence": [
-        "src/components/editor/performance-stats-dialog.tsx"
-      ],
+      "referenceEvidence": ["src/components/editor/performance-stats-dialog.tsx"],
       "v2Evidence": ["src/components/editor/performance-stats-dialog.tsx"],
       "status": "not-audited",
-      "acceptance": [
-        "Displayed frame and resource metrics have documented meanings.",
-        "The dialog remains readable during active playback.",
-        "Collecting metrics does not materially change the result being measured."
-      ],
+      "acceptance": ["Displayed frame and resource metrics have documented meanings.", "The dialog remains readable during active playback.", "Collecting metrics does not materially change the result being measured."],
       "validationMethods": ["browser", "benchmark", "manual"],
       "validationEvidence": []
     },
@@ -929,22 +493,10 @@
       "capability": "Rhythm Lab remains a complete secondary workspace with its established panels and navigation.",
       "importance": "high",
       "parityDimensions": ["visual", "interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/rhythm-lab-panel.tsx",
-        "src/components/editor/rhythm-lab/grid-card.tsx",
-        "src/components/editor/rhythm-lab/onset-card.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/editor/rhythm-lab-panel.tsx",
-        "src/components/editor/rhythm-lab/grid-card.tsx",
-        "src/components/editor/rhythm-lab/onset-card.tsx"
-      ],
+      "referenceEvidence": ["src/components/editor/rhythm-lab-panel.tsx", "src/components/editor/rhythm-lab/grid-card.tsx", "src/components/editor/rhythm-lab/onset-card.tsx"],
+      "v2Evidence": ["src/components/editor/rhythm-lab-panel.tsx", "src/components/editor/rhythm-lab/grid-card.tsx", "src/components/editor/rhythm-lab/onset-card.tsx"],
       "status": "partial",
-      "acceptance": [
-        "Rhythm Lab opens, closes, and lays out all established analysis cards.",
-        "It remains synchronized with the active audio source and transport.",
-        "Editor work is preserved while entering and leaving the workspace."
-      ],
+      "acceptance": ["Rhythm Lab opens, closes, and lays out all established analysis cards.", "It remains synchronized with the active audio source and transport.", "Editor work is preserved while entering and leaving the workspace."],
       "validationMethods": ["browser", "visual", "integration"],
       "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md"]
     },
@@ -954,20 +506,10 @@
       "capability": "Grid, onset, and related rhythm-analysis controls produce understandable and repeatable feedback.",
       "importance": "high",
       "parityDimensions": ["visual", "interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/rhythm-lab/grid-card.tsx",
-        "src/components/editor/rhythm-lab/onset-card.tsx"
-      ],
-      "v2Evidence": [
-        "src/components/editor/rhythm-lab/grid-card.tsx",
-        "src/components/editor/rhythm-lab/onset-card.tsx"
-      ],
+      "referenceEvidence": ["src/components/editor/rhythm-lab/grid-card.tsx", "src/components/editor/rhythm-lab/onset-card.tsx"],
+      "v2Evidence": ["src/components/editor/rhythm-lab/grid-card.tsx", "src/components/editor/rhythm-lab/onset-card.tsx"],
       "status": "partial",
-      "acceptance": [
-        "Analysis uses the active audio data and reports loading or unavailable states.",
-        "Control changes update results without stale cross-track data.",
-        "Equivalent inputs produce stable results within the documented algorithm tolerance."
-      ],
+      "acceptance": ["Analysis uses the active audio data and reports loading or unavailable states.", "Control changes update results without stale cross-track data.", "Equivalent inputs produce stable results within the documented algorithm tolerance."],
       "validationMethods": ["browser", "integration", "unit"],
       "validationEvidence": []
     },
@@ -977,27 +519,12 @@
       "capability": "Representative V1 scenes play smoothly in the V2 editor at comparable or better responsiveness.",
       "importance": "critical",
       "parityDimensions": ["performance", "visual", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/layer-renderer.tsx",
-        "src/components/editor/profiler-panel.tsx"
-      ],
-      "v2Evidence": [
-        "tools/foundation/runtime-preview-plan-benchmark.ts",
-        "tools/foundation/compare-performance-recordings.ts",
-        "artifacts/2026-07-29-v2-runtime-performance-summary.json"
-      ],
+      "referenceEvidence": ["src/components/editor/layer-renderer.tsx", "src/components/editor/profiler-panel.tsx"],
+      "v2Evidence": ["tools/foundation/runtime-preview-plan-benchmark.ts", "tools/foundation/compare-performance-recordings.ts", "artifacts/2026-07-29-v2-runtime-performance-summary.json"],
       "status": "partial",
-      "acceptance": [
-        "A fixed device, viewport, scene, audio source, and observation window define the benchmark.",
-        "V2 frame pacing and interaction latency meet the approved baseline-relative budget.",
-        "The benchmark records warm-up, median, tail behavior, and visible correctness."
-      ],
+      "acceptance": ["A fixed device, viewport, scene, audio source, and observation window define the benchmark.", "V2 frame pacing and interaction latency meet the approved baseline-relative budget.", "The benchmark records warm-up, median, tail behavior, and visible correctness."],
       "validationMethods": ["benchmark", "browser", "visual"],
-      "validationEvidence": [
-        "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md",
-        "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md",
-        "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md"
-      ]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md"]
     },
     {
       "id": "performance.editor-responsiveness",
@@ -1005,23 +532,12 @@
       "capability": "Layer, parameter, node, panel, and transport interactions remain immediately responsive under representative project load.",
       "importance": "critical",
       "parityDimensions": ["performance", "interaction", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/editor-layout.tsx",
-        "src/components/node-network/node-network-renderer.tsx",
-        "src/components/editor/layer-parameters.tsx"
-      ],
+      "referenceEvidence": ["src/components/editor/editor-layout.tsx", "src/components/node-network/node-network-renderer.tsx", "src/components/editor/layer-parameters.tsx"],
       "v2Evidence": ["tools/foundation/runtime-preview-plan-benchmark.ts"],
       "status": "partial",
-      "acceptance": [
-        "A representative multi-layer and graph fixture defines the workload.",
-        "Input-to-visible-update latency meets the approved baseline-relative budget.",
-        "No primary interaction causes an avoidable long task or full application stall."
-      ],
+      "acceptance": ["A representative multi-layer and graph fixture defines the workload.", "Input-to-visible-update latency meets the approved baseline-relative budget.", "No primary interaction causes an avoidable long task or full application stall."],
       "validationMethods": ["benchmark", "browser"],
-      "validationEvidence": [
-        "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md",
-        "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md"
-      ]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md"]
     },
     {
       "id": "performance.long-session-stability",
@@ -1029,26 +545,12 @@
       "capability": "Extended editing, playback, track switching, and panel use do not accumulate resources or degrade responsiveness.",
       "importance": "critical",
       "parityDimensions": ["performance", "functional"],
-      "referenceEvidence": [
-        "src/components/editor/renderer.tsx",
-        "src/components/audio/audio-panel.tsx"
-      ],
-      "v2Evidence": [
-        "tools/foundation/compare-performance-recordings.ts",
-        "src/lib/idb-json-storage.ts",
-        "artifacts/2026-07-29-v2-runtime-soak-summary.json"
-      ],
+      "referenceEvidence": ["src/components/editor/renderer.tsx", "src/components/audio/audio-panel.tsx"],
+      "v2Evidence": ["tools/foundation/compare-performance-recordings.ts", "src/lib/idb-json-storage.ts", "artifacts/2026-07-29-v2-runtime-soak-summary.json"],
       "status": "partial",
-      "acceptance": [
-        "A repeatable soak scenario exercises playback, project edits, audio changes, and tool panels.",
-        "Memory, graphics resources, audio nodes, and listeners return to bounded steady state.",
-        "Responsiveness and output remain correct at the end of the run."
-      ],
+      "acceptance": ["A repeatable soak scenario exercises playback, project edits, audio changes, and tool panels.", "Memory, graphics resources, audio nodes, and listeners return to bounded steady state.", "Responsiveness and output remain correct at the end of the run."],
       "validationMethods": ["benchmark", "browser", "manual"],
-      "validationEvidence": [
-        "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md",
-        "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md"
-      ]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md"]
     }
   ]
 }

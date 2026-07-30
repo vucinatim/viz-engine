@@ -1,6 +1,6 @@
 # Current State
 
-Last reconciled: 2026-07-30
+Last reconciled: 2026-07-31
 
 ## Product Direction
 
@@ -106,23 +106,27 @@ guardrails are stronger.
 See
 [Core Consolidation And Quality Hardening Certification](./parity/evidence/2026-07-30-core-consolidation-and-quality-hardening.md).
 
-## Active Goal
+## Completed Minimization
 
-Goal Two is active:
+Goal Two is complete:
 [Behavior-Preserving Minimization And Final Polish](./plans/v2/behavior-preserving-minimization-and-final-polish.md).
 
 Its immutable baseline is commit `6f4529b`, which is committed and pushed to
 `origin/codex/viz-engine-v2`.
 
-The hard requirement is a strictly net-negative production and combined
-maintained-code result. The serious target is at least 10,000 fewer production
-lines, with a 15–20% stretch target where the result remains transparent and
-honest.
+Production now contains 349 files and 67,645 physical lines: 22 fewer files
+and 7,879 fewer lines than the immutable baseline. Combined maintained code is
+7,632 lines smaller while deterministic tests increased from 222 to 232.
+
+The result stopped at the honest simplification frontier rather than
+compressing domain algorithms or weakening types, diagnostics, visual
+behavior, tests, or performance to force the 10,000-line serious target.
 
 Every certified editor interaction, graph capability, deterministic output,
 portable asset workflow, Signal Cathedral result, model/character path,
 renderer lifecycle, diagnostic, test, type, parity row, and performance budget
-remains protected.
+remains protected. See the
+[Goal Two certification](./parity/evidence/2026-07-31-behavior-preserving-minimization-and-final-polish.md).
 
 ## Known Deliberate Deferrals
 

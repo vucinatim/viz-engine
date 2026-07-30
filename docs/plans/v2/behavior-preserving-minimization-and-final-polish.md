@@ -1,6 +1,6 @@
 # Behavior-Preserving Minimization And Final Polish
 
-Status: active.
+Status: complete.
 
 Activated: 2026-07-30.
 
@@ -13,6 +13,9 @@ Machine-readable baseline:
 
 Parent program:
 [Core Consolidation And Behavior-Preserving Minimization Program](./core-consolidation-and-minimization-program.md).
+
+Completion evidence:
+[Behavior-Preserving Minimization And Final Polish Certification](../../parity/evidence/2026-07-31-behavior-preserving-minimization-and-final-polish.md).
 
 ## Goal
 

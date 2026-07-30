@@ -16,6 +16,7 @@ This is the entrypoint for VizEngine documentation during the V2 rewrite.
 - [parity/README.md](./parity/README.md)
 - [parity/evidence/2026-07-30-signal-cathedral-production-certification.md](./parity/evidence/2026-07-30-signal-cathedral-production-certification.md)
 - [parity/evidence/2026-07-30-core-consolidation-and-quality-hardening.md](./parity/evidence/2026-07-30-core-consolidation-and-quality-hardening.md)
+- [parity/evidence/2026-07-31-behavior-preserving-minimization-and-final-polish.md](./parity/evidence/2026-07-31-behavior-preserving-minimization-and-final-polish.md)
 
 ## Active Direction
 

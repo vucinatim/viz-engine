@@ -151,11 +151,14 @@ It consolidated the V2 substrate, automated preserved-editor acceptance,
 removed obsolete seams, and established the fresh baseline for the separate
 net-negative Goal Two minimization pass.
 
-Goal Two is now active under the
+Goal Two is complete under the
 [Behavior-Preserving Minimization And Final Polish](docs/plans/v2/behavior-preserving-minimization-and-final-polish.md)
-contract. It starts from immutable commit `6f4529b`, targets at least 10,000
-fewer production lines, and protects the complete certified product and
-quality baseline.
+contract. Against immutable commit `6f4529b`, production is 7,879 lines and
+22 files smaller, combined maintained code is 7,632 lines smaller, and the
+proof surface is stronger. The
+[final certification](docs/parity/evidence/2026-07-31-behavior-preserving-minimization-and-final-polish.md)
+records the architecture, behavior, browser, performance, and deterministic
+production evidence.
 
 Historical milestones and decisions belong in
 [the work ledger](docs/work-ledger.md) and
