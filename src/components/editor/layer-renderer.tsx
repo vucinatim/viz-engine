@@ -1,4 +1,3 @@
-import { installEditorRuntimeHostAttachments } from '@/lib/editor-runtime-host-attachments';
 import {
   createEditorRuntimePreviewAttachment,
   EditorRuntimePreviewAttachment,
@@ -73,11 +72,6 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       programRegistry: studioThreeProgramRegistry,
     });
     previewAttachmentRef.current = previewAttachment;
-    const removeHostAttachments = installEditorRuntimeHostAttachments({
-      layer,
-      preview: previewAttachment,
-    });
-
     const displayWidth = layerCanvasRef.current.clientWidth;
     const displayHeight = layerCanvasRef.current.clientHeight;
     if (displayWidth > 0 && displayHeight > 0) {
@@ -87,7 +81,6 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     registerLayerAttachment(layer.id, previewAttachment);
 
     return () => {
-      removeHostAttachments();
       previewAttachment.destroy();
       previewAttachmentRef.current = null;
       unregisterLayerAttachment(layer.id);
@@ -95,7 +88,6 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   }, [
     layer.id,
     layer.comp,
-    layer.config,
     layer,
     layerFPSTracker,
     resolutionMultiplier,

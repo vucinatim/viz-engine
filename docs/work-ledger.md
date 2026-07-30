@@ -1770,3 +1770,22 @@
     net -4,620
   - passed strict lint and type checks plus focused session, control, protocol,
     and node-editor regression coverage
+- completed the Goal Two canonical component-authoring cutover:
+  - removed the mutable editor-only configuration object graph, its parallel
+    value-type vocabulary, and both conversion directions between that graph
+    and the portable component-authoring contract
+  - made the editor render controls, nested groups, visibility rules, actions,
+    defaults, animation handles, project projection, and debug presentation
+    directly from `VizComponentAuthoring`
+  - replaced component-specific callback mutation with an explicit
+    renderer-attachment action boundary and isolated Stage Fly Mode to the
+    Stage component
+  - removed the runtime-host-attachment bridge, configuration traversal
+    utilities, compatibility types, and mutable per-layer configuration copy
+  - added direct regression coverage for canonical defaults, paths,
+    visibility, parameter identities, and attachment action invocation
+  - moved production source to 70,148 lines and combined maintained code to
+    85,350 lines, reductions of 5,376 and 5,277 lines from the immutable Goal
+    Two baseline
+  - passed strict lint and studio type checking, 32 focused foundation tests,
+    and all 7 real-browser editor journeys

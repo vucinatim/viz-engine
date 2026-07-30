@@ -1,12 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { CompDefinitionMap } from '@/components/comps';
-import { VType } from '@/components/config/types';
+import { listComponentParameterIds } from '@/components/config/config';
 import useNodeNetworkStore from '@/components/node-network/node-network-store';
-import {
-  assignDeterministicIdsToConfig,
-  getParameterIdsFromConfig,
-} from '@/lib/comp-utils/config-utils';
 import {
   buildProjectFile,
   hydrateProjectData,
@@ -52,8 +48,10 @@ describe('Project persistence', () => {
     }
 
     const layerId = 'layer-persistence-test';
-    const config = assignDeterministicIdsToConfig(layerId, comp.config.clone());
-    const [parameterId] = getParameterIdsFromConfig(config);
+    const [parameterId] = listComponentParameterIds(
+      layerId,
+      comp.authoring.settings,
+    );
     if (!parameterId) {
       throw new Error('Could not resolve parameter id');
     }
@@ -63,7 +61,7 @@ describe('Project persistence', () => {
       .importWorkingProject(createTestProject(comp, layerId));
     useEditorGraphStore
       .getState()
-      .createNetworkForParameter(parameterId, VType.Number);
+      .createNetworkForParameter(parameterId, 'number');
     useNodeNetworkStore.setState({
       openNetwork: parameterId,
       areNetworksMinimized: true,

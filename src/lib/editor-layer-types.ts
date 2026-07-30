@@ -1,4 +1,4 @@
-import { Comp, UnknownConfig } from '@/components/config/create-component';
+import type { Comp } from '@/components/config/create-component';
 import { LayerSettings } from '@/components/editor/layer-settings';
 import type {
   VizSessionRuntimePreviewAudioFrameData,
@@ -9,7 +9,7 @@ import type { VizRenderPlan } from '@viz-engine/contracts';
 export interface LayerData {
   id: string;
   comp: Comp;
-  config: UnknownConfig;
+  values: Record<string, unknown>;
   isExpanded: boolean;
   isDebugEnabled: boolean;
   layerSettings: LayerSettings;
@@ -25,5 +25,6 @@ export interface LayerRuntimePreviewAttachment {
     audioFrameData: VizSessionRuntimePreviewAudioFrameData;
     renderPlan: VizRenderPlan;
   }) => void;
+  actions?: Record<string, () => void>;
   whenReady?: () => Promise<void>;
 }

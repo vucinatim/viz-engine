@@ -1,5 +1,5 @@
 import type { Comp } from '@/components/config/create-component';
-import type { VType } from '@/components/config/types';
+import type { NodeHandleType } from '@/components/config/node-types';
 import type { LayerSettings } from '@/components/editor/layer-settings';
 import useNodeNetworkStore from '@/components/node-network/node-network-store';
 import {
@@ -210,7 +210,11 @@ export const editorControl = {
     focus() {
       useNodeNetworkStore.getState().setShouldForceShowOverlay(true);
     },
-    setAnimationEnabled(parameterId: string, isEnabled: boolean, type: VType) {
+    setAnimationEnabled(
+      parameterId: string,
+      isEnabled: boolean,
+      type: NodeHandleType,
+    ) {
       const uiStore = useNodeNetworkStore.getState();
       const beforeGraphId = resolveNetworkIdForParameter(
         getVizSessionState().project.workingProject,

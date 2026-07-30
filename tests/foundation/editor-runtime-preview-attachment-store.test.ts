@@ -119,6 +119,24 @@ describe('Editor runtime preview attachment store', () => {
     expect(state.playerRef).toBe(playerRef);
   });
 
+  it('invokes registered component actions through the attachment boundary', () => {
+    const store = useEditorRuntimePreviewAttachmentStore.getState();
+    const enterFlyMode = vi.fn();
+
+    store.registerLayerAttachment('stage', {
+      getViewport: () => ({ width: 1, height: 1 }),
+      render: vi.fn(),
+      actions: { 'stage.enter-fly-mode': enterFlyMode },
+    });
+
+    expect(store.invokeLayerAction('stage', 'stage.enter-fly-mode')).toBe(true);
+    expect(enterFlyMode).toHaveBeenCalledOnce();
+    expect(store.invokeLayerAction('stage', 'unknown-action')).toBe(false);
+    expect(store.invokeLayerAction('unknown-layer', 'unknown-action')).toBe(
+      false,
+    );
+  });
+
   it('waits for every registered runtime resource boundary', async () => {
     const store = useEditorRuntimePreviewAttachmentStore.getState();
     const readyOrder: string[] = [];

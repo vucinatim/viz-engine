@@ -24,6 +24,7 @@ interface EditorRuntimePreviewAttachmentStore {
     width: number;
     height: number;
   } | null;
+  invokeLayerAction: (layerId: string, actionId: string) => boolean;
   renderRuntimePlan: (
     frame: VizSessionRuntimePreviewFrame,
     audioFrameData: VizSessionRuntimePreviewAudioFrameData,
@@ -116,6 +117,11 @@ const useEditorRuntimePreviewAttachmentStore =
     getPreviewViewport: () => {
       const firstAttachment = get().layerAttachments.values().next().value;
       return firstAttachment?.getViewport() ?? null;
+    },
+    invokeLayerAction: (layerId, actionId) => {
+      const action = get().layerAttachments.get(layerId)?.actions?.[actionId];
+      action?.();
+      return action !== undefined;
     },
     renderRuntimePlan: (frame, audioFrameData, renderPlan) => {
       const renderedLayerIds: string[] = [];

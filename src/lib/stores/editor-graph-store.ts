@@ -2,7 +2,6 @@ import { Edge } from '@xyflow/react';
 import { useStore } from 'zustand';
 
 import type { NodeHandleType } from '@/components/config/node-types';
-import type { VType } from '@/components/config/types';
 import type {
   GraphNode,
   NodeNetwork,
@@ -21,7 +20,7 @@ export interface EditorGraphStore {
   setNetworkEnabled: (
     parameterId: string,
     isEnabled: boolean,
-    type: VType,
+    type: NodeHandleType,
   ) => void;
   addNodeToNetwork: (parameterId: string, node: GraphNode) => void;
   pasteFragment: (
@@ -31,7 +30,10 @@ export interface EditorGraphStore {
   ) => string[];
   setNodesInNetwork: (parameterId: string, nodes: GraphNode[]) => void;
   setEdgesInNetwork: (parameterId: string, edges: Edge[]) => void;
-  createNetworkForParameter: (parameterId: string, type: VType) => void;
+  createNetworkForParameter: (
+    parameterId: string,
+    type: NodeHandleType,
+  ) => void;
   removeNetworkForParameter: (parameterId: string) => void;
   applyPresetToNetwork: (
     parameterId: string,

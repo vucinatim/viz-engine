@@ -19,7 +19,7 @@ type WithDebug = (
   debugData: {
     dataArray: Uint8Array;
     config: Record<string, any>;
-    configSchema: LayerData['config'];
+    configSchema: LayerData['comp']['authoring']['settings'];
   },
 ) => void;
 
@@ -40,6 +40,7 @@ export interface EditorRuntimePreviewAttachment {
     renderPlan: VizRenderPlan;
   }) => void;
   whenReady: () => Promise<void>;
+  actions: Record<string, () => void>;
   activateFlyCameraMode: () => void;
   destroy: () => void;
 }
@@ -281,15 +282,7 @@ export const createEditorRuntimePreviewAttachment = ({
       runtimePreviewController?.resize(canvas.width, canvas.height);
     },
     render: ({ frame, audioFrameData, renderPlan }) => {
-      lastConfigValues = layer.config.getValues({
-        audioSignal: audioFrameData.timeDomainData,
-        time: frame.time,
-        frequencyAnalysis: {
-          frequencyData: audioFrameData.frequencyData,
-          sampleRate: audioFrameData.sampleRate,
-          fftSize: audioFrameData.fftSize,
-        },
-      });
+      lastConfigValues = layer.values;
       updateFlyCamera(frame.dt);
 
       withDebug(
@@ -310,7 +303,7 @@ export const createEditorRuntimePreviewAttachment = ({
         {
           dataArray: audioFrameData.frequencyData,
           config: lastConfigValues,
-          configSchema: layer.config,
+          configSchema: layer.comp.authoring.settings,
         },
       );
 
@@ -320,6 +313,10 @@ export const createEditorRuntimePreviewAttachment = ({
       }
     },
     whenReady: () => runtimePreviewController?.whenReady() ?? Promise.resolve(),
+    actions:
+      layer.comp.componentId === 'stage-scene'
+        ? { 'stage.enter-fly-mode': activateFlyCameraMode }
+        : {},
     activateFlyCameraMode,
     destroy: () => {
       deactivateFlyCamera();

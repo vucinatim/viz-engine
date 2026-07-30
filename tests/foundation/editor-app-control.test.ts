@@ -1,12 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CompDefinitionMap } from '@/components/comps';
-import { VType } from '@/components/config/types';
+import { listComponentParameterIds } from '@/components/config/config';
 import { useNodeNetworkStore } from '@/components/node-network/node-network-store';
-import {
-  assignDeterministicIdsToConfig,
-  getParameterIdsFromConfig,
-} from '@/lib/comp-utils/config-utils';
 import editorControl from '@/lib/editor-control';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useCompStore from '@/lib/stores/comp-store';
@@ -42,8 +38,10 @@ const buildProject = (): {
   }
 
   const layerId = 'editor-control-test';
-  const config = assignDeterministicIdsToConfig(layerId, comp.config.clone());
-  const [parameterId] = getParameterIdsFromConfig(config);
+  const [parameterId] = listComponentParameterIds(
+    layerId,
+    comp.authoring.settings,
+  );
 
   if (!parameterId) {
     throw new Error('Could not resolve parameter id for test component');
@@ -121,11 +119,7 @@ describe('Local editor control facade', () => {
 
     useEditorProjectStore.getState().importWorkingProject(project);
 
-    editorControl.nodeEditor.setAnimationEnabled(
-      parameterId,
-      true,
-      VType.Number,
-    );
+    editorControl.nodeEditor.setAnimationEnabled(parameterId, true, 'number');
 
     expect(useNodeNetworkStore.getState().openNetwork).toBe(parameterId);
     expect(useNodeNetworkStore.getState().shouldForceShowOverlay).toBe(true);

@@ -1,3 +1,9 @@
+import {
+  createSettingDefaults,
+  findComponentSetting,
+  isSettingVisible,
+  listComponentParameterIds,
+} from '@/components/config/config';
 import { createEditorCompFromDefinition } from '@/components/config/create-component-from-authoring';
 import {
   coreCatalogComponents,
@@ -36,12 +42,58 @@ describe('portable component authoring schema', () => {
     expect(editorComp.componentId).toBe('simple-cube');
     expect(editorComp.id).toBe('simple-cube');
     expect(editorComp.name).toBe('Simple Cube');
+    expect(editorComp.authoring).toEqual(simpleCubeComponent.authoring);
     expect(editorComp.defaultValues).toEqual({
       color: '#FF00FF',
       size: 1.5,
       rotationSpeedX: 1,
       rotationSpeedY: 1,
     });
+  });
+
+  it('projects defaults and deterministic parameter identities directly from portable settings', () => {
+    const editorComp = createEditorCompFromDefinition(simpleCubeComponent);
+
+    expect(createSettingDefaults(editorComp.authoring.settings)).toEqual(
+      editorComp.defaultValues,
+    );
+    expect(
+      listComponentParameterIds('layer-proof', editorComp.authoring.settings),
+    ).toEqual([
+      'layer-proof:color',
+      'layer-proof:size',
+      'layer-proof:rotationSpeedX',
+      'layer-proof:rotationSpeedY',
+    ]);
+    expect(
+      findComponentSetting(editorComp.authoring.settings, 'size'),
+    ).toMatchObject({
+      kind: 'number',
+      defaultValue: 1.5,
+    });
+  });
+
+  it('evaluates portable visibility conditions without an editor-only schema', () => {
+    const values = { mode: 'reactive', enabled: true };
+
+    expect(
+      isSettingVisible(
+        {
+          operator: 'all',
+          conditions: [
+            { path: 'mode', operator: 'equals', value: 'reactive' },
+            { path: 'enabled', operator: 'not-equals', value: false },
+          ],
+        },
+        values,
+      ),
+    ).toBe(true);
+    expect(
+      isSettingVisible(
+        { path: 'mode', operator: 'not-in', value: ['reactive', 'manual'] },
+        values,
+      ),
+    ).toBe(false);
   });
 
   it('is data-only and survives a JSON roundtrip', () => {

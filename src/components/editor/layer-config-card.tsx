@@ -13,7 +13,7 @@ import {
   Layers2,
   Trash,
 } from 'lucide-react';
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '../ui/button';
 import {
@@ -39,20 +39,9 @@ const getCanonicalLayerValues = (layerId: string) =>
 function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
   const comp = layer.comp;
   const [selectedPreset, setSelectedPreset] = useState<any | null>();
-  const hasInitialized = useRef(false);
 
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: layer.id });
-
-  // Initialize layer values from store on mount
-  useEffect(() => {
-    if (hasInitialized.current) return;
-    const storeValues = getCanonicalLayerValues(layer.id);
-    const valuesToUse = storeValues ?? layer.comp.defaultValues;
-    layer.config.setValues(valuesToUse);
-    hasInitialized.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layer.id]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -206,7 +195,10 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
               )}
             </div>
             <div className="relative flex flex-col gap-y-2 border-b border-zinc-600 transition-colors select-none group-hover:bg-zinc-700/20">
-              <LayerParameters layerId={layer.id} config={layer.config} />
+              <LayerParameters
+                layerId={layer.id}
+                settings={layer.comp.authoring.settings}
+              />
             </div>
           </div>
         </CollapsibleContent>

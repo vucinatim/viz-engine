@@ -4,7 +4,6 @@ import { create } from 'zustand';
 import useEditorGraphStore from '@/lib/stores/editor-graph-store';
 import type { VizGraphFragment } from '@/lib/viz-session/graph-fragments';
 import { NodeHandleType, canConnectTypes } from '../config/node-types';
-import { VType } from '../config/types';
 import { GraphNode, GraphNodeData } from './graph-types';
 
 interface NodeNetworkStore {
@@ -74,7 +73,7 @@ export const getNodeNetwork = (parameterId: string) =>
 export const setNodeNetworkEnabled = (
   parameterId: string,
   isEnabled: boolean,
-  type: VType,
+  type: NodeHandleType,
 ) => {
   const graphStore = useEditorGraphStore.getState();
   const nodeUiStore = useNodeNetworkStore.getState();

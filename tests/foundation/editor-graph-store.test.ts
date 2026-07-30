@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { VType } from '@/components/config/types';
 import {
   getNodeNetwork,
   nodeNetworkStoreMerge,
@@ -35,7 +34,7 @@ describe('Editor graph store', () => {
 
     useEditorGraphStore
       .getState()
-      .createNetworkForParameter(parameterId, VType.Number);
+      .createNetworkForParameter(parameterId, 'number');
 
     expect(
       useEditorGraphStore.getState().networks[parameterId]?.nodes.length,
@@ -72,7 +71,7 @@ describe('Editor graph store', () => {
   it('keeps node-editor animation toggles as a delegate over canonical graphs', () => {
     const parameterId = 'layer-2:settings.scale';
 
-    setNodeNetworkEnabled(parameterId, true, VType.Number);
+    setNodeNetworkEnabled(parameterId, true, 'number');
 
     expect(useEditorGraphStore.getState().networks[parameterId]).toBeDefined();
     expect(useNodeNetworkStore.getState().openNetwork).toBe(parameterId);
@@ -84,7 +83,7 @@ describe('Editor graph store', () => {
 
     useEditorGraphStore
       .getState()
-      .createNetworkForParameter(parameterId, VType.Number);
+      .createNetworkForParameter(parameterId, 'number');
     useNodeNetworkStore.getState().setOpenNetwork(parameterId);
     useNodeNetworkStore.getState().setNetworksMinimized(true);
     useNodeNetworkStore.getState().setShouldForceShowOverlay(true);
@@ -142,11 +141,7 @@ describe('Editor graph store', () => {
       network?.nodes.filter((node) => node.data.graphOutputKey),
     ).toHaveLength(5);
 
-    editorControl.nodeEditor.setAnimationEnabled(
-      parameterId,
-      false,
-      VType.Number,
-    );
+    editorControl.nodeEditor.setAnimationEnabled(parameterId, false, 'number');
 
     const detachedProject = useEditorProjectStore
       .getState()
@@ -229,7 +224,7 @@ describe('Editor graph store', () => {
 
     useEditorGraphStore
       .getState()
-      .createNetworkForParameter(parameterId, VType.Number);
+      .createNetworkForParameter(parameterId, 'number');
 
     const persistedProject = useEditorProjectStore
       .getState()
@@ -272,7 +267,7 @@ describe('Editor graph store', () => {
 
     useEditorGraphStore
       .getState()
-      .createNetworkForParameter('editor-graph', VType.Number);
+      .createNetworkForParameter('editor-graph', 'number');
 
     const canonicalProject = useEditorProjectStore
       .getState()
@@ -318,7 +313,7 @@ describe('Editor graph store', () => {
     useEditorProjectStore.getState().importWorkingProject(project);
     useEditorGraphStore
       .getState()
-      .createNetworkForParameter('editor-graph', VType.Number);
+      .createNetworkForParameter('editor-graph', 'number');
 
     useEditorGraphStore.getState().removeNetworkForParameter('editor-graph');
 

@@ -1,144 +1,161 @@
+import {
+  ComponentActionControl,
+  ComponentSettingControl,
+  createComponentParameterId,
+  getSettingNodeHandleType,
+  isSettingVisible,
+} from '@/components/config/config';
 import editorControl from '@/lib/editor-control';
 import useEditorGraphStore from '@/lib/stores/editor-graph-store';
+import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import { cn } from '@/lib/utils';
 import {
   selectParameterGraphBindings,
   selectRuntimeGraphValueForParameter,
   useVizSessionSelector,
 } from '@/lib/viz-session';
+import type {
+  VizComponentGroupSetting,
+  VizComponentSettingDefinition,
+} from '@viz-engine/contracts';
 import { AudioLines, Info, Target, X } from 'lucide-react';
-import { memo } from 'react';
-import {
-  ButtonConfigOption,
-  ConfigParam,
-  GroupConfigOption,
-  VConfigType,
-} from '../config/config';
+import { memo, type ReactNode } from 'react';
 import useNodeNetworkStore from '../node-network/node-network-store';
 import { Button } from '../ui/button';
 import CollapsibleGroup from '../ui/collapsible-group';
 import SimpleTooltip from '../ui/simple-tooltip';
 import { Toggle } from '../ui/toggle';
 
-interface LayerParametersProps {
-  layerId: string;
-  config: VConfigType;
-}
+type ValueSetting = Exclude<
+  VizComponentSettingDefinition,
+  VizComponentGroupSetting | { kind: 'action' }
+>;
 
-const LayerParameters = ({ layerId, config }: LayerParametersProps) => {
-  // Subscribe ONLY to the enabled state map (not the entire networks object)
-  // This prevents rerenders when node positions or other network data changes
+const isAnimatable = (setting: VizComponentSettingDefinition): boolean =>
+  setting.kind !== 'group' &&
+  setting.kind !== 'action' &&
+  setting.kind !== 'file' &&
+  setting.kind !== 'list' &&
+  setting.animatable !== false;
+
+const SettingLabel = ({
+  setting,
+  children,
+}: {
+  setting: VizComponentSettingDefinition;
+  children?: ReactNode;
+}) => (
+  <SimpleTooltip
+    text={setting.description}
+    trigger={
+      <div className="mb-2 flex items-center gap-x-2 text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        {setting.description && <Info className="h-3 w-3 opacity-50" />}
+        {setting.label}
+        {children}
+      </div>
+    }
+  />
+);
+
+const ActionField = ({
+  layerId,
+  setting,
+}: {
+  layerId: string;
+  setting: Extract<VizComponentSettingDefinition, { kind: 'action' }>;
+}) => (
+  <div className="px-4 pb-6">
+    <SettingLabel setting={setting} />
+    <ComponentActionControl
+      label={setting.buttonLabel ?? setting.label}
+      onPress={() =>
+        useEditorRuntimePreviewAttachmentStore
+          .getState()
+          .invokeLayerAction(layerId, setting.actionId)
+      }
+    />
+  </div>
+);
+
+const SettingEntries = ({
+  layerId,
+  group,
+  path = [],
+  values,
+}: {
+  layerId: string;
+  group: VizComponentGroupSetting;
+  path?: string[];
+  values: Record<string, unknown>;
+}) => {
   const parameterGraphBindings = useVizSessionSelector(
     selectParameterGraphBindings,
   );
 
-  // Get all current values once for visibleIf checks
-  const allValues = useVizSessionSelector(
-    (state) =>
-      state.project.workingProject.layers.find((layer) => layer.id === layerId)
-        ?.settings,
-  );
+  return Object.entries(group.fields).map(([key, setting]) => {
+    if (!isSettingVisible(setting.visibleWhen, values)) {
+      return null;
+    }
+    const settingPath = [...path, key];
+    if (setting.kind === 'group') {
+      const animatedParams = Object.entries(setting.fields).flatMap(
+        ([childKey, child]) =>
+          isAnimatable(child) &&
+          parameterGraphBindings[
+            createComponentParameterId(layerId, [...settingPath, childKey])
+          ]
+            ? [child.label]
+            : [],
+      );
+      return (
+        <CollapsibleGroup
+          key={key}
+          label={setting.label}
+          description={setting.description}
+          animatedParams={animatedParams}>
+          <div className="flex flex-col pt-2 pb-0">
+            <SettingEntries
+              layerId={layerId}
+              group={setting}
+              path={settingPath}
+              values={values}
+            />
+          </div>
+        </CollapsibleGroup>
+      );
+    }
+    if (setting.kind === 'action') {
+      return <ActionField key={key} layerId={layerId} setting={setting} />;
+    }
+    return (
+      <div key={key} className="pb-6">
+        <ParameterField
+          layerId={layerId}
+          paramPath={settingPath}
+          setting={setting}
+        />
+      </div>
+    );
+  });
+};
 
-  // Helper function to get animated parameters in a group
-  const getAnimatedParamsInGroup = (groupOption: GroupConfigOption<any>) => {
-    const animatedParams: string[] = [];
-
-    Object.values(groupOption.options).forEach((innerOption) => {
-      if (innerOption instanceof ConfigParam && innerOption.isAnimatable) {
-        const isAnimated = !!parameterGraphBindings[innerOption.id];
-        if (isAnimated) {
-          animatedParams.push(innerOption.label);
-        }
-      }
-    });
-
-    return animatedParams;
-  };
-
+const LayerParameters = ({
+  layerId,
+  settings,
+}: {
+  layerId: string;
+  settings: VizComponentGroupSetting;
+}) => {
+  const values =
+    useVizSessionSelector(
+      (state) =>
+        state.project.workingProject.layers.find(
+          (layer) => layer.id === layerId,
+        )?.settings,
+    ) ?? {};
   return (
     <div className="flex flex-col">
-      {Object.entries(config.options).map(([key, option]) => {
-        const isHidden =
-          typeof option.visibleIf === 'function' &&
-          !option.visibleIf(allValues ?? {});
-        if (isHidden) return null;
-
-        return (
-          <div key={key}>
-            {option instanceof GroupConfigOption ? (
-              <CollapsibleGroup
-                label={option.label}
-                description={option.description}
-                animatedParams={getAnimatedParamsInGroup(option)}>
-                <div className="flex flex-col pt-2 pb-0">
-                  {Object.entries(option.options).map(
-                    ([innerKey, innerOption]) => {
-                      const opt = innerOption as
-                        ConfigParam<any> | ButtonConfigOption;
-                      const isHidden =
-                        typeof opt.visibleIf === 'function' &&
-                        !opt.visibleIf(allValues ?? {});
-                      if (isHidden) return null;
-
-                      // Handle buttons separately (they don't have values/animation)
-                      if (opt instanceof ButtonConfigOption) {
-                        return (
-                          <div key={innerKey} className="px-4 pb-6">
-                            <SimpleTooltip
-                              text={opt.description}
-                              trigger={
-                                <div className="mb-2 flex items-center gap-x-2 text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                  {opt.description && (
-                                    <Info className="h-3 w-3 opacity-50" />
-                                  )}
-                                  {opt.label}
-                                </div>
-                              }
-                            />
-                            {opt.toFormElement(null, () => {})}
-                          </div>
-                        );
-                      }
-                      return (
-                        <div key={innerKey} className="pb-6">
-                          <ParameterField
-                            layerId={layerId}
-                            paramPath={[key, innerKey]}
-                            option={opt}
-                          />
-                        </div>
-                      );
-                    },
-                  )}
-                </div>
-              </CollapsibleGroup>
-            ) : option instanceof ButtonConfigOption ? (
-              <div className="px-4 pb-6">
-                <SimpleTooltip
-                  text={option.description}
-                  trigger={
-                    <div className="mb-2 flex items-center gap-x-2 text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      {option.description && (
-                        <Info className="h-3 w-3 opacity-50" />
-                      )}
-                      {option.label}
-                    </div>
-                  }
-                />
-                {option.toFormElement(null, () => {})}
-              </div>
-            ) : (
-              <div className="pb-6">
-                <ParameterField
-                  layerId={layerId}
-                  paramPath={[key]}
-                  option={option as ConfigParam<any>}
-                />
-              </div>
-            )}
-          </div>
-        );
-      })}
+      <SettingEntries layerId={layerId} group={settings} values={values} />
     </div>
   );
 };
@@ -148,20 +165,16 @@ export default LayerParameters;
 interface ParameterFieldProps {
   layerId: string;
   paramPath: string[];
-  option: ConfigParam<any>;
+  setting: ValueSetting;
 }
 
 const ParameterField = memo(
-  ({ layerId, paramPath, option }: ParameterFieldProps) => {
-    // Subscribe ONLY to this parameter's value
+  ({ layerId, paramPath, setting }: ParameterFieldProps) => {
+    const id = createComponentParameterId(layerId, paramPath);
     const value = useVizSessionSelector((state) => {
-      const layerValues = state.project.workingProject.layers.find(
+      let current: unknown = state.project.workingProject.layers.find(
         (layer) => layer.id === layerId,
       )?.settings;
-      if (!layerValues) return undefined;
-
-      // Navigate the path to get the value
-      let current: unknown = layerValues;
       for (const key of paramPath) {
         if (typeof current !== 'object' || current === null) {
           return undefined;
@@ -170,35 +183,33 @@ const ParameterField = memo(
       }
       return current;
     });
-
     const graphBinding = useVizSessionSelector(
-      (state) => selectParameterGraphBindings(state)[option.id],
+      (state) => selectParameterGraphBindings(state)[id],
     );
-    const resolvedNetworkId = graphBinding?.graphId ?? option.id;
-    const isAnimated = useEditorGraphStore(
+    const resolvedNetworkId = graphBinding?.graphId ?? id;
+    const animated = useEditorGraphStore(
       (state) =>
         !!graphBinding &&
         (state.networks[resolvedNetworkId]?.isEnabled ?? false),
     );
-
     const openNetwork = useNodeNetworkStore((state) => state.openNetwork);
-
-    const isHighlighted = openNetwork === resolvedNetworkId;
+    const highlighted = openNetwork === resolvedNetworkId;
+    const type = getSettingNodeHandleType(setting);
 
     return (
       <div className="flex grow flex-wrap justify-between px-4">
         <SimpleTooltip
-          text={option.description}
+          text={setting.description}
           trigger={
             <div
               className={cn(
                 'text-2xs mr-1 mb-2 flex items-center gap-x-2 leading-none font-medium',
-                isAnimated && !isHighlighted && 'text-animation-blue',
-                isAnimated && isHighlighted && 'text-animation-purple',
+                animated && !highlighted && 'text-animation-blue',
+                animated && highlighted && 'text-animation-purple',
               )}>
-              {option.description && <Info className="h-3 w-3 opacity-50" />}
-              {option.label || paramPath[paramPath.length - 1]}
-              {isAnimated && <AnimatedLiveValue parameterId={option.id} />}
+              {setting.description && <Info className="h-3 w-3 opacity-50" />}
+              {setting.label || paramPath.at(-1)}
+              {animated && <AnimatedLiveValue parameterId={id} />}
             </div>
           }
         />
@@ -206,28 +217,29 @@ const ParameterField = memo(
           <div
             className={cn(
               'relative grow',
-              isAnimated && 'pointer-events-none opacity-50',
+              animated && 'pointer-events-none opacity-50',
             )}>
-            {option.toFormElement(
-              value,
-              (newValue) => {
+            <ComponentSettingControl
+              setting={setting}
+              value={value}
+              onChange={(nextValue) =>
                 editorControl.project.updateLayerValue(
                   layerId,
                   paramPath,
-                  newValue,
-                );
-              },
-              () => {
+                  nextValue,
+                )
+              }
+              onDragStart={() =>
                 editorControl.history.startGesture(
                   `${layerId}:${paramPath.join('.')}`,
-                );
-              },
-              () => {
+                )
+              }
+              onDragEnd={() =>
                 editorControl.history.endGesture(
                   `${layerId}:${paramPath.join('.')}`,
-                );
-              },
-              async (selection) => {
+                )
+              }
+              onAssetSelect={async (selection) => {
                 const asset =
                   selection.kind === 'file'
                     ? await editorControl.project.attachLayerFileAsset(
@@ -241,40 +253,37 @@ const ParameterField = memo(
                         selection.uri,
                       );
                 return `asset:${asset.id}`;
-              },
-            )}
+              }}
+            />
           </div>
-          {option.isAnimatable && (
+          {isAnimatable(setting) && (
             <>
               <Toggle
                 aria-label="Enable/Select Animation"
                 tooltip="Enable or select parameter animation"
-                pressed={!!isAnimated}
+                pressed={animated}
                 variant={
-                  isAnimated && isHighlighted
+                  animated && highlighted
                     ? 'highlighted'
-                    : isAnimated && !isHighlighted
+                    : animated
                       ? 'active'
                       : 'outline'
                 }
                 onPressedChange={() => {
-                  // If already animated, just select/open it
-                  if (isAnimated) {
-                    editorControl.nodeEditor.openNetwork(option.id);
+                  if (animated) {
+                    editorControl.nodeEditor.openNetwork(id);
                     editorControl.nodeEditor.setShouldForceShowOverlay(true);
-                    return;
+                  } else {
+                    editorControl.nodeEditor.setAnimationEnabled(
+                      id,
+                      true,
+                      type,
+                    );
                   }
-
-                  // Otherwise, enable the animation
-                  editorControl.nodeEditor.setAnimationEnabled(
-                    option.id,
-                    true,
-                    option.type,
-                  );
                 }}>
-                {isAnimated ? <AudioLines /> : <Target />}
+                {animated ? <AudioLines /> : <Target />}
               </Toggle>
-              {isAnimated && (
+              {animated && (
                 <SimpleTooltip
                   text="Disable animation"
                   trigger={
@@ -282,13 +291,13 @@ const ParameterField = memo(
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 hover:bg-red-500/20"
-                      onClick={() => {
+                      onClick={() =>
                         editorControl.nodeEditor.setAnimationEnabled(
-                          option.id,
+                          id,
                           false,
-                          option.type,
-                        );
-                      }}>
+                          type,
+                        )
+                      }>
                       <X size={14} className="text-red-400" />
                     </Button>
                   }
@@ -300,25 +309,14 @@ const ParameterField = memo(
       </div>
     );
   },
-  // Custom comparison function to only rerender when needed
-  (prevProps, nextProps) => {
-    // Always rerender if props change
-    if (
-      prevProps.layerId !== nextProps.layerId ||
-      prevProps.option !== nextProps.option ||
-      prevProps.paramPath.join('.') !== nextProps.paramPath.join('.')
-    ) {
-      return false;
-    }
-    // Otherwise, let Zustand selectors handle rerenders
-    return true;
-  },
+  (previous, next) =>
+    previous.layerId === next.layerId &&
+    previous.setting === next.setting &&
+    previous.paramPath.join('.') === next.paramPath.join('.'),
 );
 
 ParameterField.displayName = 'ParameterField';
 
-// Separate component that subscribes to the live values store.
-// Only this small element re-renders as the animated value changes.
 export const AnimatedLiveValue = ({
   parameterId,
   className = 'text-zinc-300',
@@ -329,9 +327,9 @@ export const AnimatedLiveValue = ({
   const value = useVizSessionSelector((state) =>
     selectRuntimeGraphValueForParameter(state, parameterId),
   );
-
-  if (value === undefined) return null;
-
+  if (value === undefined) {
+    return null;
+  }
   let text: string;
   if (typeof value === 'number') {
     text = value.toFixed(2);

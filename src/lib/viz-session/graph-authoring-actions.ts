@@ -1,8 +1,4 @@
-import {
-  safeVTypeToNodeHandleType,
-  type NodeHandleType,
-} from '@/components/config/node-types';
-import type { VType } from '@/components/config/types';
+import type { NodeHandleType } from '@/components/config/node-types';
 import { InputNode } from '@/components/node-network/animation-nodes';
 import type {
   GraphNode,
@@ -347,7 +343,11 @@ export const createStudioGraphAuthoringActions = ({
         ]);
       }
     },
-    setNetworkEnabled(parameterId: string, enabled: boolean, type: VType) {
+    setNetworkEnabled(
+      parameterId: string,
+      enabled: boolean,
+      type: NodeHandleType,
+    ) {
       const project = getProject();
       const binding = resolveParameterGraphBinding(project, parameterId);
       const graphId = binding?.graphId ?? parameterId;
@@ -513,8 +513,7 @@ export const createStudioGraphAuthoringActions = ({
     },
     setNodesInNetwork: setNodes,
     setEdgesInNetwork: setEdges,
-    createNetworkForParameter(parameterId: string, type: VType) {
-      const outputType = safeVTypeToNodeHandleType(type);
+    createNetworkForParameter(parameterId: string, outputType: NodeHandleType) {
       const project = getProject();
       const binding = createLayerBindingAction(project, parameterId);
       commit([

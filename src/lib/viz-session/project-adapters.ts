@@ -1,8 +1,12 @@
+import {
+  createComponentParameterId,
+  findComponentSetting,
+  getSettingNodeHandleType,
+} from '@/components/config/config';
 import type { Comp } from '@/components/config/create-component';
 import {
   NodeHandleType,
   isValidNodeHandleType,
-  safeVTypeToNodeHandleType,
 } from '@/components/config/node-types';
 import {
   layerSettingsSchema,
@@ -22,7 +26,6 @@ import {
   getPresetById,
   instantiateCanonicalPreset,
 } from '@/components/node-network/presets';
-import { assignDeterministicIdsToConfig } from '@/lib/comp-utils/config-utils';
 import type { LayerData } from '@/lib/editor-layer-types';
 import type { EditorLayerUiState } from '@/lib/stores/editor-store';
 import { studioNodeRegistry } from '@/lib/viz-capabilities';
@@ -71,38 +74,14 @@ export const resolveEditorOptionByPath = (
   layerId: string,
   path: string,
 ) => {
-  const config = assignDeterministicIdsToConfig(layerId, comp.config.clone());
-  const segments = path.split('.');
-  let current: Record<string, any> = config.options;
-
-  for (let index = 0; index < segments.length; index += 1) {
-    const option = current[segments[index]!];
-
-    if (!option) {
-      return null;
-    }
-
-    if (
-      'options' in option &&
-      option.options &&
-      typeof option.options === 'object'
-    ) {
-      current = option.options;
-      continue;
-    }
-
-    if (
-      'type' in option &&
-      'getDefaultValue' in option &&
-      index === segments.length - 1
-    ) {
-      return option;
-    }
-
-    return null;
-  }
-
-  return null;
+  const setting = findComponentSetting(comp.authoring.settings, path);
+  return setting && setting.kind !== 'group' && setting.kind !== 'action'
+    ? {
+        id: createComponentParameterId(layerId, path),
+        type: getSettingNodeHandleType(setting),
+        setting,
+      }
+    : null;
 };
 
 export const createVizLayerFromComp = (
@@ -164,13 +143,10 @@ export const createProjectedLayer = ({
   comp: Comp;
   uiState: EditorLayerUiState | undefined;
 }): LayerData => {
-  const config = assignDeterministicIdsToConfig(layer.id, comp.config.clone());
-  config.setValues(getEditorLayerValues(layer));
-
   return {
     id: layer.id,
     comp,
-    config,
+    values: getEditorLayerValues(layer),
     isExpanded: uiState?.isExpanded ?? false,
     isDebugEnabled: uiState?.isDebugEnabled ?? false,
     layerSettings: getEditorLayerSettings(layer),
@@ -504,7 +480,7 @@ export const applyEditorDefaultNetworks = ({
     }
 
     const graphId = option.id;
-    const outputType = safeVTypeToNodeHandleType(option.type);
+    const outputType = option.type;
     const graph = instantiateCanonicalPreset(preset, graphId, outputType);
 
     nextProject = {

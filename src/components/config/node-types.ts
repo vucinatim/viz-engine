@@ -1,5 +1,3 @@
-import { VType } from './types';
-
 // Centralized type system for node handles
 export type NodeHandleType =
   | 'number'
@@ -109,25 +107,6 @@ type HandleTypeMap = {
 };
 
 export type TypeFromHandle<T extends NodeHandleType> = HandleTypeMap[T];
-
-// Safe mapping between VType and NodeHandleType
-const VTypeToNodeHandleType: Record<VType, NodeHandleType> = {
-  [VType.Number]: 'number',
-  [VType.String]: 'string',
-  [VType.Color]: 'color',
-  [VType.Boolean]: 'number', // Boolean becomes 0/1 in nodes
-  [VType.Select]: 'string',
-  [VType.Group]: 'object', // Groups become objects
-  [VType.File]: 'file',
-  [VType.Vector3]: 'vector3',
-  [VType.Button]: 'string', // Buttons don't carry data, map to string
-  [VType.List]: 'object', // Lists become objects/arrays
-};
-
-// Safe conversion functions
-export const safeVTypeToNodeHandleType = (vType: VType): NodeHandleType => {
-  return VTypeToNodeHandleType[vType];
-};
 
 // Validation functions
 export const canConnectTypes = (

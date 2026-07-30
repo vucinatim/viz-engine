@@ -1,12 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { CompDefinitionMap } from '@/components/comps';
-import { VType } from '@/components/config/types';
+import { listComponentParameterIds } from '@/components/config/config';
 import { useNodeNetworkStore } from '@/components/node-network/node-network-store';
-import {
-  assignDeterministicIdsToConfig,
-  getParameterIdsFromConfig,
-} from '@/lib/comp-utils/config-utils';
 import useCompStore from '@/lib/stores/comp-store';
 import useEditorGraphStore from '@/lib/stores/editor-graph-store';
 import useEditorProjectStore from '@/lib/stores/editor-project-store';
@@ -30,8 +26,10 @@ const buildProject = (): {
   }
 
   const layerId = 'layer-history-test';
-  const config = assignDeterministicIdsToConfig(layerId, comp.config.clone());
-  const [parameterId] = getParameterIdsFromConfig(config);
+  const [parameterId] = listComponentParameterIds(
+    layerId,
+    comp.authoring.settings,
+  );
 
   if (!parameterId) {
     throw new Error('Could not resolve parameter id for test component');
@@ -84,14 +82,14 @@ describe('History store', () => {
     useEditorProjectStore.getState().importWorkingProject(project);
     useEditorGraphStore
       .getState()
-      .createNetworkForParameter(parameterId, VType.Number);
+      .createNetworkForParameter(parameterId, 'number');
     useEditorGraphStore
       .getState()
-      .setNetworkEnabled(parameterId, false, VType.Number);
+      .setNetworkEnabled(parameterId, false, 'number');
 
     useEditorGraphStore
       .getState()
-      .setNetworkEnabled(parameterId, true, VType.Number);
+      .setNetworkEnabled(parameterId, true, 'number');
     useHistoryStore.getState().undoLayerEditor();
 
     expect(
@@ -105,7 +103,7 @@ describe('History store', () => {
     useEditorProjectStore.getState().importWorkingProject(project);
     useEditorGraphStore
       .getState()
-      .createNetworkForParameter(parameterId, VType.Number);
+      .createNetworkForParameter(parameterId, 'number');
 
     const graphStore = useEditorGraphStore.getState();
     const initialNetwork = graphStore.networks[parameterId];

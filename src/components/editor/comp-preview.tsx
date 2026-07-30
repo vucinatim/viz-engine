@@ -67,20 +67,6 @@ const CompPreview = ({
         LOOP_DURATION,
       );
 
-      const animInputData = {
-        audioSignal: timeDomainData,
-        frequencyData,
-        time: loopTime,
-        frequencyAnalysis: {
-          frequencyData,
-          sampleRate: syntheticAnalyzer.current.context.sampleRate,
-          fftSize: syntheticAnalyzer.current.fftSize,
-        },
-      };
-
-      // Get base config values
-      const configValues = comp.config.getValues(animInputData);
-
       const internalWidth = Math.round(width * PREVIEW_RESOLUTION);
       const internalHeight = Math.round(height * PREVIEW_RESOLUTION);
       const runtimeRenderPlan = createEditorComponentPreviewPlan({
@@ -88,7 +74,7 @@ const CompPreview = ({
         viewportWidth: internalWidth,
         viewportHeight: internalHeight,
         time: loopTime,
-        configValues,
+        configValues: comp.defaultValues,
         audioFrameData: {
           frequencyData,
           timeDomainData,

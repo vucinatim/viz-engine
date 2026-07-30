@@ -1,11 +1,7 @@
+import { listComponentParameterIds } from '@/components/config/config';
 import type { Comp } from '@/components/config/create-component';
-import { safeVTypeToNodeHandleType } from '@/components/config/node-types';
 import type { LayerSettings } from '@/components/editor/layer-settings';
 import { getPresetById } from '@/components/node-network/presets';
-import {
-  assignDeterministicIdsToConfig,
-  getParameterIdsFromConfig,
-} from '@/lib/comp-utils/config-utils';
 import { generateLayerId } from '@/lib/id-utils';
 import useEditorStore from '@/lib/stores/editor-store';
 import {
@@ -110,11 +106,7 @@ export const createStudioProjectActions = ({
       const preset =
         typeof presetOrId === 'string' ? getPresetById(presetOrId) : presetOrId;
       if (option && preset) {
-        graphActions.applyPresetDefinition(
-          option.id,
-          preset,
-          safeVTypeToNodeHandleType(option.type),
-        );
+        graphActions.applyPresetDefinition(option.id, preset, option.type);
       }
     }
   };
@@ -132,11 +124,13 @@ export const createStudioProjectActions = ({
       return;
     }
 
-    const sourceIds = getParameterIdsFromConfig(
-      assignDeterministicIdsToConfig(sourceLayer.id, sourceComp.config.clone()),
+    const sourceIds = listComponentParameterIds(
+      sourceLayer.id,
+      sourceComp.authoring.settings,
     );
-    const nextIds = getParameterIdsFromConfig(
-      assignDeterministicIdsToConfig(nextLayer.id, nextComp.config.clone()),
+    const nextIds = listComponentParameterIds(
+      nextLayer.id,
+      nextComp.authoring.settings,
     );
     const graphIds = new Set(
       (getState().workingProject.graphs ?? []).map((graph) => graph.id),
@@ -170,11 +164,7 @@ export const createStudioProjectActions = ({
     for (const [path, presetId] of Object.entries(preset.networks ?? {})) {
       const option = resolveEditorOptionByPath(comp, layer.id, path);
       if (option) {
-        graphActions.applyPresetToNetwork(
-          option.id,
-          presetId,
-          safeVTypeToNodeHandleType(option.type),
-        );
+        graphActions.applyPresetToNetwork(option.id, presetId, option.type);
       }
     }
   };

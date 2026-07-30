@@ -1,12 +1,7 @@
-import {
-  BaseConfigOption,
-  ButtonConfigOption,
-  GroupConfigOption,
-} from '@/components/config/config';
-import {
-  UnknownConfig,
-  UnknownConfigValues,
-} from '@/components/config/create-component';
+import type {
+  VizComponentGroupSetting,
+  VizComponentSettingDefinition,
+} from '@viz-engine/contracts';
 import React, { useCallback, useRef } from 'react';
 import { calculateAudioLevel } from '../comp-utils/audio-utils';
 import useAudioEngineStore from '../stores/audio-engine-store';
@@ -31,8 +26,8 @@ function useDebug(
         configSchema,
       }: {
         dataArray: Uint8Array;
-        config: UnknownConfigValues;
-        configSchema: UnknownConfig;
+        config: Record<string, unknown>;
+        configSchema: VizComponentGroupSetting;
       },
     ) => {
       const drawStart = performance.now();
@@ -169,11 +164,13 @@ const renderString = (value: string, context: RenderContext): RenderResult => {
   return { yOffset: yOffset + lineHeight, shouldContinue: true };
 };
 
-const renderButton = (value: any, context: RenderContext): RenderResult => {
+const renderButton = (
+  setting: Extract<VizComponentSettingDefinition, { kind: 'action' }>,
+  context: RenderContext,
+): RenderResult => {
   const { ctx, valueX, yOffset, lineHeight } = context;
   ctx.fillStyle = '#88ccff';
-  const buttonLabel =
-    value.options?.buttonLabel || value.buttonLabel || value.label || 'Click';
+  const buttonLabel = setting.buttonLabel ?? setting.label;
   const buttonText = `[Button: ${buttonLabel}]`;
   ctx.fillText(buttonText, valueX, yOffset);
   return { yOffset: yOffset + lineHeight, shouldContinue: true };
@@ -231,8 +228,8 @@ const renderOther = (value: any, context: RenderContext): RenderResult => {
 
 function renderDebugOverlay(
   canvas: HTMLCanvasElement | null,
-  config: UnknownConfigValues,
-  configSchema: UnknownConfig,
+  config: Record<string, unknown>,
+  configSchema: VizComponentGroupSetting,
   debugInfo: {
     fps: number;
     currentTime: number;
@@ -330,7 +327,7 @@ function renderDebugOverlay(
   const renderValue = (
     key: string,
     value: any,
-    option: BaseConfigOption<any>,
+    option: VizComponentSettingDefinition,
     indent = 0,
   ): boolean => {
     const x = padding + indent * 16;
@@ -369,17 +366,17 @@ function renderDebugOverlay(
     let result: RenderResult;
 
     // Use config schema to determine rendering
-    if (option instanceof ButtonConfigOption) {
-      result = renderButton(value, context);
-    } else if (option instanceof GroupConfigOption) {
+    if (option.kind === 'action') {
+      result = renderButton(option, context);
+    } else if (option.kind === 'group') {
       // Group - render children
       yOffset += lineHeight;
-      for (const [k, childOption] of Object.entries(option.options)) {
+      for (const [k, childOption] of Object.entries(option.fields)) {
         const childValue = value?.[k];
         const shouldContinue = renderValue(
           k,
           childValue,
-          childOption as BaseConfigOption<any>,
+          childOption,
           indent + 1,
         );
         if (!shouldContinue) return false;
@@ -415,9 +412,9 @@ function renderDebugOverlay(
   };
 
   // Render all config entries using schema
-  for (const [key, option] of Object.entries(configSchema.options)) {
+  for (const [key, option] of Object.entries(configSchema.fields)) {
     const value = config[key];
-    renderValue(key, value, option as BaseConfigOption<any>);
+    renderValue(key, value, option);
   }
 
   ctx.restore();

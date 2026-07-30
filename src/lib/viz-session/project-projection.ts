@@ -1,8 +1,5 @@
+import { listComponentParameterIds } from '@/components/config/config';
 import type { Comp } from '@/components/config/create-component';
-import {
-  assignDeterministicIdsToConfig,
-  getParameterIdsFromConfig,
-} from '@/lib/comp-utils/config-utils';
 import useCompStore from '@/lib/stores/comp-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import useEditorStore from '@/lib/stores/editor-store';
@@ -22,8 +19,7 @@ export const getEditorParameterIds = (layer: VizLayer): string[] => {
   if (!comp) {
     return [];
   }
-  const config = assignDeterministicIdsToConfig(layer.id, comp.config.clone());
-  return getParameterIdsFromConfig(config);
+  return listComponentParameterIds(layer.id, comp.authoring.settings);
 };
 
 export const syncEditorProjection = (project: VizProjectDocument): void => {
