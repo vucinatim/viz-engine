@@ -1,9 +1,8 @@
-import { v } from '../config/config';
-import { createComponent } from '../config/create-component';
+import { defineVizComponentAuthoring, settingCondition, v } from './schema.js';
 
-const StrobeLight = createComponent({
-  name: 'Strobe Light',
-  description: 'Fullscreen strobe flash effect with intensity and manual modes',
+export const strobeLightAuthoring = defineVizComponentAuthoring({
+  componentId: 'strobe-light',
+  compatibility: 'render-safe',
   presets: [
     {
       name: 'Stage Scene Strobe',
@@ -67,7 +66,7 @@ const StrobeLight = createComponent({
       min: 0.0,
       max: 20.0,
       step: 0.1,
-      visibleIf: (vals) => vals.mode === 'Intensity',
+      visibleWhen: settingCondition('mode', 'equals', 'Intensity'),
     }),
     strength: v.number({
       label: 'Strength',
@@ -86,7 +85,7 @@ const StrobeLight = createComponent({
       min: 0.1,
       max: 0.9,
       step: 0.05,
-      visibleIf: (vals) => vals.mode === 'Intensity',
+      visibleWhen: settingCondition('mode', 'equals', 'Intensity'),
     }),
     flashRate: v.number({
       label: 'Flash Rate',
@@ -96,12 +95,10 @@ const StrobeLight = createComponent({
       min: 0,
       max: 1,
       step: 0.01,
-      visibleIf: (vals) => vals.mode === 'Random Flashes',
+      visibleWhen: settingCondition('mode', 'equals', 'Random Flashes'),
     }),
   }),
   defaultNetworks: {
     strength: 'overhead-blinder-big-impact',
   },
 });
-
-export default StrobeLight;

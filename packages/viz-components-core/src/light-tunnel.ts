@@ -2,6 +2,7 @@ import type {
   VizComponentImplementation,
   VizRenderThreeProgramNode,
 } from "@viz-engine/contracts";
+import { lightTunnelAuthoring } from "./authoring/light-tunnel.js";
 import {
   asBoolean,
   asNumber,
@@ -99,6 +100,8 @@ export const lightTunnelComponent: VizComponentImplementation = {
   id: "light-tunnel",
   name: "Light Tunnel",
   rendererFamily: "three",
+  implementationVersion: "1.0.0",
+  authoring: lightTunnelAuthoring,
   description:
     "Deterministic retained neon cube tunnel with lights, waves, fog, bloom, and depth of field.",
   render: ({

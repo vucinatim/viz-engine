@@ -31,6 +31,14 @@ That reference map now lives here:
 
 - [V1 Editor UX Preservation And V2 Rebuild Map](./v1-editor-ux-preservation-and-v2-rebuild-map.md)
 
+The canonical production-loop boundary and the live/headless session topology
+now live in:
+
+- [Agent-Authored Production Loop Architecture](../../specs/v2/agent-authored-production-loop-architecture.md)
+
+The editor and agent must target one live `VizSession`; this roadmap does not
+permit mirrored editor and agent stores.
+
 ## Current Starting Point
 
 We are not starting from zero.

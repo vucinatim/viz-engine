@@ -2,12 +2,15 @@ import type {
   VizComponentImplementation,
   VizRenderThreeProgramNode,
 } from "@viz-engine/contracts";
+import { particleSystemAuthoring } from "./authoring/particle-system.js";
 import { asBoolean, asNumber, asRecord, asString } from "./shared.js";
 
 export const particleSystemComponent: VizComponentImplementation = {
   id: "particle-system",
   name: "Particle System",
   rendererFamily: "three",
+  implementationVersion: "1.0.0",
+  authoring: particleSystemAuthoring,
   description: "Deterministic package-runtime instanced particle system.",
   render: ({ frameContext, layer, settings }) => {
     const appearance = asRecord(settings.appearance);

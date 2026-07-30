@@ -7,7 +7,9 @@ import {
 } from "@viz-engine/example-projects";
 import { createCoreNodeRegistry } from "@viz-engine/nodes-core";
 import {
+  coreVizThreeRendererExtension,
   createVizThreeCompositorGraph,
+  createVizThreeProgramRegistry,
   createVizThreeSceneGraph,
   summarizeVizThreeSceneGraph,
   updateVizThreeCompositorGraph,
@@ -20,6 +22,8 @@ import {
   Matrix4,
   Mesh,
   MeshBasicMaterial,
+  OrthographicCamera,
+  Scene,
   ShaderMaterial,
 } from "three";
 import { LineSegments2 } from "three/examples/jsm/lines/LineSegments2.js";
@@ -44,6 +48,141 @@ const collectMeshes = (object: Group | Mesh): Mesh[] => {
 };
 
 describe("Viz Three renderer proof", () => {
+  it("creates project-local Three programs through an injected renderer extension", () => {
+    const programRegistry = createVizThreeProgramRegistry([
+      coreVizThreeRendererExtension,
+      {
+        capabilityPack: {
+          id: "project/production-proof",
+          version: "1.0.0",
+        },
+        programs: [
+          {
+            id: "project/signal-ribbon/v1",
+            implementationVersion: "1.0.0",
+            factory: ({ node }) => {
+              const scene = new Scene();
+              const camera = new OrthographicCamera();
+              const root = new Group();
+              root.userData.intensity = node.parameters.intensity;
+              scene.add(root);
+
+              return {
+                programId: node.programId,
+                scene,
+                camera,
+                root,
+                update(nextNode) {
+                  root.userData.intensity =
+                    nextNode.parameters.intensity;
+                },
+                resize() {},
+                render() {},
+                dispose() {},
+              };
+            },
+          },
+        ],
+      },
+    ]);
+    const plan: VizRenderPlan = {
+      frameContext: {
+        frame: 0,
+        fps: 60,
+        durationInFrames: 60,
+        timeInSeconds: 0,
+        deltaTimeSeconds: 1 / 60,
+        isFirstFrame: true,
+        isLastFrame: false,
+        mode: "live",
+        seed: "extension-proof",
+      },
+      viewport: {
+        width: 640,
+        height: 360,
+      },
+      materializedAssets: [],
+      graphResults: [],
+      issues: [],
+      layers: [
+        {
+          layerId: "layer-signal-ribbon",
+          componentId: "project-signal-ribbon",
+          rendererFamily: "three",
+          enabled: true,
+          opacity: 1,
+          blendMode: "normal",
+          resolvedInputs: {},
+          node: {
+            kind: "three-program",
+            id: "signal-ribbon-program",
+            programId: "project/signal-ribbon/v1",
+            parameters: {
+              intensity: 0.75,
+            },
+          },
+        },
+      ],
+    };
+
+    const graph = createVizThreeCompositorGraph(
+      plan,
+      undefined,
+      undefined,
+      programRegistry,
+    );
+
+    expect(
+      programRegistry.get("project/signal-ribbon/v1")?.capabilityPack,
+    ).toEqual({
+      id: "project/production-proof",
+      version: "1.0.0",
+    });
+    expect(graph.layers[0]?.programInstance?.programId).toBe(
+      "project/signal-ribbon/v1",
+    );
+    expect(graph.layers[0]?.programInstance?.root.userData.intensity).toBe(
+      0.75,
+    );
+  });
+
+  it("rejects invalid and duplicate renderer-extension identities", () => {
+    expect(() =>
+      createVizThreeProgramRegistry([
+        {
+          capabilityPack: {
+            id: "",
+            version: "1.0.0",
+          },
+          programs: [],
+        },
+      ]),
+    ).toThrow(
+      "must declare a non-empty capability-pack id and version",
+    );
+
+    expect(() =>
+      createVizThreeProgramRegistry([
+        {
+          capabilityPack: {
+            id: "project/duplicate",
+            version: "1.0.0",
+          },
+          programs: [],
+        },
+        {
+          capabilityPack: {
+            id: "project/duplicate",
+            version: "2.0.0",
+          },
+          programs: [],
+        },
+      ]),
+    ).toThrow(
+      'Duplicate Viz Three renderer extension for capability pack "project/duplicate"',
+    );
+  });
+
   it("maps the shared render plan into a Three scene graph", () => {
     const session = createVizRuntimeSession({
       project: exampleProjectDocument,

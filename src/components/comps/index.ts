@@ -1,36 +1,10 @@
-import CurveSpectrum from './curve-spectrum';
-import DebugAnimation from './debug-animation';
-import FeatureExtractionBars from './feature-extraction-bars';
-import FullscreenShader from './fullscreen-shader';
-import HeartbeatMonitor from './heartbeat-monitor';
-import InstancedSupercube from './instanced-supercube';
-import LightTunnel from './light-tunnel';
-import MorphShapes from './morph-shapes';
-import NeuralNetwork from './neural-network';
-import NoiseShader from './noise-shader';
-import OrbitingCubes from './orbiting-cubes';
-import ParticleSystem from './particle-system';
-import SimpleCube from './simple-cube';
-import StageScene from './stage-scene';
-import StrobeLight from './strobe-light';
+import { coreCatalogComponents } from '@viz-engine/components-core';
+import type { Comp } from '../config/create-component';
+import { createEditorCompFromDefinition } from '../config/create-component-from-authoring';
 
-export const AllComps = [
-  CurveSpectrum,
-  DebugAnimation,
-  SimpleCube,
-  HeartbeatMonitor,
-  InstancedSupercube,
-  LightTunnel,
-  MorphShapes,
-  FeatureExtractionBars,
-  NeuralNetwork,
-  NoiseShader,
-  OrbitingCubes,
-  ParticleSystem,
-  StageScene,
-  FullscreenShader,
-  StrobeLight,
-];
+export const AllComps = coreCatalogComponents.map(
+  createEditorCompFromDefinition,
+);
 
-export const CompDefinitionMap = new Map();
+export const CompDefinitionMap = new Map<string, Comp>();
 AllComps.forEach((comp) => CompDefinitionMap.set(comp.name, comp));

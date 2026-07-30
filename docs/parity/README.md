@@ -31,6 +31,9 @@ Browser comparison records live in [evidence](./evidence/). Start with:
 - [2026-07-29 runtime rendering cutover slice 7](./evidence/2026-07-29-runtime-rendering-cutover-slice-7.md)
 - [2026-07-29 V2 performance and video certification](./evidence/2026-07-29-v2-performance-and-video-certification.md)
 - [2026-07-29 runtime rendering cutover acceptance audit](./evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md)
+- [2026-07-30 canonical component authoring and capability composition](./evidence/2026-07-30-canonical-component-authoring-and-capability-composition.md)
+- [2026-07-30 live session host and control target](./evidence/2026-07-30-live-session-host-and-control-target.md)
+- [2026-07-30 canonical audio bake and runtime inputs](./evidence/2026-07-30-canonical-audio-bake-and-runtime-inputs.md)
 
 ## Pinned Reference
 

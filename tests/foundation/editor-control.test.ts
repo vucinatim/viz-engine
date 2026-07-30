@@ -1,7 +1,24 @@
 import { exampleProjectBundleDirectoryUrl } from "@viz-engine/example-projects/node";
-import { createVizEditorControl } from "@viz-engine/editor-control";
-import { createVizNodeEditorControl } from "@viz-engine/editor-control/node";
+import {
+  exampleProjectDocument,
+  exampleResolvedArtifacts,
+  exampleResolvedAssets,
+} from "@viz-engine/example-projects";
+import {
+  createVizControl,
+  createVizSessionHost,
+} from "@viz-engine/editor-control";
+import { createVizNodeControl } from "@viz-engine/editor-control/node";
 import { loadLocalVizProjectBundle } from "@viz-engine/dev-cli";
+import {
+  coreComponentCapabilityPack,
+  defineVizComponentAuthoring,
+  v,
+} from "@viz-engine/components-core";
+import {
+  createVizComponentRegistryFromCapabilityPacks,
+  type VizComponentImplementation,
+} from "@viz-engine/contracts";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -9,7 +26,7 @@ import { describe, expect, it } from "vitest";
 
 describe("Viz local editor control surface", () => {
   it("opens the canonical example project and exposes stable scene state", () => {
-    const control = createVizEditorControl();
+    const control = createVizControl();
     const snapshot = control.openExampleProject();
 
     expect(snapshot.source.kind).toBe("example");
@@ -28,8 +45,58 @@ describe("Viz local editor control surface", () => {
     );
   });
 
+  it("inspects an explicitly injected project-local capability pack", () => {
+    const localComponent: VizComponentImplementation = {
+      id: "project-signal-ribbon",
+      name: "Project Signal Ribbon",
+      rendererFamily: "three",
+      implementationVersion: "1.0.0",
+      authoring: defineVizComponentAuthoring({
+        componentId: "project-signal-ribbon",
+        config: v.config({
+          color: v.color({
+            label: "Color",
+            defaultValue: "#88f3ff",
+          }),
+        }),
+      }),
+      render: () => null,
+    };
+    const componentRegistry = createVizComponentRegistryFromCapabilityPacks(
+      [
+        coreComponentCapabilityPack,
+        {
+          manifest: {
+            id: "project/production-proof",
+            version: "1.0.0",
+          },
+          components: [localComponent],
+        },
+      ],
+      { strict: true },
+    );
+    const control = createVizControl({ componentRegistry });
+    const summary = control
+      .inspectComponents()
+      .find((component) => component.componentId === localComponent.id);
+
+    expect(summary).toMatchObject({
+      componentId: "project-signal-ribbon",
+      implementationVersion: "1.0.0",
+      compatibility: "render-safe",
+      capabilityPack: {
+        id: "project/production-proof",
+        version: "1.0.0",
+      },
+      authoring: {
+        schemaVersion: 1,
+        componentId: "project-signal-ribbon",
+      },
+    });
+  });
+
   it("mutates the working head and exposes updated frame and debug snapshots", () => {
-    const control = createVizEditorControl();
+    const control = createVizControl();
     control.openExampleProject();
 
     const mutation = control.applyActions([
@@ -55,7 +122,9 @@ describe("Viz local editor control surface", () => {
     ]);
 
     expect(mutation.ok).toBe(true);
-    expect(mutation.snapshot.session.revision).toBe(1);
+    expect(mutation.snapshot.session.revision).toBe(
+      mutation.transactionResult.baseRevision + 1,
+    );
 
     const frameInspection = control.inspectFrame(36);
     const debugSnapshot = control.createDebugSnapshot(36);
@@ -69,7 +138,7 @@ describe("Viz local editor control surface", () => {
   });
 
   it("opens bundle-backed projects and exports a mutated working head", () => {
-    const control = createVizNodeEditorControl();
+    const control = createVizNodeControl();
     const tempDirectory = mkdtempSync(join(tmpdir(), "viz-editor-control-export-"));
 
     try {
@@ -102,7 +171,7 @@ describe("Viz local editor control surface", () => {
   });
 
   it("keeps explicit preview and audio diagnostics without UI scraping", () => {
-    const control = createVizEditorControl();
+    const control = createVizControl();
     control.openExampleProject();
 
     control.seekToFrame(48);
@@ -126,7 +195,7 @@ describe("Viz local editor control surface", () => {
   });
 
   it("exposes ui-state mutation, graph runtime inspection, and transport advancement", () => {
-    const control = createVizEditorControl();
+    const control = createVizControl();
     control.openExampleProject();
 
     control.setUiState({
@@ -169,7 +238,7 @@ describe("Viz local editor control surface", () => {
   });
 
   it("undoes and redoes through the same canonical action session", () => {
-    const control = createVizEditorControl();
+    const control = createVizControl();
     control.openExampleProject();
     control.applyAction({
       type: "layer.settings.set",
@@ -197,5 +266,149 @@ describe("Viz local editor control surface", () => {
         (layer) => layer.id === "layer-background",
       )?.settings?.color,
     ).toBe("#123456");
+  });
+
+  it("shares one revision-safe host across human and agent controls", () => {
+    const host = createVizSessionHost({
+      actor: { kind: "user", id: "studio-user" },
+      initialProject: {
+        project: exampleProjectDocument,
+        resolvedAssets: exampleResolvedAssets,
+        resolvedArtifacts: exampleResolvedArtifacts,
+        source: {
+          kind: "memory",
+          label: "Shared host proof",
+        },
+      },
+    });
+    const human = createVizControl({
+      host,
+      actor: { kind: "user", id: "studio-user" },
+    });
+    const agent = createVizControl({
+      host,
+      actor: { kind: "agent", id: "codex" },
+    });
+    const observedRevisions: number[] = [];
+    const unsubscribe = agent.subscribe((snapshot) => {
+      observedRevisions.push(snapshot.session.revision);
+    });
+
+    const humanMutation = human.applyAction({
+      type: "layer.settings.set",
+      payload: {
+        layerId: "layer-background",
+        path: "color",
+        value: "#102030",
+      },
+    });
+    expect(humanMutation.transactionResult.status).toBe("applied");
+    expect(humanMutation.snapshot.session.revision).toBe(1);
+
+    const staleAgentMutation = agent.applyTransaction({
+      id: "agent-stale",
+      expectedRevision: 0,
+      actions: [
+        {
+          type: "layer.settings.set",
+          payload: {
+            layerId: "layer-bars",
+            path: "gain",
+            value: 0.2,
+          },
+        },
+      ],
+    });
+    expect(staleAgentMutation.transactionResult.status).toBe("conflict");
+    expect(staleAgentMutation.transactionResult.conflict).toEqual({
+      expectedRevision: 0,
+      actualRevision: 1,
+    });
+    expect(host.getSnapshot().session.revision).toBe(1);
+
+    const dryRun = agent.applyTransaction({
+      id: "agent-dry-run",
+      expectedRevision: 1,
+      dryRun: true,
+      actions: [
+        {
+          type: "layer.settings.set",
+          payload: {
+            layerId: "layer-bars",
+            path: "gain",
+            value: 0.25,
+          },
+        },
+      ],
+    });
+    expect(dryRun.transactionResult.status).toBe("dry-run");
+    expect(dryRun.transactionResult.candidateProject.layers.find(
+      (layer) => layer.id === "layer-bars",
+    )?.settings?.gain).toBe(0.25);
+    expect(host.getSnapshot().session.revision).toBe(1);
+    expect(host.getSnapshot().session.actionHistory).toHaveLength(1);
+
+    const agentMutation = agent.applyTransaction({
+      id: "agent-atomic-edit",
+      expectedRevision: 1,
+      actions: [
+        {
+          type: "layer.settings.set",
+          payload: {
+            layerId: "layer-bars",
+            path: "gain",
+            value: 0.3,
+          },
+        },
+        {
+          type: "layer.settings.set",
+          payload: {
+            layerId: "layer-bloom",
+            path: "intensity",
+            value: 0.4,
+          },
+        },
+      ],
+    });
+    expect(agentMutation.transactionResult.status).toBe("applied");
+    expect(agentMutation.snapshot.session.revision).toBe(2);
+    expect(
+      agentMutation.transactionResult.actionEnvelopes.map((entry) => ({
+        transactionId: entry.transactionId,
+        actor: entry.actor,
+      })),
+    ).toEqual([
+      {
+        transactionId: "agent-atomic-edit",
+        actor: { kind: "agent", id: "codex" },
+      },
+      {
+        transactionId: "agent-atomic-edit",
+        actor: { kind: "agent", id: "codex" },
+      },
+    ]);
+    expect(human.getSnapshot().session.revision).toBe(2);
+    expect(
+      human.getWorkingProject().layers.find(
+        (layer) => layer.id === "layer-bars",
+      )?.settings?.gain,
+    ).toBe(0.3);
+
+    human.undo();
+    expect(host.getSnapshot().session.revision).toBe(3);
+    expect(
+      agent.getWorkingProject().layers.find(
+        (layer) => layer.id === "layer-bars",
+      )?.settings?.gain,
+    ).not.toBe(0.3);
+    expect(
+      agent.getWorkingProject().layers.find(
+        (layer) => layer.id === "layer-background",
+      )?.settings?.color,
+    ).toBe("#102030");
+    expect(observedRevisions).toContain(2);
+    expect(human.getHost()).toBe(agent.getHost());
+
+    unsubscribe();
   });
 });

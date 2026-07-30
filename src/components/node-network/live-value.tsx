@@ -8,6 +8,24 @@ interface LiveValueProps {
   type: string;
 }
 
+export const formatNodeLiveValue = (
+  value: unknown,
+  type: string,
+): string => {
+  switch (type) {
+    case 'number':
+      return typeof value === 'number' && Number.isFinite(value)
+        ? value.toFixed(2)
+        : String(value);
+    case 'Uint8Array':
+      return '[Data]';
+    case 'FrequencyAnalysis':
+      return '[Freq]';
+    default:
+      return String(value);
+  }
+};
+
 const LiveValue = ({ nodeId, inputId, type }: LiveValueProps) => {
   const ref = useRef<HTMLSpanElement>(null);
   const getNodeInputValue = getRuntimeNodeInput;
@@ -17,19 +35,7 @@ const LiveValue = ({ nodeId, inputId, type }: LiveValueProps) => {
     const value = getNodeInputValue(nodeId, inputId);
 
     if (value !== undefined) {
-      switch (type) {
-        case 'number':
-          ref.current.innerText = (value as number).toFixed(2);
-          break;
-        case 'Uint8Array':
-          ref.current.innerText = '[Data]';
-          break;
-        case 'FrequencyAnalysis':
-          ref.current.innerText = '[Freq]';
-          break;
-        default:
-          ref.current.innerText = String(value);
-      }
+      ref.current.innerText = formatNodeLiveValue(value, type);
     }
   });
 

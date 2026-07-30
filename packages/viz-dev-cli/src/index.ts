@@ -14,7 +14,13 @@ import type {
   VizResolvedArtifact,
   VizResolvedAsset,
 } from "@viz-engine/contracts";
-import { createVizFramePlan, createVizRenderPlan, createVizRuntimeSession, validateProjectDocument } from "@viz-engine/runtime";
+import {
+  createVizFramePlan,
+  createVizRenderPlan,
+  createVizRuntimeSession,
+  sampleProjectAudioFrameSnapshot,
+  validateProjectDocument,
+} from "@viz-engine/runtime";
 import { readFileSync } from "node:fs";
 import { createVizComponentScaffold } from "./component-scaffold.js";
 import {
@@ -22,10 +28,19 @@ import {
   type LoadedLocalVizProjectBundle,
   writeLocalVizProjectBundle,
 } from "./local-project-bundle.js";
+import {
+  DEFAULT_VIZ_CONTROL_URL,
+  discoverLiveVizControl,
+  requestLiveVizControl,
+  VIZ_CONTROL_PROTOCOL_VERSION,
+  type LiveVizControlRequest,
+} from "./live-control-client.js";
+import { bakeLocalBundleAudio } from "./audio-bake-command.js";
 
 export { loadLocalVizProjectBundle } from "./local-project-bundle.js";
 export { writeLocalVizProjectBundle } from "./local-project-bundle.js";
 export { createVizComponentScaffold } from "./component-scaffold.js";
+export * from "./live-control-client.js";
 export type { LoadedLocalVizProjectBundle } from "./local-project-bundle.js";
 
 export interface VizCliOutput {
@@ -45,6 +60,18 @@ const createBundleSession = (loaded: LoadedLocalVizProjectBundle) => {
     resolvedArtifacts: loaded.resolvedArtifacts,
     seed: "cli-bundle-seed",
   });
+};
+
+const createBundleRuntimeInputs = (
+  loaded: LoadedLocalVizProjectBundle,
+  frame: number,
+) => {
+  const audio = sampleProjectAudioFrameSnapshot(
+    loaded.project,
+    loaded.resolvedArtifacts,
+    frame,
+  );
+  return audio === undefined ? {} : { audio };
 };
 
 export const validateExampleProject = (): VizCliOutput => {
@@ -143,6 +170,7 @@ export const inspectBundleFrame = (bundleDirectory: string, frame: number): VizC
     frame,
     registry: componentRegistry,
     nodeRegistry,
+    runtimeInputs: createBundleRuntimeInputs(loaded, frame),
   });
 
   return {
@@ -164,6 +192,8 @@ export const inspectBundleRender = (bundleDirectory: string, frame: number): Viz
     frame,
     registry: componentRegistry,
     nodeRegistry,
+    runtimeInputProvider: (requestedFrame) =>
+      createBundleRuntimeInputs(loaded, requestedFrame),
   });
 
   return {
@@ -457,6 +487,231 @@ const parseComponentNameArg = (argv: string[]): string => {
   return rawValue;
 };
 
+const parseOptionalStringArg = (
+  argv: string[],
+  flag: string,
+): string | undefined => {
+  const flagIndex = argv.findIndex((entry) => entry === flag);
+  if (flagIndex === -1) {
+    return undefined;
+  }
+  const rawValue = argv[flagIndex + 1];
+  if (!rawValue) {
+    throw new Error(`Missing ${flag} value.`);
+  }
+  return rawValue;
+};
+
+const parseLiveUrlArg = (argv: string[]): string => {
+  return parseOptionalStringArg(argv, "--url") ?? DEFAULT_VIZ_CONTROL_URL;
+};
+
+const parseTransactionArg = (argv: string[]): unknown => {
+  const path = parseOptionalStringArg(argv, "--transaction");
+  if (path === undefined) {
+    throw new Error(
+      "Missing transaction file. Pass --transaction <path-to-json>.",
+    );
+  }
+  return JSON.parse(readFileSync(path, "utf8")) as unknown;
+};
+
+const parseJsonFileArg = (
+  argv: string[],
+  flag: string,
+  label: string,
+): unknown => {
+  const path = parseOptionalStringArg(argv, flag);
+  if (path === undefined) {
+    throw new Error(`Missing ${label}. Pass ${flag} <path-to-json>.`);
+  }
+  return JSON.parse(readFileSync(path, "utf8")) as unknown;
+};
+
+const parseOptionalRevisionArg = (
+  argv: string[],
+): number | undefined => {
+  const value = parseOptionalStringArg(argv, "--expected-revision");
+  if (value === undefined) {
+    return undefined;
+  }
+  const revision = Number(value);
+  if (!Number.isInteger(revision) || revision < 0) {
+    throw new Error("--expected-revision must be a non-negative integer.");
+  }
+  return revision;
+};
+
+const parseOptionalNumberArg = (
+  argv: string[],
+  flag: string,
+  allowZero: boolean,
+): number | undefined => {
+  const raw = parseOptionalStringArg(argv, flag);
+  if (raw === undefined) {
+    return undefined;
+  }
+  const value = Number(raw);
+  if (
+    !Number.isFinite(value) ||
+    (allowZero ? value < 0 : value <= 0)
+  ) {
+    throw new Error(
+      `${flag} must be a ${allowZero ? "non-negative" : "positive"} finite number.`,
+    );
+  }
+  return value;
+};
+
+const createRequestId = (operation: string): string => {
+  const suffix =
+    typeof globalThis.crypto?.randomUUID === "function"
+      ? globalThis.crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  return `viz-dev-${operation}-${suffix}`;
+};
+
+const createLiveRequest = (
+  operation: string,
+  payload: Record<string, unknown> = {},
+): LiveVizControlRequest => ({
+  protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
+  id: createRequestId(operation),
+  operation,
+  ...payload,
+});
+
+const createHelpOutput = (): VizCliOutput => ({
+  ok: true,
+  command: "help",
+  payload: {
+    executable: "viz-dev",
+    commands: {
+      live: [
+        "live discover [--url <origin>]",
+        "live snapshot [--url <origin>]",
+        "live project [--url <origin>]",
+        "live components [--url <origin>]",
+        "live graphs [--graph-id <id>] [--url <origin>]",
+        "live transact --transaction <json-file> [--url <origin>]",
+        "live undo|redo|play|pause [--url <origin>]",
+        "live seek --frame <frame> [--url <origin>]",
+        "live jobs [--url <origin>]",
+        "live job --job-id <id> [--url <origin>]",
+        "live bake-start --request <json-file> [--url <origin>]",
+        "live job-cancel --job-id <id> [--url <origin>]",
+        "live bake-attach --job-id <id> [--expected-revision <revision>] [--url <origin>]",
+      ],
+      local: [
+        "example validate|frame|render|svg",
+        "example bundle-export --out <directory>",
+        "example action-apply --actions <json-file> [--out <directory>]",
+        "bundle validate|frame|render|svg --dir <directory>",
+        "bundle export --dir <directory> --out <directory>",
+        "bundle action-apply --dir <directory> --actions <json-file> [--out <directory>]",
+        "bundle bake-audio --dir <directory> --out <directory> [--asset-id <id>] [--fps <fps>] [--fft-size <size>] [--start <seconds>] [--duration <seconds>]",
+        "component scaffold --id <id> --name <name> --out <file>",
+      ],
+    },
+  },
+});
+
+const runLiveCommand = async (argv: string[]): Promise<VizCliOutput> => {
+  const [action] = argv;
+  const rest = argv.slice(1);
+  const baseUrl = parseLiveUrlArg(rest);
+
+  if (action === "discover") {
+    const bridge = await discoverLiveVizControl({ baseUrl });
+    if (!bridge.ok || !bridge.discovery.editor.connected) {
+      return {
+        ok: false,
+        command: "live discover",
+        payload: {
+          bridge: bridge.discovery,
+          status: bridge.status,
+        },
+      };
+    }
+    const control = await requestLiveVizControl(
+      createLiveRequest("control.discover"),
+      { baseUrl },
+    );
+    return {
+      ok: control.ok,
+      command: "live discover",
+      payload: {
+        bridge: bridge.discovery,
+        control: control.response,
+      },
+    };
+  }
+
+  const operationByAction: Record<string, string> = {
+    snapshot: "control.snapshot",
+    project: "project.inspect",
+    components: "component.inspect",
+    graphs: "graph.inspect",
+    undo: "history.undo",
+    redo: "history.redo",
+    play: "preview.play",
+    pause: "preview.pause",
+    seek: "preview.seek",
+    transact: "transaction.apply",
+    jobs: "job.list",
+    job: "job.inspect",
+    "bake-start": "audio-bake.start",
+    "job-cancel": "job.cancel",
+    "bake-attach": "audio-bake.attach",
+  };
+  const operation = operationByAction[action ?? ""];
+  if (operation === undefined) {
+    throw new Error(`Unknown live command: ${argv.join(" ") || "<empty>"}`);
+  }
+
+  const payload: Record<string, unknown> = {};
+  if (action === "graphs") {
+    const graphId = parseOptionalStringArg(rest, "--graph-id");
+    if (graphId !== undefined) {
+      payload.graphId = graphId;
+    }
+  } else if (action === "seek") {
+    payload.frame = parseFrameArg(rest);
+  } else if (action === "transact") {
+    payload.transaction = parseTransactionArg(rest);
+  } else if (action === "job" || action === "job-cancel") {
+    payload.jobId = parseOptionalStringArg(rest, "--job-id");
+    if (payload.jobId === undefined) {
+      throw new Error("Missing job id. Pass --job-id <id>.");
+    }
+  } else if (action === "bake-start") {
+    payload.request = parseJsonFileArg(
+      rest,
+      "--request",
+      "audio bake request file",
+    );
+  } else if (action === "bake-attach") {
+    payload.jobId = parseOptionalStringArg(rest, "--job-id");
+    if (payload.jobId === undefined) {
+      throw new Error("Missing job id. Pass --job-id <id>.");
+    }
+    const expectedRevision = parseOptionalRevisionArg(rest);
+    if (expectedRevision !== undefined) {
+      payload.expectedRevision = expectedRevision;
+    }
+  }
+
+  const result = await requestLiveVizControl(
+    createLiveRequest(operation, payload),
+    { baseUrl },
+  );
+  return {
+    ok: result.ok,
+    command: `live ${action}`,
+    payload: result.response,
+  };
+};
+
 const parseActionsArg = (argv: string[]): VizProjectAction[] => {
   const actionsFlagIndex = argv.findIndex((entry) => entry === "--actions");
 
@@ -480,8 +735,21 @@ const parseActionsArg = (argv: string[]): VizProjectAction[] => {
   return parsed as VizProjectAction[];
 };
 
-const run = (argv: string[]): VizCliOutput => {
+export const runVizCli = async (argv: string[]): Promise<VizCliOutput> => {
   const [scope, action] = argv;
+
+  if (
+    scope === undefined ||
+    scope === "help" ||
+    scope === "--help" ||
+    scope === "-h"
+  ) {
+    return createHelpOutput();
+  }
+
+  if (scope === "live") {
+    return runLiveCommand(argv.slice(1));
+  }
 
   if (scope === "example" && action === "validate") {
     return validateExampleProject();
@@ -537,6 +805,43 @@ const run = (argv: string[]): VizCliOutput => {
     return applyActionsToBundleProject(parseDirArg(rest), parseActionsArg(rest), parseOptionalOutArg(rest));
   }
 
+  if (scope === "bundle" && action === "bake-audio") {
+    const rest = argv.slice(2);
+    const sourceAssetId = parseOptionalStringArg(rest, "--asset-id");
+    const fps = parseOptionalNumberArg(rest, "--fps", false);
+    const fftSize = parseOptionalNumberArg(
+      rest,
+      "--fft-size",
+      false,
+    );
+    const startSeconds = parseOptionalNumberArg(
+      rest,
+      "--start",
+      true,
+    );
+    const durationSeconds = parseOptionalNumberArg(
+      rest,
+      "--duration",
+      true,
+    );
+    const result = await bakeLocalBundleAudio({
+      sourceBundleDirectory: parseDirArg(rest),
+      outputBundleDirectory: parseOutArg(rest),
+      ...(sourceAssetId === undefined ? {} : { sourceAssetId }),
+      ...(fps === undefined ? {} : { fps }),
+      ...(fftSize === undefined ? {} : { fftSize }),
+      ...(startSeconds === undefined ? {} : { startSeconds }),
+      ...(durationSeconds === undefined
+        ? {}
+        : { durationSeconds }),
+    });
+    return {
+      ok: result.ok,
+      command: "bundle bake-audio",
+      payload: result.payload,
+    };
+  }
+
   if (scope === "component" && action === "scaffold") {
     const rest = argv.slice(2);
     const outputFile = parseOutArg(rest);
@@ -556,9 +861,9 @@ const run = (argv: string[]): VizCliOutput => {
   throw new Error(`Unknown command: ${argv.join(" ") || "<empty>"}`);
 };
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const main = async (): Promise<void> => {
   try {
-    const output = run(process.argv.slice(2));
+    const output = await runVizCli(process.argv.slice(2));
     printJson(output);
     process.exit(output.ok ? 0 : 1);
   } catch (error) {
@@ -572,4 +877,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     });
     process.exit(1);
   }
+};
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  void main();
 }

@@ -1,10 +1,8 @@
-import { v } from '../config/config';
-import { createComponent } from '../config/create-component';
+import { defineVizComponentAuthoring, v } from './schema.js';
 
-const FeatureExtractionBars = createComponent({
-  name: 'Feature Extraction Bars',
-  description:
-    'Demo of five feature channels (kick, snare, bass, melody, percussion) as animated bars.',
+export const featureExtractionBarsAuthoring = defineVizComponentAuthoring({
+  componentId: 'feature-extraction-bars',
+  compatibility: 'render-safe',
   config: v.config({
     kick: v.number({
       label: 'Kick',
@@ -55,5 +53,3 @@ const FeatureExtractionBars = createComponent({
     percussion: 'percussion-adaptive',
   },
 });
-
-export default FeatureExtractionBars;

@@ -1,5 +1,8 @@
 # Bake Job Ownership And Lifecycle Model
 
+Status: hosted lifecycle remains the target model; the compatible local
+in-memory lifecycle is implemented for audio feature bakes.
+
 ## Purpose
 
 This document defines how hosted bake jobs should work in Viz Cloud.
@@ -408,6 +411,21 @@ That means:
 
 The lifecycle here is for managed product operation, not for forcing all bake
 flows into the cloud.
+
+The local implementation now proves this split:
+
+- one observable job service uses `queued`, `validating`, `running`,
+  `succeeded`, `failed`, and `cancelled`
+- requests carry actor and explicit source identity
+- progress snapshots are immutable and subscribable
+- cancellation is cooperative and terminal
+- a source-content mismatch fails closed
+- successful output is inspectable before project mutation
+- attaching the output is a separate revision-safe project transaction
+- the editor host, live bridge, CLI, and headless host consume the same service
+
+Cloud persistence and orchestration can therefore implement the lifecycle
+documented here without changing bake request, result, or artifact semantics.
 
 ## Decisions Locked In Here
 

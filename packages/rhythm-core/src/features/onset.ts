@@ -1,10 +1,10 @@
-import { stft } from '../core/stft';
-import { framesToTime } from '../utils/frames';
+import { stft } from '../core/stft.js';
+import { framesToTime } from '../utils/frames.js';
 import {
   AnalysisOptions,
   OnsetStrengthOptions,
   OnsetStrengthResult,
-} from '../utils/types';
+} from '../utils/types.js';
 
 export const DEFAULT_ONSET_OPTIONS: Required<
   Pick<
@@ -36,8 +36,8 @@ export function onsetStrength(
     nFft,
     hopLength,
     winLength,
-    window: options.window,
-    center: options.center,
+    ...(options.window === undefined ? {} : { window: options.window }),
+    ...(options.center === undefined ? {} : { center: options.center }),
   };
   const { real, imag, shape } = stft(y, stftOptions);
   const [nBins, nFrames] = shape;
@@ -52,10 +52,10 @@ export function onsetStrength(
     let count = 0;
 
     for (let bin = 0; bin < nBins; bin += 1) {
-      const r = real[currentOffset + bin];
-      const im = imag[currentOffset + bin];
-      const pr = real[prevOffset + bin];
-      const pim = imag[prevOffset + bin];
+      const r = real[currentOffset + bin]!;
+      const im = imag[currentOffset + bin]!;
+      const pr = real[prevOffset + bin]!;
+      const pim = imag[prevOffset + bin]!;
       const mag = Math.hypot(r, im);
       const prevMag = Math.hypot(pr, pim);
       const diff = mag - prevMag;
@@ -73,7 +73,7 @@ export function onsetStrength(
       if (count > 0 && scratch) {
         const values = Array.from(scratch.subarray(0, count));
         values.sort((a, b) => a - b);
-        value = values[Math.floor(values.length / 2)];
+        value = values[Math.floor(values.length / 2)]!;
       }
     } else {
       value = nBins > 0 ? sum / nBins : 0;

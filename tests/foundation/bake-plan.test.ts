@@ -12,6 +12,7 @@ describe("Viz bake planning", () => {
         kind: "audio-feature-timeline",
         sourceAssetId: "asset-audio-main",
         profile: "standard",
+        fps: exampleProjectDocument.timeline.fps,
       },
     ]);
   });

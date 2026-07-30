@@ -2,6 +2,7 @@ import type {
   VizFramePlanIssue,
   VizLayerRenderPlanEntry,
   VizRenderPlan,
+  VizRuntimeInputs,
 } from "@viz-engine/contracts";
 import { createVizFramePlan } from "./frame-plan.js";
 import type { VizComponentRegistry } from "./component-registry.js";
@@ -18,6 +19,8 @@ export interface CreateVizRenderPlanOptions {
   nodeRegistry?: VizNodeRegistry;
   inputValues?: VizRuntimeFrameInputValues;
   graphInputValues?: VizRuntimeGraphInputValues;
+  runtimeInputs?: VizRuntimeInputs;
+  runtimeInputProvider?: (frame: number) => VizRuntimeInputs;
 }
 
 const createRenderIssue = (
@@ -63,6 +66,8 @@ export const createVizRenderPlan = ({
   nodeRegistry,
   inputValues,
   graphInputValues,
+  runtimeInputs,
+  runtimeInputProvider,
 }: CreateVizRenderPlanOptions): VizRenderPlan => {
   const framePlanCache = new Map<number, ReturnType<typeof createVizFramePlan>>();
   const getFramePlan = (requestedFrame: number) => {
@@ -73,6 +78,8 @@ export const createVizRenderPlan = ({
       return cached;
     }
 
+    const requestedRuntimeInputs =
+      runtimeInputProvider?.(normalizedFrame) ?? runtimeInputs;
     const nextFramePlan = createVizFramePlan({
       session,
       frame: normalizedFrame,
@@ -80,6 +87,9 @@ export const createVizRenderPlan = ({
       ...(nodeRegistry === undefined ? {} : { nodeRegistry }),
       ...(inputValues === undefined ? {} : { inputValues }),
       ...(graphInputValues === undefined ? {} : { graphInputValues }),
+      ...(requestedRuntimeInputs === undefined
+        ? {}
+        : { runtimeInputs: requestedRuntimeInputs }),
     });
     framePlanCache.set(normalizedFrame, nextFramePlan);
     return nextFramePlan;

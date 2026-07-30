@@ -38,17 +38,38 @@ const createComponentTemplate = ({
   exportName: string;
 }) => {
   return `import type {
+  VizComponentAuthoring,
   VizComponentImplementation,
   VizRenderGroupNode,
   VizRenderRectNode,
 } from "@viz-engine/contracts";
 import { asNumber, asString } from "./shared.js";
 
+const ${exportName}Authoring = {
+  schemaVersion: 1,
+  componentId: "${componentId}",
+  compatibility: "render-safe",
+  settings: {
+    kind: "group",
+    label: "Settings",
+    fields: {
+      color: {
+        kind: "color",
+        label: "Color",
+        description: "Primary visual color.",
+        defaultValue: "#88f3ff",
+      },
+    },
+  },
+} satisfies VizComponentAuthoring;
+
 export const ${exportName}: VizComponentImplementation = {
   id: "${componentId}",
   name: "${componentName}",
   rendererFamily: "three",
   description: "Describe what this visual does.",
+  implementationVersion: "1.0.0",
+  authoring: ${exportName}Authoring,
   inputs: [
     {
       key: "intensity",
@@ -137,9 +158,9 @@ export const createVizComponentScaffold = ({
     exportName,
     issues: [],
     nextSteps: [
-      `Import ${exportName} into packages/viz-components-core/src/registry.ts`,
-      `Add ${exportName} to the coreComponents array in packages/viz-components-core/src/registry.ts`,
-      "Wire the new component into a project layer and validate it through the runtime path.",
+      `Add ${exportName} to the intended Viz capability pack`,
+      "Compose that capability pack into the target session host",
+      "Wire the component into a project layer and validate it through the runtime and editor catalog paths.",
     ],
   };
 };

@@ -4,6 +4,7 @@ import type {
   VizRenderRectNode,
   VizRenderTextNode,
 } from "@viz-engine/contracts";
+import { featureExtractionBarsAuthoring } from "./authoring/feature-extraction-bars.js";
 import { asNumber } from "./shared.js";
 
 const CHANNELS = [
@@ -18,6 +19,8 @@ export const featureExtractionBarsComponent: VizComponentImplementation = {
   id: "feature-extraction-bars",
   name: "Feature Extraction Bars",
   rendererFamily: "three",
+  implementationVersion: "1.0.0",
+  authoring: featureExtractionBarsAuthoring,
   description:
     "Runtime-backed port of the preserved editor's five feature channel visual.",
   inputs: CHANNELS.map((channel) => ({

@@ -2,6 +2,7 @@ import type {
   VizComponentImplementation,
   VizRenderThreeProgramNode,
 } from "@viz-engine/contracts";
+import { simpleCubeAuthoring } from "./authoring/simple-cube.js";
 import { asNumber, asString } from "./shared.js";
 
 export const simpleCubeComponent: VizComponentImplementation = {
@@ -9,6 +10,8 @@ export const simpleCubeComponent: VizComponentImplementation = {
   name: "Simple Cube",
   rendererFamily: "three",
   description: "Deterministic package-runtime rotating cube scene.",
+  implementationVersion: "1.0.0",
+  authoring: simpleCubeAuthoring,
   render: ({ frameContext, layer, settings }) => {
     const color = asString(settings.color, "#FF00FF");
     const size = Math.max(0.1, asNumber(settings.size, 1.5));

@@ -1,10 +1,8 @@
-import { v } from '../config/config';
-import { createComponent } from '../config/create-component';
+import { defineVizComponentAuthoring, settingCondition, v } from './schema.js';
 
-const ParticleSystem = createComponent({
-  name: 'Particle System',
-  description:
-    'GPU-accelerated particle system with physics and color interpolation',
+export const particleSystemAuthoring = defineVizComponentAuthoring({
+  componentId: 'particle-system',
+  compatibility: 'render-safe',
   config: v.config({
     appearance: v.group(
       { label: 'Appearance' },
@@ -66,7 +64,7 @@ const ParticleSystem = createComponent({
           min: 0,
           max: 50,
           step: 0.1,
-          visibleIf: (allValues) => allValues.physics.useGravity === true,
+          visibleWhen: settingCondition('physics.useGravity', 'equals', true),
         }),
         initialSpeed: v.number({
           label: 'Initial Speed',
@@ -136,5 +134,3 @@ const ParticleSystem = createComponent({
     ),
   }),
 });
-
-export default ParticleSystem;

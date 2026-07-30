@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@viz-engine/actions": "workspace:*",
+    "@viz-engine/bake": "workspace:*",
     "@viz-engine/components-core": "workspace:*",
     "@viz-engine/contracts": "workspace:*",
     "@viz-engine/example-projects": "workspace:*",

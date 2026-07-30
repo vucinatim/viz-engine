@@ -2,6 +2,7 @@ import type {
   VizComponentImplementation,
   VizRenderThreeProgramNode,
 } from "@viz-engine/contracts";
+import { instancedSupercubeAuthoring } from "./authoring/instanced-supercube.js";
 import { asNumber, asString } from "./shared.js";
 
 const clamp01 = (value: number): number =>
@@ -47,6 +48,8 @@ export const instancedSupercubeComponent: VizComponentImplementation = {
   id: "instanced-supercube",
   name: "Instanced Supercube",
   rendererFamily: "three",
+  implementationVersion: "1.0.0",
+  authoring: instancedSupercubeAuthoring,
   description:
     "Deterministic retained instanced hollow-cube lattice with explosion response.",
   render: ({

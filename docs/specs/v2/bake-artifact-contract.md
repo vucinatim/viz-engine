@@ -1,5 +1,8 @@
 # V2 Bake Artifact Contract
 
+Status: audio-feature-timeline family implemented; other artifact families
+remain planned.
+
 ## Purpose
 
 VizEngine V2 needs a first-class baking system.
@@ -69,6 +72,18 @@ The deeper contract now lives here:
 
 - [Audio Feature Timeline Spec](./audio-feature-timeline-spec.md)
 
+The implemented standard artifact also carries:
+
+- explicit source content and window identity
+- centered video-frame alignment
+- DSP pipeline and decoder identity
+- typed scalar descriptors and values
+- packed full analyzer-compatible spectrum and waveform frames
+- deterministic portable base64 encoding
+
+The runtime validates descriptor/payload consistency before sampling. Invalid
+or truncated dense data is rejected instead of being treated as partial truth.
+
 ## Simulation Checkpoints
 
 For heavier physics or simulation systems, V2 should support checkpoint baking.
@@ -83,6 +98,10 @@ This allows render mode to:
 
 Baking should be owned by explicit `viz-bake` contracts, not hidden inside
 editor-only helpers.
+
+This boundary is now real for audio. Browser and Node hosts only decode source
+media and resolve assets; `@viz-engine/bake` owns validation, execution
+identity, progress, cancellation, artifact construction, and job semantics.
 
 ## No Legacy Rule
 

@@ -1,10 +1,8 @@
-import { v } from '../config/config';
-import { createComponent } from '../config/create-component';
+import { defineVizComponentAuthoring, settingCondition, v } from './schema.js';
 
-const MorphShapes = createComponent({
-  name: 'Morph Shapes',
-  description:
-    'Instanced morph between two hardcoded shapes with explosion overlay',
+export const morphShapesAuthoring = defineVizComponentAuthoring({
+  componentId: 'morph-shapes',
+  compatibility: 'render-safe',
   config: v.config({
     morphT: v.number({
       label: 'Morph',
@@ -48,7 +46,7 @@ const MorphShapes = createComponent({
       description: 'Number of points for model shapes',
       defaultValue: 15000,
       min: 1,
-      max: 10000,
+      max: 60000,
       step: 10,
     }),
     modelEvenness: v.number({
@@ -115,20 +113,32 @@ const MorphShapes = createComponent({
           description:
             'Optional TTF font URL (CORS-enabled, e.g., Google Fonts TTF) for custom text',
           defaultValue: '',
-          visibleIf: (vals) => vals.shapeASettings?.shape === 'custom-text',
+          visibleWhen: settingCondition(
+            'shapeASettings.shape',
+            'equals',
+            'custom-text',
+          ),
         }),
         modelUrl: v.file({
           label: 'Model (.glb/.gltf)',
           description: 'Path or URL when shape is set to model',
           defaultValue: '',
           allowedExtensions: ['.glb', '.gltf'],
-          visibleIf: (vals) => vals.shapeASettings?.shape === 'model',
+          visibleWhen: settingCondition(
+            'shapeASettings.shape',
+            'equals',
+            'model',
+          ),
         }),
         text: v.text({
           label: 'Custom Text',
           description: 'Shown when shape is custom-text',
           defaultValue: '',
-          visibleIf: (vals) => vals.shapeASettings?.shape === 'custom-text',
+          visibleWhen: settingCondition(
+            'shapeASettings.shape',
+            'equals',
+            'custom-text',
+          ),
         }),
         textSize: v.number({
           label: 'Text Size',
@@ -137,7 +147,11 @@ const MorphShapes = createComponent({
           min: 0.1,
           max: 10,
           step: 0.1,
-          visibleIf: (vals) => vals.shapeASettings?.shape === 'custom-text',
+          visibleWhen: settingCondition(
+            'shapeASettings.shape',
+            'equals',
+            'custom-text',
+          ),
         }),
         textDepth: v.number({
           label: 'Text Depth',
@@ -146,7 +160,11 @@ const MorphShapes = createComponent({
           min: 0.01,
           max: 2,
           step: 0.01,
-          visibleIf: (vals) => vals.shapeASettings?.shape === 'custom-text',
+          visibleWhen: settingCondition(
+            'shapeASettings.shape',
+            'equals',
+            'custom-text',
+          ),
         }),
         position: v.vector3({
           label: 'Position',
@@ -180,20 +198,32 @@ const MorphShapes = createComponent({
           description:
             'Optional TTF font URL (CORS-enabled, e.g., Google Fonts TTF) for custom text',
           defaultValue: '',
-          visibleIf: (vals) => vals.shapeBSettings?.shape === 'custom-text',
+          visibleWhen: settingCondition(
+            'shapeBSettings.shape',
+            'equals',
+            'custom-text',
+          ),
         }),
         modelUrl: v.file({
           label: 'Model (.glb/.gltf)',
           description: 'Path or URL when shape is set to model',
           defaultValue: '',
           allowedExtensions: ['.glb', '.gltf'],
-          visibleIf: (vals) => vals.shapeBSettings?.shape === 'model',
+          visibleWhen: settingCondition(
+            'shapeBSettings.shape',
+            'equals',
+            'model',
+          ),
         }),
         text: v.text({
           label: 'Custom Text',
           description: 'Shown when shape is custom-text',
           defaultValue: '',
-          visibleIf: (vals) => vals.shapeBSettings?.shape === 'custom-text',
+          visibleWhen: settingCondition(
+            'shapeBSettings.shape',
+            'equals',
+            'custom-text',
+          ),
         }),
         textSize: v.number({
           label: 'Text Size',
@@ -202,7 +232,11 @@ const MorphShapes = createComponent({
           min: 0.1,
           max: 10,
           step: 0.1,
-          visibleIf: (vals) => vals.shapeBSettings?.shape === 'custom-text',
+          visibleWhen: settingCondition(
+            'shapeBSettings.shape',
+            'equals',
+            'custom-text',
+          ),
         }),
         textDepth: v.number({
           label: 'Text Depth',
@@ -211,7 +245,11 @@ const MorphShapes = createComponent({
           min: 0.01,
           max: 2,
           step: 0.01,
-          visibleIf: (vals) => vals.shapeBSettings?.shape === 'custom-text',
+          visibleWhen: settingCondition(
+            'shapeBSettings.shape',
+            'equals',
+            'custom-text',
+          ),
         }),
         position: v.vector3({
           label: 'Position',
@@ -233,5 +271,3 @@ const MorphShapes = createComponent({
     ),
   }),
 });
-
-export default MorphShapes;

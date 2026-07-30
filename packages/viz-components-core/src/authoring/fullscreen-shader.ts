@@ -1,16 +1,15 @@
-import { fullscreenShaderNames } from '@viz-engine/components-core';
-import { v } from '../config/config';
-import { createComponent } from '../config/create-component';
+import { fullscreenShaderNames } from '../fullscreen-shader-catalog.js';
+import { defineVizComponentAuthoring, settingCondition, v } from './schema.js';
 
-const FullscreenShader = createComponent({
-  name: 'Fullscreen Shader',
-  description: 'Audio-reactive fullscreen GLSL shaders',
+export const fullscreenShaderAuthoring = defineVizComponentAuthoring({
+  componentId: 'fullscreen-shader',
+  compatibility: 'render-safe',
   config: v.config({
     shader: v.select({
       label: 'Shader',
       description: 'Choose shader effect',
       defaultValue: 'Radial Ripple Grid',
-      options: fullscreenShaderNames,
+      options: [...fullscreenShaderNames],
     }),
     color: v.color({
       label: 'Primary Color',
@@ -48,7 +47,7 @@ const FullscreenShader = createComponent({
       min: -2,
       max: 2,
       step: 0.01,
-      visibleIf: (config) => config.shader !== 'Neon Grid',
+      visibleWhen: settingCondition('shader', 'not-equals', 'Neon Grid'),
     }),
     offsetY: v.number({
       label: 'Offset Y',
@@ -57,7 +56,7 @@ const FullscreenShader = createComponent({
       min: -2,
       max: 2,
       step: 0.01,
-      visibleIf: (config) => config.shader !== 'Neon Grid',
+      visibleWhen: settingCondition('shader', 'not-equals', 'Neon Grid'),
     }),
     seed: v.number({
       label: 'Seed',
@@ -66,7 +65,7 @@ const FullscreenShader = createComponent({
       min: 0,
       max: 1000,
       step: 1,
-      visibleIf: (config) => config.shader === 'Neon Grid',
+      visibleWhen: settingCondition('shader', 'equals', 'Neon Grid'),
     }),
     scanIntensity: v.number({
       label: 'Scan Intensity',
@@ -75,7 +74,7 @@ const FullscreenShader = createComponent({
       min: 0,
       max: 2,
       step: 0.1,
-      visibleIf: (config) => config.shader === 'Neon Grid',
+      visibleWhen: settingCondition('shader', 'equals', 'Neon Grid'),
     }),
     waveIntensity: v.number({
       label: 'Wave Intensity',
@@ -84,9 +83,7 @@ const FullscreenShader = createComponent({
       min: 0,
       max: 2,
       step: 0.1,
-      visibleIf: (config) => config.shader === 'Neon Grid',
+      visibleWhen: settingCondition('shader', 'equals', 'Neon Grid'),
     }),
   }),
 });
-
-export default FullscreenShader;

@@ -190,4 +190,179 @@ describe("Viz editor session foundation", () => {
       rmSync(bundleDirectory, { recursive: true, force: true });
     }
   });
+
+  it("commits revision-safe transactions atomically with durable attribution", () => {
+    const session = createVizEditorSession({
+      project: exampleProjectDocument,
+      actor: { kind: "user", id: "human" },
+    });
+
+    const result = session.transact(
+      {
+        id: "agent-transaction",
+        expectedRevision: 0,
+        actions: [
+          {
+            type: "layer.settings.set",
+            payload: {
+              layerId: "layer-bars",
+              path: "gain",
+              value: 0.35,
+            },
+          },
+          {
+            type: "layer.remove",
+            payload: {
+              layerId: "missing-layer",
+            },
+          },
+        ],
+      },
+      {
+        actor: { kind: "agent", id: "codex" },
+      },
+    );
+
+    expect(result.status).toBe("rejected");
+    expect(result.revision).toBe(0);
+    expect(session.getSnapshot().actionHistory).toHaveLength(0);
+    expect(
+      session.getWorkingProject().layers.find(
+        (layer) => layer.id === "layer-bars",
+      )?.settings?.gain,
+    ).not.toBe(0.35);
+
+    const applied = session.transact(
+      {
+        id: "agent-transaction",
+        expectedRevision: 0,
+        actions: [
+          {
+            type: "layer.settings.set",
+            payload: {
+              layerId: "layer-bars",
+              path: "gain",
+              value: 0.35,
+            },
+          },
+          {
+            type: "layer.settings.set",
+            payload: {
+              layerId: "layer-bloom",
+              path: "intensity",
+              value: 0.45,
+            },
+          },
+        ],
+      },
+      {
+        actor: { kind: "agent", id: "codex" },
+      },
+    );
+
+    expect(applied).toMatchObject({
+      ok: true,
+      status: "applied",
+      transactionId: "agent-transaction",
+      baseRevision: 0,
+      revision: 1,
+    });
+    expect(applied.actionEnvelopes).toHaveLength(2);
+    expect(
+      applied.actionEnvelopes.every(
+        (entry) =>
+          entry.transactionId === "agent-transaction" &&
+          entry.actor.kind === "agent" &&
+          entry.actor.id === "codex",
+      ),
+    ).toBe(true);
+
+    session.undo();
+    expect(session.getSnapshot().revision).toBe(2);
+    expect(
+      session.getWorkingProject().layers.find(
+        (layer) => layer.id === "layer-bars",
+      )?.settings?.gain,
+    ).not.toBe(0.35);
+  });
+
+  it("keeps dry runs and conflicts side-effect free", () => {
+    const session = createVizEditorSession({
+      project: exampleProjectDocument,
+    });
+    let notifications = 0;
+    const unsubscribe = session.subscribe(() => {
+      notifications += 1;
+    });
+
+    const dryRun = session.transact({
+      expectedRevision: 0,
+      dryRun: true,
+      actions: [
+        {
+          type: "layer.settings.set",
+          payload: {
+            layerId: "layer-background",
+            path: "color",
+            value: "#abcdef",
+          },
+        },
+      ],
+    });
+    expect(dryRun.status).toBe("dry-run");
+    expect(dryRun.revision).toBe(0);
+    expect(
+      dryRun.candidateProject.layers.find(
+        (layer) => layer.id === "layer-background",
+      )?.settings?.color,
+    ).toBe("#abcdef");
+
+    const conflict = session.transact({
+      expectedRevision: 1,
+      actions: [
+        {
+          type: "layer.settings.set",
+          payload: {
+            layerId: "layer-background",
+            path: "color",
+            value: "#abcdef",
+          },
+        },
+      ],
+    });
+    expect(conflict.status).toBe("conflict");
+    expect(conflict.conflict).toEqual({
+      expectedRevision: 1,
+      actualRevision: 0,
+    });
+    expect(session.getSnapshot().revision).toBe(0);
+    expect(session.getSnapshot().actionHistory).toHaveLength(0);
+    expect(notifications).toBe(0);
+
+    unsubscribe();
+  });
+
+  it("loads a new project without replacing the subscribed session object", () => {
+    const session = createVizEditorSession({
+      project: exampleProjectDocument,
+    });
+    const observedProjectIds: string[] = [];
+    session.subscribe((snapshot) => {
+      observedProjectIds.push(snapshot.workingProject.projectId);
+    });
+    const loadedProject = structuredClone(exampleProjectDocument);
+    loadedProject.projectId = "project-loaded-in-place";
+    loadedProject.name = "Loaded In Place";
+
+    const snapshot = session.loadProject(loadedProject);
+
+    expect(snapshot.revision).toBe(1);
+    expect(session.getSourceProject().projectId).toBe(
+      "project-loaded-in-place",
+    );
+    expect(session.getWorkingProject().projectId).toBe(
+      "project-loaded-in-place",
+    );
+    expect(observedProjectIds).toEqual(["project-loaded-in-place"]);
+  });
 });

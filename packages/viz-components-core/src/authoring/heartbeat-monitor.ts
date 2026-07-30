@@ -1,9 +1,8 @@
-import { v } from '../config/config';
-import { createComponent } from '../config/create-component';
+import { defineVizComponentAuthoring, v } from './schema.js';
 
-const HeartbeatMonitor = createComponent({
-  name: 'Heartbeat Monitor',
-  description: 'Draws a scrolling line graph, like an ECG.',
+export const heartbeatMonitorAuthoring = defineVizComponentAuthoring({
+  componentId: 'heartbeat-monitor',
+  compatibility: 'render-safe',
   config: v.config({
     yPosition: v.number({
       label: 'Y Position',
@@ -26,5 +25,3 @@ const HeartbeatMonitor = createComponent({
     }),
   }),
 });
-
-export default HeartbeatMonitor;

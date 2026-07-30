@@ -1,9 +1,8 @@
-import { v } from '../config/config';
-import { createComponent } from '../config/create-component';
+import { defineVizComponentAuthoring, v } from './schema.js';
 
-const SimpleCube = createComponent({
-  name: 'Simple Cube',
-  description: 'A simple 3D cube visualization',
+export const simpleCubeAuthoring = defineVizComponentAuthoring({
+  componentId: 'simple-cube',
+  compatibility: 'render-safe',
   config: v.config({
     color: v.color({
       label: 'Cube Color',
@@ -36,5 +35,3 @@ const SimpleCube = createComponent({
     }),
   }),
 });
-
-export default SimpleCube;

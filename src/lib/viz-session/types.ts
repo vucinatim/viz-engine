@@ -4,6 +4,7 @@ import type {
   VizLayerRenderPlanEntry,
   VizMaterializedAsset,
   VizProjectDocument,
+  VizRuntimeAudioFrameSnapshot,
 } from '@viz-engine/contracts';
 import type {
   VizEditorAudioAnalyzerState,
@@ -29,12 +30,21 @@ export interface VizSessionRuntimePreviewFrame {
   mode: VizSessionRuntimePreviewMode;
 }
 
-export interface VizSessionRuntimePreviewAudioFrameData {
-  frequencyData: Uint8Array;
-  timeDomainData: Uint8Array;
-  sampleRate: number;
-  fftSize: number;
-}
+export type VizSessionRuntimePreviewAudioFrameData = Pick<
+  VizRuntimeAudioFrameSnapshot,
+  'frequencyData' | 'timeDomainData' | 'sampleRate' | 'fftSize'
+> &
+  Partial<
+    Pick<
+      VizRuntimeAudioFrameSnapshot,
+      | 'minDecibels'
+      | 'maxDecibels'
+      | 'provenance'
+      | 'sourceAssetId'
+      | 'artifactId'
+      | 'artifactFrame'
+    >
+  >;
 
 export interface VizSessionRuntimePreviewError {
   message: string;

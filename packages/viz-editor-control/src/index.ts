@@ -1,94 +1,97 @@
-import { coreComponents, createCoreComponentRegistry } from "@viz-engine/components-core";
+import type {
+  VizAudioFeatureBakeJobRecord,
+  VizAudioFeatureBakeJobRequest,
+} from "@viz-engine/bake";
 import type {
   VizActionActor,
+  VizCapabilityPackManifest,
+  VizComponentAuthoring,
+  VizComponentRegistry,
   VizGraphEvaluationIssue,
   VizGraphEvaluationResult,
   VizGraphId,
+  VizJobId,
   VizProjectAction,
   VizProjectDocument,
+  VizProjectTransaction,
   VizResolvedArtifact,
   VizResolvedAsset,
 } from "@viz-engine/contracts";
-import { exampleProjectDocument, exampleResolvedArtifacts, exampleResolvedAssets } from "@viz-engine/example-projects";
 import {
-  createVizEditorAudioSessionController,
-  createVizEditorSession,
-  createVizEditorTransportController,
-  type VizEditorAudioAnalyzerState,
-  type VizEditorAudioSource,
-  type VizEditorAudioSessionController,
-  type VizEditorSession,
-  type VizEditorTransportController,
+  exampleProjectDocument,
+  exampleResolvedArtifacts,
+  exampleResolvedAssets,
+} from "@viz-engine/example-projects";
+import type {
+  VizEditorAudioAnalyzerState,
+  VizEditorAudioSource,
+  VizEditorSessionMutationResult,
 } from "@viz-engine/editor-session";
-import { createCoreNodeRegistry } from "@viz-engine/nodes-core";
 import { renderVizRenderPlanToSvgMarkup } from "@viz-engine/renderer-svg";
 import {
   createVizFramePlan,
   createVizRenderPlan,
   createVizRuntimeSession,
+  createVizStandardGraphRuntimeInputValues,
   evaluateVizGraphs,
+  sampleProjectAudioFrameSnapshot,
   type VizGraphRuntimeCheckpoint,
+  type VizNodeRegistry,
   validateProjectDocument,
 } from "@viz-engine/runtime";
+import {
+  createVizSessionHost,
+  type VizSessionHost,
+  type VizSessionHostSnapshot,
+  type VizSessionProjectResources,
+  type VizSessionSource,
+} from "./host.js";
 
-export interface VizEditorControlSource {
-  kind: "example" | "bundle" | "memory";
-  label: string;
-  bundleDirectory?: string;
-}
+export * from "./host.js";
+export * from "./protocol.js";
+export * from "./request-handler.js";
 
-export interface VizEditorControlProjectResources {
-  project: VizProjectDocument;
-  resolvedAssets: VizResolvedAsset[];
-  resolvedArtifacts: VizResolvedArtifact[];
-  source: VizEditorControlSource;
-}
-
-export interface VizEditorGraphSummary {
+export interface VizGraphSummary {
   graphId: VizGraphId;
   name: string;
   nodeCount: number;
   outputKeys: string[];
 }
 
-export interface VizEditorComponentSummary {
+export interface VizComponentSummary {
   componentId: string;
   name: string;
   rendererFamily: string;
   description: string | undefined;
+  implementationVersion: string | undefined;
+  compatibility: VizComponentAuthoring["compatibility"] | undefined;
+  capabilityPack: VizCapabilityPackManifest | undefined;
+  authoring: VizComponentAuthoring | undefined;
   inputCount: number;
   inputKeys: string[];
 }
 
-export interface VizEditorControlSnapshot {
-  source: VizEditorControlSource;
-  session: ReturnType<VizEditorSession["getSnapshot"]>;
-  transport: ReturnType<VizEditorTransportController["getState"]>;
-  audioSession: ReturnType<VizEditorAudioSessionController["getState"]>;
-  audioDiagnostics: ReturnType<VizEditorAudioSessionController["getDiagnostics"]>;
-  graphSummaries: VizEditorGraphSummary[];
-  resourceCounts: {
-    assets: number;
-    artifacts: number;
-  };
+export interface VizControlSnapshot extends VizSessionHostSnapshot {
+  graphSummaries: VizGraphSummary[];
+  jobSummaries: VizControlJobSummary[];
 }
 
-export interface VizEditorControlFrameInspection {
-  source: VizEditorControlSource;
+export interface VizControlFrameInspection {
+  source: VizSessionSource;
   revision: number;
   frame: number;
   framePlan: ReturnType<typeof createVizFramePlan>;
 }
 
-export interface VizEditorControlRenderInspection {
-  source: VizEditorControlSource;
+export interface VizControlRenderInspection {
+  source: VizSessionSource;
   revision: number;
   frame: number;
   renderPlan: ReturnType<typeof createVizRenderPlan>;
 }
 
-export interface VizEditorControlDebugSnapshot {
-  source: VizEditorControlSource;
+export interface VizControlDebugSnapshot {
+  source: VizSessionSource;
   revision: number;
   frame: number;
   framePlan: ReturnType<typeof createVizFramePlan>;
@@ -96,25 +99,25 @@ export interface VizEditorControlDebugSnapshot {
   svg: string;
 }
 
-export interface VizEditorControlMutationResult {
+export interface VizControlMutationResult {
   ok: boolean;
-  snapshot: VizEditorControlSnapshot;
-  actionResult: ReturnType<VizEditorSession["applyActions"]>;
+  snapshot: VizControlSnapshot;
+  transactionResult: VizEditorSessionMutationResult;
 }
 
-export interface VizEditorProjectInspection {
-  source: VizEditorControlSource;
+export interface VizProjectInspection {
+  source: VizSessionSource;
   revision: number;
   project: VizProjectDocument;
   validation: ReturnType<typeof validateProjectDocument>;
   assets: VizResolvedAsset[];
   artifacts: VizResolvedArtifact[];
-  issues: VizEditorControlSnapshot["session"]["issues"];
-  actionHistory: VizEditorControlSnapshot["session"]["actionHistory"];
+  issues: VizControlSnapshot["session"]["issues"];
+  actionHistory: VizControlSnapshot["session"]["actionHistory"];
 }
 
-export interface VizEditorGraphRuntimeInspection {
-  source: VizEditorControlSource;
+export interface VizGraphRuntimeInspection {
+  source: VizSessionSource;
   revision: number;
   frame: number;
   graphs: Array<{
@@ -127,59 +130,112 @@ export interface VizEditorGraphRuntimeInspection {
   }>;
 }
 
-export interface CreateVizEditorControlOptions {
-  actor?: VizActionActor;
-  initialProject?: VizEditorControlProjectResources;
+export interface VizControlJobSummary {
+  id: VizJobId;
+  kind: string;
+  status: VizAudioFeatureBakeJobRecord["status"];
+  requestedBy: VizActionActor;
+  requestedAt: string;
+  updatedAt: string;
+  inputIdentity?: string;
+  progress?: VizAudioFeatureBakeJobRecord["progress"];
+  outputArtifactId?: string;
+  failure?: VizAudioFeatureBakeJobRecord["failure"];
 }
 
-export interface VizEditorControl {
-  openExampleProject(): VizEditorControlSnapshot;
-  openProject(resources: VizEditorControlProjectResources): VizEditorControlSnapshot;
-  getSnapshot(): VizEditorControlSnapshot;
+export type VizControlProjectChangeReason =
+  | "load"
+  | "transaction"
+  | "undo"
+  | "redo";
+
+export interface CreateVizControlOptions {
+  actor?: VizActionActor;
+  host?: VizSessionHost;
+  initialProject?: VizSessionProjectResources;
+  componentRegistry?: VizComponentRegistry;
+  nodeRegistry?: VizNodeRegistry;
+  onProjectChange?: (
+    snapshot: VizControlSnapshot,
+    reason: VizControlProjectChangeReason,
+  ) => void;
+}
+
+export interface VizControl {
+  getHost(): VizSessionHost;
+  openExampleProject(): VizControlSnapshot;
+  openProject(resources: VizSessionProjectResources): VizControlSnapshot;
+  getSnapshot(): VizControlSnapshot;
   getWorkingProject(): VizProjectDocument;
-  getProjectResources(): VizEditorControlProjectResources;
-  getUiState(): VizEditorControlSnapshot["session"]["uiState"];
-  inspectProject(): VizEditorProjectInspection;
+  getProjectResources(): VizSessionProjectResources;
+  getUiState(): VizControlSnapshot["session"]["uiState"];
+  inspectProject(): VizProjectInspection;
   setUiState(
     next:
-      | Partial<VizEditorControlSnapshot["session"]["uiState"]>
+      | Partial<VizControlSnapshot["session"]["uiState"]>
       | ((
-          current: VizEditorControlSnapshot["session"]["uiState"],
+          current: VizControlSnapshot["session"]["uiState"],
         ) =>
-          | VizEditorControlSnapshot["session"]["uiState"]
-          | Partial<VizEditorControlSnapshot["session"]["uiState"]>),
-  ): VizEditorControlSnapshot;
-  inspectGraphs(): VizEditorGraphSummary[];
-  inspectComponents(): VizEditorComponentSummary[];
-  inspectGraph(graphId: VizGraphId): NonNullable<VizProjectDocument["graphs"]>[number] | undefined;
-  inspectGraphRuntime(frame?: number): VizEditorGraphRuntimeInspection;
-  applyAction(action: VizProjectAction, options?: { actor?: VizActionActor }): VizEditorControlMutationResult;
-  applyActions(actions: VizProjectAction[], options?: { actor?: VizActionActor }): VizEditorControlMutationResult;
-  undo(): VizEditorControlSnapshot;
-  redo(): VizEditorControlSnapshot;
-  inspectFrame(frame?: number): VizEditorControlFrameInspection;
-  inspectRender(frame?: number): VizEditorControlRenderInspection;
-  createDebugSnapshot(frame?: number): VizEditorControlDebugSnapshot;
-  play(): VizEditorControlSnapshot;
-  pause(): VizEditorControlSnapshot;
-  seekToFrame(frame: number): VizEditorControlSnapshot;
-  advanceBySeconds(seconds: number): VizEditorControlSnapshot;
-  setLoop(loop: boolean): VizEditorControlSnapshot;
-  setTransportDurationFrames(durationFrames: number): VizEditorControlSnapshot;
-  setPreviewMode(mode: VizEditorControlSnapshot["transport"]["mode"]): VizEditorControlSnapshot;
-  attachAudioSource(source: VizEditorAudioSource): VizEditorControlSnapshot;
-  clearAudioSource(): VizEditorControlSnapshot;
-  setAudioAnalyzerState(state: VizEditorAudioAnalyzerState): VizEditorControlSnapshot;
-  setLiveInputAvailable(available: boolean): VizEditorControlSnapshot;
-  setBakedArtifactAvailable(available: boolean): VizEditorControlSnapshot;
+          | VizControlSnapshot["session"]["uiState"]
+          | Partial<VizControlSnapshot["session"]["uiState"]>),
+  ): VizControlSnapshot;
+  inspectGraphs(): VizGraphSummary[];
+  inspectComponents(): VizComponentSummary[];
+  inspectGraph(
+    graphId: VizGraphId,
+  ): NonNullable<VizProjectDocument["graphs"]>[number] | undefined;
+  inspectGraphRuntime(frame?: number): VizGraphRuntimeInspection;
+  listJobs(): VizControlJobSummary[];
+  inspectJob(jobId: VizJobId): VizAudioFeatureBakeJobRecord | undefined;
+  startAudioFeatureBake(
+    request: VizAudioFeatureBakeJobRequest,
+  ): VizAudioFeatureBakeJobRecord;
+  cancelJob(jobId: VizJobId): VizAudioFeatureBakeJobRecord | undefined;
+  attachAudioFeatureBakeOutput(
+    jobId: VizJobId,
+    expectedRevision?: number,
+  ): VizControlMutationResult;
+  applyTransaction(
+    transaction: VizProjectTransaction,
+    options?: { actor?: VizActionActor },
+  ): VizControlMutationResult;
+  applyAction(
+    action: VizProjectAction,
+    options?: { actor?: VizActionActor },
+  ): VizControlMutationResult;
+  applyActions(
+    actions: VizProjectAction[],
+    options?: { actor?: VizActionActor },
+  ): VizControlMutationResult;
+  undo(): VizControlSnapshot;
+  redo(): VizControlSnapshot;
+  inspectFrame(frame?: number): VizControlFrameInspection;
+  inspectRender(frame?: number): VizControlRenderInspection;
+  createDebugSnapshot(frame?: number): VizControlDebugSnapshot;
+  play(): VizControlSnapshot;
+  pause(): VizControlSnapshot;
+  seekToFrame(frame: number): VizControlSnapshot;
+  advanceBySeconds(seconds: number): VizControlSnapshot;
+  setLoop(loop: boolean): VizControlSnapshot;
+  setTransportDurationFrames(durationFrames: number): VizControlSnapshot;
+  setPreviewMode(
+    mode: VizControlSnapshot["transport"]["mode"],
+  ): VizControlSnapshot;
+  attachAudioSource(source: VizEditorAudioSource): VizControlSnapshot;
+  clearAudioSource(): VizControlSnapshot;
+  setAudioAnalyzerState(
+    state: VizEditorAudioAnalyzerState,
+  ): VizControlSnapshot;
+  setLiveInputAvailable(available: boolean): VizControlSnapshot;
+  setBakedArtifactAvailable(available: boolean): VizControlSnapshot;
+  subscribe(listener: (snapshot: VizControlSnapshot) => void): () => void;
 }
 
-const componentRegistry = createCoreComponentRegistry();
-const nodeRegistry = createCoreNodeRegistry();
+const clone = <T>(value: T): T => structuredClone(value);
 
-const cloneUnknown = <T>(value: T): T => structuredClone(value);
-
-const createGraphSummaries = (project: VizProjectDocument): VizEditorGraphSummary[] => {
+const createGraphSummaries = (
+  project: VizProjectDocument,
+): VizGraphSummary[] => {
   return (project.graphs ?? []).map((graph) => ({
     graphId: graph.id,
     name: graph.name,
@@ -188,16 +244,46 @@ const createGraphSummaries = (project: VizProjectDocument): VizEditorGraphSummar
   }));
 };
 
-const createComponentSummaries = (): VizEditorComponentSummary[] => {
-  return coreComponents.map((component) => ({
-    componentId: component.id,
-    name: component.name,
-    rendererFamily: component.rendererFamily,
-    description: component.description,
-    inputCount: component.inputs?.length ?? 0,
-    inputKeys: (component.inputs ?? []).map((input) => input.key),
-  }));
+const createComponentSummaries = (
+  registry: VizComponentRegistry,
+): VizComponentSummary[] => {
+  return registry.listRegistrations().map((registration) => {
+    const component = registration.component;
+    return {
+      componentId: component.id,
+      name: component.name,
+      rendererFamily: component.rendererFamily,
+      description: component.description,
+      implementationVersion: component.implementationVersion,
+      compatibility: component.authoring?.compatibility,
+      capabilityPack: registration.capabilityPack,
+      authoring: component.authoring,
+      inputCount: component.inputs?.length ?? 0,
+      inputKeys: (component.inputs ?? []).map((input) => input.key),
+    };
+  });
 };
+
+const createJobSummary = (
+  job: VizAudioFeatureBakeJobRecord,
+): VizControlJobSummary => ({
+  id: job.id,
+  kind: job.kind,
+  status: job.status,
+  requestedBy: job.requestedBy,
+  requestedAt: job.requestedAt,
+  updatedAt: job.updatedAt,
+  ...(job.inputIdentity === undefined
+    ? {}
+    : { inputIdentity: job.inputIdentity }),
+  ...(job.progress === undefined
+    ? {}
+    : { progress: job.progress }),
+  ...(job.result === undefined
+    ? {}
+    : { outputArtifactId: job.result.artifact.id }),
+  ...(job.failure === undefined ? {} : { failure: job.failure }),
+});
 
 const createRuntimeSessionForInspection = ({
   project,
@@ -208,307 +294,356 @@ const createRuntimeSessionForInspection = ({
   project: VizProjectDocument;
   resolvedAssets: VizResolvedAsset[];
   resolvedArtifacts: VizResolvedArtifact[];
-  frameMode: VizEditorControlSnapshot["transport"]["mode"];
+  frameMode: VizControlSnapshot["transport"]["mode"];
 }) => {
   return createVizRuntimeSession({
     project,
     mode: frameMode,
     resolvedAssets,
     resolvedArtifacts,
-    seed: "editor-control-seed",
+    seed: "viz-control-seed",
   });
 };
 
-const createAudioSessionOptions = ({
-  source,
-  analyzerState,
-  bakedArtifactId,
-  bakedArtifactAvailable,
-  liveInputAvailable,
-}: {
-  source: VizEditorAudioSource | undefined;
-  analyzerState: VizEditorAudioAnalyzerState | undefined;
-  bakedArtifactId: string | undefined;
-  bakedArtifactAvailable: boolean;
-  liveInputAvailable: boolean;
-}) => {
-  return {
-    ...(source === undefined ? {} : { source }),
-    ...(analyzerState === undefined ? {} : { analyzerState }),
-    ...(bakedArtifactId === undefined ? {} : { bakedArtifactId }),
-    bakedArtifactAvailable,
-    liveInputAvailable,
-  };
+const createRuntimeInputsForInspection = (
+  resources: VizSessionProjectResources,
+  frame: number,
+) => {
+  const audio = sampleProjectAudioFrameSnapshot(
+    resources.project,
+    resources.resolvedArtifacts,
+    frame,
+  );
+  return audio === undefined ? {} : { audio };
 };
 
-const getProjectFrame = (
-  frame: number | undefined,
-  session: VizEditorSession,
-): number => {
-  return frame ?? session.getPreviewState().currentFrame;
-};
-
-const createExampleResources = (): VizEditorControlProjectResources => ({
-  project: cloneUnknown(exampleProjectDocument),
-  resolvedAssets: cloneUnknown(exampleResolvedAssets),
-  resolvedArtifacts: cloneUnknown(exampleResolvedArtifacts),
+const createExampleResources = (): VizSessionProjectResources => ({
+  project: clone(exampleProjectDocument),
+  resolvedAssets: clone(exampleResolvedAssets),
+  resolvedArtifacts: clone(exampleResolvedArtifacts),
   source: {
     kind: "example",
     label: "Canonical Example Project",
   },
 });
 
-export const createVizEditorControl = ({
-  actor = { kind: "agent", id: "local-editor-control" },
-  initialProject = createExampleResources(),
-}: CreateVizEditorControlOptions = {}): VizEditorControl => {
-  let currentResources = cloneUnknown(initialProject);
-  let editorSession = createVizEditorSession({
-    project: currentResources.project,
-    actor,
-    previewState: {
-      mode: "live",
-    },
-  });
-
-  let transportController = createVizEditorTransportController({
-    fps: currentResources.project.timeline.fps,
-    durationFrames: currentResources.project.timeline.durationInFrames,
-    currentFrame: editorSession.getPreviewState().currentFrame,
-    isPlaying: editorSession.getPreviewState().isPlaying,
-    mode: editorSession.getPreviewState().mode,
-    onStateChange: (state) => {
-      editorSession.setPreviewState({
-        currentFrame: state.currentFrame,
-        isPlaying: state.isPlaying,
-        mode: state.mode,
-      });
-    },
-  });
-
-  let audioSessionController = createVizEditorAudioSessionController({
-    ...createAudioSessionOptions({
-      source: undefined,
-      analyzerState: undefined,
-      bakedArtifactId: currentResources.project.artifactRefs?.[0]?.id,
-      bakedArtifactAvailable: (currentResources.project.artifactRefs?.length ?? 0) > 0,
-      liveInputAvailable: false,
-    }),
-  });
-
-  const rebuildControllers = () => {
-    transportController = createVizEditorTransportController({
-      fps: currentResources.project.timeline.fps,
-      durationFrames: currentResources.project.timeline.durationInFrames,
-      currentFrame: editorSession.getPreviewState().currentFrame,
-      isPlaying: editorSession.getPreviewState().isPlaying,
-      mode: editorSession.getPreviewState().mode,
-      onStateChange: (state) => {
-        editorSession.setPreviewState({
-          currentFrame: state.currentFrame,
-          isPlaying: state.isPlaying,
-          mode: state.mode,
-        });
-      },
-    });
-    audioSessionController = createVizEditorAudioSessionController({
-      ...createAudioSessionOptions({
-        source: audioSessionController.getState().source,
-        analyzerState: audioSessionController.getState().analyzerState,
-        bakedArtifactId: currentResources.project.artifactRefs?.[0]?.id,
-        bakedArtifactAvailable: (currentResources.project.artifactRefs?.length ?? 0) > 0,
-        liveInputAvailable: audioSessionController.getState().liveInputAvailable,
-      }),
-    });
+export const createVizControl = (
+  options: CreateVizControlOptions = {},
+): VizControl => {
+  const actor = options.actor ?? {
+    kind: "agent",
+    id: "local-viz-control",
   };
 
-  const getSnapshot = (): VizEditorControlSnapshot => {
+  if (
+    options.host !== undefined &&
+    (options.initialProject !== undefined ||
+      options.componentRegistry !== undefined ||
+      options.nodeRegistry !== undefined)
+  ) {
+    throw new Error(
+      "An injected VizSessionHost already owns project resources and registries.",
+    );
+  }
+
+  const host =
+    options.host ??
+    createVizSessionHost({
+      actor,
+      initialProject: options.initialProject ?? createExampleResources(),
+      ...(options.componentRegistry === undefined
+        ? {}
+        : { componentRegistry: options.componentRegistry }),
+      ...(options.nodeRegistry === undefined
+        ? {}
+        : { nodeRegistry: options.nodeRegistry }),
+    });
+
+  const getSnapshot = (): VizControlSnapshot => {
+    const hostSnapshot = host.getSnapshot();
     return {
-      source: cloneUnknown(currentResources.source),
-      session: editorSession.getSnapshot(),
-      transport: transportController.getState(),
-      audioSession: audioSessionController.getState(),
-      audioDiagnostics: audioSessionController.getDiagnostics(),
-      graphSummaries: createGraphSummaries(editorSession.getWorkingProject()),
-      resourceCounts: {
-        assets: currentResources.resolvedAssets.length,
-        artifacts: currentResources.resolvedArtifacts.length,
-      },
+      ...hostSnapshot,
+      graphSummaries: createGraphSummaries(
+        hostSnapshot.session.workingProject,
+      ),
+      jobSummaries:
+        host
+          .getServices()
+          .audioFeatureBakeJobs?.list()
+          .map(createJobSummary) ?? [],
     };
   };
 
-  const openProject = (resources: VizEditorControlProjectResources): VizEditorControlSnapshot => {
-    const validation = validateProjectDocument(resources.project);
-
-    if (!validation.ok) {
-      throw new Error(
-        `Cannot open invalid Viz project: ${validation.issues.map((issue) => issue.message).join("; ")}`,
-      );
-    }
-
-    currentResources = cloneUnknown(resources);
-    editorSession = createVizEditorSession({
-      project: currentResources.project,
-      actor,
-      previewState: {
-        mode: "live",
-      },
-    });
-    rebuildControllers();
-    return getSnapshot();
+  const notifyProjectChange = (reason: VizControlProjectChangeReason) => {
+    const snapshot = getSnapshot();
+    options.onProjectChange?.(snapshot, reason);
+    return snapshot;
   };
 
-  const createFrameInspection = (frame?: number): VizEditorControlFrameInspection => {
-    const project = editorSession.getWorkingProject();
-    const selectedFrame = getProjectFrame(frame, editorSession);
+  const openProject = (
+    resources: VizSessionProjectResources,
+  ): VizControlSnapshot => {
+    host.loadProject(resources);
+    return notifyProjectChange("load");
+  };
+
+  const getSelectedFrame = (frame: number | undefined): number => {
+    return frame ?? host.getSnapshot().transport.currentFrame;
+  };
+
+  const createFrameInspection = (
+    frame?: number,
+  ): VizControlFrameInspection => {
+    const resources = host.getProjectResources();
+    const hostSnapshot = host.getSnapshot();
+    const selectedFrame = getSelectedFrame(frame);
     const runtimeSession = createRuntimeSessionForInspection({
-      project,
-      resolvedAssets: currentResources.resolvedAssets,
-      resolvedArtifacts: currentResources.resolvedArtifacts,
-      frameMode: transportController.getState().mode,
+      project: resources.project,
+      resolvedAssets: resources.resolvedAssets,
+      resolvedArtifacts: resources.resolvedArtifacts,
+      frameMode: hostSnapshot.transport.mode,
     });
     const framePlan = createVizFramePlan({
       session: runtimeSession,
       frame: selectedFrame,
-      registry: componentRegistry,
-      nodeRegistry,
+      registry: host.getComponentRegistry(),
+      nodeRegistry: host.getNodeRegistry(),
+      runtimeInputs: createRuntimeInputsForInspection(
+        resources,
+        selectedFrame,
+      ),
     });
 
     return {
-      source: cloneUnknown(currentResources.source),
-      revision: editorSession.getSnapshot().revision,
+      source: clone(resources.source),
+      revision: hostSnapshot.session.revision,
       frame: selectedFrame,
       framePlan,
     };
   };
 
-  const createRenderInspection = (frame?: number): VizEditorControlRenderInspection => {
-    const project = editorSession.getWorkingProject();
-    const selectedFrame = getProjectFrame(frame, editorSession);
+  const createRenderInspection = (
+    frame?: number,
+  ): VizControlRenderInspection => {
+    const resources = host.getProjectResources();
+    const hostSnapshot = host.getSnapshot();
+    const selectedFrame = getSelectedFrame(frame);
     const runtimeSession = createRuntimeSessionForInspection({
-      project,
-      resolvedAssets: currentResources.resolvedAssets,
-      resolvedArtifacts: currentResources.resolvedArtifacts,
-      frameMode: transportController.getState().mode,
+      project: resources.project,
+      resolvedAssets: resources.resolvedAssets,
+      resolvedArtifacts: resources.resolvedArtifacts,
+      frameMode: hostSnapshot.transport.mode,
     });
     const renderPlan = createVizRenderPlan({
       session: runtimeSession,
       frame: selectedFrame,
-      registry: componentRegistry,
-      nodeRegistry,
+      registry: host.getComponentRegistry(),
+      nodeRegistry: host.getNodeRegistry(),
+      runtimeInputProvider: (requestedFrame) =>
+        createRuntimeInputsForInspection(resources, requestedFrame),
     });
 
     return {
-      source: cloneUnknown(currentResources.source),
-      revision: editorSession.getSnapshot().revision,
+      source: clone(resources.source),
+      revision: hostSnapshot.session.revision,
       frame: selectedFrame,
       renderPlan,
     };
   };
 
-  const createGraphRuntimeInspection = (frame?: number): VizEditorGraphRuntimeInspection => {
-    const project = editorSession.getWorkingProject();
-    const selectedFrame = getProjectFrame(frame, editorSession);
+  const createGraphRuntimeInspection = (
+    frame?: number,
+  ): VizGraphRuntimeInspection => {
+    const resources = host.getProjectResources();
+    const hostSnapshot = host.getSnapshot();
+    const selectedFrame = getSelectedFrame(frame);
     const runtimeSession = createRuntimeSessionForInspection({
-      project,
-      resolvedAssets: currentResources.resolvedAssets,
-      resolvedArtifacts: currentResources.resolvedArtifacts,
-      frameMode: transportController.getState().mode,
+      project: resources.project,
+      resolvedAssets: resources.resolvedAssets,
+      resolvedArtifacts: resources.resolvedArtifacts,
+      frameMode: hostSnapshot.transport.mode,
     });
-
     const graphResults = evaluateVizGraphs({
       session: runtimeSession,
       frame: selectedFrame,
-      registry: nodeRegistry,
+      registry: host.getNodeRegistry(),
+      inputValues: Object.fromEntries(
+        (resources.project.graphs ?? []).map((graph) => [
+          graph.id,
+          createVizStandardGraphRuntimeInputValues(
+            runtimeSession.getFrameContext(selectedFrame)
+              .timeInSeconds,
+            createRuntimeInputsForInspection(
+              resources,
+              selectedFrame,
+            ),
+          ),
+        ]),
+      ),
     });
 
     return {
-      source: cloneUnknown(currentResources.source),
-      revision: editorSession.getSnapshot().revision,
+      source: clone(resources.source),
+      revision: hostSnapshot.session.revision,
       frame: selectedFrame,
-      graphs: (project.graphs ?? []).map((graph) => ({
+      graphs: (resources.project.graphs ?? []).map((graph) => ({
         graphId: graph.id,
         name: graph.name,
-        values: structuredClone(graphResults.get(graph.id)?.values ?? {}),
-        nodes: structuredClone(graphResults.get(graph.id)?.nodes ?? {}),
-        issues: structuredClone(graphResults.get(graph.id)?.issues ?? []),
-        checkpoint: runtimeSession.getGraphCheckpointBeforeOrAt(graph.id, selectedFrame),
+        values: clone(graphResults.get(graph.id)?.values ?? {}),
+        nodes: clone(graphResults.get(graph.id)?.nodes ?? {}),
+        issues: clone(graphResults.get(graph.id)?.issues ?? []),
+        checkpoint: runtimeSession.getGraphCheckpointBeforeOrAt(
+          graph.id,
+          selectedFrame,
+        ),
       })),
     };
   };
 
+  const createMutationResult = (
+    transactionResult: VizEditorSessionMutationResult,
+  ): VizControlMutationResult => {
+    const snapshot =
+      transactionResult.status === "applied"
+        ? notifyProjectChange("transaction")
+        : getSnapshot();
+    return {
+      ok: transactionResult.ok,
+      snapshot,
+      transactionResult,
+    };
+  };
+
+  const getAudioFeatureBakeJobs = () => {
+    const service = host.getServices().audioFeatureBakeJobs;
+    if (!service) {
+      throw new Error(
+        "This Viz session host has no audio-feature bake job service.",
+      );
+    }
+    return service;
+  };
+
+  const attachAudioFeatureBakeOutput = (
+    jobId: VizJobId,
+    expectedRevision?: number,
+  ): VizControlMutationResult => {
+    const job = getAudioFeatureBakeJobs().get(jobId);
+    if (job?.status !== "succeeded" || !job.result) {
+      throw new Error(
+        `Audio bake job "${jobId}" has no successful output to attach.`,
+      );
+    }
+    host.registerResolvedArtifact(job.result.resolvedArtifact);
+    const artifact = job.result.artifact;
+    return createMutationResult(
+      host.transact(
+        {
+          id: `attach-${job.id}`,
+          ...(expectedRevision === undefined
+            ? {}
+            : { expectedRevision }),
+          actions: [
+            {
+              type: "artifact.attach",
+              payload: {
+                artifact: {
+                  id: artifact.id,
+                  kind: artifact.kind,
+                  label: artifact.label,
+                  sourceAssetId: artifact.sourceAssetId,
+                  metadata: {
+                    profile: artifact.profile,
+                    executionIdentity:
+                      job.result.executionIdentity,
+                    sourceContentIdentity:
+                      artifact.analysis?.sourceContentIdentity,
+                  },
+                },
+              },
+            },
+          ],
+        },
+        { actor },
+      ),
+    );
+  };
+
   return {
+    getHost: () => host,
     openExampleProject: () => openProject(createExampleResources()),
     openProject,
     getSnapshot,
-    getWorkingProject: () => editorSession.exportWorkingProject(),
-    getProjectResources: () => ({
-      project: editorSession.exportWorkingProject(),
-      resolvedAssets: cloneUnknown(currentResources.resolvedAssets),
-      resolvedArtifacts: cloneUnknown(currentResources.resolvedArtifacts),
-      source: cloneUnknown(currentResources.source),
-    }),
-    getUiState: () => cloneUnknown(editorSession.getUiState()),
+    getWorkingProject: () => host.getWorkingProject(),
+    getProjectResources: () => host.getProjectResources(),
+    getUiState: () => clone(host.getSnapshot().session.uiState),
     inspectProject: () => {
-      const snapshot = editorSession.getSnapshot();
+      const resources = host.getProjectResources();
+      const snapshot = host.getSnapshot();
       return {
-        source: cloneUnknown(currentResources.source),
-        revision: snapshot.revision,
-        project: cloneUnknown(snapshot.workingProject),
-        validation: validateProjectDocument(snapshot.workingProject),
-        assets: cloneUnknown(currentResources.resolvedAssets),
-        artifacts: cloneUnknown(currentResources.resolvedArtifacts),
-        issues: cloneUnknown(snapshot.issues),
-        actionHistory: cloneUnknown(snapshot.actionHistory),
+        source: clone(resources.source),
+        revision: snapshot.session.revision,
+        project: clone(resources.project),
+        validation: validateProjectDocument(resources.project),
+        assets: clone(resources.resolvedAssets),
+        artifacts: clone(resources.resolvedArtifacts),
+        issues: clone(snapshot.session.issues),
+        actionHistory: clone(snapshot.session.actionHistory),
       };
     },
     setUiState: (next) => {
-      editorSession.setUiState(next);
+      host.setUiState(next);
       return getSnapshot();
     },
-    inspectGraphs: () => createGraphSummaries(editorSession.getWorkingProject()),
-    inspectComponents: () => cloneUnknown(createComponentSummaries()),
+    inspectGraphs: () => createGraphSummaries(host.getWorkingProject()),
+    inspectComponents: () =>
+      clone(createComponentSummaries(host.getComponentRegistry())),
     inspectGraph: (graphId) => {
-      return cloneUnknown(
-        editorSession.getWorkingProject().graphs?.find((graph) => graph.id === graphId),
+      return clone(
+        host
+          .getWorkingProject()
+          .graphs?.find((graph) => graph.id === graphId),
       );
     },
     inspectGraphRuntime: createGraphRuntimeInspection,
-    applyAction: (action, options) => {
-      const actionResult = editorSession.applyAction(action, options);
-
-      if (actionResult.ok) {
-        rebuildControllers();
-      }
-
-      return {
-        ok: actionResult.ok,
-        snapshot: getSnapshot(),
-        actionResult,
-      };
-    },
-    applyActions: (actions, options) => {
-      const actionResult = editorSession.applyActions(actions, options);
-
-      if (actionResult.ok) {
-        rebuildControllers();
-      }
-
-      return {
-        ok: actionResult.ok,
-        snapshot: getSnapshot(),
-        actionResult,
-      };
-    },
+    listJobs: () =>
+      getAudioFeatureBakeJobs().list().map(createJobSummary),
+    inspectJob: (jobId) => getAudioFeatureBakeJobs().get(jobId),
+    startAudioFeatureBake: (request) =>
+      getAudioFeatureBakeJobs().start(request, actor),
+    cancelJob: (jobId) => getAudioFeatureBakeJobs().cancel(jobId),
+    attachAudioFeatureBakeOutput,
+    applyTransaction: (transaction, transactionOptions) =>
+      createMutationResult(
+        host.transact(transaction, {
+          actor: transactionOptions?.actor ?? actor,
+        }),
+      ),
+    applyAction: (action, transactionOptions) =>
+      createMutationResult(
+        host.applyAction(action, {
+          actor: transactionOptions?.actor ?? actor,
+        }),
+      ),
+    applyActions: (actions, transactionOptions) =>
+      createMutationResult(
+        host.applyActions(actions, {
+          actor: transactionOptions?.actor ?? actor,
+        }),
+      ),
     undo: () => {
-      editorSession.undo();
-      rebuildControllers();
-      return getSnapshot();
+      const previousRevision = host.getSnapshot().session.revision;
+      host.undo();
+      return host.getSnapshot().session.revision === previousRevision
+        ? getSnapshot()
+        : notifyProjectChange("undo");
     },
     redo: () => {
-      editorSession.redo();
-      rebuildControllers();
-      return getSnapshot();
+      const previousRevision = host.getSnapshot().session.revision;
+      host.redo();
+      return host.getSnapshot().session.revision === previousRevision
+        ? getSnapshot()
+        : notifyProjectChange("redo");
     },
     inspectFrame: createFrameInspection,
     inspectRender: createRenderInspection,
@@ -517,7 +652,7 @@ export const createVizEditorControl = ({
       const renderInspection = createRenderInspection(frameInspection.frame);
 
       return {
-        source: cloneUnknown(currentResources.source),
+        source: clone(renderInspection.source),
         revision: renderInspection.revision,
         frame: renderInspection.frame,
         framePlan: frameInspection.framePlan,
@@ -526,52 +661,67 @@ export const createVizEditorControl = ({
       };
     },
     play: () => {
-      transportController.play();
+      host.play();
       return getSnapshot();
     },
     pause: () => {
-      transportController.pause();
+      host.pause();
       return getSnapshot();
     },
     seekToFrame: (frame) => {
-      transportController.seekToFrame(frame);
+      host.seekToFrame(frame);
       return getSnapshot();
     },
     advanceBySeconds: (seconds) => {
-      transportController.advanceBySeconds(seconds);
+      host.advanceBySeconds(seconds);
       return getSnapshot();
     },
     setLoop: (loop) => {
-      transportController.setLoop(loop);
+      host.setLoop(loop);
       return getSnapshot();
     },
     setTransportDurationFrames: (durationFrames) => {
-      transportController.setDurationFrames(durationFrames);
+      host.setTransportDurationFrames(durationFrames);
       return getSnapshot();
     },
     setPreviewMode: (mode) => {
-      transportController.setMode(mode);
+      host.setPreviewMode(mode);
       return getSnapshot();
     },
     attachAudioSource: (source) => {
-      audioSessionController.attachSource(source);
+      host.attachAudioSource(source);
       return getSnapshot();
     },
     clearAudioSource: () => {
-      audioSessionController.clearSource();
+      host.clearAudioSource();
       return getSnapshot();
     },
     setAudioAnalyzerState: (state) => {
-      audioSessionController.setAnalyzerState(state);
+      host.setAudioAnalyzerState(state);
       return getSnapshot();
     },
     setLiveInputAvailable: (available) => {
-      audioSessionController.setLiveInputAvailable(available);
+      host.setLiveInputAvailable(available);
       return getSnapshot();
     },
     setBakedArtifactAvailable: (available) => {
-      audioSessionController.setBakedArtifactAvailable(available);
+      host.setBakedArtifactAvailable(available);
       return getSnapshot();
+    },
+    subscribe: (listener) => {
+      const unsubscribeHost = host.subscribe(() => {
+        listener(getSnapshot());
+      });
+      const unsubscribeJobs =
+        host
+          .getServices()
+          .audioFeatureBakeJobs?.subscribe(() => {
+            listener(getSnapshot());
+          }) ?? (() => {});
+      return () => {
+        unsubscribeHost();
+        unsubscribeJobs();
+      };
     },
   };
 };

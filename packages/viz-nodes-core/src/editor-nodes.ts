@@ -362,8 +362,7 @@ const FrequencyBandNode = createNode({
       !frequencyAnalysis ||
       !frequencyAnalysis.frequencyData ||
       frequencyAnalysis.frequencyData.length === 0 ||
-      !frequencyAnalysis.sampleRate ||
-      !frequencyAnalysis.fftSize
+      !frequencyAnalysis.sampleRate
     ) {
       return {
         bandData: new Uint8Array(),
@@ -371,9 +370,9 @@ const FrequencyBandNode = createNode({
         frequencyPerBin: 0,
       };
     }
-    const { frequencyData, sampleRate, fftSize } = frequencyAnalysis;
+    const { frequencyData, sampleRate } = frequencyAnalysis;
     const nyquist = sampleRate / 2;
-    const frequencyPerBin = nyquist / (fftSize / 2);
+    const frequencyPerBin = nyquist / frequencyData.length;
     const startBin = Math.floor(startFrequency / frequencyPerBin);
     const endBin = Math.min(
       frequencyData.length - 1,
@@ -1417,7 +1416,6 @@ const MultiBandAnalysisNode = createNode({
 
     const data = frequencyAnalysis.frequencyData;
     const sampleRate = frequencyAnalysis.sampleRate || 44100;
-    const fftSize = frequencyAnalysis.fftSize || 2048;
     const n = data.length;
 
     if (n === 0) {
@@ -1431,15 +1429,15 @@ const MultiBandAnalysisNode = createNode({
       };
     }
 
-    const freqPerBin = sampleRate / fftSize;
+    const freqPerBin = sampleRate / (2 * n);
     const bassMaxFreq = typeof bassMax === 'number' ? bassMax : 250;
     const midMaxFreq = typeof midMax === 'number' ? midMax : 4000;
 
     // Web Audio's getByteFrequencyData returns dB values scaled to 0-255
     // where 0 = minDecibels (-100dB) and 255 = maxDecibels (-30dB)
     // We need to convert to linear magnitude for accurate energy comparison across bands
-    const minDb = -100;
-    const maxDb = -30;
+    const minDb = frequencyAnalysis.minDecibels ?? -90;
+    const maxDb = frequencyAnalysis.maxDecibels ?? -10;
     const dbRange = maxDb - minDb; // 70
 
     // Noise floor threshold - ignore very quiet bins
@@ -1531,19 +1529,18 @@ const SpectralCentroidNode = createNode({
 
     const data = frequencyAnalysis.frequencyData;
     const sampleRate = frequencyAnalysis.sampleRate || 44100;
-    const fftSize = frequencyAnalysis.fftSize || 2048;
     const n = data.length;
 
     if (n === 0) return { centroid: 0, normalized: 0 };
 
     // Calculate frequency per bin
-    const freqPerBin = sampleRate / fftSize;
+    const freqPerBin = sampleRate / (2 * n);
 
     // Web Audio's getByteFrequencyData returns dB values scaled to 0-255
     // where 0 = minDecibels (-100dB) and 255 = maxDecibels (-30dB)
     // We need to convert to linear magnitude for accurate centroid calculation
-    const minDb = -100;
-    const maxDb = -30;
+    const minDb = frequencyAnalysis.minDecibels ?? -90;
+    const maxDb = frequencyAnalysis.maxDecibels ?? -10;
     const dbRange = maxDb - minDb; // 70
 
     // Calculate spectral centroid: Σ(frequency * magnitude) / Σ(magnitude)

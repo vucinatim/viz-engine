@@ -1,9 +1,8 @@
-import { v } from '../config/config';
-import { createComponent } from '../config/create-component';
+import { defineVizComponentAuthoring, v } from './schema.js';
 
-const DebugAnimation = createComponent({
-  name: 'Debug Animation',
-  description: 'A simple component to debug animated values.',
+export const debugAnimationAuthoring = defineVizComponentAuthoring({
+  componentId: 'debug-animation',
+  compatibility: 'render-safe',
   config: v.config({
     value: v.number({
       label: 'Value',
@@ -36,5 +35,3 @@ const DebugAnimation = createComponent({
     midi: 'pitch-detection-midi-mod',
   },
 });
-
-export default DebugAnimation;

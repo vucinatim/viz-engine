@@ -2,6 +2,7 @@ import type {
   VizComponentImplementation,
   VizRenderShaderNode,
 } from "@viz-engine/contracts";
+import { noiseShaderAuthoring } from "./authoring/noise-shader.js";
 import { asBoolean, asNumber, asRecord, asString } from "./shared.js";
 
 export const noiseShaderVertexShader = `
@@ -317,6 +318,8 @@ export const noiseShaderComponent: VizComponentImplementation = {
   id: "noise-shader",
   name: "Noise Shader",
   rendererFamily: "three",
+  implementationVersion: "1.0.0",
+  authoring: noiseShaderAuthoring,
   description: "Deterministic package-runtime procedural noise shader.",
   render: ({ viewport, frameContext, layer, settings }) => {
     const noise = asRecord(settings.noise);

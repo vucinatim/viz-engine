@@ -4,12 +4,15 @@ import type {
   VizRenderRectNode,
   VizRenderTextNode,
 } from "@viz-engine/contracts";
+import { debugAnimationAuthoring } from "./authoring/debug-animation.js";
 import { asNumber, asString } from "./shared.js";
 
 export const debugAnimationComponent: VizComponentImplementation = {
   id: "debug-animation",
   name: "Debug Animation",
   rendererFamily: "three",
+  implementationVersion: "1.0.0",
+  authoring: debugAnimationAuthoring,
   description:
     "Runtime-backed diagnostic values, labels, and normalized value bar.",
   render: ({ viewport, layer, settings }) => {

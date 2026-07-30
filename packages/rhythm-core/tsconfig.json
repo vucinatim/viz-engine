@@ -3,6 +3,8 @@
   "compilerOptions": {
     "noEmit": true,
     "composite": false,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
     "module": "esnext",
     "moduleResolution": "bundler"
   },

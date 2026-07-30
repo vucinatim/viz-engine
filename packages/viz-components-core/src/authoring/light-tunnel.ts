@@ -1,10 +1,13 @@
-import { v } from '../config/config';
-import { createComponent } from '../config/create-component';
+import {
+  allSettingConditions,
+  defineVizComponentAuthoring,
+  settingCondition,
+  v,
+} from './schema.js';
 
-const LightTunnel = createComponent({
-  name: 'Light Tunnel',
-  description:
-    'Infinite tunnel made with cubes that have glowing neon edges, camera centered',
+export const lightTunnelAuthoring = defineVizComponentAuthoring({
+  componentId: 'light-tunnel',
+  compatibility: 'render-safe',
   config: v.config({
     structure: v.group(
       {
@@ -60,7 +63,11 @@ const LightTunnel = createComponent({
           label: 'Edge Color',
           description: 'Color of the glowing edges',
           defaultValue: '#00FFFF',
-          visibleIf: (values) => values.appearance.colorMode === 'Single',
+          visibleWhen: settingCondition(
+            'appearance.colorMode',
+            'equals',
+            'Single',
+          ),
         }),
         colorPalette: v.list({
           label: 'Color Palette',
@@ -71,7 +78,11 @@ const LightTunnel = createComponent({
             description: 'A color in the palette',
             defaultValue: '#FFFFFF',
           }),
-          visibleIf: (values) => values.appearance.colorMode !== 'Single',
+          visibleWhen: settingCondition(
+            'appearance.colorMode',
+            'not-equals',
+            'Single',
+          ),
         }),
       },
     ),
@@ -109,13 +120,21 @@ const LightTunnel = createComponent({
           label: 'Base Color',
           description: 'Base color of the solid cube material',
           defaultValue: '#0a0a0a',
-          visibleIf: (values) => values.appearance.renderMode === 'Solid',
+          visibleWhen: settingCondition(
+            'appearance.renderMode',
+            'equals',
+            'Solid',
+          ),
         }),
         solidEmissiveColor: v.color({
           label: 'Emissive Color',
           description: 'Glow color of the solid cube material',
           defaultValue: 'rgb(0, 0, 0)',
-          visibleIf: (values) => values.appearance.renderMode === 'Solid',
+          visibleWhen: settingCondition(
+            'appearance.renderMode',
+            'equals',
+            'Solid',
+          ),
         }),
         solidEmissiveIntensity: v.number({
           label: 'Emissive Intensity',
@@ -124,7 +143,11 @@ const LightTunnel = createComponent({
           min: 0,
           max: 1,
           step: 0.05,
-          visibleIf: (values) => values.appearance.renderMode === 'Solid',
+          visibleWhen: settingCondition(
+            'appearance.renderMode',
+            'equals',
+            'Solid',
+          ),
         }),
         metalness: v.number({
           label: 'Metalness',
@@ -133,7 +156,11 @@ const LightTunnel = createComponent({
           min: 0,
           max: 1,
           step: 0.05,
-          visibleIf: (values) => values.appearance.renderMode === 'Solid',
+          visibleWhen: settingCondition(
+            'appearance.renderMode',
+            'equals',
+            'Solid',
+          ),
         }),
         roughness: v.number({
           label: 'Roughness',
@@ -142,7 +169,11 @@ const LightTunnel = createComponent({
           min: 0,
           max: 1,
           step: 0.01,
-          visibleIf: (values) => values.appearance.renderMode === 'Solid',
+          visibleWhen: settingCondition(
+            'appearance.renderMode',
+            'equals',
+            'Solid',
+          ),
         }),
         envMapIntensity: v.number({
           label: 'Environment Reflection',
@@ -151,7 +182,11 @@ const LightTunnel = createComponent({
           min: 0,
           max: 5,
           step: 0.1,
-          visibleIf: (values) => values.appearance.renderMode === 'Solid',
+          visibleWhen: settingCondition(
+            'appearance.renderMode',
+            'equals',
+            'Solid',
+          ),
         }),
       },
     ),
@@ -166,7 +201,11 @@ const LightTunnel = createComponent({
           description:
             'Add a rotating circle of colored lights in front of camera',
           defaultValue: true,
-          visibleIf: (values) => values.appearance.renderMode === 'Solid',
+          visibleWhen: settingCondition(
+            'appearance.renderMode',
+            'equals',
+            'Solid',
+          ),
         }),
         lightCount: v.number({
           label: 'Light Count',
@@ -175,20 +214,22 @@ const LightTunnel = createComponent({
           min: 3,
           max: 16,
           step: 1,
-          visibleIf: (values) =>
-            values.appearance.renderMode === 'Solid' &&
-            values.lighting.enableLights,
+          visibleWhen: allSettingConditions(
+            settingCondition('appearance.renderMode', 'equals', 'Solid'),
+            settingCondition('lighting.enableLights', 'equals', true),
+          ),
         }),
         lightCircleRadius: v.number({
           label: 'Circle Radius',
           description: 'Radius of the light circle',
           defaultValue: 7,
           min: 0.2,
-          max: 5,
+          max: 7,
           step: 0.1,
-          visibleIf: (values) =>
-            values.appearance.renderMode === 'Solid' &&
-            values.lighting.enableLights,
+          visibleWhen: allSettingConditions(
+            settingCondition('appearance.renderMode', 'equals', 'Solid'),
+            settingCondition('lighting.enableLights', 'equals', true),
+          ),
         }),
         lightCircleDistance: v.number({
           label: 'Circle Distance',
@@ -197,9 +238,10 @@ const LightTunnel = createComponent({
           min: 0.5,
           max: 10,
           step: 0.5,
-          visibleIf: (values) =>
-            values.appearance.renderMode === 'Solid' &&
-            values.lighting.enableLights,
+          visibleWhen: allSettingConditions(
+            settingCondition('appearance.renderMode', 'equals', 'Solid'),
+            settingCondition('lighting.enableLights', 'equals', true),
+          ),
         }),
         lightIntensity: v.number({
           label: 'Light Intensity',
@@ -208,9 +250,10 @@ const LightTunnel = createComponent({
           min: 0,
           max: 100,
           step: 1,
-          visibleIf: (values) =>
-            values.appearance.renderMode === 'Solid' &&
-            values.lighting.enableLights,
+          visibleWhen: allSettingConditions(
+            settingCondition('appearance.renderMode', 'equals', 'Solid'),
+            settingCondition('lighting.enableLights', 'equals', true),
+          ),
         }),
         lightDistance: v.number({
           label: 'Light Distance',
@@ -219,9 +262,10 @@ const LightTunnel = createComponent({
           min: 1,
           max: 100,
           step: 5,
-          visibleIf: (values) =>
-            values.appearance.renderMode === 'Solid' &&
-            values.lighting.enableLights,
+          visibleWhen: allSettingConditions(
+            settingCondition('appearance.renderMode', 'equals', 'Solid'),
+            settingCondition('lighting.enableLights', 'equals', true),
+          ),
         }),
         lightRotationSpeed: v.number({
           label: 'Rotation Speed',
@@ -230,9 +274,10 @@ const LightTunnel = createComponent({
           min: 0,
           max: 2,
           step: 0.05,
-          visibleIf: (values) =>
-            values.appearance.renderMode === 'Solid' &&
-            values.lighting.enableLights,
+          visibleWhen: allSettingConditions(
+            settingCondition('appearance.renderMode', 'equals', 'Solid'),
+            settingCondition('lighting.enableLights', 'equals', true),
+          ),
         }),
       },
     ),
@@ -376,5 +421,3 @@ const LightTunnel = createComponent({
     'wave.triggerWave': 'neural-fire-on-kick',
   },
 });
-
-export default LightTunnel;

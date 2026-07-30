@@ -1,6 +1,4 @@
-import Color from 'color';
-import { v } from '../config/config';
-import { createComponent } from '../config/create-component';
+import { defineVizComponentAuthoring, v } from './schema.js';
 
 const commonSettingsConfig = v.group(
   {
@@ -122,9 +120,9 @@ const pointSettingsConfig = v.group(
   },
 );
 
-const CurveSpectrum = createComponent({
-  name: 'Curve Spectrum',
-  description: 'Curve visualization of audio spectrum',
+export const curveSpectrumAuthoring = defineVizComponentAuthoring({
+  componentId: 'curve-spectrum',
+  compatibility: 'render-safe',
   config: v.config({
     appearance: commonSettingsConfig,
     grid: gridSettingsConfig,
@@ -141,7 +139,7 @@ const CurveSpectrum = createComponent({
           maxFrequency: 20000,
         },
         grid: {
-          color: Color('#ccc').alpha(0.5).string(),
+          color: 'rgba(204, 204, 204, 0.5)',
           freqLines: 10,
           ampLines: 5,
         },
@@ -166,7 +164,7 @@ const CurveSpectrum = createComponent({
           maxFrequency: 22050,
         },
         grid: {
-          color: Color('#ccc').alpha(0.2).string(),
+          color: 'rgba(204, 204, 204, 0.2)',
           freqLines: 10,
           ampLines: 5,
         },
@@ -191,7 +189,7 @@ const CurveSpectrum = createComponent({
           maxFrequency: 16000,
         },
         grid: {
-          color: Color('#00ff00').alpha(0.5).string(),
+          color: 'rgba(0, 255, 0, 0.5)',
           freqLines: 6,
           ampLines: 3,
         },
@@ -209,5 +207,3 @@ const CurveSpectrum = createComponent({
     },
   ],
 });
-
-export default CurveSpectrum;

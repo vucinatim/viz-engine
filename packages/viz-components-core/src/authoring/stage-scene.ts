@@ -1,10 +1,8 @@
-import { v } from '../config/config';
-import { createComponent } from '../config/create-component';
+import { defineVizComponentAuthoring, v } from './schema.js';
 
-const StageScene = createComponent({
-  name: 'Stage Scene',
-  description:
-    'Full 3D EDM stage scene with lights, lasers, beams, and effects',
+export const stageSceneAuthoring = defineVizComponentAuthoring({
+  componentId: 'stage-scene',
+  compatibility: 'render-safe',
   config: v.config({
     camera: v.group(
       {
@@ -22,14 +20,12 @@ const StageScene = createComponent({
           description: 'Camera rotation in radians (Pitch, Yaw, Roll)',
           defaultValue: { x: 0, y: 0, z: 0 },
         }),
-        enterWasdMode: v.button({
+        enterWasdMode: v.action({
           label: 'Fly Mode',
           buttonLabel: 'Enter Fly Mode (WASD)',
           description:
             'Click to enter interactive camera control. Use WASD to move, mouse to look around, Space/Shift for up/down. Press ESC to exit.',
-          onPress: () => {
-            // Interactive fly mode is installed by the editor host.
-          },
+          actionId: 'stage.enter-fly-mode',
         }),
         moveSpeed: v.number({
           label: 'Move Speed',
@@ -538,5 +534,3 @@ const StageScene = createComponent({
     'overheadBlinder.intensity': 'overhead-blinder-big-impact',
   },
 });
-
-export default StageScene;

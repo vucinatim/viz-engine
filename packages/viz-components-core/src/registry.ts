@@ -1,5 +1,8 @@
 import type { VizComponentImplementation } from "@viz-engine/contracts";
-import { createVizComponentRegistry } from "@viz-engine/contracts";
+import {
+  createVizComponentRegistryFromCapabilityPacks,
+  type VizCapabilityPack,
+} from "@viz-engine/contracts";
 import { coverImageComponent } from "./cover-image.js";
 import { curveSpectrumComponent } from "./curve-spectrum.js";
 import { debugAnimationComponent } from "./debug-animation.js";
@@ -44,8 +47,42 @@ export const coreComponents: VizComponentImplementation[] = [
   stageSceneComponent,
 ];
 
+/**
+ * The curated first-party authoring catalog. Runtime-only primitives can remain
+ * in `coreComponents` without appearing as top-level editor choices.
+ */
+export const coreCatalogComponents: VizComponentImplementation[] = [
+  curveSpectrumComponent,
+  debugAnimationComponent,
+  simpleCubeComponent,
+  heartbeatMonitorComponent,
+  instancedSupercubeComponent,
+  lightTunnelComponent,
+  morphShapesComponent,
+  featureExtractionBarsComponent,
+  neuralNetworkComponent,
+  noiseShaderComponent,
+  orbitingCubesComponent,
+  particleSystemComponent,
+  stageSceneComponent,
+  fullscreenShaderComponent,
+  strobeLightComponent,
+];
+
+export const coreComponentCapabilityPack: VizCapabilityPack = {
+  manifest: {
+    id: "@viz-engine/components-core",
+    version: "0.0.1",
+    description: "First-party VizEngine visual components.",
+  },
+  components: coreComponents,
+};
+
 export const createCoreComponentRegistry = () => {
-  return createVizComponentRegistry(coreComponents, {
-    strict: true,
-  });
+  return createVizComponentRegistryFromCapabilityPacks(
+    [coreComponentCapabilityPack],
+    {
+      strict: true,
+    },
+  );
 };

@@ -2,6 +2,7 @@ import type {
   VizComponentImplementation,
   VizRenderThreeProgramNode,
 } from "@viz-engine/contracts";
+import { stageSceneAuthoring } from "./authoring/stage-scene.js";
 import {
   asBoolean,
   asNumber,
@@ -44,6 +45,8 @@ export const stageSceneComponent: VizComponentImplementation = {
   id: "stage-scene",
   name: "Stage Scene",
   rendererFamily: "three",
+  implementationVersion: "1.0.0",
+  authoring: stageSceneAuthoring,
   description:
     "Deterministic retained EDM stage with a cinematic camera, crowd, lighting, lasers, beams, and shader wall.",
   inputs: STAGE_MODEL_ASSET_DEFINITIONS.map((definition) => ({

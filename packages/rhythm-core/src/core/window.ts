@@ -1,4 +1,4 @@
-import { WindowFunction } from '../utils/types';
+import type { WindowFunction } from '../utils/types.js';
 
 export function getWindow(
   type: WindowFunction,

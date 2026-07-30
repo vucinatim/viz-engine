@@ -170,10 +170,22 @@ describe("Viz graph evaluation", () => {
           ...exampleResolvedArtifacts[0]!,
           payload: {
             ...exampleAudioTimelineArtifact,
+            sourceWindow: {
+              startSample: 0,
+              sampleCount: 5_880,
+              startSeconds: 0,
+              durationSeconds: 4 / 30,
+            },
+            frameAlignment: {
+              fps: 30,
+              frameCount: 4,
+              alignment: "frame-centered",
+            },
             featureSeries: [
               {
                 name: "spectral-flux",
-                sampleRate: 30,
+                unit: "unit",
+                normalization: "artifact-peak",
                 values: [1, 0, 0.1, 0],
               },
             ],

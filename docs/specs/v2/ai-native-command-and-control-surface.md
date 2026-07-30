@@ -54,7 +54,10 @@ Not:
 
 This AI-native control model is absolutely part of the intended future.
 
-But it should be layered in after:
+The stable baseline and session convergence now exist, so the local,
+contract-driven control slice is active architecture. Heavy distributed
+orchestration, cloud runners, and generalized MCP exposure should still be
+layered in only after:
 
 1. Viz has a stable baseline architecture
 2. the core runtime/editor/product boundaries are proven
@@ -64,6 +67,25 @@ This timing rule matters a lot.
 
 We should not let speculative agent-control complexity destabilize the baseline
 engine and product architecture before that baseline is real.
+
+The active local boundary, including headless operation and an editor
+subscribed to the same live session, is specified in
+[Agent-Authored Production Loop Architecture](./agent-authored-production-loop-architecture.md).
+
+The first concrete live slice is now implemented:
+
+- one `VizSessionHost` owns the actual preserved-editor session
+- `VizControl` is an injected semantic facade over that host
+- human and agent mutations share revision, history, subscriptions, and undo
+- versioned strict transactions support expected revision and dry run
+- trusted mounted controls assign actor identity
+- the local Vite bridge routes HTTP/SSE clients to the browser control without
+  owning or mirroring project state
+- `viz-dev live` provides machine-readable discovery, inspection,
+  transactions, history, and preview commands
+
+This is the local architecture seam, not yet a claim of distributed
+collaboration, authentication, generalized MCP publication, or cloud runners.
 
 ## What “AI-Native” Means Here
 

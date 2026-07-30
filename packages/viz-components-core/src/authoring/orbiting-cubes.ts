@@ -1,11 +1,11 @@
-import { v } from '../config/config';
-import { createComponent } from '../config/create-component';
-import { INPUT_ALIAS, OUTPUT_ALIAS } from '../node-network/presets';
+import { defineVizComponentAuthoring, v } from './schema.js';
 
-const OrbitingCubes = createComponent({
-  name: 'Orbiting Cubes',
-  description:
-    'Neuron-like structures with dendrites and soma, orbiting camera reveals intricate patterns',
+const INPUT_ALIAS = 'INPUT';
+const OUTPUT_ALIAS = 'OUTPUT';
+
+export const orbitingCubesAuthoring = defineVizComponentAuthoring({
+  componentId: 'orbiting-cubes',
+  compatibility: 'render-safe',
   config: v.config({
     seed: v.number({
       label: 'Structure Seed',
@@ -375,5 +375,3 @@ const OrbitingCubes = createComponent({
     },
   },
 });
-
-export default OrbitingCubes;

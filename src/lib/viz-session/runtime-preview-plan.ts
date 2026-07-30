@@ -7,10 +7,12 @@ import type {
   VizExecutionMode,
   VizProjectDocument,
   VizRenderPlan,
+  VizRuntimeAudioFrameSnapshot,
 } from '@viz-engine/contracts';
 import {
   createVizRenderPlan,
   createVizRuntimeSession,
+  resolveVizComponentRuntimeInputValues,
   type VizRuntimeFrameInputValues,
   type VizRuntimeSession,
 } from '@viz-engine/runtime';
@@ -46,7 +48,7 @@ const componentRegistry = createCoreComponentRegistry();
 const nodeRegistry = createCoreNodeRegistry();
 const frozenAudioByLayerId = new Map<
   string,
-  VizSessionRuntimePreviewAudioFrameData
+  VizRuntimeAudioFrameSnapshot
 >();
 let sessionCache: RuntimePreviewSessionCache | null = null;
 
@@ -55,12 +57,45 @@ const toExecutionMode = (
 ): VizExecutionMode => (mode === 'export' ? 'render' : 'live');
 
 const cloneAudioFrameData = (
-  audioFrameData: VizSessionRuntimePreviewAudioFrameData,
-): VizSessionRuntimePreviewAudioFrameData => ({
+  audioFrameData: VizRuntimeAudioFrameSnapshot,
+): VizRuntimeAudioFrameSnapshot => ({
   frequencyData: audioFrameData.frequencyData.slice(),
   timeDomainData: audioFrameData.timeDomainData.slice(),
   sampleRate: audioFrameData.sampleRate,
   fftSize: audioFrameData.fftSize,
+  minDecibels: audioFrameData.minDecibels,
+  maxDecibels: audioFrameData.maxDecibels,
+  provenance: audioFrameData.provenance,
+  ...(audioFrameData.sourceAssetId === undefined
+    ? {}
+    : { sourceAssetId: audioFrameData.sourceAssetId }),
+  ...(audioFrameData.artifactId === undefined
+    ? {}
+    : { artifactId: audioFrameData.artifactId }),
+  ...(audioFrameData.artifactFrame === undefined
+    ? {}
+    : { artifactFrame: audioFrameData.artifactFrame }),
+});
+
+const toRuntimeAudioSnapshot = (
+  audioFrameData: VizSessionRuntimePreviewAudioFrameData,
+): VizRuntimeAudioFrameSnapshot => ({
+  frequencyData: audioFrameData.frequencyData,
+  timeDomainData: audioFrameData.timeDomainData,
+  sampleRate: audioFrameData.sampleRate,
+  fftSize: audioFrameData.fftSize,
+  minDecibels: audioFrameData.minDecibels ?? -90,
+  maxDecibels: audioFrameData.maxDecibels ?? -10,
+  provenance: audioFrameData.provenance ?? 'live',
+  ...(audioFrameData.sourceAssetId === undefined
+    ? {}
+    : { sourceAssetId: audioFrameData.sourceAssetId }),
+  ...(audioFrameData.artifactId === undefined
+    ? {}
+    : { artifactId: audioFrameData.artifactId }),
+  ...(audioFrameData.artifactFrame === undefined
+    ? {}
+    : { artifactFrame: audioFrameData.artifactFrame }),
 });
 
 const createSessionProject = ({
@@ -129,6 +164,7 @@ const createFrameInputValues = ({
   audioFrameData,
   isPlaying,
 }: CreateRuntimePreviewPlanOptions): VizRuntimeFrameInputValues => {
+  const runtimeAudio = toRuntimeAudioSnapshot(audioFrameData);
   const activeLayerIds = new Set(project.layers.map((layer) => layer.id));
 
   for (const layerId of frozenAudioByLayerId.keys()) {
@@ -139,60 +175,40 @@ const createFrameInputValues = ({
 
   return Object.fromEntries(
     project.layers.flatMap((layer) => {
-      if (layer.componentId !== 'curve-spectrum') {
-        return [];
-      }
-
       const shouldFreeze =
         frame.mode === 'live' &&
         layer.surface?.freezeWhenPaused !== false &&
         !isPlaying;
-      let layerAudio = audioFrameData;
-
-      if (shouldFreeze) {
-        layerAudio =
-          frozenAudioByLayerId.get(layer.id) ??
-          cloneAudioFrameData(audioFrameData);
-      } else {
+      if (!shouldFreeze) {
         frozenAudioByLayerId.set(
           layer.id,
-          cloneAudioFrameData(audioFrameData),
+          cloneAudioFrameData(runtimeAudio),
         );
+        return [];
       }
 
+      const component = componentRegistry.get(layer.componentId);
+      if (!component) {
+        return [];
+      }
+      const layerAudio =
+        frozenAudioByLayerId.get(layer.id) ??
+        cloneAudioFrameData(runtimeAudio);
+      const values = resolveVizComponentRuntimeInputValues(component, {
+        audio: layerAudio,
+      });
+      if (Object.keys(values).length === 0) {
+        return [];
+      }
       return [
         [
           layer.id,
-          {
-            spectrum: Array.from(layerAudio.frequencyData),
-            sampleRate: layerAudio.sampleRate,
-            fftSize: layerAudio.fftSize,
-          },
+          values,
         ],
       ];
     }),
   );
 };
-
-const createGraphInputValues = ({
-  project,
-  frame,
-  audioFrameData,
-}: CreateRuntimePreviewPlanOptions) =>
-  Object.fromEntries(
-    (project.graphs ?? []).map((graph) => [
-      graph.id,
-      {
-        audioSignal: audioFrameData.timeDomainData,
-        frequencyAnalysis: {
-          frequencyData: audioFrameData.frequencyData,
-          sampleRate: audioFrameData.sampleRate,
-          fftSize: audioFrameData.fftSize,
-        },
-        time: frame.time,
-      },
-    ]),
-  );
 
 export const createVizSessionRuntimePreviewPlan = (
   options: CreateRuntimePreviewPlanOptions,
@@ -205,7 +221,9 @@ export const createVizSessionRuntimePreviewPlan = (
     registry: componentRegistry,
     nodeRegistry,
     inputValues: createFrameInputValues(options),
-    graphInputValues: createGraphInputValues(options),
+    runtimeInputs: {
+      audio: toRuntimeAudioSnapshot(options.audioFrameData),
+    },
   });
 };
 

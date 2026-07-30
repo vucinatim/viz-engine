@@ -26,12 +26,14 @@ import {
   getParameterIdsFromConfig,
 } from '@/lib/comp-utils/config-utils';
 import {
-  createVizEditorAudioSessionController,
-  createVizEditorSession,
-  createVizEditorTransportController,
   type VizEditorAudioAnalyzerState,
   type VizEditorAudioSource,
 } from '@viz-engine/editor-session';
+import {
+  createVizControl,
+  createVizSessionHost,
+} from '@viz-engine/editor-control';
+import { createVizAudioFeatureBakeJobService } from '@viz-engine/bake';
 import {
   VIZ_PROJECT_SCHEMA_VERSION,
   type VizProjectAction,
@@ -39,6 +41,7 @@ import {
   type VizProjectDocument,
 } from '@viz-engine/contracts';
 import {
+  applyVizComponentDefaultAssets,
   assertValidProjectDocument,
   validateProjectDocument,
 } from '@viz-engine/runtime';
@@ -54,6 +57,7 @@ import { generateLayerId } from '@/lib/id-utils';
 import { createIdbJsonStorage } from '@/lib/idb-json-storage';
 import { useNodeNetworkStore } from '@/components/node-network/node-network-store';
 import { toast } from 'sonner';
+import { createVizBrowserAudioBakeSourceResolver } from '@/lib/utils/browser-audio-bake';
 
 import type {
   VizSessionAudioState,
@@ -71,7 +75,6 @@ import {
 } from './runtime-preview-plan';
 import {
   applyEditorLayerSettings,
-  applyComponentDefaultAssets,
   createProjectedLayer,
   createVizLayerFromComp,
   findEditorCompForLayer,
@@ -87,31 +90,25 @@ import {
 const DEFAULT_FPS = 60;
 const DEFAULT_DURATION_FRAMES = 1;
 const runtimeComponentRegistry = createCoreComponentRegistry();
-const createProjectSession = (project: VizProjectDocument) =>
-  createVizEditorSession({
-    project,
-    actor: { kind: 'user', id: 'viz-studio' },
-    normalizeProject: (projectDocument) =>
-      applyComponentDefaultAssets(
-        projectDocument,
-        (componentId) => runtimeComponentRegistry.get(componentId),
-      ),
-  });
-let projectSession = createVizEditorSession({
-  project: createEmptyVizProjectDocument(),
-  actor: { kind: 'user', id: 'viz-studio' },
+const audioFeatureBakeJobs = createVizAudioFeatureBakeJobService({
+  sourceResolver: createVizBrowserAudioBakeSourceResolver((request) => {
+    const asset = vizSessionHost
+      .getProjectResources()
+      .resolvedAssets.find(
+        (candidate) =>
+          candidate.id === request.sourceAssetId &&
+          candidate.kind === 'audio',
+      );
+    if (!asset) {
+      throw new Error(
+        `No resolved audio asset "${request.sourceAssetId}" is available in the active session.`,
+      );
+    }
+    return asset.uri;
+  }),
 });
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
-
-const createInitialTransportState = () => ({
-  fps: DEFAULT_FPS,
-  durationFrames: DEFAULT_DURATION_FRAMES,
-  currentFrame: 0,
-  isPlaying: false,
-  loop: true,
-  mode: 'live' as const,
-});
 
 const createInitialRuntimeInspectionState =
   (): VizSessionRuntimeInspectionState => ({
@@ -129,7 +126,7 @@ const createInitialRuntimeInspectionState =
   });
 
 const createInitialPreviewState = (): VizSessionPreviewState => ({
-  transport: createInitialTransportState(),
+  transport: vizSessionHost.getSnapshot().transport,
   runtimeInspection: createInitialRuntimeInspectionState(),
 });
 
@@ -137,8 +134,6 @@ const createInitialHistoryState = (): VizSessionHistoryState => ({
   isNodeEditorFocused: false,
   activeGestureId: null,
 });
-
-const createInitialAudioController = () => createVizEditorAudioSessionController();
 
 const createSessionStorage = () => {
   if (typeof window === 'undefined') {
@@ -156,12 +151,46 @@ const createSessionStorage = () => {
   });
 };
 
-let transportController = createVizEditorTransportController({
-  fps: DEFAULT_FPS,
-  durationFrames: DEFAULT_DURATION_FRAMES,
+export const vizSessionHost = createVizSessionHost({
+  actor: { kind: 'user', id: 'viz-studio' },
+  initialProject: {
+    project: createEmptyVizProjectDocument(),
+    resolvedAssets: [],
+    resolvedArtifacts: [],
+    source: {
+      kind: 'memory',
+      label: 'Viz Studio working project',
+    },
+  },
+  componentRegistry: runtimeComponentRegistry,
+  services: {
+    audioFeatureBakeJobs,
+  },
+  normalizeProject: (projectDocument) =>
+    applyVizComponentDefaultAssets(
+      projectDocument,
+      (componentId) => runtimeComponentRegistry.get(componentId),
+    ),
+  onTransportStateChange: (transport) => {
+    vizSessionStore.setState((state) => ({
+      ...state,
+      preview: {
+        ...state.preview,
+        transport,
+      },
+    }));
+  },
+  onAudioSessionStateChange: (session, diagnostics) => {
+    vizSessionStore.setState((state) => ({
+      ...state,
+      audio: {
+        ...state.audio,
+        session,
+        diagnostics,
+      },
+    }));
+  },
 });
-
-let audioController = createInitialAudioController();
 
 const resolveComp = (layer: Pick<VizLayer, 'componentId' | 'name'>): Comp | null =>
   findEditorCompForLayer(layer, useCompStore.getState().comps);
@@ -327,8 +356,8 @@ const createInitialProjectState = (): VizSessionProjectState => ({
 });
 
 const createInitialAudioState = (): VizSessionAudioState => ({
-  session: audioController.getState(),
-  diagnostics: audioController.getDiagnostics(),
+  session: vizSessionHost.getSnapshot().audioSession,
+  diagnostics: vizSessionHost.getSnapshot().audioDiagnostics,
   audioFile: null,
   currentTrackUrl: null,
   trackList: [],
@@ -381,33 +410,6 @@ export const vizSessionStore = createStore<VizSessionState>()(
   ),
 );
 
-transportController = createVizEditorTransportController({
-  fps: DEFAULT_FPS,
-  durationFrames: DEFAULT_DURATION_FRAMES,
-  onStateChange: (transport) => {
-    vizSessionStore.setState((state) => ({
-      ...state,
-      preview: {
-        ...state.preview,
-        transport,
-      },
-    }));
-  },
-});
-
-audioController = createVizEditorAudioSessionController({
-  onStateChange: (session) => {
-    vizSessionStore.setState((state) => ({
-      ...state,
-      audio: {
-        ...state.audio,
-        session,
-        diagnostics: audioController.getDiagnostics(),
-      },
-    }));
-  },
-});
-
 const getProjectState = () => vizSessionStore.getState().project;
 const getGraphNetworks = () =>
   getProjectedNodeNetworks(vizSessionStore.getState());
@@ -457,7 +459,7 @@ const applyProjectActions = (
     syncLayerProjections?: boolean;
   } = {},
 ) => {
-  const result = projectSession.applyActions(actions);
+  const result = vizSessionHost.applyActions(actions);
   if (!result.ok) {
     throw new Error(
       result.errors.map((error) => error.message).join('; ') ||
@@ -473,31 +475,53 @@ const applyProjectActions = (
   resetVizSessionSelectorCaches();
   replaceProjectState({
     initialized: true,
-    revision: projectSession.getSnapshot().revision,
+    revision: vizSessionHost.getSnapshot().session.revision,
     sourceProject: projectState.sourceProject ?? clone(canonicalProject),
     workingProject: canonicalProject,
   });
 };
 
 const syncProjectSessionProject = () => {
-  const project = projectSession.exportWorkingProject();
+  const project = vizSessionHost.getWorkingProject();
   syncProjectedStoresFromProject(project);
   resetVizSessionSelectorCaches();
   replaceProjectState({
     ...getProjectState(),
     initialized: true,
-    revision: projectSession.getSnapshot().revision,
+    revision: vizSessionHost.getSnapshot().session.revision,
     workingProject: project,
   });
   syncNetworkOpenState();
 };
 
+export const vizControl = createVizControl({
+  host: vizSessionHost,
+  actor: { kind: 'agent', id: 'viz-studio-live-control' },
+  onProjectChange: (_snapshot, reason) => {
+    if (reason === 'load') {
+      const project = vizSessionHost.getWorkingProject();
+      syncProjectedStoresFromProject(project);
+      resetVizSessionSelectorCaches();
+      replaceProjectState({
+        initialized: true,
+        revision: vizSessionHost.getSnapshot().session.revision,
+        sourceProject: clone(project),
+        workingProject: clone(project),
+      });
+      syncNetworkOpenState();
+      return;
+    }
+
+    syncProjectSessionProject();
+  },
+});
+
 const runProjectHistoryGroup = (mutation: () => void) => {
-  projectSession.beginHistoryGroup();
+  vizSessionHost.beginHistoryGroup();
   try {
     mutation();
   } finally {
-    projectSession.endHistoryGroup();
+    vizSessionHost.endHistoryGroup();
     syncProjectSessionProject();
   }
 };
@@ -710,10 +734,22 @@ const applyPresetNetworksForLayer = (
 
 const buildBundledTrackUrl = (filename: string) => `/music/${filename}`;
 
+const loadProjectIntoVizSessionHost = (project: VizProjectDocument) => {
+  vizSessionHost.loadProject({
+    project,
+    resolvedAssets: [],
+    resolvedArtifacts: [],
+    source: {
+      kind: 'memory',
+      label: project.name,
+    },
+  });
+};
+
 export const vizSessionActions = {
   inspection: {
     project() {
-      const snapshot = projectSession.getSnapshot();
+      const snapshot = vizSessionHost.getSnapshot().session;
       return {
         revision: snapshot.revision,
         project: snapshot.workingProject,
@@ -725,7 +761,7 @@ export const vizSessionActions = {
       };
     },
     graph(graphId: string) {
-      const project = projectSession.getWorkingProject();
+      const project = vizSessionHost.getWorkingProject();
       const graph = project.graphs?.find((candidate) => candidate.id === graphId);
       const runtime = getPreviewState().runtimeInspection.lastGraphResults.find(
         (result) => result.graphId === graphId,
@@ -739,7 +775,7 @@ export const vizSessionActions = {
       return vizSessionActions.preview.inspectRuntimePreview();
     },
     assets() {
-      const project = projectSession.getWorkingProject();
+      const project = vizSessionHost.getWorkingProject();
       return {
         assetRefs: structuredClone(project.assetRefs ?? []),
         artifactRefs: structuredClone(project.artifactRefs ?? []),
@@ -753,26 +789,26 @@ export const vizSessionActions = {
     initializeProjectState(force = false) {
       const state = getProjectState();
       if (state.initialized) {
-        const project = applyComponentDefaultAssets(
+        const project = applyVizComponentDefaultAssets(
           state.workingProject,
           (componentId) =>
             runtimeComponentRegistry.get(componentId),
         );
         syncProjectedStoresFromProject(project);
         resetVizSessionSelectorCaches();
-        transportController.setDurationFrames(
+        vizSessionHost.setTransportDurationFrames(
           project.timeline.durationInFrames,
         );
-        projectSession = createProjectSession(project);
         if (force || project !== state.workingProject) {
+          loadProjectIntoVizSessionHost(project);
           replaceProjectState({
             ...state,
-            revision: state.revision + 1,
+            revision: vizSessionHost.getSnapshot().session.revision,
             sourceProject:
               state.sourceProject === null
                 ? null
                 : clone(
-                    applyComponentDefaultAssets(
+                    applyVizComponentDefaultAssets(
                       state.sourceProject,
                       (componentId) =>
                         runtimeComponentRegistry.get(componentId),
@@ -784,7 +820,7 @@ export const vizSessionActions = {
         return;
       }
 
-      const project = applyComponentDefaultAssets(
+      const project = applyVizComponentDefaultAssets(
         state.workingProject.schemaVersion === VIZ_PROJECT_SCHEMA_VERSION
           ? state.workingProject
           : createEmptyVizProjectDocument(),
@@ -792,31 +828,26 @@ export const vizSessionActions = {
       );
       syncProjectedStoresFromProject(project);
       resetVizSessionSelectorCaches();
-      transportController.setDurationFrames(project.timeline.durationInFrames);
-      projectSession = createProjectSession(project);
+      loadProjectIntoVizSessionHost(project);
       replaceProjectState({
         initialized: true,
-        revision: force ? state.revision + 1 : state.revision,
+        revision: vizSessionHost.getSnapshot().session.revision,
         sourceProject: clone(project),
         workingProject: clone(project),
       });
     },
     importWorkingProject(project: VizProjectDocument) {
       assertValidProjectDocument(project);
-      const canonicalProject = applyComponentDefaultAssets(
+      const canonicalProject = applyVizComponentDefaultAssets(
         project,
         (componentId) => runtimeComponentRegistry.get(componentId),
       );
       syncProjectedStoresFromProject(canonicalProject);
       resetVizSessionSelectorCaches();
-      transportController.setDurationFrames(
-        canonicalProject.timeline.durationInFrames,
-      );
-      projectSession = createProjectSession(canonicalProject);
-      const current = getProjectState();
+      loadProjectIntoVizSessionHost(canonicalProject);
       replaceProjectState({
         initialized: true,
-        revision: current.revision + 1,
+        revision: vizSessionHost.getSnapshot().session.revision,
         sourceProject: clone(canonicalProject),
         workingProject: clone(canonicalProject),
       });
@@ -1234,32 +1265,32 @@ export const vizSessionActions = {
   },
   preview: {
     play() {
-      transportController.play();
+      vizSessionHost.play();
     },
     pause() {
-      transportController.pause();
+      vizSessionHost.pause();
     },
     togglePlayback() {
-      transportController.togglePlayback();
+      vizSessionHost.togglePlayback();
     },
     seekToFrame(frame: number) {
-      transportController.seekToFrame(frame);
+      vizSessionHost.seekToFrame(frame);
     },
     seekToSeconds(seconds: number) {
       const fps =
         getPreviewState().transport.fps > 0
           ? getPreviewState().transport.fps
           : DEFAULT_FPS;
-      transportController.seekToFrame(Math.floor(seconds * fps));
+      vizSessionHost.seekToFrame(Math.floor(seconds * fps));
     },
     syncCurrentFrame(frame: number) {
       if (frame === getPreviewState().transport.currentFrame) {
         return;
       }
-      transportController.seekToFrame(frame);
+      vizSessionHost.seekToFrame(frame);
     },
     setDurationFrames(durationFrames: number) {
-      transportController.setDurationFrames(durationFrames);
+      vizSessionHost.setTransportDurationFrames(durationFrames);
       const project = getProjectState().workingProject;
       if (
         Number.isInteger(durationFrames) &&
@@ -1283,12 +1314,12 @@ export const vizSessionActions = {
       }
     },
     reset() {
-      transportController.pause();
-      transportController.seekToFrame(0);
-      transportController.setDurationFrames(DEFAULT_DURATION_FRAMES);
+      vizSessionHost.pause();
+      vizSessionHost.seekToFrame(0);
+      vizSessionHost.setTransportDurationFrames(DEFAULT_DURATION_FRAMES);
       replacePreviewState({
         ...getPreviewState(),
-        transport: transportController.getState(),
+        transport: vizSessionHost.getSnapshot().transport,
         runtimeInspection: createInitialRuntimeInspectionState(),
       });
       resetVizSessionRuntimePreviewPlanCache();
@@ -1436,7 +1467,7 @@ export const vizSessionActions = {
     attachBundledTrack(filename: string, index?: number) {
       const url = buildBundledTrackUrl(filename);
       useAudioEngineStore.getState().loadAudioUrl(url);
-      audioController.attachSource({
+      vizSessionHost.attachAudioSource({
         kind: 'media-element',
         id: filename,
         label: filename,
@@ -1445,8 +1476,8 @@ export const vizSessionActions = {
       vizSessionActions.preview.seekToFrame(0);
       replaceAudioState({
         ...getAudioState(),
-        session: audioController.getState(),
-        diagnostics: audioController.getDiagnostics(),
+        session: vizSessionHost.getSnapshot().audioSession,
+        diagnostics: vizSessionHost.getSnapshot().audioDiagnostics,
         audioFile: null,
         currentTrackUrl: url,
         currentTrackIndex:
@@ -1457,7 +1488,7 @@ export const vizSessionActions = {
     },
     attachLocalFile(audioFile: File, objectUrl: string) {
       useAudioEngineStore.getState().loadAudioUrl(objectUrl);
-      audioController.attachSource({
+      vizSessionHost.attachAudioSource({
         kind: 'file',
         id: `${audioFile.name}:${audioFile.lastModified}`,
         label: audioFile.name,
@@ -1466,8 +1497,8 @@ export const vizSessionActions = {
       vizSessionActions.preview.seekToFrame(0);
       replaceAudioState({
         ...getAudioState(),
-        session: audioController.getState(),
-        diagnostics: audioController.getDiagnostics(),
+        session: vizSessionHost.getSnapshot().audioSession,
+        diagnostics: vizSessionHost.getSnapshot().audioDiagnostics,
         audioFile,
         currentTrackUrl: objectUrl,
         currentTrackIndex: -1,
@@ -1476,7 +1507,7 @@ export const vizSessionActions = {
       });
     },
     attachCapturedStream(label: string) {
-      audioController.attachSource({
+      vizSessionHost.attachAudioSource({
         kind: 'stream',
         id: 'captured-tab-audio',
         label,
@@ -1484,30 +1515,30 @@ export const vizSessionActions = {
       vizSessionActions.preview.seekToFrame(0);
       replaceAudioState({
         ...getAudioState(),
-        session: audioController.getState(),
-        diagnostics: audioController.getDiagnostics(),
+        session: vizSessionHost.getSnapshot().audioSession,
+        diagnostics: vizSessionHost.getSnapshot().audioDiagnostics,
         currentTime: 0,
         visualTime: 0,
       });
     },
     detachCapturedStream() {
       const { currentTrackUrl } = getAudioState();
-      audioController.clearSource();
-      audioController.setLiveInputAvailable(false);
-      audioController.setAnalyzerState('idle');
+      vizSessionHost.clearAudioSource();
+      vizSessionHost.setLiveInputAvailable(false);
+      vizSessionHost.setAudioAnalyzerState('idle');
       vizSessionActions.preview.seekToFrame(0);
 
       replaceAudioState({
         ...getAudioState(),
-        session: audioController.getState(),
-        diagnostics: audioController.getDiagnostics(),
+        session: vizSessionHost.getSnapshot().audioSession,
+        diagnostics: vizSessionHost.getSnapshot().audioDiagnostics,
         currentTime: 0,
         visualTime: 0,
       });
 
       if (currentTrackUrl) {
         useAudioEngineStore.getState().restoreElementUrl(currentTrackUrl);
-        audioController.attachSource({
+        vizSessionHost.attachAudioSource({
           kind: getAudioState().audioFile ? 'file' : 'media-element',
           id: getAudioState().audioFile
             ? `${getAudioState().audioFile!.name}:${getAudioState().audioFile!.lastModified}`
@@ -1519,18 +1550,18 @@ export const vizSessionActions = {
         });
         replaceAudioState({
           ...getAudioState(),
-          session: audioController.getState(),
-          diagnostics: audioController.getDiagnostics(),
+          session: vizSessionHost.getSnapshot().audioSession,
+          diagnostics: vizSessionHost.getSnapshot().audioDiagnostics,
         });
       } else {
         useAudioEngineStore.getState().clearElementSource();
       }
     },
     setAnalyzerState(analyzerState: VizEditorAudioAnalyzerState) {
-      audioController.setAnalyzerState(analyzerState);
+      vizSessionHost.setAudioAnalyzerState(analyzerState);
     },
     setLiveInputAvailable(liveInputAvailable: boolean) {
-      audioController.setLiveInputAvailable(liveInputAvailable);
+      vizSessionHost.setLiveInputAvailable(liveInputAvailable);
     },
     skipToNext() {
       const { trackList, currentTrackIndex } = getAudioState();
@@ -1566,15 +1597,15 @@ export const vizSessionActions = {
       });
     },
     clearSelection() {
-      audioController.clearSource();
-      audioController.setLiveInputAvailable(false);
-      audioController.setAnalyzerState('idle');
+      vizSessionHost.clearAudioSource();
+      vizSessionHost.setLiveInputAvailable(false);
+      vizSessionHost.setAudioAnalyzerState('idle');
       useAudioEngineStore.getState().clearElementSource();
       vizSessionActions.preview.seekToFrame(0);
       replaceAudioState({
         ...getAudioState(),
-        session: audioController.getState(),
-        diagnostics: audioController.getDiagnostics(),
+        session: vizSessionHost.getSnapshot().audioSession,
+        diagnostics: vizSessionHost.getSnapshot().audioDiagnostics,
         audioFile: null,
         currentTrackUrl: null,
         currentTrackIndex: -1,
@@ -1583,12 +1614,12 @@ export const vizSessionActions = {
       });
     },
     reset() {
-      audioController.clearSource();
-      audioController.setLiveInputAvailable(false);
-      audioController.setAnalyzerState('idle');
+      vizSessionHost.clearAudioSource();
+      vizSessionHost.setLiveInputAvailable(false);
+      vizSessionHost.setAudioAnalyzerState('idle');
       replaceAudioState({
-        session: audioController.getState(),
-        diagnostics: audioController.getDiagnostics(),
+        session: vizSessionHost.getSnapshot().audioSession,
+        diagnostics: vizSessionHost.getSnapshot().audioDiagnostics,
         audioFile: null,
         currentTrackUrl: null,
         trackList: [],
@@ -1598,19 +1629,19 @@ export const vizSessionActions = {
       });
     },
     attachSource(source: VizEditorAudioSource) {
-      audioController.attachSource(source);
+      vizSessionHost.attachAudioSource(source);
       replaceAudioState({
         ...getAudioState(),
-        session: audioController.getState(),
-        diagnostics: audioController.getDiagnostics(),
+        session: vizSessionHost.getSnapshot().audioSession,
+        diagnostics: vizSessionHost.getSnapshot().audioDiagnostics,
       });
     },
     clearSource() {
-      audioController.clearSource();
+      vizSessionHost.clearAudioSource();
       replaceAudioState({
         ...getAudioState(),
-        session: audioController.getState(),
-        diagnostics: audioController.getDiagnostics(),
+        session: vizSessionHost.getSnapshot().audioSession,
+        diagnostics: vizSessionHost.getSnapshot().audioDiagnostics,
       });
     },
     setState(partial: Partial<VizSessionAudioState>) {
@@ -1622,18 +1653,18 @@ export const vizSessionActions = {
   },
   history: {
     undo() {
-      if (!projectSession.canUndo()) {
+      if (!vizSessionHost.canUndo()) {
         return;
       }
-      projectSession.undo();
+      vizSessionHost.undo();
       syncProjectSessionProject();
       toast.success('Undo', { duration: 1500 });
     },
     redo() {
-      if (!projectSession.canRedo()) {
+      if (!vizSessionHost.canRedo()) {
         return;
       }
-      projectSession.redo();
+      vizSessionHost.redo();
       syncProjectSessionProject();
       toast.success('Redo', { duration: 1500 });
     },
@@ -1646,13 +1677,13 @@ export const vizSessionActions = {
       vizSessionActions.history.redo();
     },
     canUndo() {
-      return projectSession.canUndo();
+      return vizSessionHost.canUndo();
     },
     canRedo() {
-      return projectSession.canRedo();
+      return vizSessionHost.canRedo();
     },
     startNodeDrag(networkId: string) {
-      projectSession.beginHistoryGroup();
+      vizSessionHost.beginHistoryGroup();
       replaceHistoryState({
         ...getHistoryState(),
         activeGestureId: networkId,
@@ -1660,7 +1691,7 @@ export const vizSessionActions = {
     },
     endNodeDrag(networkId: string) {
       if (getHistoryState().activeGestureId === networkId) {
-        projectSession.endHistoryGroup();
+        vizSessionHost.endHistoryGroup();
         replaceHistoryState({
           ...getHistoryState(),
           activeGestureId: null,

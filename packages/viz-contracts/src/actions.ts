@@ -16,10 +16,29 @@ export type VizActionActor =
 
 export interface VizActionEnvelope<TAction extends VizProjectAction = VizProjectAction> {
   id: string;
+  transactionId: string;
   type: TAction["type"];
   timestamp: string;
   actor: VizActionActor;
   payload: TAction["payload"];
+}
+
+export interface VizProjectTransaction {
+  id?: string;
+  expectedRevision?: number;
+  dryRun?: boolean;
+  actions: VizProjectAction[];
+}
+
+export type VizProjectTransactionStatus =
+  | "applied"
+  | "dry-run"
+  | "conflict"
+  | "rejected";
+
+export interface VizProjectRevisionConflict {
+  expectedRevision: number;
+  actualRevision: number;
 }
 
 export type VizProjectAction =

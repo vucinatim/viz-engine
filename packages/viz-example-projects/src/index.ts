@@ -44,27 +44,40 @@ const exampleCoverDataUri = `data:image/svg+xml;charset=utf-8,${encodeURICompone
 const exampleAudioPlaceholderBytes = new TextEncoder().encode("viz-engine-audio-placeholder").buffer;
 
 export const exampleAudioTimelineArtifact: VizAudioFeatureTimelineArtifact = {
+  schemaVersion: 1,
   id: "artifact-audio-standard-main",
   kind: "audio-feature-timeline",
   label: "Main Song Standard Features",
   sourceAssetId: "asset-audio-main",
   profile: "standard",
-  fps: 30,
-  frameCount,
+  sourceWindow: {
+    startSample: 0,
+    sampleCount: frameCount * 1470,
+    startSeconds: 0,
+    durationSeconds: frameCount / 30,
+  },
+  frameAlignment: {
+    fps: 30,
+    frameCount,
+    alignment: "frame-centered",
+  },
   featureSeries: [
     {
       name: "bass-energy",
-      sampleRate: 30,
+      unit: "unit",
+      normalization: "custom",
       values: createFeatureSeries(frameCount, (index) => 0.3 + Math.abs(Math.sin(index / 9)) * 0.7),
     },
     {
       name: "loudness",
-      sampleRate: 30,
+      unit: "unit",
+      normalization: "custom",
       values: createFeatureSeries(frameCount, (index) => 0.2 + Math.abs(Math.sin(index / 16)) * 0.6),
     },
     {
       name: "spectral-flux",
-      sampleRate: 30,
+      unit: "unit",
+      normalization: "custom",
       values: createFeatureSeries(frameCount, (index) => 0.15 + Math.abs(Math.cos(index / 11)) * 0.5),
     },
   ],

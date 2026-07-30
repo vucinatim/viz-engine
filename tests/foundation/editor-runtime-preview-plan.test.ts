@@ -2,18 +2,19 @@ import { describe, expect, it } from 'vitest';
 
 import { CompDefinitionMap } from '@/components/comps';
 import { NodeDefinitionMap } from '@/components/node-network/animation-nodes';
-import FullscreenShader from '@/components/comps/fullscreen-shader';
-import StageScene from '@/components/comps/stage-scene';
 import {
   createEditorComponentPreviewPlan,
   isEditorComponentRuntimeBacked,
 } from '@/lib/editor-component-preview-plan';
-import { applyComponentDefaultAssets } from '@/lib/viz-session/project-adapters';
+import { applyVizComponentDefaultAssets } from '@viz-engine/runtime';
 import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
 import { createVizSessionRuntimePreviewFrame } from '@/lib/viz-session';
 import { createVizSessionRuntimePreviewPlan } from '@/lib/viz-session/runtime-preview-plan';
 import { createTestProject } from './viz-session-test-utils';
 import { createCoreComponentRegistry } from '@viz-engine/components-core';
+
+const FullscreenShader = CompDefinitionMap.get('Fullscreen Shader')!;
+const StageScene = CompDefinitionMap.get('Stage Scene')!;
 
 const audioFrameData = {
   frequencyData: Uint8Array.from(
@@ -92,7 +93,7 @@ describe('Editor runtime preview planning', () => {
 
     expect(
       renderPlan.layers[0]?.resolvedInputs.spectrum?.value,
-    ).toEqual(Array.from(audioFrameData.frequencyData));
+    ).toBe(audioFrameData.frequencyData);
     expect(renderPlan.layers[0]?.node?.kind).toBe('group');
     expect(renderPlan.issues).toEqual([]);
   });
@@ -299,7 +300,7 @@ describe('Editor runtime preview planning', () => {
       },
     };
     const registry = createCoreComponentRegistry();
-    const normalized = applyComponentDefaultAssets(
+    const normalized = applyVizComponentDefaultAssets(
       project,
       (componentId) => registry.get(componentId),
     );

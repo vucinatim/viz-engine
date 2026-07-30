@@ -4,6 +4,23 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
 
 ## Active Architectural Suggestions
 
+- Extend the authoritative decoder posture now proven for project
+  transactions, live control, and audio-bake jobs to render and feedback job
+  requests. Transport adapters must never cast arbitrary JSON into trusted
+  typed operations.
+- Add a minimal execution manifest that locks capability, component, node,
+  renderer, bake, asset, and artifact identities required to reproduce output.
+- Preserve the full analyzer-compatible standard audio artifact for semantic
+  parity, but investigate an explicit compressed/binary container when real
+  production bundles prove JSON/base64 storage too costly. Do not silently
+  reduce bin/sample resolution as a storage optimization.
+- Move cooperative browser audio analysis into a worker attachment when
+  production-length measurements show main-thread contention. The current
+  yielding implementation protects responsiveness, but it does not provide CPU
+  isolation.
+- Wrap the proven browser capture and FFmpeg implementation behind a shared
+  render-job contract, then add repeatable still, contact-sheet, short-clip,
+  media-probe, blank-frame, frozen-frame, and performance feedback tools.
 - Continue stable render-node reconciliation beyond the retained shader,
   Three-program, and polyline paths. Frequently changing text and mixed
   primitive groups can still recreate textures or geometry, which would
@@ -26,8 +43,6 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
   `render-safe`, `bake-required`, `live-only`.
 - Introduce first-class baking contracts for audio features, simulation caches,
   and checkpoints instead of ad hoc offline helpers.
-- Design a stable AI action surface early so the engine does not become
-  UI-driven by accident.
 - Keep Remotion behind a renderer adapter boundary and avoid letting Remotion
   semantics leak into the source-of-truth scene model.
 - Move toward a package structure that cleanly separates contracts, runtime,
@@ -98,17 +113,9 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
 - Extend the new isolated-layer `Three` compositor into a fuller pass/effect
   graph deliberately, but keep layer ownership explicit so masks, blur, bloom,
   and later post-processing do not get reimplemented as primitive-level hacks.
-- Keep the future agent-operated editor loop centered on the same action and
-  runtime surfaces as the CLI and tests, so “open the editor and build it live”
-  does not drift into a browser-only control architecture with hidden state.
 - Preserve the V1 editor UX as a first-class product reference while replacing
   the architecture underneath it, so V2 does not accidentally regress from a
   serious creative tool into a lower-ambition dev shell or inspector product.
-- Build the next editor rebuild seam as a generic live transport and
-  audio-session foundation on top of `@viz-engine/editor-session`, not inside a
-  shell-specific app store, so play/pause/seek, live-vs-baked diagnostics, and
-  audio-session lifecycle can later plug under the preserved V1 editor UX
-  cleanly.
 - When wiring the new transport/audio controllers under the preserved V1 editor
   shell, keep browser media element ownership outside the pure session package
   and feed only explicit state transitions inward, so browser quirks do not
@@ -125,7 +132,7 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
   editor grows, so bundle/filesystem concerns do not leak back into browser
   builds and the operator surface stays safe to mount under the real editor.
 - The next editor-facing follow-up should harden repeated browser-verified
-  play/pause/seek behavior under the V2-backed Next shell, so the live loop is
+  play/pause/seek behavior under the V2-backed Vite shell, so the live loop is
   proven in the actual product terrain and not only through deterministic
   package/runtime tests.
 - As more of the preserved V1 editor surface is rebuilt over V2, track and
@@ -135,15 +142,12 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
   mechanically simple and explicitly controlled; avoid over-clever control
   primitives on the critical live-loop path when a plain button conveys the
   state more truthfully for both humans and agents.
-- The next live-loop follow-up should connect the local operator surface and the
-  open browser/editor session more directly, so browser verification can observe
-  canonical state transitions without relying on fragile UI event synthesis
-  alone.
-- Build the next layer-creation/editor-authoring step on top of the new
-  component-catalog truth, so new layer flows stay registry-driven instead of
-  hardcoding component knowledge into the UI.
+
 ## Next Cleanup Candidates
 
+- repair the repository Prettier configuration, which still imports the deleted
+  Tailwind v3 `tailwind.config.ts`; formatting currently needs an explicit
+  config override even though the active studio uses Tailwind v4
 - keep burning down editor-era convenience accessors that still encourage
   treating adapter stores as canonical truth
 - now that the editor has one explicit local control plane, the next cleanup

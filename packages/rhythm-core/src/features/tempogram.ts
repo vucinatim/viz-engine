@@ -1,4 +1,4 @@
-import { TempogramOptions, TempogramResult } from '../utils/types';
+import type { TempogramOptions, TempogramResult } from '../utils/types.js';
 
 export const DEFAULT_TEMPOGRAM_OPTIONS: Required<
   Pick<TempogramOptions, 'sr' | 'hopLength' | 'minBpm' | 'maxBpm' | 'method'>
@@ -37,10 +37,10 @@ export function tempogram(
     for (let j = -smoothRadius; j <= smoothRadius; j += 1) {
       const idx = i + j;
       if (idx < 0 || idx >= onsetEnv.length) continue;
-      sum += onsetEnv[idx];
+      sum += onsetEnv[idx]!;
       count += 1;
     }
-    smoothed[i] = count > 0 ? sum / count : onsetEnv[i];
+    smoothed[i] = count > 0 ? sum / count : onsetEnv[i]!;
   }
 
   const medianFiltered = new Float32Array(smoothed.length);
@@ -52,13 +52,13 @@ export function tempogram(
     for (let j = -medianRadius; j <= medianRadius; j += 1) {
       const idx = i + j;
       if (idx < 0 || idx >= smoothed.length) continue;
-      windowValues[count] = smoothed[idx];
+      windowValues[count] = smoothed[idx]!;
       count += 1;
     }
     const slice = Array.from(windowValues.subarray(0, count)).sort(
       (a, b) => a - b,
     );
-    medianFiltered[i] = slice[Math.floor(count / 2)] ?? smoothed[i];
+    medianFiltered[i] = slice[Math.floor(count / 2)] ?? smoothed[i]!;
   }
 
   const minLag = Math.max(
@@ -87,13 +87,13 @@ export function tempogram(
   for (let start = 0; start + windowLength <= medianFiltered.length; start += windowHop) {
     let mean = 0;
     for (let i = start; i < start + windowLength; i += 1) {
-      mean += medianFiltered[i];
+      mean += medianFiltered[i]!;
     }
     mean /= windowLength;
 
     let variance = 0;
     for (let i = start; i < start + windowLength; i += 1) {
-      const diff = medianFiltered[i] - mean;
+      const diff = medianFiltered[i]! - mean;
       variance += diff * diff;
     }
     const std = Math.sqrt(variance / windowLength) || 1;
@@ -104,23 +104,23 @@ export function tempogram(
       let sumA = 0;
       let sumB = 0;
       for (let j = start; j + lag < start + windowLength; j += 1) {
-        const a = (medianFiltered[j] - mean) / std;
-        const b = (medianFiltered[j + lag] - mean) / std;
+        const a = (medianFiltered[j]! - mean) / std;
+        const b = (medianFiltered[j + lag]! - mean) / std;
         sum += a * b;
         sumA += a * a;
         sumB += b * b;
       }
       const denom = Math.sqrt(sumA * sumB);
       const normalized = denom > 0 ? sum / denom : 0;
-      accum[i] += normalized;
-      counts[i] += 1;
+      accum[i] = accum[i]! + normalized;
+      counts[i] = counts[i]! + 1;
       tempos[i] = (60 * sr) / (hopLength * lag);
     }
   }
 
   let maxValue = 0;
   for (let i = 0; i < lagCount; i += 1) {
-    const averaged = counts[i] > 0 ? accum[i] / counts[i] : 0;
+    const averaged = counts[i]! > 0 ? accum[i]! / counts[i]! : 0;
     tempogramValues[i] = averaged;
     if (averaged > maxValue) maxValue = averaged;
   }
@@ -131,14 +131,14 @@ export function tempogram(
 
     for (let i = 0; i < tempogramValues.length; i += 1) {
       const lag = minLag + i;
-      let value = tempogramValues[i];
+      let value = tempogramValues[i]!;
       const doubleIdx = Math.round(lag / 2 - minLag);
       const halfIdx = Math.round(lag * 2 - minLag);
       if (doubleIdx >= 0 && doubleIdx < tempogramValues.length) {
-        value += 0.5 * tempogramValues[doubleIdx];
+        value += 0.5 * tempogramValues[doubleIdx]!;
       }
       if (halfIdx >= 0 && halfIdx < tempogramValues.length) {
-        value += 0.25 * tempogramValues[halfIdx];
+        value += 0.25 * tempogramValues[halfIdx]!;
       }
       weighted[i] = value;
       if (value > weightedMax) weightedMax = value;
@@ -146,7 +146,7 @@ export function tempogram(
 
     if (weightedMax > 0) {
       for (let i = 0; i < weighted.length; i += 1) {
-        weighted[i] /= weightedMax;
+        weighted[i] = weighted[i]! / weightedMax;
       }
     }
 

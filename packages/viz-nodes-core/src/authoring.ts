@@ -14,6 +14,8 @@ export interface VizNodeFrequencyAnalysis {
   frequencyData: Uint8Array;
   sampleRate: number;
   fftSize: number;
+  minDecibels?: number;
+  maxDecibels?: number;
 }
 
 export interface VizNodeAnimationInput {

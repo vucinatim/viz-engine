@@ -1,9 +1,8 @@
-import { v } from '../config/config';
-import { createComponent } from '../config/create-component';
+import { defineVizComponentAuthoring, v } from './schema.js';
 
-const NeuralNetwork = createComponent({
-  name: 'Neural Network',
-  description: 'Realistic procedural neuron structures - fly through the brain',
+export const neuralNetworkAuthoring = defineVizComponentAuthoring({
+  componentId: 'neural-network',
+  compatibility: 'render-safe',
   config: v.config({
     neuronCount: v.number({
       label: 'Neuron Count',
@@ -182,5 +181,3 @@ const NeuralNetwork = createComponent({
     seed: 'neural-seed-snare-cycle',
   },
 });
-
-export default NeuralNetwork;

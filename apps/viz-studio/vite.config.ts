@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 import type { Alias } from 'vite';
+import { createVizControlBridgePlugin } from './viz-control-bridge-plugin';
 
 const repoRoot = path.resolve(__dirname, '../..');
 const publicRoot = path.resolve(repoRoot, 'public');
@@ -103,7 +104,12 @@ function createPublicManifestPlugin() {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), createPublicManifestPlugin()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    createPublicManifestPlugin(),
+    createVizControlBridgePlugin(),
+  ],
   publicDir: publicRoot,
   optimizeDeps: {
     exclude: ['@ffmpeg/ffmpeg'],

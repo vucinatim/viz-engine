@@ -4,23 +4,23 @@ import {
 } from '@viz-engine/dev-cli';
 
 import {
-  createVizEditorControl,
-  type CreateVizEditorControlOptions,
-  type VizEditorControl,
-  type VizEditorControlSnapshot,
+  createVizControl,
+  type CreateVizControlOptions,
+  type VizControl,
+  type VizControlSnapshot,
 } from './index.js';
 
-export interface VizNodeEditorControl extends VizEditorControl {
-  openBundleProject(bundleDirectory: string): VizEditorControlSnapshot;
+export interface VizNodeControl extends VizControl {
+  openBundleProject(bundleDirectory: string): VizControlSnapshot;
   exportWorkingBundle(
     bundleDirectory: string,
   ): ReturnType<typeof writeLocalVizProjectBundle>;
 }
 
-export const createVizNodeEditorControl = (
-  options: CreateVizEditorControlOptions = {},
-): VizNodeEditorControl => {
-  const control = createVizEditorControl(options);
+export const createVizNodeControl = (
+  options: CreateVizControlOptions = {},
+): VizNodeControl => {
+  const control = createVizControl(options);
 
   return {
     ...control,

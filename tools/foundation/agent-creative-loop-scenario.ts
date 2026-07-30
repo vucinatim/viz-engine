@@ -3,10 +3,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { loadLocalVizProjectBundle } from '@viz-engine/dev-cli';
-import { createVizNodeEditorControl } from '@viz-engine/editor-control/node';
+import { createVizNodeControl } from '@viz-engine/editor-control/node';
 
 const run = () => {
-  const control = createVizNodeEditorControl({
+  const control = createVizNodeControl({
     actor: { kind: 'agent', id: 'creative-loop-proof' },
   });
 
@@ -108,7 +108,7 @@ const run = () => {
 
   if (!actionResult.ok) {
     throw new Error(
-      `Creative loop mutation failed: ${actionResult.actionResult.errors
+      `Creative loop mutation failed: ${actionResult.transactionResult.errors
         .map((error) => error.message)
         .join('; ')}`,
     );

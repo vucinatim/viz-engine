@@ -1,7 +1,7 @@
-import { frame } from './frame';
-import { jsFftBackend, nextPowerOfTwo, isPowerOfTwo } from './fft';
-import { getWindow } from './window';
-import { AnalysisOptions } from '../utils/types';
+import { frame } from './frame.js';
+import { jsFftBackend, nextPowerOfTwo, isPowerOfTwo } from './fft.js';
+import { getWindow } from './window.js';
+import type { AnalysisOptions } from '../utils/types.js';
 
 export interface ComplexMatrix {
   real: Float32Array;
@@ -48,7 +48,7 @@ export function stft(
     tempImag.fill(0);
     const frameOffset = frameIndex * winLength;
     for (let i = 0; i < winLength; i += 1) {
-      tempReal[i] = framed.frames[frameOffset + i] * window[i];
+      tempReal[i] = framed.frames[frameOffset + i]! * window[i]!;
     }
 
     const { real: outReal, imag: outImag } = jsFftBackend.forward(

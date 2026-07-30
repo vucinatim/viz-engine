@@ -1,5 +1,5 @@
-import { BeatTrackOptions, BeatTrackResult } from '../utils/types';
-import { tempo } from './tempo';
+import type { BeatTrackOptions, BeatTrackResult } from '../utils/types.js';
+import { tempo } from './tempo.js';
 
 export function beatTrack(
   onsetEnv: Float32Array,
@@ -42,7 +42,7 @@ export function beatTrack(
       if (idx >= onsetEnv.length) break;
       if (idx === lastIndex) continue;
       lastIndex = idx;
-      sum += onsetEnv[idx];
+      sum += onsetEnv[idx]!;
     }
     return sum;
   };

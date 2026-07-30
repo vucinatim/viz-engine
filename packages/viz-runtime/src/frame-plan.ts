@@ -8,6 +8,7 @@ import type {
   VizLayerFrameSnapshot,
   VizMaterializedAsset,
   VizResolvedInputValue,
+  VizRuntimeInputs,
   VizValueSource,
 } from "@viz-engine/contracts";
 import { getAudioFeatureTimelineArtifact, sampleAudioFeatureValue } from "./audio-feature-timeline.js";
@@ -16,6 +17,10 @@ import { evaluateVizGraphs } from "./graph-evaluator.js";
 import type { VizRuntimeGraphInputValues } from "./graph-evaluator.js";
 import type { VizNodeRegistry } from "./node-registry.js";
 import type { VizRuntimeSession } from "./runtime-session.js";
+import {
+  createVizStandardGraphRuntimeInputValues,
+  resolveVizComponentRuntimeInputValues,
+} from "./runtime-inputs.js";
 
 export interface CreateVizFramePlanOptions {
   session: VizRuntimeSession;
@@ -24,6 +29,7 @@ export interface CreateVizFramePlanOptions {
   nodeRegistry?: VizNodeRegistry;
   inputValues?: VizRuntimeFrameInputValues;
   graphInputValues?: VizRuntimeGraphInputValues;
+  runtimeInputs?: VizRuntimeInputs;
 }
 
 export type VizRuntimeFrameInputValues = Readonly<
@@ -250,14 +256,29 @@ export const createVizFramePlan = ({
   nodeRegistry,
   inputValues = {},
   graphInputValues,
+  runtimeInputs = {},
 }: CreateVizFramePlanOptions): VizFramePlan => {
   const frameContext = session.getFrameContext(frame);
   const issues: VizFramePlanIssue[] = [];
+  const standardGraphInputValues =
+    createVizStandardGraphRuntimeInputValues(
+      frameContext.timeInSeconds,
+      runtimeInputs,
+    );
+  const mergedGraphInputValues = Object.fromEntries(
+    (session.project.graphs ?? []).map((graph) => [
+      graph.id,
+      {
+        ...standardGraphInputValues,
+        ...(graphInputValues?.[graph.id] ?? {}),
+      },
+    ]),
+  );
   const graphResults = evaluateVizGraphs({
     session,
     frame: frameContext.frame,
     ...(nodeRegistry === undefined ? {} : { registry: nodeRegistry }),
-    ...(graphInputValues === undefined ? {} : { inputValues: graphInputValues }),
+    inputValues: mergedGraphInputValues,
   });
 
   for (const result of graphResults.values()) {
@@ -278,6 +299,28 @@ export const createVizFramePlan = ({
     .filter((layer) => shouldIncludeLayer(layer, session.mode))
     .map((layer) => {
       const component = registry?.get(layer.componentId);
+      const resolvedCanonicalRuntimeInputs = Object.fromEntries(
+        Object.entries(
+          component === undefined
+            ? {}
+            : resolveVizComponentRuntimeInputValues(
+                component,
+                runtimeInputs,
+              ),
+        ).map(([key, value]) => [
+          key,
+          {
+            key,
+            sourceKind: "literal" as const,
+            source: {
+              kind: "literal" as const,
+              value,
+            },
+            status: "resolved" as const,
+            value,
+          },
+        ]),
+      );
       const resolvedProjectInputs = Object.fromEntries(
         Object.entries(layer.inputs ?? {}).map(([key, source]) => [
           key,
@@ -300,6 +343,7 @@ export const createVizFramePlan = ({
         ]),
       );
       const resolvedInputs = {
+        ...resolvedCanonicalRuntimeInputs,
         ...resolvedProjectInputs,
         ...resolvedRuntimeInputs,
       };

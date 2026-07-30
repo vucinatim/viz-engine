@@ -9,7 +9,9 @@ import {
 import editorControl from '@/lib/editor-control';
 import {
   createVizSessionRuntimePreviewFrame,
+  vizControl,
   vizSessionActions,
+  vizSessionHost,
   vizSessionStore,
 } from '@/lib/viz-session';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
@@ -217,5 +219,59 @@ describe('Local editor control facade', () => {
       'a.mp3',
       'b.mp3',
     ]);
+  });
+
+  it('reflects agent transactions through the exact session used by the editor', () => {
+    const { project, layerId } = buildProject();
+    useEditorProjectStore.getState().importWorkingProject(project);
+    const baseRevision = vizSessionHost.getSnapshot().session.revision;
+
+    const agentMutation = vizControl.applyTransaction({
+      id: 'studio-agent-edit',
+      expectedRevision: baseRevision,
+      actions: [
+        {
+          type: 'layer.settings.set',
+          payload: {
+            layerId,
+            path: 'size',
+            value: 2.25,
+          },
+        },
+      ],
+    });
+
+    expect(agentMutation.transactionResult.status).toBe('applied');
+    expect(
+      useEditorProjectStore.getState().workingProject.layers[0]?.settings?.size,
+    ).toBe(2.25);
+    expect(
+      vizSessionStore.getState().project.workingProject.layers[0]?.settings
+        ?.size,
+    ).toBe(2.25);
+    expect(
+      vizSessionHost.getSnapshot().session.actionHistory.at(-1),
+    ).toMatchObject({
+      transactionId: 'studio-agent-edit',
+      actor: {
+        kind: 'agent',
+        id: 'viz-studio-live-control',
+      },
+    });
+
+    editorControl.project.updateLayerValue(layerId, ['size'], 3);
+    expect(vizSessionHost.getSnapshot().session.revision).toBe(
+      baseRevision + 2,
+    );
+
+    editorControl.history.undo();
+    expect(
+      useEditorProjectStore.getState().workingProject.layers[0]?.settings?.size,
+    ).toBe(2.25);
+    editorControl.history.undo();
+    expect(
+      useEditorProjectStore.getState().workingProject.layers[0]?.settings?.size,
+    ).not.toBe(2.25);
+    expect(vizControl.getHost()).toBe(vizSessionHost);
   });
 });

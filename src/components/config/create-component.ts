@@ -14,13 +14,14 @@ type Preset<T> = {
 
 export interface Comp {
   id: string;
+  componentId?: string;
   name: string;
   description: string;
   config: UnknownConfig;
   defaultValues: UnknownConfigValues;
   presets?: Preset<UnknownConfigValues>[];
   // Map of config parameter path (e.g., "size" or "groupA.height") to a default node network preset
-  defaultNetworks?: Record<string, NodeNetworkPreset>;
+  defaultNetworks?: Record<string, NodeNetworkPreset | string>;
 }
 
 // Create the component

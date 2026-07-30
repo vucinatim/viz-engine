@@ -2,6 +2,7 @@ import type {
   VizComponentImplementation,
   VizRenderShaderNode,
 } from "@viz-engine/contracts";
+import { strobeLightAuthoring } from "./authoring/strobe-light.js";
 import { asNumber, asString } from "./shared.js";
 
 const vertexShader = `
@@ -77,6 +78,8 @@ export const strobeLightComponent: VizComponentImplementation = {
   id: "strobe-light",
   name: "Strobe Light",
   rendererFamily: "three",
+  implementationVersion: "1.0.0",
+  authoring: strobeLightAuthoring,
   description:
     "Deterministic package-runtime fullscreen strobe shader.",
   render: ({ viewport, frameContext, layer, settings }) => {

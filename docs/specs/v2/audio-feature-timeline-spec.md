@@ -1,5 +1,7 @@
 # Audio Feature Timeline Spec
 
+Status: standard-profile contract implemented and validated on 2026-07-30.
+
 ## Purpose
 
 This document defines the intended audio feature timeline model for VizEngine
@@ -287,20 +289,29 @@ to understand what the artifact contains.
 
 ## Standard Profile Contents
 
-The standard profile should stay intentionally compact and broadly useful.
+The standard scalar vocabulary stays intentionally compact and broadly useful.
+Its dense analyzer data stays full fidelity.
 
-Suggested initial contents:
+Implemented scalar contents:
 
+- `rms`
 - `loudness`
-- `low_band_energy`
-- `mid_band_energy`
-- `high_band_energy`
-- `spectral_centroid`
-- `onset_strength`
-- `waveform_summary`
+- `bass-energy`
+- `mid-energy`
+- `treble-energy`
+- `spectral-centroid`
+- `spectral-flux`
+- `onset-strength`
+- `waveform-peak`
 
 This is enough to drive a large number of visuals without making the baseline
 analysis too heavy.
+
+The standard dense payload contains `fftSize / 2` frequency bytes and
+`fftSize` time-domain bytes per frame. This matches the established analyzer
+shape used by waveform/spectrum components and graph nodes. A future compact
+or compressed representation must be a declared profile or encoding, not a
+silent resolution loss in the standard artifact.
 
 ## Extended Profile Contents
 
@@ -503,6 +514,23 @@ The clean baseline is:
 
 This is much better than designing a huge feature universe before the baseline
 exists.
+
+## Implemented Baseline
+
+The first baseline now exists across:
+
+- pure synchronous and cooperative asynchronous DSP in `rhythm-core`
+- a versioned portable artifact and deterministic base64 encoding
+- browser Web Audio and Node FFmpeg decoder attachments
+- one observable, cancellable bake-job service
+- explicit project attachment through canonical transactions
+- authoritative runtime sampling at scene frame rate
+- component and node-graph runtime bindings
+- browser export, direct CLI rendering, and Remotion consumption
+
+Decoder implementations are part of artifact derivation identity because
+compressed-media decoding is host-dependent. The PCM analysis algorithm and
+frame alignment remain canonical.
 
 ## Non-Goals
 

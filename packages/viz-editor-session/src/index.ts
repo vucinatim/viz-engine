@@ -1,4 +1,4 @@
-import { applyVizProjectAction, applyVizProjectActions } from "@viz-engine/actions";
+import { applyVizProjectActions } from "@viz-engine/actions";
 import type {
   VizActionActor,
   VizActionEnvelope,
@@ -9,6 +9,9 @@ import type {
   VizLayerId,
   VizProjectAction,
   VizProjectDocument,
+  VizProjectRevisionConflict,
+  VizProjectTransaction,
+  VizProjectTransactionStatus,
 } from "@viz-engine/contracts";
 import { assertValidProjectDocument, validateProjectDocument } from "@viz-engine/runtime";
 export * from "./live-preview.js";
@@ -28,9 +31,17 @@ export interface VizEditorPreviewState {
 }
 
 export interface VizEditorSessionIssue {
-  source: "action" | "validation";
+  source: "action" | "validation" | "transaction";
   severity: "warning" | "error";
   code: string;
+  message: string;
+}
+
+export interface VizEditorSessionTransactionIssue {
+  code:
+    | "invalid-transaction"
+    | "duplicate-transaction-id"
+    | "revision-conflict";
   message: string;
 }
 
@@ -48,8 +59,16 @@ export interface VizEditorSessionSnapshot {
 
 export interface VizEditorSessionMutationResult {
   ok: boolean;
+  status: VizProjectTransactionStatus;
+  transactionId: string;
+  actor: VizActionActor;
+  baseRevision: number;
   project: VizProjectDocument;
+  candidateProject: VizProjectDocument;
   revision: number;
+  dryRun: boolean;
+  conflict: VizProjectRevisionConflict | undefined;
+  transactionIssues: VizEditorSessionTransactionIssue[];
   warnings: VizActionWarning[];
   errors: VizActionError[];
   validation: ReturnType<typeof validateProjectDocument>;
@@ -91,6 +110,10 @@ export interface VizEditorSession {
     actions: VizProjectAction[],
     options?: { actor?: VizActionActor },
   ): VizEditorSessionMutationResult;
+  transact(
+    transaction: VizProjectTransaction,
+    options?: { actor?: VizActionActor },
+  ): VizEditorSessionMutationResult;
   undo(): VizEditorSessionSnapshot;
   redo(): VizEditorSessionSnapshot;
   canUndo(): boolean;
@@ -103,6 +126,14 @@ export interface VizEditorSession {
       actor?: VizActionActor;
       resetHistory?: boolean;
       recordHistory?: boolean;
+    },
+  ): VizEditorSessionSnapshot;
+  loadProject(
+    project: VizProjectDocument,
+    options?: {
+      actor?: VizActionActor;
+      uiState?: Partial<VizEditorUiState>;
+      previewState?: Partial<VizEditorPreviewState>;
     },
   ): VizEditorSessionSnapshot;
   resetWorkingProject(): VizEditorSessionSnapshot;
@@ -187,12 +218,23 @@ const createSessionIssues = ({
   warnings,
   errors,
   validation,
+  transactionIssues = [],
 }: {
   warnings: VizActionWarning[];
   errors: VizActionError[];
   validation: ReturnType<typeof validateProjectDocument>;
+  transactionIssues?: VizEditorSessionTransactionIssue[];
 }): VizEditorSessionIssue[] => {
   const issues: VizEditorSessionIssue[] = [];
+
+  for (const issue of transactionIssues) {
+    issues.push({
+      source: "transaction",
+      severity: "error",
+      code: issue.code,
+      message: issue.message,
+    });
+  }
 
   for (const warning of warnings) {
     issues.push({
@@ -228,15 +270,20 @@ const createActionEnvelope = ({
   action,
   actor,
   counter,
+  transactionId,
+  timestamp,
 }: {
   action: VizProjectAction;
   actor: VizActionActor;
   counter: number;
+  transactionId: string;
+  timestamp: string;
 }): VizActionEnvelope => {
   return {
     id: `action-${counter}`,
+    transactionId,
     type: action.type,
-    timestamp: new Date().toISOString(),
+    timestamp,
     actor,
     payload: cloneUnknown(action.payload),
   };
@@ -269,6 +316,7 @@ interface InternalSessionState {
   issues: VizEditorSessionIssue[];
   revision: number;
   actionCounter: number;
+  transactionCounter: number;
   defaultActor: VizActionActor;
   past: ProjectHistoryEntry[];
   future: ProjectHistoryEntry[];
@@ -299,6 +347,7 @@ export const createVizEditorSession = ({
     issues: [],
     revision: 0,
     actionCounter: 0,
+    transactionCounter: 0,
     defaultActor: cloneUnknown(actor),
     past: [],
     future: [],
@@ -320,27 +369,183 @@ export const createVizEditorSession = ({
     ].slice(-MAX_PROJECT_HISTORY_SIZE);
   };
 
-  const mutateProjects = ({
-    nextProject,
-    actionEnvelopes,
-    warnings,
-    errors,
-  }: {
-    nextProject: VizProjectDocument;
-    actionEnvelopes: VizActionEnvelope[];
-    warnings: VizActionWarning[];
-    errors: VizActionError[];
-  }): VizEditorSessionMutationResult => {
-    const normalizedProject = normalize(nextProject);
-    const validation = validateProjectDocument(normalizedProject);
+  const createGeneratedTransactionId = (): string => {
+    const existingIds = new Set(
+      state.actionHistory.map((entry) => entry.transactionId),
+    );
+    let counter = state.transactionCounter + 1;
+    let transactionId = `transaction-${counter}`;
+
+    while (existingIds.has(transactionId)) {
+      counter += 1;
+      transactionId = `transaction-${counter}`;
+    }
+
+    return transactionId;
+  };
+
+  const transact = (
+    transaction: VizProjectTransaction,
+    options?: { actor?: VizActionActor },
+  ): VizEditorSessionMutationResult => {
+    const baseRevision = state.revision;
+    const transactionActor = cloneUnknown(
+      options?.actor ?? state.defaultActor,
+    );
+    const transactionId =
+      typeof transaction.id === "string" && transaction.id.trim().length > 0
+        ? transaction.id
+        : createGeneratedTransactionId();
+    const transactionIssues: VizEditorSessionTransactionIssue[] = [];
+    const currentProject = cloneProject(state.workingProject);
+    const currentValidation = validateProjectDocument(currentProject);
+
+    if (
+      transaction.id !== undefined &&
+      (typeof transaction.id !== "string" ||
+        transaction.id.trim().length === 0)
+    ) {
+      transactionIssues.push({
+        code: "invalid-transaction",
+        message: "Transaction id must be a non-empty string when provided.",
+      });
+    }
+
+    if (!Array.isArray(transaction.actions) || transaction.actions.length === 0) {
+      transactionIssues.push({
+        code: "invalid-transaction",
+        message: "A project transaction must contain at least one action.",
+      });
+    }
+
+    if (
+      transaction.expectedRevision !== undefined &&
+      (!Number.isInteger(transaction.expectedRevision) ||
+        transaction.expectedRevision < 0)
+    ) {
+      transactionIssues.push({
+        code: "invalid-transaction",
+        message:
+          "Transaction expectedRevision must be a non-negative integer when provided.",
+      });
+    }
+
+    if (
+      state.actionHistory.some(
+        (entry) => entry.transactionId === transactionId,
+      )
+    ) {
+      transactionIssues.push({
+        code: "duplicate-transaction-id",
+        message: `Transaction id "${transactionId}" has already been committed.`,
+      });
+    }
+
+    if (
+      transactionIssues.length === 0 &&
+      transaction.expectedRevision !== undefined &&
+      transaction.expectedRevision !== baseRevision
+    ) {
+      const conflict: VizProjectRevisionConflict = {
+        expectedRevision: transaction.expectedRevision,
+        actualRevision: baseRevision,
+      };
+      const conflictIssues: VizEditorSessionTransactionIssue[] = [
+        {
+          code: "revision-conflict",
+          message: `Expected project revision ${conflict.expectedRevision}, but the current revision is ${conflict.actualRevision}.`,
+        },
+      ];
+
+      return {
+        ok: false,
+        status: "conflict",
+        transactionId,
+        actor: transactionActor,
+        baseRevision,
+        project: currentProject,
+        candidateProject: cloneProject(currentProject),
+        revision: baseRevision,
+        dryRun: transaction.dryRun ?? false,
+        conflict,
+        transactionIssues: conflictIssues,
+        warnings: [],
+        errors: [],
+        validation: currentValidation,
+        issues: createSessionIssues({
+          warnings: [],
+          errors: [],
+          validation: currentValidation,
+          transactionIssues: conflictIssues,
+        }),
+        actionEnvelopes: [],
+      };
+    }
+
+    if (transactionIssues.length > 0) {
+      const issues = createSessionIssues({
+        warnings: [],
+        errors: [],
+        validation: currentValidation,
+        transactionIssues,
+      });
+
+      return {
+        ok: false,
+        status: "rejected",
+        transactionId,
+        actor: transactionActor,
+        baseRevision,
+        project: currentProject,
+        candidateProject: cloneProject(currentProject),
+        revision: baseRevision,
+        dryRun: transaction.dryRun ?? false,
+        conflict: undefined,
+        transactionIssues: cloneUnknown(transactionIssues),
+        warnings: [],
+        errors: [],
+        validation: currentValidation,
+        issues,
+        actionEnvelopes: [],
+      };
+    }
+
+    const actionResult = applyVizProjectActions(
+      state.workingProject,
+      transaction.actions,
+    );
+    const candidateProject = normalize(actionResult.project);
+    const validation = validateProjectDocument(candidateProject);
     const issues = createSessionIssues({
-      warnings,
-      errors,
+      warnings: actionResult.warnings,
+      errors: actionResult.errors,
       validation,
     });
-    const ok = errors.length === 0 && validation.ok;
+    const candidateIsValid =
+      actionResult.errors.length === 0 && validation.ok;
 
-    if (!ok) {
+    if (transaction.dryRun === true) {
+      return {
+        ok: candidateIsValid,
+        status: candidateIsValid ? "dry-run" : "rejected",
+        transactionId,
+        actor: transactionActor,
+        baseRevision,
+        project: currentProject,
+        candidateProject: cloneProject(candidateProject),
+        revision: baseRevision,
+        dryRun: true,
+        conflict: undefined,
+        transactionIssues: [],
+        warnings: cloneUnknown(actionResult.warnings),
+        errors: cloneUnknown(actionResult.errors),
+        validation,
+        issues: cloneUnknown(issues),
+        actionEnvelopes: [],
+      };
+    }
+
+    if (!candidateIsValid) {
       state = {
         ...state,
         issues,
@@ -349,23 +554,46 @@ export const createVizEditorSession = ({
 
       return {
         ok: false,
+        status: "rejected",
+        transactionId,
+        actor: transactionActor,
+        baseRevision,
         project: cloneProject(state.workingProject),
+        candidateProject: cloneProject(candidateProject),
         revision: state.revision,
-        warnings: cloneUnknown(warnings),
-        errors: cloneUnknown(errors),
+        dryRun: false,
+        conflict: undefined,
+        transactionIssues: [],
+        warnings: cloneUnknown(actionResult.warnings),
+        errors: cloneUnknown(actionResult.errors),
         validation,
         issues: cloneUnknown(issues),
-        actionEnvelopes: actionEnvelopes.map((entry) => cloneEnvelope(entry)),
+        actionEnvelopes: [],
       };
     }
 
+    const timestamp = new Date().toISOString();
+    const actionEnvelopes = transaction.actions.map((action, index) =>
+      createActionEnvelope({
+        action,
+        actor: transactionActor,
+        counter: state.actionCounter + index + 1,
+        transactionId,
+        timestamp,
+      }),
+    );
+
     state = {
       ...state,
-      workingProject: normalizedProject,
-      actionHistory: [...state.actionHistory, ...actionEnvelopes.map((entry) => cloneEnvelope(entry))],
+      workingProject: candidateProject,
+      actionHistory: [
+        ...state.actionHistory,
+        ...actionEnvelopes.map((entry) => cloneEnvelope(entry)),
+      ],
       issues,
       revision: state.revision + 1,
       actionCounter: state.actionCounter + actionEnvelopes.length,
+      transactionCounter: state.transactionCounter + 1,
       past:
         state.historyGroupStart === undefined
           ? pushPast(state.workingProject)
@@ -376,10 +604,18 @@ export const createVizEditorSession = ({
 
     return {
       ok: true,
+      status: "applied",
+      transactionId,
+      actor: transactionActor,
+      baseRevision,
       project: cloneProject(state.workingProject),
+      candidateProject: cloneProject(state.workingProject),
       revision: state.revision,
-      warnings: cloneUnknown(warnings),
-      errors: cloneUnknown(errors),
+      dryRun: false,
+      conflict: undefined,
+      transactionIssues: [],
+      warnings: cloneUnknown(actionResult.warnings),
+      errors: cloneUnknown(actionResult.errors),
       validation,
       issues: cloneUnknown(issues),
       actionEnvelopes: actionEnvelopes.map((entry) => cloneEnvelope(entry)),
@@ -410,38 +646,10 @@ export const createVizEditorSession = ({
       notify();
       return createSnapshot(state);
     },
-    applyAction: (action, options) => {
-      const result = applyVizProjectAction(state.workingProject, action);
-      const actionEnvelope = createActionEnvelope({
-        action,
-        actor: cloneUnknown(options?.actor ?? state.defaultActor),
-        counter: state.actionCounter + 1,
-      });
-
-      return mutateProjects({
-        nextProject: result.project,
-        actionEnvelopes: [actionEnvelope],
-        warnings: result.warnings,
-        errors: result.errors,
-      });
-    },
-    applyActions: (actions, options) => {
-      const result = applyVizProjectActions(state.workingProject, actions);
-      const actionEnvelopes = actions.map((action, index) =>
-        createActionEnvelope({
-          action,
-          actor: cloneUnknown(options?.actor ?? state.defaultActor),
-          counter: state.actionCounter + index + 1,
-        }),
-      );
-
-      return mutateProjects({
-        nextProject: result.project,
-        actionEnvelopes,
-        warnings: result.warnings,
-        errors: result.errors,
-      });
-    },
+    applyAction: (action, options) =>
+      transact({ actions: [action] }, options),
+    applyActions: (actions, options) => transact({ actions }, options),
+    transact,
     undo: () => {
       const previous = state.past.at(-1);
       if (!previous) {
@@ -519,11 +727,41 @@ export const createVizEditorSession = ({
         revision: state.revision + 1,
         actionHistory: options?.resetHistory ? [] : state.actionHistory,
         actionCounter: options?.resetHistory ? 0 : state.actionCounter,
+        transactionCounter: options?.resetHistory
+          ? 0
+          : state.transactionCounter,
         past: options?.resetHistory
           ? []
           : options?.recordHistory === false
             ? state.past
             : pushPast(state.workingProject),
+        future: [],
+        historyGroupStart: undefined,
+      };
+
+      notify();
+      return createSnapshot(state);
+    },
+    loadProject: (projectDocument, options) => {
+      const normalizedProject = normalize(projectDocument);
+      assertValidProjectDocument(normalizedProject);
+
+      state = {
+        ...state,
+        sourceProject: cloneProject(normalizedProject),
+        workingProject: cloneProject(normalizedProject),
+        uiState: createEditorUiState(normalizedProject, options?.uiState),
+        previewState: createEditorPreviewState({
+          mode: state.previewState.mode,
+          ...options?.previewState,
+        }),
+        actionHistory: [],
+        issues: [],
+        revision: state.revision + 1,
+        actionCounter: 0,
+        transactionCounter: 0,
+        defaultActor: cloneUnknown(options?.actor ?? state.defaultActor),
+        past: [],
         future: [],
         historyGroupStart: undefined,
       };
@@ -539,6 +777,7 @@ export const createVizEditorSession = ({
         revision: state.revision + 1,
         actionHistory: [],
         actionCounter: 0,
+        transactionCounter: 0,
         past: [],
         future: [],
         historyGroupStart: undefined,

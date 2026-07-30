@@ -4,6 +4,7 @@ import type {
   VizRenderPolylineNode,
   VizRenderRectNode,
 } from "@viz-engine/contracts";
+import { heartbeatMonitorAuthoring } from "./authoring/heartbeat-monitor.js";
 import { asNumber, asString } from "./shared.js";
 
 const mapHeartbeatValueToY = (
@@ -16,6 +17,8 @@ export const heartbeatMonitorComponent: VizComponentImplementation = {
   id: "heartbeat-monitor",
   name: "Heartbeat Monitor",
   rendererFamily: "three",
+  implementationVersion: "1.0.0",
+  authoring: heartbeatMonitorAuthoring,
   description:
     "Deterministic direct-frame heartbeat trail sampled from canonical component settings.",
   inputs: [

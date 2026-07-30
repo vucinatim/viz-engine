@@ -1,5 +1,5 @@
-import { TempoOptions, TempoResult } from '../utils/types';
-import { tempogram } from './tempogram';
+import type { TempoOptions, TempoResult } from '../utils/types.js';
+import { tempogram } from './tempogram.js';
 
 export function tempo(
   onsetEnv: Float32Array,
@@ -20,7 +20,11 @@ export function tempo(
 
   const ranked: { bpm: number; value: number; index: number }[] = [];
   for (let i = 0; i < tempogramValues.length; i += 1) {
-    ranked.push({ bpm: tempos[i], value: tempogramValues[i], index: i });
+    ranked.push({
+      bpm: tempos[i]!,
+      value: tempogramValues[i]!,
+      index: i,
+    });
   }
   ranked.sort((a, b) => b.value - a.value);
 
@@ -37,8 +41,9 @@ export function tempo(
 
   let chosen = unique[0];
   if (preferHigher && chosen) {
+    const chosenBpm = chosen.bpm;
     const doubleMatch = unique.find(
-      (entry) => Math.abs(entry.bpm - chosen.bpm * 2) <= dedupeTolerance,
+      (entry) => Math.abs(entry.bpm - chosenBpm * 2) <= dedupeTolerance,
     );
     if (doubleMatch && doubleMatch.bpm > chosen.bpm) {
       chosen = doubleMatch;
@@ -64,9 +69,9 @@ export function tempo(
     const bestIndex = ranked[0]?.index ?? 0;
     let refinedIndex = bestIndex;
     if (bestIndex > 0 && bestIndex < tempogramValues.length - 1) {
-      const y0 = tempogramValues[bestIndex - 1];
-      const y1 = tempogramValues[bestIndex];
-      const y2 = tempogramValues[bestIndex + 1];
+      const y0 = tempogramValues[bestIndex - 1]!;
+      const y1 = tempogramValues[bestIndex]!;
+      const y2 = tempogramValues[bestIndex + 1]!;
       const denom = y0 - 2 * y1 + y2;
       if (denom !== 0) {
         const delta = 0.5 * (y0 - y2) / denom;

@@ -9,18 +9,134 @@ import { describe, expect, it } from "vitest";
 import {
   applyActionsToBundleProject,
   applyActionsToExampleProject,
+  discoverLiveVizControl,
   exportBundleProject,
   exportExampleBundle,
   inspectBundleFrame,
   inspectExampleFrame,
   loadLocalVizProjectBundle,
   renderBundleSvg,
+  requestLiveVizControl,
+  runVizCli,
+  VIZ_CONTROL_PROTOCOL_VERSION,
   validateBundleProject,
   validateExampleProject,
   writeLocalVizProjectBundle,
 } from "@viz-engine/dev-cli";
 
 describe("Viz local-first CLI surface", () => {
+  it("publishes machine-readable help including the live control surface", async () => {
+    const output = await runVizCli(["help"]);
+
+    expect(output).toMatchObject({
+      ok: true,
+      command: "help",
+      payload: {
+        executable: "viz-dev",
+      },
+    });
+    expect(
+      (output.payload as { commands: { live: string[] } }).commands.live,
+    ).toContain("live transact --transaction <json-file> [--url <origin>]");
+    expect(
+      (output.payload as { commands: { live: string[] } }).commands.live,
+    ).toContain(
+      "live bake-start --request <json-file> [--url <origin>]",
+    );
+    expect(
+      (output.payload as { commands: { local: string[] } }).commands.local,
+    ).toContain(
+      "bundle bake-audio --dir <directory> --out <directory> [--asset-id <id>] [--fps <fps>] [--fft-size <size>] [--start <seconds>] [--duration <seconds>]",
+    );
+  });
+
+  it("discovers and requests a live control bridge through injectable HTTP", async () => {
+    const requests: Array<{ url: string; init?: RequestInit }> = [];
+    const fetchImplementation: typeof fetch = async (input, init) => {
+      requests.push({
+        url: String(input),
+        ...(init === undefined ? {} : { init }),
+      });
+      if (String(input).endsWith("/discovery")) {
+        return new Response(
+          JSON.stringify({
+            protocolVersion: 1,
+            transport: {
+              request: "/__viz-control__/request",
+              events: "/__viz-control__/events",
+            },
+            editor: {
+              connected: true,
+              instanceId: "editor-test",
+            },
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          },
+        );
+      }
+      return new Response(
+        JSON.stringify({
+          protocolVersion: 1,
+          id: "request-test",
+          operation: "control.snapshot",
+          ok: true,
+          result: { revision: 7 },
+        }),
+        {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        },
+      );
+    };
+
+    const discovery = await discoverLiveVizControl({
+      baseUrl: "http://127.0.0.1:4173",
+      fetch: fetchImplementation,
+    });
+    const response = await requestLiveVizControl(
+      {
+        protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
+        id: "request-test",
+        operation: "control.snapshot",
+      },
+      {
+        baseUrl: "http://127.0.0.1:4173",
+        fetch: fetchImplementation,
+      },
+    );
+
+    expect(discovery).toMatchObject({
+      ok: true,
+      discovery: {
+        editor: {
+          connected: true,
+          instanceId: "editor-test",
+        },
+      },
+    });
+    expect(response).toMatchObject({
+      ok: true,
+      response: {
+        result: {
+          revision: 7,
+        },
+      },
+    });
+    expect(requests.map(({ url }) => url)).toEqual([
+      "http://127.0.0.1:4173/__viz-control__/discovery",
+      "http://127.0.0.1:4173/__viz-control__/request",
+    ]);
+    expect(requests[1]?.init).toMatchObject({
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+      },
+    });
+  });
+
   it("validates the canonical example project", () => {
     const output = validateExampleProject();
 

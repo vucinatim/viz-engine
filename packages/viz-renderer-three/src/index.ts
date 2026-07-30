@@ -49,7 +49,11 @@ import {
 import { Line2 } from "three/examples/jsm/lines/Line2.js";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
-import { createVizThreeProgramInstance } from "./programs/registry.js";
+import {
+  createCoreVizThreeProgramRegistry,
+  createVizThreeProgramInstance,
+  type VizThreeProgramRegistry,
+} from "./programs/registry.js";
 import type { VizThreeProgramInstance } from "./programs/types.js";
 import {
   createVizThreeModelResourceManager,
@@ -61,6 +65,7 @@ export type {
   VizThreeProgramFactory,
   VizThreeProgramInstance,
 } from "./programs/types.js";
+export * from "./programs/registry.js";
 export * from "./model-animation.js";
 export * from "./model-resources.js";
 
@@ -784,6 +789,7 @@ const createVizThreeCompositorLayer = (
   materializedAssets: ReadonlyMap<string, VizMaterializedAsset>,
   modelResources: VizThreeModelResourceManager,
   invalidate: () => void,
+  programRegistry: VizThreeProgramRegistry,
 ): VizThreeCompositorLayer => {
   if (layer.node?.kind === "three-program") {
     const programInstance = createVizThreeProgramInstance({
@@ -793,6 +799,7 @@ const createVizThreeCompositorLayer = (
       materializedAssets,
       modelResources,
       invalidate,
+      programRegistry,
     });
     const compositeSurface = createCompositeSurface(
       layer,
@@ -843,6 +850,7 @@ export const createVizThreeCompositorGraph = (
   renderPlan: VizRenderPlan,
   invalidate: () => void = () => undefined,
   providedModelResources?: VizThreeModelResourceManager,
+  programRegistry: VizThreeProgramRegistry = createCoreVizThreeProgramRegistry(),
 ): VizThreeCompositorGraph => {
   const compositeScene = new Scene();
   compositeScene.background =
@@ -869,6 +877,7 @@ export const createVizThreeCompositorGraph = (
         materializedAssets,
         modelResources,
         invalidate,
+        programRegistry,
       ),
     );
 
@@ -1428,10 +1437,12 @@ export const createVizThreePreviewController = ({
   canvas,
   renderPlan,
   preserveDrawingBuffer = false,
+  programRegistry = createCoreVizThreeProgramRegistry(),
 }: {
   canvas: HTMLCanvasElement;
   renderPlan: VizRenderPlan;
   preserveDrawingBuffer?: boolean;
+  programRegistry?: VizThreeProgramRegistry;
 }): VizThreePreviewController => {
   const renderer = new WebGLRenderer({
     canvas,
@@ -1448,6 +1459,7 @@ export const createVizThreePreviewController = ({
     renderPlan,
     () => render(),
     modelResources,
+    programRegistry,
   );
   const textureCache = new Map<string, Texture>();
   const pendingTextureLoads = new Set<string>();
@@ -1543,6 +1555,7 @@ export const createVizThreePreviewController = ({
         nextRenderPlan,
         () => render(),
         modelResources,
+        programRegistry,
       );
       resize(nextRenderPlan.viewport.width, nextRenderPlan.viewport.height);
       hydrate();

@@ -6,6 +6,8 @@ export * from "./frame-plan.js";
 export * from "./graph-evaluator.js";
 export * from "./materialized-assets.js";
 export * from "./node-registry.js";
+export * from "./project-default-assets.js";
 export * from "./render-plan.js";
 export * from "./runtime-session.js";
+export * from "./runtime-inputs.js";
 export * from "./validation.js";

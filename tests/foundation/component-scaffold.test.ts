@@ -22,7 +22,10 @@ describe("Viz component scaffold helper", () => {
       expect(fileContents).toContain('id: "signal-ribbon"');
       expect(fileContents).toContain('name: "Signal Ribbon"');
       expect(fileContents).toContain("SignalRibbonComponent");
-      expect(result.nextSteps[0]).toContain("registry.ts");
+      expect(fileContents).toContain('componentId: "signal-ribbon"');
+      expect(fileContents).toContain('implementationVersion: "1.0.0"');
+      expect(fileContents).toContain('authoring: SignalRibbonComponentAuthoring');
+      expect(result.nextSteps[0]).toContain("capability pack");
     } finally {
       rmSync(tempDirectory, { recursive: true, force: true });
     }

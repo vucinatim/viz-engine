@@ -8,8 +8,10 @@ const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, "..", "..");
 
 const packageEntries = [
+  { name: "@viz-engine/rhythm-core", dir: "packages/rhythm-core" },
   { name: "@viz-engine/contracts", dir: "packages/viz-contracts" },
   { name: "@viz-engine/actions", dir: "packages/viz-actions" },
+  { name: "@viz-engine/bake", dir: "packages/viz-bake" },
   { name: "@viz-engine/editor-control", dir: "packages/viz-editor-control" },
   { name: "@viz-engine/editor-session", dir: "packages/viz-editor-session" },
   { name: "@viz-engine/runtime", dir: "packages/viz-runtime" },
@@ -75,7 +77,7 @@ try {
   const consumerScript = `
 import { createCoreComponentRegistry } from "@viz-engine/components-core";
 import { applyVizProjectAction } from "@viz-engine/actions";
-import { createVizEditorControl } from "@viz-engine/editor-control";
+import { createVizControl } from "@viz-engine/editor-control";
 import { createVizEditorSession } from "@viz-engine/editor-session";
 import { createCoreNodeRegistry } from "@viz-engine/nodes-core";
 import {
@@ -190,7 +192,7 @@ if (reloadedRoundtripBundle.issues.length > 0) {
   throw new Error(\`Unexpected roundtrip bundle issues: \${JSON.stringify(reloadedRoundtripBundle.issues)}\`);
 }
 
-const editorControl = createVizEditorControl();
+const editorControl = createVizControl();
 const controlSnapshot = editorControl.openExampleProject();
 const controlMutation = editorControl.applyAction({
   type: "layer.settings.set",
@@ -202,7 +204,7 @@ const controlMutation = editorControl.applyAction({
 });
 
 if (!controlMutation.ok) {
-  throw new Error(\`Expected editor control mutation to succeed: \${JSON.stringify(controlMutation.actionResult)}\`);
+  throw new Error(\`Expected editor control mutation to succeed: \${JSON.stringify(controlMutation.transactionResult)}\`);
 }
 
 const controlDebugSnapshot = editorControl.createDebugSnapshot(24);

@@ -661,6 +661,10 @@ executable boundaries:
 - content-addressed assets and bake derivations
 - measurable UI, UX, feature, and performance parity
 
+Those boundaries, including the one-session headless-agent/live-editor model,
+are operationalized in
+[Agent-Authored Production Loop Architecture](../specs/v2/agent-authored-production-loop-architecture.md).
+
 The rewrite is successful only when the cleaner architecture produces a
 product that is at least as capable, responsive, intuitive, and enjoyable as
 the established editor—and provides a stronger foundation for everything that

@@ -24,10 +24,11 @@ import {
   getAllFrames,
 } from './frame-storage';
 import {
-  OfflineAudioData,
-  extractOfflineAudioData,
-  loadAndDecodeAudio,
-} from './offline-audio-extractor';
+  bakeBrowserAudioFeatures,
+  loadAndDecodeBrowserAudio,
+  sampleBrowserAudioBakeFrame,
+  type BrowserAudioBake,
+} from './browser-audio-bake';
 import { downloadVideo, encodeVideo, initFFmpeg } from './video-encoder';
 
 // Helper to add logs to the export store
@@ -193,7 +194,8 @@ export async function exportVideo(
     // Load and decode audio
     exportStore.setProgress({ message: 'Loading audio...' });
     const audioLoadTimer = new PerfTimer('Load and decode audio');
-    const audioBuffer = await loadAndDecodeAudio(audioUrl);
+    const loadedAudio = await loadAndDecodeBrowserAudio(audioUrl);
+    const { audioBuffer } = loadedAudio;
     audioLoadTimer.end(
       `${audioBuffer.duration.toFixed(2)}s audio, ${audioBuffer.numberOfChannels} channels`,
     );
@@ -206,18 +208,30 @@ export async function exportVideo(
     // Extract offline audio data for the export range only
     exportStore.setProgress({ message: 'Analyzing audio...' });
     const audioAnalysisTimer = new PerfTimer('Analyze audio (FFT extraction)');
-    const offlineAudioData = await extractOfflineAudioData(
+    const offlineAudioData = await bakeBrowserAudioFeatures(
       audioBuffer,
-      finalSettings.fps,
-      2048, // FFT size
-      finalSettings.startTime, // Only analyze from start time
-      finalSettings.duration, // Only analyze the export duration
+      loadedAudio.sourceContentIdentity,
+      {
+        fps: finalSettings.fps,
+        fftSize: 2048,
+        startTime: finalSettings.startTime,
+        duration: finalSettings.duration,
+        shouldCancel: () => useExportStore.getState().shouldCancel,
+        onProgress: ({ completedFrames, totalFrames }) => {
+          exportStore.setProgress({
+            message: `Analyzing audio frame ${completedFrames} of ${totalFrames}...`,
+          });
+        },
+      },
     );
-    audioAnalysisTimer.end(`${offlineAudioData.frames.length} frames analyzed`);
+    audioAnalysisTimer.end(`${offlineAudioData.frameCount} frames analyzed`);
 
     // Analyze the audio data quality
-    if (offlineAudioData.frames.length > 0) {
-      const firstFrame = offlineAudioData.frames[0];
+    if (offlineAudioData.frameCount > 0) {
+      const firstFrame = sampleBrowserAudioBakeFrame(
+        offlineAudioData,
+        0,
+      );
       const freqMax = Math.max(...firstFrame.frequencyData);
       const freqMin = Math.min(...firstFrame.frequencyData);
       const freqAvg =
@@ -472,14 +486,14 @@ export async function exportVideo(
  */
 async function renderFrames(
   rendererContainer: HTMLElement,
-  offlineAudioData: OfflineAudioData,
+  offlineAudioData: BrowserAudioBake,
   settings: ExportSettings,
   maxFrames: number, // Maximum frames to render (from user settings)
   onProgress: (frame: number) => void,
 ): Promise<void> {
   const { fps, width, height } = settings;
   // Use the smaller of: audio frames available OR user-selected duration
-  const totalFrames = Math.min(offlineAudioData.frames.length, maxFrames);
+  const totalFrames = Math.min(offlineAudioData.frameCount, maxFrames);
 
   log(
     'info',
@@ -542,7 +556,10 @@ async function renderFrames(
       // CRITICAL FIX #2: Inject offline audio data for this frame
       // The offline audio data is already trimmed to the export range (startTime to startTime+duration)
       // So frameIndex 0 corresponds to startTime, frameIndex 1 to startTime+deltaTime, etc.
-      const audioFrameData = offlineAudioData.frames[frameIndex];
+      const audioFrameData = sampleBrowserAudioBakeFrame(
+        offlineAudioData,
+        frameIndex,
+      );
       if (audioFrameData) {
         // Debug log for first few frames to analyze audio data quality
         if (frameIndex < 3) {

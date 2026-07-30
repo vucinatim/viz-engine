@@ -1,9 +1,8 @@
-import { v } from '../config/config';
-import { createComponent } from '../config/create-component';
+import { defineVizComponentAuthoring, v } from './schema.js';
 
-const InstancedSupercube = createComponent({
-  name: 'Instanced Supercube',
-  description: 'Interactive 3D instanced cubes with explosion animation',
+export const instancedSupercubeAuthoring = defineVizComponentAuthoring({
+  componentId: 'instanced-supercube',
+  compatibility: 'render-safe',
   config: v.config({
     color: v.color({
       label: 'Color',
@@ -61,5 +60,3 @@ const InstancedSupercube = createComponent({
     }),
   }),
 });
-
-export default InstancedSupercube;

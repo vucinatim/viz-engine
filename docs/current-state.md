@@ -73,8 +73,21 @@ The repo now has:
 - a real preview transport foundation under the preserved editor
 - a real split between canonical audio-session truth and browser audio-engine
   attachments
+- a real deterministic audio-feature bake pipeline shared by browser export,
+  Node/headless workflows, runtime components, graphs, and Remotion
+- one observable job lifecycle and explicit revision-safe artifact attachment
 - a real local operator surface
 - a separate dev-shell path for engine validation
+
+The first three phases of the agent-authored production loop are now certified:
+
+- canonical component authoring and injected capability composition
+- one live/headless session host and revision-safe control target
+- canonical audio bake artifacts and runtime inputs
+
+The active next phase is render and feedback jobs: stills, contact sheets,
+clips, final video, media probing, visual sanity checks, runtime diagnostics,
+and performance reporting over the same control/job boundary.
 
 So the current phase is no longer “invent V2”.
 
@@ -200,18 +213,23 @@ The remaining adapter classification and deletion conditions are recorded in:
 The largest remaining architecture work is now beyond basic session
 convergence:
 
+- execute the remaining canonical agent-authored production-loop phases:
+  deterministic audio bake, render/feedback jobs, and the final authored visual
 - continue shrinking hook-shaped compatibility facades as concrete preserved
   UI consumers can subscribe to `VizSession` directly
-- finish moving the preserved config presentation model onto portable
-  component input schemas without weakening the editor
-- turn the structured control/inspection surface into the agent-operated live
-  authoring loop
+- lock capability, component, and renderer implementation identities into the
+  portable execution manifest
 - prepare legacy FBX source assets into cleaner derivatives so unsupported
   material-map and excess-weight warnings do not remain runtime concerns
 
 The completed cutover and its exact boundaries are recorded in:
 
 - [viz-session-convergence-and-editor-control-cutover.md](./plans/v2/viz-session-convergence-and-editor-control-cutover.md)
+
+The next complete authoring, bake, render, feedback, and live/headless control
+boundary is recorded in:
+
+- [agent-authored-production-loop-architecture.md](./specs/v2/agent-authored-production-loop-architecture.md)
 
 The active renderer cutover inventory and deletion map now lives in:
 
@@ -236,11 +254,62 @@ The renderer contract also has a persistent Three program node:
 - Simple Cube rotation now derives from canonical frame time rather than
   accumulated browser `dt`
 
-Runtime-backed component-catalog previews now use that same package registry
-and renderer attachment. All fifteen editor definitions now contain
-only authoring metadata and parameter schemas; their visual semantics live
-entirely in package terrain. `Fullscreen Shader` GLSL source moved there as
-part of the same cutover.
+Component authoring now has one portable package-owned source of truth:
+
+- `@viz-engine/contracts` owns the data-only authoring/settings schema,
+  compatibility vocabulary, presets, default animation networks, and
+  capability-pack manifest
+- all fifteen preserved catalog choices declare that schema beside their
+  package runtime implementation and carry explicit implementation versions
+- `coreCatalogComponents` owns the curated first-party catalog order
+- the preserved editor generates its existing rich controls from those
+  definitions at the React presentation boundary
+- the duplicate `src/components/comps/*.ts` definitions are gone
+- strict registries retain capability-pack origin for structured inspection
+- `@viz-engine/editor-control` accepts injected component and node registries
+
+Three program attachment is now equally explicit. The renderer composes
+`VizThreeRendererExtension` contributions into an injected program registry;
+the compositor and preview controller no longer depend on mutable module-global
+program lookup. A project-local proof component and Three program execute
+without modifying renderer core.
+
+The architecture, catalog policy, exact validation rules, and remaining
+boundaries are recorded in:
+
+- [component-contract.md](./specs/v2/component-contract.md)
+- [canonical-component-authoring-and-capability-composition.md](./plans/v2/canonical-component-authoring-and-capability-composition.md)
+
+The preserved editor and local agent now also share one real control target:
+
+- `VizSessionHost` owns the stable package session, preview transport, audio
+  session, resources, registries, and subscriptions
+- the preserved editor delegates its project, history, transport, and audio
+  commands to that host
+- `VizControl` is injected over the same host and supplies trusted human or
+  agent attribution
+- multi-action transactions are atomic, increment revision once, and create
+  one undo step
+- expected-revision conflicts and dry-run validation are side-effect free
+- project loads retain session/control/subscriber identity
+- strict versioned request decoding covers the current project actions and
+  live control operations
+- the development Vite bridge routes HTTP request/response and SSE clients
+  through the browser's mounted control while owning no project state
+- `viz-dev live` exposes discovery, inspection, transactions, history, and
+  preview commands
+- live browser acceptance proved an externally applied two-action transaction
+  appears immediately in existing settings and is reversed as one unit by the
+  editor's native undo
+
+The architecture and acceptance evidence are recorded in:
+
+- [live-session-host-and-control-target.md](./plans/v2/live-session-host-and-control-target.md)
+- [2026-07-30 live session host and control target](./parity/evidence/2026-07-30-live-session-host-and-control-target.md)
+
+The active implementation frontier is now canonical deterministic audio bake
+execution and artifacts through `rhythm-core`, not another session or control
+surface.
 
 Particle System is now an analytic deterministic simulation. Each visible
 particle is derived from canonical frame time, session seed, emission index,

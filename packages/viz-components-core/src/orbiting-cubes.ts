@@ -2,12 +2,15 @@ import type {
   VizComponentImplementation,
   VizRenderThreeProgramNode,
 } from "@viz-engine/contracts";
+import { orbitingCubesAuthoring } from "./authoring/orbiting-cubes.js";
 import { asNumber, asString } from "./shared.js";
 
 export const orbitingCubesComponent: VizComponentImplementation = {
   id: "orbiting-cubes",
   name: "Orbiting Cubes",
   rendererFamily: "three",
+  implementationVersion: "1.0.0",
+  authoring: orbitingCubesAuthoring,
   description: "Deterministic package-runtime orbiting neuron-like cubes.",
   render: ({ frameContext, layer, settings }) => ({
     kind: "three-program",

@@ -24,6 +24,7 @@
     "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@viz-engine/bake": "workspace:*",
     "@viz-engine/components-core": "workspace:*",
     "@viz-engine/contracts": "workspace:*",
     "@viz-engine/dev-cli": "workspace:*",
@@ -31,6 +32,7 @@
     "@viz-engine/example-projects": "workspace:*",
     "@viz-engine/nodes-core": "workspace:*",
     "@viz-engine/renderer-svg": "workspace:*",
-    "@viz-engine/runtime": "workspace:*"
+    "@viz-engine/runtime": "workspace:*",
+    "zod": "^3.23.4"
   }
 }

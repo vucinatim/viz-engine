@@ -6,7 +6,7 @@ export function framesToTime(
   const out = new Float32Array(frames.length);
   const scale = hopLength / sr;
   for (let i = 0; i < frames.length; i += 1) {
-    out[i] = frames[i] * scale;
+    out[i] = frames[i]! * scale;
   }
   return out;
 }
@@ -19,7 +19,7 @@ export function timeToFrames(
   const out = new Float32Array(times.length);
   const scale = sr / hopLength;
   for (let i = 0; i < times.length; i += 1) {
-    out[i] = Math.round(times[i] * scale);
+    out[i] = Math.round(times[i]! * scale);
   }
   return out;
 }

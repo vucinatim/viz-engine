@@ -3,6 +3,7 @@ import { renderVizRenderPlanToSvgMarkup } from "@viz-engine/renderer-svg";
 import {
   createVizRenderPlan,
   createVizRuntimeSession,
+  sampleProjectAudioFrameSnapshot,
   type VizComponentRegistry,
   type VizNodeRegistry,
 } from "@viz-engine/runtime";
@@ -84,6 +85,14 @@ export const createVizRemotionRenderPlan = ({
     frame: options.frame,
     registry,
     ...(nodeRegistry === undefined ? {} : { nodeRegistry }),
+    runtimeInputProvider: (frame) => {
+      const audio = sampleProjectAudioFrameSnapshot(
+        options.project,
+        options.resolvedArtifacts ?? [],
+        frame,
+      );
+      return audio === undefined ? {} : { audio };
+    },
   });
 };
 

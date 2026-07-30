@@ -39,6 +39,7 @@ This is the current source of truth for where VizEngine is heading:
 
 ## V2 Specs
 
+- [specs/v2/agent-authored-production-loop-architecture.md](./specs/v2/agent-authored-production-loop-architecture.md)
 - [specs/v2/viz-project-document.md](./specs/v2/viz-project-document.md)
 - [specs/v2/viz-session.md](./specs/v2/viz-session.md)
 - [specs/v2/component-contract.md](./specs/v2/component-contract.md)
@@ -106,6 +107,9 @@ This is the current source of truth for where VizEngine is heading:
 - [plans/v2/phase-13-viz-session-runtime-preview-ownership.md](./plans/v2/phase-13-viz-session-runtime-preview-ownership.md)
 - [plans/v2/runtime-backed-rendering-cutover.md](./plans/v2/runtime-backed-rendering-cutover.md)
 - [plans/v2/viz-session-convergence-and-editor-control-cutover.md](./plans/v2/viz-session-convergence-and-editor-control-cutover.md)
+- [plans/v2/canonical-component-authoring-and-capability-composition.md](./plans/v2/canonical-component-authoring-and-capability-composition.md)
+- [plans/v2/live-session-host-and-control-target.md](./plans/v2/live-session-host-and-control-target.md)
+- [plans/v2/canonical-audio-bake-and-runtime-inputs.md](./plans/v2/canonical-audio-bake-and-runtime-inputs.md)
 - [plans/v2/editor-session-foundation-implementation-plan.md](./plans/v2/editor-session-foundation-implementation-plan.md)
 - [plans/v2/live-preview-and-audio-session-foundation-plan.md](./plans/v2/live-preview-and-audio-session-foundation-plan.md)
 - [plans/v2/local-agent-control-surface-implementation-plan.md](./plans/v2/local-agent-control-surface-implementation-plan.md)

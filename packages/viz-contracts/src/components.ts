@@ -11,20 +11,197 @@ import type { VizGraphEvaluationResult } from "./graphs.js";
 
 export type VizComponentInputSourceKind = VizValueSource["kind"];
 
+export type VizComponentCompatibility =
+  | "render-safe"
+  | "bake-required"
+  | "live-only";
+
+export type VizComponentCatalogVisibility = "public" | "hidden";
+
+export type VizComponentSettingConditionOperator =
+  | "equals"
+  | "not-equals"
+  | "in"
+  | "not-in";
+
+export interface VizComponentSettingValueCondition {
+  path: string;
+  operator: VizComponentSettingConditionOperator;
+  value: unknown;
+}
+
+export interface VizComponentSettingConditionGroup {
+  operator: "all" | "any";
+  conditions: VizComponentSettingCondition[];
+}
+
+export type VizComponentSettingCondition =
+  | VizComponentSettingValueCondition
+  | VizComponentSettingConditionGroup;
+
+interface VizComponentSettingBase {
+  label: string;
+  description?: string;
+  visibleWhen?: VizComponentSettingCondition;
+}
+
+export interface VizComponentNumberSetting extends VizComponentSettingBase {
+  kind: "number";
+  defaultValue: number;
+  min: number;
+  max: number;
+  step?: number;
+  animatable?: boolean;
+}
+
+export interface VizComponentTextSetting extends VizComponentSettingBase {
+  kind: "text";
+  defaultValue: string;
+  animatable?: boolean;
+}
+
+export interface VizComponentBooleanSetting extends VizComponentSettingBase {
+  kind: "boolean";
+  defaultValue: boolean;
+  animatable?: boolean;
+}
+
+export interface VizComponentColorSetting extends VizComponentSettingBase {
+  kind: "color";
+  defaultValue: string;
+  animatable?: boolean;
+}
+
+export interface VizComponentSelectSetting extends VizComponentSettingBase {
+  kind: "select";
+  defaultValue: string;
+  options: string[];
+  animatable?: boolean;
+}
+
+export interface VizComponentFileSetting extends VizComponentSettingBase {
+  kind: "file";
+  defaultValue: string;
+  allowedExtensions?: string[];
+  animatable?: false;
+}
+
+export interface VizComponentVector3Setting extends VizComponentSettingBase {
+  kind: "vector3";
+  defaultValue: {
+    x: number;
+    y: number;
+    z: number;
+  };
+  min?: number;
+  max?: number;
+  step?: number;
+  animatable?: boolean;
+}
+
+export interface VizComponentListSetting extends VizComponentSettingBase {
+  kind: "list";
+  defaultValue: unknown[];
+  item: Exclude<
+    VizComponentSettingDefinition,
+    VizComponentGroupSetting | VizComponentActionSetting
+  >;
+  itemLabel?: string;
+  animatable?: false;
+}
+
+export interface VizComponentActionSetting extends VizComponentSettingBase {
+  kind: "action";
+  actionId: string;
+  buttonLabel?: string;
+}
+
+export interface VizComponentGroupSetting extends VizComponentSettingBase {
+  kind: "group";
+  fields: Record<string, VizComponentSettingDefinition>;
+}
+
+export type VizComponentSettingDefinition =
+  | VizComponentNumberSetting
+  | VizComponentTextSetting
+  | VizComponentBooleanSetting
+  | VizComponentColorSetting
+  | VizComponentSelectSetting
+  | VizComponentFileSetting
+  | VizComponentVector3Setting
+  | VizComponentListSetting
+  | VizComponentActionSetting
+  | VizComponentGroupSetting;
+
+export interface VizComponentPreset {
+  id: string;
+  name: string;
+  description?: string;
+  values: Record<string, unknown>;
+  networks?: Record<string, string>;
+}
+
+export interface VizComponentInlineNetworkPreset {
+  id: string;
+  name: string;
+  description?: string;
+  outputType: string;
+  autoPlace?: boolean;
+  nodes: Array<{
+    id: string;
+    label: string;
+    position?: { x: number; y: number };
+    inputValues?: Record<string, unknown>;
+    state?: Record<string, unknown>;
+  }>;
+  edges: Array<{
+    source: string;
+    sourceHandle?: string;
+    target: string;
+    targetHandle: string;
+  }>;
+}
+
+export type VizComponentDefaultNetwork =
+  | string
+  | VizComponentInlineNetworkPreset;
+
+export interface VizComponentAuthoring {
+  schemaVersion: 1;
+  componentId: string;
+  category?: string;
+  tags?: string[];
+  catalogVisibility?: VizComponentCatalogVisibility;
+  compatibility: VizComponentCompatibility;
+  settings: VizComponentGroupSetting;
+  presets?: VizComponentPreset[];
+  defaultNetworks?: Record<string, VizComponentDefaultNetwork>;
+}
+
 export interface VizComponentInputDefinition {
   key: string;
   label: string;
   supportedSources: VizComponentInputSourceKind[];
+  runtimeBinding?: VizComponentRuntimeInputBinding;
   required?: boolean;
   defaultAsset?: VizAssetRef;
   description?: string;
 }
+
+export type VizComponentRuntimeInputBinding =
+  | "audio.frequency-data"
+  | "audio.time-domain-data"
+  | "audio.sample-rate"
+  | "audio.fft-size"
+  | "audio.frequency-analysis";
 
 export interface VizComponentDefinition {
   id: string;
   name: string;
   rendererFamily: VizRendererFamily;
   description?: string;
+  implementationVersion?: string;
+  authoring?: VizComponentAuthoring;
   inputs?: VizComponentInputDefinition[];
   renderPolicy?: VizLayerRenderPolicy;
   metadata?: Record<string, unknown>;

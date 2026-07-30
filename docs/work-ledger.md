@@ -1,5 +1,117 @@
 # Work Ledger
 
+## 2026-07-30
+
+- established the canonical architecture for the first complete
+  agent-authored production loop:
+  - separated engine core, capability packs, projects, hosts/adapters, and
+    agent tooling into explicit responsibility boundaries
+  - defined project transactions, session commands, jobs, and inspection/events
+    as distinct operation categories
+  - confirmed that headless agent authoring is the primary control model rather
+    than UI event synthesis
+  - defined the first live topology as one editor-hosted `VizSession` used by
+    both the subscribed editor and a thin local agent-control transport
+  - retained fully headless construction as an equal mode while deferring a
+    distributed session daemon until a real multi-process or cloud need exists
+  - specified injectable capability packs and renderer extensions as the home
+    for reusable agent-authored visuals
+  - defined canonical audio bake, render job, automated feedback, execution
+    identity, and production certification boundaries
+  - recorded the current implementation seams, phased execution gates,
+    assumptions, locked decisions, and open decisions in
+    `docs/specs/v2/agent-authored-production-loop-architecture.md`
+- completed canonical component authoring and capability composition:
+  - added a portable data-only authoring schema covering the complete preserved
+    settings vocabulary, declarative conditions, presets, default networks,
+    compatibility, catalog metadata, and implementation identity
+  - moved all fifteen preserved component schemas into
+    `@viz-engine/components-core` beside their runtime implementations
+  - deleted the duplicate editor-local component definitions and generated the
+    existing editor config presentation from `coreCatalogComponents`
+  - introduced inspectable capability-pack manifests and strict explicit
+    component-registry composition
+  - made `@viz-engine/editor-control` accept injected component/node registries
+    and report component, pack, compatibility, version, and authoring metadata
+  - replaced module-global Three program extension lookup with injected
+    renderer-extension registries carrying program and pack identities
+  - proved a project-local component and Three program can execute through the
+    real control/compositor paths without editing engine core
+  - updated component scaffolding to emit the portable authoring schema and
+    capability-pack guidance
+  - rejected blank or duplicate capability-pack and Three-extension identities
+    at strict composition boundaries
+  - passed the full foundation, package, consumer, creative-loop, production
+    build, and 42-capability parity gates
+  - browser-verified the three-layer editor, all fifteen catalog entries,
+    schema-derived controls, add/undo, animation graphs, live values, waveform
+    transport, and package preview
+  - fixed a browser-discovered node live-value formatting edge case and
+    confirmed a clean second browser context
+  - recorded the architecture and evidence in
+    `docs/plans/v2/canonical-component-authoring-and-capability-composition.md`
+- completed the one-live-control-target milestone:
+  - added stable `VizSessionHost` ownership for project session, transport,
+    audio session, project resources, registries, and subscriptions
+  - replaced the private/recreated editor control composition with injected
+    `VizControl` instances over that host
+  - made the actual preserved studio use and export the same host/control while
+    retaining Zustand only as a selective React read projection
+  - added stable project loading without replacing control or subscriber
+    identity
+  - implemented atomic multi-action transactions with applied/dry-run/conflict/
+    rejected status, optimistic expected revision, host-assigned actor,
+    transaction attribution, duplicate-id rejection, and one-step undo
+  - added strict versioned Zod decoding for all current nested project actions
+    and control requests
+  - returned lean portable transaction/history/preview results while retaining
+    explicit project inspection for clients that need the full document
+  - introduced a dev-only Vite bridge whose browser leg uses the existing HMR
+    WebSocket and whose tool leg exposes HTTP request/response and SSE events
+  - kept the bridge stateless and added heartbeat/staleness, one-active-editor,
+    request-size, duplicate, timeout, and structured error handling
+  - exposed machine-readable `viz-dev live` help, discovery, inspection,
+    transaction, history, and preview commands without a reverse package
+    dependency on browser control
+  - browser-proved external two-action mutation, immediate existing-UI
+    reflection, structured stale conflict, side-effect-free dry run, native UI
+    undo of the complete agent transaction, CLI discovery/control, and SSE
+  - hardened snapshot events with content deduplication after acceptance
+    exposed identical paused-frame event churn
+  - passed focused dev-cli/editor-control/studio typechecks and 5 focused test
+    files / 37 tests before the complete foundation gate
+  - recorded the design and acceptance in
+    `docs/plans/v2/live-session-host-and-control-target.md` and
+    `docs/parity/evidence/2026-07-30-live-session-host-and-control-target.md`
+- completed the canonical audio-bake and runtime-input milestone:
+  - implemented deterministic centered standard frame analysis in
+    `rhythm-core` with scalar features and full analyzer-compatible
+    waveform/spectrum frames
+  - added versioned portable artifact, runtime-input, semantic component
+    binding, and generic job lifecycle contracts
+  - implemented synchronous and cooperative asynchronous bake execution,
+    progress, cancellation, deterministic identity, and strict validation
+  - added browser Web Audio and Node FFprobe/FFmpeg decoder attachments over
+    one pure PCM boundary
+  - added an observable audio-bake job service to the shared session host and
+    live/headless control surface
+  - kept completed job output separate from project mutation and attached it
+    only through a revision-safe canonical transaction
+  - replaced the browser export-local FFT path with canonical bake artifacts
+    and fed the same sampled snapshots to components, node graphs, direct
+    rendering, and Remotion
+  - added headless bundle audio baking and real-media portable-bundle
+    integration coverage
+  - rejected compact standard dense frames because they would degrade
+    analyzer, bass-frequency, and node-graph semantics
+  - fixed `rhythm-core` package ESM specifiers and expanded the packed external
+    consumer gate to cover the bake/audio dependency chain
+  - passed the complete parity, typecheck, build, consumer, creative-loop, and
+    foundation gate with 44 test files and 186 passing tests
+  - recorded the implementation and evidence in
+    `docs/plans/v2/canonical-audio-bake-and-runtime-inputs.md` and
+    `docs/parity/evidence/2026-07-30-canonical-audio-bake-and-runtime-inputs.md`
+
 ## 2026-07-29
 
 - started the full runtime-backed component rendering cutover:

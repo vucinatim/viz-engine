@@ -1,6 +1,5 @@
 import type { Comp } from '@/components/config/create-component';
 import {
-  applyComponentDefaultAssets,
   applyEditorDefaultNetworks,
   createEmptyVizProjectDocument,
   toEditorComponentId,
@@ -11,7 +10,11 @@ import {
 } from '@viz-engine/components-core';
 import type { VizProjectDocument, VizRenderPlan } from '@viz-engine/contracts';
 import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
-import { createVizRenderPlan, createVizRuntimeSession } from '@viz-engine/runtime';
+import {
+  applyVizComponentDefaultAssets,
+  createVizRenderPlan,
+  createVizRuntimeSession,
+} from '@viz-engine/runtime';
 
 const componentRegistry = createCoreComponentRegistry();
 const nodeRegistry = createCoreNodeRegistry();
@@ -83,7 +86,7 @@ export const createEditorComponentPreviewPlan = ({
     layerId,
     comp,
   });
-  const project = applyComponentDefaultAssets(
+  const project = applyVizComponentDefaultAssets(
     projectWithNetworks,
     (candidateId) => componentRegistry.get(candidateId),
   );
@@ -101,30 +104,17 @@ export const createEditorComponentPreviewPlan = ({
     frame,
     registry: componentRegistry,
     nodeRegistry,
-    graphInputValues: Object.fromEntries(
-      (project.graphs ?? []).map((graph) => [
-        graph.id,
-        {
-          audioSignal:
-            audioFrameData.timeDomainData ?? new Uint8Array(),
-          frequencyAnalysis: {
-            frequencyData: audioFrameData.frequencyData,
-            sampleRate: audioFrameData.sampleRate,
-            fftSize: audioFrameData.fftSize,
-          },
-          time,
-        },
-      ]),
-    ),
-    inputValues:
-      componentId === 'curve-spectrum'
-        ? {
-            [layerId]: {
-              spectrum: Array.from(audioFrameData.frequencyData),
-              sampleRate: audioFrameData.sampleRate,
-              fftSize: audioFrameData.fftSize,
-            },
-          }
-        : undefined,
+    runtimeInputs: {
+      audio: {
+        frequencyData: audioFrameData.frequencyData,
+        timeDomainData:
+          audioFrameData.timeDomainData ?? new Uint8Array(),
+        sampleRate: audioFrameData.sampleRate,
+        fftSize: audioFrameData.fftSize,
+        minDecibels: -90,
+        maxDecibels: -10,
+        provenance: 'live',
+      },
+    },
   });
 };

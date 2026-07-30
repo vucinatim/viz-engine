@@ -1,5 +1,6 @@
 import type { VizResolvedArtifact } from "./artifacts.js";
 import type { VizMaterializedAsset, VizResolvedAsset } from "./assets.js";
+import type { VizArtifactId, VizAssetId } from "./ids.js";
 
 export type VizExecutionMode = "live" | "render" | "bake";
 
@@ -39,4 +40,21 @@ export interface VizRuntimeResources {
   resolvedAssets?: VizResolvedAsset[];
   materializedAssets?: VizMaterializedAsset[];
   resolvedArtifacts?: VizResolvedArtifact[];
+}
+
+export interface VizRuntimeAudioFrameSnapshot {
+  frequencyData: Uint8Array;
+  timeDomainData: Uint8Array;
+  sampleRate: number;
+  fftSize: number;
+  minDecibels: number;
+  maxDecibels: number;
+  sourceAssetId?: VizAssetId;
+  artifactId?: VizArtifactId;
+  artifactFrame?: number;
+  provenance: "live" | "baked";
+}
+
+export interface VizRuntimeInputs {
+  audio?: VizRuntimeAudioFrameSnapshot;
 }

@@ -3,6 +3,7 @@ import type {
   VizRenderProgramValue,
   VizRenderThreeProgramNode,
 } from "@viz-engine/contracts";
+import { morphShapesAuthoring } from "./authoring/morph-shapes.js";
 import {
   asBoolean,
   asNumber,
@@ -161,6 +162,8 @@ export const morphShapesComponent: VizComponentImplementation = {
   id: "morph-shapes",
   name: "Morph Shapes",
   rendererFamily: "three",
+  implementationVersion: "1.0.0",
+  authoring: morphShapesAuthoring,
   description:
     "Deterministic retained point-cloud morphing between procedural, model, and text shapes.",
   render: ({

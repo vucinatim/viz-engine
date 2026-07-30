@@ -17,6 +17,13 @@ export default defineConfig({
       "@": path.resolve(repoRoot, "src"),
       "@viz-engine/contracts": packageEntry("viz-contracts"),
       "@viz-engine/runtime": packageEntry("viz-runtime"),
+      "@viz-engine/bake/node": path.resolve(
+        repoRoot,
+        "packages",
+        "viz-bake",
+        "src",
+        "node.ts",
+      ),
       "@viz-engine/bake": packageEntry("viz-bake"),
       "@viz-engine/components-core": packageEntry("viz-components-core"),
       "@viz-engine/remotion-adapter": packageEntry("viz-remotion-adapter"),

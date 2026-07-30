@@ -4,6 +4,7 @@ import type {
   VizRenderGroupNode,
   VizRenderRectNode,
 } from "@viz-engine/contracts";
+import { curveSpectrumAuthoring } from "./authoring/curve-spectrum.js";
 import { asNumber, asString } from "./shared.js";
 
 type Point = { x: number; y: number };
@@ -112,24 +113,29 @@ export const curveSpectrumComponent: VizComponentImplementation = {
   id: "curve-spectrum",
   name: "Curve Spectrum",
   rendererFamily: "three",
+  implementationVersion: "1.0.0",
+  authoring: curveSpectrumAuthoring,
   description: "Runtime-rendered port of the V1 curve spectrum visual.",
   inputs: [
     {
       key: "spectrum",
       label: "Spectrum Data",
       supportedSources: ["literal"],
+      runtimeBinding: "audio.frequency-data",
       required: true,
     },
     {
       key: "sampleRate",
       label: "Sample Rate",
       supportedSources: ["literal"],
+      runtimeBinding: "audio.sample-rate",
       required: true,
     },
     {
       key: "fftSize",
       label: "FFT Size",
       supportedSources: ["literal"],
+      runtimeBinding: "audio.fft-size",
       required: true,
     },
   ],

@@ -35,10 +35,10 @@ export function fftRadix2(real: Float32Array, imag: Float32Array): void {
     j ^= bit;
 
     if (i < j) {
-      const tempReal = real[i];
-      const tempImag = imag[i];
-      real[i] = real[j];
-      imag[i] = imag[j];
+      const tempReal = real[i]!;
+      const tempImag = imag[i]!;
+      real[i] = real[j]!;
+      imag[i] = imag[j]!;
       real[j] = tempReal;
       imag[j] = tempImag;
     }
@@ -55,13 +55,14 @@ export function fftRadix2(real: Float32Array, imag: Float32Array): void {
         const sin = Math.sin(angle);
 
         const off = i + j + halfSize;
-        const treal = real[off] * cos - imag[off] * sin;
-        const timag = real[off] * sin + imag[off] * cos;
+        const treal = real[off]! * cos - imag[off]! * sin;
+        const timag = real[off]! * sin + imag[off]! * cos;
 
-        real[off] = real[i + j] - treal;
-        imag[off] = imag[i + j] - timag;
-        real[i + j] += treal;
-        imag[i + j] += timag;
+        const on = i + j;
+        real[off] = real[on]! - treal;
+        imag[off] = imag[on]! - timag;
+        real[on] = real[on]! + treal;
+        imag[on] = imag[on]! + timag;
       }
     }
   }

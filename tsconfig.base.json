@@ -17,6 +17,7 @@
       "@viz-engine/contracts": ["packages/viz-contracts/src/index.ts"],
       "@viz-engine/runtime": ["packages/viz-runtime/src/index.ts"],
       "@viz-engine/bake": ["packages/viz-bake/src/index.ts"],
+      "@viz-engine/bake/node": ["packages/viz-bake/src/node.ts"],
       "@viz-engine/remotion-adapter": ["packages/viz-remotion-adapter/src/index.ts"],
       "@viz-engine/example-projects": ["packages/viz-example-projects/src/index.ts"],
       "@viz-engine/example-projects/node": ["packages/viz-example-projects/src/node.ts"],

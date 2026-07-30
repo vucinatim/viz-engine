@@ -2,6 +2,8 @@ import type {
   VizComponentImplementation,
   VizRenderShaderNode,
 } from '@viz-engine/contracts';
+import { fullscreenShaderAuthoring } from './authoring/fullscreen-shader.js';
+import { fullscreenShaderNames } from './fullscreen-shader-catalog.js';
 import { asNumber, asString } from './shared.js';
 
 // Vertex shader (same for all - just a fullscreen quad)
@@ -423,12 +425,14 @@ export const fullscreenShaderPrograms: Record<string, string> = {
   'Cyber Grid': cyberGrid,
 };
 
-export const fullscreenShaderNames = Object.keys(fullscreenShaderPrograms);
+export { fullscreenShaderNames };
 
 export const fullscreenShaderComponent: VizComponentImplementation = {
   id: 'fullscreen-shader',
   name: 'Fullscreen Shader',
   rendererFamily: 'three',
+  implementationVersion: '1.0.0',
+  authoring: fullscreenShaderAuthoring,
   description: 'Deterministic package-runtime fullscreen GLSL shaders.',
   render: ({ viewport, frameContext, layer, settings }) => {
     const shaderName = asString(

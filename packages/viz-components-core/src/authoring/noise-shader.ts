@@ -1,10 +1,8 @@
-import { v } from '../config/config';
-import { createComponent } from '../config/create-component';
+import { defineVizComponentAuthoring, settingCondition, v } from './schema.js';
 
-const NoiseShader = createComponent({
-  name: 'Noise Shader',
-  description:
-    'Fullscreen procedural noise shader with extensive customization',
+export const noiseShaderAuthoring = defineVizComponentAuthoring({
+  componentId: 'noise-shader',
+  compatibility: 'render-safe',
   presets: [
     {
       name: 'Init',
@@ -553,7 +551,7 @@ const NoiseShader = createComponent({
           min: 1,
           max: 8,
           step: 1,
-          visibleIf: (vals) => vals.noise?.type === 'fbm',
+          visibleWhen: settingCondition('noise.type', 'equals', 'fbm'),
         }),
         lacunarity: v.number({
           label: 'Lacunarity',
@@ -562,7 +560,7 @@ const NoiseShader = createComponent({
           min: 1.0,
           max: 4.0,
           step: 0.1,
-          visibleIf: (vals) => vals.noise?.type === 'fbm',
+          visibleWhen: settingCondition('noise.type', 'equals', 'fbm'),
         }),
         gain: v.number({
           label: 'Gain',
@@ -571,7 +569,7 @@ const NoiseShader = createComponent({
           min: 0.0,
           max: 1.0,
           step: 0.01,
-          visibleIf: (vals) => vals.noise?.type === 'fbm',
+          visibleWhen: settingCondition('noise.type', 'equals', 'fbm'),
         }),
       },
     ),
@@ -633,7 +631,7 @@ const NoiseShader = createComponent({
           min: 0.0,
           max: 5.0,
           step: 0.1,
-          visibleIf: (vals) => vals.distortion?.enabled === true,
+          visibleWhen: settingCondition('distortion.enabled', 'equals', true),
         }),
         scale: v.number({
           label: 'Scale',
@@ -642,7 +640,7 @@ const NoiseShader = createComponent({
           min: 0.1,
           max: 10.0,
           step: 0.1,
-          visibleIf: (vals) => vals.distortion?.enabled === true,
+          visibleWhen: settingCondition('distortion.enabled', 'equals', true),
         }),
       },
     ),
@@ -662,23 +660,26 @@ const NoiseShader = createComponent({
           label: 'Color 1',
           description: 'First color (gradient start, or monochrome)',
           defaultValue: '#000000',
-          visibleIf: (vals) =>
-            vals.color?.mode === 'gradient' ||
-            vals.color?.mode === 'palette' ||
-            vals.color?.mode === 'monochrome',
+          visibleWhen: settingCondition('color.mode', 'in', [
+            'gradient',
+            'palette',
+            'monochrome',
+          ]),
         }),
         color2: v.color({
           label: 'Color 2',
           description: 'Second color (gradient end)',
           defaultValue: '#ffffff',
-          visibleIf: (vals) =>
-            vals.color?.mode === 'gradient' || vals.color?.mode === 'palette',
+          visibleWhen: settingCondition('color.mode', 'in', [
+            'gradient',
+            'palette',
+          ]),
         }),
         color3: v.color({
           label: 'Color 3',
           description: 'Third color (palette mode)',
           defaultValue: '#ff0000',
-          visibleIf: (vals) => vals.color?.mode === 'palette',
+          visibleWhen: settingCondition('color.mode', 'equals', 'palette'),
         }),
         hueShift: v.number({
           label: 'Hue Shift Speed',
@@ -687,7 +688,7 @@ const NoiseShader = createComponent({
           min: 0.0,
           max: 5.0,
           step: 0.1,
-          visibleIf: (vals) => vals.color?.mode === 'hue-shift',
+          visibleWhen: settingCondition('color.mode', 'equals', 'hue-shift'),
         }),
         saturation: v.number({
           label: 'Saturation',
@@ -696,10 +697,11 @@ const NoiseShader = createComponent({
           min: 0.0,
           max: 2.0,
           step: 0.01,
-          visibleIf: (vals) =>
-            vals.color?.mode === 'gradient' ||
-            vals.color?.mode === 'palette' ||
-            vals.color?.mode === 'hue-shift',
+          visibleWhen: settingCondition('color.mode', 'in', [
+            'gradient',
+            'palette',
+            'hue-shift',
+          ]),
         }),
       },
     ),
@@ -742,5 +744,3 @@ const NoiseShader = createComponent({
     ),
   }),
 });
-
-export default NoiseShader;
