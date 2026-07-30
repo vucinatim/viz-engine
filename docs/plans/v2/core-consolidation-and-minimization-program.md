@@ -1,12 +1,15 @@
 # Core Consolidation And Behavior-Preserving Minimization Program
 
-Status: Goal One complete and certified; Goal Two ready for activation after
-the Goal One worktree is committed.
+Status: Goal One complete and certified; Goal Two active from immutable commit
+`6f4529b`.
 
 Baseline reviewed: `bda5b2a` on `codex/viz-engine-v2`, 2026-07-30.
 
 Goal One certification:
 [2026-07-30 Core Consolidation And Quality Hardening](../../parity/evidence/2026-07-30-core-consolidation-and-quality-hardening.md).
+
+Goal Two execution contract:
+[Behavior-Preserving Minimization And Final Polish](./behavior-preserving-minimization-and-final-polish.md).
 
 ## Purpose
 

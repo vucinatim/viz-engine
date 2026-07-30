@@ -2,6 +2,24 @@
 
 ## 2026-07-30
 
+- activated Goal Two behavior-preserving minimization and final polish:
+  - committed the complete Goal One certification as `6f4529b`
+  - pushed the immutable baseline to `origin/codex/viz-engine-v2`
+  - recorded a machine-readable source, architecture, dependency, parity,
+    test, browser, production-identity, and performance baseline
+  - set a hard net-negative production and combined-maintained-code
+    requirement
+  - set a serious target of at least 10,000 fewer production lines and a
+    transparent 15–20% stretch target
+  - protected the complete editor UX, graph, deterministic runtime, asset,
+    model/character, Signal Cathedral, agent-control, diagnostic, parity,
+    resource, test, and performance contract
+  - defined measured workstreams for public surface, control/session/action,
+    nodes/presets/components, renderer lifecycles, editor presentation,
+    bake/render/host orchestration, dead surface, tests/tooling, and final
+    certification
+  - recorded the complete autonomous contract in
+    `docs/plans/v2/behavior-preserving-minimization-and-final-polish.md`
 - completed and certified Goal One core consolidation and quality hardening:
   - added honest flat ESLint, Tailwind v4 formatting, source metrics, package
     dependency validation, and a non-duplicative complete foundation gate

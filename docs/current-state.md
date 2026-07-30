@@ -106,16 +106,23 @@ guardrails are stronger.
 See
 [Core Consolidation And Quality Hardening Certification](./parity/evidence/2026-07-30-core-consolidation-and-quality-hardening.md).
 
-## Next Goal
+## Active Goal
 
-Goal Two is the next deliberate goal, but it starts only after this Goal One
-worktree is committed.
+Goal Two is active:
+[Behavior-Preserving Minimization And Final Polish](./plans/v2/behavior-preserving-minimization-and-final-polish.md).
 
-It is a behavior-preserving minimization and final-polish pass. Its final
-implementation diff must delete more maintained source lines than it adds
-while preserving all certified editor UX, graph capability, deterministic
-outputs, portable assets, Signal Cathedral behavior, renderer stability,
-diagnostics, type safety, and parity coverage.
+Its immutable baseline is commit `6f4529b`, which is committed and pushed to
+`origin/codex/viz-engine-v2`.
+
+The hard requirement is a strictly net-negative production and combined
+maintained-code result. The serious target is at least 10,000 fewer production
+lines, with a 15–20% stretch target where the result remains transparent and
+honest.
+
+Every certified editor interaction, graph capability, deterministic output,
+portable asset workflow, Signal Cathedral result, model/character path,
+renderer lifecycle, diagnostic, test, type, parity row, and performance budget
+remains protected.
 
 ## Known Deliberate Deferrals
 
@@ -135,6 +142,7 @@ consolidation.
 - [V2 vision](./visions/viz-engine-v2-vision.md)
 - [Product architecture and parity alignment](./visions/v2-product-architecture-and-parity-alignment.md)
 - [Active consolidation plan](./plans/v2/core-consolidation-and-minimization-program.md)
+- [Active minimization plan](./plans/v2/behavior-preserving-minimization-and-final-polish.md)
 - [Autonomous development contract](./plans/v2/autonomous-development-operating-contract.md)
 - [Parity matrix](./parity/README.md)
 - [Suggestions](./suggestions.md)

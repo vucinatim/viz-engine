@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "goal": "viz-engine-v2-behavior-preserving-minimization",
+  "capturedAt": "2026-07-30",
+  "git": {
+    "commit": "6f4529b824d38a60cf3363b1cd646e55b4339227",
+    "branch": "codex/viz-engine-v2",
+    "remote": "origin/codex/viz-engine-v2"
+  },
+  "source": {
+    "extensions": ["ts", "tsx", "mts", "mjs"],
+    "scopes": {
+      "production": {
+        "files": 371,
+        "lines": 75524
+      },
+      "tools": {
+        "files": 13,
+        "lines": 2466
+      },
+      "tests": {
+        "files": 54,
+        "lines": 12637
+      },
+      "playground": {
+        "files": 22,
+        "lines": 3139
+      },
+      "allCode": {
+        "files": 464,
+        "lines": 93954
+      },
+      "maintained": {
+        "files": 438,
+        "lines": 90627,
+        "includes": ["production", "tools", "tests"]
+      }
+    }
+  },
+  "architecture": {
+    "packageCount": 17,
+    "declaredEntrypointCount": 21,
+    "packageSourceFileCount": 148,
+    "packageExportDeclarationCount": 762,
+    "validation": {
+      "upwardDependencies": 0,
+      "cycles": 0,
+      "undeclaredWorkspaceImports": 0,
+      "nodeEntrypointLeaks": 0
+    },
+    "packages": {
+      "@viz-engine/rhythm-core": [],
+      "@viz-engine/actions": ["@viz-engine/contracts"],
+      "@viz-engine/bake": ["@viz-engine/contracts", "@viz-engine/rhythm-core"],
+      "@viz-engine/components-core": ["@viz-engine/contracts"],
+      "@viz-engine/contracts": [],
+      "@viz-engine/dev-cli": [
+        "@viz-engine/actions",
+        "@viz-engine/bake",
+        "@viz-engine/components-core",
+        "@viz-engine/contracts",
+        "@viz-engine/example-projects",
+        "@viz-engine/nodes-core",
+        "@viz-engine/project-bundle",
+        "@viz-engine/render",
+        "@viz-engine/renderer-svg",
+        "@viz-engine/runtime"
+      ],
+      "@viz-engine/editor-control": [
+        "@viz-engine/bake",
+        "@viz-engine/components-core",
+        "@viz-engine/contracts",
+        "@viz-engine/editor-session",
+        "@viz-engine/example-projects",
+        "@viz-engine/nodes-core",
+        "@viz-engine/project-bundle",
+        "@viz-engine/render",
+        "@viz-engine/renderer-svg",
+        "@viz-engine/runtime",
+        "zod"
+      ],
+      "@viz-engine/editor-session": [
+        "@viz-engine/actions",
+        "@viz-engine/contracts",
+        "@viz-engine/runtime"
+      ],
+      "@viz-engine/example-projects": ["@viz-engine/contracts"],
+      "@viz-engine/nodes-core": ["@viz-engine/contracts"],
+      "@viz-engine/production-signal-cathedral": [
+        "@viz-engine/components-core",
+        "@viz-engine/contracts",
+        "@viz-engine/renderer-three",
+        "three"
+      ],
+      "@viz-engine/project-bundle": ["@viz-engine/contracts"],
+      "@viz-engine/remotion-adapter": [
+        "@viz-engine/contracts",
+        "@viz-engine/renderer-svg",
+        "@viz-engine/runtime"
+      ],
+      "@viz-engine/render": [
+        "@viz-engine/contracts",
+        "@viz-engine/renderer-svg",
+        "@viz-engine/runtime"
+      ],
+      "@viz-engine/renderer-svg": ["@viz-engine/contracts"],
+      "@viz-engine/renderer-three": ["@viz-engine/contracts", "three"],
+      "@viz-engine/runtime": ["@viz-engine/contracts"]
+    }
+  },
+  "parity": {
+    "referenceCommit": "e806fbc10980615588b52ff574bc923c6f00f35e",
+    "capabilityCount": 42,
+    "statusCounts": {
+      "not-audited": 2,
+      "gap": 0,
+      "partial": 37,
+      "verified": 3,
+      "approved-change": 0
+    }
+  },
+  "tests": {
+    "vitestFiles": 52,
+    "vitestTests": 222,
+    "browserFiles": 1,
+    "browserJourneys": [
+      "canonical editing, history, graph, and transport",
+      "portable model attachment and reload",
+      "canonical graph authoring, history, clipboard, and reload",
+      "visible canonical project file roundtrip",
+      "visible nonblank still export",
+      "bounded canonical and renderer resource soak",
+      "visible probed nonblank and nonfrozen video export"
+    ],
+    "browserJourneyCount": 7
+  },
+  "signalCathedral": {
+    "projectSha256": "c0085922cb268a69b8306898b167a1e2386675fdcf96778a832c258e75bf9223",
+    "bundleManifestSha256": "6c4a4c27ac7e6003a1f88e09395e9dd3332dbea21ece6d05a1cfe5c76e209e9c",
+    "executionManifestSha256": "17370aedb0674dfeeaa68a9f3c1811d5c8ad796dfce3f8220058711c2d3b0d65",
+    "audioArtifactSha256": "2f5f8dc41a8e2d49a499c91a4caeba711cbe8eb6f46863e1ad35428a49554f79",
+    "finalVideoSha256": "a835883cafa005dc38851ea6cbb2e5adbf0abfd10137fa59bc6583383b2fcfb2",
+    "contactSheetSha256": "852419d591a4139b31f5e43071f3512d3b1dee028932b23701d389cb4c5ff372",
+    "representativeFrame": {
+      "frame": 360,
+      "width": 640,
+      "height": 360,
+      "pngBytes": 192501,
+      "sha256": "8527fc09dee569995799de25d2cff1c6b17fcf8314107ea9729c35de1b0528da",
+      "averageLuminance": 0.11647028935185312,
+      "darkPixelRatio": 0.1488715277777778
+    },
+    "finalMedia": {
+      "durationSeconds": 12,
+      "width": 1280,
+      "height": 720,
+      "fps": 60,
+      "videoCodec": "h264",
+      "audioCodec": "aac",
+      "audioSampleRate": 48000,
+      "audioChannels": 2,
+      "bytes": 4215523,
+      "blankFrames": 0,
+      "nearBlackFrames": 0,
+      "frozenFrames": 0
+    }
+  },
+  "performance": {
+    "runtimePlan": {
+      "environment": "Node v22.22.0, darwin arm64",
+      "componentCount": 15,
+      "measuredFrames": 300,
+      "warmupFrames": 30,
+      "fps": 60,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "canonicalMeanMs": 0.30220696666666563,
+      "canonicalMedianMs": 0.2697080000000369,
+      "canonicalP95Ms": 0.44583299999999326,
+      "canonicalMaxMs": 0.8582919999998921,
+      "formerShapeMeanMs": 0.4511225033333301
+    },
+    "audioArtifactContainer": {
+      "frameCount": 720,
+      "featureCount": 9,
+      "packedValues": 2211840,
+      "legacyJsonBytes": 3133447,
+      "containerBytes": 2337004,
+      "legacyDecodeMedianMs": 2.7123750000000086,
+      "containerDecodeMedianMs": 0.7261250000000246,
+      "legacySeekMedianMs": 12.967874999999992,
+      "containerSeekMedianMs": 12.991791999999975,
+      "seekSamples": 10000,
+      "seekChecksum": 2881316.7188340724,
+      "retainedPackedBytes": 2211840
+    },
+    "signalCathedralLive": {
+      "frame550SeekMs": 22.5,
+      "playbackObservationSeconds": 12.503,
+      "renderCycles": 699,
+      "graphIssues": 0,
+      "runtimePlanIssues": 0
+    }
+  },
+  "certification": {
+    "command": "pnpm check:foundation",
+    "passed": true,
+    "includes": [
+      "parity",
+      "architecture",
+      "format",
+      "lint",
+      "types",
+      "deterministic tests",
+      "browser acceptance",
+      "package builds",
+      "studio build",
+      "packed consumer",
+      "built creative loop"
+    ]
+  }
+}
