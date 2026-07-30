@@ -12,6 +12,14 @@ import { createVizSessionRuntimePreviewFrame } from '@/lib/viz-session';
 import { createVizSessionRuntimePreviewPlan } from '@/lib/viz-session/runtime-preview-plan';
 import { createTestProject } from './viz-session-test-utils';
 import { createCoreComponentRegistry } from '@viz-engine/components-core';
+import { studioCatalogComponents } from '@/lib/viz-capabilities';
+import {
+  createSignalCathedralProject,
+  SIGNAL_CATHEDRAL_AUDIO_ARTIFACT_ID,
+  SIGNAL_CATHEDRAL_AUDIO_ASSET_ID,
+  SIGNAL_CATHEDRAL_GRAPH_ID,
+} from '@viz-engine/production-signal-cathedral';
+import type { VizAudioFeatureTimelineArtifact } from '@viz-engine/contracts';
 
 const FullscreenShader = CompDefinitionMap.get('Fullscreen Shader')!;
 const StageScene = CompDefinitionMap.get('Stage Scene')!;
@@ -96,6 +104,78 @@ describe('Editor runtime preview planning', () => {
     ).toBe(audioFrameData.frequencyData);
     expect(renderPlan.layers[0]?.node?.kind).toBe('group');
     expect(renderPlan.issues).toEqual([]);
+  });
+
+  it('resolves baked graph features from the live session resources', () => {
+    const series = (name: string, value: number) => ({
+      name,
+      unit: 'unit' as const,
+      normalization: 'custom' as const,
+      values: Array.from({ length: 720 }, () => value),
+    });
+    const artifact: VizAudioFeatureTimelineArtifact = {
+      schemaVersion: 1,
+      id: SIGNAL_CATHEDRAL_AUDIO_ARTIFACT_ID,
+      kind: 'audio-feature-timeline',
+      label: 'Preview resource fixture',
+      sourceAssetId: SIGNAL_CATHEDRAL_AUDIO_ASSET_ID,
+      profile: 'standard',
+      sourceWindow: {
+        startSample: 0,
+        sampleCount: 576_000,
+        startSeconds: 0,
+        durationSeconds: 12,
+      },
+      frameAlignment: {
+        fps: 60,
+        frameCount: 720,
+        alignment: 'frame-centered',
+      },
+      featureSeries: [
+        series('bass-energy', 0.5),
+        series('mid-energy', 0.4),
+        series('loudness', 0.6),
+        series('treble-energy', 0.3),
+        series('onset-strength', 0.2),
+        series('spectral-flux', 0.1),
+      ],
+    };
+    const project = createSignalCathedralProject({
+      audioArtifactRef: artifact,
+    });
+    const renderPlan = createVizSessionRuntimePreviewPlan({
+      project,
+      projectRevision: 8,
+      resourceRevision: 3,
+      resolvedArtifacts: [
+        {
+          id: artifact.id,
+          kind: artifact.kind,
+          uri: 'memory://preview-resource-fixture.json',
+          payload: artifact,
+        },
+      ],
+      frame: createVizSessionRuntimePreviewFrame({
+        currentFrame: 120,
+        time: 2,
+        dt: 1 / 60,
+        fps: 60,
+        mode: 'live',
+      }),
+      viewport: { width: 640, height: 360 },
+      audioFrameData,
+      isPlaying: true,
+    });
+
+    const graph = renderPlan.graphResults.find(
+      (candidate) => candidate.graphId === SIGNAL_CATHEDRAL_GRAPH_ID,
+    );
+    expect(graph?.issues).toEqual([]);
+    expect(graph?.values.structurePulse).toBeCloseTo(0.62);
+    expect(graph?.values.coreEnergy).toBeCloseTo(0.48);
+    expect(graph?.values.spectralShimmer).toBeCloseTo(0.402);
+    expect(graph?.values.shockwaveTrigger).toBeCloseTo(0.34);
+    expect(graph?.values.bloomAccent).toBeCloseTo(0.145);
   });
 
   it('evaluates editor node graphs into runtime component settings', () => {
@@ -236,7 +316,7 @@ describe('Editor runtime preview planning', () => {
   it('keeps all preserved editor components runtime-backed and callback-free', () => {
     const components = Array.from(CompDefinitionMap.values());
 
-    expect(components).toHaveLength(15);
+    expect(components).toHaveLength(studioCatalogComponents.length);
     for (const comp of components) {
       expect(isEditorComponentRuntimeBacked(comp)).toBe(true);
       expect(comp).not.toHaveProperty('draw');

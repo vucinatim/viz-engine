@@ -1,15 +1,17 @@
-import { destructureParameterId } from '@/lib/id-utils';
 import editorControl from '@/lib/editor-control';
 import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
-import useEditorLayerProjectionStore from '@/lib/stores/editor-layer-projection-store';
 import { cn } from '@/lib/utils';
 import { AudioLines } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import NodeNetworkRenderer from '../node-network/node-network-renderer';
 import useNodeNetworkStore, {
   useSpecificNetwork,
 } from '../node-network/node-network-store';
 import NodeEditorToolbar from './node-editor-toolbar';
+import {
+  describeProjectGraph,
+  useVizSessionSelector,
+} from '@/lib/viz-session';
 
 const AnimationBuilder = () => {
   const isPlaying = useEditorPreviewStore((state) => state.transport.isPlaying);
@@ -25,23 +27,22 @@ const AnimationBuilder = () => {
   const shouldForceShowOverlay = useNodeNetworkStore(
     (state) => state.shouldForceShowOverlay,
   );
-  const layers = useEditorLayerProjectionStore((state) => state.layers);
+  const project = useVizSessionSelector(
+    (state) => state.project.workingProject,
+  );
 
   const [isHovering, setIsHovering] = useState(false);
   const [hasMouseEntered, setHasMouseEntered] = useState(false);
   const reactFlowInstance = useRef<any>(null);
 
   // Get formatted parameter info
-  const parameterInfo = nodeNetworkId
-    ? (() => {
-        const info = destructureParameterId(nodeNetworkId);
-        const layer = layers.find((l) => l.id === info.layerId);
-        return {
-          ...info,
-          layerName: layer?.comp.name || info.componentName,
-        };
-      })()
-    : null;
+  const graphPresentation = useMemo(
+    () =>
+      nodeNetworkId
+        ? describeProjectGraph(project, nodeNetworkId)
+        : null,
+    [nodeNetworkId, project],
+  );
 
   // When shouldForceShowOverlay changes to true, show the overlay immediately
   useEffect(() => {
@@ -125,14 +126,16 @@ const AnimationBuilder = () => {
             <div className="flex items-center gap-3">
               <div className="flex flex-col gap-0.5 text-right">
                 <div className="text-sm font-semibold text-white">
-                  {parameterInfo?.displayName || 'Parameter'}
+                  {graphPresentation?.displayName || 'Graph'}
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-white/60">
-                  <span>{parameterInfo?.layerName || 'Layer'}</span>
-                  {parameterInfo?.groupPath && (
+                  <span>
+                    {graphPresentation?.contextLabel || 'Project graph'}
+                  </span>
+                  {graphPresentation?.detailLabel && (
                     <>
                       <span>›</span>
-                      <span>{parameterInfo.groupPath}</span>
+                      <span>{graphPresentation.detailLabel}</span>
                     </>
                   )}
                 </div>

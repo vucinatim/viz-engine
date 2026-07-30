@@ -6,6 +6,7 @@ export * from "./bundles.js";
 export * from "./capabilities.js";
 export * from "./components.js";
 export * from "./component-registry.js";
+export * from "./execution-manifests.js";
 export * from "./graphs.js";
 export * from "./ids.js";
 export * from "./jobs.js";

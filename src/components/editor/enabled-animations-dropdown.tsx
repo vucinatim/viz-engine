@@ -5,8 +5,11 @@ import editorControl from '@/lib/editor-control';
 import useEditorLayerProjectionStore from '@/lib/stores/editor-layer-projection-store';
 import { useCallback, useMemo } from 'react';
 import useNodeNetworkStore, {
-  useEnabledNetworkIds,
 } from '../node-network/node-network-store';
+import {
+  selectParameterGraphBindings,
+  useVizSessionSelector,
+} from '@/lib/viz-session';
 import { Badge } from '../ui/badge';
 import SearchSelect from '../ui/search-select';
 import AnimationItem from './animation-item';
@@ -19,7 +22,10 @@ import LazyNodeNetworkPreview from './lazy-node-network-preview';
 const EnabledAnimationsDropdown = () => {
   // Use optimized selector to only get enabled parameter IDs (not full networks)
   // This prevents rerenders when node positions change or disabled networks change
-  const enabledNetworkIds = useEnabledNetworkIds();
+  const parameterGraphBindings = useVizSessionSelector(
+    selectParameterGraphBindings,
+  );
+  const enabledParameterIds = Object.keys(parameterGraphBindings);
   const openNetwork = useNodeNetworkStore((state) => state.openNetwork);
   const layers = useEditorLayerProjectionStore((state) => state.layers);
 
@@ -35,7 +41,7 @@ const EnabledAnimationsDropdown = () => {
   // Check if animation is currently active
   const isActiveAnimation = useCallback(
     (animation: any) => {
-      return openNetwork === animation.parameterId;
+      return openNetwork === animation.graphId;
     },
     [openNetwork],
   );
@@ -43,12 +49,13 @@ const EnabledAnimationsDropdown = () => {
   // Group enabled animations by layer in the same order as the layer stack
   const groupedAnimations = useMemo(() => {
     // First, collect all enabled animations with their metadata
-    const allAnimations = enabledNetworkIds.map((parameterId) => {
+    const allAnimations = enabledParameterIds.map((parameterId) => {
       const info = destructureParameterId(parameterId);
       const layer = layers.find((l) => l.id === info.layerId);
 
       return {
         parameterId,
+        graphId: parameterGraphBindings[parameterId]!.graphId,
         ...info,
         layerName: layer?.comp.name || info.componentName,
         layerId: info.layerId,
@@ -73,7 +80,7 @@ const EnabledAnimationsDropdown = () => {
       .filter((group): group is NonNullable<typeof group> => group !== null);
 
     return grouped;
-  }, [enabledNetworkIds, layers]);
+  }, [enabledParameterIds, layers, parameterGraphBindings]);
 
   // Memoize render functions to prevent recreating them
   const renderOption = useCallback((animation: any, isActive: boolean) => {
@@ -91,7 +98,7 @@ const EnabledAnimationsDropdown = () => {
   const renderPreview = useCallback((animation: any, isHovered: boolean) => {
     return (
       <LazyNodeNetworkPreview
-        parameterId={animation.parameterId}
+        parameterId={animation.graphId}
         isHovered={isHovered}
         width={120}
         height={68}

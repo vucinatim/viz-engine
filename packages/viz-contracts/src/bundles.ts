@@ -24,6 +24,7 @@ export interface VizProjectBundleManifest {
   schemaVersion: typeof VIZ_PROJECT_BUNDLE_MANIFEST_SCHEMA_VERSION;
   kind: typeof VIZ_PROJECT_BUNDLE_MANIFEST_KIND;
   projectFile: string;
+  executionManifestFile?: string;
   assetEntries: VizProjectBundleAssetEntry[];
   artifactEntries: VizProjectBundleArtifactEntry[];
   metadata?: Record<string, unknown>;

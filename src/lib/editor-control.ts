@@ -2,7 +2,6 @@ import type { Comp } from '@/components/config/create-component';
 import type { LayerSettings } from '@/components/editor/layer-settings';
 import type { VType } from '@/components/config/types';
 import useNodeNetworkStore, {
-  setNodeNetworkEnabled,
 } from '@/components/node-network/node-network-store';
 import { vizSessionActions } from '@/lib/viz-session';
 import {
@@ -20,6 +19,10 @@ import type {
 } from '@/lib/viz-session';
 import type { VizEditorAudioAnalyzerState } from '@viz-engine/editor-session';
 import type { VizProjectDocument } from '@viz-engine/contracts';
+import {
+  getVizSessionState,
+  resolveNetworkIdForParameter,
+} from '@/lib/viz-session';
 
 type LayerPreset = {
   name: string;
@@ -160,7 +163,12 @@ export const editorControl = {
   },
   nodeEditor: {
     openNetwork(parameterId: string) {
-      useNodeNetworkStore.getState().setOpenNetwork(parameterId);
+      useNodeNetworkStore.getState().setOpenNetwork(
+        resolveNetworkIdForParameter(
+          getVizSessionState().project.workingProject,
+          parameterId,
+        ),
+      );
     },
     closeNetwork() {
       useNodeNetworkStore.getState().setOpenNetwork(null);
@@ -179,7 +187,32 @@ export const editorControl = {
       isEnabled: boolean,
       type: VType,
     ) {
-      setNodeNetworkEnabled(parameterId, isEnabled, type);
+      const uiStore = useNodeNetworkStore.getState();
+      const beforeGraphId = resolveNetworkIdForParameter(
+        getVizSessionState().project.workingProject,
+        parameterId,
+      );
+
+      vizSessionActions.graph.setNetworkEnabled(
+        parameterId,
+        isEnabled,
+        type,
+      );
+
+      const afterGraphId = resolveNetworkIdForParameter(
+        getVizSessionState().project.workingProject,
+        parameterId,
+      );
+
+      if (!isEnabled && uiStore.openNetwork === beforeGraphId) {
+        uiStore.setOpenNetwork(null);
+      } else if (isEnabled && uiStore.openNetwork === null) {
+        uiStore.setOpenNetwork(afterGraphId);
+      }
+
+      if (isEnabled) {
+        uiStore.setShouldForceShowOverlay(true);
+      }
     },
   },
   audio: {

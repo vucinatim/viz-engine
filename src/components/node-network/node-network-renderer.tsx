@@ -36,6 +36,7 @@ import {
 import { isConnectionValid } from './connection-validator';
 import NodeRenderer from './node-renderer';
 import NodesSearch from './nodes-search';
+import { isProtectedGraphNode } from './graph-types';
 
 const NodeNetworkRenderer = ({
   nodeNetworkId,
@@ -220,9 +221,7 @@ const NodeNetworkRenderer = ({
                     (candidate) => candidate.id === props.id,
                   );
                   const isProtected =
-                    node &&
-                    (node.data.definition.label === 'Input' ||
-                      node.data.definition.label === 'Output');
+                    node && isProtectedGraphNode(node);
 
                   if (!isProtected) {
                     // Use ReactFlow's built-in deletion mechanism
@@ -273,6 +272,7 @@ const NodeNetworkRenderer = ({
               onReactFlowInit?.(instance);
             }}
             fitView
+            fitViewOptions={{ padding: 0.24 }}
             panOnScroll
             zoomOnPinch
             selectionOnDrag
@@ -306,9 +306,11 @@ const NodeNetworkRenderer = ({
                 if (change.type === 'remove') {
                   // Check if the node being removed is a protected node
                   // We can identify protected nodes by their ID pattern
+                  const node = flowNodesRef.current.find(
+                    (candidate) => candidate.id === change.id,
+                  );
                   const isProtected =
-                    change.id.includes('-input-node') ||
-                    change.id.includes('-output-node');
+                    node !== undefined && isProtectedGraphNode(node);
                   return !isProtected;
                 }
                 return true;

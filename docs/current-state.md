@@ -86,7 +86,7 @@ The first four phases of the agent-authored production loop are now certified:
 - canonical audio bake artifacts and runtime inputs
 - canonical render and feedback jobs
 
-The active next phase is the first genuinely new agent-authored visual:
+The first genuinely new agent-authored visual phase is now certified:
 
 - define it once in a project-local capability pack
 - compose reusable engine capabilities without adding scene-specific core code
@@ -95,6 +95,42 @@ The active next phase is the first genuinely new agent-authored visual:
 - preserve live editor settings, node graphs, undo/redo, persistence, playback,
   and export behavior
 - promote only proven generic pieces into reusable engine packages
+
+That production is **Signal Cathedral**:
+
+- a project-local capability pack rather than engine-core scene code
+- a retained neon architectural Three program with bounded resources
+- a canonical editable graph driven by a portable audio bake artifact
+- a self-contained 12-second Progressive House derivative so preview, bake,
+  final audio, and portable reopen share one timeline
+- real still, contact-sheet, clip, performance, parity, and reopen acceptance
+  gates
+
+The implementation contract and acceptance evidence are:
+
+- [First Agent-Authored Production: Signal Cathedral](./plans/v2/first-agent-authored-production-signal-cathedral.md)
+- [Signal Cathedral Production Certification](./parity/evidence/2026-07-30-signal-cathedral-production-certification.md)
+
+Signal Cathedral now exists as:
+
+- a 12-second, 60 fps, 1920 × 1080-capable canonical project
+- a portable bundle with exact execution, capability, component, node,
+  renderer, asset, artifact, and bake identities
+- a playable 1280 × 720 H.264/AAC final video
+- a clean fresh-session reopen with byte-identical representative output
+- a live editor proof with full settings, five named graph outputs, typed
+  portable nodes, revision-safe undo/redo, working audio, transport, jobs, and
+  export
+
+The next product focus is no longer proving that the first loop can close. It
+is using this certified substrate repeatedly while:
+
+- automating more of the browser acceptance procedure
+- raising the remaining partial parity rows through direct evidence
+- adding a native headless video executor only when non-browser production
+  rendering becomes a real requirement
+- continuing to promote only genuinely reusable production discoveries into
+  engine packages
 
 The completed render foundation is recorded in:
 

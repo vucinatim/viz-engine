@@ -13,11 +13,9 @@ import { useRafLoop } from 'react-use';
 import { toast } from 'sonner';
 import editorControl from '@/lib/editor-control';
 import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
-import { destructureParameterId } from '../../lib/id-utils';
 import { getRuntimeGraphValue } from '@/lib/viz-session';
 import useEditorGraphStore from '../../lib/stores/editor-graph-store';
 import { useHistoryStore } from '../../lib/stores/history-store';
-import useEditorLayerProjectionStore from '../../lib/stores/editor-layer-projection-store';
 import { cn } from '../../lib/utils';
 import { NodeHandleType } from '../config/node-types';
 import useNodeNetworkStore, {
@@ -32,6 +30,11 @@ import { getPresetsForType } from '../node-network/presets';
 import { Button } from '../ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import SearchSelect from '../ui/search-select';
+import {
+  describeProjectGraph,
+  useVizSessionSelector,
+} from '@/lib/viz-session';
+import { isProtectedGraphNode } from '../node-network/graph-types';
 
 interface NodeEditorToolbarProps {
   nodeNetworkId: string;
@@ -61,7 +64,9 @@ const NodeEditorToolbar = ({
     (state) => state.canRedo(),
   );
 
-  const layers = useEditorLayerProjectionStore((state) => state.layers);
+  const project = useVizSessionSelector(
+    (state) => state.project.workingProject,
+  );
 
   // Create wrapper functions to match the expected interface
   const setNodes = (newNodes: any[]) =>
@@ -74,15 +79,13 @@ const NodeEditorToolbar = ({
   const isNetworkEnabled = useIsNetworkEnabled(nodeNetworkId);
 
   // Compute parameter info from networkId and layers
-  const parameterInfo = useMemo(() => {
-    const destructured = destructureParameterId(nodeNetworkId);
-    const layer = layers.find((l) => l.id === destructured.layerId);
-    return {
-      ...destructured,
-      layerName: layer?.comp.name || destructured.componentName,
+  const graphPresentation = useMemo(
+    () => ({
+      ...describeProjectGraph(project, nodeNetworkId),
       isEnabled: isNetworkEnabled,
-    };
-  }, [nodeNetworkId, layers, isNetworkEnabled]);
+    }),
+    [nodeNetworkId, project, isNetworkEnabled],
+  );
 
   const applyPreset = (presetId: string) => {
     // Derive output type from current Output node definition if present; fallback to number
@@ -115,10 +118,12 @@ const NodeEditorToolbar = ({
     const selectedNodeIds = selectedNodes.map((node: any) => node.id);
 
     // Filter out protected nodes (input/output)
-    const deletableNodeIds = selectedNodeIds.filter(
-      (id: string) =>
-        !id.includes('-input-node') && !id.includes('-output-node'),
-    );
+    const deletableNodeIds = selectedNodeIds.filter((id: string) => {
+      const node = reactFlowInstance.current
+        .getNodes()
+        .find((candidate: any) => candidate.id === id);
+      return node && !isProtectedGraphNode(node);
+    });
 
     if (deletableNodeIds.length === 0) return;
 
@@ -153,8 +158,7 @@ const NodeEditorToolbar = ({
       .filter((node: any) => node.selected);
 
     return selectedNodes.some(
-      (node: any) =>
-        !node.id.includes('-input-node') && !node.id.includes('-output-node'),
+      (node: any) => !isProtectedGraphNode(node),
     );
   };
 
@@ -223,14 +227,14 @@ const NodeEditorToolbar = ({
         <div className="flex items-center gap-4">
           <div className="flex flex-col gap-0.5">
             <span className="text-sm font-semibold text-white">
-              {parameterInfo?.displayName || 'Parameter'}
+              {graphPresentation.displayName}
             </span>
             <div className="flex items-center gap-1.5 text-xs text-white/60">
-              <span>{parameterInfo?.layerName || 'Layer'}</span>
-              {parameterInfo?.groupPath && (
+              <span>{graphPresentation.contextLabel}</span>
+              {graphPresentation.detailLabel && (
                 <>
                   <span>›</span>
-                  <span>{parameterInfo.groupPath}</span>
+                  <span>{graphPresentation.detailLabel}</span>
                 </>
               )}
             </div>
@@ -303,11 +307,22 @@ const NodeEditorToolbar = ({
         </div>
 
         <div className="flex items-center gap-4">
-          <LiveValueDisplay nodeNetworkId={nodeNetworkId} />
-          <PresetsSelect
-            nodeNetworkId={nodeNetworkId}
-            onPresetSelect={applyPreset}
-          />
+          {graphPresentation.outputKeys.length === 1 ? (
+            <LiveValueDisplay
+              nodeNetworkId={nodeNetworkId}
+              outputKey={graphPresentation.outputKeys[0]}
+            />
+          ) : (
+            <span className="font-mono text-xs text-white/60">
+              {graphPresentation.outputKeys.length} live outputs
+            </span>
+          )}
+          {graphPresentation.supportsParameterPresets && (
+            <PresetsSelect
+              nodeNetworkId={nodeNetworkId}
+              onPresetSelect={applyPreset}
+            />
+          )}
           <Button
             variant="ghostly"
             size="icon"
@@ -324,14 +339,18 @@ const NodeEditorToolbar = ({
 
 interface LiveValueDisplayProps {
   nodeNetworkId: string;
+  outputKey?: string;
 }
 
-const LiveValueDisplay = ({ nodeNetworkId }: LiveValueDisplayProps) => {
+const LiveValueDisplay = ({
+  nodeNetworkId,
+  outputKey = 'value',
+}: LiveValueDisplayProps) => {
   const ref = useRef<HTMLSpanElement>(null);
 
   useRafLoop(() => {
     if (!ref.current) return;
-    const value = getRuntimeGraphValue(nodeNetworkId);
+    const value = getRuntimeGraphValue(nodeNetworkId, outputKey);
 
     if (value !== undefined) {
       if (typeof value === 'number') {

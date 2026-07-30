@@ -1,0 +1,507 @@
+{
+  "schemaVersion": "2.0.0-alpha.1",
+  "projectId": "project-signal-cathedral",
+  "name": "Signal Cathedral",
+  "timeline": {
+    "fps": 60,
+    "durationInFrames": 720
+  },
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "backgroundColor": "#02030d"
+  },
+  "layerOrder": [
+    "layer-signal-cathedral"
+  ],
+  "layers": [
+    {
+      "id": "layer-signal-cathedral",
+      "name": "Signal Cathedral",
+      "componentId": "signal-cathedral",
+      "enabled": true,
+      "opacity": 1,
+      "blendMode": "normal",
+      "rendererFamily": "three",
+      "settings": {
+        "palette": {
+          "background": "#02030d",
+          "primary": "#5cf5ff",
+          "secondary": "#8b5cff",
+          "accent": "#ff3fcf",
+          "fog": "#07051c"
+        },
+        "structure": {
+          "archCount": 24,
+          "archSpacing": 4.2,
+          "naveWidth": 11,
+          "naveHeight": 7,
+          "segmentThickness": 0.16,
+          "floorExtent": 120,
+          "coreSize": 1.05,
+          "particleCount": 900
+        },
+        "motion": {
+          "travelSpeed": 4.8,
+          "cameraSway": 0.32,
+          "cameraLift": 0.16,
+          "structuralTwist": 0.055,
+          "particleDrift": 0.7,
+          "coreRotation": 0.65
+        },
+        "reactivity": {
+          "masterResponse": 1,
+          "bassResponse": 1,
+          "midResponse": 1,
+          "trebleResponse": 1,
+          "onsetResponse": 1,
+          "fluxResponse": 1,
+          "smoothing": 0.35,
+          "structurePulse": 0,
+          "coreEnergy": 0,
+          "spectralShimmer": 0,
+          "shockwaveTrigger": 0,
+          "bloomAccent": 0
+        },
+        "lighting": {
+          "ambientLevel": 0.12,
+          "keyLightIntensity": 18,
+          "bloomStrength": 0.72,
+          "bloomRadius": 0.62,
+          "bloomThreshold": 0.18,
+          "exposure": 1.05,
+          "fogDensity": 0.014
+        }
+      },
+      "inputs": {
+        "reactivity:structurePulse": {
+          "kind": "graph-output",
+          "graphId": "graph-signal-cathedral-reactivity",
+          "output": "structurePulse"
+        },
+        "reactivity:coreEnergy": {
+          "kind": "graph-output",
+          "graphId": "graph-signal-cathedral-reactivity",
+          "output": "coreEnergy"
+        },
+        "reactivity:spectralShimmer": {
+          "kind": "graph-output",
+          "graphId": "graph-signal-cathedral-reactivity",
+          "output": "spectralShimmer"
+        },
+        "reactivity:shockwaveTrigger": {
+          "kind": "graph-output",
+          "graphId": "graph-signal-cathedral-reactivity",
+          "output": "shockwaveTrigger"
+        },
+        "reactivity:bloomAccent": {
+          "kind": "graph-output",
+          "graphId": "graph-signal-cathedral-reactivity",
+          "output": "bloomAccent"
+        }
+      },
+      "requiredAssetIds": [
+        "asset-signal-cathedral-progressive-house"
+      ],
+      "requiredArtifactIds": [
+        "artifact-audio-features-a10777ef"
+      ],
+      "renderPolicy": {
+        "supportedModes": [
+          "live",
+          "render"
+        ],
+        "requiresBake": true,
+        "preferredRendererFamily": "three"
+      }
+    }
+  ],
+  "assetRefs": [
+    {
+      "id": "asset-signal-cathedral-progressive-house",
+      "kind": "audio",
+      "source": "generated",
+      "label": "Signal Cathedral — Progressive House 48–60s",
+      "mimeType": "audio/mpeg",
+      "originalFileName": "signal-cathedral-progressive-house-48s-60s.mp3",
+      "metadata": {
+        "derivation": {
+          "sourcePath": "public/music/[House] Progressive House.mp3",
+          "sourceStartSeconds": 48,
+          "durationSeconds": 12
+        },
+        "sourceContentIdentity": "d13f1a0f9fe2af8cb088d08320f24822a8ecafddde4801143a52972fc4bc9dcd",
+        "derivationTool": "ffmpeg",
+        "derivationArguments": {
+          "sourceStartSeconds": 48,
+          "durationSeconds": 12,
+          "codec": "libmp3lame",
+          "bitrate": "192k",
+          "stripMetadata": true
+        }
+      }
+    }
+  ],
+  "artifactRefs": [
+    {
+      "id": "artifact-audio-features-a10777ef",
+      "kind": "audio-feature-timeline",
+      "label": "asset-signal-cathedral-progressive-house Standard Audio Features",
+      "sourceAssetId": "asset-signal-cathedral-progressive-house",
+      "metadata": {
+        "profile": "standard",
+        "executionIdentity": "viz-bake.audio-feature-timeline.v1:c27288b9"
+      }
+    }
+  ],
+  "graphs": [
+    {
+      "id": "graph-signal-cathedral-reactivity",
+      "name": "Signal Cathedral Music Reactivity",
+      "inputs": {
+        "bass": {
+          "kind": "artifact-feature",
+          "artifactId": "artifact-audio-features-a10777ef",
+          "feature": "bass-energy"
+        },
+        "mids": {
+          "kind": "artifact-feature",
+          "artifactId": "artifact-audio-features-a10777ef",
+          "feature": "mid-energy"
+        },
+        "loudness": {
+          "kind": "artifact-feature",
+          "artifactId": "artifact-audio-features-a10777ef",
+          "feature": "loudness"
+        },
+        "treble": {
+          "kind": "artifact-feature",
+          "artifactId": "artifact-audio-features-a10777ef",
+          "feature": "treble-energy"
+        },
+        "onset": {
+          "kind": "artifact-feature",
+          "artifactId": "artifact-audio-features-a10777ef",
+          "feature": "onset-strength"
+        },
+        "flux": {
+          "kind": "artifact-feature",
+          "artifactId": "artifact-audio-features-a10777ef",
+          "feature": "spectral-flux"
+        }
+      },
+      "nodes": [
+        {
+          "id": "input-bass",
+          "type": "graph-input",
+          "inputs": {
+            "inputKey": {
+              "kind": "literal",
+              "value": "bass"
+            }
+          }
+        },
+        {
+          "id": "scale-bass",
+          "type": "multiply",
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-bass",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 1.24
+            }
+          }
+        },
+        {
+          "id": "clamp-bass",
+          "type": "clamp",
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "scale-bass",
+              "output": "value"
+            },
+            "min": {
+              "kind": "literal",
+              "value": 0
+            },
+            "max": {
+              "kind": "literal",
+              "value": 1
+            }
+          }
+        },
+        {
+          "id": "input-mids",
+          "type": "graph-input",
+          "inputs": {
+            "inputKey": {
+              "kind": "literal",
+              "value": "mids"
+            }
+          }
+        },
+        {
+          "id": "scale-mids",
+          "type": "multiply",
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-mids",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 0.72
+            }
+          }
+        },
+        {
+          "id": "input-loudness",
+          "type": "graph-input",
+          "inputs": {
+            "inputKey": {
+              "kind": "literal",
+              "value": "loudness"
+            }
+          }
+        },
+        {
+          "id": "scale-loudness",
+          "type": "multiply",
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-loudness",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 0.32
+            }
+          }
+        },
+        {
+          "id": "combine-core",
+          "type": "add",
+          "inputs": {
+            "a": {
+              "kind": "node-output",
+              "nodeId": "scale-mids",
+              "output": "value"
+            },
+            "b": {
+              "kind": "node-output",
+              "nodeId": "scale-loudness",
+              "output": "value"
+            }
+          }
+        },
+        {
+          "id": "clamp-core",
+          "type": "clamp",
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "combine-core",
+              "output": "value"
+            },
+            "min": {
+              "kind": "literal",
+              "value": 0
+            },
+            "max": {
+              "kind": "literal",
+              "value": 1
+            }
+          }
+        },
+        {
+          "id": "input-treble",
+          "type": "graph-input",
+          "inputs": {
+            "inputKey": {
+              "kind": "literal",
+              "value": "treble"
+            }
+          }
+        },
+        {
+          "id": "scale-treble",
+          "type": "multiply",
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-treble",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 1.34
+            }
+          }
+        },
+        {
+          "id": "clamp-treble",
+          "type": "clamp",
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "scale-treble",
+              "output": "value"
+            },
+            "min": {
+              "kind": "literal",
+              "value": 0
+            },
+            "max": {
+              "kind": "literal",
+              "value": 1
+            }
+          }
+        },
+        {
+          "id": "input-onset",
+          "type": "graph-input",
+          "inputs": {
+            "inputKey": {
+              "kind": "literal",
+              "value": "onset"
+            }
+          }
+        },
+        {
+          "id": "scale-onset",
+          "type": "multiply",
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-onset",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 1.7
+            }
+          }
+        },
+        {
+          "id": "clamp-onset",
+          "type": "clamp",
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "scale-onset",
+              "output": "value"
+            },
+            "min": {
+              "kind": "literal",
+              "value": 0
+            },
+            "max": {
+              "kind": "literal",
+              "value": 1
+            }
+          }
+        },
+        {
+          "id": "input-flux",
+          "type": "graph-input",
+          "inputs": {
+            "inputKey": {
+              "kind": "literal",
+              "value": "flux"
+            }
+          }
+        },
+        {
+          "id": "scale-flux",
+          "type": "multiply",
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-flux",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 1.45
+            }
+          }
+        },
+        {
+          "id": "clamp-flux",
+          "type": "clamp",
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "scale-flux",
+              "output": "value"
+            },
+            "min": {
+              "kind": "literal",
+              "value": 0
+            },
+            "max": {
+              "kind": "literal",
+              "value": 1
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "key": "structurePulse",
+          "nodeId": "clamp-bass",
+          "output": "value"
+        },
+        {
+          "key": "coreEnergy",
+          "nodeId": "clamp-core",
+          "output": "value"
+        },
+        {
+          "key": "spectralShimmer",
+          "nodeId": "clamp-treble",
+          "output": "value"
+        },
+        {
+          "key": "shockwaveTrigger",
+          "nodeId": "clamp-onset",
+          "output": "value"
+        },
+        {
+          "key": "bloomAccent",
+          "nodeId": "clamp-flux",
+          "output": "value"
+        }
+      ],
+      "metadata": {
+        "production": "signal-cathedral",
+        "intent": "Readable feature-to-visual mapping for the first agent-authored production."
+      }
+    }
+  ],
+  "metadata": {
+    "authoringMode": "agent-authored-production",
+    "production": "signal-cathedral",
+    "capabilityPacks": [
+      {
+        "id": "@viz-engine/production-signal-cathedral",
+        "version": "0.0.1"
+      },
+      {
+        "id": "@viz-engine/components-core",
+        "version": "0.0.1"
+      }
+    ],
+    "selectedAudioWindow": {
+      "sourceStartSeconds": 48,
+      "durationSeconds": 12
+    }
+  }
+}

@@ -1,5 +1,4 @@
 import {
-  createCoreComponentRegistry,
   resolveBundledStageModelAssets,
 } from '@viz-engine/components-core';
 import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
@@ -7,6 +6,8 @@ import type {
   VizExecutionMode,
   VizProjectDocument,
   VizRenderPlan,
+  VizResolvedArtifact,
+  VizResolvedAsset,
   VizRuntimeAudioFrameSnapshot,
 } from '@viz-engine/contracts';
 import {
@@ -21,9 +22,11 @@ import type {
   VizSessionRuntimePreviewAudioFrameData,
   VizSessionRuntimePreviewFrame,
 } from './types';
+import { studioComponentRegistry } from '@/lib/viz-capabilities';
 
 interface RuntimePreviewSessionCache {
   revision: number;
+  resourceRevision: number;
   mode: VizExecutionMode;
   fps: number;
   viewportWidth: number;
@@ -42,9 +45,12 @@ interface CreateRuntimePreviewPlanOptions {
   };
   audioFrameData: VizSessionRuntimePreviewAudioFrameData;
   isPlaying: boolean;
+  resourceRevision?: number;
+  resolvedAssets?: VizResolvedAsset[];
+  resolvedArtifacts?: VizResolvedArtifact[];
 }
 
-const componentRegistry = createCoreComponentRegistry();
+const componentRegistry = studioComponentRegistry;
 const nodeRegistry = createCoreNodeRegistry();
 const frozenAudioByLayerId = new Map<
   string,
@@ -128,6 +134,7 @@ const getRuntimeSession = (
   if (
     cached &&
     cached.revision === options.projectRevision &&
+    cached.resourceRevision === (options.resourceRevision ?? 0) &&
     cached.mode === mode &&
     cached.fps === options.frame.fps &&
     cached.viewportWidth === options.viewport.width &&
@@ -137,16 +144,25 @@ const getRuntimeSession = (
     return cached.session;
   }
 
+  const bundledAssets = resolveBundledStageModelAssets(
+    options.project.assetRefs ?? [],
+  );
+  const resolvedAssets = new Map(
+    bundledAssets.map((asset) => [asset.id, asset]),
+  );
+  for (const asset of options.resolvedAssets ?? []) {
+    resolvedAssets.set(asset.id, asset);
+  }
   const session = createVizRuntimeSession({
     project: createSessionProject(options),
     mode,
     seed: 'editor-runtime-preview',
-    resolvedAssets: resolveBundledStageModelAssets(
-      options.project.assetRefs ?? [],
-    ),
+    resolvedAssets: [...resolvedAssets.values()],
+    resolvedArtifacts: options.resolvedArtifacts ?? [],
   });
   sessionCache = {
     revision: options.projectRevision,
+    resourceRevision: options.resourceRevision ?? 0,
     mode,
     fps: options.frame.fps,
     viewportWidth: options.viewport.width,

@@ -56,6 +56,29 @@ export interface VizNodeDefinitionOutput {
   description?: string;
 }
 
+export type VizNodeAuthoringValueType =
+  | "number"
+  | "string"
+  | "boolean"
+  | "color"
+  | "file"
+  | "vector3"
+  | "Uint8Array"
+  | "FrequencyAnalysis"
+  | "object"
+  | "math-op";
+
+export interface VizNodeAuthoringPort {
+  key: string;
+  type: VizNodeAuthoringValueType;
+  defaultValue?: unknown;
+}
+
+export interface VizNodeAuthoring {
+  inputs: VizNodeAuthoringPort[];
+  outputs: VizNodeAuthoringPort[];
+}
+
 export type VizNodeCategory = "pure" | "temporal";
 
 export interface VizNodeDefinition {
@@ -65,6 +88,7 @@ export interface VizNodeDefinition {
   description?: string;
   inputs?: VizNodeDefinitionInput[];
   outputs: VizNodeDefinitionOutput[];
+  authoring?: VizNodeAuthoring;
   metadata?: Record<string, unknown>;
 }
 

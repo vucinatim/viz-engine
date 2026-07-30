@@ -54,6 +54,7 @@ const NodeRenderer = ({
   // Check if this is a protected node (input/output)
   const isProtectedNode = label === 'Input' || label === 'Output';
   const isOutputNode = label === 'Output';
+  const graphOutputKey = data.graphOutputKey;
 
   // For output nodes, get the layer name from nodeNetworkId
   // Only read the layer name when needed, not the entire layers array
@@ -65,8 +66,15 @@ const NodeRenderer = ({
   });
 
   // Get parameter info for output node label
-  const parameterInfo =
-    isOutputNode && layerInfo
+  const parameterInfo = graphOutputKey
+    ? {
+        displayName: graphOutputKey
+          .replace(/([A-Z])/g, ' $1')
+          .replace(/^./, (character) => character.toUpperCase()),
+        layerName: 'Graph output',
+        groupPath: null,
+      }
+    : isOutputNode && layerInfo
       ? {
           ...layerInfo,
           layerName: layerName || layerInfo.componentName,
@@ -121,7 +129,28 @@ const NodeRenderer = ({
             type="text"
             className="nodrag nopan h-6 w-16 bg-zinc-800 text-xs"
             value={inputValues[input.id] ?? ''}
-            onChange={(e) => updateInputValue(nodeId, input.id, e.target.value)}
+            onChange={(event) => {
+              const rawValue = event.target.value;
+              const numericValue = Number(rawValue);
+              updateInputValue(
+                nodeId,
+                input.id,
+                rawValue === '' || !Number.isFinite(numericValue)
+                  ? rawValue
+                  : numericValue,
+              );
+            }}
+          />
+        );
+      case 'string':
+        return (
+          <Input
+            type="text"
+            className="nodrag nopan h-6 w-24 bg-zinc-800 text-xs"
+            value={inputValues[input.id] ?? ''}
+            onChange={(event) =>
+              updateInputValue(nodeId, input.id, event.target.value)
+            }
           />
         );
       case 'boolean':

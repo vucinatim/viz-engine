@@ -369,6 +369,25 @@ importers:
         specifier: workspace:*
         version: link:../viz-contracts
 
+  packages/viz-production-signal-cathedral:
+    dependencies:
+      '@viz-engine/components-core':
+        specifier: workspace:*
+        version: link:../viz-components-core
+      '@viz-engine/contracts':
+        specifier: workspace:*
+        version: link:../viz-contracts
+      '@viz-engine/renderer-three':
+        specifier: workspace:*
+        version: link:../viz-renderer-three
+      three:
+        specifier: ^0.164.1
+        version: 0.164.1
+    devDependencies:
+      '@types/three':
+        specifier: ^0.164.0
+        version: 0.164.1
+
   packages/viz-remotion-adapter:
     dependencies:
       '@viz-engine/contracts':

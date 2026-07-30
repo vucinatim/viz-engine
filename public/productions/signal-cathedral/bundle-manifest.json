@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "kind": "viz.project-bundle-manifest.v1",
+  "projectFile": "project.json",
+  "executionManifestFile": "execution-manifest.json",
+  "assetEntries": [
+    {
+      "assetId": "asset-signal-cathedral-progressive-house",
+      "kind": "audio",
+      "path": "assets/asset-signal-cathedral-progressive-house.mp3",
+      "mimeType": "audio/mpeg",
+      "metadata": {
+        "derivation": {
+          "sourcePath": "public/music/[House] Progressive House.mp3",
+          "sourceStartSeconds": 48,
+          "durationSeconds": 12
+        },
+        "sourceContentIdentity": "d13f1a0f9fe2af8cb088d08320f24822a8ecafddde4801143a52972fc4bc9dcd",
+        "derivationTool": "ffmpeg",
+        "derivationArguments": {
+          "sourceStartSeconds": 48,
+          "durationSeconds": 12,
+          "codec": "libmp3lame",
+          "bitrate": "192k",
+          "stripMetadata": true
+        }
+      }
+    }
+  ],
+  "artifactEntries": [
+    {
+      "artifactId": "artifact-audio-features-a10777ef",
+      "kind": "audio-feature-timeline",
+      "path": "baked/artifact-audio-features-a10777ef.json",
+      "metadata": {
+        "profile": "standard",
+        "executionIdentity": "viz-bake.audio-feature-timeline.v1:c27288b9"
+      }
+    }
+  ]
+}

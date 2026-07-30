@@ -30,6 +30,7 @@
       "@viz-engine/editor-control/node": ["packages/viz-editor-control/src/node.ts"],
       "@viz-engine/nodes-core": ["packages/viz-nodes-core/src/index.ts"],
       "@viz-engine/components-core": ["packages/viz-components-core/src/index.ts"],
+      "@viz-engine/production-signal-cathedral": ["packages/viz-production-signal-cathedral/src/index.ts"],
       "@viz-engine/renderer-svg": ["packages/viz-renderer-svg/src/index.ts"],
       "@viz-engine/renderer-three": ["packages/viz-renderer-three/src/index.ts"]
     }

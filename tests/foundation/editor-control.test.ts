@@ -194,6 +194,40 @@ describe("Viz local editor control surface", () => {
     expect(snapshot.audioDiagnostics.usesBakedArtifacts).toBe(true);
   });
 
+  it("selects the project-declared baked audio source when project resources open", () => {
+    const control = createVizControl();
+    const nonProjectAudio = {
+      ...exampleResolvedAssets[0]!,
+      id: "asset-unrelated-audio",
+      kind: "audio" as const,
+      uri: "file:///unrelated.mp3",
+    };
+
+    const snapshot = control.openProject({
+      project: exampleProjectDocument,
+      resolvedAssets: [nonProjectAudio, ...exampleResolvedAssets],
+      resolvedArtifacts: exampleResolvedArtifacts,
+      source: {
+        kind: "memory",
+        label: "Canonical project audio proof",
+      },
+    });
+
+    const audioRef = exampleProjectDocument.assetRefs?.find(
+      (asset) => asset.kind === "audio",
+    );
+    const resolvedAudio = exampleResolvedAssets.find(
+      (asset) => asset.id === audioRef?.id,
+    );
+
+    expect(snapshot.audioSession.source).toEqual({
+      kind: "media-element",
+      id: audioRef?.id,
+      label: audioRef?.label,
+      uri: resolvedAudio?.uri,
+    });
+  });
+
   it("exposes ui-state mutation, graph runtime inspection, and transport advancement", () => {
     const control = createVizControl();
     control.openExampleProject();

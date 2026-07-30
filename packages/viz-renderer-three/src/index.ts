@@ -66,6 +66,7 @@ export type {
   VizThreeProgramInstance,
 } from "./programs/types.js";
 export * from "./programs/registry.js";
+export * from "./programs/post-processing.js";
 export * from "./model-animation.js";
 export * from "./model-resources.js";
 

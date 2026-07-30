@@ -4,13 +4,6 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
 
 ## Active Architectural Suggestions
 
-- Add a minimal execution manifest that locks capability, component, node,
-  renderer, bake, asset, and artifact identities required to reproduce output.
-- Make resolved asset registration and portable materialization explicit on
-  the shared control/bundle boundary before final production. Project
-  `asset.attach` actions should continue to mutate only canonical references;
-  host-local URI or byte resolution must remain an explicit resource
-  operation rather than hidden editor state.
 - Add a native headless clip/video executor behind the existing render-job
   contract once production needs to render without a browser WebGL host.
   Reuse the same request, output, probe, cancellation, and feedback semantics;

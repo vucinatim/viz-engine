@@ -55,6 +55,9 @@ export default defineConfig({
       ),
       "@viz-engine/editor-control": packageEntry("viz-editor-control"),
       "@viz-engine/nodes-core": packageEntry("viz-nodes-core"),
+      "@viz-engine/production-signal-cathedral": packageEntry(
+        "viz-production-signal-cathedral",
+      ),
       "@viz-engine/renderer-svg": packageEntry("viz-renderer-svg"),
       "@viz-engine/renderer-three": packageEntry("viz-renderer-three"),
     },

@@ -739,6 +739,8 @@ Evidence:
 
 ### Phase 5: Agent-Authored Visual
 
+Status: certified by Signal Cathedral.
+
 - create the new visual in a trusted project-local capability pack
 - expose a complete authoring schema and useful presets
 - compose it with existing reusable engine capabilities
@@ -752,7 +754,14 @@ Gate:
 - playback, seeking, graphs, undo/redo, persistence, and export remain intact
 - the visual meets explicit frame-time and resource budgets
 
+Active plan:
+
+- [First Agent-Authored Production: Signal Cathedral](../../plans/v2/first-agent-authored-production-signal-cathedral.md)
+- [Signal Cathedral production certification](../../parity/evidence/2026-07-30-signal-cathedral-production-certification.md)
+
 ### Phase 6: Production Certification
+
+Status: certified by Signal Cathedral.
 
 - render the chosen short track segment
 - visually review representative stills and the encoded clip

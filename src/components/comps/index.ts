@@ -1,8 +1,8 @@
-import { coreCatalogComponents } from '@viz-engine/components-core';
+import { studioCatalogComponents } from '@/lib/viz-capabilities';
 import type { Comp } from '../config/create-component';
 import { createEditorCompFromDefinition } from '../config/create-component-from-authoring';
 
-export const AllComps = coreCatalogComponents.map(
+export const AllComps = studioCatalogComponents.map(
   createEditorCompFromDefinition,
 );
 

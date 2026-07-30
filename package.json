@@ -24,6 +24,7 @@
     "smoke:consumer": "pnpm build:packages && node tools/foundation/package-consumer-smoke.mjs",
     "smoke:consumer:built": "node tools/foundation/package-consumer-smoke.mjs",
     "smoke:creative-loop": "pnpm build:packages && tsx tools/foundation/agent-creative-loop-scenario.ts",
+    "production:signal-cathedral": "tsx tools/foundation/materialize-signal-cathedral-production.ts",
     "benchmark:runtime-preview": "tsx tools/foundation/runtime-preview-plan-benchmark.ts",
     "compare:runtime-performance": "tsx tools/foundation/compare-performance-recordings-cli.ts",
     "parity:validate": "node tools/foundation/validate-v1-v2-parity-matrix.mjs",

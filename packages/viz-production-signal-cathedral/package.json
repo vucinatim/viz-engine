@@ -1,0 +1,31 @@
+{
+  "name": "@viz-engine/production-signal-cathedral",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@viz-engine/components-core": "workspace:*",
+    "@viz-engine/contracts": "workspace:*",
+    "@viz-engine/renderer-three": "workspace:*",
+    "three": "^0.164.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.164.0"
+  }
+}

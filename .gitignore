@@ -16,6 +16,7 @@ node_modules/
 
 # production
 /build
+/.artifacts/
 /packages/*/dist
 /apps/*/dist
 

@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "kind": "viz.execution-manifest.v1",
+  "project": {
+    "projectId": "project-signal-cathedral",
+    "schemaVersion": "2.0.0-alpha.1",
+    "contentIdentity": "sha256:c0085922cb268a69b8306898b167a1e2386675fdcf96778a832c258e75bf9223"
+  },
+  "runtime": {
+    "packageId": "@viz-engine/runtime",
+    "version": "0.0.1"
+  },
+  "capabilityPacks": [
+    {
+      "id": "@viz-engine/components-core",
+      "version": "0.0.1"
+    },
+    {
+      "id": "@viz-engine/production-signal-cathedral",
+      "version": "0.0.1"
+    }
+  ],
+  "components": [
+    {
+      "componentId": "signal-cathedral",
+      "implementationVersion": "1.0.0",
+      "capabilityPack": {
+        "id": "@viz-engine/production-signal-cathedral",
+        "version": "0.0.1"
+      }
+    }
+  ],
+  "nodePackages": [
+    {
+      "packageId": "@viz-engine/nodes-core",
+      "version": "0.0.1",
+      "nodeTypes": [
+        "add",
+        "clamp",
+        "graph-input",
+        "multiply"
+      ]
+    }
+  ],
+  "renderer": {
+    "package": {
+      "packageId": "@viz-engine/renderer-three",
+      "version": "0.0.1"
+    },
+    "backend": {
+      "id": "browser-webgl",
+      "version": "viz-render.browser-webgl.v1"
+    },
+    "programs": [
+      {
+        "programId": "viz-production/signal-cathedral/v1",
+        "implementationVersion": "1.0.0",
+        "capabilityPack": {
+          "id": "@viz-engine/production-signal-cathedral",
+          "version": "0.0.1"
+        }
+      }
+    ]
+  },
+  "bakes": [
+    {
+      "artifactId": "artifact-audio-features-a10777ef",
+      "sourceAssetId": "asset-signal-cathedral-progressive-house",
+      "executionIdentity": "viz-bake.audio-feature-timeline.v1:c27288b9"
+    }
+  ],
+  "assets": [
+    {
+      "assetId": "asset-signal-cathedral-progressive-house",
+      "contentIdentity": "sha256:d13f1a0f9fe2af8cb088d08320f24822a8ecafddde4801143a52972fc4bc9dcd"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "artifact-audio-features-a10777ef",
+      "contentIdentity": "sha256:2f5f8dc41a8e2d49a499c91a4caeba711cbe8eb6f46863e1ad35428a49554f79"
+    }
+  ],
+  "metadata": {
+    "determinism": "semantic",
+    "production": "signal-cathedral"
+  }
+}

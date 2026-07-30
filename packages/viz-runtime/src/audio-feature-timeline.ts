@@ -13,6 +13,8 @@ const isFiniteNumber = (value: unknown): value is number =>
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.trim().length > 0;
 
+const artifactValidationCache = new WeakMap<object, boolean>();
+
 const isAudioFeatureSeries = (
   value: unknown,
 ): value is VizAudioFeatureSeries => {
@@ -106,6 +108,10 @@ export const isVizAudioFeatureTimelineArtifact = (
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return false;
   }
+  const cached = artifactValidationCache.get(value);
+  if (cached !== undefined) {
+    return cached;
+  }
 
   const candidate = value as Partial<VizAudioFeatureTimelineArtifact>;
   const frameAlignment = candidate.frameAlignment;
@@ -118,7 +124,7 @@ export const isVizAudioFeatureTimelineArtifact = (
       : undefined;
   const packedFrames = candidate.packedFrames;
 
-  return (
+  const isValid =
     candidate.schemaVersion === 1 &&
     candidate.kind === "audio-feature-timeline" &&
     (candidate.profile === "standard" ||
@@ -166,9 +172,15 @@ export const isVizAudioFeatureTimelineArtifact = (
           (packedFrames.frequency.valuesPerFrame ===
             candidate.analysis.fftSize / 2 &&
             packedFrames.timeDomain.valuesPerFrame ===
-              candidate.analysis.fftSize))))
-  );
+              candidate.analysis.fftSize))));
+  artifactValidationCache.set(value, isValid);
+  return isValid;
 };
+
+const resolvedArtifactTimelineCache = new WeakMap<
+  object,
+  VizAudioFeatureTimelineArtifact | null
+>();
 
 export const getAudioFeatureTimelineArtifact = (
   artifact: VizResolvedArtifact | undefined,
@@ -176,15 +188,22 @@ export const getAudioFeatureTimelineArtifact = (
   if (!artifact) {
     return undefined;
   }
+  const cached = resolvedArtifactTimelineCache.get(artifact);
+  if (cached !== undefined) {
+    return cached ?? undefined;
+  }
 
   if (isVizAudioFeatureTimelineArtifact(artifact.payload)) {
+    resolvedArtifactTimelineCache.set(artifact, artifact.payload);
     return artifact.payload;
   }
 
   if (isVizAudioFeatureTimelineArtifact(artifact)) {
+    resolvedArtifactTimelineCache.set(artifact, artifact);
     return artifact;
   }
 
+  resolvedArtifactTimelineCache.set(artifact, null);
   return undefined;
 };
 

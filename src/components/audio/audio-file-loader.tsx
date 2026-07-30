@@ -22,6 +22,7 @@ const AudioFileLoader = () => {
     (s) => s.currentTrackIndex,
   );
   const trackList = useEditorAudioSessionStore((s) => s.trackList);
+  const sessionSource = useEditorAudioSessionStore((s) => s.session.source);
 
   const [audioFiles, setAudioFiles] = useState<string[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -53,6 +54,12 @@ const AudioFileLoader = () => {
     const files = getBundledAudioFiles();
     setAudioFiles(files);
     editorControl.audio.setTrackList(files);
+    const activeSource =
+      useEditorAudioSessionStore.getState().session.source;
+    if (activeSource) {
+      setSelectedFile(activeSource.label ?? activeSource.id);
+      return;
+    }
     if (files.length > 0) {
       const defaultFile =
         files.find((f) => f === DEFAULT_AUDIO_FILE) || files[0];
@@ -69,8 +76,10 @@ const AudioFileLoader = () => {
       if (currentTrack) {
         setSelectedFile(currentTrack);
       }
+      return;
     }
-  }, [currentTrackIndex, trackList]);
+    setSelectedFile(sessionSource?.label ?? sessionSource?.id ?? null);
+  }, [currentTrackIndex, sessionSource, trackList]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

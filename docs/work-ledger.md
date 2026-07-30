@@ -2,6 +2,73 @@
 
 ## 2026-07-30
 
+- completed and certified the first end-to-end agent-authored production loop:
+  - implemented `@viz-engine/production-signal-cathedral` as a trusted
+    project-local capability pack with a complete data-only authoring schema,
+    three presets, canonical project factory, retained Three program, and
+    renderer extension
+  - composed production and core capability, component, node, and renderer
+    registries through one studio root
+  - derived the selected 48–60 second Progressive House window into a portable
+    project audio asset and baked 720 canonical standard feature frames
+  - authored one 18-node, five-output shared reactivity graph and kept every
+    musical binding editable project data
+  - added the generic execution manifest and bundle validation needed to lock
+    project, runtime, capability, component, node, renderer, bake, asset, and
+    artifact identities
+  - rendered and visually inspected the final 12-second H.264/AAC production
+    at 1280 × 720 and 60 fps; all 720 metric frames were present with zero
+    blank, near-black, or frozen frames
+  - fixed a visible arch-wrap discontinuity by fading retained instances near
+    the camera; the affected consecutive-frame difference fell from `0.1126`
+    to `0.003409`
+  - fixed project audio reconciliation so a reopened bundle selects the
+    project-declared audio rather than a previously mounted editor track
+  - changed browser video capture to compress and release each full-resolution
+    canvas immediately instead of retaining every canvas backing store
+  - reopened the public bundle in a fresh isolated browser session and produced
+    a byte-identical frame-360 PNG with SHA-256
+    `8527fc09dee569995799de25d2cff1c6b17fcf8314107ea9729c35de1b0528da`
+  - made shared canonical graphs first-class editor projections: a parameter
+    opens its bound graph without mutation, portable node authoring ports are
+    visible and editable, named outputs are protected UI endpoints, and graph
+    edits preserve canonical inputs, outputs, types, and metadata
+  - made one-parameter disable detach only that layer input instead of
+    destroying a graph shared by other outputs
+  - threaded resolved host resources into live runtime preview with an explicit
+    resource revision and cached resource snapshot
+  - found and fixed repeated validation/base64 decoding of the 3 MB audio bake;
+    representative baked frame seek fell from tens of seconds to 22.5 ms
+  - capped preview evaluation at the authored timeline rate on high-refresh
+    displays and completed a 12.503-second loop observation with 699 render
+    cycles, no runtime error, and no graph issue
+  - proved one camera-sway change as one revision/undo step and verified exact
+    undo/redo restoration
+  - recorded exact media, identity, visual, performance, UI, graph, reopen, and
+    assumption evidence in
+    `docs/parity/evidence/2026-07-30-signal-cathedral-production-certification.md`
+    and `artifacts/2026-07-30-signal-cathedral-production-summary.json`
+  - passed the complete `pnpm check:foundation` gate:
+    - parity matrix valid with 42 capabilities and zero known gaps
+    - all 16 package type checks and builds passed
+    - production studio type check and both production builds passed
+    - 50 foundation test files / 208 tests passed
+    - built-package consumer smoke passed
+    - agent creative-loop bundle roundtrip passed
+- locked the first agent-authored production as **Signal Cathedral**:
+  - selected a self-contained 12-second derivative of the bundled Progressive
+    House track from 48–60 seconds so playback, baking, export audio, and
+    portable reopen share one timeline
+  - separated the production capability package from engine, studio-host,
+    project-data, render-job, and bundle responsibilities
+  - defined the retained renderer design, complete editable authoring schema,
+    presets, audio-feature graph, and canonical project shape
+  - established explicit architecture, determinism, visual-quality,
+    performance, preserved-editor parity, and final-artifact acceptance gates
+  - recorded assumptions and non-goals so later implementation cannot silently
+    widen engine scope or weaken quality
+  - recorded the active contract in
+    `docs/plans/v2/first-agent-authored-production-signal-cathedral.md`
 - completed canonical render and feedback jobs:
   - added strict portable still, contact-sheet, clip, and video
     request/result contracts with exact project revision and content identity

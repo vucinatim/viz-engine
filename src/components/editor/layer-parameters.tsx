@@ -1,7 +1,8 @@
 import editorControl from '@/lib/editor-control';
 import { cn } from '@/lib/utils';
 import {
-  selectRuntimeGraphValue,
+  selectParameterGraphBindings,
+  selectRuntimeGraphValueForParameter,
   useVizSessionSelector,
 } from '@/lib/viz-session';
 import { AudioLines, Info, Target, X } from 'lucide-react';
@@ -13,9 +14,8 @@ import {
   VConfigType,
 } from '../config/config';
 import useNodeNetworkStore, {
-  useIsNetworkEnabled,
-  useNetworkEnabledMap,
 } from '../node-network/node-network-store';
+import useEditorGraphStore from '@/lib/stores/editor-graph-store';
 import { Button } from '../ui/button';
 import CollapsibleGroup from '../ui/collapsible-group';
 import SimpleTooltip from '../ui/simple-tooltip';
@@ -29,7 +29,9 @@ interface LayerParametersProps {
 const LayerParameters = ({ layerId, config }: LayerParametersProps) => {
   // Subscribe ONLY to the enabled state map (not the entire networks object)
   // This prevents rerenders when node positions or other network data changes
-  const networkEnabledMap = useNetworkEnabledMap();
+  const parameterGraphBindings = useVizSessionSelector(
+    selectParameterGraphBindings,
+  );
 
   // Get all current values once for visibleIf checks
   const allValues = useVizSessionSelector(
@@ -45,7 +47,7 @@ const LayerParameters = ({ layerId, config }: LayerParametersProps) => {
 
     Object.entries(groupOption.options).forEach(([innerKey, innerOption]) => {
       if (innerOption instanceof ConfigParam && innerOption.isAnimatable) {
-        const isAnimated = networkEnabledMap[innerOption.id];
+        const isAnimated = !!parameterGraphBindings[innerOption.id];
         if (isAnimated) {
           animatedParams.push(innerOption.label);
         }
@@ -172,11 +174,19 @@ const ParameterField = memo(
       return current;
     });
 
-    const isAnimated = useIsNetworkEnabled(option.id);
+    const graphBinding = useVizSessionSelector(
+      (state) => selectParameterGraphBindings(state)[option.id],
+    );
+    const resolvedNetworkId = graphBinding?.graphId ?? option.id;
+    const isAnimated = useEditorGraphStore(
+      (state) =>
+        !!graphBinding &&
+        (state.networks[resolvedNetworkId]?.isEnabled ?? false),
+    );
 
     const openNetwork = useNodeNetworkStore((state) => state.openNetwork);
 
-    const isHighlighted = openNetwork === option.id;
+    const isHighlighted = openNetwork === resolvedNetworkId;
 
     return (
       <div className="flex grow flex-wrap justify-between px-4">
@@ -305,7 +315,7 @@ export const AnimatedLiveValue = ({
   className?: string;
 }) => {
   const value = useVizSessionSelector(
-    (state) => selectRuntimeGraphValue(state, parameterId),
+    (state) => selectRuntimeGraphValueForParameter(state, parameterId),
   );
 
   if (value === undefined) return null;

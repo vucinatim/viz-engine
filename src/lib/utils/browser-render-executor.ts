@@ -58,7 +58,12 @@ interface CapturedFrame {
   canvas: HTMLCanvasElement;
   durationMilliseconds: number;
   metric: VizRenderFrameVisualMetric;
-  pixels: Uint8ClampedArray;
+}
+
+interface CapturedFrameFeedback {
+  frame: number;
+  durationMilliseconds: number;
+  metric: VizRenderFrameVisualMetric;
 }
 
 const percentile95 = (values: readonly number[]): number => {
@@ -161,7 +166,7 @@ const createVisualMetric = (
 };
 
 const createVisualFeedback = (
-  captured: readonly CapturedFrame[],
+  captured: readonly CapturedFrameFeedback[],
 ): VizRenderVisualFeedback => ({
   sampledFrames: captured.map((entry) => entry.metric),
   blankOrNearBlackFrames: captured
@@ -301,7 +306,6 @@ const captureFrames = async (
         pixels,
         previousPixels,
       ),
-      pixels,
     });
     previousPixels = pixels;
     context.onProgress({
@@ -434,26 +438,50 @@ const executeVideoRender = async (
     { length: request.frameCount },
     (_, index) => request.startFrame + index,
   );
-  const captured = await captureFrames(frames, context, options);
+  const captured: CapturedFrameFeedback[] = [];
   const frameBlobs: Blob[] = [];
-  for (let index = 0; index < captured.length; index += 1) {
+  let previousPixels: Uint8ClampedArray | undefined;
+  for (let index = 0; index < frames.length; index += 1) {
     if (signal.aborted) {
       throw new Error('Render cancelled.');
     }
+    const frame = frames[index]!;
+    const startedAt = performance.now();
+    const canvas = await options.captureFrame({
+      request,
+      source,
+      frame,
+      firstFrame: index === 0,
+      signal,
+    });
+    const durationMilliseconds = performance.now() - startedAt;
+    const pixels = sampleCanvasPixels(canvas);
+    captured.push({
+      frame,
+      durationMilliseconds,
+      metric: createVisualMetric(
+        frame,
+        pixels,
+        previousPixels,
+      ),
+    });
+    previousPixels = pixels;
     frameBlobs.push(
-      await captureCanvasToBlob(captured[index]!.canvas, {
+      await captureCanvasToBlob(canvas, {
         format: 'jpeg',
         quality: qualityFor(request.quality),
       }),
     );
+    canvas.width = 0;
+    canvas.height = 0;
     onProgress({
-      stage: 'preparing-encode',
+      stage: 'rendering',
       completed: index + 1,
-      total: captured.length,
-      progress: (index + 1) / captured.length,
-      message: `Prepared frame ${index + 1} of ${captured.length}.`,
+      total: frames.length,
+      progress: (index + 1) / frames.length,
+      message: `Captured and prepared frame ${frame}.`,
     });
-    if ((index + 1) % 8 === 0 && index + 1 < captured.length) {
+    if ((index + 1) % 4 === 0 && index + 1 < frames.length) {
       await new Promise<void>((resolve) => setTimeout(resolve, 0));
     }
   }

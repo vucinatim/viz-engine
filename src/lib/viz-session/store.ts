@@ -1,7 +1,8 @@
 import { Comp } from '@/components/config/create-component';
 import {
-  createCoreComponentRegistry,
-} from '@viz-engine/components-core';
+  studioComponentRegistry,
+  studioNodeRegistry,
+} from '@/lib/viz-capabilities';
 import {
   NodeHandleType,
   safeVTypeToNodeHandleType,
@@ -47,6 +48,7 @@ import {
 import {
   applyVizComponentDefaultAssets,
   assertValidProjectDocument,
+  resolveVizProjectAudioAsset,
   sampleProjectAudioFrameSnapshot,
   validateProjectDocument,
 } from '@viz-engine/runtime';
@@ -99,10 +101,14 @@ import {
   getProjectedNodeNetworks,
   resetVizSessionSelectorCaches,
 } from './selectors';
+import {
+  resolveParameterGraphBinding,
+  splitParameterId,
+} from './runtime-graph-inspection';
 
 const DEFAULT_FPS = 60;
 const DEFAULT_DURATION_FRAMES = 1;
-const runtimeComponentRegistry = createCoreComponentRegistry();
+const runtimeComponentRegistry = studioComponentRegistry;
 const audioFeatureBakeJobs = createVizAudioFeatureBakeJobService({
   sourceResolver: createVizBrowserAudioBakeSourceResolver((request) => {
     const asset = vizSessionHost
@@ -175,9 +181,10 @@ const renderJobs = createVizRenderJobService({
         return encoded;
       },
       resolveAudioUrl: (source) =>
-        source.resolvedAssets.find(
-          (asset) => asset.kind === 'audio',
-        )?.uri ?? null,
+        resolveVizProjectAudioAsset(
+          source.project,
+          source.resolvedAssets,
+        )?.resolved.uri ?? null,
       captureFrame: async ({
         request,
         source,
@@ -328,6 +335,7 @@ export const vizSessionHost = createVizSessionHost({
     },
   },
   componentRegistry: runtimeComponentRegistry,
+  nodeRegistry: studioNodeRegistry,
   services: {
     audioFeatureBakeJobs,
     renderJobs,
@@ -357,6 +365,37 @@ export const vizSessionHost = createVizSessionHost({
     }));
   },
 });
+
+let runtimePreviewResourceCache:
+  | {
+      resourceRevision: number;
+      resolvedAssets: ReturnType<
+        typeof vizSessionHost.getProjectResources
+      >['resolvedAssets'];
+      resolvedArtifacts: ReturnType<
+        typeof vizSessionHost.getProjectResources
+      >['resolvedArtifacts'];
+    }
+  | undefined;
+
+const getRuntimePreviewResources = () => {
+  const resourceRevision =
+    vizSessionHost.getSnapshot().resourceRevision;
+
+  if (
+    !runtimePreviewResourceCache ||
+    runtimePreviewResourceCache.resourceRevision !== resourceRevision
+  ) {
+    const resources = vizSessionHost.getProjectResources();
+    runtimePreviewResourceCache = {
+      resourceRevision,
+      resolvedAssets: resources.resolvedAssets,
+      resolvedArtifacts: resources.resolvedArtifacts,
+    };
+  }
+
+  return runtimePreviewResourceCache;
+};
 
 const resolveComp = (layer: Pick<VizLayer, 'componentId' | 'name'>): Comp | null =>
   findEditorCompForLayer(layer, useCompStore.getState().comps);
@@ -666,6 +705,12 @@ export const vizControl = createVizControl({
   onProjectChange: (_snapshot, reason) => {
     if (reason === 'load') {
       const project = vizSessionHost.getWorkingProject();
+      const audioSource = vizSessionHost.getSnapshot().audioSession.source;
+      if (audioSource?.uri) {
+        useAudioEngineStore.getState().loadAudioUrl(audioSource.uri);
+      } else {
+        useAudioEngineStore.getState().clearElementSource();
+      }
       syncProjectedStoresFromProject(project);
       resetVizSessionSelectorCaches();
       replaceProjectState({
@@ -673,6 +718,16 @@ export const vizControl = createVizControl({
         revision: vizSessionHost.getSnapshot().session.revision,
         sourceProject: clone(project),
         workingProject: clone(project),
+      });
+      replaceAudioState({
+        ...getAudioState(),
+        session: vizSessionHost.getSnapshot().audioSession,
+        diagnostics: vizSessionHost.getSnapshot().audioDiagnostics,
+        audioFile: null,
+        currentTrackUrl: audioSource?.uri ?? null,
+        currentTrackIndex: -1,
+        currentTime: 0,
+        visualTime: 0,
       });
       syncNetworkOpenState();
       return;
@@ -696,10 +751,17 @@ const createGraphUpsertActions = (
   graphId: string,
   network: NodeNetwork,
 ): VizProjectAction[] => {
-  const graph = nodeNetworkToVizGraph(graphId, network);
-  const exists = (getProjectState().workingProject.graphs ?? []).some(
+  const previousGraph = (
+    getProjectState().workingProject.graphs ?? []
+  ).find(
     (candidate) => candidate.id === graphId,
   );
+  const graph = nodeNetworkToVizGraph(
+    graphId,
+    network,
+    previousGraph,
+  );
+  const exists = previousGraph !== undefined;
   const actions: VizProjectAction[] = exists
     ? [{ type: 'graph.replace', payload: { graphId, graph } }]
     : [
@@ -1260,7 +1322,35 @@ export const vizSessionActions = {
       );
     },
     setNetworkEnabled(parameterId: string, isEnabled: boolean, type: VType) {
-      if (!getGraphNetworks()[parameterId]) {
+      const project = getProjectState().workingProject;
+      const binding = resolveParameterGraphBinding(project, parameterId);
+      const graphId = binding?.graphId ?? parameterId;
+      const network = getGraphNetworks()[graphId];
+
+      if (binding && graphId !== parameterId && !isEnabled) {
+        const parameter = splitParameterId(parameterId);
+        if (!parameter) {
+          return;
+        }
+
+        applyProjectActions(
+          [
+            {
+              type: 'layer.input.set',
+              payload: {
+                layerId: parameter.layerId,
+                inputKey: parameter.inputKey,
+                valueSource: null,
+              },
+            },
+          ],
+          { syncLayerProjections: false },
+        );
+        syncNetworkOpenState();
+        return;
+      }
+
+      if (!network) {
         if (!isEnabled) {
           return;
         }
@@ -1269,8 +1359,8 @@ export const vizSessionActions = {
         return;
       }
 
-      commitGraphNetwork(parameterId, {
-        ...getGraphNetworks()[parameterId],
+      commitGraphNetwork(graphId, {
+        ...network,
         isEnabled,
       });
     },
@@ -1521,6 +1611,7 @@ export const vizSessionActions = {
           width: projectState.workingProject.viewport.width,
           height: projectState.workingProject.viewport.height,
         };
+        const runtimeResources = getRuntimePreviewResources();
         const renderPlan = createVizSessionRuntimePreviewPlan({
           project: projectState.workingProject,
           projectRevision: projectState.revision,
@@ -1528,6 +1619,9 @@ export const vizSessionActions = {
           viewport,
           audioFrameData,
           isPlaying: getPreviewState().transport.isPlaying,
+          resourceRevision: runtimeResources.resourceRevision,
+          resolvedAssets: runtimeResources.resolvedAssets,
+          resolvedArtifacts: runtimeResources.resolvedArtifacts,
         });
         const lastRenderedLayerIds = attachmentStore.renderRuntimePlan(
           frame,

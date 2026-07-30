@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "production": "signal-cathedral",
+  "project": {
+    "projectId": "project-signal-cathedral",
+    "fps": 60,
+    "durationFrames": 720,
+    "durationSeconds": 12,
+    "authoredViewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "contentIdentity": "sha256:c0085922cb268a69b8306898b167a1e2386675fdcf96778a832c258e75bf9223"
+  },
+  "resources": {
+    "audioAssetId": "asset-signal-cathedral-progressive-house",
+    "audioContentIdentity": "sha256:d13f1a0f9fe2af8cb088d08320f24822a8ecafddde4801143a52972fc4bc9dcd",
+    "audioArtifactId": "artifact-audio-features-a10777ef",
+    "audioArtifactContentIdentity": "sha256:2f5f8dc41a8e2d49a499c91a4caeba711cbe8eb6f46863e1ad35428a49554f79",
+    "bakeExecutionIdentity": "viz-bake.audio-feature-timeline.v1:c27288b9",
+    "executionManifestContentIdentity": "sha256:17370aedb0674dfeeaa68a9f3c1811d5c8ad796dfce3f8220058711c2d3b0d65"
+  },
+  "finalVideo": {
+    "path": "public/productions/signal-cathedral/renders/signal-cathedral-final-1280x720-60fps.mp4",
+    "contentIdentity": "sha256:a835883cafa005dc38851ea6cbb2e5adbf0abfd10137fa59bc6583383b2fcfb2",
+    "byteLength": 4215523,
+    "durationSeconds": 12,
+    "video": {
+      "codec": "h264",
+      "width": 1280,
+      "height": 720,
+      "fps": 60
+    },
+    "audio": {
+      "codec": "aac",
+      "sampleRate": 48000,
+      "channels": 2
+    },
+    "feedback": {
+      "metricFrames": 720,
+      "blankFrames": 0,
+      "nearBlackFrames": 0,
+      "frozenFrames": 0,
+      "renderMilliseconds": {
+        "total": 49781.6,
+        "average": 69.1411,
+        "p95": 71.9,
+        "maximum": 124.1
+      },
+      "encodeMilliseconds": 41093.2
+    }
+  },
+  "contactSheet": {
+    "path": "public/productions/signal-cathedral/renders/signal-cathedral-final-contact-sheet.jpg",
+    "contentIdentity": "sha256:852419d591a4139b31f5e43071f3512d3b1dee028932b23701d389cb4c5ff372",
+    "byteLength": 69023,
+    "width": 2572,
+    "height": 724,
+    "sampledFrames": 8
+  },
+  "reopenProof": {
+    "frame": 360,
+    "width": 640,
+    "height": 360,
+    "pngContentIdentity": "sha256:8527fc09dee569995799de25d2cff1c6b17fcf8314107ea9729c35de1b0528da",
+    "byteLength": 192501,
+    "averageLuminance": 0.11647028935185312,
+    "darkPixelRatio": 0.1488715277777778,
+    "byteIdenticalAcrossFreshSession": true
+  },
+  "liveEditorProof": {
+    "sharedGraphRuntimeNodes": 18,
+    "projectedOutputNodes": 5,
+    "openGraphRevisionDelta": 0,
+    "seekFrame": 550,
+    "seekLatencyMilliseconds": 22.5,
+    "graphIssues": 0,
+    "sampledValues": {
+      "structurePulse": 0.9601613903045654,
+      "coreEnergy": 0.6857243013381957,
+      "spectralShimmer": 0.45318009674549103,
+      "shockwaveTrigger": 0.2867406949400902,
+      "bloomAccent": 0.24431936964392661
+    },
+    "loopPlayback": {
+      "observationMilliseconds": 12503,
+      "renderCycles": 699,
+      "endingFrameAfterLoop": 29,
+      "runtimeIssues": 0,
+      "runtimeErrors": 0
+    }
+  }
+}

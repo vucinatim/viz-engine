@@ -3,13 +3,13 @@ import { cn } from '@/lib/utils';
 import { AudioLines, Info, Target, X } from 'lucide-react';
 import { UseFormReturn, useForm } from 'react-hook-form';
 import {
-  selectRuntimeGraphValue,
+  selectParameterGraphBindings,
+  selectRuntimeGraphValueForParameter,
   useVizSessionSelector,
 } from '@/lib/viz-session';
 import useNodeNetworkStore, {
-  useIsNetworkEnabled,
-  useNetworkEnabledMap,
 } from '../node-network/node-network-store';
+import useEditorGraphStore from '@/lib/stores/editor-graph-store';
 import { Button } from '../ui/button';
 import CollapsibleGroup from '../ui/collapsible-group';
 import {
@@ -42,7 +42,9 @@ const DynamicForm = ({ layerId, config, defaultValues }: DynamicFormProps) => {
 
   // Subscribe ONLY to the enabled state map (not the entire networks object)
   // This prevents rerenders when node positions or other network data changes
-  const networkEnabledMap = useNetworkEnabledMap();
+  const parameterGraphBindings = useVizSessionSelector(
+    selectParameterGraphBindings,
+  );
 
   // Helper function to get animated parameters in a group
   const getAnimatedParamsInGroup = (groupOption: GroupConfigOption<any>) => {
@@ -50,7 +52,7 @@ const DynamicForm = ({ layerId, config, defaultValues }: DynamicFormProps) => {
 
     Object.entries(groupOption.options).forEach(([innerKey, innerOption]) => {
       if (innerOption instanceof ConfigParam && innerOption.isAnimatable) {
-        const isAnimated = networkEnabledMap[innerOption.id];
+        const isAnimated = !!parameterGraphBindings[innerOption.id];
         if (isAnimated) {
           animatedParams.push(innerOption.label);
         }
@@ -165,11 +167,19 @@ const DynamicFormField = ({
   option,
   form,
 }: DynamicFormFieldProps) => {
-  const isAnimated = useIsNetworkEnabled(option.id);
+  const graphBinding = useVizSessionSelector(
+    (state) => selectParameterGraphBindings(state)[option.id],
+  );
+  const resolvedNetworkId = graphBinding?.graphId ?? option.id;
+  const isAnimated = useEditorGraphStore(
+    (state) =>
+      !!graphBinding &&
+      (state.networks[resolvedNetworkId]?.isEnabled ?? false),
+  );
 
   const openNetwork = useNodeNetworkStore((state) => state.openNetwork);
 
-  const isHighlighted = openNetwork === option.id;
+  const isHighlighted = openNetwork === resolvedNetworkId;
 
   // Live animated value is rendered in a separate component to avoid
   // re-rendering the entire field when the value updates.
@@ -321,7 +331,7 @@ export const AnimatedLiveValue = ({
   className?: string;
 }) => {
   const value = useVizSessionSelector(
-    (state) => selectRuntimeGraphValue(state, parameterId),
+    (state) => selectRuntimeGraphValueForParameter(state, parameterId),
   );
 
   if (value === undefined) return null;

@@ -6,6 +6,7 @@ import {
   EditorRuntimePreviewAttachment,
 } from '@/lib/editor-runtime-preview-attachment';
 import { installEditorRuntimeHostAttachments } from '@/lib/editor-runtime-host-attachments';
+import { studioThreeProgramRegistry } from '@/lib/viz-capabilities';
 import useEditorStore from '@/lib/stores/editor-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import { LayerData } from '@/lib/stores/editor-layer-projection-store';
@@ -71,6 +72,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
       withDebug,
       getMirrorCanvases: () => mirrorCanvasesRef.current,
       profiler: layerFPSTracker,
+      programRegistry: studioThreeProgramRegistry,
     });
     previewAttachmentRef.current = previewAttachment;
     const removeHostAttachments = installEditorRuntimeHostAttachments({

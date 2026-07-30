@@ -43,6 +43,16 @@ export const graphInputNode: VizNodeImplementation = {
       label: "Value",
     },
   ],
+  authoring: {
+    inputs: [
+      {
+        key: "inputKey",
+        type: "string",
+        defaultValue: "",
+      },
+    ],
+    outputs: [{ key: "value", type: "number" }],
+  },
   evaluate: ({ inputs, graphInputs }) => {
     const inputKey = asString(inputs.inputKey);
     return {
@@ -74,6 +84,13 @@ export const multiplyNode: VizNodeImplementation = {
       label: "Value",
     },
   ],
+  authoring: {
+    inputs: [
+      { key: "value", type: "number", defaultValue: 0 },
+      { key: "factor", type: "number", defaultValue: 1 },
+    ],
+    outputs: [{ key: "value", type: "number" }],
+  },
   evaluate: ({ inputs }) => ({
     value: asNumber(inputs.value, 0) * asNumber(inputs.factor, 1),
   }),
@@ -107,6 +124,14 @@ export const clampNode: VizNodeImplementation = {
       label: "Value",
     },
   ],
+  authoring: {
+    inputs: [
+      { key: "value", type: "number", defaultValue: 0 },
+      { key: "min", type: "number", defaultValue: 0 },
+      { key: "max", type: "number", defaultValue: 1 },
+    ],
+    outputs: [{ key: "value", type: "number" }],
+  },
   evaluate: ({ inputs }) => {
     const value = asNumber(inputs.value, 0);
     const min = asNumber(inputs.min, 0);
@@ -140,6 +165,13 @@ export const addNode: VizNodeImplementation = {
       label: "Value",
     },
   ],
+  authoring: {
+    inputs: [
+      { key: "a", type: "number", defaultValue: 0 },
+      { key: "b", type: "number", defaultValue: 0 },
+    ],
+    outputs: [{ key: "value", type: "number" }],
+  },
   evaluate: ({ inputs }) => ({
     value: asNumber(inputs.a, 0) + asNumber(inputs.b, 0),
   }),
@@ -241,22 +273,20 @@ const createAnimationInput = (
   };
 };
 
-const createAuthoringMetadata = (
+const createAuthoring = (
   definition: VizNodeAuthoringDefinition,
 ) => ({
-  authoring: {
-    inputs: definition.inputs.map((input) => ({
+  inputs: definition.inputs.map((input) => ({
       key: input.id,
       type: input.type,
       ...(input.defaultValue === undefined
         ? {}
         : { defaultValue: input.defaultValue }),
     })),
-    outputs: definition.outputs.map((output) => ({
+  outputs: definition.outputs.map((output) => ({
       key: output.id,
       type: output.type,
     })),
-  },
 });
 
 const createInputs = (
@@ -287,7 +317,7 @@ const createPureEditorNodeImplementation = (
     : { description: definition.description }),
   inputs: createInputs(definition),
   outputs: createOutputs(definition),
-  metadata: createAuthoringMetadata(definition),
+  authoring: createAuthoring(definition),
   evaluate: (context) =>
     definition.computeSignal(
       context.inputs,
@@ -306,7 +336,7 @@ const createTemporalEditorNodeImplementation = (
     : { description: definition.description }),
   inputs: createInputs(definition),
   outputs: createOutputs(definition),
-  metadata: createAuthoringMetadata(definition),
+  authoring: createAuthoring(definition),
   createInitialState: () => ({}),
   step: (context: VizNodeStepContext) => {
     const state =

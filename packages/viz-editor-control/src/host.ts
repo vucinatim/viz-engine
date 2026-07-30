@@ -28,6 +28,7 @@ import {
 } from "@viz-engine/editor-session";
 import { createCoreNodeRegistry } from "@viz-engine/nodes-core";
 import {
+  resolveVizProjectAudioAsset,
   type VizNodeRegistry,
   validateProjectDocument,
 } from "@viz-engine/runtime";
@@ -52,6 +53,7 @@ export interface VizSessionServices {
 
 export interface VizSessionHostSnapshot {
   source: VizSessionSource;
+  resourceRevision: number;
   session: VizEditorSessionSnapshot;
   transport: VizEditorTransportState;
   audioSession: VizEditorAudioSessionState;
@@ -147,6 +149,32 @@ const assertValidResources = (
   }
 };
 
+const createProjectAudioSource = (
+  resources: VizSessionProjectResources,
+): VizEditorAudioSource | undefined => {
+  const audio = resolveVizProjectAudioAsset(
+    resources.project,
+    resources.resolvedAssets,
+  );
+
+  if (!audio) {
+    return undefined;
+  }
+
+  const durationSeconds =
+    typeof audio.ref.metadata?.durationSeconds === "number"
+      ? audio.ref.metadata.durationSeconds
+      : undefined;
+
+  return {
+    kind: "media-element",
+    id: audio.ref.id,
+    label: audio.ref.label,
+    uri: audio.resolved.uri,
+    ...(durationSeconds === undefined ? {} : { durationSeconds }),
+  };
+};
+
 export const createVizSessionHost = ({
   actor = { kind: "user" },
   initialProject,
@@ -160,6 +188,7 @@ export const createVizSessionHost = ({
   assertValidResources(initialProject);
 
   let currentResources = clone(initialProject);
+  let resourceRevision = 0;
   const listeners = new Set<(snapshot: VizSessionHostSnapshot) => void>();
   const session: VizEditorSession = createVizEditorSession({
     project: currentResources.project,
@@ -174,6 +203,7 @@ export const createVizSessionHost = ({
 
   const getSnapshot = (): VizSessionHostSnapshot => ({
     source: clone(currentResources.source),
+    resourceRevision,
     session: session.getSnapshot(),
     transport: transportController.getState(),
     audioSession: audioSessionController.getState(),
@@ -213,7 +243,11 @@ export const createVizSessionHost = ({
     },
   });
 
+  const initialAudioSource = createProjectAudioSource(currentResources);
   audioSessionController = createVizEditorAudioSessionController({
+    ...(initialAudioSource === undefined
+      ? {}
+      : { source: initialAudioSource }),
     ...(currentResources.project.artifactRefs?.[0]?.id === undefined
       ? {}
       : {
@@ -245,6 +279,7 @@ export const createVizSessionHost = ({
       ),
       artifact,
     ];
+    resourceRevision += 1;
     emit();
   });
 
@@ -257,6 +292,7 @@ export const createVizSessionHost = ({
       ),
       clone(asset),
     ];
+    resourceRevision += 1;
     emit();
     return getSnapshot();
   };
@@ -270,6 +306,7 @@ export const createVizSessionHost = ({
       ),
       clone(artifact),
     ];
+    resourceRevision += 1;
     emit();
     return getSnapshot();
   };
@@ -306,6 +343,7 @@ export const createVizSessionHost = ({
     loadProject: (resources) => {
       assertValidResources(resources);
       currentResources = clone(resources);
+      resourceRevision += 1;
       session.loadProject(currentResources.project, {
         previewState: {
           mode: transportController.getState().mode,
@@ -316,6 +354,12 @@ export const createVizSessionHost = ({
         currentResources.project.timeline.durationInFrames,
       );
       transportController.seekToFrame(0);
+      const audioSource = createProjectAudioSource(currentResources);
+      if (audioSource) {
+        audioSessionController.attachSource(audioSource);
+      } else {
+        audioSessionController.clearSource();
+      }
       audioSessionController.setBakedArtifactId(
         currentResources.project.artifactRefs?.[0]?.id,
       );

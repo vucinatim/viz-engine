@@ -5,7 +5,6 @@ import {
   toEditorComponentId,
 } from '@/lib/viz-session/project-adapters';
 import {
-  createCoreComponentRegistry,
   resolveBundledStageModelAssets,
 } from '@viz-engine/components-core';
 import type { VizProjectDocument, VizRenderPlan } from '@viz-engine/contracts';
@@ -15,8 +14,9 @@ import {
   createVizRenderPlan,
   createVizRuntimeSession,
 } from '@viz-engine/runtime';
+import { studioComponentRegistry } from '@/lib/viz-capabilities';
 
-const componentRegistry = createCoreComponentRegistry();
+const componentRegistry = studioComponentRegistry;
 const nodeRegistry = createCoreNodeRegistry();
 
 export interface EditorComponentPreviewAudioFrameData {

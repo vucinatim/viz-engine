@@ -33,9 +33,12 @@ import {
   type VizLayer,
 } from '@viz-engine/contracts';
 import type { Edge } from '@xyflow/react';
+import { studioNodeRegistry } from '@/lib/viz-capabilities';
 
 const DEFAULT_OUTPUT_HANDLE = '__viz_default_output__';
 const DEFAULT_INPUT_HANDLE = '__viz_default_input__';
+const GRAPH_OUTPUT_NODE_PREFIX = '__viz_graph_output__:';
+const GRAPH_OUTPUT_EDGE_PREFIX = '__viz_graph_output_edge__:';
 const EDITOR_NODE_METADATA_KEY = 'vizEditor';
 const EDITOR_GRAPH_METADATA_KEY = 'vizEditor';
 
@@ -47,6 +50,7 @@ interface EditorNodeMetadata {
 
 interface EditorGraphMetadata {
   isMinimized?: boolean;
+  outputPositions?: Record<string, { x: number; y: number }>;
 }
 
 const clone = <T>(value: T): T => structuredClone(value);
@@ -210,7 +214,8 @@ export const createProjectedLayer = ({
   };
 };
 
-const getDefinitionType = (node: GraphNode) => node.data.definition.label;
+const getDefinitionType = (node: GraphNode) =>
+  node.data.portableNodeType ?? node.data.definition.label;
 
 const getOutputType = (node: GraphNode) =>
   node.data.definition.label === 'Output'
@@ -249,16 +254,52 @@ const createNodeBindings = (
 export const nodeNetworkToVizGraph = (
   graphId: string,
   network: NodeNetwork,
+  previousGraph?: VizNodeGraphDocument,
 ): VizNodeGraphDocument => {
-  const outputNode = network.nodes.find(
-    (node) => node.data.definition.label === 'Output',
+  const graphOutputNodes = network.nodes.filter(
+    (node) => node.data.graphOutputKey,
+  );
+  const legacyOutputNode = network.nodes.find(
+    (node) =>
+      node.data.definition.label === 'Output' &&
+      !node.data.graphOutputKey,
+  );
+  const canonicalOutputs = graphOutputNodes.flatMap((node) => {
+    const edge = network.edges.find(
+      (candidate) => candidate.target === node.id,
+    );
+
+    return edge && node.data.graphOutputKey
+      ? [
+          {
+            key: node.data.graphOutputKey,
+            nodeId: edge.source,
+            output: edge.sourceHandle ?? DEFAULT_OUTPUT_HANDLE,
+          },
+        ]
+      : [];
+  });
+  const previousEditorMetadata = readEditorGraphMetadata(
+    previousGraph?.metadata,
+  );
+  const outputPositions = Object.fromEntries(
+    graphOutputNodes.flatMap((node) =>
+      node.data.graphOutputKey
+        ? [[node.data.graphOutputKey, clone(node.position)]]
+        : [],
+    ),
   );
 
   return {
     id: graphId,
     name: network.name || graphId,
     enabled: network.isEnabled,
-    nodes: network.nodes.map((node) => {
+    ...(previousGraph?.inputs === undefined
+      ? {}
+      : { inputs: clone(previousGraph.inputs) }),
+    nodes: network.nodes
+      .filter((node) => !node.data.graphOutputKey)
+      .map((node) => {
       const outputType = getOutputType(node);
       const inputs = createNodeBindings(node, network.edges);
       const editorMetadata: EditorNodeMetadata = {
@@ -276,18 +317,32 @@ export const nodeNetworkToVizGraph = (
         },
       };
     }),
-    outputs: outputNode
-      ? [
+    outputs:
+      canonicalOutputs.length > 0
+        ? canonicalOutputs
+        : legacyOutputNode
+          ? [
           {
             key: 'value',
-            nodeId: outputNode.id,
+            nodeId: legacyOutputNode.id,
             output: 'value',
           },
-        ]
-      : [],
+            ]
+          : clone(previousGraph?.outputs ?? []),
     metadata: {
+      ...(previousGraph?.metadata ?? {}),
       [EDITOR_GRAPH_METADATA_KEY]: {
         isMinimized: network.isMinimized ?? false,
+        ...((Object.keys(outputPositions).length > 0
+          ? outputPositions
+          : previousEditorMetadata.outputPositions) === undefined
+          ? {}
+          : {
+              outputPositions:
+                Object.keys(outputPositions).length > 0
+                  ? outputPositions
+                  : previousEditorMetadata.outputPositions,
+            }),
       } satisfies EditorGraphMetadata,
     },
   };
@@ -301,21 +356,61 @@ const resolveNodeDefinition = (node: VizNodeGraphDocument['nodes'][number]) => {
   }
 
   const definition = NodeDefinitionMap.get(node.type);
+  if (definition) {
+    return definition;
+  }
+
+  const portableDefinition = studioNodeRegistry.get(node.type);
+  if (portableDefinition?.authoring) {
+    const labels = new Map([
+      ...(portableDefinition.inputs ?? []).map(
+        (input) => [input.key, input.label] as const,
+      ),
+      ...portableDefinition.outputs.map(
+        (output) => [output.key, output.label] as const,
+      ),
+    ]);
+
+    return {
+      label: portableDefinition.name,
+      description: portableDefinition.description,
+      inputs: portableDefinition.authoring.inputs.map((input) => ({
+        id: input.key,
+        label: labels.get(input.key) ?? input.key,
+        type: toNodeHandleType(input.type),
+        ...(input.defaultValue === undefined
+          ? {}
+          : { defaultValue: clone(input.defaultValue) }),
+      })),
+      outputs: portableDefinition.authoring.outputs.map((output) => ({
+        id: output.key,
+        label: labels.get(output.key) ?? output.key,
+        type: toNodeHandleType(output.type),
+        ...(output.defaultValue === undefined
+          ? {}
+          : { defaultValue: clone(output.defaultValue) }),
+      })),
+      // Evaluation remains owned by the canonical runtime registry. This
+      // projection only supplies editor affordances and port metadata.
+      computeSignal: () => ({}),
+    } satisfies AnimNode;
+  }
+
   return (
-    definition ??
-    ({
+    {
       label: node.type,
       description: `Unknown node type "${node.type}".`,
       inputs: [],
       outputs: [],
       computeSignal: () => ({}),
-    } satisfies AnimNode)
+    } satisfies AnimNode
   );
 };
 
 const createProjectedGraphNode = (
   node: VizNodeGraphDocument['nodes'][number],
   previousNode: GraphNode | undefined,
+  fallbackPosition: { x: number; y: number },
 ): GraphNode => {
   const editorMetadata = readEditorNodeMetadata(node.metadata);
   const inputValues = Object.fromEntries(
@@ -330,11 +425,12 @@ const createProjectedGraphNode = (
   return {
     id: node.id,
     type: editorMetadata.nodeType ?? 'NodeRenderer',
-    position: editorMetadata.position ?? { x: 0, y: 0 },
+    position: editorMetadata.position ?? fallbackPosition,
     data: {
       definition: resolveNodeDefinition(node),
       inputValues,
       state: previousNode?.data.state ?? {},
+      portableNodeType: node.type,
     },
   };
 };
@@ -366,22 +462,163 @@ const createProjectedGraphEdges = (
     }),
   );
 
+const createFallbackNodePositions = (
+  graph: VizNodeGraphDocument,
+): Map<string, { x: number; y: number }> => {
+  const nodesById = new Map(graph.nodes.map((node) => [node.id, node]));
+  const depthCache = new Map<string, number>();
+  const resolveDepth = (
+    nodeId: string,
+    ancestry = new Set<string>(),
+  ): number => {
+    const cached = depthCache.get(nodeId);
+    if (cached !== undefined) {
+      return cached;
+    }
+    if (ancestry.has(nodeId)) {
+      return 0;
+    }
+
+    const node = nodesById.get(nodeId);
+    if (!node) {
+      return 0;
+    }
+
+    const nextAncestry = new Set(ancestry).add(nodeId);
+    const dependencies = Object.values(node.inputs ?? {})
+      .filter(
+        (
+          binding,
+        ): binding is Extract<
+          VizGraphNodeInputBinding,
+          { kind: 'node-output' }
+        > => binding.kind === 'node-output',
+      )
+      .map((binding) => resolveDepth(binding.nodeId, nextAncestry));
+    const depth =
+      dependencies.length === 0 ? 0 : Math.max(...dependencies) + 1;
+    depthCache.set(nodeId, depth);
+    return depth;
+  };
+
+  const nodesByDepth = new Map<number, string[]>();
+  for (const node of graph.nodes) {
+    const depth = resolveDepth(node.id);
+    nodesByDepth.set(depth, [...(nodesByDepth.get(depth) ?? []), node.id]);
+  }
+
+  const positions = new Map<string, { x: number; y: number }>();
+  for (const [depth, nodeIds] of nodesByDepth) {
+    const totalHeight = Math.max(0, nodeIds.length - 1) * 180;
+    nodeIds.forEach((nodeId, index) => {
+      positions.set(nodeId, {
+        x: depth * 260,
+        y: index * 180 - totalHeight / 2,
+      });
+    });
+  }
+
+  return positions;
+};
+
+const resolveGraphOutputType = (
+  nodes: GraphNode[],
+  nodeId: string,
+  outputKey: string,
+): NodeHandleType => {
+  const source = nodes.find((node) => node.id === nodeId);
+  return (
+    source?.data.definition.outputs.find(
+      (output) => output.id === outputKey,
+    )?.type ?? 'number'
+  ) as NodeHandleType;
+};
+
+const createProjectedGraphOutputNodes = (
+  graph: VizNodeGraphDocument,
+  projectedNodes: GraphNode[],
+): { nodes: GraphNode[]; edges: Edge[] } => {
+  const editorMetadata = readEditorGraphMetadata(graph.metadata);
+  const runtimeNodesById = new Map(
+    graph.nodes.map((node) => [node.id, node]),
+  );
+  const canonicalOutputs = graph.outputs.filter(
+    (output) => runtimeNodesById.get(output.nodeId)?.type !== 'Output',
+  );
+  const sourcePositions = new Map(
+    projectedNodes.map((node) => [node.id, node.position]),
+  );
+  const nodes = canonicalOutputs.map((output, index): GraphNode => {
+    const sourcePosition = sourcePositions.get(output.nodeId) ?? {
+      x: 0,
+      y: index * 180,
+    };
+
+    return {
+      id: `${GRAPH_OUTPUT_NODE_PREFIX}${output.key}`,
+      type: 'NodeRenderer',
+      position:
+        editorMetadata.outputPositions?.[output.key] ?? {
+          x: sourcePosition.x + 260,
+          y: sourcePosition.y,
+        },
+      data: {
+        definition: createOutputNode(
+          resolveGraphOutputType(
+            projectedNodes,
+            output.nodeId,
+            output.output,
+          ),
+        ),
+        inputValues: {},
+        state: {},
+        graphOutputKey: output.key,
+      },
+    };
+  });
+  const edges = canonicalOutputs.map((output) => ({
+    id: `${GRAPH_OUTPUT_EDGE_PREFIX}${output.key}`,
+    source: output.nodeId,
+    target: `${GRAPH_OUTPUT_NODE_PREFIX}${output.key}`,
+    sourceHandle:
+      output.output === DEFAULT_OUTPUT_HANDLE
+        ? undefined
+        : output.output,
+    targetHandle: 'output',
+  }));
+
+  return { nodes, edges };
+};
+
 export const vizGraphToNodeNetwork = (
   graph: VizNodeGraphDocument,
   previousNetwork?: NodeNetwork,
-): NodeNetwork => ({
-  name: graph.name,
-  isEnabled: graph.enabled ?? true,
-  isMinimized:
-    readEditorGraphMetadata(graph.metadata).isMinimized ?? false,
-  nodes: graph.nodes.map((node) =>
+): NodeNetwork => {
+  const fallbackPositions = createFallbackNodePositions(graph);
+  const projectedNodes = graph.nodes.map((node) =>
     createProjectedGraphNode(
       node,
       previousNetwork?.nodes.find((candidate) => candidate.id === node.id),
+      fallbackPositions.get(node.id) ?? { x: 0, y: 0 },
     ),
-  ),
-  edges: createProjectedGraphEdges(graph),
-});
+  );
+  const projectedOutputs = createProjectedGraphOutputNodes(
+    graph,
+    projectedNodes,
+  );
+
+  return {
+    name: graph.name,
+    isEnabled: graph.enabled ?? true,
+    isMinimized:
+      readEditorGraphMetadata(graph.metadata).isMinimized ?? false,
+    nodes: [...projectedNodes, ...projectedOutputs.nodes],
+    edges: [
+      ...createProjectedGraphEdges(graph),
+      ...projectedOutputs.edges,
+    ],
+  };
+};
 
 export const projectGraphsToNodeNetworks = (
   project: VizProjectDocument,

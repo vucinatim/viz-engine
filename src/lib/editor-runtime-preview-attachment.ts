@@ -9,6 +9,7 @@ import {
   createVizThreePreviewController,
   type VizThreePreviewCameraPose,
   type VizThreePreviewController,
+  type VizThreeProgramRegistry,
 } from '@viz-engine/renderer-three';
 import type { VizRenderPlan } from '@viz-engine/contracts';
 import * as THREE from 'three';
@@ -51,6 +52,7 @@ interface CreateEditorRuntimePreviewAttachmentOptions {
   withDebug: WithDebug;
   getMirrorCanvases: () => HTMLCanvasElement[];
   profiler: LayerProfiler;
+  programRegistry: VizThreeProgramRegistry;
 }
 
 const applyCanvasResolution = (
@@ -71,6 +73,7 @@ export const createEditorRuntimePreviewAttachment = ({
   withDebug,
   getMirrorCanvases,
   profiler,
+  programRegistry,
 }: CreateEditorRuntimePreviewAttachmentOptions): EditorRuntimePreviewAttachment => {
   let runtimePreviewController: VizThreePreviewController | null = null;
   let flyCameraPose: VizThreePreviewCameraPose | null = null;
@@ -302,6 +305,7 @@ export const createEditorRuntimePreviewAttachment = ({
               canvas,
               renderPlan,
               preserveDrawingBuffer: true,
+              programRegistry,
             });
           }
           profiler.endRender();
