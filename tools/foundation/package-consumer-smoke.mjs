@@ -12,6 +12,7 @@ const packageEntries = [
   { name: "@viz-engine/contracts", dir: "packages/viz-contracts" },
   { name: "@viz-engine/actions", dir: "packages/viz-actions" },
   { name: "@viz-engine/bake", dir: "packages/viz-bake" },
+  { name: "@viz-engine/render", dir: "packages/viz-render" },
   { name: "@viz-engine/editor-control", dir: "packages/viz-editor-control" },
   { name: "@viz-engine/editor-session", dir: "packages/viz-editor-session" },
   { name: "@viz-engine/runtime", dir: "packages/viz-runtime" },

@@ -4,12 +4,17 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
 
 ## Active Architectural Suggestions
 
-- Extend the authoritative decoder posture now proven for project
-  transactions, live control, and audio-bake jobs to render and feedback job
-  requests. Transport adapters must never cast arbitrary JSON into trusted
-  typed operations.
 - Add a minimal execution manifest that locks capability, component, node,
   renderer, bake, asset, and artifact identities required to reproduce output.
+- Make resolved asset registration and portable materialization explicit on
+  the shared control/bundle boundary before final production. Project
+  `asset.attach` actions should continue to mutate only canonical references;
+  host-local URI or byte resolution must remain an explicit resource
+  operation rather than hidden editor state.
+- Add a native headless clip/video executor behind the existing render-job
+  contract once production needs to render without a browser WebGL host.
+  Reuse the same request, output, probe, cancellation, and feedback semantics;
+  do not introduce a second export architecture.
 - Preserve the full analyzer-compatible standard audio artifact for semantic
   parity, but investigate an explicit compressed/binary container when real
   production bundles prove JSON/base64 storage too costly. Do not silently
@@ -18,9 +23,6 @@ This file tracks durable, high-impact follow-up improvements for VizEngine V2.
   production-length measurements show main-thread contention. The current
   yielding implementation protects responsiveness, but it does not provide CPU
   isolation.
-- Wrap the proven browser capture and FFmpeg implementation behind a shared
-  render-job contract, then add repeatable still, contact-sheet, short-clip,
-  media-probe, blank-frame, frozen-frame, and performance feedback tools.
 - Continue stable render-node reconciliation beyond the retained shader,
   Three-program, and polyline paths. Frequently changing text and mixed
   primitive groups can still recreate textures or geometry, which would

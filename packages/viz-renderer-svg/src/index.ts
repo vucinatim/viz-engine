@@ -197,7 +197,9 @@ const renderLayerNode = (
   return `<g data-layer-id="${escapeAttribute(layer.layerId)}">${renderVizRenderNode(layer.node, materializedImageAssets)}</g>`;
 };
 
-export const renderVizRenderPlanToSvgMarkup = (renderPlan: VizRenderPlan): string => {
+export const renderVizRenderPlanToSvgFragment = (
+  renderPlan: VizRenderPlan,
+): string => {
   const materializedImageAssets = new Map(
     renderPlan.materializedAssets
       .filter((asset): asset is VizMaterializedImageAsset => asset.kind === "image")
@@ -209,5 +211,11 @@ export const renderVizRenderPlanToSvgMarkup = (renderPlan: VizRenderPlan): strin
   const backgroundFill = renderPlan.viewport.backgroundColor ?? "#000000";
   const background = `<rect x="0" y="0" width="${renderPlan.viewport.width}" height="${renderPlan.viewport.height}" fill="${escapeAttribute(backgroundFill)}" />`;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${renderPlan.viewport.width} ${renderPlan.viewport.height}" width="${renderPlan.viewport.width}" height="${renderPlan.viewport.height}" role="img" aria-label="Viz frame ${renderPlan.frameContext.frame}">${background}${layerMarkup}</svg>`;
+  return `${background}${layerMarkup}`;
+};
+
+export const renderVizRenderPlanToSvgMarkup = (
+  renderPlan: VizRenderPlan,
+): string => {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${renderPlan.viewport.width} ${renderPlan.viewport.height}" width="${renderPlan.viewport.width}" height="${renderPlan.viewport.height}" role="img" aria-label="Viz frame ${renderPlan.frameContext.frame}">${renderVizRenderPlanToSvgFragment(renderPlan)}</svg>`;
 };

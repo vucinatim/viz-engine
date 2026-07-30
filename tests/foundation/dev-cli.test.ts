@@ -2,9 +2,15 @@ import { exampleProjectBundleDirectoryUrl } from "@viz-engine/example-projects/n
 import { createCoreComponentRegistry } from "@viz-engine/components-core";
 import { createCoreNodeRegistry } from "@viz-engine/nodes-core";
 import { createVizRemotionSvgMarkup } from "@viz-engine/remotion-adapter";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   applyActionsToBundleProject,
@@ -44,9 +50,19 @@ describe("Viz local-first CLI surface", () => {
       "live bake-start --request <json-file> [--url <origin>]",
     );
     expect(
+      (output.payload as { commands: { live: string[] } }).commands.live,
+    ).toContain(
+      "live render-start --request <json-file> [--url <origin>]",
+    );
+    expect(
       (output.payload as { commands: { local: string[] } }).commands.local,
     ).toContain(
       "bundle bake-audio --dir <directory> --out <directory> [--asset-id <id>] [--fps <fps>] [--fft-size <size>] [--start <seconds>] [--duration <seconds>]",
+    );
+    expect(
+      (output.payload as { commands: { local: string[] } }).commands.local,
+    ).toContain(
+      "bundle render-job --dir <directory> --out <directory> --request <json-file>",
     );
   });
 
@@ -210,6 +226,77 @@ describe("Viz local-first CLI surface", () => {
     expect(svgOutput.ok).toBe(true);
     expect(svgPayload.svg).toContain("data-layer-id=\"layer-cover\"");
     expect(svgPayload.svg).toBe(remotionSvg);
+  });
+
+  it("runs a headless bundle contact-sheet job through the CLI", async () => {
+    const tempDirectory = mkdtempSync(
+      join(tmpdir(), "viz-cli-render-job-"),
+    );
+    const requestFile = join(tempDirectory, "request.json");
+    const outputDirectory = join(tempDirectory, "outputs");
+    writeFileSync(
+      requestFile,
+      JSON.stringify({
+        schemaVersion: 1,
+        kind: "contact-sheet",
+        source: {
+          projectId: "project-example-reactive-bars",
+        },
+        intent: "preview",
+        executorId: "node-svg",
+        outputLabel: "CLI Contact Sheet",
+        viewport: {
+          width: 320,
+          height: 180,
+          backgroundColor: "#000000",
+        },
+        quality: "draft",
+        frames: [0, 18, 36, 54],
+        columns: 2,
+        gap: 4,
+        format: "svg",
+      }),
+      "utf8",
+    );
+
+    try {
+      const result = await runVizCli([
+        "bundle",
+        "render-job",
+        "--dir",
+        fileURLToPath(exampleProjectBundleDirectoryUrl),
+        "--out",
+        outputDirectory,
+        "--request",
+        requestFile,
+      ]);
+
+      expect(result.ok).toBe(true);
+      expect(result.command).toBe("bundle render-job");
+      const payload = result.payload as {
+        job: {
+          status: string;
+          result: {
+            outputs: Array<{
+              uri: string;
+              contentIdentity: string;
+            }>;
+          };
+        };
+      };
+      expect(payload.job.status).toBe("succeeded");
+      expect(payload.job.result.outputs[0]?.contentIdentity).toMatch(
+        /^sha256:/,
+      );
+      expect(
+        readFileSync(
+          new URL(payload.job.result.outputs[0]!.uri),
+          "utf8",
+        ),
+      ).toContain('aria-label="Frame 54"');
+    } finally {
+      rmSync(tempDirectory, { recursive: true, force: true });
+    }
   });
 
   it("exports the in-memory example project into a portable bundle", () => {

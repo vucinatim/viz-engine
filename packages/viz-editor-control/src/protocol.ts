@@ -1,5 +1,6 @@
 import type {
   VizProjectTransaction,
+  VizRenderRequest,
 } from "@viz-engine/contracts";
 import type { VizAudioFeatureBakeJobRequest } from "@viz-engine/bake";
 import { z } from "zod";
@@ -457,6 +458,82 @@ const audioFeatureBakeJobRequestSchema = z
     },
   );
 
+const renderRequestBaseShape = {
+  schemaVersion: z.literal(1),
+  source: z
+    .object({
+      projectId: nonEmptyString,
+      expectedRevision: z.number().int().nonnegative().optional(),
+      expectedContentIdentity: nonEmptyString.optional(),
+    })
+    .strict(),
+  intent: z.enum([
+    "preview",
+    "candidate",
+    "final",
+    "integration",
+  ]),
+  executorId: nonEmptyString,
+  outputLabel: nonEmptyString,
+  viewport: z
+    .object({
+      width: z.number().int().positive(),
+      height: z.number().int().positive(),
+      backgroundColor: z.string().optional(),
+    })
+    .strict(),
+  quality: z.enum(["draft", "standard", "high"]),
+};
+
+const renderRequestSchema = z.discriminatedUnion("kind", [
+  z
+    .object({
+      ...renderRequestBaseShape,
+      kind: z.literal("still"),
+      frame: z.number().int().nonnegative(),
+      format: z.enum(["svg", "png", "jpeg", "webp"]),
+    })
+    .strict(),
+  z
+    .object({
+      ...renderRequestBaseShape,
+      kind: z.literal("contact-sheet"),
+      frames: z
+        .array(z.number().int().nonnegative())
+        .min(1)
+        .max(256)
+        .refine((frames) => new Set(frames).size === frames.length, {
+          message: "Contact-sheet frames must be unique.",
+        }),
+      columns: z.number().int().positive().optional(),
+      gap: z.number().int().min(0).max(256).optional(),
+      format: z.enum(["svg", "png", "jpeg", "webp"]),
+    })
+    .strict(),
+  z
+    .object({
+      ...renderRequestBaseShape,
+      kind: z.literal("clip"),
+      startFrame: z.number().int().nonnegative(),
+      frameCount: z.number().int().positive(),
+      fps: z.number().int().positive(),
+      format: z.enum(["mp4", "webm"]),
+      includeAudio: z.boolean(),
+    })
+    .strict(),
+  z
+    .object({
+      ...renderRequestBaseShape,
+      kind: z.literal("video"),
+      startFrame: z.number().int().nonnegative(),
+      frameCount: z.number().int().positive(),
+      fps: z.number().int().positive(),
+      format: z.enum(["mp4", "webm"]),
+      includeAudio: z.boolean(),
+    })
+    .strict(),
+]);
+
 const controlRequestSchema = z.discriminatedUnion("operation", [
   z
     .object({
@@ -565,6 +642,14 @@ const controlRequestSchema = z.discriminatedUnion("operation", [
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
+      operation: z.literal("render.start"),
+      request: renderRequestSchema,
+    })
+    .strict(),
+  z
+    .object({
+      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
+      id: nonEmptyString,
       operation: z.literal("job.cancel"),
       jobId: nonEmptyString,
     })
@@ -614,6 +699,10 @@ export type VizControlRequest =
   | (VizControlRequestBase & {
       operation: "audio-bake.start";
       request: VizAudioFeatureBakeJobRequest;
+    })
+  | (VizControlRequestBase & {
+      operation: "render.start";
+      request: VizRenderRequest;
     })
   | (VizControlRequestBase & {
       operation: "job.cancel";
@@ -683,6 +772,7 @@ export const vizControlDiscovery: VizControlDiscovery = {
     "job.list",
     "job.inspect",
     "audio-bake.start",
+    "render.start",
     "job.cancel",
     "audio-bake.attach",
   ],

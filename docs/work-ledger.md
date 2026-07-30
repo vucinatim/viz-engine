@@ -2,6 +2,49 @@
 
 ## 2026-07-30
 
+- completed canonical render and feedback jobs:
+  - added strict portable still, contact-sheet, clip, and video
+    request/result contracts with exact project revision and content identity
+  - added `@viz-engine/render` lifecycle, executor, source-resolution,
+    cancellation, progress, and content-addressed output boundaries
+  - added a deterministic Node SVG still/contact-sheet executor and headless
+    directory-bundle CLI command
+  - exposed render start/list/inspect/cancel through the shared direct/live
+    `VizControl` surface
+  - wrapped the preserved browser Three/WebGL compositor and FFmpeg encoder as
+    a browser executor with exact frame stepping
+  - added real media probing, blank/near-black and frozen-frame feedback,
+    capture/encode timings, and renderer execution identity
+  - added a preserved-editor job panel for shared bake/render progress,
+    failures, cancellation, and output links
+  - aligned `@ffmpeg/core` to 0.12.10 so the installed wrapper and core share
+    FFprobe support
+  - made the browser wait for exact editor layer attachments and renderer
+    resources before first capture, and reject uninitialized session sources
+  - browser-certified deterministic nonblank 320×180 H.264 clips and a real
+    H.264/AAC stereo 48 kHz clip from an explicit resolved audio asset
+  - proved cooperative cancellation stopped a 100-frame capture after 16
+    frames with no successful output
+  - exposed the actual mounted `vizControl` in the dev-only editor inspection
+    surface so browser validation cannot accidentally instantiate a duplicate
+    hot-reloaded session module
+  - passed `pnpm check:foundation` with 42 parity capabilities, zero gaps, 48
+    test files, 196 tests, all typechecks/builds, packed-consumer smoke, and
+    the headless creative-loop scenario
+  - recorded the architecture and acceptance evidence in
+    `docs/plans/v2/canonical-render-and-feedback-jobs.md` and
+    `docs/parity/evidence/2026-07-30-canonical-render-and-feedback-jobs.md`
+- started the canonical render-and-feedback job phase:
+  - locked one adapter-backed job lifecycle for still, contact-sheet, clip, and
+    video outputs
+  - required exact project revision/content identity for working-head renders
+  - separated portable request/result/job semantics from browser, WebGL,
+    storage, and FFmpeg executor mechanics
+  - made probe, visual-sanity, runtime-diagnostic, and performance feedback part
+    of the explicit result contract
+  - recorded the implementation order, package boundaries, validation gates,
+    assumptions, and completion boundary in
+    `docs/plans/v2/canonical-render-and-feedback-jobs.md`
 - established the canonical architecture for the first complete
   agent-authored production loop:
   - separated engine core, capability packs, projects, hosts/adapters, and

@@ -1,5 +1,5 @@
 {
-  "name": "@viz-engine/editor-control",
+  "name": "@viz-engine/render",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -24,16 +24,8 @@
     "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@viz-engine/bake": "workspace:*",
-    "@viz-engine/components-core": "workspace:*",
     "@viz-engine/contracts": "workspace:*",
-    "@viz-engine/dev-cli": "workspace:*",
-    "@viz-engine/editor-session": "workspace:*",
-    "@viz-engine/example-projects": "workspace:*",
-    "@viz-engine/nodes-core": "workspace:*",
     "@viz-engine/renderer-svg": "workspace:*",
-    "@viz-engine/render": "workspace:*",
-    "@viz-engine/runtime": "workspace:*",
-    "zod": "^3.23.4"
+    "@viz-engine/runtime": "workspace:*"
   }
 }

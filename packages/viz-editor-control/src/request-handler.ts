@@ -213,6 +213,14 @@ export const executeVizControlRequest = (
           ok: true,
           result: control.startAudioFeatureBake(request.request),
         };
+      case "render.start":
+        return {
+          protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
+          id: request.id,
+          operation: request.operation,
+          ok: true,
+          result: control.startRender(request.request),
+        };
       case "job.cancel":
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,

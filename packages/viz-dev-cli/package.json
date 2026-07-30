@@ -32,6 +32,7 @@
     "@viz-engine/example-projects": "workspace:*",
     "@viz-engine/nodes-core": "workspace:*",
     "@viz-engine/renderer-svg": "workspace:*",
+    "@viz-engine/render": "workspace:*",
     "@viz-engine/runtime": "workspace:*"
   }
 }

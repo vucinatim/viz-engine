@@ -718,6 +718,8 @@ Evidence:
 
 ### Phase 4: Render And Feedback Jobs
 
+Status: implemented and validated.
+
 - define render request, status, cancellation, result, and artifact contracts
 - adapt current browser capture/FFmpeg export behind them
 - add deterministic stills, contact sheets, short clips, and final video
@@ -729,6 +731,11 @@ Gate:
 - the agent can request, await, inspect, and validate outputs without driving
   export UI
 - the editor can display the same job progress and artifacts
+
+Evidence:
+
+- [canonical-render-and-feedback-jobs.md](../../plans/v2/canonical-render-and-feedback-jobs.md)
+- [2026-07-30 canonical render and feedback jobs](../../parity/evidence/2026-07-30-canonical-render-and-feedback-jobs.md)
 
 ### Phase 5: Agent-Authored Visual
 

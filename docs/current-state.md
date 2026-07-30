@@ -79,15 +79,27 @@ The repo now has:
 - a real local operator surface
 - a separate dev-shell path for engine validation
 
-The first three phases of the agent-authored production loop are now certified:
+The first four phases of the agent-authored production loop are now certified:
 
 - canonical component authoring and injected capability composition
 - one live/headless session host and revision-safe control target
 - canonical audio bake artifacts and runtime inputs
+- canonical render and feedback jobs
 
-The active next phase is render and feedback jobs: stills, contact sheets,
-clips, final video, media probing, visual sanity checks, runtime diagnostics,
-and performance reporting over the same control/job boundary.
+The active next phase is the first genuinely new agent-authored visual:
+
+- define it once in a project-local capability pack
+- compose reusable engine capabilities without adding scene-specific core code
+- author and iterate through canonical transactions, inspection, stills,
+  contact sheets, and clips
+- preserve live editor settings, node graphs, undo/redo, persistence, playback,
+  and export behavior
+- promote only proven generic pieces into reusable engine packages
+
+The completed render foundation is recorded in:
+
+- [Canonical Render And Feedback Jobs](./plans/v2/canonical-render-and-feedback-jobs.md)
+- [2026-07-30 canonical render and feedback jobs](./parity/evidence/2026-07-30-canonical-render-and-feedback-jobs.md)
 
 So the current phase is no longer “invent V2”.
 
@@ -210,11 +222,10 @@ The remaining adapter classification and deletion conditions are recorded in:
 - [phase-12-canonical-viz-project-document-cutover.md](./plans/v2/phase-12-canonical-viz-project-document-cutover.md)
 - [phase-13-viz-session-runtime-preview-ownership.md](./plans/v2/phase-13-viz-session-runtime-preview-ownership.md)
 
-The largest remaining architecture work is now beyond basic session
-convergence:
+The largest remaining work is now beyond basic session convergence and render
+infrastructure:
 
-- execute the remaining canonical agent-authored production-loop phases:
-  deterministic audio bake, render/feedback jobs, and the final authored visual
+- execute the final agent-authored visual and production-certification phases
 - continue shrinking hook-shaped compatibility facades as concrete preserved
   UI consumers can subscribe to `VizSession` directly
 - lock capability, component, and renderer implementation identities into the

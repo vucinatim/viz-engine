@@ -34,6 +34,7 @@ Browser comparison records live in [evidence](./evidence/). Start with:
 - [2026-07-30 canonical component authoring and capability composition](./evidence/2026-07-30-canonical-component-authoring-and-capability-composition.md)
 - [2026-07-30 live session host and control target](./evidence/2026-07-30-live-session-host-and-control-target.md)
 - [2026-07-30 canonical audio bake and runtime inputs](./evidence/2026-07-30-canonical-audio-bake-and-runtime-inputs.md)
+- [2026-07-30 canonical render and feedback jobs](./evidence/2026-07-30-canonical-render-and-feedback-jobs.md)
 
 ## Pinned Reference
 

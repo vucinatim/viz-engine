@@ -29,16 +29,16 @@ export interface FastCaptureOptions {
   height: number;
   backgroundColor?: string;
   quality?: number;
+  format?: 'png' | 'jpeg' | 'webp';
 }
 
 /**
- * Fast capture using direct canvas compositing
- * Finds all layer canvases and composites them with blend modes
+ * Fast capture using direct canvas compositing.
  */
-export async function fastCaptureFrame(
+export function fastCaptureCanvas(
   containerElement: HTMLElement,
   options: FastCaptureOptions,
-): Promise<Blob> {
+): HTMLCanvasElement {
   const {
     width,
     height,
@@ -125,11 +125,22 @@ export async function fastCaptureFrame(
     ctx.restore();
   }
 
-  // Convert to blob using JPEG for much faster encoding
-  // JPEG is 5-10x faster than PNG and quality parameter actually works
-  // FFmpeg will handle the final video quality, so JPEG is fine for intermediate frames
+  return composite;
+}
+
+export function captureCanvasToBlob(
+  canvas: HTMLCanvasElement,
+  options: Pick<FastCaptureOptions, 'format' | 'quality'> = {},
+): Promise<Blob> {
+  const { format = 'jpeg', quality = 0.95 } = options;
+  const mimeType =
+    format === 'png'
+      ? 'image/png'
+      : format === 'webp'
+        ? 'image/webp'
+        : 'image/jpeg';
   return new Promise<Blob>((resolve, reject) => {
-    composite.toBlob(
+    canvas.toBlob(
       (blob) => {
         if (blob) {
           resolve(blob);
@@ -137,8 +148,21 @@ export async function fastCaptureFrame(
           reject(new Error('Failed to convert canvas to blob'));
         }
       },
-      'image/jpeg',
+      mimeType,
       quality,
     );
   });
+}
+
+/**
+ * Compatibility helper for callers that need an encoded frame immediately.
+ */
+export async function fastCaptureFrame(
+  containerElement: HTMLElement,
+  options: FastCaptureOptions,
+): Promise<Blob> {
+  return captureCanvasToBlob(
+    fastCaptureCanvas(containerElement, options),
+    options,
+  );
 }

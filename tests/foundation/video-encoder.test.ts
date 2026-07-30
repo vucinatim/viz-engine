@@ -1,6 +1,7 @@
 import {
   buildVideoEncodingCommand,
   estimateVideoSize,
+  parseEncodedVideoProbe,
 } from '@/lib/utils/video-encoder';
 import { describe, expect, it } from 'vitest';
 
@@ -74,5 +75,57 @@ describe('video encoder contract', () => {
     expect(estimateVideoSize(300, 1920, 1080, 'high', 30)).toBe(
       estimateVideoSize(600, 1920, 1080, 'high', 60),
     );
+  });
+
+  it('authoritatively parses FFprobe media structure', () => {
+    expect(
+      parseEncodedVideoProbe(
+        {
+          format: {
+            format_name: 'mov,mp4,m4a,3gp,3g2,mj2',
+            duration: '2.000000',
+          },
+          streams: [
+            {
+              codec_type: 'video',
+              codec_name: 'h264',
+              width: 640,
+              height: 360,
+              r_frame_rate: '30/1',
+              duration: '2.000000',
+            },
+            {
+              codec_type: 'audio',
+              codec_name: 'aac',
+              sample_rate: '48000',
+              channels: 2,
+              duration: '2.000000',
+            },
+          ],
+        },
+        123_456,
+      ),
+    ).toEqual({
+      container: 'mov,mp4,m4a,3gp,3g2,mj2',
+      durationSeconds: 2,
+      byteLength: 123_456,
+      streams: [
+        {
+          kind: 'video',
+          codec: 'h264',
+          durationSeconds: 2,
+          width: 640,
+          height: 360,
+          frameRate: 30,
+        },
+        {
+          kind: 'audio',
+          codec: 'aac',
+          durationSeconds: 2,
+          sampleRate: 48_000,
+          channelCount: 2,
+        },
+      ],
+    });
   });
 });

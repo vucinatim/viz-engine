@@ -12,4 +12,5 @@ export * from "./jobs.js";
 export * from "./models.js";
 export * from "./project.js";
 export * from "./render-nodes.js";
+export * from "./render-jobs.js";
 export * from "./runtime.js";

@@ -12,6 +12,7 @@ import EditorToolbar from './editor-toolbar';
 import ExportButton from './export-button';
 import { HelpDialog } from './help-dialog';
 import { InterfaceGuide } from './interface-guide';
+import JobStatusButton from './job-status-button';
 
 const EditorHeader = () => {
   const ambientMode = useEditorStore((s) => s.ambientMode);
@@ -78,6 +79,7 @@ const EditorHeader = () => {
           Rhythm Lab
         </Button>
         <ExportButton />
+        <JobStatusButton />
         <HelpDialog />
         <DebugInfoDialog />
         <InterfaceGuide />

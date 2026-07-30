@@ -13,7 +13,10 @@ import ProjectDropzone from '@/components/editor/project-dropzone';
 import RemotionPlayer from '@/components/editor/remotion-player';
 import { useProfilerMonitors } from '@/lib/hooks/use-profiler-monitors';
 import editorControl from '@/lib/editor-control';
-import { vizSessionStore } from '@/lib/viz-session';
+import {
+  vizControl,
+  vizSessionStore,
+} from '@/lib/viz-session';
 import useBodyProps from '@/lib/stores/body-props-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import useProfilerStore from '@/lib/stores/profiler-store';
@@ -23,6 +26,7 @@ declare global {
   interface Window {
     __vizEditorDebug?: {
       editorControl: typeof editorControl;
+      vizControl: typeof vizControl;
       vizSessionStore: typeof vizSessionStore;
     };
   }
@@ -54,6 +58,7 @@ export default function EditorPage() {
 
     window.__vizEditorDebug = {
       editorControl,
+      vizControl,
       vizSessionStore,
     };
 

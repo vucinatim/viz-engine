@@ -110,6 +110,7 @@ This is the current source of truth for where VizEngine is heading:
 - [plans/v2/canonical-component-authoring-and-capability-composition.md](./plans/v2/canonical-component-authoring-and-capability-composition.md)
 - [plans/v2/live-session-host-and-control-target.md](./plans/v2/live-session-host-and-control-target.md)
 - [plans/v2/canonical-audio-bake-and-runtime-inputs.md](./plans/v2/canonical-audio-bake-and-runtime-inputs.md)
+- [plans/v2/canonical-render-and-feedback-jobs.md](./plans/v2/canonical-render-and-feedback-jobs.md)
 - [plans/v2/editor-session-foundation-implementation-plan.md](./plans/v2/editor-session-foundation-implementation-plan.md)
 - [plans/v2/live-preview-and-audio-session-foundation-plan.md](./plans/v2/live-preview-and-audio-session-foundation-plan.md)
 - [plans/v2/local-agent-control-surface-implementation-plan.md](./plans/v2/local-agent-control-surface-implementation-plan.md)

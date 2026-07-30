@@ -35,6 +35,10 @@ import {
 } from '@viz-engine/editor-control';
 import { createVizAudioFeatureBakeJobService } from '@viz-engine/bake';
 import {
+  createVizRenderJobService,
+  createVizRenderSourceContentIdentity,
+} from '@viz-engine/render';
+import {
   VIZ_PROJECT_SCHEMA_VERSION,
   type VizProjectAction,
   type VizLayer,
@@ -43,6 +47,7 @@ import {
 import {
   applyVizComponentDefaultAssets,
   assertValidProjectDocument,
+  sampleProjectAudioFrameSnapshot,
   validateProjectDocument,
 } from '@viz-engine/runtime';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -51,13 +56,20 @@ import { createStore } from 'zustand/vanilla';
 import { LayerSettings } from '@/components/editor/layer-settings';
 import useCompStore from '@/lib/stores/comp-store';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
+import useEditorRuntimePreviewAttachmentStore, {
+  waitForEditorRuntimePreviewAttachments,
+} from '@/lib/stores/editor-runtime-preview-attachment-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { generateLayerId } from '@/lib/id-utils';
 import { createIdbJsonStorage } from '@/lib/idb-json-storage';
 import { useNodeNetworkStore } from '@/components/node-network/node-network-store';
 import { toast } from 'sonner';
 import { createVizBrowserAudioBakeSourceResolver } from '@/lib/utils/browser-audio-bake';
+import {
+  createVizBrowserRenderExecutor,
+} from '@/lib/utils/browser-render-executor';
+import { fastCaptureCanvas } from '@/lib/utils/fast-frame-capture';
+import { encodeVideoWithProbe } from '@/lib/utils/video-encoder';
 
 import type {
   VizSessionAudioState,
@@ -73,6 +85,7 @@ import {
   createVizSessionRuntimePreviewPlan,
   resetVizSessionRuntimePreviewPlanCache,
 } from './runtime-preview-plan';
+import { createVizSessionRuntimePreviewFrame } from './runtime-preview';
 import {
   applyEditorLayerSettings,
   createProjectedLayer,
@@ -106,6 +119,158 @@ const audioFeatureBakeJobs = createVizAudioFeatureBakeJobService({
     }
     return asset.uri;
   }),
+});
+const renderJobs = createVizRenderJobService({
+  sourceResolver: {
+    resolve: async (_request, signal) => {
+      if (signal.aborted) {
+        throw new Error('Render source resolution was cancelled.');
+      }
+      if (!getProjectState().initialized) {
+        throw new Error(
+          'The editor project session is still initializing.',
+        );
+      }
+      const resources = vizSessionHost.getProjectResources();
+      return {
+        project: resources.project,
+        resolvedAssets: resources.resolvedAssets,
+        resolvedArtifacts: resources.resolvedArtifacts,
+        contentIdentity:
+          createVizRenderSourceContentIdentity(resources),
+        revision:
+          vizSessionHost.getSnapshot().session.revision,
+      };
+    },
+  },
+  executors: [
+    createVizBrowserRenderExecutor({
+      encodeVideo: async ({
+        frames,
+        audioUrl,
+        request,
+        signal,
+        onProgress,
+      }) => {
+        const encoded = await encodeVideoWithProbe(
+          frames,
+          audioUrl,
+          {
+            fps: request.fps,
+            width: request.viewport.width,
+            height: request.viewport.height,
+            format: request.format,
+            quality:
+              request.quality === 'high'
+                ? 'high'
+                : request.quality === 'standard'
+                  ? 'medium'
+                  : 'low',
+            audioStartTime: request.startFrame / request.fps,
+            audioDuration: request.frameCount / request.fps,
+          },
+          (percentage) => onProgress(percentage / 100),
+          { signal },
+        );
+        return encoded;
+      },
+      resolveAudioUrl: (source) =>
+        source.resolvedAssets.find(
+          (asset) => asset.kind === 'audio',
+        )?.uri ?? null,
+      captureFrame: async ({
+        request,
+        source,
+        frame,
+        firstFrame,
+        signal,
+      }) => {
+        if (signal.aborted) {
+          throw new Error('Render was cancelled.');
+        }
+        const currentResources =
+          vizSessionHost.getProjectResources();
+        const currentRevision =
+          vizSessionHost.getSnapshot().session.revision;
+        const currentIdentity =
+          createVizRenderSourceContentIdentity(currentResources);
+        if (
+          currentRevision !== source.revision ||
+          currentIdentity !== source.contentIdentity
+        ) {
+          throw new Error(
+            'The working project changed during browser rendering.',
+          );
+        }
+        const fps = source.project.timeline.fps;
+        const audio =
+          sampleProjectAudioFrameSnapshot(
+            source.project,
+            source.resolvedArtifacts,
+            frame,
+          ) ?? {
+            frequencyData: new Uint8Array(0),
+            timeDomainData: new Uint8Array(0),
+            sampleRate:
+              source.project.timeline.sampleRate ?? 44_100,
+            fftSize: 2_048,
+          };
+        const previewFrame =
+          createVizSessionRuntimePreviewFrame({
+            currentFrame: frame,
+            time: frame / fps,
+            dt: 1 / fps,
+            fps,
+            mode: 'export',
+          });
+        if (firstFrame) {
+          await waitForEditorRuntimePreviewAttachments(
+            source.project.layers.map((layer) => layer.id),
+            { signal },
+          );
+        }
+        vizSessionActions.preview.renderRuntimePreviewFrame(
+          previewFrame,
+          audio,
+        );
+        if (firstFrame) {
+          await useEditorRuntimePreviewAttachmentStore
+            .getState()
+            .whenRuntimeResourcesReady();
+          if (signal.aborted) {
+            throw new Error('Render was cancelled.');
+          }
+          vizSessionActions.preview.renderRuntimePreviewFrame(
+            previewFrame,
+            audio,
+          );
+        }
+        const rendererContainer =
+          document.querySelector<HTMLElement>(
+            '[data-renderer-container]',
+          );
+        if (!rendererContainer) {
+          throw new Error(
+            'The preserved editor renderer is not mounted.',
+          );
+        }
+        for (const canvas of rendererContainer.querySelectorAll(
+          'canvas',
+        )) {
+          const gl =
+            canvas.getContext('webgl2') ??
+            canvas.getContext('webgl');
+          gl?.finish();
+        }
+        return fastCaptureCanvas(rendererContainer, {
+          width: request.viewport.width,
+          height: request.viewport.height,
+          backgroundColor:
+            request.viewport.backgroundColor ?? '#000000',
+        });
+      },
+    }),
+  ],
 });
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));
@@ -165,6 +330,7 @@ export const vizSessionHost = createVizSessionHost({
   componentRegistry: runtimeComponentRegistry,
   services: {
     audioFeatureBakeJobs,
+    renderJobs,
   },
   normalizeProject: (projectDocument) =>
     applyVizComponentDefaultAssets(

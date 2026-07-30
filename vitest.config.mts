@@ -25,6 +25,14 @@ export default defineConfig({
         "node.ts",
       ),
       "@viz-engine/bake": packageEntry("viz-bake"),
+      "@viz-engine/render/node": path.resolve(
+        repoRoot,
+        "packages",
+        "viz-render",
+        "src",
+        "node.ts",
+      ),
+      "@viz-engine/render": packageEntry("viz-render"),
       "@viz-engine/components-core": packageEntry("viz-components-core"),
       "@viz-engine/remotion-adapter": packageEntry("viz-remotion-adapter"),
       "@viz-engine/example-projects/node": path.resolve(

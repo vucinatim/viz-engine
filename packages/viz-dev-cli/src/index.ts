@@ -36,12 +36,14 @@ import {
   type LiveVizControlRequest,
 } from "./live-control-client.js";
 import { bakeLocalBundleAudio } from "./audio-bake-command.js";
+import { renderLocalBundle } from "./render-command.js";
 
 export { loadLocalVizProjectBundle } from "./local-project-bundle.js";
 export { writeLocalVizProjectBundle } from "./local-project-bundle.js";
 export { createVizComponentScaffold } from "./component-scaffold.js";
 export * from "./live-control-client.js";
 export type { LoadedLocalVizProjectBundle } from "./local-project-bundle.js";
+export { renderLocalBundle } from "./render-command.js";
 
 export interface VizCliOutput {
   ok: boolean;
@@ -599,6 +601,7 @@ const createHelpOutput = (): VizCliOutput => ({
         "live jobs [--url <origin>]",
         "live job --job-id <id> [--url <origin>]",
         "live bake-start --request <json-file> [--url <origin>]",
+        "live render-start --request <json-file> [--url <origin>]",
         "live job-cancel --job-id <id> [--url <origin>]",
         "live bake-attach --job-id <id> [--expected-revision <revision>] [--url <origin>]",
       ],
@@ -610,6 +613,7 @@ const createHelpOutput = (): VizCliOutput => ({
         "bundle export --dir <directory> --out <directory>",
         "bundle action-apply --dir <directory> --actions <json-file> [--out <directory>]",
         "bundle bake-audio --dir <directory> --out <directory> [--asset-id <id>] [--fps <fps>] [--fft-size <size>] [--start <seconds>] [--duration <seconds>]",
+        "bundle render-job --dir <directory> --out <directory> --request <json-file>",
         "component scaffold --id <id> --name <name> --out <file>",
       ],
     },
@@ -661,6 +665,7 @@ const runLiveCommand = async (argv: string[]): Promise<VizCliOutput> => {
     jobs: "job.list",
     job: "job.inspect",
     "bake-start": "audio-bake.start",
+    "render-start": "render.start",
     "job-cancel": "job.cancel",
     "bake-attach": "audio-bake.attach",
   };
@@ -689,6 +694,12 @@ const runLiveCommand = async (argv: string[]): Promise<VizCliOutput> => {
       rest,
       "--request",
       "audio bake request file",
+    );
+  } else if (action === "render-start") {
+    payload.request = parseJsonFileArg(
+      rest,
+      "--request",
+      "render request file",
     );
   } else if (action === "bake-attach") {
     payload.jobId = parseOptionalStringArg(rest, "--job-id");
@@ -838,6 +849,24 @@ export const runVizCli = async (argv: string[]): Promise<VizCliOutput> => {
     return {
       ok: result.ok,
       command: "bundle bake-audio",
+      payload: result.payload,
+    };
+  }
+
+  if (scope === "bundle" && action === "render-job") {
+    const rest = argv.slice(2);
+    const result = await renderLocalBundle({
+      sourceBundleDirectory: parseDirArg(rest),
+      outputDirectory: parseOutArg(rest),
+      request: parseJsonFileArg(
+        rest,
+        "--request",
+        "render request file",
+      ) as import("@viz-engine/contracts").VizRenderRequest,
+    });
+    return {
+      ok: result.ok,
+      command: "bundle render-job",
       payload: result.payload,
     };
   }

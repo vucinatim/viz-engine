@@ -21,8 +21,8 @@ importers:
         specifier: ^3.2.2
         version: 3.2.2(react@18.2.0)
       '@ffmpeg/core':
-        specifier: 0.12.6
-        version: 0.12.6
+        specifier: 0.12.10
+        version: 0.12.10
       '@ffmpeg/ffmpeg':
         specifier: ^0.12.15
         version: 0.12.15
@@ -299,6 +299,9 @@ importers:
       '@viz-engine/nodes-core':
         specifier: workspace:*
         version: link:../viz-nodes-core
+      '@viz-engine/render':
+        specifier: workspace:*
+        version: link:../viz-render
       '@viz-engine/renderer-svg':
         specifier: workspace:*
         version: link:../viz-renderer-svg
@@ -329,6 +332,9 @@ importers:
       '@viz-engine/nodes-core':
         specifier: workspace:*
         version: link:../viz-nodes-core
+      '@viz-engine/render':
+        specifier: workspace:*
+        version: link:../viz-render
       '@viz-engine/renderer-svg':
         specifier: workspace:*
         version: link:../viz-renderer-svg
@@ -364,6 +370,18 @@ importers:
         version: link:../viz-contracts
 
   packages/viz-remotion-adapter:
+    dependencies:
+      '@viz-engine/contracts':
+        specifier: workspace:*
+        version: link:../viz-contracts
+      '@viz-engine/renderer-svg':
+        specifier: workspace:*
+        version: link:../viz-renderer-svg
+      '@viz-engine/runtime':
+        specifier: workspace:*
+        version: link:../viz-runtime
+
+  packages/viz-render:
     dependencies:
       '@viz-engine/contracts':
         specifier: workspace:*
@@ -1042,8 +1060,8 @@ packages:
       '@noble/hashes':
         optional: true
 
-  '@ffmpeg/core@0.12.6':
-    resolution: {integrity: sha512-PrjWBTfGn2WVn9T7wGnzfFwChbqWeZc7tM9vvJZVRadYFUDakfzy7W0LpYC0cvvK0xT82qlBsk38lQhJ/Hps5A==}
+  '@ffmpeg/core@0.12.10':
+    resolution: {integrity: sha512-dzNplnn2Nxle2c2i2rrDhqcB19q9cglCkWnoMTDN9Q9l3PvdjZWd1HfSPjCNWc/p8Q3CT+Es9fWOR0UhAeYQZA==}
     engines: {node: '>=16.x'}
 
   '@ffmpeg/ffmpeg@0.12.15':
@@ -4488,7 +4506,7 @@ snapshots:
   '@exodus/bytes@1.15.0':
     optional: true
 
-  '@ffmpeg/core@0.12.6': {}
+  '@ffmpeg/core@0.12.10': {}
 
   '@ffmpeg/ffmpeg@0.12.15':
     dependencies:
@@ -5098,14 +5116,14 @@ snapshots:
     dependencies:
       '@remotion/studio': 4.0.172(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@remotion/studio-shared': 4.0.172(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      css-loader: 5.2.7(webpack@5.83.1(esbuild@0.18.6))
+      css-loader: 5.2.7(webpack@5.83.1)
       esbuild: 0.18.6
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
       react-refresh: 0.9.0
       remotion: 4.0.172(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       source-map: 0.7.3
-      style-loader: 2.0.0(webpack@5.83.1(esbuild@0.18.6))
+      style-loader: 2.0.0(webpack@5.83.1)
       webpack: 5.83.1(esbuild@0.18.6)
     transitivePeerDependencies:
       - '@swc/core'
@@ -5903,7 +5921,7 @@ snapshots:
     dependencies:
       utrie: 1.0.2
 
-  css-loader@5.2.7(webpack@5.83.1(esbuild@0.18.6)):
+  css-loader@5.2.7(webpack@5.83.1):
     dependencies:
       icss-utils: 5.1.0(postcss@8.4.38)
       loader-utils: 2.0.4
@@ -7182,7 +7200,7 @@ snapshots:
     dependencies:
       js-tokens: 9.0.1
 
-  style-loader@2.0.0(webpack@5.83.1(esbuild@0.18.6)):
+  style-loader@2.0.0(webpack@5.83.1):
     dependencies:
       loader-utils: 2.0.4
       schema-utils: 3.3.0

@@ -155,4 +155,82 @@ const useEditorRuntimePreviewAttachmentStore =
       }),
   }));
 
+export const waitForEditorRuntimePreviewAttachments = (
+  layerIds: readonly string[],
+  options: {
+    signal?: AbortSignal;
+    timeoutMilliseconds?: number;
+  } = {},
+): Promise<void> => {
+  const expectedLayerIds = [...new Set(layerIds)];
+  if (expectedLayerIds.length === 0) {
+    return Promise.resolve();
+  }
+  const missingLayerIds = () => {
+    const attachments =
+      useEditorRuntimePreviewAttachmentStore.getState().layerAttachments;
+    return expectedLayerIds.filter(
+      (layerId) => !attachments.has(layerId),
+    );
+  };
+  if (missingLayerIds().length === 0) {
+    return Promise.resolve();
+  }
+
+  return new Promise<void>((resolve, reject) => {
+    const timeoutMilliseconds =
+      options.timeoutMilliseconds ?? 5_000;
+    let settled = false;
+    let unsubscribe: () => void = () => undefined;
+    const cleanup = () => {
+      unsubscribe();
+      clearTimeout(timeout);
+      options.signal?.removeEventListener('abort', handleAbort);
+    };
+    const finish = (
+      outcome: { ok: true } | { ok: false; error: Error },
+    ) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      if (outcome.ok) {
+        resolve();
+      } else {
+        reject(outcome.error);
+      }
+    };
+    const handleAbort = () => {
+      finish({
+        ok: false,
+        error: new Error(
+          'Waiting for editor render attachments was cancelled.',
+        ),
+      });
+    };
+    const timeout = setTimeout(() => {
+      finish({
+        ok: false,
+        error: new Error(
+          `Editor render attachments did not mount within ${timeoutMilliseconds}ms: ${missingLayerIds().join(', ')}.`,
+        ),
+      });
+    }, timeoutMilliseconds);
+    unsubscribe = useEditorRuntimePreviewAttachmentStore.subscribe(
+      () => {
+        if (missingLayerIds().length === 0) {
+          finish({ ok: true });
+        }
+      },
+    );
+    options.signal?.addEventListener('abort', handleAbort, {
+      once: true,
+    });
+    if (options.signal?.aborted) {
+      handleAbort();
+    }
+  });
+};
+
 export default useEditorRuntimePreviewAttachmentStore;

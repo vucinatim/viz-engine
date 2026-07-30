@@ -11,12 +11,16 @@ import type {
   VizGraphEvaluationResult,
   VizGraphId,
   VizJobId,
+  VizJobRecord,
   VizProjectAction,
   VizProjectDocument,
   VizProjectTransaction,
   VizResolvedArtifact,
   VizResolvedAsset,
+  VizRenderJobRecord,
+  VizRenderRequest,
 } from "@viz-engine/contracts";
+import type { VizRenderJobService } from "@viz-engine/render";
 import {
   exampleProjectDocument,
   exampleResolvedArtifacts,
@@ -133,15 +137,19 @@ export interface VizGraphRuntimeInspection {
 export interface VizControlJobSummary {
   id: VizJobId;
   kind: string;
-  status: VizAudioFeatureBakeJobRecord["status"];
+  status: VizJobRecord["status"];
   requestedBy: VizActionActor;
   requestedAt: string;
   updatedAt: string;
   inputIdentity?: string;
-  progress?: VizAudioFeatureBakeJobRecord["progress"];
-  outputArtifactId?: string;
-  failure?: VizAudioFeatureBakeJobRecord["failure"];
+  progress?: VizJobRecord["progress"];
+  outputArtifactIds?: string[];
+  failure?: VizJobRecord["failure"];
 }
+
+export type VizControlJobRecord =
+  | VizAudioFeatureBakeJobRecord
+  | VizRenderJobRecord;
 
 export type VizControlProjectChangeReason =
   | "load"
@@ -186,11 +194,12 @@ export interface VizControl {
   ): NonNullable<VizProjectDocument["graphs"]>[number] | undefined;
   inspectGraphRuntime(frame?: number): VizGraphRuntimeInspection;
   listJobs(): VizControlJobSummary[];
-  inspectJob(jobId: VizJobId): VizAudioFeatureBakeJobRecord | undefined;
+  inspectJob(jobId: VizJobId): VizControlJobRecord | undefined;
   startAudioFeatureBake(
     request: VizAudioFeatureBakeJobRequest,
   ): VizAudioFeatureBakeJobRecord;
-  cancelJob(jobId: VizJobId): VizAudioFeatureBakeJobRecord | undefined;
+  startRender(request: VizRenderRequest): VizRenderJobRecord;
+  cancelJob(jobId: VizJobId): VizControlJobRecord | undefined;
   attachAudioFeatureBakeOutput(
     jobId: VizJobId,
     expectedRevision?: number,
@@ -265,8 +274,15 @@ const createComponentSummaries = (
 };
 
 const createJobSummary = (
-  job: VizAudioFeatureBakeJobRecord,
-): VizControlJobSummary => ({
+  job: VizControlJobRecord,
+): VizControlJobSummary => {
+  const outputArtifactIds =
+    job.result === undefined
+      ? undefined
+      : "artifact" in job.result
+        ? [job.result.artifact.id]
+        : job.result.outputs.map((output) => output.id);
+  return {
   id: job.id,
   kind: job.kind,
   status: job.status,
@@ -279,11 +295,12 @@ const createJobSummary = (
   ...(job.progress === undefined
     ? {}
     : { progress: job.progress }),
-  ...(job.result === undefined
+  ...(outputArtifactIds === undefined
     ? {}
-    : { outputArtifactId: job.result.artifact.id }),
+    : { outputArtifactIds }),
   ...(job.failure === undefined ? {} : { failure: job.failure }),
-});
+  };
+};
 
 const createRuntimeSessionForInspection = ({
   project,
@@ -367,10 +384,16 @@ export const createVizControl = (
         hostSnapshot.session.workingProject,
       ),
       jobSummaries:
-        host
-          .getServices()
-          .audioFeatureBakeJobs?.list()
-          .map(createJobSummary) ?? [],
+        [
+          ...(host
+            .getServices()
+            .audioFeatureBakeJobs?.list() ?? []),
+          ...(host.getServices().renderJobs?.list() ?? []),
+        ]
+          .map(createJobSummary)
+          .sort((left, right) =>
+            left.requestedAt.localeCompare(right.requestedAt),
+          ),
     };
   };
 
@@ -524,6 +547,44 @@ export const createVizControl = (
     return service;
   };
 
+  const getRenderJobs = (): VizRenderJobService => {
+    const service = host.getServices().renderJobs;
+    if (!service) {
+      throw new Error(
+        "This Viz session host has no render job service.",
+      );
+    }
+    return service;
+  };
+
+  const findJob = (
+    jobId: VizJobId,
+  ): VizControlJobRecord | undefined => {
+    const audioJob =
+      host.getServices().audioFeatureBakeJobs?.get(jobId);
+    const renderJob = host.getServices().renderJobs?.get(jobId);
+    if (audioJob && renderJob) {
+      throw new Error(
+        `Job id "${jobId}" is ambiguous across session services.`,
+      );
+    }
+    return audioJob ?? renderJob;
+  };
+
+  const cancelJob = (
+    jobId: VizJobId,
+  ): VizControlJobRecord | undefined => {
+    if (host.getServices().audioFeatureBakeJobs?.get(jobId)) {
+      return host
+        .getServices()
+        .audioFeatureBakeJobs!.cancel(jobId);
+    }
+    if (host.getServices().renderJobs?.get(jobId)) {
+      return host.getServices().renderJobs!.cancel(jobId);
+    }
+    return undefined;
+  };
+
   const attachAudioFeatureBakeOutput = (
     jobId: VizJobId,
     expectedRevision?: number,
@@ -607,11 +668,22 @@ export const createVizControl = (
     },
     inspectGraphRuntime: createGraphRuntimeInspection,
     listJobs: () =>
-      getAudioFeatureBakeJobs().list().map(createJobSummary),
-    inspectJob: (jobId) => getAudioFeatureBakeJobs().get(jobId),
+      [
+        ...(host
+          .getServices()
+          .audioFeatureBakeJobs?.list() ?? []),
+        ...(host.getServices().renderJobs?.list() ?? []),
+      ]
+        .map(createJobSummary)
+        .sort((left, right) =>
+          left.requestedAt.localeCompare(right.requestedAt),
+        ),
+    inspectJob: findJob,
     startAudioFeatureBake: (request) =>
       getAudioFeatureBakeJobs().start(request, actor),
-    cancelJob: (jobId) => getAudioFeatureBakeJobs().cancel(jobId),
+    startRender: (request) =>
+      getRenderJobs().start(request, actor),
+    cancelJob,
     attachAudioFeatureBakeOutput,
     applyTransaction: (transaction, transactionOptions) =>
       createMutationResult(
@@ -718,9 +790,14 @@ export const createVizControl = (
           .audioFeatureBakeJobs?.subscribe(() => {
             listener(getSnapshot());
           }) ?? (() => {});
+      const unsubscribeRenderJobs =
+        host.getServices().renderJobs?.subscribe(() => {
+          listener(getSnapshot());
+        }) ?? (() => {});
       return () => {
         unsubscribeHost();
         unsubscribeJobs();
+        unsubscribeRenderJobs();
       };
     },
   };

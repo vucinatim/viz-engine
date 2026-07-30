@@ -1,5 +1,6 @@
 import { createCoreComponentRegistry } from "@viz-engine/components-core";
 import type { VizAudioFeatureBakeJobService } from "@viz-engine/bake";
+import type { VizRenderJobService } from "@viz-engine/render";
 import type {
   VizActionActor,
   VizComponentRegistry,
@@ -46,6 +47,7 @@ export interface VizSessionProjectResources {
 
 export interface VizSessionServices {
   audioFeatureBakeJobs?: VizAudioFeatureBakeJobService;
+  renderJobs?: VizRenderJobService;
 }
 
 export interface VizSessionHostSnapshot {
