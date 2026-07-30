@@ -1,11 +1,11 @@
+import type { LayerData } from '@/lib/editor-layer-types';
 import useCompStore from '@/lib/stores/comp-store';
 import useEditorStore from '@/lib/stores/editor-store';
-import { vizSessionStore } from '@/lib/viz-session/store';
 import {
   createProjectedLayer,
   findEditorCompForLayer,
 } from '@/lib/viz-session/project-adapters';
-import type { LayerData } from '@/lib/editor-layer-types';
+import { vizSessionStore } from '@/lib/viz-session/store';
 import { useMemo } from 'react';
 import { useStore } from 'zustand';
 
@@ -14,7 +14,9 @@ interface EditorLayerProjection {
 }
 
 const projectLayers = (
-  project: ReturnType<typeof vizSessionStore.getState>['project']['workingProject'],
+  project: ReturnType<
+    typeof vizSessionStore.getState
+  >['project']['workingProject'],
   comps: ReturnType<typeof useCompStore.getState>['comps'],
   layerUi: ReturnType<typeof useEditorStore.getState>['layerUi'],
 ): LayerData[] => {
@@ -22,7 +24,9 @@ const projectLayers = (
   const orderedLayers = [
     ...project.layerOrder
       .map((layerId) => layersById.get(layerId))
-      .filter((layer): layer is NonNullable<typeof layer> => layer !== undefined),
+      .filter(
+        (layer): layer is NonNullable<typeof layer> => layer !== undefined,
+      ),
     ...project.layers.filter((layer) => !project.layerOrder.includes(layer.id)),
   ];
 

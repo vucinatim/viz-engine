@@ -1,11 +1,8 @@
-import {
-  getRuntimeNodeInput,
-  getRuntimeNodeOutput,
-} from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
+import { getRuntimeNodeInput, getRuntimeNodeOutput } from '@/lib/viz-session';
 import { D3DragEvent, drag } from 'd3-drag';
 import { select } from 'd3-selection';
-import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useRef } from 'react';
 import { useRafLoop } from 'react-use';
 import type { GraphNodeData } from '../graph-types';
 import { useNodeNetwork } from '../node-network-store';
@@ -51,8 +48,6 @@ const FrequencyBandBody = ({
     initialStartFreq: 0,
     initialEndFreq: 0,
   });
-
-  const { startFrequency, endFrequency } = data.inputValues;
 
   // Update getInputValue to handle frequencyAnalysis
   const getInputValue = useCallback(
@@ -184,18 +179,9 @@ const FrequencyBandBody = ({
     updateInputValue,
     xToLogFreq,
     getLiveNodeValue,
+    freqToLogPercent,
     data.inputValues,
   ]);
-
-  // Update sourceNodeId to use frequencyAnalysis
-  const sourceNodeId = useMemo(
-    () =>
-      edges.find(
-        (edge) =>
-          edge.target === nodeId && edge.targetHandle === 'frequencyAnalysis',
-      )?.source,
-    [edges, nodeId],
-  );
 
   useRafLoop(() => {
     // Get latest values on every frame
@@ -269,7 +255,7 @@ const FrequencyBandBody = ({
           width: '32px',
           background: 'transparent',
         }}>
-        <div className="absolute left-1/2 top-0 h-full w-1 -translate-x-1/2 bg-blue-400" />
+        <div className="absolute top-0 left-1/2 h-full w-1 -translate-x-1/2 bg-blue-400" />
       </div>
       <div
         ref={endHandleRef}
@@ -279,7 +265,7 @@ const FrequencyBandBody = ({
           width: '32px',
           background: 'transparent',
         }}>
-        <div className="absolute left-1/2 top-0 h-full w-1 -translate-x-1/2 bg-blue-400" />
+        <div className="absolute top-0 left-1/2 h-full w-1 -translate-x-1/2 bg-blue-400" />
       </div>
       <div
         ref={overlayRef}

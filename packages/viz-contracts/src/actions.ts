@@ -1,26 +1,28 @@
-import type { VizArtifactRef } from "./artifacts.js";
-import type { VizAssetRef } from "./assets.js";
-import type { VizGraphId, VizLayerId } from "./ids.js";
+import type { VizArtifactRef } from './artifacts.js';
+import type { VizAssetRef } from './assets.js';
 import type {
   VizGraphInputSource,
   VizGraphNodeInputBinding,
   VizNodeGraphNode,
   VizNodeGraphOutputBinding,
-} from "./graphs.js";
-import type { VizLayer, VizValueSource } from "./project.js";
+} from './graphs.js';
+import type { VizGraphId, VizLayerId } from './ids.js';
+import type { VizLayer, VizValueSource } from './project.js';
 
 export type VizActionActor =
-  | { kind: "user"; id?: string }
-  | { kind: "agent"; id?: string }
-  | { kind: "system"; id?: string };
+  | { kind: 'user'; id?: string }
+  | { kind: 'agent'; id?: string }
+  | { kind: 'system'; id?: string };
 
-export interface VizActionEnvelope<TAction extends VizProjectAction = VizProjectAction> {
+export interface VizActionEnvelope<
+  TAction extends VizProjectAction = VizProjectAction,
+> {
   id: string;
   transactionId: string;
-  type: TAction["type"];
+  type: TAction['type'];
   timestamp: string;
   actor: VizActionActor;
-  payload: TAction["payload"];
+  payload: TAction['payload'];
 }
 
 export interface VizProjectTransaction {
@@ -31,10 +33,7 @@ export interface VizProjectTransaction {
 }
 
 export type VizProjectTransactionStatus =
-  | "applied"
-  | "dry-run"
-  | "conflict"
-  | "rejected";
+  'applied' | 'dry-run' | 'conflict' | 'rejected';
 
 export interface VizProjectRevisionConflict {
   expectedRevision: number;
@@ -57,19 +56,23 @@ export type VizProjectAction =
   | VizGraphRemoveAction
   | VizGraphNodeAddAction
   | VizGraphNodeRemoveAction
+  | VizGraphNodePositionSetAction
   | VizGraphNodeInputSetAction
   | VizGraphOutputSetAction
+  | VizGraphOutputRemoveAction
+  | VizGraphOutputPositionSetAction
+  | VizGraphEnabledSetAction
   | VizGraphInputSetAction;
 
 export interface VizAssetAttachAction {
-  type: "asset.attach";
+  type: 'asset.attach';
   payload: {
     asset: VizAssetRef;
   };
 }
 
 export interface VizAssetReplaceAction {
-  type: "asset.replace";
+  type: 'asset.replace';
   payload: {
     assetId: string;
     asset: VizAssetRef;
@@ -77,30 +80,30 @@ export interface VizAssetReplaceAction {
 }
 
 export interface VizArtifactAttachAction {
-  type: "artifact.attach";
+  type: 'artifact.attach';
   payload: {
     artifact: VizArtifactRef;
   };
 }
 
 export interface VizLayerCreateAction {
-  type: "layer.create";
+  type: 'layer.create';
   payload: {
     layerId?: VizLayerId;
     index?: number;
-    layer: Omit<VizLayer, "id"> & Partial<Pick<VizLayer, "id">>;
+    layer: Omit<VizLayer, 'id'> & Partial<Pick<VizLayer, 'id'>>;
   };
 }
 
 export interface VizLayerRemoveAction {
-  type: "layer.remove";
+  type: 'layer.remove';
   payload: {
     layerId: VizLayerId;
   };
 }
 
 export interface VizLayerMoveAction {
-  type: "layer.move";
+  type: 'layer.move';
   payload: {
     layerId: VizLayerId;
     index: number;
@@ -108,7 +111,7 @@ export interface VizLayerMoveAction {
 }
 
 export interface VizLayerReplaceAction {
-  type: "layer.replace";
+  type: 'layer.replace';
   payload: {
     layerId: VizLayerId;
     layer: VizLayer;
@@ -116,7 +119,7 @@ export interface VizLayerReplaceAction {
 }
 
 export interface VizLayerSettingsSetAction {
-  type: "layer.settings.set";
+  type: 'layer.settings.set';
   payload: {
     layerId: VizLayerId;
     path: string;
@@ -125,7 +128,7 @@ export interface VizLayerSettingsSetAction {
 }
 
 export interface VizLayerInputSetAction {
-  type: "layer.input.set";
+  type: 'layer.input.set';
   payload: {
     layerId: VizLayerId;
     inputKey: string;
@@ -134,14 +137,14 @@ export interface VizLayerInputSetAction {
 }
 
 export interface VizTimelineSetAction {
-  type: "timeline.set";
+  type: 'timeline.set';
   payload: {
-    timeline: import("./runtime.js").VizTimeline;
+    timeline: import('./runtime.js').VizTimeline;
   };
 }
 
 export interface VizGraphCreateAction {
-  type: "graph.create";
+  type: 'graph.create';
   payload: {
     graphId?: VizGraphId;
     name: string;
@@ -149,22 +152,22 @@ export interface VizGraphCreateAction {
 }
 
 export interface VizGraphReplaceAction {
-  type: "graph.replace";
+  type: 'graph.replace';
   payload: {
     graphId: VizGraphId;
-    graph: import("./graphs.js").VizNodeGraphDocument;
+    graph: import('./graphs.js').VizNodeGraphDocument;
   };
 }
 
 export interface VizGraphRemoveAction {
-  type: "graph.remove";
+  type: 'graph.remove';
   payload: {
     graphId: VizGraphId;
   };
 }
 
 export interface VizGraphInputSetAction {
-  type: "graph.input.set";
+  type: 'graph.input.set';
   payload: {
     graphId: VizGraphId;
     inputKey: string;
@@ -173,26 +176,39 @@ export interface VizGraphInputSetAction {
 }
 
 export interface VizGraphNodeAddAction {
-  type: "graph.node.add";
+  type: 'graph.node.add';
   payload: {
     graphId: VizGraphId;
     nodeId?: string;
     nodeType: string;
+    position?: VizNodeGraphNode['position'];
     initialInputs?: Record<string, VizGraphNodeInputBinding>;
-    metadata?: VizNodeGraphNode["metadata"];
+    metadata?: VizNodeGraphNode['metadata'];
   };
 }
 
 export interface VizGraphNodeRemoveAction {
-  type: "graph.node.remove";
+  type: 'graph.node.remove';
   payload: {
     graphId: VizGraphId;
     nodeId: string;
   };
 }
 
+export interface VizGraphNodePositionSetAction {
+  type: 'graph.node.position.set';
+  payload: {
+    graphId: VizGraphId;
+    nodeId: string;
+    position: {
+      x: number;
+      y: number;
+    };
+  };
+}
+
 export interface VizGraphNodeInputSetAction {
-  type: "graph.node.input.set";
+  type: 'graph.node.input.set';
   payload: {
     graphId: VizGraphId;
     nodeId: string;
@@ -202,36 +218,64 @@ export interface VizGraphNodeInputSetAction {
 }
 
 export interface VizGraphOutputSetAction {
-  type: "graph.output.set";
+  type: 'graph.output.set';
   payload: {
     graphId: VizGraphId;
     output: VizNodeGraphOutputBinding;
   };
 }
 
+export interface VizGraphOutputRemoveAction {
+  type: 'graph.output.remove';
+  payload: {
+    graphId: VizGraphId;
+    outputKey: string;
+  };
+}
+
+export interface VizGraphOutputPositionSetAction {
+  type: 'graph.output.position.set';
+  payload: {
+    graphId: VizGraphId;
+    outputKey: string;
+    position: {
+      x: number;
+      y: number;
+    };
+  };
+}
+
+export interface VizGraphEnabledSetAction {
+  type: 'graph.enabled.set';
+  payload: {
+    graphId: VizGraphId;
+    enabled: boolean;
+  };
+}
+
 export interface VizActionWarning {
   code:
-    | "generated-id"
-    | "replaced-existing-ref"
-    | "replaced-existing-output"
-    | "set-on-missing-container";
+    | 'generated-id'
+    | 'replaced-existing-ref'
+    | 'replaced-existing-output'
+    | 'set-on-missing-container';
   message: string;
 }
 
 export interface VizActionError {
   code:
-    | "missing-layer"
-    | "missing-graph"
-    | "missing-node"
-    | "duplicate-id"
-    | "invalid-index"
-    | "invalid-path";
+    | 'missing-layer'
+    | 'missing-graph'
+    | 'missing-node'
+    | 'duplicate-id'
+    | 'invalid-index'
+    | 'invalid-path';
   message: string;
 }
 
 export interface VizProjectActionResult {
   ok: boolean;
-  project: import("./project.js").VizProjectDocument;
+  project: import('./project.js').VizProjectDocument;
   warnings: VizActionWarning[];
   errors: VizActionError[];
 }

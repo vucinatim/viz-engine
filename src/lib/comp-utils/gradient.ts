@@ -13,14 +13,14 @@ const defaultProps = {
   x1: 0,
   y1: 100,
   stops: [
-    { offset: 0, color: "white" },
-    { offset: 1, color: "black" },
+    { offset: 0, color: 'white' },
+    { offset: 1, color: 'black' },
   ],
 };
 
 export const gradient = (
   ctx: CanvasRenderingContext2D,
-  props?: GradientProps
+  props?: GradientProps,
 ) => {
   const { x0, y0, x1, y1, stops } = props || defaultProps;
 
@@ -33,15 +33,15 @@ export const convertCssGradientToCanvasGradient = (
   ctx: CanvasRenderingContext2D,
   cssGradient: string,
   width: number,
-  height: number
+  height: number,
 ) => {
-  const canvas = document.createElement("canvas");
+  const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
-  const canvasCtx = canvas.getContext("2d");
+  const canvasCtx = canvas.getContext('2d');
   if (!canvasCtx) return;
 
   canvasCtx.fillStyle = cssGradient;
   canvasCtx.fillRect(0, 0, width, height);
-  return canvasCtx.createPattern(canvas, "no-repeat");
+  return canvasCtx.createPattern(canvas, 'no-repeat');
 };

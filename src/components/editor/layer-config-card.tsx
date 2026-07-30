@@ -1,7 +1,7 @@
 import editorControl from '@/lib/editor-control';
 import { LayerData } from '@/lib/stores/editor-layer-projection-store';
-import { getVizSessionState } from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
+import { getVizSessionState } from '@/lib/viz-session';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
@@ -66,7 +66,10 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
         editorControl.project.setLayerExpanded(layer.id, open);
       }}
       className="w-full">
-      <div className="group relative">
+      <div
+        className="group relative"
+        data-testid="layer-card"
+        data-layer-id={layer.id}>
         <div
           ref={setNodeRef}
           style={style}
@@ -85,13 +88,13 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
               <div className="flex grow cursor-pointer flex-col gap-y-4 px-4 py-4 transition-colors hover:bg-zinc-800/30">
                 <div className="flex h-16 gap-x-4">
                   <div className="flex grow flex-col gap-y-2 overflow-y-auto">
-                    <h2 className="flex select-none items-start text-sm font-semibold">
+                    <h2 className="flex items-start text-sm font-semibold select-none">
                       <div className="mr-2 h-5 w-5 shrink-0 rounded-md bg-gradient-to-br from-zinc-200 to-zinc-500 text-center font-bold text-black opacity-20">
                         {index + 1}
                       </div>
                       {comp.name}
                     </h2>
-                    <p className="select-none text-xs">{comp.description}</p>
+                    <p className="text-xs select-none">{comp.description}</p>
                   </div>
                   <div
                     onClick={(e) => e.stopPropagation()}
@@ -101,13 +104,15 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                 </div>
 
                 <div
-                  className="pointer-events-none flex select-none items-center gap-x-2"
+                  className="pointer-events-none flex items-center gap-x-2 select-none"
                   onClick={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}>
                   <Button
                     size="iconMini"
                     variant="defaultLighter"
                     tooltip="Delete layer"
+                    aria-label={`Delete ${comp.name} layer`}
+                    data-testid="delete-layer"
                     className="pointer-events-auto"
                     onClick={() => editorControl.project.removeLayer(layer.id)}>
                     <Trash className="h-6 w-6" />
@@ -116,6 +121,8 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                     size="iconMini"
                     variant="defaultLighter"
                     tooltip="Duplicate layer"
+                    aria-label={`Duplicate ${comp.name} layer`}
+                    data-testid="duplicate-layer"
                     className="pointer-events-auto"
                     onClick={() =>
                       editorControl.project.duplicateLayer(layer.id)
@@ -161,7 +168,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                       className="pointer-events-auto h-7 px-2"
                       tooltip="Open/Close layer settings">
                       <div className="flex cursor-pointer items-center gap-x-2">
-                        <p className="grow select-none text-xs">Settings</p>
+                        <p className="grow text-xs select-none">Settings</p>
                         {layer.isExpanded ? (
                           <ChevronUp className="h-5 w-5" />
                         ) : (
@@ -178,7 +185,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
 
         <CollapsibleContent className="space-y-2 transition-colors group-hover:bg-zinc-800/30">
           <div className="flex flex-col">
-            <div className="z-10 flex select-none flex-col gap-y-3 bg-gradient-to-b from-zinc-900 to-transparent px-4 pb-4 pt-4 transition-colors group-hover:bg-zinc-700/20">
+            <div className="z-10 flex flex-col gap-y-3 bg-gradient-to-b from-zinc-900 to-transparent px-4 pt-4 pb-4 transition-colors select-none group-hover:bg-zinc-700/20">
               <LayerSettings layer={layer} />
               {comp.presets && comp.presets.length > 0 && (
                 <SearchSelect
@@ -198,7 +205,7 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                 />
               )}
             </div>
-            <div className="relative flex select-none flex-col gap-y-2 border-b border-zinc-600 transition-colors group-hover:bg-zinc-700/20">
+            <div className="relative flex flex-col gap-y-2 border-b border-zinc-600 transition-colors select-none group-hover:bg-zinc-700/20">
               <LayerParameters layerId={layer.id} config={layer.config} />
             </div>
           </div>

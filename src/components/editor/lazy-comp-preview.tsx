@@ -1,5 +1,3 @@
-'use client';
-
 import { Comp } from '@/components/config/create-component';
 import { useEffect, useRef, useState } from 'react';
 import CompPreview from './comp-preview';
@@ -21,7 +19,6 @@ const LazyCompPreview = ({
   width = 120,
   height = 68,
 }: LazyCompPreviewProps) => {
-  const [isVisible, setIsVisible] = useState(false);
   const [hasRendered, setHasRendered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -30,7 +27,6 @@ const LazyCompPreview = ({
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            setIsVisible(true);
             setHasRendered(true);
             // Once rendered, we can disconnect to save resources
             observer.disconnect();

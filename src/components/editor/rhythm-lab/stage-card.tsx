@@ -1,5 +1,3 @@
-'use client';
-
 import { StageStatus } from '@/lib/rhythm-lab/analysis-graph';
 import { STAGE_COLORS } from '@/lib/rhythm-lab/stage-colors';
 import useRhythmLabStore from '@/lib/stores/rhythm-lab-store';
@@ -34,10 +32,9 @@ const StageCard = ({
           {showToggle ? (
             <button
               type="button"
-              className="flex items-center gap-1 text-[10px] uppercase text-white/40"
+              className="flex items-center gap-1 text-[10px] text-white/40 uppercase"
               onClick={() => setEnabledStage(stageId, !enabled)}
-              aria-pressed={enabled}
-            >
+              aria-pressed={enabled}>
               {status}
               <span
                 className="h-2 w-2 rounded-full"
@@ -47,7 +44,9 @@ const StageCard = ({
               />
             </button>
           ) : (
-            <span className="text-[10px] uppercase text-white/40">{status}</span>
+            <span className="text-[10px] text-white/40 uppercase">
+              {status}
+            </span>
           )}
         </div>
         {children}

@@ -1,7 +1,4 @@
-import {
-  getRuntimeNodeInput,
-  getRuntimeNodeOutput,
-} from '@/lib/viz-session';
+import { getRuntimeNodeInput, getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
 import type { GraphNodeData } from '../graph-types';

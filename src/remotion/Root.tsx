@@ -1,6 +1,6 @@
-import Renderer from "@/components/editor/renderer";
-import React from "react";
-import { Composition } from "remotion";
+import Renderer from '@/components/editor/renderer';
+import React from 'react';
+import { Composition } from 'remotion';
 
 export const RemotionRoot: React.FC = () => {
   return (

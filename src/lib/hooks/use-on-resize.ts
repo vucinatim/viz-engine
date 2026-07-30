@@ -1,8 +1,8 @@
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
 const useOnResize = (
   elementRef: React.RefObject<Element>,
-  callback: (entries: ResizeObserverEntry[], element: Element) => void
+  callback: (entries: ResizeObserverEntry[], element: Element) => void,
 ) => {
   useEffect(() => {
     if (!elementRef.current) return;

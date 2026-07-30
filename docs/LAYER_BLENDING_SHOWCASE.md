@@ -946,6 +946,6 @@ After studying this example, you should understand:
 
 **Related Documentation**:
 - [Stage Scene Component](./STAGE_SCENE_COMPONENT.md) - Single-component 3D concert scene
-- [Project Structure](./PROJECT_STRUCTURE.md) - Understanding viz-engine project organization
-- [System Architecture](./SYSTEM_ARCHITECTURE.md) - How the layer rendering system works
-
+- [Current State](./current-state.md) - Current V2 architecture and frontier
+- [V1 System Architecture](./thesis/v1-system-architecture.md) - Historical
+  architecture reference for the original layer renderer

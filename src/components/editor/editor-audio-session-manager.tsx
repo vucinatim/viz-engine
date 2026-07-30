@@ -1,5 +1,3 @@
-'use client';
-
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 import { useEffect } from 'react';
@@ -29,12 +27,7 @@ export default function EditorAudioSessionManager() {
 
     setAnalyzerState('idle');
     setLiveInputAvailable(false);
-  }, [
-    audioAnalyzer,
-    audioSource,
-    setAnalyzerState,
-    setLiveInputAvailable,
-  ]);
+  }, [audioAnalyzer, audioSource, setAnalyzerState, setLiveInputAvailable]);
 
   return null;
 }

@@ -4,10 +4,8 @@ import type {
   VizMaterializedModelAsset,
   VizModelFormat,
   VizModelManifest,
-} from "@viz-engine/contracts";
-import {
-  VIZ_MODEL_MANIFEST_SCHEMA_VERSION,
-} from "@viz-engine/contracts";
+} from '@viz-engine/contracts';
+import { VIZ_MODEL_MANIFEST_SCHEMA_VERSION } from '@viz-engine/contracts';
 import {
   AnimationClip,
   Box3,
@@ -17,22 +15,21 @@ import {
   Mesh,
   Object3D,
   Texture,
-} from "three";
-import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
+} from 'three';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 export type VizThreeModelAsset =
-  | VizMaterializedModelAsset
-  | VizMaterializedBinaryAsset;
+  VizMaterializedModelAsset | VizMaterializedBinaryAsset;
 
 export type VizThreeModelResourceErrorCode =
-  | "MODEL_ASSET_UNSUPPORTED"
-  | "MODEL_SOURCE_MISSING"
-  | "MODEL_FETCH_FAILED"
-  | "MODEL_PARSE_FAILED"
-  | "MODEL_RESOURCE_LOAD_CANCELLED"
-  | "MODEL_RESOURCE_MANAGER_DISPOSED";
+  | 'MODEL_ASSET_UNSUPPORTED'
+  | 'MODEL_SOURCE_MISSING'
+  | 'MODEL_FETCH_FAILED'
+  | 'MODEL_PARSE_FAILED'
+  | 'MODEL_RESOURCE_LOAD_CANCELLED'
+  | 'MODEL_RESOURCE_MANAGER_DISPOSED';
 
 export class VizThreeModelResourceError extends Error {
   readonly code: VizThreeModelResourceErrorCode;
@@ -50,7 +47,7 @@ export class VizThreeModelResourceError extends Error {
     cause?: unknown;
   }) {
     super(message, cause === undefined ? undefined : { cause });
-    this.name = "VizThreeModelResourceError";
+    this.name = 'VizThreeModelResourceError';
     this.code = code;
     this.assetId = assetId;
   }
@@ -64,7 +61,7 @@ export interface VizThreeDecodedModel {
 }
 
 export interface VizThreeModelResourceWarning {
-  code: "MODEL_DEPENDENCY_LOAD_FAILED";
+  code: 'MODEL_DEPENDENCY_LOAD_FAILED';
   uri: string;
   message: string;
 }
@@ -95,7 +92,7 @@ export interface VizThreeModelResourceLease {
 export interface VizThreeModelResourceDiagnostic {
   assetId: string;
   cacheKey: string;
-  status: "loading" | "ready" | "failed";
+  status: 'loading' | 'ready' | 'failed';
   references: number;
   error?: VizThreeModelResourceError;
   warnings?: VizThreeModelResourceWarning[];
@@ -112,7 +109,7 @@ interface ModelResourceEntry {
   cacheKey: string;
   controller: AbortController;
   references: number;
-  status: VizThreeModelResourceDiagnostic["status"];
+  status: VizThreeModelResourceDiagnostic['status'];
   ready: Promise<VizThreeModelResource>;
   resource?: VizThreeModelResource;
   error?: VizThreeModelResourceError;
@@ -121,84 +118,77 @@ interface ModelResourceEntry {
 const isModelBinaryAsset = (
   asset: VizMaterializedAsset,
 ): asset is VizThreeModelAsset => {
-  if (asset.kind === "model") {
+  if (asset.kind === 'model') {
     return true;
   }
 
   return (
-    asset.kind === "binary" &&
-    (asset.mimeType?.startsWith("model/") === true ||
-      asset.mimeType === "application/vnd.autodesk.fbx")
+    asset.kind === 'binary' &&
+    (asset.mimeType?.startsWith('model/') === true ||
+      asset.mimeType === 'application/vnd.autodesk.fbx')
   );
 };
 
-const getModelSourceUri = (
-  asset: VizThreeModelAsset,
-): string | undefined =>
-  asset.kind === "model"
-    ? asset.modelSourceUri
-    : asset.binarySourceUri;
+const getModelSourceUri = (asset: VizThreeModelAsset): string | undefined =>
+  asset.kind === 'model' ? asset.modelSourceUri : asset.binarySourceUri;
 
 const readMetadataString = (
   asset: VizThreeModelAsset,
   key: string,
 ): string | undefined => {
   const value = asset.metadata?.[key];
-  return typeof value === "string" && value.length > 0
-    ? value
-    : undefined;
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
 };
 
-const inferModelFormat = (
-  asset: VizThreeModelAsset,
-): VizModelFormat => {
-  const declaredFormat = readMetadataString(asset, "modelFormat")?.toLowerCase();
+const inferModelFormat = (asset: VizThreeModelAsset): VizModelFormat => {
+  const declaredFormat = readMetadataString(
+    asset,
+    'modelFormat',
+  )?.toLowerCase();
   if (
-    declaredFormat === "fbx" ||
-    declaredFormat === "glb" ||
-    declaredFormat === "gltf" ||
-    declaredFormat === "obj"
+    declaredFormat === 'fbx' ||
+    declaredFormat === 'glb' ||
+    declaredFormat === 'gltf' ||
+    declaredFormat === 'obj'
   ) {
     return declaredFormat;
   }
 
-  if (asset.mimeType === "application/vnd.autodesk.fbx") {
-    return "fbx";
+  if (asset.mimeType === 'application/vnd.autodesk.fbx') {
+    return 'fbx';
   }
-  if (asset.mimeType === "model/gltf-binary") {
-    return "glb";
+  if (asset.mimeType === 'model/gltf-binary') {
+    return 'glb';
   }
-  if (asset.mimeType === "model/gltf+json") {
-    return "gltf";
-  }
-
-  const uri = getModelSourceUri(asset)?.toLowerCase() ?? "";
-  if (uri.split(/[?#]/u)[0]?.endsWith(".fbx")) {
-    return "fbx";
-  }
-  if (uri.split(/[?#]/u)[0]?.endsWith(".glb")) {
-    return "glb";
-  }
-  if (uri.split(/[?#]/u)[0]?.endsWith(".gltf")) {
-    return "gltf";
-  }
-  if (uri.split(/[?#]/u)[0]?.endsWith(".obj")) {
-    return "obj";
+  if (asset.mimeType === 'model/gltf+json') {
+    return 'gltf';
   }
 
-  return "unknown";
+  const uri = getModelSourceUri(asset)?.toLowerCase() ?? '';
+  if (uri.split(/[?#]/u)[0]?.endsWith('.fbx')) {
+    return 'fbx';
+  }
+  if (uri.split(/[?#]/u)[0]?.endsWith('.glb')) {
+    return 'glb';
+  }
+  if (uri.split(/[?#]/u)[0]?.endsWith('.gltf')) {
+    return 'gltf';
+  }
+  if (uri.split(/[?#]/u)[0]?.endsWith('.obj')) {
+    return 'obj';
+  }
+
+  return 'unknown';
 };
 
 const getResourceBasePath = (uri: string | undefined): string => {
   if (!uri) {
-    return "";
+    return '';
   }
 
   const cleanUri = uri.split(/[?#]/u)[0] ?? uri;
-  const separatorIndex = cleanUri.lastIndexOf("/");
-  return separatorIndex < 0
-    ? ""
-    : cleanUri.slice(0, separatorIndex + 1);
+  const separatorIndex = cleanUri.lastIndexOf('/');
+  return separatorIndex < 0 ? '' : cleanUri.slice(0, separatorIndex + 1);
 };
 
 const fetchModelBytes = async (
@@ -212,7 +202,7 @@ const fetchModelBytes = async (
   const sourceUri = getModelSourceUri(asset);
   if (!sourceUri) {
     throw new VizThreeModelResourceError({
-      code: "MODEL_SOURCE_MISSING",
+      code: 'MODEL_SOURCE_MISSING',
       assetId: asset.id,
       message: `Model asset "${asset.id}" has neither bytes nor a source URI.`,
     });
@@ -224,14 +214,14 @@ const fetchModelBytes = async (
   } catch (error) {
     if (signal.aborted) {
       throw new VizThreeModelResourceError({
-        code: "MODEL_RESOURCE_LOAD_CANCELLED",
+        code: 'MODEL_RESOURCE_LOAD_CANCELLED',
         assetId: asset.id,
         message: `Loading model asset "${asset.id}" was cancelled.`,
         cause: error,
       });
     }
     throw new VizThreeModelResourceError({
-      code: "MODEL_FETCH_FAILED",
+      code: 'MODEL_FETCH_FAILED',
       assetId: asset.id,
       message: `Model asset "${asset.id}" could not be fetched from "${sourceUri}".`,
       cause: error,
@@ -240,7 +230,7 @@ const fetchModelBytes = async (
 
   if (!response.ok) {
     throw new VizThreeModelResourceError({
-      code: "MODEL_FETCH_FAILED",
+      code: 'MODEL_FETCH_FAILED',
       assetId: asset.id,
       message: `Model asset "${asset.id}" returned HTTP ${response.status} from "${sourceUri}".`,
     });
@@ -252,9 +242,9 @@ const fetchModelBytes = async (
 const createDefaultModelDecoder = (): VizThreeModelDecoder => ({
   async decode(asset, signal) {
     const format = inferModelFormat(asset);
-    if (format !== "fbx" && format !== "glb" && format !== "gltf") {
+    if (format !== 'fbx' && format !== 'glb' && format !== 'gltf') {
       throw new VizThreeModelResourceError({
-        code: "MODEL_ASSET_UNSUPPORTED",
+        code: 'MODEL_ASSET_UNSUPPORTED',
         assetId: asset.id,
         message: `Model asset "${asset.id}" uses unsupported runtime format "${format}".`,
       });
@@ -263,7 +253,7 @@ const createDefaultModelDecoder = (): VizThreeModelDecoder => ({
     const bytes = await fetchModelBytes(asset, signal);
     if (signal.aborted) {
       throw new VizThreeModelResourceError({
-        code: "MODEL_RESOURCE_LOAD_CANCELLED",
+        code: 'MODEL_RESOURCE_LOAD_CANCELLED',
         assetId: asset.id,
         message: `Loading model asset "${asset.id}" was cancelled.`,
       });
@@ -273,7 +263,7 @@ const createDefaultModelDecoder = (): VizThreeModelDecoder => ({
     const basePath = getResourceBasePath(sourceUri);
 
     try {
-      if (format === "fbx") {
+      if (format === 'fbx') {
         let dependencyLoadStarted = false;
         let resolveDependencies: () => void = () => undefined;
         const dependenciesReady = new Promise<void>((resolve) => {
@@ -287,21 +277,18 @@ const createDefaultModelDecoder = (): VizThreeModelDecoder => ({
         loadingManager.onLoad = resolveDependencies;
         loadingManager.onError = (url) => {
           warnings.push({
-            code: "MODEL_DEPENDENCY_LOAD_FAILED",
+            code: 'MODEL_DEPENDENCY_LOAD_FAILED',
             uri: url,
             message: `A non-critical model dependency could not be loaded from "${url}".`,
           });
         };
-        const scene = new FBXLoader(loadingManager).parse(
-          bytes,
-          basePath,
-        );
+        const scene = new FBXLoader(loadingManager).parse(bytes, basePath);
         if (dependencyLoadStarted) {
           await dependenciesReady;
         }
         if (signal.aborted) {
           throw new VizThreeModelResourceError({
-            code: "MODEL_RESOURCE_LOAD_CANCELLED",
+            code: 'MODEL_RESOURCE_LOAD_CANCELLED',
             assetId: asset.id,
             message: `Loading model asset "${asset.id}" was cancelled.`,
           });
@@ -321,13 +308,11 @@ const createDefaultModelDecoder = (): VizThreeModelDecoder => ({
         sourceFormat: format,
       };
     } catch (error) {
-      if (
-        error instanceof VizThreeModelResourceError
-      ) {
+      if (error instanceof VizThreeModelResourceError) {
         throw error;
       }
       throw new VizThreeModelResourceError({
-        code: "MODEL_PARSE_FAILED",
+        code: 'MODEL_PARSE_FAILED',
         assetId: asset.id,
         message: `Model asset "${asset.id}" could not be parsed as ${format.toUpperCase()}.`,
         cause: error,
@@ -336,10 +321,8 @@ const createDefaultModelDecoder = (): VizThreeModelDecoder => ({
   },
 });
 
-const createStableObjectId = (
-  object: Object3D,
-  index: number,
-): string => object.name.trim() || `${object.type}-${index}`;
+const createStableObjectId = (object: Object3D, index: number): string =>
+  object.name.trim() || `${object.type}-${index}`;
 
 const createModelManifest = ({
   asset,
@@ -348,10 +331,10 @@ const createModelManifest = ({
   asset: VizThreeModelAsset;
   decoded: VizThreeDecodedModel;
 }): VizModelManifest => {
-  const nodes: VizModelManifest["nodes"] = [];
-  const materials = new Map<string, VizModelManifest["materials"][number]>();
-  const skeletons = new Map<string, VizModelManifest["skeletons"][number]>();
-  const morphTargets: VizModelManifest["morphTargets"] = [];
+  const nodes: VizModelManifest['nodes'] = [];
+  const materials = new Map<string, VizModelManifest['materials'][number]>();
+  const skeletons = new Map<string, VizModelManifest['skeletons'][number]>();
+  const morphTargets: VizModelManifest['morphTargets'] = [];
   const objectIds = new Map<Object3D, string>();
   let hasMesh = false;
   let hasSkeletalAnimation = false;
@@ -415,7 +398,7 @@ const createModelManifest = ({
       if (!skeletons.has(skeleton.uuid)) {
         skeletons.set(skeleton.uuid, {
           id: skeleton.uuid,
-          name: object.name || "Skeleton",
+          name: object.name || 'Skeleton',
           boneCount: skeleton.bones.length,
           boneNames: skeleton.bones.map((bone) => bone.name),
         });
@@ -436,10 +419,7 @@ const createModelManifest = ({
 
   const bounds = new Box3().setFromObject(decoded.scene);
 
-  const contentIdentity = readMetadataString(
-    asset,
-    "contentIdentity",
-  );
+  const contentIdentity = readMetadataString(asset, 'contentIdentity');
 
   return {
     schemaVersion: VIZ_MODEL_MANIFEST_SCHEMA_VERSION,
@@ -468,8 +448,7 @@ const createModelManifest = ({
       staticMesh: hasMesh,
       transformAnimation: decoded.animations.some((clip) =>
         clip.tracks.some(
-          (track) =>
-            !track.name.endsWith(".morphTargetInfluences"),
+          (track) => !track.name.endsWith('.morphTargetInfluences'),
         ),
       ),
       skeletalAnimation: hasSkeletalAnimation,
@@ -491,9 +470,7 @@ const disposeMaterial = (material: Material): void => {
   material.dispose();
 };
 
-const disposeModelResource = (
-  resource: VizThreeModelResource,
-): void => {
+const disposeModelResource = (resource: VizThreeModelResource): void => {
   const geometries = new Set<{
     dispose(): void;
   }>();
@@ -531,7 +508,7 @@ const toResourceError = (
   }
 
   return new VizThreeModelResourceError({
-    code: "MODEL_PARSE_FAILED",
+    code: 'MODEL_PARSE_FAILED',
     assetId,
     message: `Model asset "${assetId}" failed to load.`,
     cause: error,
@@ -556,7 +533,7 @@ export const createVizThreeModelResourceManager = ({
       cacheKey,
       controller,
       references: 0,
-      status: "loading",
+      status: 'loading',
       ready: Promise.resolve(null as never),
     };
 
@@ -566,8 +543,8 @@ export const createVizThreeModelResourceManager = ({
         if (disposed || controller.signal.aborted) {
           throw new VizThreeModelResourceError({
             code: disposed
-              ? "MODEL_RESOURCE_MANAGER_DISPOSED"
-              : "MODEL_RESOURCE_LOAD_CANCELLED",
+              ? 'MODEL_RESOURCE_MANAGER_DISPOSED'
+              : 'MODEL_RESOURCE_LOAD_CANCELLED',
             assetId: asset.id,
             message: disposed
               ? `Model resource manager was disposed while loading "${asset.id}".`
@@ -584,13 +561,13 @@ export const createVizThreeModelResourceManager = ({
           warnings: [...(decoded.warnings ?? [])],
           instantiate: () => cloneSkeleton(decoded.scene) as Group,
         };
-        entry.status = "ready";
+        entry.status = 'ready';
         entry.resource = resource;
         return resource;
       })
       .catch((error: unknown) => {
         const resourceError = toResourceError(asset.id, error);
-        entry.status = "failed";
+        entry.status = 'failed';
         entry.error = resourceError;
         throw resourceError;
       });
@@ -603,7 +580,7 @@ export const createVizThreeModelResourceManager = ({
     acquire(asset) {
       if (disposed) {
         const error = new VizThreeModelResourceError({
-          code: "MODEL_RESOURCE_MANAGER_DISPOSED",
+          code: 'MODEL_RESOURCE_MANAGER_DISPOSED',
           assetId: asset.id,
           message: `Cannot acquire model asset "${asset.id}" from a disposed resource manager.`,
         });
@@ -616,7 +593,7 @@ export const createVizThreeModelResourceManager = ({
 
       if (!isModelBinaryAsset(asset)) {
         const error = new VizThreeModelResourceError({
-          code: "MODEL_ASSET_UNSUPPORTED",
+          code: 'MODEL_ASSET_UNSUPPORTED',
           assetId: asset.id,
           message: `Asset "${asset.id}" is not a materialized model asset.`,
         });
@@ -628,12 +605,10 @@ export const createVizThreeModelResourceManager = ({
       }
 
       const cacheKey =
-        readMetadataString(asset, "contentIdentity") ??
+        readMetadataString(asset, 'contentIdentity') ??
         getModelSourceUri(asset) ??
         asset.id;
-      const entry =
-        entries.get(cacheKey) ??
-        createEntry(asset, cacheKey);
+      const entry = entries.get(cacheKey) ?? createEntry(asset, cacheKey);
       entry.references += 1;
       let released = false;
 
@@ -647,7 +622,7 @@ export const createVizThreeModelResourceManager = ({
           released = true;
           entry.references = Math.max(0, entry.references - 1);
 
-          if (entry.references === 0 && entry.status === "loading") {
+          if (entry.references === 0 && entry.status === 'loading') {
             entry.controller.abort();
             entries.delete(cacheKey);
           }

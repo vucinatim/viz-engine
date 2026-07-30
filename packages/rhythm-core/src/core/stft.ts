@@ -1,7 +1,7 @@
-import { frame } from './frame.js';
-import { jsFftBackend, nextPowerOfTwo, isPowerOfTwo } from './fft.js';
-import { getWindow } from './window.js';
 import type { AnalysisOptions } from '../utils/types.js';
+import { isPowerOfTwo, jsFftBackend, nextPowerOfTwo } from './fft.js';
+import { frame } from './frame.js';
+import { getWindow } from './window.js';
 
 export interface ComplexMatrix {
   real: Float32Array;
@@ -15,7 +15,9 @@ export interface StftResult extends ComplexMatrix {
   winLength: number;
 }
 
-export const DEFAULT_STFT_OPTIONS: Required<Pick<AnalysisOptions, 'nFft' | 'hopLength' | 'winLength'>> = {
+export const DEFAULT_STFT_OPTIONS: Required<
+  Pick<AnalysisOptions, 'nFft' | 'hopLength' | 'winLength'>
+> = {
   nFft: 2048,
   hopLength: 512,
   winLength: 2048,

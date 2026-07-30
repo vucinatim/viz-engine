@@ -2,7 +2,7 @@ import type {
   VizAssetRef,
   VizProjectDocument,
   VizResolvedAsset,
-} from "@viz-engine/contracts";
+} from '@viz-engine/contracts';
 
 export interface VizResolvedProjectAudioAsset {
   ref: VizAssetRef;
@@ -22,23 +22,22 @@ export const resolveVizProjectAudioAsset = (
   resolvedAssets: readonly VizResolvedAsset[],
 ): VizResolvedProjectAudioAsset | undefined => {
   const audioRefs = (project.assetRefs ?? []).filter(
-    (asset): asset is VizAssetRef => asset.kind === "audio",
+    (asset): asset is VizAssetRef => asset.kind === 'audio',
   );
   const bakedSourceAssetId = project.artifactRefs?.find(
     (artifact) =>
-      artifact.kind === "audio-feature-timeline" &&
+      artifact.kind === 'audio-feature-timeline' &&
       artifact.sourceAssetId !== undefined,
   )?.sourceAssetId;
   const ref =
-    audioRefs.find((asset) => asset.id === bakedSourceAssetId) ??
-    audioRefs[0];
+    audioRefs.find((asset) => asset.id === bakedSourceAssetId) ?? audioRefs[0];
 
   if (!ref) {
     return undefined;
   }
 
   const resolved = resolvedAssets.find(
-    (asset) => asset.id === ref.id && asset.kind === "audio",
+    (asset) => asset.id === ref.id && asset.kind === 'audio',
   );
 
   return resolved ? { ref, resolved } : undefined;

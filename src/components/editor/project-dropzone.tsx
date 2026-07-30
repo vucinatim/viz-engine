@@ -1,5 +1,3 @@
-'use client';
-
 import { loadProject } from '@/lib/project-persistence';
 import { cn } from '@/lib/utils';
 import { FileJson } from 'lucide-react';
@@ -41,7 +39,7 @@ const ProjectDropzone = ({
             'absolute inset-0 z-50 flex flex-col items-center justify-center gap-y-2 bg-white/20 backdrop-blur-sm',
             // If the file is not a vizengine file, let the events pass through to the audio dropzone.
             isDragReject &&
-              'pointer-events-none bg-transparent backdrop-blur-0',
+              'backdrop-blur-0 pointer-events-none bg-transparent',
           )}>
           {isDragAccept && (
             <div className="z-50 flex flex-col items-center justify-center gap-2">

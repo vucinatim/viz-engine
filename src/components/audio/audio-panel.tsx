@@ -1,5 +1,3 @@
-'use client';
-
 import editorControl from '@/lib/editor-control';
 import useAudioEngine from '@/lib/hooks/use-audio-engine';
 import useAudioPlaybackSync from '@/lib/hooks/use-audio-playback-sync';
@@ -20,9 +18,7 @@ import VolumeFader from './volume-fader';
 import WaveformDisplay from './waveform-display';
 
 const AudioPanel = () => {
-  const isPlaying = useEditorPreviewStore(
-    (state) => state.transport.isPlaying,
-  );
+  const isPlaying = useEditorPreviewStore((state) => state.transport.isPlaying);
   const isCapturingTab = useEditorAudioSessionStore(
     (s) => s.session.source?.kind === 'stream',
   );

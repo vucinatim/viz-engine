@@ -1,5 +1,3 @@
-'use client';
-
 import editorControl from '@/lib/editor-control';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
@@ -52,7 +50,9 @@ const CaptureAudio = () => {
         t.addEventListener('ended', () => {
           try {
             source.disconnect();
-          } catch {}
+          } catch {
+            // The source may already be disconnected when the track ends.
+          }
           setAudioSource(null);
           setTabCaptureStream(null);
           editorControl.audio.detachCapturedStream();
@@ -95,7 +95,7 @@ const CaptureAudio = () => {
         className={
           'rounded px-2 py-1 text-xs transition-colors ' +
           (isCapturingTab
-            ? 'border-animation-blue/60 bg-animation-blue/10 text-animation-blue/80 hover:bg-animation-blue/20 border'
+            ? 'border border-animation-blue/60 bg-animation-blue/10 text-animation-blue/80 hover:bg-animation-blue/20'
             : 'border border-white/20 hover:bg-white/10')
         }
         onClick={() =>

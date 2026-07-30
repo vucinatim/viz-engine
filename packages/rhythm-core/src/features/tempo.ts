@@ -31,7 +31,9 @@ export function tempo(
   const unique: { bpm: number; value: number }[] = [];
   for (const candidate of ranked) {
     if (
-      unique.some((entry) => Math.abs(entry.bpm - candidate.bpm) <= dedupeTolerance)
+      unique.some(
+        (entry) => Math.abs(entry.bpm - candidate.bpm) <= dedupeTolerance,
+      )
     ) {
       continue;
     }
@@ -74,21 +76,19 @@ export function tempo(
       const y2 = tempogramValues[bestIndex + 1]!;
       const denom = y0 - 2 * y1 + y2;
       if (denom !== 0) {
-        const delta = 0.5 * (y0 - y2) / denom;
+        const delta = (0.5 * (y0 - y2)) / denom;
         refinedIndex = bestIndex + Math.max(-0.5, Math.min(0.5, delta));
       }
     }
-    const lag = Math.min(
-      maxLag,
-      Math.max(minLag, minLag + refinedIndex),
-    );
+    const lag = Math.min(maxLag, Math.max(minLag, minLag + refinedIndex));
     const bpm = (60 * sampleRate) / (hopLength * lag);
     refinedRaw = bpm;
     if (snapToHalf) {
       const snapped = Math.round(bpm * 2) / 2;
       const nearestInt = Math.round(bpm);
       const preferInt =
-        snapped % 1 !== 0 && Math.abs(bpm - nearestInt) <= preferIntegerTolerance;
+        snapped % 1 !== 0 &&
+        Math.abs(bpm - nearestInt) <= preferIntegerTolerance;
       refinedTempo = preferInt ? nearestInt : snapped;
     } else {
       refinedTempo = bpm;

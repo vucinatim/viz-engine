@@ -2,56 +2,61 @@ import type {
   VizNodeEvaluateContext,
   VizNodeImplementation,
   VizNodeStepContext,
-} from "@viz-engine/contracts";
-import {
-  editorNodeAuthoringDefinitions,
-  inputNodeAuthoringDefinition,
-} from "./editor-nodes.js";
+} from '@viz-engine/contracts';
 import type {
   VizNodeAnimationInput,
   VizNodeAuthoringDefinition,
   VizNodeAuthoringRuntimeRef,
   VizNodeFrequencyAnalysis,
-} from "./authoring.js";
+} from './authoring.js';
+import {
+  editorNodeAuthoringDefinitions,
+  inputNodeAuthoringDefinition,
+} from './editor-nodes.js';
 
-export * from "./authoring.js";
-export * from "./editor-nodes.js";
+export * from './authoring.js';
+export * from './editor-nodes.js';
+
+export const coreNodePackageIdentity = {
+  packageId: '@viz-engine/nodes-core',
+  version: '0.0.1',
+} as const;
 
 const asNumber = (value: unknown, fallback: number): number => {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 };
 
-const asString = (value: unknown, fallback = ""): string => {
-  return typeof value === "string" ? value : fallback;
+const asString = (value: unknown, fallback = ''): string => {
+  return typeof value === 'string' ? value : fallback;
 };
 
 export const graphInputNode: VizNodeImplementation = {
-  type: "graph-input",
-  name: "Graph Input",
-  category: "pure",
-  description: "Reads one named graph input value into the node graph.",
+  type: 'graph-input',
+  name: 'Graph Input',
+  category: 'pure',
+  description: 'Reads one named graph input value into the node graph.',
   inputs: [
     {
-      key: "inputKey",
-      label: "Input Key",
+      key: 'inputKey',
+      label: 'Input Key',
       required: true,
     },
   ],
   outputs: [
     {
-      key: "value",
-      label: "Value",
+      key: 'value',
+      label: 'Value',
     },
   ],
   authoring: {
     inputs: [
       {
-        key: "inputKey",
-        type: "string",
-        defaultValue: "",
+        key: 'inputKey',
+        type: 'string',
+        defaultValue: '',
       },
     ],
-    outputs: [{ key: "value", type: "number" }],
+    outputs: [{ key: 'value', type: 'number' }],
   },
   evaluate: ({ inputs, graphInputs }) => {
     const inputKey = asString(inputs.inputKey);
@@ -62,34 +67,34 @@ export const graphInputNode: VizNodeImplementation = {
 };
 
 export const multiplyNode: VizNodeImplementation = {
-  type: "multiply",
-  name: "Multiply",
-  category: "pure",
-  description: "Multiplies two numeric inputs.",
+  type: 'multiply',
+  name: 'Multiply',
+  category: 'pure',
+  description: 'Multiplies two numeric inputs.',
   inputs: [
     {
-      key: "value",
-      label: "Value",
+      key: 'value',
+      label: 'Value',
       required: true,
     },
     {
-      key: "factor",
-      label: "Factor",
+      key: 'factor',
+      label: 'Factor',
       required: true,
     },
   ],
   outputs: [
     {
-      key: "value",
-      label: "Value",
+      key: 'value',
+      label: 'Value',
     },
   ],
   authoring: {
     inputs: [
-      { key: "value", type: "number", defaultValue: 0 },
-      { key: "factor", type: "number", defaultValue: 1 },
+      { key: 'value', type: 'number', defaultValue: 0 },
+      { key: 'factor', type: 'number', defaultValue: 1 },
     ],
-    outputs: [{ key: "value", type: "number" }],
+    outputs: [{ key: 'value', type: 'number' }],
   },
   evaluate: ({ inputs }) => ({
     value: asNumber(inputs.value, 0) * asNumber(inputs.factor, 1),
@@ -97,40 +102,40 @@ export const multiplyNode: VizNodeImplementation = {
 };
 
 export const clampNode: VizNodeImplementation = {
-  type: "clamp",
-  name: "Clamp",
-  category: "pure",
-  description: "Clamps a numeric input between min and max.",
+  type: 'clamp',
+  name: 'Clamp',
+  category: 'pure',
+  description: 'Clamps a numeric input between min and max.',
   inputs: [
     {
-      key: "value",
-      label: "Value",
+      key: 'value',
+      label: 'Value',
       required: true,
     },
     {
-      key: "min",
-      label: "Min",
+      key: 'min',
+      label: 'Min',
       required: true,
     },
     {
-      key: "max",
-      label: "Max",
+      key: 'max',
+      label: 'Max',
       required: true,
     },
   ],
   outputs: [
     {
-      key: "value",
-      label: "Value",
+      key: 'value',
+      label: 'Value',
     },
   ],
   authoring: {
     inputs: [
-      { key: "value", type: "number", defaultValue: 0 },
-      { key: "min", type: "number", defaultValue: 0 },
-      { key: "max", type: "number", defaultValue: 1 },
+      { key: 'value', type: 'number', defaultValue: 0 },
+      { key: 'min', type: 'number', defaultValue: 0 },
+      { key: 'max', type: 'number', defaultValue: 1 },
     ],
-    outputs: [{ key: "value", type: "number" }],
+    outputs: [{ key: 'value', type: 'number' }],
   },
   evaluate: ({ inputs }) => {
     const value = asNumber(inputs.value, 0);
@@ -143,34 +148,34 @@ export const clampNode: VizNodeImplementation = {
 };
 
 export const addNode: VizNodeImplementation = {
-  type: "add",
-  name: "Add",
-  category: "pure",
-  description: "Adds two numeric inputs.",
+  type: 'add',
+  name: 'Add',
+  category: 'pure',
+  description: 'Adds two numeric inputs.',
   inputs: [
     {
-      key: "a",
-      label: "A",
+      key: 'a',
+      label: 'A',
       required: true,
     },
     {
-      key: "b",
-      label: "B",
+      key: 'b',
+      label: 'B',
       required: true,
     },
   ],
   outputs: [
     {
-      key: "value",
-      label: "Value",
+      key: 'value',
+      label: 'Value',
     },
   ],
   authoring: {
     inputs: [
-      { key: "a", type: "number", defaultValue: 0 },
-      { key: "b", type: "number", defaultValue: 0 },
+      { key: 'a', type: 'number', defaultValue: 0 },
+      { key: 'b', type: 'number', defaultValue: 0 },
     ],
-    outputs: [{ key: "value", type: "number" }],
+    outputs: [{ key: 'value', type: 'number' }],
   },
   evaluate: ({ inputs }) => ({
     value: asNumber(inputs.a, 0) + asNumber(inputs.b, 0),
@@ -178,27 +183,27 @@ export const addNode: VizNodeImplementation = {
 };
 
 export const decayNode: VizNodeImplementation = {
-  type: "decay",
-  name: "Decay",
-  category: "temporal",
+  type: 'decay',
+  name: 'Decay',
+  category: 'temporal',
   description:
-    "Tracks incoming peaks immediately, then decays toward zero at a fixed per-second falloff.",
+    'Tracks incoming peaks immediately, then decays toward zero at a fixed per-second falloff.',
   inputs: [
     {
-      key: "value",
-      label: "Value",
+      key: 'value',
+      label: 'Value',
       required: true,
     },
     {
-      key: "falloffPerSecond",
-      label: "Falloff / s",
+      key: 'falloffPerSecond',
+      label: 'Falloff / s',
       required: true,
     },
   ],
   outputs: [
     {
-      key: "value",
-      label: "Value",
+      key: 'value',
+      label: 'Value',
     },
   ],
   createInitialState: () => 0,
@@ -206,7 +211,10 @@ export const decayNode: VizNodeImplementation = {
     const incomingValue = asNumber(inputs.value, 0);
     const previousValue = asNumber(previousState, 0);
     const falloffPerSecond = Math.max(0, asNumber(inputs.falloffPerSecond, 0));
-    const decayedValue = Math.max(0, previousValue - falloffPerSecond * deltaTimeSeconds);
+    const decayedValue = Math.max(
+      0,
+      previousValue - falloffPerSecond * deltaTimeSeconds,
+    );
     const nextValue = Math.max(incomingValue, decayedValue);
 
     return {
@@ -219,22 +227,22 @@ export const decayNode: VizNodeImplementation = {
 };
 
 const TEMPORAL_EDITOR_NODE_TYPES = new Set([
-  "Spike",
-  "Adaptive Normalize (Quantile)",
-  "Pitch Detection",
-  "Band Info",
-  "Spectral Flux",
-  "Ducker",
-  "Harmonic Presence",
-  "Tonal Presence",
-  "Hysteresis Gate",
-  "Refractory Gate",
-  "Envelope Follower",
-  "Threshold Counter",
-  "Section Change Detector",
-  "Spectral Centroid",
-  "Adaptive Section Detector",
-  "Rate Limiter",
+  'Spike',
+  'Adaptive Normalize (Quantile)',
+  'Pitch Detection',
+  'Band Info',
+  'Spectral Flux',
+  'Ducker',
+  'Harmonic Presence',
+  'Tonal Presence',
+  'Hysteresis Gate',
+  'Refractory Gate',
+  'Envelope Follower',
+  'Threshold Counter',
+  'Section Change Detector',
+  'Spectral Centroid',
+  'Adaptive Section Detector',
+  'Rate Limiter',
 ]);
 
 const readGraphInput = (
@@ -245,62 +253,47 @@ const readGraphInput = (
 const createAnimationInput = (
   context: VizNodeEvaluateContext,
 ): VizNodeAnimationInput => {
-  const audioSignal = readGraphInput(context, "audioSignal");
-  const frequencyAnalysis = readGraphInput(
-    context,
-    "frequencyAnalysis",
-  );
-  const time = readGraphInput(context, "time");
+  const audioSignal = readGraphInput(context, 'audioSignal');
+  const frequencyAnalysis = readGraphInput(context, 'frequencyAnalysis');
+  const time = readGraphInput(context, 'time');
 
   return {
     audioSignal:
-      audioSignal instanceof Uint8Array
-        ? audioSignal
-        : new Uint8Array(),
+      audioSignal instanceof Uint8Array ? audioSignal : new Uint8Array(),
     frequencyAnalysis:
-      frequencyAnalysis &&
-      typeof frequencyAnalysis === "object"
+      frequencyAnalysis && typeof frequencyAnalysis === 'object'
         ? (frequencyAnalysis as VizNodeFrequencyAnalysis)
         : {
             frequencyData: new Uint8Array(),
             sampleRate: 0,
             fftSize: 0,
           },
-    time:
-      typeof time === "number"
-        ? time
-        : context.frameContext.timeInSeconds,
+    time: typeof time === 'number' ? time : context.frameContext.timeInSeconds,
   };
 };
 
-const createAuthoring = (
-  definition: VizNodeAuthoringDefinition,
-) => ({
+const createAuthoring = (definition: VizNodeAuthoringDefinition) => ({
   inputs: definition.inputs.map((input) => ({
-      key: input.id,
-      type: input.type,
-      ...(input.defaultValue === undefined
-        ? {}
-        : { defaultValue: input.defaultValue }),
-    })),
+    key: input.id,
+    type: input.type,
+    ...(input.defaultValue === undefined
+      ? {}
+      : { defaultValue: input.defaultValue }),
+  })),
   outputs: definition.outputs.map((output) => ({
-      key: output.id,
-      type: output.type,
-    })),
+    key: output.id,
+    type: output.type,
+  })),
 });
 
-const createInputs = (
-  definition: VizNodeAuthoringDefinition,
-) =>
+const createInputs = (definition: VizNodeAuthoringDefinition) =>
   definition.inputs.map((input) => ({
     key: input.id,
     label: input.label,
     required: false,
   }));
 
-const createOutputs = (
-  definition: VizNodeAuthoringDefinition,
-) =>
+const createOutputs = (definition: VizNodeAuthoringDefinition) =>
   definition.outputs.map((output) => ({
     key: output.id,
     label: output.label,
@@ -311,7 +304,7 @@ const createPureEditorNodeImplementation = (
 ): VizNodeImplementation => ({
   type: definition.label,
   name: definition.label,
-  category: "pure",
+  category: 'pure',
   ...(definition.description === undefined
     ? {}
     : { description: definition.description }),
@@ -319,10 +312,7 @@ const createPureEditorNodeImplementation = (
   outputs: createOutputs(definition),
   authoring: createAuthoring(definition),
   evaluate: (context) =>
-    definition.computeSignal(
-      context.inputs,
-      createAnimationInput(context),
-    ),
+    definition.computeSignal(context.inputs, createAnimationInput(context)),
 });
 
 const createTemporalEditorNodeImplementation = (
@@ -330,7 +320,7 @@ const createTemporalEditorNodeImplementation = (
 ): VizNodeImplementation => ({
   type: definition.label,
   name: definition.label,
-  category: "temporal",
+  category: 'temporal',
   ...(definition.description === undefined
     ? {}
     : { description: definition.description }),
@@ -341,11 +331,9 @@ const createTemporalEditorNodeImplementation = (
   step: (context: VizNodeStepContext) => {
     const state =
       context.previousState &&
-      typeof context.previousState === "object" &&
+      typeof context.previousState === 'object' &&
       !Array.isArray(context.previousState)
-        ? structuredClone(
-            context.previousState as Record<string, unknown>,
-          )
+        ? structuredClone(context.previousState as Record<string, unknown>)
         : {};
     const runtimeRef: VizNodeAuthoringRuntimeRef = {
       data: { state },
@@ -360,24 +348,25 @@ const createTemporalEditorNodeImplementation = (
   },
 });
 
-const inputEditorNodeImplementation =
-  createPureEditorNodeImplementation(inputNodeAuthoringDefinition);
+const inputEditorNodeImplementation = createPureEditorNodeImplementation(
+  inputNodeAuthoringDefinition,
+);
 
 const outputEditorNodeImplementation: VizNodeImplementation = {
-  type: "Output",
-  name: "Output",
-  category: "pure",
+  type: 'Output',
+  name: 'Output',
+  category: 'pure',
   inputs: [
     {
-      key: "output",
-      label: "Output Value",
+      key: 'output',
+      label: 'Output Value',
       required: true,
     },
   ],
   outputs: [
     {
-      key: "value",
-      label: "Value",
+      key: 'value',
+      label: 'Value',
     },
   ],
   evaluate: ({ inputs }) => ({

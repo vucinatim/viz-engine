@@ -1,4 +1,4 @@
-import type { VizRenderThreeProgramNode } from "@viz-engine/contracts";
+import type { VizRenderThreeProgramNode } from '@viz-engine/contracts';
 import {
   AmbientLight,
   BoxGeometry,
@@ -12,10 +12,10 @@ import {
   Vector3,
   type WebGLRenderTarget,
   type WebGLRenderer,
-} from "three";
-import type { VizThreeProgramFactory } from "./types.js";
+} from 'three';
+import type { VizThreeProgramFactory } from './types.js';
 
-const PROGRAM_ID = "viz-core/orbiting-cubes/v1";
+const PROGRAM_ID = 'viz-core/orbiting-cubes/v1';
 
 // Seeded random number generator
 class SeededRandom {
@@ -33,7 +33,6 @@ class SeededRandom {
   randomInt(min: number, max: number) {
     return Math.floor(this.random() * (max - min + 1)) + min;
   }
-
 }
 
 // Cube structure with position and scale
@@ -194,7 +193,7 @@ function generateClusteredNeuron(
   rng: SeededRandom,
   addCube: (x: number, y: number, z: number, scale: number) => boolean,
   maxCubes: number,
-  depth: number,
+  _depth: number,
 ) {
   const clusters = rng.randomInt(3, 5);
   const cubesPerCluster = Math.floor(maxCubes / clusters);
@@ -336,12 +335,11 @@ function generateSparseNeuron(
   }
 }
 
-
 const asNumber = (value: unknown, fallback: number): number =>
-  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 
 const asString = (value: unknown, fallback: string): string =>
-  typeof value === "string" && value.length > 0 ? value : fallback;
+  typeof value === 'string' && value.length > 0 ? value : fallback;
 
 const assertProgram = (node: VizRenderThreeProgramNode) => {
   if (node.programId !== PROGRAM_ID) {
@@ -369,7 +367,7 @@ export const createOrbitingCubesProgram: VizThreeProgramFactory = ({
   );
   const geometry = new BoxGeometry(1, 1, 1);
   const material = new MeshStandardMaterial({
-    color: "#1a1a2e",
+    color: '#1a1a2e',
     metalness: 0.95,
     roughness: 0.5,
   });
@@ -381,14 +379,7 @@ export const createOrbitingCubesProgram: VizThreeProgramFactory = ({
 
   const lightDistance = 12;
   const createSpotlight = (angle: number) => {
-    const light = new SpotLight(
-      "#ffffff",
-      500,
-      0,
-      Math.PI / 3,
-      0.5,
-      2,
-    );
+    const light = new SpotLight('#ffffff', 500, 0, Math.PI / 3, 0.5, 2);
     light.position.set(
       Math.cos(angle) * lightDistance,
       lightDistance * 0.5,
@@ -401,13 +392,13 @@ export const createOrbitingCubesProgram: VizThreeProgramFactory = ({
   const spotlight1 = createSpotlight(0);
   const spotlight2 = createSpotlight((Math.PI * 2) / 3);
   const spotlight3 = createSpotlight((Math.PI * 4) / 3);
-  const ambientLight = new AmbientLight("#ffffff", 185);
+  const ambientLight = new AmbientLight('#ffffff', 185);
   root.add(structure, ambientLight);
   scene.add(root);
 
   const matrix = new Matrix4();
-  let structureKey = "";
-  let transformKey = "";
+  let structureKey = '';
+  let transformKey = '';
   let cubeData: CubeData[] = [];
 
   const update = (nextNode: VizRenderThreeProgramNode) => {
@@ -424,14 +415,10 @@ export const createOrbitingCubesProgram: VizThreeProgramFactory = ({
     );
     const nextStructureKey = `${seed}:${maxCubes}:${fractalDepth}`;
     if (nextStructureKey !== structureKey) {
-      cubeData = generateFractalCubeStructure(
-        seed,
-        maxCubes,
-        fractalDepth,
-      );
+      cubeData = generateFractalCubeStructure(seed, maxCubes, fractalDepth);
       cubes.count = cubeData.length;
       structureKey = nextStructureKey;
-      transformKey = "";
+      transformKey = '';
     }
 
     const spacing = Math.max(0.1, asNumber(parameters.spacing, 0.65));
@@ -449,7 +436,7 @@ export const createOrbitingCubesProgram: VizThreeProgramFactory = ({
       transformKey = nextTransformKey;
     }
 
-    material.color.set(asString(parameters.cubeColor, "#1a1a2e"));
+    material.color.set(asString(parameters.cubeColor, '#1a1a2e'));
     material.metalness = Math.min(
       1,
       Math.max(0, asNumber(parameters.metalness, 0.95)),
@@ -458,9 +445,9 @@ export const createOrbitingCubesProgram: VizThreeProgramFactory = ({
       1,
       Math.max(0, asNumber(parameters.roughness, 0.5)),
     );
-    spotlight1.color.set(asString(parameters.light1Color, "#FF00FF"));
-    spotlight2.color.set(asString(parameters.light2Color, "#00FFFF"));
-    spotlight3.color.set(asString(parameters.light3Color, "#FFFF00"));
+    spotlight1.color.set(asString(parameters.light1Color, '#FF00FF'));
+    spotlight2.color.set(asString(parameters.light2Color, '#00FFFF'));
+    spotlight3.color.set(asString(parameters.light3Color, '#FFFF00'));
     const lightIntensity = Math.max(
       0,
       asNumber(parameters.lightIntensity, 500),
@@ -474,24 +461,15 @@ export const createOrbitingCubesProgram: VizThreeProgramFactory = ({
     );
 
     const time = Math.max(0, asNumber(parameters.time, 0));
-    const rotationSpeed = Math.max(
-      0,
-      asNumber(parameters.rotationSpeed, 0.1),
-    );
+    const rotationSpeed = Math.max(0, asNumber(parameters.rotationSpeed, 0.1));
     structure.rotation.set(
       time * rotationSpeed * 0.3,
       time * rotationSpeed,
       time * rotationSpeed * 0.5,
     );
 
-    const orbitSpeed = Math.max(
-      0,
-      asNumber(parameters.orbitSpeed, 0.3),
-    );
-    const orbitRadius = Math.max(
-      3,
-      asNumber(parameters.orbitRadius, 8),
-    );
+    const orbitSpeed = Math.max(0, asNumber(parameters.orbitSpeed, 0.3));
+    const orbitRadius = Math.max(3, asNumber(parameters.orbitRadius, 8));
     const angle1 = time * orbitSpeed;
     const angle2 = time * orbitSpeed * 0.7;
     const angle3 = time * orbitSpeed * 0.4;
@@ -517,10 +495,7 @@ export const createOrbitingCubesProgram: VizThreeProgramFactory = ({
       camera.aspect = nextWidth / Math.max(nextHeight, 1);
       camera.updateProjectionMatrix();
     },
-    render(
-      renderer: WebGLRenderer,
-      renderTarget: WebGLRenderTarget,
-    ) {
+    render(renderer: WebGLRenderer, renderTarget: WebGLRenderTarget) {
       renderer.setRenderTarget(renderTarget);
       renderer.render(scene, camera);
     },

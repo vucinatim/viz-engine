@@ -42,7 +42,6 @@ export function cssToThreeColor(css: string): {
   alpha: number;
 } {
   const c = Color(css).rgb();
-  const [r, g, b] = c.array();
   const a = c.alpha();
   const lin = cssColorToLinearRGB(c.string());
   return {

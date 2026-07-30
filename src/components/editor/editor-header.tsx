@@ -29,7 +29,7 @@ const EditorHeader = () => {
           height={25}
           className="h-[25px] w-[25px] shrink-0 object-contain"
         />
-        <div className="fixed left-[-10px] top-1 -rotate-[30deg] rounded-[2px] bg-gradient-to-t from-violet-300 to-purple-50 px-5 py-0.5 text-[6px] font-bold uppercase tracking-wide text-black shadow-md">
+        <div className="fixed top-1 left-[-10px] -rotate-[30deg] rounded-[2px] bg-gradient-to-t from-violet-300 to-purple-50 px-5 py-0.5 text-[6px] font-bold tracking-wide text-black uppercase shadow-md">
           Alpha
         </div>
       </div>

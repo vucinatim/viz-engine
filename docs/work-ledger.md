@@ -2,6 +2,64 @@
 
 ## 2026-07-30
 
+- completed and certified Goal One core consolidation and quality hardening:
+  - added honest flat ESLint, Tailwind v4 formatting, source metrics, package
+    dependency validation, and a non-duplicative complete foundation gate
+  - introduced neutral `@viz-engine/project-bundle` ownership and removed the
+    `editor-control -> dev-cli` dependency inversion
+  - reduced the app-local 1,979-line session store to a roughly 294-line
+    assembly boundary around one canonical `VizSession`
+  - removed bidirectional durable `NodeNetwork` mutation projection and made
+    canonical graph documents, fragments, presets, and clipboard direct
+    authoring truth
+  - made browser-selected assets content-addressed, portable, byte-owned,
+    exportable, importable, and restorable without `idb:` project values
+  - decomposed and hardened retained Three object, material, texture, model,
+    program, render-target, compositor, and preview resource lifecycles
+  - composed execution identity from registries and introduced an exact
+    versioned binary audio-artifact container that measured 25.42% smaller and
+    73.28% faster to decode
+  - made the CLI a thin source/built client of shared bundle, control, bake,
+    render, and live services
+  - deleted obsolete adapters, configuration, dynamic-form code, historical
+    architecture snapshots, and dead documentation scripts
+  - added seven repository-owned Chromium journeys covering canonical editing,
+    graph authoring/history/clipboard/reload, portable GLTF restoration,
+    visible project roundtrip, checked PNG/MP4 export, and bounded resource
+    soak
+  - fixed six real integration defects exposed by those journeys, including
+    stale graph rendering, unsafe paste selection feedback, clicked-node
+    clipboard semantics, and dropped pre-mount audio URLs
+  - passed the uninterrupted complete gate with 42 capabilities, zero gaps, 52
+    Vitest files / 222 tests, seven browser journeys, 17 package builds, the
+    studio build, packed-consumer smoke, and the built creative loop
+  - removed an accidental studio-barrel import from the runtime benchmark that
+    had made a Node-only measurement attempt to load browser FFmpeg/WASM
+  - measured canonical 15-component runtime-plan evaluation at 0.284 ms mean
+    and 0.431 ms p95 across 300 frames at 1280 × 720 and 60 fps
+  - ended with production source 146 physical lines smaller than the reviewed
+    baseline while adding 1,802 test lines and 342 developer-tool lines
+  - recorded the complete result and fresh minimization baseline in
+    `docs/parity/evidence/2026-07-30-core-consolidation-and-quality-hardening.md`
+- defined the post-production consolidation and minimization program:
+  - separated architecture correction and validation hardening from the later
+    net-negative code minimization goal
+  - measured the current source baseline and identified the largest
+    responsibility concentrations
+  - confirmed broken TSX formatting and obsolete Next.js ESLint configuration
+  - identified the `editor-control -> dev-cli` dependency inversion, the
+    bidirectional canonical-graph / `NodeNetwork` mutation projection, the
+    oversized app-local session composition seam, repeated execution
+    identities, non-portable editor file values, artifact-container cost,
+    renderer resource-reconciliation gaps, manual browser acceptance, and
+    documentation drift as the principal cleanup terrain
+  - defined exact architecture, tooling, browser, behavior, performance,
+    portability, parity, and production acceptance gates
+  - defined the successor minimization goal with strict net-negative code
+    metrics and explicit protections against sacrificing tests, type safety,
+    diagnostics, performance, UI/UX, graph behavior, or visual quality
+  - recorded the complete contract in
+    `docs/plans/v2/core-consolidation-and-minimization-program.md`
 - completed and certified the first end-to-end agent-authored production loop:
   - implemented `@viz-engine/production-signal-cathedral` as a trusted
     project-local capability pack with a complete data-only authoring schema,
@@ -1112,8 +1170,8 @@
 - split `@viz-engine/editor-control` into:
   - a browser-safe root entry
   - a Node-only secondary entry for bundle IO
-  so the real editor build can stay clean while local tooling still owns
-  filesystem-backed roundtrips
+    so the real editor build can stay clean while local tooling still owns
+    filesystem-backed roundtrips
 - added root-app validation to the V2 gate:
   - `pnpm app:check`
   - root Next app typecheck/build now run inside `pnpm check:foundation`
@@ -1134,8 +1192,8 @@
     load, preview-duration extension, and reset behavior
 - added a deliberate local bypass for the old screen-size guard:
   - `?allowSmallViewport=1`
-  so the real editor can be opened in the Codex browser without weakening the
-  default product guard for normal users
+    so the real editor can be opened in the Codex browser without weakening the
+    default product guard for normal users
 - added the next editor-facing component-authoring slice:
   - `@viz-engine/editor-control.inspectComponents()`
   - V2 app-store component summaries
@@ -1146,7 +1204,7 @@
   - `editor-component-catalog-inspection-plan.md`
 - revalidated the full V2 stack after the editor-shell and creative-loop work:
   - `pnpm check:foundation`
-  current V2 baseline to a real human-plus-agent live creation loop
+    current V2 baseline to a real human-plus-agent live creation loop
 - clarified the V2 source-of-truth docs so it is now explicit that:
   - the V1 editor experience is the UX reference to preserve
   - the hidden V1 architecture is what should be replaced
@@ -1311,6 +1369,7 @@
   - `pnpm test:foundation`
   - `pnpm viz:bundle:validate`
   - `pnpm check:foundation`
+
 # 2026-05-15
 
 - completed the first real node-editor adapter burn-down
@@ -1608,3 +1667,22 @@
   - recorded the design and acceptance evidence in
     `docs/plans/v2/viz-session-convergence-and-editor-control-cutover.md` and
     `docs/parity/evidence/2026-07-29-viz-session-convergence-and-node-editor-parity.md`
+- completed Goal One artifact-container and execution-identity consolidation:
+  - added one registry-driven execution-manifest composer at the project-bundle
+    boundary
+  - removed manually reconstructed runtime, node, renderer, capability,
+    component, program, bake, and content identities from the Signal Cathedral
+    production materializer
+  - added the versioned `viz-audio-feature-timeline-v1` binary container while
+    retaining legacy JSON/base64 reads
+  - preserved all 2,211,840 production packed values, all 9 scalar features,
+    all 720 frames, and exact deterministic sampling
+  - measured the production artifact at 25.42% smaller storage, 73.28% faster
+    median decode, no seek regression, and a 2,949,120-byte reduction in the
+    retained packed-representation floor
+  - passed focused unit/integration coverage, real ffmpeg bundle bake/reopen,
+    package builds, strict lint, fresh Signal Cathedral finalization, and
+    canonical bundle validation
+  - recorded the contract, measurement, validation, and compatibility policy
+    in
+    `docs/parity/evidence/2026-07-30-artifact-container-and-execution-identity.md`

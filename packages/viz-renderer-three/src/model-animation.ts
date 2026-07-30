@@ -1,19 +1,16 @@
 import type {
   VizModelAnimationLoopMode,
   VizModelAnimationPlayback,
-} from "@viz-engine/contracts";
+} from '@viz-engine/contracts';
 import {
   AnimationAction,
   AnimationClip,
   AnimationMixer,
   LoopRepeat,
   Object3D,
-} from "three";
+} from 'three';
 
-const positiveModulo = (
-  value: number,
-  divisor: number,
-): number => {
+const positiveModulo = (value: number, divisor: number): number => {
   if (divisor <= 0) {
     return 0;
   }
@@ -25,7 +22,7 @@ export const sampleVizModelClipTime = ({
   clipDurationSeconds,
   speed = 1,
   phaseSeconds = 0,
-  loopMode = "loop",
+  loopMode = 'loop',
 }: {
   timelineTimeSeconds: number;
   clipDurationSeconds: number;
@@ -33,33 +30,23 @@ export const sampleVizModelClipTime = ({
   phaseSeconds?: number;
   loopMode?: VizModelAnimationLoopMode;
 }): number => {
-  if (
-    !Number.isFinite(clipDurationSeconds) ||
-    clipDurationSeconds <= 0
-  ) {
+  if (!Number.isFinite(clipDurationSeconds) || clipDurationSeconds <= 0) {
     return 0;
   }
 
   const authoredTime =
-    (Number.isFinite(timelineTimeSeconds)
-      ? timelineTimeSeconds
-      : 0) *
+    (Number.isFinite(timelineTimeSeconds) ? timelineTimeSeconds : 0) *
       (Number.isFinite(speed) ? speed : 1) +
     (Number.isFinite(phaseSeconds) ? phaseSeconds : 0);
 
-  if (loopMode === "once") {
-    return Math.min(
-      clipDurationSeconds,
-      Math.max(0, authoredTime),
-    );
+  if (loopMode === 'once') {
+    return Math.min(clipDurationSeconds, Math.max(0, authoredTime));
   }
 
-  if (loopMode === "ping-pong") {
+  if (loopMode === 'ping-pong') {
     const period = clipDurationSeconds * 2;
     const phase = positiveModulo(authoredTime, period);
-    return phase <= clipDurationSeconds
-      ? phase
-      : period - phase;
+    return phase <= clipDurationSeconds ? phase : period - phase;
   }
 
   return positiveModulo(authoredTime, clipDurationSeconds);
@@ -84,9 +71,7 @@ const resolveClip = (
 
   return (
     clips.find(
-      (clip, index) =>
-        clip.name === clipId ||
-        `clip-${index}` === clipId,
+      (clip, index) => clip.name === clipId || `clip-${index}` === clipId,
     ) ?? clips[0]
   );
 };
@@ -114,9 +99,7 @@ export const createVizThreeDeterministicClipPlayer = ({
       activeAction.stop();
     }
     activeClip = clip;
-    activeAction = clip
-      ? mixer.clipAction(clip)
-      : undefined;
+    activeAction = clip ? mixer.clipAction(clip) : undefined;
 
     if (activeAction) {
       activeAction.reset();
@@ -145,9 +128,7 @@ export const createVizThreeDeterministicClipPlayer = ({
         sampleVizModelClipTime({
           timelineTimeSeconds,
           clipDurationSeconds: clip.duration,
-          ...(playback.speed === undefined
-            ? {}
-            : { speed: playback.speed }),
+          ...(playback.speed === undefined ? {} : { speed: playback.speed }),
           ...(playback.phaseSeconds === undefined
             ? {}
             : { phaseSeconds: playback.phaseSeconds }),

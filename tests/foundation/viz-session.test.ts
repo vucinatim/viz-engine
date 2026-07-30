@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { CompDefinitionMap } from '@/components/comps';
+import useCompStore from '@/lib/stores/comp-store';
 import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
 import useEditorProjectStore from '@/lib/stores/editor-project-store';
-import useCompStore from '@/lib/stores/comp-store';
 import { vizSessionActions, vizSessionStore } from '@/lib/viz-session';
 import { createTestProject } from './viz-session-test-utils';
 
@@ -37,8 +37,12 @@ describe('VizSession', () => {
     expect(sessionState.preview.transport.currentFrame).toBe(90);
     expect(sessionState.audio.trackList).toEqual(['alpha.mp3']);
 
-    expect(useEditorProjectStore.getState().workingProject.layers).toHaveLength(1);
+    expect(useEditorProjectStore.getState().workingProject.layers).toHaveLength(
+      1,
+    );
     expect(useEditorPreviewStore.getState().transport.currentFrame).toBe(90);
-    expect(useEditorAudioSessionStore.getState().trackList).toEqual(['alpha.mp3']);
+    expect(useEditorAudioSessionStore.getState().trackList).toEqual([
+      'alpha.mp3',
+    ]);
   });
 });

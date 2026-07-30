@@ -1,5 +1,3 @@
-'use client';
-
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import { useEffect, useRef } from 'react';
 

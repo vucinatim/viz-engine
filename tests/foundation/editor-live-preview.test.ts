@@ -1,13 +1,13 @@
-import { describe, expect, it } from "vitest";
 import {
   createVizEditorAudioSessionController,
   createVizEditorSession,
   createVizEditorTransportController,
-} from "@viz-engine/editor-session";
-import { exampleProjectDocument } from "@viz-engine/example-projects";
+} from '@viz-engine/editor-session';
+import { exampleProjectDocument } from '@viz-engine/example-projects';
+import { describe, expect, it } from 'vitest';
 
-describe("Viz editor live preview foundation", () => {
-  it("drives deterministic transport state with play, seek, and pause semantics", () => {
+describe('Viz editor live preview foundation', () => {
+  it('drives deterministic transport state with play, seek, and pause semantics', () => {
     const transport = createVizEditorTransportController({
       fps: 60,
       durationFrames: 120,
@@ -23,7 +23,7 @@ describe("Viz editor live preview foundation", () => {
     expect(transport.pause().isPlaying).toBe(false);
   });
 
-  it("loops transport playback when configured for looping preview", () => {
+  it('loops transport playback when configured for looping preview', () => {
     const transport = createVizEditorTransportController({
       fps: 30,
       durationFrames: 90,
@@ -38,38 +38,38 @@ describe("Viz editor live preview foundation", () => {
     expect(advanced.isPlaying).toBe(true);
   });
 
-  it("reports live-vs-baked preview diagnostics explicitly", () => {
+  it('reports live-vs-baked preview diagnostics explicitly', () => {
     const audioSession = createVizEditorAudioSessionController({
       source: {
-        kind: "file",
-        id: "audio-track",
-        label: "Track",
+        kind: 'file',
+        id: 'audio-track',
+        label: 'Track',
       },
-      analyzerState: "active",
+      analyzerState: 'active',
       liveInputAvailable: true,
-      bakedArtifactId: "artifact-audio-features",
+      bakedArtifactId: 'artifact-audio-features',
       bakedArtifactAvailable: true,
     });
 
     expect(audioSession.getDiagnostics()).toEqual({
-      inputMode: "hybrid",
+      inputMode: 'hybrid',
       usesLiveAudio: true,
       usesBakedArtifacts: true,
       issues: [],
     });
 
-    audioSession.setAnalyzerState("error");
+    audioSession.setAnalyzerState('error');
     audioSession.setLiveInputAvailable(false);
 
     expect(audioSession.getDiagnostics()).toEqual({
-      inputMode: "baked-only",
+      inputMode: 'baked-only',
       usesLiveAudio: false,
       usesBakedArtifacts: true,
-      issues: ["Live analyzer is in an error state."],
+      issues: ['Live analyzer is in an error state.'],
     });
   });
 
-  it("can feed transport state back into the editor-session preview state without UI coupling", () => {
+  it('can feed transport state back into the editor-session preview state without UI coupling', () => {
     const editorSession = createVizEditorSession({
       project: exampleProjectDocument,
     });
@@ -92,7 +92,7 @@ describe("Viz editor live preview foundation", () => {
     expect(editorSession.getPreviewState()).toEqual({
       currentFrame: 15,
       isPlaying: false,
-      mode: "live",
+      mode: 'live',
     });
   });
 });

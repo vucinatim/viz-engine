@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 import { AnimInputData } from '../node-network/animation-nodes';
 import { Button } from '../ui/button';
 import { ColorPickerPopover } from '../ui/color-picker';
-import FileInput from '../ui/file-input';
+import FileInput, { type FileInputSelection } from '../ui/file-input';
 import { Input } from '../ui/input';
 import { ListEditor } from '../ui/list-editor';
 import { SimpleSelect } from '../ui/select'; // Assuming you have a Select component
@@ -42,6 +42,7 @@ export abstract class BaseConfigOption<T> {
     onChange: (value: T) => void,
     onDragStart?: () => void,
     onDragEnd?: () => void,
+    onAssetSelect?: (selection: FileInputSelection) => Promise<T>,
   ): ReactNode;
 }
 
@@ -224,7 +225,7 @@ export class StringConfigOption extends ConfigParam<string> {
     return new StringConfigOption(this.options);
   }
 
-  validate(value: string): boolean {
+  validate(_value: string): boolean {
     return true; // No validation for string
   }
 
@@ -261,6 +262,7 @@ export class FileConfigOption extends ConfigParam<string> {
 
   validate(value: string): boolean {
     if (!value) return true; // empty allowed
+    if (value.startsWith('asset:')) return true;
     const allowed = this.options.allowedExtensions || [];
     if (allowed.length === 0) return true;
     try {
@@ -274,11 +276,25 @@ export class FileConfigOption extends ConfigParam<string> {
     }
   }
 
-  toFormElement(value: string, onChange: (value: string) => void) {
+  toFormElement(
+    value: string,
+    onChange: (value: string) => void,
+    _onDragStart?: () => void,
+    _onDragEnd?: () => void,
+    onAssetSelect?: (selection: FileInputSelection) => Promise<string>,
+  ) {
     return (
       <FileInput
         value={value}
         acceptExtensions={this.options.allowedExtensions}
+        onAssetSelect={async (selection) => {
+          if (!onAssetSelect) {
+            throw new Error('File attachment is not available in this host.');
+          }
+          const nextValue = await onAssetSelect(selection);
+          this.value = nextValue;
+          return nextValue;
+        }}
         onChange={(val) => {
           this.value = val;
           onChange(val);
@@ -375,11 +391,11 @@ export class ButtonConfigOption extends BaseConfigOption<null> {
     this.onPress = options.onPress;
   }
 
-  getValue(inputData: AnimInputData): null {
+  getValue(_inputData: AnimInputData): null {
     return null; // Buttons don't have a value
   }
 
-  setValue(value: null): void {
+  setValue(_value: null): void {
     // Buttons don't have a value to set
   }
 
@@ -391,7 +407,7 @@ export class ButtonConfigOption extends BaseConfigOption<null> {
     return new ButtonConfigOption(this.options);
   }
 
-  toFormElement(value: null, onChange: (value: null) => void) {
+  toFormElement(_value: null, _onChange: (value: null) => void) {
     return (
       <Button
         onClick={() => {
@@ -483,7 +499,7 @@ export class GroupConfigOption<
   getValue(inputData: AnimInputData) {
     const values: Partial<{ [K in keyof T]: any }> = {};
     for (const key in this.options) {
-      if (this.options.hasOwnProperty(key)) {
+      if (Object.hasOwn(this.options, key)) {
         const option = this.options[key];
         // Buttons are editor actions, not runtime or persisted values.
         if (option instanceof ButtonConfigOption) {
@@ -498,7 +514,7 @@ export class GroupConfigOption<
 
   setValue(value: T) {
     for (const key in value) {
-      if (value.hasOwnProperty(key) && this.options.hasOwnProperty(key)) {
+      if (Object.hasOwn(value, key) && Object.hasOwn(this.options, key)) {
         this.options[key].setValue(value[key]);
       }
     }
@@ -507,7 +523,7 @@ export class GroupConfigOption<
   getDefaultValue() {
     const defaults: Partial<{ [K in keyof T]: any }> = {};
     for (const key in this.options) {
-      if (this.options.hasOwnProperty(key)) {
+      if (Object.hasOwn(this.options, key)) {
         const option = this.options[key];
         // Buttons are editor actions, not runtime or persisted values.
         if (option instanceof ButtonConfigOption) {
@@ -523,7 +539,7 @@ export class GroupConfigOption<
   clone(): GroupConfigOption<T> {
     const clonedOptions: Partial<T> = {};
     for (const key in this.options) {
-      if (this.options.hasOwnProperty(key)) {
+      if (Object.hasOwn(this.options, key)) {
         clonedOptions[key as keyof T] = this.options[
           key
         ].clone() as T[typeof key];
@@ -568,7 +584,7 @@ export class VConfig<T extends Record<string, BaseConfigOption<any>>> {
   clone(): VConfig<T> {
     const clonedOptions: Partial<T> = {};
     for (const key in this.options) {
-      if (this.options.hasOwnProperty(key)) {
+      if (Object.hasOwn(this.options, key)) {
         clonedOptions[key as keyof T] = this.options[
           key as keyof T
         ].clone() as T[typeof key];
@@ -600,7 +616,7 @@ export class VConfig<T extends Record<string, BaseConfigOption<any>>> {
   getValues(inputData: AnimInputData): InferValues<VConfig<T>> {
     const values: Partial<InferValues<VConfig<T>>> = {};
     for (const key in this.options) {
-      if (this.options.hasOwnProperty(key)) {
+      if (Object.hasOwn(this.options, key)) {
         const option = this.options[key];
         // Buttons are editor actions, not runtime or persisted values.
         if (option instanceof ButtonConfigOption) {
@@ -615,7 +631,7 @@ export class VConfig<T extends Record<string, BaseConfigOption<any>>> {
 
   setValues(values: InferValues<VConfig<T>>) {
     for (const key in values) {
-      if (values.hasOwnProperty(key) && this.options.hasOwnProperty(key)) {
+      if (Object.hasOwn(values, key) && Object.hasOwn(this.options, key)) {
         this.options[key].setValue(values[key]);
       }
     }
@@ -624,7 +640,7 @@ export class VConfig<T extends Record<string, BaseConfigOption<any>>> {
   getDefaultValues(): InferValues<VConfig<T>> {
     const defaults: Partial<InferValues<VConfig<T>>> = {};
     for (const key in this.options) {
-      if (this.options.hasOwnProperty(key)) {
+      if (Object.hasOwn(this.options, key)) {
         const option = this.options[key];
         // Buttons are editor actions, not runtime or persisted values.
         if (option instanceof ButtonConfigOption) {

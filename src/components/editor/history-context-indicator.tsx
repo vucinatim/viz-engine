@@ -1,10 +1,10 @@
+import useNodeNetworkStore from '@/components/node-network/node-network-store';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import useNodeNetworkStore from '@/components/node-network/node-network-store';
 import { useHistoryStore } from '@/lib/stores/history-store';
 import { Layers, Network } from 'lucide-react';
 import { memo } from 'react';

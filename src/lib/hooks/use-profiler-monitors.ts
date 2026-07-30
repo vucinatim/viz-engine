@@ -171,7 +171,6 @@ export function useCPUMonitor() {
     if (!enabled) return;
 
     let animationFrameId: number;
-    let timeoutId: NodeJS.Timeout;
     let observer: PerformanceObserver | null = null;
 
     // Setup Long Task API observer (detects tasks >50ms)
@@ -186,7 +185,7 @@ export function useCPUMonitor() {
           }
         });
         observer.observe({ entryTypes: ['longtask'] });
-      } catch (e) {
+      } catch {
         // Long Task API not supported in this browser
         console.warn('Long Task API not available');
       }
@@ -270,7 +269,7 @@ export function useCPUMonitor() {
     animationFrameId = requestAnimationFrame(measureFrameTiming);
 
     // Update metrics periodically
-    timeoutId = setInterval(updateCPUMetrics, CPU_UPDATE_INTERVAL);
+    const timeoutId = setInterval(updateCPUMetrics, CPU_UPDATE_INTERVAL);
 
     return () => {
       cancelAnimationFrame(animationFrameId);

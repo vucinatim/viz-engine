@@ -1,7 +1,4 @@
-import {
-  resolveBundledStageModelAssets,
-} from '@viz-engine/components-core';
-import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
+import { resolveBundledStageModelAssets } from '@viz-engine/components-core';
 import type {
   VizExecutionMode,
   VizProjectDocument,
@@ -10,6 +7,7 @@ import type {
   VizResolvedAsset,
   VizRuntimeAudioFrameSnapshot,
 } from '@viz-engine/contracts';
+import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
 import {
   createVizRenderPlan,
   createVizRuntimeSession,
@@ -18,11 +16,11 @@ import {
   type VizRuntimeSession,
 } from '@viz-engine/runtime';
 
+import { studioComponentRegistry } from '@/lib/viz-capabilities';
 import type {
   VizSessionRuntimePreviewAudioFrameData,
   VizSessionRuntimePreviewFrame,
 } from './types';
-import { studioComponentRegistry } from '@/lib/viz-capabilities';
 
 interface RuntimePreviewSessionCache {
   revision: number;
@@ -52,10 +50,7 @@ interface CreateRuntimePreviewPlanOptions {
 
 const componentRegistry = studioComponentRegistry;
 const nodeRegistry = createCoreNodeRegistry();
-const frozenAudioByLayerId = new Map<
-  string,
-  VizRuntimeAudioFrameSnapshot
->();
+const frozenAudioByLayerId = new Map<string, VizRuntimeAudioFrameSnapshot>();
 let sessionCache: RuntimePreviewSessionCache | null = null;
 
 const toExecutionMode = (
@@ -108,7 +103,10 @@ const createSessionProject = ({
   project,
   frame,
   viewport,
-}: Pick<CreateRuntimePreviewPlanOptions, 'project' | 'frame' | 'viewport'>) => ({
+}: Pick<
+  CreateRuntimePreviewPlanOptions,
+  'project' | 'frame' | 'viewport'
+>) => ({
   ...project,
   timeline: {
     ...project.timeline,
@@ -196,10 +194,7 @@ const createFrameInputValues = ({
         layer.surface?.freezeWhenPaused !== false &&
         !isPlaying;
       if (!shouldFreeze) {
-        frozenAudioByLayerId.set(
-          layer.id,
-          cloneAudioFrameData(runtimeAudio),
-        );
+        frozenAudioByLayerId.set(layer.id, cloneAudioFrameData(runtimeAudio));
         return [];
       }
 
@@ -208,20 +203,14 @@ const createFrameInputValues = ({
         return [];
       }
       const layerAudio =
-        frozenAudioByLayerId.get(layer.id) ??
-        cloneAudioFrameData(runtimeAudio);
+        frozenAudioByLayerId.get(layer.id) ?? cloneAudioFrameData(runtimeAudio);
       const values = resolveVizComponentRuntimeInputValues(component, {
         audio: layerAudio,
       });
       if (Object.keys(values).length === 0) {
         return [];
       }
-      return [
-        [
-          layer.id,
-          values,
-        ],
-      ];
+      return [[layer.id, values]];
     }),
   );
 };

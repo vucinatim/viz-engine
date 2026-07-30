@@ -1,5 +1,3 @@
-'use client';
-
 import editorControl from '@/lib/editor-control';
 import useCompStore from '@/lib/stores/comp-store';
 import { Search } from 'lucide-react';

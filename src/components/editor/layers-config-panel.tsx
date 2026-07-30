@@ -1,5 +1,7 @@
 import editorControl from '@/lib/editor-control';
-import useEditorLayerProjectionStore, { LayerData } from '@/lib/stores/editor-layer-projection-store';
+import useEditorLayerProjectionStore, {
+  LayerData,
+} from '@/lib/stores/editor-layer-projection-store';
 import {
   DndContext,
   DragEndEvent,
@@ -33,7 +35,9 @@ const LayersConfigPanel = () => {
   );
 
   return (
-    <div className="absolute inset-0 flex flex-col items-stretch justify-start">
+    <div
+      className="absolute inset-0 flex flex-col items-stretch justify-start"
+      data-testid="layers-panel">
       <div className="flex gap-x-2 border-b border-zinc-600 p-4">
         <EditorLayerSearch />
         <Button
@@ -70,7 +74,7 @@ const SortableLayers = ({ layers }: SortableLayersProps) => {
     }),
   );
 
-  function handleDragStart(event: DragStartEvent) {
+  function handleDragStart(_event: DragStartEvent) {
     editorControl.project.setAllLayersExpanded(false);
   }
 

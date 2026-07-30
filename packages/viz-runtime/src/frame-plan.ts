@@ -10,17 +10,20 @@ import type {
   VizResolvedInputValue,
   VizRuntimeInputs,
   VizValueSource,
-} from "@viz-engine/contracts";
-import { getAudioFeatureTimelineArtifact, sampleAudioFeatureValue } from "./audio-feature-timeline.js";
-import type { VizComponentRegistry } from "./component-registry.js";
-import { evaluateVizGraphs } from "./graph-evaluator.js";
-import type { VizRuntimeGraphInputValues } from "./graph-evaluator.js";
-import type { VizNodeRegistry } from "./node-registry.js";
-import type { VizRuntimeSession } from "./runtime-session.js";
+} from '@viz-engine/contracts';
+import {
+  getAudioFeatureTimelineArtifact,
+  sampleAudioFeatureValue,
+} from './audio-feature-timeline.js';
+import type { VizComponentRegistry } from './component-registry.js';
+import type { VizRuntimeGraphInputValues } from './graph-evaluator.js';
+import { evaluateVizGraphs } from './graph-evaluator.js';
+import type { VizNodeRegistry } from './node-registry.js';
 import {
   createVizStandardGraphRuntimeInputValues,
   resolveVizComponentRuntimeInputValues,
-} from "./runtime-inputs.js";
+} from './runtime-inputs.js';
+import type { VizRuntimeSession } from './runtime-session.js';
 
 export interface CreateVizFramePlanOptions {
   session: VizRuntimeSession;
@@ -39,22 +42,25 @@ export type VizRuntimeFrameInputValues = Readonly<
 const getDefaultRendererFamily = (
   layer: VizLayer,
   component: VizComponentDefinition | undefined,
-): VizLayerFrameSnapshot["rendererFamily"] => {
-  return layer.rendererFamily ?? component?.rendererFamily ?? "unknown";
+): VizLayerFrameSnapshot['rendererFamily'] => {
+  return layer.rendererFamily ?? component?.rendererFamily ?? 'unknown';
 };
 
-const resolveLiteralInput = (key: string, source: Extract<VizValueSource, { kind: "literal" }>): VizResolvedInputValue => {
+const resolveLiteralInput = (
+  key: string,
+  source: Extract<VizValueSource, { kind: 'literal' }>,
+): VizResolvedInputValue => {
   return {
     key,
-    sourceKind: "literal",
+    sourceKind: 'literal',
     source,
-    status: "resolved",
+    status: 'resolved',
     value: source.value,
   };
 };
 
 const createIssue = (
-  code: VizFramePlanIssue["code"],
+  code: VizFramePlanIssue['code'],
   layerId: string,
   inputKey: string,
   message: string,
@@ -67,7 +73,7 @@ const createIssue = (
 
 const resolveArtifactFeatureInput = (
   key: string,
-  source: Extract<VizValueSource, { kind: "artifact-feature" }>,
+  source: Extract<VizValueSource, { kind: 'artifact-feature' }>,
   session: VizRuntimeSession,
   frame: number,
   issues: VizFramePlanIssue[],
@@ -79,7 +85,7 @@ const resolveArtifactFeatureInput = (
   if (!timelineArtifact) {
     issues.push(
       createIssue(
-        "missing-artifact",
+        'missing-artifact',
         layerId,
         key,
         `Layer "${layerId}" could not resolve audio feature artifact "${source.artifactId}".`,
@@ -88,19 +94,23 @@ const resolveArtifactFeatureInput = (
 
     return {
       key,
-      sourceKind: "artifact-feature",
+      sourceKind: 'artifact-feature',
       source,
-      status: "missing",
+      status: 'missing',
       message: `Missing resolved artifact "${source.artifactId}".`,
     };
   }
 
-  const sampledValue = sampleAudioFeatureValue(timelineArtifact, source.feature, frame);
+  const sampledValue = sampleAudioFeatureValue(
+    timelineArtifact,
+    source.feature,
+    frame,
+  );
 
   if (sampledValue === undefined) {
     issues.push(
       createIssue(
-        "missing-feature",
+        'missing-feature',
         layerId,
         key,
         `Artifact "${source.artifactId}" does not contain feature "${source.feature}".`,
@@ -109,25 +119,25 @@ const resolveArtifactFeatureInput = (
 
     return {
       key,
-      sourceKind: "artifact-feature",
+      sourceKind: 'artifact-feature',
       source,
-      status: "missing",
+      status: 'missing',
       message: `Missing feature "${source.feature}" in artifact "${source.artifactId}".`,
     };
   }
 
   return {
     key,
-    sourceKind: "artifact-feature",
+    sourceKind: 'artifact-feature',
     source,
-    status: "resolved",
+    status: 'resolved',
     value: sampledValue,
   };
 };
 
 const resolveAssetRefInput = (
   key: string,
-  source: Extract<VizValueSource, { kind: "asset-ref" }>,
+  source: Extract<VizValueSource, { kind: 'asset-ref' }>,
   session: VizRuntimeSession,
   issues: VizFramePlanIssue[],
   layerId: string,
@@ -137,7 +147,7 @@ const resolveAssetRefInput = (
   if (!asset) {
     issues.push(
       createIssue(
-        "missing-asset",
+        'missing-asset',
         layerId,
         key,
         `Layer "${layerId}" could not resolve asset "${source.assetId}".`,
@@ -146,18 +156,18 @@ const resolveAssetRefInput = (
 
     return {
       key,
-      sourceKind: "asset-ref",
+      sourceKind: 'asset-ref',
       source,
-      status: "missing",
+      status: 'missing',
       message: `Missing resolved asset "${source.assetId}".`,
     };
   }
 
   return {
     key,
-    sourceKind: "asset-ref",
+    sourceKind: 'asset-ref',
     source,
-    status: "resolved",
+    status: 'resolved',
     value: asset satisfies VizMaterializedAsset,
   };
 };
@@ -171,25 +181,32 @@ const resolveInputValue = (
   layerId: string,
   graphResults: Map<string, VizGraphEvaluationResult>,
 ): VizResolvedInputValue => {
-  if (source.kind === "literal") {
+  if (source.kind === 'literal') {
     return resolveLiteralInput(key, source);
   }
 
-  if (source.kind === "artifact-feature") {
-    return resolveArtifactFeatureInput(key, source, session, frame, issues, layerId);
+  if (source.kind === 'artifact-feature') {
+    return resolveArtifactFeatureInput(
+      key,
+      source,
+      session,
+      frame,
+      issues,
+      layerId,
+    );
   }
 
-  if (source.kind === "asset-ref") {
+  if (source.kind === 'asset-ref') {
     return resolveAssetRefInput(key, source, session, issues, layerId);
   }
 
-  if (source.kind === "graph-output") {
+  if (source.kind === 'graph-output') {
     const graphResult = graphResults.get(source.graphId);
 
     if (!graphResult) {
       issues.push(
         createIssue(
-          "missing-graph",
+          'missing-graph',
           layerId,
           key,
           `Layer "${layerId}" references missing graph "${source.graphId}".`,
@@ -198,9 +215,9 @@ const resolveInputValue = (
 
       return {
         key,
-        sourceKind: "graph-output",
+        sourceKind: 'graph-output',
         source,
-        status: "missing",
+        status: 'missing',
         message: `Missing graph "${source.graphId}".`,
       };
     }
@@ -210,7 +227,7 @@ const resolveInputValue = (
     if (graphOutput === undefined) {
       issues.push(
         createIssue(
-          "missing-graph-output",
+          'missing-graph-output',
           layerId,
           key,
           `Graph "${source.graphId}" did not produce output "${source.output}" for layer "${layerId}".`,
@@ -219,27 +236,32 @@ const resolveInputValue = (
 
       return {
         key,
-        sourceKind: "graph-output",
+        sourceKind: 'graph-output',
         source,
-        status: "missing",
+        status: 'missing',
         message: `Missing graph output "${source.output}" from graph "${source.graphId}".`,
       };
     }
 
     return {
       key,
-      sourceKind: "graph-output",
+      sourceKind: 'graph-output',
       source,
-      status: "resolved",
+      status: 'resolved',
       value: graphOutput,
     };
   }
 
   const exhaustiveSource: never = source;
-  throw new Error(`Unhandled Viz input source in frame planner: ${JSON.stringify(exhaustiveSource)}.`);
+  throw new Error(
+    `Unhandled Viz input source in frame planner: ${JSON.stringify(exhaustiveSource)}.`,
+  );
 };
 
-const shouldIncludeLayer = (layer: VizLayer, mode: VizExecutionMode): boolean => {
+const shouldIncludeLayer = (
+  layer: VizLayer,
+  mode: VizExecutionMode,
+): boolean => {
   const supportedModes = layer.renderPolicy?.supportedModes;
 
   if (!supportedModes || supportedModes.length === 0) {
@@ -260,11 +282,10 @@ export const createVizFramePlan = ({
 }: CreateVizFramePlanOptions): VizFramePlan => {
   const frameContext = session.getFrameContext(frame);
   const issues: VizFramePlanIssue[] = [];
-  const standardGraphInputValues =
-    createVizStandardGraphRuntimeInputValues(
-      frameContext.timeInSeconds,
-      runtimeInputs,
-    );
+  const standardGraphInputValues = createVizStandardGraphRuntimeInputValues(
+    frameContext.timeInSeconds,
+    runtimeInputs,
+  );
   const mergedGraphInputValues = Object.fromEntries(
     (session.project.graphs ?? []).map((graph) => [
       graph.id,
@@ -285,9 +306,11 @@ export const createVizFramePlan = ({
     for (const graphIssue of result.issues) {
       issues.push(
         createIssue(
-          graphIssue.code === "missing-graph-input" ? "missing-feature" : "graph-evaluation-failed",
+          graphIssue.code === 'missing-graph-input'
+            ? 'missing-feature'
+            : 'graph-evaluation-failed',
           `graph:${result.graphId}`,
-          graphIssue.inputKey ?? graphIssue.nodeId ?? "__graph__",
+          graphIssue.inputKey ?? graphIssue.nodeId ?? '__graph__',
           graphIssue.message,
         ),
       );
@@ -303,20 +326,17 @@ export const createVizFramePlan = ({
         Object.entries(
           component === undefined
             ? {}
-            : resolveVizComponentRuntimeInputValues(
-                component,
-                runtimeInputs,
-              ),
+            : resolveVizComponentRuntimeInputValues(component, runtimeInputs),
         ).map(([key, value]) => [
           key,
           {
             key,
-            sourceKind: "literal" as const,
+            sourceKind: 'literal' as const,
             source: {
-              kind: "literal" as const,
+              kind: 'literal' as const,
               value,
             },
-            status: "resolved" as const,
+            status: 'resolved' as const,
             value,
           },
         ]),
@@ -324,7 +344,15 @@ export const createVizFramePlan = ({
       const resolvedProjectInputs = Object.fromEntries(
         Object.entries(layer.inputs ?? {}).map(([key, source]) => [
           key,
-          resolveInputValue(key, source, session, frameContext.frame, issues, layer.id, graphResults),
+          resolveInputValue(
+            key,
+            source,
+            session,
+            frameContext.frame,
+            issues,
+            layer.id,
+            graphResults,
+          ),
         ]),
       );
       const resolvedRuntimeInputs = Object.fromEntries(
@@ -332,12 +360,12 @@ export const createVizFramePlan = ({
           key,
           {
             key,
-            sourceKind: "literal" as const,
+            sourceKind: 'literal' as const,
             source: {
-              kind: "literal" as const,
+              kind: 'literal' as const,
               value,
             },
-            status: "resolved" as const,
+            status: 'resolved' as const,
             value,
           },
         ]),

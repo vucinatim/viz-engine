@@ -12,7 +12,7 @@ Before you drive traffic, make sure machines (Google & LLMs) understand what the
 
 **2. Website SEO (`viz-engine.com`)**
 
-* **Meta Tags:** Ensure your `index.html` or Next.js `metadata` config includes a clear `og:image` (Open Graph Image). If you link the site and it has no preview image, click-through rates drop by ~50%.
+* **Meta Tags:** Ensure `index.html` includes a clear `og:image` (Open Graph Image). If you link the site and it has no preview image, click-through rates drop by ~50%.
 * **Keywords:** Ensure the phrase "Web-based Audio Reactive Animation" appears in your `<h1>` or first paragraph.
 https://search.google.com/search-console/welcome
 

@@ -61,14 +61,8 @@ export function tempogram(
     medianFiltered[i] = slice[Math.floor(count / 2)] ?? smoothed[i]!;
   }
 
-  const minLag = Math.max(
-    1,
-    Math.round((60 * sr) / (maxBpm * hopLength)),
-  );
-  const maxLag = Math.max(
-    minLag,
-    Math.round((60 * sr) / (minBpm * hopLength)),
-  );
+  const minLag = Math.max(1, Math.round((60 * sr) / (maxBpm * hopLength)));
+  const maxLag = Math.max(minLag, Math.round((60 * sr) / (minBpm * hopLength)));
   const lagCount = Math.max(0, maxLag - minLag + 1);
   const tempogramValues = new Float32Array(lagCount);
   const tempos = new Float32Array(lagCount);
@@ -77,14 +71,21 @@ export function tempogram(
   const windowSeconds = 8;
   const windowLength = Math.max(
     32,
-    Math.min(medianFiltered.length, Math.round(framesPerSecond * windowSeconds)),
+    Math.min(
+      medianFiltered.length,
+      Math.round(framesPerSecond * windowSeconds),
+    ),
   );
   const windowHop = Math.max(1, Math.round(windowLength / 2));
 
   const accum = new Float32Array(lagCount);
   const counts = new Float32Array(lagCount);
 
-  for (let start = 0; start + windowLength <= medianFiltered.length; start += windowHop) {
+  for (
+    let start = 0;
+    start + windowLength <= medianFiltered.length;
+    start += windowHop
+  ) {
     let mean = 0;
     for (let i = start; i < start + windowLength; i += 1) {
       mean += medianFiltered[i]!;

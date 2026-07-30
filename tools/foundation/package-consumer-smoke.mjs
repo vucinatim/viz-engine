@@ -1,40 +1,57 @@
-import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { execFileSync } from 'node:child_process';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
-const repoRoot = resolve(scriptDir, "..", "..");
+const repoRoot = resolve(scriptDir, '..', '..');
 
 const packageEntries = [
-  { name: "@viz-engine/rhythm-core", dir: "packages/rhythm-core" },
-  { name: "@viz-engine/contracts", dir: "packages/viz-contracts" },
-  { name: "@viz-engine/actions", dir: "packages/viz-actions" },
-  { name: "@viz-engine/bake", dir: "packages/viz-bake" },
-  { name: "@viz-engine/render", dir: "packages/viz-render" },
-  { name: "@viz-engine/editor-control", dir: "packages/viz-editor-control" },
-  { name: "@viz-engine/editor-session", dir: "packages/viz-editor-session" },
-  { name: "@viz-engine/runtime", dir: "packages/viz-runtime" },
-  { name: "@viz-engine/components-core", dir: "packages/viz-components-core" },
-  { name: "@viz-engine/nodes-core", dir: "packages/viz-nodes-core" },
-  { name: "@viz-engine/dev-cli", dir: "packages/viz-dev-cli" },
-  { name: "@viz-engine/example-projects", dir: "packages/viz-example-projects" },
-  { name: "@viz-engine/renderer-svg", dir: "packages/viz-renderer-svg" },
-  { name: "@viz-engine/remotion-adapter", dir: "packages/viz-remotion-adapter" },
+  { name: '@viz-engine/rhythm-core', dir: 'packages/rhythm-core' },
+  { name: '@viz-engine/contracts', dir: 'packages/viz-contracts' },
+  { name: '@viz-engine/actions', dir: 'packages/viz-actions' },
+  { name: '@viz-engine/bake', dir: 'packages/viz-bake' },
+  { name: '@viz-engine/render', dir: 'packages/viz-render' },
+  { name: '@viz-engine/editor-control', dir: 'packages/viz-editor-control' },
+  { name: '@viz-engine/editor-session', dir: 'packages/viz-editor-session' },
+  { name: '@viz-engine/runtime', dir: 'packages/viz-runtime' },
+  { name: '@viz-engine/components-core', dir: 'packages/viz-components-core' },
+  { name: '@viz-engine/nodes-core', dir: 'packages/viz-nodes-core' },
+  {
+    name: '@viz-engine/project-bundle',
+    dir: 'packages/viz-project-bundle',
+  },
+  { name: '@viz-engine/dev-cli', dir: 'packages/viz-dev-cli' },
+  {
+    name: '@viz-engine/example-projects',
+    dir: 'packages/viz-example-projects',
+  },
+  { name: '@viz-engine/renderer-svg', dir: 'packages/viz-renderer-svg' },
+  {
+    name: '@viz-engine/remotion-adapter',
+    dir: 'packages/viz-remotion-adapter',
+  },
 ];
 
 const run = (command, args, cwd) => {
   return execFileSync(command, args, {
     cwd,
-    encoding: "utf8",
-    stdio: "pipe",
+    encoding: 'utf8',
+    stdio: 'pipe',
   }).trim();
 };
 
-const tempRoot = mkdtempSync(join(tmpdir(), "viz-foundation-package-smoke-"));
-const tarballDir = join(tempRoot, "tarballs");
-const consumerDir = join(tempRoot, "consumer");
+const tempRoot = mkdtempSync(join(tmpdir(), 'viz-foundation-package-smoke-'));
+const tarballDir = join(tempRoot, 'tarballs');
+const consumerDir = join(tempRoot, 'consumer');
 
 mkdirSync(tarballDir, { recursive: true });
 mkdirSync(consumerDir, { recursive: true });
@@ -45,9 +62,15 @@ try {
   for (const entry of packageEntries) {
     const packageDir = resolve(repoRoot, entry.dir);
     const before = new Set(readdirSync(tarballDir));
-    run("pnpm", ["-C", packageDir, "pack", "--pack-destination", tarballDir], repoRoot);
+    run(
+      'pnpm',
+      ['-C', packageDir, 'pack', '--pack-destination', tarballDir],
+      repoRoot,
+    );
     const after = readdirSync(tarballDir);
-    const tarballName = after.find((file) => file.endsWith(".tgz") && !before.has(file));
+    const tarballName = after.find(
+      (file) => file.endsWith('.tgz') && !before.has(file),
+    );
 
     if (!tarballName) {
       throw new Error(`Could not locate packed tarball for ${entry.name}.`);
@@ -57,21 +80,27 @@ try {
   }
 
   const consumerPackageJson = {
-    name: "viz-foundation-consumer-smoke",
+    name: 'viz-foundation-consumer-smoke',
     private: true,
-    type: "module",
+    type: 'module',
     dependencies: Object.fromEntries(
-      packageEntries.map((entry) => [entry.name, tarballByPackageName.get(entry.name)]),
+      packageEntries.map((entry) => [
+        entry.name,
+        tarballByPackageName.get(entry.name),
+      ]),
     ),
     pnpm: {
       overrides: Object.fromEntries(
-        packageEntries.map((entry) => [entry.name, tarballByPackageName.get(entry.name)]),
+        packageEntries.map((entry) => [
+          entry.name,
+          tarballByPackageName.get(entry.name),
+        ]),
       ),
     },
   };
 
   writeFileSync(
-    join(consumerDir, "package.json"),
+    join(consumerDir, 'package.json'),
     `${JSON.stringify(consumerPackageJson, null, 2)}\n`,
   );
 
@@ -87,7 +116,8 @@ import {
   exampleResolvedAssets,
 } from "@viz-engine/example-projects";
 import { exampleProjectBundleDirectoryUrl } from "@viz-engine/example-projects/node";
-import { exportBundleProject, loadLocalVizProjectBundle } from "@viz-engine/dev-cli";
+import { exportBundleProject } from "@viz-engine/dev-cli";
+import { loadLocalVizProjectBundle } from "@viz-engine/project-bundle/node";
 import { createVizRemotionSvgMarkup } from "@viz-engine/remotion-adapter";
 import { renderVizRenderPlanToSvgMarkup } from "@viz-engine/renderer-svg";
 import { createVizRenderPlan, createVizRuntimeSession } from "@viz-engine/runtime";
@@ -229,20 +259,27 @@ process.stdout.write(\`\${JSON.stringify({
 }, null, 2)}\\n\`);
 `.trimStart();
 
-  writeFileSync(join(consumerDir, "index.mjs"), consumerScript);
+  writeFileSync(join(consumerDir, 'index.mjs'), consumerScript);
 
-  run("pnpm", ["install"], consumerDir);
-  const output = run("node", ["index.mjs"], consumerDir);
+  run('pnpm', ['install'], consumerDir);
+  const output = run('node', ['index.mjs'], consumerDir);
 
-  const consumerNodeModules = join(consumerDir, "node_modules");
+  const consumerNodeModules = join(consumerDir, 'node_modules');
   const installedRendererPackage = resolve(
     consumerNodeModules,
-    "@viz-engine/renderer-svg/package.json",
+    '@viz-engine/renderer-svg/package.json',
   );
-  const installedRendererManifest = JSON.parse(readFileSync(installedRendererPackage, "utf8"));
+  const installedRendererManifest = JSON.parse(
+    readFileSync(installedRendererPackage, 'utf8'),
+  );
 
-  if (Array.isArray(installedRendererManifest.files) && installedRendererManifest.files.includes("src")) {
-    throw new Error("Expected packed package manifests to exclude src/ from published files.");
+  if (
+    Array.isArray(installedRendererManifest.files) &&
+    installedRendererManifest.files.includes('src')
+  ) {
+    throw new Error(
+      'Expected packed package manifests to exclude src/ from published files.',
+    );
   }
 
   process.stdout.write(`${output}\n`);

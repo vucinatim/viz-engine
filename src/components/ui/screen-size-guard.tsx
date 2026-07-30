@@ -18,8 +18,7 @@ export default function ScreenSizeGuard({
       window.location.hostname === '::1';
 
     return (
-      isLocalhost &&
-      window.location.search.includes('allowSmallViewport=1')
+      isLocalhost && window.location.search.includes('allowSmallViewport=1')
     );
   }, []);
 

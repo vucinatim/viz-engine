@@ -1,9 +1,9 @@
-import type { VizRenderThreeProgramNode } from "@viz-engine/contracts";
+import type { VizRenderThreeProgramNode } from '@viz-engine/contracts';
 import {
   createVizThreePostProcessingPipeline,
   type VizThreePostProcessingSettings,
   type VizThreeProgramFactory,
-} from "@viz-engine/renderer-three";
+} from '@viz-engine/renderer-three';
 import {
   AdditiveBlending,
   AmbientLight,
@@ -29,10 +29,9 @@ import {
   Scene,
   TorusGeometry,
   type Material,
-} from "three";
+} from 'three';
 
-export const SIGNAL_CATHEDRAL_PROGRAM_ID =
-  "viz-production/signal-cathedral/v1";
+export const SIGNAL_CATHEDRAL_PROGRAM_ID = 'viz-production/signal-cathedral/v1';
 
 const MAX_ARCH_COUNT = 32;
 const SEGMENTS_PER_ARCH = 4;
@@ -41,16 +40,16 @@ const MAX_PARTICLE_COUNT = 1600;
 const MAX_SHOCKWAVES = 8;
 
 const asNumber = (value: unknown, fallback: number): number =>
-  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 
 const asString = (value: unknown, fallback: string): string =>
-  typeof value === "string" && value.length > 0 ? value : fallback;
+  typeof value === 'string' && value.length > 0 ? value : fallback;
 
 const asNumberArray = (value: unknown): number[] =>
   Array.isArray(value)
     ? value.filter(
         (entry): entry is number =>
-          typeof entry === "number" && Number.isFinite(entry),
+          typeof entry === 'number' && Number.isFinite(entry),
       )
     : [];
 
@@ -104,11 +103,7 @@ const readPostProcessingSettings = (
       Math.max(0, asNumber(parameters.bloomStrength, 0.72)) +
       bloomAccent * 0.25,
     bloomRadius: clamp(asNumber(parameters.bloomRadius, 0.62), 0, 1),
-    bloomThreshold: clamp(
-      asNumber(parameters.bloomThreshold, 0.18),
-      0,
-      1,
-    ),
+    bloomThreshold: clamp(asNumber(parameters.bloomThreshold, 0.18), 0, 1),
     depthOfFieldEnabled: false,
     depthOfFieldFocus: 1,
     depthOfFieldAperture: 0,
@@ -145,14 +140,14 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
 
   const archGeometry = new BoxGeometry(1, 1, 1);
   const primaryArchMaterial = new MeshBasicMaterial({
-    color: "#5cf5ff",
+    color: '#5cf5ff',
     transparent: true,
     opacity: 0.76,
     depthWrite: false,
     toneMapped: false,
   });
   const secondaryArchMaterial = new MeshBasicMaterial({
-    color: "#8b5cff",
+    color: '#8b5cff',
     transparent: true,
     opacity: 0.7,
     depthWrite: false,
@@ -175,14 +170,14 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
 
   const floorGeometry = new PlaneGeometry(1, 1);
   const floorMaterial = new MeshStandardMaterial({
-    color: "#03040a",
+    color: '#03040a',
     metalness: 0.72,
     roughness: 0.34,
   });
   const floor = new Mesh(floorGeometry, floorMaterial);
   floor.rotation.x = -Math.PI / 2;
 
-  const grid = new GridHelper(160, 80, "#5cf5ff", "#25204f");
+  const grid = new GridHelper(160, 80, '#5cf5ff', '#25204f');
   for (const material of Array.isArray(grid.material)
     ? grid.material
     : [grid.material]) {
@@ -194,7 +189,7 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
 
   const coreGeometry = new IcosahedronGeometry(1, 3);
   const coreMaterial = new MeshBasicMaterial({
-    color: "#5cf5ff",
+    color: '#5cf5ff',
     transparent: true,
     opacity: 0.9,
     blending: AdditiveBlending,
@@ -205,7 +200,7 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
   const core = new Mesh(coreGeometry, coreMaterial);
   const coreHaloGeometry = new IcosahedronGeometry(1.25, 2);
   const coreHaloMaterial = new MeshBasicMaterial({
-    color: "#8b5cff",
+    color: '#8b5cff',
     transparent: true,
     opacity: 0.14,
     blending: AdditiveBlending,
@@ -217,7 +212,7 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
   const ringGeometry = new TorusGeometry(1.7, 0.025, 8, 96);
   const coreRings = Array.from({ length: 3 }, (_, index) => {
     const material = new MeshBasicMaterial({
-      color: index === 1 ? "#ff3fcf" : "#5cf5ff",
+      color: index === 1 ? '#ff3fcf' : '#5cf5ff',
       transparent: true,
       opacity: 0.5,
       blending: AdditiveBlending,
@@ -235,15 +230,12 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
 
   const particleGeometry = new BufferGeometry();
   const particlePositions = new Float32Array(MAX_PARTICLE_COUNT * 3);
-  const particlePositionAttribute = new BufferAttribute(
-    particlePositions,
-    3,
-  );
+  const particlePositionAttribute = new BufferAttribute(particlePositions, 3);
   particlePositionAttribute.setUsage(DynamicDrawUsage);
-  particleGeometry.setAttribute("position", particlePositionAttribute);
+  particleGeometry.setAttribute('position', particlePositionAttribute);
   particleGeometry.setDrawRange(0, 0);
   const particleMaterial = new PointsMaterial({
-    color: "#5cf5ff",
+    color: '#5cf5ff',
     size: 0.045,
     sizeAttenuation: true,
     transparent: true,
@@ -258,7 +250,7 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
   const shockwaveGeometry = new TorusGeometry(1, 0.035, 8, 96);
   const shockwaves = Array.from({ length: MAX_SHOCKWAVES }, () => {
     const material = new MeshBasicMaterial({
-      color: "#ff3fcf",
+      color: '#ff3fcf',
       transparent: true,
       opacity: 0,
       blending: AdditiveBlending,
@@ -271,8 +263,8 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
     return wave;
   });
 
-  const ambientLight = new AmbientLight("#8b8cff", 0.12);
-  const keyLight = new PointLight("#5cf5ff", 18, 80, 1.8);
+  const ambientLight = new AmbientLight('#8b8cff', 0.12);
+  const keyLight = new PointLight('#5cf5ff', 18, 80, 1.8);
   keyLight.position.set(0, 1, -12);
 
   architecture.add(primaryArches, secondaryArches, floor, grid);
@@ -306,7 +298,7 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
   const particleBaseX = new Float32Array(MAX_PARTICLE_COUNT);
   const particleBaseY = new Float32Array(MAX_PARTICLE_COUNT);
   const particleBaseZ = new Float32Array(MAX_PARTICLE_COUNT);
-  let currentSeed = "";
+  let currentSeed = '';
 
   const initializeParticles = (seed: string): void => {
     if (seed === currentSeed) {
@@ -355,15 +347,11 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
     assertProgram(nextNode);
     const parameters = nextNode.parameters;
     const time = Math.max(0, asNumber(parameters.time, 0));
-    const seed = asString(parameters.seed, "signal-cathedral");
+    const seed = asString(parameters.seed, 'signal-cathedral');
     const archCount = Math.round(
       clamp(asNumber(parameters.archCount, 24), 8, MAX_ARCH_COUNT),
     );
-    const archSpacing = clamp(
-      asNumber(parameters.archSpacing, 4.2),
-      2,
-      8,
-    );
+    const archSpacing = clamp(asNumber(parameters.archSpacing, 4.2), 2, 8);
     const naveWidth = clamp(asNumber(parameters.naveWidth, 11), 5, 18);
     const naveHeight = clamp(asNumber(parameters.naveHeight, 7), 3, 12);
     const segmentThickness = clamp(
@@ -371,93 +359,42 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
       0.05,
       0.6,
     );
-    const floorExtent = clamp(
-      asNumber(parameters.floorExtent, 120),
-      40,
-      180,
-    );
-    const coreSize = clamp(
-      asNumber(parameters.coreSize, 1.05),
-      0.2,
-      2.5,
-    );
+    const floorExtent = clamp(asNumber(parameters.floorExtent, 120), 40, 180);
+    const coreSize = clamp(asNumber(parameters.coreSize, 1.05), 0.2, 2.5);
     const particleCount = Math.round(
-      clamp(
-        asNumber(parameters.particleCount, 900),
-        100,
-        MAX_PARTICLE_COUNT,
-      ),
+      clamp(asNumber(parameters.particleCount, 900), 100, MAX_PARTICLE_COUNT),
     );
-    const travelSpeed = clamp(
-      asNumber(parameters.travelSpeed, 4.8),
-      0,
-      14,
-    );
-    const cameraSway = clamp(
-      asNumber(parameters.cameraSway, 0.32),
-      0,
-      2,
-    );
-    const cameraLift = clamp(
-      asNumber(parameters.cameraLift, 0.16),
-      0,
-      1.5,
-    );
+    const travelSpeed = clamp(asNumber(parameters.travelSpeed, 4.8), 0, 14);
+    const cameraSway = clamp(asNumber(parameters.cameraSway, 0.32), 0, 2);
+    const cameraLift = clamp(asNumber(parameters.cameraLift, 0.16), 0, 1.5);
     const structuralTwist = clamp(
       asNumber(parameters.structuralTwist, 0.055),
       -0.3,
       0.3,
     );
-    const particleDrift = clamp(
-      asNumber(parameters.particleDrift, 0.7),
-      0,
-      3,
-    );
-    const coreRotation = clamp(
-      asNumber(parameters.coreRotation, 0.65),
-      -3,
-      3,
-    );
-    const structurePulse = clamp(
-      asNumber(parameters.structurePulse, 0),
-      0,
-      3,
-    );
-    const coreEnergy = clamp(
-      asNumber(parameters.coreEnergy, 0),
-      0,
-      3,
-    );
+    const particleDrift = clamp(asNumber(parameters.particleDrift, 0.7), 0, 3);
+    const coreRotation = clamp(asNumber(parameters.coreRotation, 0.65), -3, 3);
+    const structurePulse = clamp(asNumber(parameters.structurePulse, 0), 0, 3);
+    const coreEnergy = clamp(asNumber(parameters.coreEnergy, 0), 0, 3);
     const spectralShimmer = clamp(
       asNumber(parameters.spectralShimmer, 0),
       0,
       3,
     );
-    const onsetResponse = clamp(
-      asNumber(parameters.onsetResponse, 1),
-      0,
-      3,
-    );
-    const bloomAccent = clamp(
-      asNumber(parameters.bloomAccent, 0),
-      0,
-      3,
-    );
+    const onsetResponse = clamp(asNumber(parameters.onsetResponse, 1), 0, 3);
+    const bloomAccent = clamp(asNumber(parameters.bloomAccent, 0), 0, 3);
     const spectrum = asNumberArray(parameters.spectrum);
-    const primaryHex = asString(parameters.primaryColor, "#5cf5ff");
-    const secondaryHex = asString(
-      parameters.secondaryColor,
-      "#8b5cff",
-    );
-    const accentHex = asString(parameters.accentColor, "#ff3fcf");
+    const primaryHex = asString(parameters.primaryColor, '#5cf5ff');
+    const secondaryHex = asString(parameters.secondaryColor, '#8b5cff');
+    const accentHex = asString(parameters.accentColor, '#ff3fcf');
     primaryColor.set(primaryHex);
     secondaryColor.set(secondaryHex);
     accentColor.set(accentHex);
     scene.background = new Color(
-      asString(parameters.backgroundColor, "#02030d"),
+      asString(parameters.backgroundColor, '#02030d'),
     );
     scene.fog = new FogExp2(
-      asString(parameters.fogColor, "#07051c"),
+      asString(parameters.fogColor, '#07051c'),
       clamp(asNumber(parameters.fogDensity, 0.022), 0, 0.08),
     );
 
@@ -489,8 +426,7 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
           : 0;
       const bandEnergy =
         spectrum.length > 0 ? (spectrum[spectrumIndex] ?? 0) / 255 : 0;
-      const gatePulse =
-        pulseScale * (1 + bandEnergy * spectralShimmer * 0.035);
+      const gatePulse = pulseScale * (1 + bandEnergy * spectralShimmer * 0.035);
       const nearFade = clamp(
         logicalDepth / Math.min(archSpacing * 0.7, 2.5),
         0,
@@ -506,12 +442,9 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
       const rightDiagonalCenterX =
         (naveWidth / 4) * gatePulse + horizontalOffset;
       const diagonalCenterY = shoulderY + diagonalHeight / 2;
-      const target =
-        archIndex % 2 === 0 ? primaryArches : secondaryArches;
+      const target = archIndex % 2 === 0 ? primaryArches : secondaryArches;
       let targetIndex =
-        archIndex % 2 === 0
-          ? primarySegmentIndex
-          : secondarySegmentIndex;
+        archIndex % 2 === 0 ? primarySegmentIndex : secondarySegmentIndex;
 
       setArchSegment({
         target,
@@ -577,15 +510,11 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
     primaryArchMaterial.color
       .copy(primaryColor)
       .lerp(secondaryColor, clamp(spectralShimmer * 0.12, 0, 0.24))
-      .multiplyScalar(
-        0.48 + structurePulse * 0.28 + spectralShimmer * 0.1,
-      );
+      .multiplyScalar(0.48 + structurePulse * 0.28 + spectralShimmer * 0.1);
     secondaryArchMaterial.color
       .copy(secondaryColor)
       .lerp(accentColor, clamp(spectralShimmer * 0.22, 0, 0.4))
-      .multiplyScalar(
-        0.44 + structurePulse * 0.22 + spectralShimmer * 0.16,
-      );
+      .multiplyScalar(0.44 + structurePulse * 0.22 + spectralShimmer * 0.16);
 
     floor.position.set(0, floorY - 0.08, -floorExtent / 2 + 4);
     floor.scale.set(naveWidth * 1.6, floorExtent, 1);
@@ -629,8 +558,7 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
         (1.25 + index * 0.22 + spectralShimmer * (0.08 + index * 0.03));
       ring.scale.setScalar(scale);
       ring.rotation.z =
-        time * coreRotation * (index % 2 === 0 ? 0.55 : -0.42) +
-        index * 0.8;
+        time * coreRotation * (index % 2 === 0 ? 0.55 : -0.42) + index * 0.8;
       const material = ring.material as MeshBasicMaterial;
       material.color
         .copy(index === 1 ? accentColor : primaryColor)
@@ -654,11 +582,8 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
       const particleOffset = index * 3;
       particlePositions[particleOffset] =
         (baseX - 0.5) * naveWidth * 1.25 +
-        Math.sin(time * 0.5 + index * 0.17) *
-          spectralShimmer *
-          0.08;
-      particlePositions[particleOffset + 1] =
-        floorY + baseY * naveHeight;
+        Math.sin(time * 0.5 + index * 0.17) * spectralShimmer * 0.08;
+      particlePositions[particleOffset + 1] = floorY + baseY * naveHeight;
       particlePositions[particleOffset + 2] = z;
     }
     particleGeometry.setDrawRange(0, particleCount);
@@ -668,11 +593,7 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
       .lerp(accentColor, spectralShimmer * 0.44)
       .multiplyScalar(0.9 + spectralShimmer * 0.8);
     particleMaterial.size = 0.035 + spectralShimmer * 0.035;
-    particleMaterial.opacity = clamp(
-      0.38 + spectralShimmer * 0.3,
-      0,
-      0.82,
-    );
+    particleMaterial.opacity = clamp(0.38 + spectralShimmer * 0.3, 0, 0.82);
 
     const shockwaveAges = asNumberArray(parameters.shockwaveAges).slice(
       -MAX_SHOCKWAVES,
@@ -699,8 +620,7 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
     camera.position.x =
       Math.sin(time * 0.42) * cameraSway +
       Math.sin(time * 0.13) * cameraSway * 0.35;
-    camera.position.y =
-      0.2 + Math.sin(time * 0.31 + 0.8) * cameraLift;
+    camera.position.y = 0.2 + Math.sin(time * 0.31 + 0.8) * cameraLift;
     camera.lookAt(
       Math.sin(time * 0.19) * cameraSway * 0.2,
       Math.sin(time * 0.23) * cameraLift * 0.18,
@@ -712,9 +632,7 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
       0,
       2,
     );
-    keyLight.color
-      .copy(primaryColor)
-      .lerp(accentColor, coreEnergy * 0.3);
+    keyLight.color.copy(primaryColor).lerp(accentColor, coreEnergy * 0.3);
     keyLight.intensity =
       clamp(asNumber(parameters.keyLightIntensity, 18), 0, 60) *
       (0.72 + coreEnergy * 0.42);
@@ -723,8 +641,7 @@ export const createSignalCathedralProgram: VizThreeProgramFactory = ({
 
     root.userData.vizFrameSummary = {
       time,
-      activeArchSegments:
-        primarySegmentIndex + secondarySegmentIndex,
+      activeArchSegments: primarySegmentIndex + secondarySegmentIndex,
       activeParticles: particleCount,
       activeShockwaves: shockwaveAges.length,
       structurePulse,

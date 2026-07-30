@@ -1,5 +1,5 @@
-import { mkdirSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 
 export interface CreateVizComponentScaffoldOptions {
   componentId: string;
@@ -21,7 +21,7 @@ const toPascalCase = (value: string): string => {
     .split(/[^a-zA-Z0-9]+/)
     .filter((segment) => segment.length > 0)
     .map((segment) => `${segment[0]!.toUpperCase()}${segment.slice(1)}`)
-    .join("");
+    .join('');
 };
 
 const isValidComponentId = (value: string): boolean => {
@@ -119,12 +119,12 @@ export const createVizComponentScaffold = ({
 
   if (!isValidComponentId(componentId)) {
     issues.push(
-      "Component id must be kebab-case using lowercase letters, numbers, and dashes only.",
+      'Component id must be kebab-case using lowercase letters, numbers, and dashes only.',
     );
   }
 
   if (componentName.trim().length === 0) {
-    issues.push("Component name must be a non-empty string.");
+    issues.push('Component name must be a non-empty string.');
   }
 
   const exportName = `${toPascalCase(componentId)}Component`;
@@ -159,8 +159,8 @@ export const createVizComponentScaffold = ({
     issues: [],
     nextSteps: [
       `Add ${exportName} to the intended Viz capability pack`,
-      "Compose that capability pack into the target session host",
-      "Wire the component into a project layer and validate it through the runtime and editor catalog paths.",
+      'Compose that capability pack into the target session host',
+      'Wire the component into a project layer and validate it through the runtime and editor catalog paths.',
     ],
   };
 };

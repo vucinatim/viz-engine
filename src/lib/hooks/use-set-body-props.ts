@@ -1,7 +1,7 @@
-import { useEffect } from "react";
-import useBodyProps from "../stores/body-props-store";
+import { useEffect } from 'react';
+import useBodyProps from '../stores/body-props-store';
 
-const useSetBodyProps = (props: Object) => {
+const useSetBodyProps = (props: object) => {
   const { setProps } = useBodyProps();
   useEffect(() => {
     setProps(props);

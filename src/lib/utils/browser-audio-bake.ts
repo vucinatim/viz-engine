@@ -34,9 +34,7 @@ export interface LoadedBrowserAudio {
 }
 
 const toHex = (bytes: Uint8Array): string =>
-  Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join(
-    '',
-  );
+  Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join('');
 
 const createSourceContentIdentity = async (
   sourceBytes: ArrayBuffer,
@@ -54,10 +52,7 @@ const getCanonicalChannels = (
   if (audioBuffer.numberOfChannels === 1) {
     return [audioBuffer.getChannelData(0)];
   }
-  return [
-    audioBuffer.getChannelData(0),
-    audioBuffer.getChannelData(1),
-  ];
+  return [audioBuffer.getChannelData(0), audioBuffer.getChannelData(1)];
 };
 
 export const bakeBrowserAudioFeatures = async (
@@ -72,9 +67,7 @@ export const bakeBrowserAudioFeatures = async (
       sourceContentIdentity,
       profile: 'standard',
       fps: options.fps,
-      ...(options.fftSize === undefined
-        ? {}
-        : { fftSize: options.fftSize }),
+      ...(options.fftSize === undefined ? {} : { fftSize: options.fftSize }),
       sourceWindow: {
         startSeconds: options.startTime ?? 0,
         ...(options.duration === undefined
@@ -163,7 +156,7 @@ export const createVizBrowserAudioBakeSourceResolver = (
     const audioUrl = await resolveAudioUrl(request);
     const loaded = await loadAndDecodeBrowserAudio(audioUrl, signal);
     if (signal.aborted) {
-      throw new DOMException("Audio decode was cancelled.", "AbortError");
+      throw new DOMException('Audio decode was cancelled.', 'AbortError');
     }
     return {
       pcm: {
@@ -171,7 +164,7 @@ export const createVizBrowserAudioBakeSourceResolver = (
         channels: getCanonicalChannels(loaded.audioBuffer),
       },
       sourceContentIdentity: loaded.sourceContentIdentity,
-      decoderIdentity: "web-audio.decodeAudioData",
+      decoderIdentity: 'web-audio.decodeAudioData',
     };
   },
 });

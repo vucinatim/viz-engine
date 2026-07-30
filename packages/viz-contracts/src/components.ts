@@ -1,28 +1,28 @@
-import type { VizBlendMode, VizLayerRenderPolicy, VizValueSource } from "./project.js";
-import type { VizLayer } from "./project.js";
-import type { VizLayerId } from "./ids.js";
-import type { VizFrameContext, VizRendererFamily, VizViewport } from "./runtime.js";
-import type { VizRenderNode } from "./render-nodes.js";
+import type { VizAssetRef, VizMaterializedAsset } from './assets.js';
+import type { VizGraphEvaluationResult } from './graphs.js';
+import type { VizLayerId } from './ids.js';
 import type {
-  VizAssetRef,
-  VizMaterializedAsset,
-} from "./assets.js";
-import type { VizGraphEvaluationResult } from "./graphs.js";
+  VizBlendMode,
+  VizLayer,
+  VizLayerRenderPolicy,
+  VizValueSource,
+} from './project.js';
+import type { VizRenderNode } from './render-nodes.js';
+import type {
+  VizFrameContext,
+  VizRendererFamily,
+  VizViewport,
+} from './runtime.js';
 
-export type VizComponentInputSourceKind = VizValueSource["kind"];
+export type VizComponentInputSourceKind = VizValueSource['kind'];
 
 export type VizComponentCompatibility =
-  | "render-safe"
-  | "bake-required"
-  | "live-only";
+  'render-safe' | 'bake-required' | 'live-only';
 
-export type VizComponentCatalogVisibility = "public" | "hidden";
+export type VizComponentCatalogVisibility = 'public' | 'hidden';
 
 export type VizComponentSettingConditionOperator =
-  | "equals"
-  | "not-equals"
-  | "in"
-  | "not-in";
+  'equals' | 'not-equals' | 'in' | 'not-in';
 
 export interface VizComponentSettingValueCondition {
   path: string;
@@ -31,13 +31,12 @@ export interface VizComponentSettingValueCondition {
 }
 
 export interface VizComponentSettingConditionGroup {
-  operator: "all" | "any";
+  operator: 'all' | 'any';
   conditions: VizComponentSettingCondition[];
 }
 
 export type VizComponentSettingCondition =
-  | VizComponentSettingValueCondition
-  | VizComponentSettingConditionGroup;
+  VizComponentSettingValueCondition | VizComponentSettingConditionGroup;
 
 interface VizComponentSettingBase {
   label: string;
@@ -46,7 +45,7 @@ interface VizComponentSettingBase {
 }
 
 export interface VizComponentNumberSetting extends VizComponentSettingBase {
-  kind: "number";
+  kind: 'number';
   defaultValue: number;
   min: number;
   max: number;
@@ -55,39 +54,39 @@ export interface VizComponentNumberSetting extends VizComponentSettingBase {
 }
 
 export interface VizComponentTextSetting extends VizComponentSettingBase {
-  kind: "text";
+  kind: 'text';
   defaultValue: string;
   animatable?: boolean;
 }
 
 export interface VizComponentBooleanSetting extends VizComponentSettingBase {
-  kind: "boolean";
+  kind: 'boolean';
   defaultValue: boolean;
   animatable?: boolean;
 }
 
 export interface VizComponentColorSetting extends VizComponentSettingBase {
-  kind: "color";
+  kind: 'color';
   defaultValue: string;
   animatable?: boolean;
 }
 
 export interface VizComponentSelectSetting extends VizComponentSettingBase {
-  kind: "select";
+  kind: 'select';
   defaultValue: string;
   options: string[];
   animatable?: boolean;
 }
 
 export interface VizComponentFileSetting extends VizComponentSettingBase {
-  kind: "file";
+  kind: 'file';
   defaultValue: string;
   allowedExtensions?: string[];
   animatable?: false;
 }
 
 export interface VizComponentVector3Setting extends VizComponentSettingBase {
-  kind: "vector3";
+  kind: 'vector3';
   defaultValue: {
     x: number;
     y: number;
@@ -100,7 +99,7 @@ export interface VizComponentVector3Setting extends VizComponentSettingBase {
 }
 
 export interface VizComponentListSetting extends VizComponentSettingBase {
-  kind: "list";
+  kind: 'list';
   defaultValue: unknown[];
   item: Exclude<
     VizComponentSettingDefinition,
@@ -111,13 +110,13 @@ export interface VizComponentListSetting extends VizComponentSettingBase {
 }
 
 export interface VizComponentActionSetting extends VizComponentSettingBase {
-  kind: "action";
+  kind: 'action';
   actionId: string;
   buttonLabel?: string;
 }
 
 export interface VizComponentGroupSetting extends VizComponentSettingBase {
-  kind: "group";
+  kind: 'group';
   fields: Record<string, VizComponentSettingDefinition>;
 }
 
@@ -163,8 +162,7 @@ export interface VizComponentInlineNetworkPreset {
 }
 
 export type VizComponentDefaultNetwork =
-  | string
-  | VizComponentInlineNetworkPreset;
+  string | VizComponentInlineNetworkPreset;
 
 export interface VizComponentAuthoring {
   schemaVersion: 1;
@@ -189,11 +187,11 @@ export interface VizComponentInputDefinition {
 }
 
 export type VizComponentRuntimeInputBinding =
-  | "audio.frequency-data"
-  | "audio.time-domain-data"
-  | "audio.sample-rate"
-  | "audio.fft-size"
-  | "audio.frequency-analysis";
+  | 'audio.frequency-data'
+  | 'audio.time-domain-data'
+  | 'audio.sample-rate'
+  | 'audio.fft-size'
+  | 'audio.frequency-analysis';
 
 export interface VizComponentDefinition {
   id: string;
@@ -230,7 +228,7 @@ export interface VizComponentImplementation extends VizComponentDefinition {
   render(context: VizComponentRenderContext): VizRenderNode | null;
 }
 
-export type VizResolvedInputStatus = "resolved" | "missing" | "unsupported";
+export type VizResolvedInputStatus = 'resolved' | 'missing' | 'unsupported';
 
 export interface VizResolvedInputValue {
   key: string;
@@ -243,15 +241,15 @@ export interface VizResolvedInputValue {
 
 export interface VizFramePlanIssue {
   code:
-    | "missing-asset"
-    | "missing-artifact"
-    | "missing-graph"
-    | "missing-graph-output"
-    | "missing-feature"
-    | "unsupported-source"
-    | "graph-evaluation-failed"
-    | "missing-component"
-    | "component-render-failed";
+    | 'missing-asset'
+    | 'missing-artifact'
+    | 'missing-graph'
+    | 'missing-graph-output'
+    | 'missing-feature'
+    | 'unsupported-source'
+    | 'graph-evaluation-failed'
+    | 'missing-component'
+    | 'component-render-failed';
   layerId: VizLayerId;
   inputKey: string;
   message: string;

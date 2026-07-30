@@ -33,7 +33,9 @@ const VolumeFader = () => {
       if (splitterRef.current) splitterRef.current.disconnect();
       if (leftAnalyzerRef.current) leftAnalyzerRef.current.disconnect();
       if (rightAnalyzerRef.current) rightAnalyzerRef.current.disconnect();
-    } catch {}
+    } catch {
+      // Nodes may already be disconnected while switching audio sources.
+    }
     splitterRef.current = null;
     leftAnalyzerRef.current = null;
     rightAnalyzerRef.current = null;
@@ -72,7 +74,9 @@ const VolumeFader = () => {
           if (splitterRef.current) splitterRef.current.disconnect();
           if (leftAnalyzerRef.current) leftAnalyzerRef.current.disconnect();
           if (rightAnalyzerRef.current) rightAnalyzerRef.current.disconnect();
-        } catch {}
+        } catch {
+          // Nodes may already be disconnected while switching audio sources.
+        }
         splitterRef.current = null;
         leftAnalyzerRef.current = null;
         rightAnalyzerRef.current = null;
@@ -95,7 +99,9 @@ const VolumeFader = () => {
           rightAnalyzerRef.current = right;
           tdLeft = new Uint8Array(left.fftSize);
           tdRight = new Uint8Array(right.fftSize);
-        } catch {}
+        } catch {
+          // Some sources cannot expose separate stereo channels.
+        }
       }
 
       // Time since last frame
@@ -235,9 +241,6 @@ const VolumeFader = () => {
         Math.floor(width * AUDIO_THEME.meter.barWidthFraction),
       );
 
-      // We'll overlay the scale AFTER drawing the bars, so no horizontal offset is needed
-      const scaleWidth = 0;
-
       // Left bar
       ctx.fillStyle = gradientL;
       ctx.fillRect(0, height - barHeightL, barWidth, barHeightL);
@@ -343,7 +346,9 @@ const VolumeFader = () => {
         if (splitterRef.current) splitterRef.current.disconnect();
         if (leftAnalyzerRef.current) leftAnalyzerRef.current.disconnect();
         if (rightAnalyzerRef.current) rightAnalyzerRef.current.disconnect();
-      } catch {}
+      } catch {
+        // Nodes may already be disconnected during effect cleanup.
+      }
       splitterRef.current = null;
       leftAnalyzerRef.current = null;
       rightAnalyzerRef.current = null;
@@ -370,7 +375,7 @@ const VolumeFader = () => {
       />
       <SliderPrimitive.Root
         orientation="vertical"
-        className="absolute inset-x-0 inset-y-4 flex cursor-pointer touch-none select-none items-center justify-center"
+        className="absolute inset-x-0 inset-y-4 flex cursor-pointer touch-none items-center justify-center select-none"
         defaultValue={[1]}
         onValueChange={handleVolumeChange}
         min={0}
@@ -381,7 +386,7 @@ const VolumeFader = () => {
             <SliderPrimitive.Range className="absolute h-full bg-primary" />
           </div>
         </SliderPrimitive.Track>
-        <SliderPrimitive.Thumb className="block h-6 w-6 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50" />
+        <SliderPrimitive.Thumb className="block h-6 w-6 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50" />
       </SliderPrimitive.Root>
     </div>
   );

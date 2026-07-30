@@ -209,10 +209,7 @@ function parseSession(value: unknown): RecordingSession {
   );
 
   return {
-    duration: assertFiniteNumber(
-      candidateRecord.duration,
-      'session duration',
-    ),
+    duration: assertFiniteNumber(candidateRecord.duration, 'session duration'),
     metadata: {
       browser: assertString(metadataRecord.browser, 'metadata browser'),
       devicePixelRatio: assertFiniteNumber(
@@ -253,10 +250,7 @@ function percentile(values: number[], percentileValue: number): number {
   return sorted[lower] * (1 - weight) + sorted[upper] * weight;
 }
 
-function slopePerMinute(
-  timestamps: number[],
-  values: number[],
-): number {
+function slopePerMinute(timestamps: number[], values: number[]): number {
   if (timestamps.length < 2) {
     return 0;
   }
@@ -385,11 +379,7 @@ export function comparePerformanceRecordings(
     candidate.environment.physicalResolution,
     baseline.environment.physicalResolution,
   );
-  exact(
-    'recording.sample-rate',
-    candidate.sampleRateMs,
-    baseline.sampleRateMs,
-  );
+  exact('recording.sample-rate', candidate.sampleRateMs, baseline.sampleRateMs);
   atLeast(
     'recording.duration-min',
     candidate.durationMs,
@@ -424,10 +414,7 @@ export function comparePerformanceRecordings(
     actual: candidate.fixture.layerNames.join(', '),
     expected: baseline.fixture.layerNames.join(', '),
     id: 'fixture.layer-names',
-    pass: sameValues(
-      candidate.fixture.layerNames,
-      baseline.fixture.layerNames,
-    ),
+    pass: sameValues(candidate.fixture.layerNames, baseline.fixture.layerNames),
   });
 
   atLeast(
@@ -469,8 +456,7 @@ export function comparePerformanceRecordings(
   atMost(
     'stability.memory-slope',
     candidate.memoryMB.slopePerMinute,
-    baseline.memoryMB.slopePerMinute +
-      budget.memorySlopeAllowanceMBPerMinute,
+    baseline.memoryMB.slopePerMinute + budget.memorySlopeAllowanceMBPerMinute,
   );
 
   return {

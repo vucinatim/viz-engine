@@ -1,5 +1,3 @@
-'use client';
-
 import { cn } from '@/lib/utils';
 import React, { useCallback, useRef, useState } from 'react';
 
@@ -76,7 +74,7 @@ const CustomSeekerSlider = ({
       onMouseLeave={() => setIsHovering(false)}>
       {/* Progress track */}
       <div
-        className="absolute left-0 top-0 h-full rounded-full bg-white/60 transition-all duration-200"
+        className="absolute top-0 left-0 h-full rounded-full bg-white/60 transition-all duration-200"
         style={{ width: `${percentage}%` }}
       />
 

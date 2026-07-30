@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createVizSessionRuntimePreviewFrame } from '@/lib/viz-session';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
+import { createVizSessionRuntimePreviewFrame } from '@/lib/viz-session';
 import type { VizRenderPlan } from '@viz-engine/contracts';
 
 const audioFrameData = {
@@ -47,8 +47,7 @@ describe('Editor runtime preview attachment store', () => {
   });
 
   it('owns browser callbacks, mirrors, and the player ref without scene or inspection state', () => {
-    const attachmentStore =
-      useEditorRuntimePreviewAttachmentStore.getState();
+    const attachmentStore = useEditorRuntimePreviewAttachmentStore.getState();
     const renderLayerA = vi.fn();
     const mirrorCanvas = {} as HTMLCanvasElement;
     const playerRef = { current: { seekTo: vi.fn() } } as any;
@@ -70,11 +69,7 @@ describe('Editor runtime preview attachment store', () => {
 
     const renderPlan = createRenderPlan('layer-a');
     expect(
-      attachmentStore.renderRuntimePlan(
-        frame,
-        audioFrameData,
-        renderPlan,
-      ),
+      attachmentStore.renderRuntimePlan(frame, audioFrameData, renderPlan),
     ).toEqual(['layer-a']);
     expect(renderLayerA).toHaveBeenCalledWith({
       frame,
@@ -86,12 +81,13 @@ describe('Editor runtime preview attachment store', () => {
       height: 360,
     });
     expect(
-      useEditorRuntimePreviewAttachmentStore.getState()
-        .mirrorCanvasesByLayerId['layer-a'],
+      useEditorRuntimePreviewAttachmentStore.getState().mirrorCanvasesByLayerId[
+        'layer-a'
+      ],
     ).toEqual([mirrorCanvas]);
-    expect(
-      useEditorRuntimePreviewAttachmentStore.getState().playerRef,
-    ).toBe(playerRef);
+    expect(useEditorRuntimePreviewAttachmentStore.getState().playerRef).toBe(
+      playerRef,
+    );
 
     const state = useEditorRuntimePreviewAttachmentStore.getState();
     expect(state).not.toHaveProperty('layers');

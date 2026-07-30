@@ -1,16 +1,11 @@
-import type { VizResolvedArtifact } from "./artifacts.js";
-import type { VizMaterializedAsset, VizResolvedAsset } from "./assets.js";
-import type { VizArtifactId, VizAssetId } from "./ids.js";
+import type { VizResolvedArtifact } from './artifacts.js';
+import type { VizMaterializedAsset, VizResolvedAsset } from './assets.js';
+import type { VizArtifactId, VizAssetId } from './ids.js';
 
-export type VizExecutionMode = "live" | "render" | "bake";
+export type VizExecutionMode = 'live' | 'render' | 'bake';
 
 export type VizRendererFamily =
-  | "three"
-  | "canvas2d"
-  | "webgpu"
-  | "video"
-  | "image"
-  | "unknown";
+  'three' | 'canvas2d' | 'webgpu' | 'video' | 'image' | 'unknown';
 
 export interface VizTimeline {
   fps: number;
@@ -52,7 +47,7 @@ export interface VizRuntimeAudioFrameSnapshot {
   sourceAssetId?: VizAssetId;
   artifactId?: VizArtifactId;
   artifactFrame?: number;
-  provenance: "live" | "baked";
+  provenance: 'live' | 'baked';
 }
 
 export interface VizRuntimeInputs {

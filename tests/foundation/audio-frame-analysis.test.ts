@@ -12,13 +12,10 @@ const createSine = (
   sampleRate: number,
   amplitude = 0.8,
 ): Float32Array => {
-  const signal = new Float32Array(
-    Math.floor(durationSeconds * sampleRate),
-  );
+  const signal = new Float32Array(Math.floor(durationSeconds * sampleRate));
   for (let index = 0; index < signal.length; index += 1) {
     signal[index] =
-      Math.sin((2 * Math.PI * frequency * index) / sampleRate) *
-      amplitude;
+      Math.sin((2 * Math.PI * frequency * index) / sampleRate) * amplitude;
   }
   return signal;
 };
@@ -41,19 +38,14 @@ describe('standard audio frame analysis', () => {
     const first = analyzeStandardAudioFrames(signal, options);
     const second = analyzeStandardAudioFrames(signal, options);
 
-    expect(first.analysisVersion).toBe(
-      STANDARD_AUDIO_FRAME_ANALYSIS_VERSION,
-    );
+    expect(first.analysisVersion).toBe(STANDARD_AUDIO_FRAME_ANALYSIS_VERSION);
     expect(first.frameCount).toBe(10);
     expect(first.frequencyData).toHaveLength(10 * 32);
     expect(first.timeDomainData).toHaveLength(10 * 40);
     expect(first.frequencyData).toEqual(second.frequencyData);
     expect(first.timeDomainData).toEqual(second.timeDomainData);
     expect(
-      first.featureSeries.map(({ name, values }) => [
-        name,
-        Array.from(values),
-      ]),
+      first.featureSeries.map(({ name, values }) => [name, Array.from(values)]),
     ).toEqual(
       second.featureSeries.map(({ name, values }) => [
         name,
@@ -63,16 +55,13 @@ describe('standard audio frame analysis', () => {
   });
 
   it('keeps silence finite and centered in the waveform byte range', () => {
-    const result = analyzeStandardAudioFrames(
-      new Float32Array(4_000),
-      {
-        sampleRate: 8_000,
-        fps: 20,
-        fftSize: 512,
-        spectrumBinCount: 32,
-        waveformSampleCount: 40,
-      },
-    );
+    const result = analyzeStandardAudioFrames(new Float32Array(4_000), {
+      sampleRate: 8_000,
+      fps: 20,
+      fftSize: 512,
+      spectrumBinCount: 32,
+      waveformSampleCount: 40,
+    });
 
     expect(new Set(result.frequencyData)).toEqual(new Set([0]));
     expect(new Set(result.timeDomainData)).toEqual(new Set([128]));
@@ -84,14 +73,11 @@ describe('standard audio frame analysis', () => {
 
   it('places a bass sine in the low band and an impulse in onset channels', () => {
     const sampleRate = 8_000;
-    const bass = analyzeStandardAudioFrames(
-      createSine(110, 1, sampleRate),
-      {
-        sampleRate,
-        fps: 20,
-        fftSize: 512,
-      },
-    );
+    const bass = analyzeStandardAudioFrames(createSine(110, 1, sampleRate), {
+      sampleRate,
+      fps: 20,
+      fftSize: 512,
+    });
     const impulseSignal = new Float32Array(sampleRate);
     impulseSignal[Math.floor(sampleRate / 2)] = 1;
     const impulse = analyzeStandardAudioFrames(impulseSignal, {
@@ -111,19 +97,16 @@ describe('standard audio frame analysis', () => {
 
   it('uses explicit centered source-window alignment and reports progress', () => {
     const progress: Array<[number, number]> = [];
-    const result = analyzeStandardAudioFrames(
-      createSine(440, 1, 8_000),
-      {
-        sampleRate: 8_000,
-        fps: 10,
-        fftSize: 256,
-        startSample: 2_000,
-        sampleCount: 4_000,
-        onProgress: (completed, total) => {
-          progress.push([completed, total]);
-        },
+    const result = analyzeStandardAudioFrames(createSine(440, 1, 8_000), {
+      sampleRate: 8_000,
+      fps: 10,
+      fftSize: 256,
+      startSample: 2_000,
+      sampleCount: 4_000,
+      onProgress: (completed, total) => {
+        progress.push([completed, total]);
       },
-    );
+    });
 
     expect(result).toMatchObject({
       startSample: 2_000,
@@ -169,8 +152,6 @@ describe('standard audio frame analysis', () => {
           cancel = true;
         },
       }),
-    ).rejects.toBeInstanceOf(
-      StandardAudioFrameAnalysisCancelledError,
-    );
+    ).rejects.toBeInstanceOf(StandardAudioFrameAnalysisCancelledError);
   });
 });

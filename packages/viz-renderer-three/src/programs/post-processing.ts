@@ -1,20 +1,20 @@
 import {
   ACESFilmicToneMapping,
-  type Camera,
-  type Scene,
   ShaderMaterial,
-  type ToneMapping,
   UniformsUtils,
   Vector2,
+  type Camera,
+  type Scene,
+  type ToneMapping,
   type WebGLRenderTarget,
   type WebGLRenderer,
-} from "three";
-import { CopyShader } from "three/examples/jsm/shaders/CopyShader.js";
-import { BokehPass } from "three/examples/jsm/postprocessing/BokehPass.js";
-import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { FullScreenQuad } from "three/examples/jsm/postprocessing/Pass.js";
-import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+} from 'three';
+import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { CopyShader } from 'three/examples/jsm/shaders/CopyShader.js';
 
 export interface VizThreePostProcessingSettings {
   bloomEnabled: boolean;
@@ -32,10 +32,7 @@ export interface VizThreePostProcessingSettings {
 export interface VizThreePostProcessingPipeline {
   update(settings: VizThreePostProcessingSettings): void;
   resize(width: number, height: number): void;
-  render(
-    renderer: WebGLRenderer,
-    renderTarget: WebGLRenderTarget,
-  ): void;
+  render(renderer: WebGLRenderer, renderTarget: WebGLRenderTarget): void;
   dispose(): void;
 }
 
@@ -80,15 +77,10 @@ export const createVizThreePostProcessingPipeline = ({
 
     if (bokehPass) {
       bokehPass.enabled = settings.depthOfFieldEnabled;
-      const uniforms = bokehPass.uniforms as Record<
-        string,
-        { value: unknown }
-      >;
+      const uniforms = bokehPass.uniforms as Record<string, { value: unknown }>;
       uniforms.focus!.value = settings.depthOfFieldFocus;
-      uniforms.aperture!.value =
-        settings.depthOfFieldAperture;
-      uniforms.maxblur!.value =
-        settings.depthOfFieldMaxBlur;
+      uniforms.aperture!.value = settings.depthOfFieldAperture;
+      uniforms.maxblur!.value = settings.depthOfFieldMaxBlur;
     }
   };
 
@@ -144,10 +136,8 @@ export const createVizThreePostProcessingPipeline = ({
     render(renderer, renderTarget) {
       const previousToneMapping = renderer.toneMapping;
       const previousExposure = renderer.toneMappingExposure;
-      renderer.toneMapping =
-        settings.toneMapping ?? ACESFilmicToneMapping;
-      renderer.toneMappingExposure =
-        settings.toneMappingExposure ?? 1.2;
+      renderer.toneMapping = settings.toneMapping ?? ACESFilmicToneMapping;
+      renderer.toneMappingExposure = settings.toneMappingExposure ?? 1.2;
 
       if (!settings.bloomEnabled && !settings.depthOfFieldEnabled) {
         renderer.setRenderTarget(renderTarget);

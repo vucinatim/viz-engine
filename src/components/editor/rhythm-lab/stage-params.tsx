@@ -1,10 +1,8 @@
-'use client';
-
-import { StageParamUiDefinition } from '@/lib/rhythm-lab/analysis-graph';
-import useRhythmLabStore from '@/lib/stores/rhythm-lab-store';
 import { Input } from '@/components/ui/input';
 import { SimpleSelect } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { StageParamUiDefinition } from '@/lib/rhythm-lab/analysis-graph';
+import useRhythmLabStore from '@/lib/stores/rhythm-lab-store';
 
 type StageParamsProps = {
   params: StageParamUiDefinition[];
@@ -28,7 +26,9 @@ const StageParams = ({ params }: StageParamsProps) => {
             <SimpleSelect
               name={param.label}
               value={String(value)}
-              onChange={(next) => setParam(param.id as keyof typeof values, next as any)}
+              onChange={(next) =>
+                setParam(param.id as keyof typeof values, next as any)
+              }
               options={param.options || []}
               size="xs"
             />
@@ -45,7 +45,9 @@ const StageParams = ({ params }: StageParamsProps) => {
           </span>
           <Switch
             checked={Boolean(value)}
-            onCheckedChange={(next) => setParam(param.id as keyof typeof values, next as any)}
+            onCheckedChange={(next) =>
+              setParam(param.id as keyof typeof values, next as any)
+            }
             size="xs"
           />
         </div>
@@ -71,7 +73,9 @@ const StageParams = ({ params }: StageParamsProps) => {
     );
   };
 
-  return <div className="flex flex-col gap-2">{params.map(renderParamControl)}</div>;
+  return (
+    <div className="flex flex-col gap-2">{params.map(renderParamControl)}</div>
+  );
 };
 
 export default StageParams;

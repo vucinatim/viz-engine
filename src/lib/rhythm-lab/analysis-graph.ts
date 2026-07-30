@@ -1,12 +1,7 @@
 export type StageParamUiType = 'number' | 'boolean' | 'select';
 
 export type OutputViewId =
-  | 'Onset'
-  | 'Grid'
-  | 'Kick'
-  | 'Snare'
-  | 'Hat'
-  | 'Custom';
+  'Onset' | 'Grid' | 'Kick' | 'Snare' | 'Hat' | 'Custom';
 
 export type StageStatus = 'active' | 'placeholder';
 
@@ -43,9 +38,19 @@ export const PIPELINE_STAGES: PipelineStageDefinition[] = [
     title: 'Onset',
     status: 'active',
     params: [
-      { id: 'hopLength', label: 'hop (samples)', type: 'number', unit: 'samples' },
+      {
+        id: 'hopLength',
+        label: 'hop (samples)',
+        type: 'number',
+        unit: 'samples',
+      },
       { id: 'nFft', label: 'n_fft (samples)', type: 'number', unit: 'samples' },
-      { id: 'winLength', label: 'win (samples)', type: 'number', unit: 'samples' },
+      {
+        id: 'winLength',
+        label: 'win (samples)',
+        type: 'number',
+        unit: 'samples',
+      },
       {
         id: 'aggregate',
         label: 'aggregate',
@@ -75,7 +80,12 @@ export const PIPELINE_STAGES: PipelineStageDefinition[] = [
     title: 'Grid',
     status: 'active',
     params: [
-      { id: 'phaseOffset', label: 'phase (frames)', type: 'number', unit: 'frames' },
+      {
+        id: 'phaseOffset',
+        label: 'phase (frames)',
+        type: 'number',
+        unit: 'frames',
+      },
       { id: 'optimizePhase', label: 'optimize', type: 'boolean' },
     ],
   },

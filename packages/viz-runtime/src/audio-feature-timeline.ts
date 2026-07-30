@@ -3,22 +3,22 @@ import {
   type VizAudioFeatureSeries,
   type VizAudioFeatureTimelineArtifact,
   type VizPackedAudioFrameSeries,
-  type VizResolvedArtifact,
   type VizProjectDocument,
+  type VizResolvedArtifact,
   type VizRuntimeAudioFrameSnapshot,
-} from "@viz-engine/contracts";
+} from '@viz-engine/contracts';
 
 const isFiniteNumber = (value: unknown): value is number =>
-  typeof value === "number" && Number.isFinite(value);
+  typeof value === 'number' && Number.isFinite(value);
 const isNonEmptyString = (value: unknown): value is string =>
-  typeof value === "string" && value.trim().length > 0;
+  typeof value === 'string' && value.trim().length > 0;
 
 const artifactValidationCache = new WeakMap<object, boolean>();
 
 const isAudioFeatureSeries = (
   value: unknown,
 ): value is VizAudioFeatureSeries => {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false;
   }
 
@@ -28,19 +28,13 @@ const isAudioFeatureSeries = (
     Array.isArray(candidate.values) &&
     candidate.values.every(isFiniteNumber) &&
     (candidate.unit === undefined ||
-      [
-        "linear-amplitude",
-        "unit",
-        "hertz",
-        "custom",
-      ].includes(candidate.unit)) &&
+      ['linear-amplitude', 'unit', 'hertz', 'custom'].includes(
+        candidate.unit,
+      )) &&
     (candidate.normalization === undefined ||
-      [
-        "none",
-        "decibel-unit",
-        "artifact-peak",
-        "custom",
-      ].includes(candidate.normalization)) &&
+      ['none', 'decibel-unit', 'artifact-peak', 'custom'].includes(
+        candidate.normalization,
+      )) &&
     (candidate.min === undefined || isFiniteNumber(candidate.min)) &&
     (candidate.max === undefined || isFiniteNumber(candidate.max))
   );
@@ -50,39 +44,47 @@ const isPackedFrameSeries = (
   value: unknown,
   expectedFrameCount: number,
 ): value is VizPackedAudioFrameSeries => {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false;
   }
   const candidate = value as Partial<VizPackedAudioFrameSeries>;
   const valuesPerFrame = candidate.valuesPerFrame;
   if (
-    candidate.encoding !== "uint8-base64" ||
     candidate.frameCount !== expectedFrameCount ||
-    typeof valuesPerFrame !== "number" ||
+    typeof valuesPerFrame !== 'number' ||
     !Number.isInteger(valuesPerFrame) ||
-    valuesPerFrame <= 0 ||
-    typeof candidate.data !== "string"
+    valuesPerFrame <= 0
   ) {
     return false;
   }
-  try {
-    return (
-      decodeVizUint8Base64(candidate.data).length ===
-      expectedFrameCount * valuesPerFrame
-    );
-  } catch {
-    return false;
+  const expectedLength = expectedFrameCount * valuesPerFrame;
+  if (
+    candidate.encoding === 'uint8-array' &&
+    candidate.data instanceof Uint8Array
+  ) {
+    return candidate.data.length === expectedLength;
   }
+  if (
+    candidate.encoding === 'uint8-base64' &&
+    typeof candidate.data === 'string'
+  ) {
+    try {
+      return decodeVizUint8Base64(candidate.data).length === expectedLength;
+    } catch {
+      return false;
+    }
+  }
+  return false;
 };
 
 const isAudioAnalysisIdentity = (
   value: unknown,
-): value is NonNullable<VizAudioFeatureTimelineArtifact["analysis"]> => {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+): value is NonNullable<VizAudioFeatureTimelineArtifact['analysis']> => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false;
   }
   const candidate = value as Partial<
-    NonNullable<VizAudioFeatureTimelineArtifact["analysis"]>
+    NonNullable<VizAudioFeatureTimelineArtifact['analysis']>
   >;
   return (
     isNonEmptyString(candidate.pipeline) &&
@@ -93,9 +95,8 @@ const isAudioAnalysisIdentity = (
     (candidate.channelCount === 1 || candidate.channelCount === 2) &&
     Number.isInteger(candidate.fftSize) &&
     (candidate.fftSize ?? 0) >= 32 &&
-    (((candidate.fftSize ?? 0) & ((candidate.fftSize ?? 0) - 1)) ===
-      0) &&
-    candidate.window === "hann" &&
+    ((candidate.fftSize ?? 0) & ((candidate.fftSize ?? 0) - 1)) === 0 &&
+    candidate.window === 'hann' &&
     isFiniteNumber(candidate.minDecibels) &&
     isFiniteNumber(candidate.maxDecibels) &&
     candidate.minDecibels < candidate.maxDecibels
@@ -105,7 +106,7 @@ const isAudioAnalysisIdentity = (
 export const isVizAudioFeatureTimelineArtifact = (
   value: unknown,
 ): value is VizAudioFeatureTimelineArtifact => {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false;
   }
   const cached = artifactValidationCache.get(value);
@@ -117,30 +118,30 @@ export const isVizAudioFeatureTimelineArtifact = (
   const frameAlignment = candidate.frameAlignment;
   const sourceWindow = candidate.sourceWindow;
   const frameCount =
-    typeof frameAlignment === "object" &&
+    typeof frameAlignment === 'object' &&
     frameAlignment !== null &&
-    "frameCount" in frameAlignment
+    'frameCount' in frameAlignment
       ? (frameAlignment as { frameCount?: unknown }).frameCount
       : undefined;
   const packedFrames = candidate.packedFrames;
 
   const isValid =
     candidate.schemaVersion === 1 &&
-    candidate.kind === "audio-feature-timeline" &&
-    (candidate.profile === "standard" ||
-      candidate.profile === "extended" ||
-      candidate.profile === "specialized") &&
+    candidate.kind === 'audio-feature-timeline' &&
+    (candidate.profile === 'standard' ||
+      candidate.profile === 'extended' ||
+      candidate.profile === 'specialized') &&
     isNonEmptyString(candidate.id) &&
     isNonEmptyString(candidate.label) &&
     isNonEmptyString(candidate.sourceAssetId) &&
-    typeof frameAlignment === "object" &&
+    typeof frameAlignment === 'object' &&
     frameAlignment !== null &&
     isFiniteNumber(frameAlignment.fps) &&
     frameAlignment.fps > 0 &&
     Number.isInteger(frameAlignment.frameCount) &&
     frameAlignment.frameCount >= 0 &&
-    frameAlignment.alignment === "frame-centered" &&
-    typeof sourceWindow === "object" &&
+    frameAlignment.alignment === 'frame-centered' &&
+    typeof sourceWindow === 'object' &&
     sourceWindow !== null &&
     Number.isInteger(sourceWindow.startSample) &&
     sourceWindow.startSample >= 0 &&
@@ -153,22 +154,15 @@ export const isVizAudioFeatureTimelineArtifact = (
     Array.isArray(candidate.featureSeries) &&
     candidate.featureSeries.every(
       (series) =>
-        isAudioFeatureSeries(series) &&
-        series.values.length === frameCount,
+        isAudioFeatureSeries(series) && series.values.length === frameCount,
     ) &&
     (candidate.analysis === undefined ||
       isAudioAnalysisIdentity(candidate.analysis)) &&
     (packedFrames === undefined ||
       (candidate.analysis !== undefined &&
-        isPackedFrameSeries(
-          packedFrames.frequency,
-          frameCount as number,
-        ) &&
-        isPackedFrameSeries(
-          packedFrames.timeDomain,
-          frameCount as number,
-        ) &&
-        (candidate.profile !== "standard" ||
+        isPackedFrameSeries(packedFrames.frequency, frameCount as number) &&
+        isPackedFrameSeries(packedFrames.timeDomain, frameCount as number) &&
+        (candidate.profile !== 'standard' ||
           (packedFrames.frequency.valuesPerFrame ===
             candidate.analysis.fftSize / 2 &&
             packedFrames.timeDomain.valuesPerFrame ===
@@ -217,8 +211,7 @@ const mapRuntimeFrameToArtifactFrame = (
     return 0;
   }
   const mapped = Math.floor(
-    ((Math.max(0, frame) + 0.5) * artifact.frameAlignment.fps) /
-      runtimeFps,
+    ((Math.max(0, frame) + 0.5) * artifact.frameAlignment.fps) / runtimeFps,
   );
   return Math.max(0, Math.min(mapped, frameCount - 1));
 };
@@ -265,13 +258,13 @@ const getDecodedFrames = (
   if (cached) {
     return cached;
   }
+  const decode = (series: VizPackedAudioFrameSeries): Uint8Array =>
+    series.encoding === 'uint8-array'
+      ? series.data
+      : decodeVizUint8Base64(series.data);
   const decoded = {
-    frequency: decodeVizUint8Base64(
-      artifact.packedFrames.frequency.data,
-    ),
-    timeDomain: decodeVizUint8Base64(
-      artifact.packedFrames.timeDomain.data,
-    ),
+    frequency: decode(artifact.packedFrames.frequency),
+    timeDomain: decode(artifact.packedFrames.timeDomain),
   };
   const expectedFrequencyLength =
     artifact.packedFrames.frequency.frameCount *
@@ -298,12 +291,7 @@ export const sampleAudioFrameSnapshot = (
 ): VizRuntimeAudioFrameSnapshot | undefined => {
   const packed = artifact.packedFrames;
   const analysis = artifact.analysis;
-  if (
-    !packed ||
-    !analysis ||
-    !Number.isFinite(runtimeFps) ||
-    runtimeFps <= 0
-  ) {
+  if (!packed || !analysis || !Number.isFinite(runtimeFps) || runtimeFps <= 0) {
     return undefined;
   }
   const decoded = getDecodedFrames(artifact);
@@ -315,10 +303,8 @@ export const sampleAudioFrameSnapshot = (
     frame,
     runtimeFps,
   );
-  const frequencyStart =
-    artifactFrame * packed.frequency.valuesPerFrame;
-  const timeDomainStart =
-    artifactFrame * packed.timeDomain.valuesPerFrame;
+  const frequencyStart = artifactFrame * packed.frequency.valuesPerFrame;
+  const timeDomainStart = artifactFrame * packed.timeDomain.valuesPerFrame;
 
   return {
     frequencyData: decoded.frequency.slice(
@@ -336,7 +322,7 @@ export const sampleAudioFrameSnapshot = (
     sourceAssetId: artifact.sourceAssetId,
     artifactId: artifact.id,
     artifactFrame,
-    provenance: "baked",
+    provenance: 'baked',
   };
 };
 
@@ -346,7 +332,7 @@ export const sampleProjectAudioFrameSnapshot = (
   frame: number,
 ): VizRuntimeAudioFrameSnapshot | undefined => {
   for (const artifactRef of project.artifactRefs ?? []) {
-    if (artifactRef.kind !== "audio-feature-timeline") {
+    if (artifactRef.kind !== 'audio-feature-timeline') {
       continue;
     }
     const resolved = resolvedArtifacts.find(

@@ -1,9 +1,9 @@
-import { exampleAudioTimelineArtifact } from "@viz-engine/example-projects";
-import { writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { exampleAudioTimelineArtifact } from '@viz-engine/example-projects';
+import { writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 const outputPath = resolve(
-  "packages/viz-example-projects/fixtures/example-reactive-bars-bundle/baked/audio-standard-main.json",
+  'packages/viz-example-projects/fixtures/example-reactive-bars-bundle/baked/audio-standard-main.json',
 );
 
 writeFileSync(

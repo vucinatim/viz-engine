@@ -1,6 +1,4 @@
-'use client';
-
-import { AnimatedLiveValue } from '@/components/config/dynamic-form';
+import { AnimatedLiveValue } from '@/components/editor/animated-live-value';
 import { cn } from '@/lib/utils';
 import { memo } from 'react';
 

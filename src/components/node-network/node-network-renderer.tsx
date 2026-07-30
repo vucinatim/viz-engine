@@ -34,9 +34,9 @@ import {
   ContextMenuItem,
 } from '../ui/context-menu';
 import { isConnectionValid } from './connection-validator';
+import { isProtectedGraphNode } from './graph-types';
 import NodeRenderer from './node-renderer';
 import NodesSearch from './nodes-search';
-import { isProtectedGraphNode } from './graph-types';
 
 const NodeNetworkRenderer = ({
   nodeNetworkId,
@@ -48,7 +48,6 @@ const NodeNetworkRenderer = ({
   reactFlowInstance?: React.MutableRefObject<any>;
 }) => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const isDraggingRef = useRef(false);
 
   // Use the passed instance or create our own if not provided
   const localReactFlowInstance = useRef<any>(null);
@@ -56,15 +55,18 @@ const NodeNetworkRenderer = ({
 
   // Get nodes and edges from the network store
   const network = useSpecificNetwork(nodeNetworkId);
-  const nodes = network?.nodes || [];
-  const edges = network?.edges || [];
+  const nodes = useMemo(() => network?.nodes ?? [], [network?.nodes]);
+  const edges = useMemo(() => network?.edges ?? [], [network?.edges]);
   const [flowNodes, setFlowNodes] = useState<any[]>(nodes);
+  const [paneMenuGeneration, setPaneMenuGeneration] = useState(0);
   const flowNodesRef = useRef<any[]>(nodes);
 
   useEffect(() => {
     setFlowNodes((currentNodes) =>
       nodes.map((node) => {
-        const current = currentNodes.find((candidate) => candidate.id === node.id);
+        const current = currentNodes.find(
+          (candidate) => candidate.id === node.id,
+        );
         return current
           ? {
               ...node,
@@ -72,7 +74,9 @@ const NodeNetworkRenderer = ({
                 ? {}
                 : { measured: current.measured }),
               ...(current.width === undefined ? {} : { width: current.width }),
-              ...(current.height === undefined ? {} : { height: current.height }),
+              ...(current.height === undefined
+                ? {}
+                : { height: current.height }),
               ...(current.selected === undefined
                 ? {}
                 : { selected: current.selected }),
@@ -91,14 +95,14 @@ const NodeNetworkRenderer = ({
     (newNodes: any[]) => {
       setNodesInNetwork(nodeNetworkId, newNodes);
     },
-    [nodeNetworkId, setNodesInNetwork],
+    [nodeNetworkId],
   );
 
   const setEdges = useCallback(
     (newEdges: any[]) => {
       setEdgesInNetwork(nodeNetworkId, newEdges);
     },
-    [nodeNetworkId, setEdgesInNetwork],
+    [nodeNetworkId],
   );
 
   // History functions
@@ -110,12 +114,8 @@ const NodeNetworkRenderer = ({
     editorControl.history.redoNodeEditor(nodeNetworkId);
   }, [nodeNetworkId]);
 
-  const canUndo = useHistoryStore(
-    (state) => state.canUndo(),
-  );
-  const canRedo = useHistoryStore(
-    (state) => state.canRedo(),
-  );
+  const canUndo = useHistoryStore((state) => state.canUndo());
+  const canRedo = useHistoryStore((state) => state.canRedo());
 
   const startDrag = useCallback(() => {
     editorControl.history.startNodeDrag(nodeNetworkId);
@@ -126,15 +126,11 @@ const NodeNetworkRenderer = ({
   }, [nodeNetworkId]);
 
   // Use the clipboard hook for copy/paste functionality
-  const {
-    copySelectedNodes,
-    pasteNodesAtPosition,
-    duplicateSelectedNodes,
-    canPaste,
-  } = useNodeGraphClipboard({
-    parameterId: nodeNetworkId,
-    reactFlowInstance: finalReactFlowInstance,
-  });
+  const { copyNode, pasteNodesAtPosition, duplicateNode } =
+    useNodeGraphClipboard({
+      parameterId: nodeNetworkId,
+      reactFlowInstance: finalReactFlowInstance,
+    });
 
   // Mouse position tracking for context menu
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -162,9 +158,9 @@ const NodeNetworkRenderer = ({
 
   const isValidConnection = useCallback(
     (connection: Connection | Edge) => {
-      return isConnectionValid(connection as Connection, flowNodes, edges);
+      return isConnectionValid(connection as Connection, flowNodes);
     },
-    [flowNodes, edges],
+    [flowNodes],
   );
 
   // Handle edge reconnection
@@ -188,14 +184,14 @@ const NodeNetworkRenderer = ({
               <ContextMenuItem
                 inset
                 onClick={() => {
-                  copySelectedNodes();
+                  copyNode(props.id);
                 }}>
                 Copy
               </ContextMenuItem>
               <ContextMenuItem
                 inset
                 onClick={() => {
-                  duplicateSelectedNodes();
+                  duplicateNode(props.id);
                 }}>
                 Duplicate
               </ContextMenuItem>
@@ -220,8 +216,7 @@ const NodeNetworkRenderer = ({
                   const node = flowNodesRef.current.find(
                     (candidate) => candidate.id === props.id,
                   );
-                  const isProtected =
-                    node && isProtectedGraphNode(node);
+                  const isProtected = node && isProtectedGraphNode(node);
 
                   if (!isProtected) {
                     // Use ReactFlow's built-in deletion mechanism
@@ -260,13 +255,15 @@ const NodeNetworkRenderer = ({
   return (
     <div
       ref={reactFlowWrapper}
+      data-testid="node-network"
       className="relative h-full w-full"
       onContextMenu={onPaneContextMenu}>
       {/* Selection indicator */}
       {/* The selection indicator is removed as per the edit hint */}
-      <ContextMenu>
+      <ContextMenu key={paneMenuGeneration}>
         <ContextMenuTrigger>
           <ReactFlow
+            key={nodeNetworkId}
             onInit={(instance) => {
               finalReactFlowInstance.current = instance;
               onReactFlowInit?.(instance);
@@ -319,16 +316,12 @@ const NodeNetworkRenderer = ({
               // React Flow measurement and selection are canvas-local UI state.
               // Only durable graph edits are written back to the canonical document.
               if (filteredChanges.length > 0) {
-                const newNodes = applyNodeChanges(
-                  filteredChanges,
-                  flowNodes,
-                );
+                const newNodes = applyNodeChanges(filteredChanges, flowNodes);
                 setFlowNodes(newNodes);
                 if (
                   filteredChanges.some(
                     (change) =>
-                      change.type !== 'dimensions' &&
-                      change.type !== 'select',
+                      change.type !== 'dimensions' && change.type !== 'select',
                   )
                 ) {
                   setNodes(newNodes);
@@ -338,9 +331,6 @@ const NodeNetworkRenderer = ({
               if (isDragEnd) {
                 endDrag();
               }
-            }}
-            onSelectionChange={(elements) => {
-              // This handler is no longer needed as selection state is removed
             }}
             onEdgesChange={(changes) => {
               const newEdges = applyEdgeChanges(changes, edges);
@@ -383,6 +373,9 @@ const NodeNetworkRenderer = ({
                 networkId={nodeNetworkId}
                 mousePosition={mousePosition}
                 getCanvasPosition={getCanvasPosition}
+                onNodeAdded={() =>
+                  setPaneMenuGeneration((generation) => generation + 1)
+                }
               />
               <ContextMenuItem
                 inset

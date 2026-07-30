@@ -1,5 +1,3 @@
-'use client';
-
 import { Button } from '@/components/ui/button';
 import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 import useExportStore from '@/lib/stores/export-store';

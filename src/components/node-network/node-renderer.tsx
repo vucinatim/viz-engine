@@ -170,7 +170,10 @@ const NodeRenderer = ({
   };
 
   return (
-    <div className="relative">
+    <div
+      className="relative"
+      data-testid="graph-node"
+      data-graph-node-id={nodeId}>
       {/* Floating label above output node */}
       {isOutputNode && parameterInfo && (
         <div className="pointer-events-none absolute bottom-full left-0 mb-2">
@@ -199,7 +202,7 @@ const NodeRenderer = ({
           selected && 'border-animation-purple shadow-lg',
         )}>
         <div className="flex w-full items-center justify-between gap-2 rounded-t-lg bg-zinc-800 px-2 py-1">
-          <p className="select-none text-xs font-bold">{getNodeHeaderText()}</p>
+          <p className="text-xs font-bold select-none">{getNodeHeaderText()}</p>
           {definition?.description && (
             <SimpleTooltip
               text={definition.description}

@@ -3,34 +3,30 @@ import type {
   VizRenderGroupNode,
   VizRenderRectNode,
   VizRenderTextNode,
-} from "@viz-engine/contracts";
-import { featureExtractionBarsAuthoring } from "./authoring/feature-extraction-bars.js";
-import { asNumber } from "./shared.js";
+} from '@viz-engine/contracts';
+import { featureExtractionBarsAuthoring } from './authoring/feature-extraction-bars.js';
+import { asNumber } from './shared.js';
 
 const CHANNELS = [
-  { key: "kick", label: "Kick", color: "#ef4444" },
-  { key: "snare", label: "Snare", color: "#f59e0b" },
-  { key: "bass", label: "Bass", color: "#22c55e" },
-  { key: "melody", label: "Melody", color: "#60a5fa" },
-  { key: "percussion", label: "Perc", color: "#a78bfa" },
+  { key: 'kick', label: 'Kick', color: '#ef4444' },
+  { key: 'snare', label: 'Snare', color: '#f59e0b' },
+  { key: 'bass', label: 'Bass', color: '#22c55e' },
+  { key: 'melody', label: 'Melody', color: '#60a5fa' },
+  { key: 'percussion', label: 'Perc', color: '#a78bfa' },
 ] as const;
 
 export const featureExtractionBarsComponent: VizComponentImplementation = {
-  id: "feature-extraction-bars",
-  name: "Feature Extraction Bars",
-  rendererFamily: "three",
-  implementationVersion: "1.0.0",
+  id: 'feature-extraction-bars',
+  name: 'Feature Extraction Bars',
+  rendererFamily: 'three',
+  implementationVersion: '1.0.0',
   authoring: featureExtractionBarsAuthoring,
   description:
     "Runtime-backed port of the preserved editor's five feature channel visual.",
   inputs: CHANNELS.map((channel) => ({
     key: channel.key,
     label: channel.label,
-    supportedSources: [
-      "artifact-feature",
-      "graph-output",
-      "literal",
-    ] as const,
+    supportedSources: ['artifact-feature', 'graph-output', 'literal'] as const,
   })),
   render: ({ viewport, layer, settings }) => {
     const padTop = Math.max(10, viewport.height * 0.05);
@@ -43,15 +39,15 @@ export const featureExtractionBarsComponent: VizComponentImplementation = {
     const barWidth = Math.max(0, columnAreaWidth - barMargin * 2);
     const labelFontSize = Math.floor(Math.max(10, barWidth * 0.22));
     const valueFontSize = Math.floor(Math.max(12, barWidth * 0.28));
-    const children: VizRenderGroupNode["children"] = [
+    const children: VizRenderGroupNode['children'] = [
       {
-        kind: "rect",
+        kind: 'rect',
         id: `${layer.id}-background`,
         x: 0,
         y: 0,
         width: viewport.width,
         height: viewport.height,
-        style: { fill: "#000000", opacity: 0.4 },
+        style: { fill: '#000000', opacity: 0.4 },
       } satisfies VizRenderRectNode,
     ];
 
@@ -64,16 +60,16 @@ export const featureExtractionBarsComponent: VizComponentImplementation = {
 
       children.push(
         {
-          kind: "rect",
+          kind: 'rect',
           id: `${layer.id}-${channel.key}-track`,
           x,
           y: barAreaTop,
           width: barWidth,
           height: barAreaHeight,
-          style: { fill: "#ffffff", opacity: 0.08 },
+          style: { fill: '#ffffff', opacity: 0.08 },
         } satisfies VizRenderRectNode,
         {
-          kind: "rect",
+          kind: 'rect',
           id: `${layer.id}-${channel.key}-fill`,
           x,
           y,
@@ -82,36 +78,36 @@ export const featureExtractionBarsComponent: VizComponentImplementation = {
           style: { fill: channel.color },
         } satisfies VizRenderRectNode,
         {
-          kind: "text",
+          kind: 'text',
           id: `${layer.id}-${channel.key}-label`,
           x: x + barWidth / 2,
           y: viewport.height - padBottom / 2,
           text: channel.label,
           fontSize: labelFontSize,
           fontFamily:
-            "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-          anchor: "middle",
-          baseline: "middle",
-          style: { fill: "#ffffff", opacity: 0.9 },
+            'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
+          anchor: 'middle',
+          baseline: 'middle',
+          style: { fill: '#ffffff', opacity: 0.9 },
         } satisfies VizRenderTextNode,
         {
-          kind: "text",
+          kind: 'text',
           id: `${layer.id}-${channel.key}-value`,
           x: x + barWidth / 2,
           y: barAreaTop + barAreaHeight / 2,
           text: rawValue.toFixed(2),
           fontSize: valueFontSize,
           fontFamily:
-            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-          anchor: "middle",
-          baseline: "middle",
-          style: { fill: "#ffffff", opacity: 0.9 },
+            'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+          anchor: 'middle',
+          baseline: 'middle',
+          style: { fill: '#ffffff', opacity: 0.9 },
         } satisfies VizRenderTextNode,
       );
     }
 
     return {
-      kind: "group",
+      kind: 'group',
       id: layer.id,
       children,
     };

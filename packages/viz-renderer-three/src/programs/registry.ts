@@ -2,23 +2,23 @@ import type {
   VizCapabilityPackManifest,
   VizMaterializedAsset,
   VizRenderThreeProgramNode,
-} from "@viz-engine/contracts";
-import { createSimpleCubeProgram } from "./simple-cube.js";
-import { createStageSceneProgram } from "./stage-scene.js";
-import { createParticleSystemProgram } from "./particle-system.js";
-import { createOrbitingCubesProgram } from "./orbiting-cubes.js";
-import { createInstancedSupercubeProgram } from "./instanced-supercube.js";
-import { createLightTunnelProgram } from "./light-tunnel.js";
-import { createMorphShapesProgram } from "./morph-shapes.js";
-import { createNeuralNetworkProgram } from "./neural-network.js";
-import type {
-  VizThreeProgramFactory,
-  VizThreeProgramInstance,
-} from "./types.js";
+} from '@viz-engine/contracts';
 import {
   createVizThreeModelResourceManager,
   type VizThreeModelResourceManager,
-} from "../model-resources.js";
+} from '../model-resources.js';
+import { createInstancedSupercubeProgram } from './instanced-supercube.js';
+import { createLightTunnelProgram } from './light-tunnel.js';
+import { createMorphShapesProgram } from './morph-shapes.js';
+import { createNeuralNetworkProgram } from './neural-network.js';
+import { createOrbitingCubesProgram } from './orbiting-cubes.js';
+import { createParticleSystemProgram } from './particle-system.js';
+import { createSimpleCubeProgram } from './simple-cube.js';
+import { createStageSceneProgram } from './stage-scene.js';
+import type {
+  VizThreeProgramFactory,
+  VizThreeProgramInstance,
+} from './types.js';
 
 export interface VizThreeProgramDefinition {
   id: string;
@@ -42,48 +42,48 @@ export interface VizThreeProgramRegistry {
 
 export const coreVizThreeRendererExtension: VizThreeRendererExtension = {
   capabilityPack: {
-    id: "@viz-engine/components-core",
-    version: "0.0.1",
+    id: '@viz-engine/components-core',
+    version: '0.0.1',
   },
   programs: [
     {
-      id: "viz-core/simple-cube/v1",
-      implementationVersion: "1.0.0",
+      id: 'viz-core/simple-cube/v1',
+      implementationVersion: '1.0.0',
       factory: createSimpleCubeProgram,
     },
     {
-      id: "viz-core/particle-system/v1",
-      implementationVersion: "1.0.0",
+      id: 'viz-core/particle-system/v1',
+      implementationVersion: '1.0.0',
       factory: createParticleSystemProgram,
     },
     {
-      id: "viz-core/orbiting-cubes/v1",
-      implementationVersion: "1.0.0",
+      id: 'viz-core/orbiting-cubes/v1',
+      implementationVersion: '1.0.0',
       factory: createOrbitingCubesProgram,
     },
     {
-      id: "viz-core/instanced-supercube/v1",
-      implementationVersion: "1.0.0",
+      id: 'viz-core/instanced-supercube/v1',
+      implementationVersion: '1.0.0',
       factory: createInstancedSupercubeProgram,
     },
     {
-      id: "viz-core/light-tunnel/v1",
-      implementationVersion: "1.0.0",
+      id: 'viz-core/light-tunnel/v1',
+      implementationVersion: '1.0.0',
       factory: createLightTunnelProgram,
     },
     {
-      id: "viz-core/morph-shapes/v1",
-      implementationVersion: "1.0.0",
+      id: 'viz-core/morph-shapes/v1',
+      implementationVersion: '1.0.0',
       factory: createMorphShapesProgram,
     },
     {
-      id: "viz-core/neural-network/v1",
-      implementationVersion: "1.0.0",
+      id: 'viz-core/neural-network/v1',
+      implementationVersion: '1.0.0',
       factory: createNeuralNetworkProgram,
     },
     {
-      id: "viz-core/stage-scene/v1",
-      implementationVersion: "1.0.0",
+      id: 'viz-core/stage-scene/v1',
+      implementationVersion: '1.0.0',
       factory: createStageSceneProgram,
     },
   ],
@@ -99,7 +99,7 @@ export const createVizThreeProgramRegistry = (
 
     if (!id.trim() || !version.trim()) {
       throw new Error(
-        "Viz Three renderer extensions must declare a non-empty capability-pack id and version.",
+        'Viz Three renderer extensions must declare a non-empty capability-pack id and version.',
       );
     }
     if (seenCapabilityPackIds.has(id)) {
@@ -120,7 +120,7 @@ export const createVizThreeProgramRegistry = (
 
   for (const registration of registrations) {
     if (!registration.id.trim()) {
-      throw new Error("Viz Three program id must be a non-empty string.");
+      throw new Error('Viz Three program id must be a non-empty string.');
     }
     if (!registration.implementationVersion.trim()) {
       throw new Error(
@@ -128,9 +128,7 @@ export const createVizThreeProgramRegistry = (
       );
     }
     if (registrationsById.has(registration.id)) {
-      throw new Error(
-        `Duplicate Viz Three program id "${registration.id}".`,
-      );
+      throw new Error(`Duplicate Viz Three program id "${registration.id}".`);
     }
     registrationsById.set(registration.id, registration);
   }
@@ -172,8 +170,7 @@ export const createVizThreeProgramInstance = ({
     width,
     height,
     materializedAssets: materializedAssets ?? new Map(),
-    modelResources:
-      modelResources ?? createVizThreeModelResourceManager(),
+    modelResources: modelResources ?? createVizThreeModelResourceManager(),
     invalidate: invalidate ?? (() => undefined),
   });
 };

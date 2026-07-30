@@ -1,210 +1,163 @@
 # VizEngine
 
-**A Web-Native Audio-Reactive Animation Engine, now entering a V2 rewrite**
+VizEngine is a web-native, audio-reactive animation engine and editor.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://www.viz-engine.com)
-[![Thesis](https://img.shields.io/badge/Read_The_Thesis-PDF-orange)](docs/viz-engine-thesis.pdf)
-
-**[🚀 Try the Editor Live at viz-engine.com](https://www.viz-engine.com)**
-
-<p align="center">
-  <img src="public/gifs/demo.gif" alt="VizEngine Demo" width="800">
-  <br>
-  <em>Create audio-reactive visuals in your browser. (Yes, it actually exports video.)</em>
-</p>
-
->ℹ️ **Project Status:** VizEngine V1 proved the core concept. The repo is now
-> entering a V2 full-replacement rewrite focused on a deterministic runtime,
-> AI-native scene authoring, and clean Magnify Core integration.
-
----
-
-**VizEngine** is a web-native tool designed to bridge the gap between simple
-creative coding sketches and complex professional software like TouchDesigner.
-
-V1 combines a **layer-based workflow** (like Photoshop) with a **node-based
-animation engine**, allowing you to build complex, reactive scenes using
-standard web technologies.
-
-V2 is intended to turn VizEngine into:
+The repository is building V2 as a full replacement architecture while
+preserving the proven product quality of the original editor:
 
 - a deterministic visual runtime
-- a browser-based editor for that runtime
-- an AI-native scene system
+- a browser-based layer and node editor
+- an AI-native project/action system
+- reusable 2D, Three.js, audio, bake, and render packages
 - a clean rendering attachment for Magnify Core
 
-Start here for the rewrite:
+V2 replaces hidden architecture, not the editor’s serious creative-tool
+ambition. Existing UX and capabilities remain the parity reference unless a
+deliberate improvement replaces them.
 
-- [docs/docs-index.md](docs/docs-index.md)
-- [docs/current-state.md](docs/current-state.md)
-- [docs/working-agreements.md](docs/working-agreements.md)
-- [docs/visions/viz-engine-v2-vision.md](docs/visions/viz-engine-v2-vision.md)
-- [docs/visions/v2-product-architecture-and-parity-alignment.md](docs/visions/v2-product-architecture-and-parity-alignment.md)
-- [docs/plans/v2/v2-foundation-and-rewrite-plan.md](docs/plans/v2/v2-foundation-and-rewrite-plan.md)
-- [docs/plans/v2/autonomous-development-operating-contract.md](docs/plans/v2/autonomous-development-operating-contract.md)
-- [docs/parity/README.md](docs/parity/README.md)
+## Start Here
 
-## ✨ Features
+- [Documentation index](docs/docs-index.md)
+- [Current state](docs/current-state.md)
+- [Working agreements](docs/working-agreements.md)
+- [V2 vision](docs/visions/viz-engine-v2-vision.md)
+- [Product architecture and parity alignment](docs/visions/v2-product-architecture-and-parity-alignment.md)
+- [Core consolidation program](docs/plans/v2/core-consolidation-and-minimization-program.md)
+- [Parity status](docs/parity/README.md)
 
-### 🎨 Hybrid Creative Workflow
-* **Layers:** Stack visual elements using a familiar interface. Layers are composited using the DOM and CSS hardware acceleration.
-* **Nodes:** Animate *any* parameter (color, position, opacity) by connecting it to audio analyzers in a visual graph.
-* **3D + 2D:** Seamlessly mix HTML5 Canvas shaders with Three.js 3D scenes in the same composition.
+## What Exists
 
-### 🎵 Professional Audio Architecture
-* **Dual-Path Audio Engine:** The system separates "Playback" from "Analysis." You hear high-fidelity audio, while the visualization engine gets raw, zero-latency data for tighter sync.
-* **Smart Triggers:** Includes pre-built detection nodes for **Kick/Snare isolation**, **Melody detection**, and **Harmonic Presence**.
+- one versioned `VizProjectDocument`
+- one canonical in-memory `VizSession`
+- typed layers, settings, assets, artifacts, graphs, and actions
+- deterministic live/render frame evaluation
+- direct canonical node-graph authoring
+- browser and Node audio-feature baking
+- versioned compact audio-artifact storage
+- SVG and retained Three.js renderer packages
+- model-backed Stage characters and scalable animated crowds
+- still and video render jobs with probing and feedback
+- a preserved Vite/React studio with playback, graphs, history, persistence,
+  import/export, and runtime inspection
+- local CLI and live-control surfaces for agents and developers
 
-### 🎬 Native Video Export (No Screen Recording)
-* **Offline Rendering:** Unlike screen recorders which lag if the frame rate drops, VizEngine recalculates every frame deterministically offline.
-* **High Quality:** It uses `ffmpeg.wasm` to encode smooth 60 FPS video (MP4/WebM) directly in your browser—no server required.
+The first complete agent-authored production is
+[Signal Cathedral](docs/plans/v2/first-agent-authored-production-signal-cathedral.md).
 
----
+## Quick Start
 
-## 🚀 Quick Start
+Requirements:
 
-### Prerequisites
-* **Node.js** 18+ and **pnpm** (recommended)
-
-### Installation
+- Node.js 20+
+- pnpm
 
 ```bash
-# Clone the repository
-git clone [https://github.com/vucinatim/viz-engine.git](https://github.com/vucinatim/viz-engine.git)
-cd viz-engine
-
-# Install dependencies
 pnpm install
-
-# Start the local editor
 pnpm dev
-
 ```
 
-Open [http://localhost:4173](http://localhost:4173) to start creating.
+Open [http://localhost:4173](http://localhost:4173).
 
----
+Useful checks:
 
-## 🆚 Why VizEngine?
-
-| Feature | VizEngine | TouchDesigner | cables.gl |
-| --- | --- | --- | --- |
-| **Platform** | **Web-Native** (Browser) | Desktop App | Web-Based |
-| **License** | **Open Source (MIT)** | Proprietary / Paid | Proprietary / Freemium |
-| **Paradigm** | **Hybrid** (Layers + Nodes) | Node-Based Dataflow | Node-Based Visual |
-| **Export** | **Client-Side Video (MP4)** | Real-time / Spout | Real-time |
-| **Goal** | Shareable Audio-Visuals | Live Events | Interactive Web Art |
-
----
-
-## 🏗️ Architecture & Performance
-
-This engine was engineered to prove that the web is ready for serious motion graphics. During thesis stress-testing (rendering 8.3 million pixels with active node networks), it achieved:
-* **M1 Pro:** 111.6 FPS Mean 
-* **RTX 2060:** 84.4 FPS Mean 
-* **Node Overhead:** Less than 0.2ms per frame 
-
-It achieves this via **DOM-based compositing** (giving every layer its own lightweight canvas) and a **Strict Schema System** that ensures type safety and performance.
-
----
-
-## 🧩 Developer Guide
-
-VizEngine is designed to be hacked on. You can add your own custom visuals using a simple, typed API.
-> Additions to the visuals and nodes are very welcome!
-
-### 💡 AI Coding Tip
-
-The API uses a strict schema, which makes it remarkably easy for LLMs to write code for.
-
-**Try it yourself:**
-Ask ChatGPT: *"Write a VizEngine component that draws a bouncing circle using the 2D context."*  
-> Tip: Paste in some example code from `/src/comps` to give it context.
-
-### Creating a Component
-
-Use the `createComponent` factory. The UI controls are auto-generated from your config.
-
-```typescript
-// src/components/comps/my-visual.ts
-import { createComponent, v } from '@/components/config';
-import * as THREE from 'three';
-
-export const RotatingCube = createComponent({
-  name: 'Rotating Cube',
-
-  // 1. Define parameters (UI is auto-generated!)
-  config: v.config({
-    color: v.color({ defaultValue: '#FF6347' }),
-    speed: v.number({ defaultValue: 1, min: 0, max: 5 })
-  }),
-
-  // 2. Setup (Runs once)
-  init3D: ({ threeCtx }) => {
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshStandardMaterial();
-    threeCtx.scene.userData.cube = new THREE.Mesh(geometry, material);
-    threeCtx.scene.add(threeCtx.scene.userData.cube);
-  },
-
-  // 3. Render Loop (60 FPS)
-  draw3D: ({ threeCtx, config, dt }) => {
-    const cube = threeCtx.scene.userData.cube;
-    cube.material.color.set(config.color);
-    cube.rotation.y += config.speed * dt;
-  }
-});
-
+```bash
+pnpm check:foundation
+pnpm test:foundation
+pnpm test:browser
+pnpm architecture:validate
+pnpm metrics:source
 ```
 
----
+## Local Agent And Developer CLI
 
-## 🎯 V2 Direction
+Source-mode commands run without rebuilding the entire workspace:
 
-The current direction is a full replacement rewrite.
+```bash
+pnpm viz --help
+pnpm viz example validate
+pnpm viz bundle validate --dir <bundle-directory>
+pnpm viz bundle frame --dir <bundle-directory> --frame 36
+pnpm viz live discover
+```
+
+Use `pnpm viz:built --help` when explicitly validating compiled package
+consumption.
+
+The CLI is a client of canonical bundle, action, bake, render, runtime, and live
+control services. It does not define separate scene semantics.
+
+## Architecture
+
+The central flow is:
+
+```text
+VizProjectDocument
+        │
+        ▼
+    VizSession ───── typed actions / history / transport
+        │
+        ▼
+ deterministic frame and render plans
+        │
+        ├── SVG renderer
+        ├── retained Three.js renderer
+        ├── browser preview
+        └── still/video render jobs
+```
 
 Key rules:
 
-- no legacy compatibility layer by default
-- no dead code or dead folders preserved for comfort
-- salvage proven ideas selectively
-- rebuild runtime boundaries cleanly
-- keep live, render, and bake as first-class modes
-- keep Remotion as an adapter, not the source-of-truth architecture
+- no compatibility layer for obsolete V1 architecture by default
+- one canonical project document and session truth
+- editor state and runtime state remain distinct
+- baking and deterministic seeking are first-class
+- renderer and host adapters do not become architecture roots
+- AI and CLI actions operate on stable contracts, not UI imitation
+- portable assets and artifacts have explicit ownership and identity
 
-## 🎯 Roadmap
+Package and app boundaries are checked by
+`pnpm architecture:validate`.
 
-### V1 Roadmap Notes
+## Component Authoring
 
-These roadmap notes reflect the old engine direction and should now be treated
-as reference material, not the canonical V2 execution plan.
+Reusable components live in capability packs and declare:
 
-### Core & Ecosystem
+- stable component and implementation identity
+- portable settings/authoring schemas
+- deterministic runtime rendering
+- optional renderer-program registrations
+- required assets, artifacts, and render policy
 
-* [ ] **`rhythm-core` Package**: Developing a standalone "Librosa for TypeScript" library for offline rhythmic analysis and feature extraction (active).
-* [ ] **VizEngine Runtime**: A lightweight NPM package to render project JSONs inside any React application.
-* [ ] **WebGPU Support**: Exploring next-gen rendering pipelines for massive particle systems.
-* [ ] **Renderer Agnosticism**: Abstracting the engine to support renderers beyond Three.js (e.g., Babylon.js, p5.js).
+Use the current scaffold command as a starting point:
 
-### Editor & Workflow
+```bash
+pnpm viz component scaffold \
+  --id my-component \
+  --name "My Component" \
+  --out /absolute/path/to/my-component.ts
+```
 
-* [ ] **AI Assistant**: LLM integration for generating components and natural language editor control.
-* [ ] **Meta Nodes**: Ability to group and collapse complex node graphs.
-* [ ] **Keyframe Editor**: Manual animation curves to blend with audio-reactive values.
-* [ ] **Popout Preview**: Detachable preview window for multi-monitor setups.
+See the [component contract](docs/specs/v2/component-contract.md) and
+[agent-authored production architecture](docs/specs/v2/agent-authored-production-loop-architecture.md)
+before adding engine-level capabilities.
 
-### Audio & IO
+## Rewrite Status
 
-* [ ] **MIDI Integration**: Input for parameter control and Output for sending processed signals to hardware.
-* [ ] **Advanced Audio Sources**: Robust streaming from microphone and external audio inputs.
+Goal One of the
+[Core Consolidation And Behavior-Preserving Minimization Program](docs/plans/v2/core-consolidation-and-minimization-program.md)
+is complete and
+[certified](docs/parity/evidence/2026-07-30-core-consolidation-and-quality-hardening.md).
+It consolidated the V2 substrate, automated preserved-editor acceptance,
+removed obsolete seams, and established the fresh baseline for the separate
+net-negative Goal Two minimization pass.
 
+Historical milestones and decisions belong in
+[the work ledger](docs/work-ledger.md) and
+[parity evidence](docs/parity/evidence/).
 
+## License
 
----
+VizEngine is licensed under the [MIT License](LICENSE).
 
-## 📄 License
-
-This project is licensed under the **MIT License**.
-
-**Academic Note:** *This project was originally developed as a Master's Thesis at the University of Ljubljana. For a detailed breakdown of the algorithms and architecture, please [read the thesis PDF](https://www.google.com/search?q=docs/viz-engine-thesis.pdf).*
+The project originated as a Master’s thesis at the University of Ljubljana.
+The thesis remains available at [docs/viz-engine-thesis.pdf](docs/viz-engine-thesis.pdf).

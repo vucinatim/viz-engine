@@ -1,36 +1,37 @@
 import {
-  VIZ_EXECUTION_MANIFEST_KIND,
-  VIZ_EXECUTION_MANIFEST_SCHEMA_VERSION,
   VIZ_PROJECT_SCHEMA_VERSION,
+  createVizComponentRegistryFromCapabilityPacks,
   type VizArtifactRef,
-  type VizExecutionManifest,
   type VizProjectDocument,
-} from "@viz-engine/contracts";
+} from '@viz-engine/contracts';
 import {
-  createSignalCathedralProject,
-  signalCathedralCapabilityPack,
-  signalCathedralComponent,
-  signalCathedralAudioAssetRef,
-  signalCathedralThreeRendererExtension,
+  coreNodePackageIdentity,
+  createCoreNodeRegistry,
+} from '@viz-engine/nodes-core';
+import {
   SIGNAL_CATHEDRAL_AUDIO_ASSET_ID,
-} from "@viz-engine/production-signal-cathedral";
+  createSignalCathedralProject,
+  signalCathedralAudioAssetRef,
+  signalCathedralCapabilityPack,
+  signalCathedralThreeRendererExtension,
+} from '@viz-engine/production-signal-cathedral';
 import {
   loadLocalVizProjectBundle,
   writeLocalVizProjectBundle,
-} from "@viz-engine/dev-cli";
-import { createHash } from "node:crypto";
+} from '@viz-engine/project-bundle/node';
 import {
-  mkdirSync,
-  readFileSync,
-} from "node:fs";
-import { resolve } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
-import { spawnSync } from "node:child_process";
+  createVizThreeProgramRegistry,
+  vizThreeBrowserBackendIdentity,
+  vizThreeRendererPackageIdentity,
+} from '@viz-engine/renderer-three';
+import { vizRuntimePackageIdentity } from '@viz-engine/runtime';
+import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { mkdirSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const repoRoot = resolve(
-  fileURLToPath(new URL(".", import.meta.url)),
-  "../..",
-);
+const repoRoot = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..');
 
 const readArgument = (name: string): string | undefined => {
   const index = process.argv.indexOf(name);
@@ -49,51 +50,43 @@ const writeSummary = (value: unknown): void => {
   process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
 };
 
-const sha256Identity = (
-  value: string | NodeJS.ArrayBufferView,
-): string =>
-  `sha256:${createHash("sha256").update(value).digest("hex")}`;
-
-const canonicalJson = (value: unknown): string =>
-  `${JSON.stringify(value, null, 2)}\n`;
-
 const prepare = (): void => {
-  const outputDirectory = resolve(requireArgument("--out"));
+  const outputDirectory = resolve(requireArgument('--out'));
   const sourcePath = resolve(
     repoRoot,
-    "public/music/[House] Progressive House.mp3",
+    'public/music/[House] Progressive House.mp3',
   );
   const stagingDirectory = resolve(
     repoRoot,
-    ".artifacts/signal-cathedral/staging",
+    '.artifacts/signal-cathedral/staging',
   );
   const derivativePath = resolve(
     stagingDirectory,
-    "signal-cathedral-progressive-house-48s-60s.mp3",
+    'signal-cathedral-progressive-house-48s-60s.mp3',
   );
   mkdirSync(stagingDirectory, { recursive: true });
 
   const ffmpeg = spawnSync(
-    "ffmpeg",
+    'ffmpeg',
     [
-      "-y",
-      "-ss",
-      "48",
-      "-i",
+      '-y',
+      '-ss',
+      '48',
+      '-i',
       sourcePath,
-      "-t",
-      "12",
-      "-vn",
-      "-map_metadata",
-      "-1",
-      "-c:a",
-      "libmp3lame",
-      "-b:a",
-      "192k",
+      '-t',
+      '12',
+      '-vn',
+      '-map_metadata',
+      '-1',
+      '-c:a',
+      'libmp3lame',
+      '-b:a',
+      '192k',
       derivativePath,
     ],
     {
-      encoding: "utf8",
+      encoding: 'utf8',
     },
   );
   if (ffmpeg.status !== 0) {
@@ -103,26 +96,26 @@ const prepare = (): void => {
   }
 
   const bytes = readFileSync(derivativePath);
-  const contentIdentity = createHash("sha256").update(bytes).digest("hex");
+  const contentIdentity = createHash('sha256').update(bytes).digest('hex');
   const audioAssetRef = {
     ...signalCathedralAudioAssetRef,
     metadata: {
       ...signalCathedralAudioAssetRef.metadata,
       sourceContentIdentity: contentIdentity,
-      derivationTool: "ffmpeg",
+      derivationTool: 'ffmpeg',
       derivationArguments: {
         sourceStartSeconds: 48,
         durationSeconds: 12,
-        codec: "libmp3lame",
-        bitrate: "192k",
+        codec: 'libmp3lame',
+        bitrate: '192k',
         stripMetadata: true,
       },
     },
   };
   const bootstrapProject: VizProjectDocument = {
     schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-    projectId: "project-signal-cathedral-audio-bootstrap",
-    name: "Signal Cathedral Audio Bootstrap",
+    projectId: 'project-signal-cathedral-audio-bootstrap',
+    name: 'Signal Cathedral Audio Bootstrap',
     timeline: {
       fps: 60,
       durationInFrames: 720,
@@ -130,14 +123,14 @@ const prepare = (): void => {
     viewport: {
       width: 1920,
       height: 1080,
-      backgroundColor: "#02030d",
+      backgroundColor: '#02030d',
     },
     layerOrder: [],
     layers: [],
     assetRefs: [audioAssetRef],
     metadata: {
-      temporaryPurpose: "canonical-audio-bake-input",
-      production: "signal-cathedral",
+      temporaryPurpose: 'canonical-audio-bake-input',
+      production: 'signal-cathedral',
     },
   };
   const written = writeLocalVizProjectBundle({
@@ -155,13 +148,13 @@ const prepare = (): void => {
     throw new Error(
       `Could not prepare production bundle: ${written.issues
         .map((issue) => issue.message)
-        .join("; ")}`,
+        .join('; ')}`,
     );
   }
 
   writeSummary({
     ok: true,
-    mode: "prepare",
+    mode: 'prepare',
     outputDirectory,
     audioAssetId: SIGNAL_CATHEDRAL_AUDIO_ASSET_ID,
     sourceWindow: {
@@ -177,14 +170,14 @@ const prepare = (): void => {
 };
 
 const finalize = (): void => {
-  const sourceDirectory = resolve(requireArgument("--dir"));
-  const outputDirectory = resolve(requireArgument("--out"));
+  const sourceDirectory = resolve(requireArgument('--dir'));
+  const outputDirectory = resolve(requireArgument('--out'));
   const loaded = loadLocalVizProjectBundle(sourceDirectory);
   if (loaded.issues.length > 0) {
     throw new Error(
       `Cannot finalize bundle with issues: ${loaded.issues
         .map((issue) => issue.message)
-        .join("; ")}`,
+        .join('; ')}`,
     );
   }
   const audioAssetRef = loaded.project.assetRefs?.find(
@@ -197,7 +190,7 @@ const finalize = (): void => {
   }
   const audioArtifactRef = loaded.project.artifactRefs?.find(
     (artifact) =>
-      artifact.kind === "audio-feature-timeline" &&
+      artifact.kind === 'audio-feature-timeline' &&
       artifact.sourceAssetId === SIGNAL_CATHEDRAL_AUDIO_ASSET_ID,
   );
   if (!audioArtifactRef) {
@@ -221,7 +214,7 @@ const finalize = (): void => {
   const resolvedAudioAsset = loaded.resolvedAssets.find(
     (asset) => asset.id === audioAssetRef.id,
   );
-  if (!resolvedAudioAsset?.uri.startsWith("file:")) {
+  if (!resolvedAudioAsset?.uri.startsWith('file:')) {
     throw new Error(
       `Baked bundle did not resolve file-backed audio asset "${audioAssetRef.id}".`,
     );
@@ -232,7 +225,7 @@ const finalize = (): void => {
     );
   }
   const bakeExecutionIdentity =
-    typeof audioArtifactRef.metadata?.executionIdentity === "string"
+    typeof audioArtifactRef.metadata?.executionIdentity === 'string'
       ? audioArtifactRef.metadata.executionIdentity
       : undefined;
   if (!bakeExecutionIdentity) {
@@ -240,135 +233,50 @@ const finalize = (): void => {
       `Baked artifact "${audioArtifactRef.id}" has no execution identity.`,
     );
   }
-  const rendererProgram =
-    signalCathedralThreeRendererExtension.programs[0];
-  if (!rendererProgram) {
-    throw new Error(
-      "Signal Cathedral renderer extension has no registered program.",
-    );
-  }
-  const executionManifest: VizExecutionManifest = {
-    schemaVersion: VIZ_EXECUTION_MANIFEST_SCHEMA_VERSION,
-    kind: VIZ_EXECUTION_MANIFEST_KIND,
-    project: {
-      projectId: project.projectId,
-      schemaVersion: project.schemaVersion,
-      contentIdentity: sha256Identity(canonicalJson(project)),
-    },
-    runtime: {
-      packageId: "@viz-engine/runtime",
-      version: "0.0.1",
-    },
-    capabilityPacks: [
-      {
-        id: "@viz-engine/components-core",
-        version: "0.0.1",
-      },
-      {
-        id: signalCathedralCapabilityPack.manifest.id,
-        version: signalCathedralCapabilityPack.manifest.version,
-      },
-    ],
-    components: [
-      {
-        componentId: signalCathedralComponent.id,
-        implementationVersion:
-          signalCathedralComponent.implementationVersion ?? "0.0.0",
-        capabilityPack: {
-          id: signalCathedralCapabilityPack.manifest.id,
-          version: signalCathedralCapabilityPack.manifest.version,
-        },
-      },
-    ],
-    nodePackages: [
-      {
-        packageId: "@viz-engine/nodes-core",
-        version: "0.0.1",
-        nodeTypes: [
-          ...new Set(
-            (project.graphs ?? []).flatMap((graph) =>
-              graph.nodes.map((node) => node.type),
-            ),
-          ),
-        ].sort(),
-      },
-    ],
-    renderer: {
-      package: {
-        packageId: "@viz-engine/renderer-three",
-        version: "0.0.1",
-      },
-      backend: {
-        id: "browser-webgl",
-        version: "viz-render.browser-webgl.v1",
-      },
-      programs: [
-        {
-          programId: rendererProgram.id,
-          implementationVersion:
-            rendererProgram.implementationVersion,
-          capabilityPack: {
-            id:
-              signalCathedralThreeRendererExtension
-                .capabilityPack.id,
-            version:
-              signalCathedralThreeRendererExtension
-                .capabilityPack.version,
-          },
-        },
-      ],
-    },
-    bakes: [
-      {
-        artifactId: audioArtifactRef.id,
-        ...(audioArtifactRef.sourceAssetId === undefined
-          ? {}
-          : {
-              sourceAssetId:
-                audioArtifactRef.sourceAssetId,
-            }),
-        executionIdentity: bakeExecutionIdentity,
-      },
-    ],
-    assets: [
-      {
-        assetId: audioAssetRef.id,
-        contentIdentity: sha256Identity(
-          readFileSync(fileURLToPath(resolvedAudioAsset.uri)),
-        ),
-      },
-    ],
-    artifacts: [
-      {
-        artifactId: audioArtifactRef.id,
-        contentIdentity: sha256Identity(
-          canonicalJson(resolvedArtifact.payload),
-        ),
-      },
-    ],
-    metadata: {
-      determinism: "semantic",
-      production: "signal-cathedral",
-    },
-  };
+  const componentRegistry = createVizComponentRegistryFromCapabilityPacks(
+    [signalCathedralCapabilityPack],
+    { strict: true },
+  );
+  const nodeRegistry = createCoreNodeRegistry();
+  const rendererRegistry = createVizThreeProgramRegistry([
+    signalCathedralThreeRendererExtension,
+  ]);
   const written = writeLocalVizProjectBundle({
     bundleDirectory: outputDirectory,
     project,
     resolvedAssets: loaded.resolvedAssets,
     resolvedArtifacts: [resolvedArtifact],
-    executionManifest,
+    executionEnvironment: {
+      runtime: vizRuntimePackageIdentity,
+      components: componentRegistry.listRegistrations(),
+      nodePackages: [
+        {
+          ...coreNodePackageIdentity,
+          nodes: nodeRegistry.list(),
+        },
+      ],
+      renderer: {
+        package: vizThreeRendererPackageIdentity,
+        backend: vizThreeBrowserBackendIdentity,
+        programs: rendererRegistry.list(),
+      },
+      metadata: {
+        determinism: 'semantic',
+        production: 'signal-cathedral',
+      },
+    },
   });
   if (written.issues.length > 0) {
     throw new Error(
       `Could not finalize production bundle: ${written.issues
         .map((issue) => issue.message)
-        .join("; ")}`,
+        .join('; ')}`,
     );
   }
 
   writeSummary({
     ok: true,
-    mode: "finalize",
+    mode: 'finalize',
     sourceDirectory,
     outputDirectory,
     projectId: project.projectId,
@@ -377,17 +285,17 @@ const finalize = (): void => {
     graphId: project.graphs?.[0]?.id,
     layerId: project.layers[0]?.id,
     manifest: written.manifest,
-    executionManifest,
+    executionManifest: written.executionManifest,
   });
 };
 
 const mode = process.argv[2];
-if (mode === "prepare") {
+if (mode === 'prepare') {
   prepare();
-} else if (mode === "finalize") {
+} else if (mode === 'finalize') {
   finalize();
 } else {
   throw new Error(
-    "Usage: materialize-signal-cathedral-production.ts prepare --out <dir> | finalize --dir <baked-dir> --out <dir>",
+    'Usage: materialize-signal-cathedral-production.ts prepare --out <dir> | finalize --dir <baked-dir> --out <dir>',
   );
 }

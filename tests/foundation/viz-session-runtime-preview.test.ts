@@ -76,14 +76,12 @@ describe('VizSession runtime preview inspection', () => {
     vizSessionActions.project.importWorkingProject(
       createTestProject(comp, 'broken-layer'),
     );
-    useEditorRuntimePreviewAttachmentStore
-      .getState()
-      .registerLayerAttachment(
-        'broken-layer',
-        createAttachment(() => {
-          throw new Error('render failed');
-        }),
-      );
+    useEditorRuntimePreviewAttachmentStore.getState().registerLayerAttachment(
+      'broken-layer',
+      createAttachment(() => {
+        throw new Error('render failed');
+      }),
+    );
     const frame = createVizSessionRuntimePreviewFrame({
       currentFrame: 12,
       time: 0.2,
@@ -144,8 +142,7 @@ describe('VizSession runtime preview inspection', () => {
       lastError: null,
     });
     expect(
-      useEditorRuntimePreviewAttachmentStore.getState().layerAttachments
-        .size,
+      useEditorRuntimePreviewAttachmentStore.getState().layerAttachments.size,
     ).toBe(1);
   });
 });

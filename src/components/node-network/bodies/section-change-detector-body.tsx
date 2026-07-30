@@ -179,7 +179,7 @@ const SectionChangeDetectorBody = ({
       <canvas ref={canvasRef} className="h-full w-full" />
       <div
         ref={statsTextRef}
-        className="pointer-events-none absolute right-2 top-2 flex flex-col items-end rounded bg-zinc-900/90 px-2 py-1"
+        className="pointer-events-none absolute top-2 right-2 flex flex-col items-end rounded bg-zinc-900/90 px-2 py-1"
       />
       <div className="pointer-events-none absolute bottom-1 left-2 text-[9px] text-zinc-500">
         Section Detector

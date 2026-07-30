@@ -1,9 +1,9 @@
 import type {
   VizMaterializedAsset,
   VizMaterializedBinaryAsset,
+  VizMaterializedModelAsset,
   VizRenderThreeProgramNode,
-} from "@viz-engine/contracts";
-import helvetikerRegular from "three/examples/fonts/helvetiker_regular.typeface.json";
+} from '@viz-engine/contracts';
 import {
   ACESFilmicToneMapping,
   AdditiveBlending,
@@ -26,21 +26,22 @@ import {
   Vector3,
   type WebGLRenderTarget,
   type WebGLRenderer,
-} from "three";
-import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry.js";
+} from 'three';
+import helvetikerRegular from 'three/examples/fonts/helvetiker_regular.typeface.json';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import {
   FontLoader,
   type FontData,
-} from "three/examples/jsm/loaders/FontLoader.js";
+} from 'three/examples/jsm/loaders/FontLoader.js';
 import {
   GLTFLoader,
   type GLTF,
-} from "three/examples/jsm/loaders/GLTFLoader.js";
-import { TTFLoader } from "three/examples/jsm/loaders/TTFLoader.js";
-import { MeshSurfaceSampler } from "three/examples/jsm/math/MeshSurfaceSampler.js";
-import type { VizThreeProgramFactory } from "./types.js";
+} from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { TTFLoader } from 'three/examples/jsm/loaders/TTFLoader.js';
+import { MeshSurfaceSampler } from 'three/examples/jsm/math/MeshSurfaceSampler.js';
+import type { VizThreeProgramFactory } from './types.js';
 
-const PROGRAM_ID = "viz-core/morph-shapes/v1";
+const PROGRAM_ID = 'viz-core/morph-shapes/v1';
 const MAX_INSTANCE_COUNT = 60_000;
 
 type MorphSample = readonly [number, number, number];
@@ -62,18 +63,16 @@ interface DeterministicMeshSurfaceSampler extends MeshSurfaceSampler {
 }
 
 const asNumber = (value: unknown, fallback: number): number =>
-  typeof value === "number" && Number.isFinite(value)
-    ? value
-    : fallback;
+  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 
 const asBoolean = (value: unknown, fallback: boolean): boolean =>
-  typeof value === "boolean" ? value : fallback;
+  typeof value === 'boolean' ? value : fallback;
 
 const asString = (value: unknown, fallback: string): string =>
-  typeof value === "string" ? value : fallback;
+  typeof value === 'string' ? value : fallback;
 
 const asRecord = (value: unknown): Record<string, unknown> =>
-  value !== null && typeof value === "object" && !Array.isArray(value)
+  value !== null && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
 
@@ -131,17 +130,14 @@ const readShapeDescriptor = (
   const shape = asRecord(value);
   return {
     shape: asString(shape.shape, fallbackShape),
-    modelUrl: asString(shape.modelUrl, ""),
-    modelAssetId: asString(shape.modelAssetId, ""),
-    text: asString(shape.text, ""),
+    modelUrl: asString(shape.modelUrl, ''),
+    modelAssetId: asString(shape.modelAssetId, ''),
+    text: asString(shape.text, ''),
     textSize: Math.max(0.1, asNumber(shape.textSize, 1)),
     textDepth: Math.max(0.01, asNumber(shape.textDepth, 0.2)),
-    textFontUrl: asString(shape.textFontUrl, ""),
+    textFontUrl: asString(shape.textFontUrl, ''),
     position: asVectorTuple(shape.position, [0, 0, 0]),
-    rotationDegrees: asVectorTuple(
-      shape.rotationDegrees,
-      [0, 0, 0],
-    ),
+    rotationDegrees: asVectorTuple(shape.rotationDegrees, [0, 0, 0]),
   };
 };
 
@@ -210,11 +206,7 @@ const generatePyramidPositions = (gridSize: number): Vector3[] => {
     for (let y = 0; y < size; y += 1) {
       if (x === 0 || x === size - 1 || y === 0 || y === size - 1) {
         positions.push(
-          new Vector3(
-            (x - half) * (3 / 5),
-            (y - half) * (3 / 5),
-            -height,
-          ),
+          new Vector3((x - half) * (3 / 5), (y - half) * (3 / 5), -height),
         );
       }
     }
@@ -229,9 +221,7 @@ const generatePyramidPositions = (gridSize: number): Vector3[] => {
   const apex = new Vector3(0, 0, height);
   for (const corner of corners) {
     for (let step = 0; step <= size; step += 1) {
-      positions.push(
-        corner.clone().lerp(apex, step / size),
-      );
+      positions.push(corner.clone().lerp(apex, step / size));
     }
   }
   return positions;
@@ -249,9 +239,7 @@ const normalizePointCloud = (points: readonly Vector3[]): Vector3[] => {
   const size = bounds.getSize(new Vector3());
   const center = bounds.getCenter(new Vector3());
   const scale = 1 / (Math.max(size.x, size.y, size.z) || 1);
-  return points.map((point) =>
-    point.clone().sub(center).multiplyScalar(scale),
-  );
+  return points.map((point) => point.clone().sub(center).multiplyScalar(scale));
 };
 
 const blueNoiseSelect = (
@@ -271,11 +259,12 @@ const blueNoiseSelect = (
   const cells = new Map<string, number[]>();
   const selected: Vector3[] = [];
 
-  const cellCoordinates = (point: Vector3) => [
-    Math.floor(point.x / minimumDistance),
-    Math.floor(point.y / minimumDistance),
-    Math.floor(point.z / minimumDistance),
-  ] as const;
+  const cellCoordinates = (point: Vector3) =>
+    [
+      Math.floor(point.x / minimumDistance),
+      Math.floor(point.y / minimumDistance),
+      Math.floor(point.z / minimumDistance),
+    ] as const;
 
   for (
     let pointIndex = 0;
@@ -331,9 +320,7 @@ const fitPointCloudToGrid = (
   gridSize: number,
 ): Vector3[] => {
   const desiredSpan = (Math.max(3, gridSize) - 1) * (3 / 5);
-  return points.map((point) =>
-    point.clone().multiplyScalar(desiredSpan),
-  );
+  return points.map((point) => point.clone().multiplyScalar(desiredSpan));
 };
 
 const applyTransform = (
@@ -344,7 +331,7 @@ const applyTransform = (
     (descriptor.rotationDegrees[0] * Math.PI) / 180,
     (descriptor.rotationDegrees[1] * Math.PI) / 180,
     (descriptor.rotationDegrees[2] * Math.PI) / 180,
-    "XYZ",
+    'XYZ',
   );
   const matrix = new Matrix4()
     .makeRotationFromEuler(rotation)
@@ -356,10 +343,7 @@ const applyTransform = (
   return points.map((point) => point.clone().applyMatrix4(matrix));
 };
 
-const padToCount = (
-  points: readonly Vector3[],
-  count: number,
-): Vector3[] => {
+const padToCount = (points: readonly Vector3[], count: number): Vector3[] => {
   if (points.length >= count) {
     return points.slice(0, count).map((point) => point.clone());
   }
@@ -391,16 +375,19 @@ const loadBinaryGltf = async ({
   asset,
   url,
 }: {
-  asset: VizMaterializedBinaryAsset | undefined;
+  asset: VizMaterializedBinaryAsset | VizMaterializedModelAsset | undefined;
   url: string;
 }): Promise<GLTF> => {
   const loader = new GLTFLoader();
   if (asset?.bytes) {
-    return loader.parseAsync(asset.bytes, "");
+    return loader.parseAsync(asset.bytes, '');
   }
-  const source = asset?.binarySourceUri ?? url;
-  if (!source || source.startsWith("idb:")) {
-    throw new Error("Morph model source is not materialized.");
+  const source =
+    asset?.kind === 'model'
+      ? asset.modelSourceUri
+      : (asset?.binarySourceUri ?? url);
+  if (!source) {
+    throw new Error('Morph model source is not materialized.');
   }
   return loader.loadAsync(source);
 };
@@ -412,7 +399,7 @@ const sampleModelPoints = async ({
   evenness,
   random,
 }: {
-  asset: VizMaterializedBinaryAsset | undefined;
+  asset: VizMaterializedBinaryAsset | VizMaterializedModelAsset | undefined;
   url: string;
   desiredCount: number;
   evenness: number;
@@ -434,17 +421,14 @@ const sampleModelPoints = async ({
     return [];
   }
 
-  const sampler = (new MeshSurfaceSampler(
-    mesh,
-  ) as DeterministicMeshSurfaceSampler)
+  const sampler = (
+    new MeshSurfaceSampler(mesh) as DeterministicMeshSurfaceSampler
+  )
     .setRandomGenerator(random)
     .build();
   const candidates: Vector3[] = [];
   const sample = new Vector3();
-  const oversampleCount = Math.max(
-    desiredCount * 4,
-    desiredCount + 1000,
-  );
+  const oversampleCount = Math.max(desiredCount * 4, desiredCount + 1000);
   for (let index = 0; index < oversampleCount; index += 1) {
     sampler.sample(sample);
     candidates.push(sample.clone());
@@ -470,15 +454,13 @@ const sampleTextPoints = async ({
   let fontData: FontData = helvetikerRegular as unknown as FontData;
   if (descriptor.textFontUrl) {
     try {
-      fontData = await new TTFLoader().loadAsync(
-        descriptor.textFontUrl,
-      );
+      fontData = await new TTFLoader().loadAsync(descriptor.textFontUrl);
     } catch {
       fontData = helvetikerRegular as unknown as FontData;
     }
   }
   const font = new FontLoader().parse(fontData);
-  const geometry = new TextGeometry(descriptor.text || " ", {
+  const geometry = new TextGeometry(descriptor.text || ' ', {
     font,
     size: descriptor.textSize,
     depth: descriptor.textDepth,
@@ -489,9 +471,9 @@ const sampleTextPoints = async ({
   geometry.computeVertexNormals();
   const material = new MeshBasicMaterial();
   const mesh = new Mesh(geometry, material);
-  const sampler = (new MeshSurfaceSampler(
-    mesh,
-  ) as DeterministicMeshSurfaceSampler)
+  const sampler = (
+    new MeshSurfaceSampler(mesh) as DeterministicMeshSurfaceSampler
+  )
     .setRandomGenerator(random)
     .build();
   const point = new Vector3();
@@ -548,22 +530,18 @@ export const createMorphShapesProgram: VizThreeProgramFactory = ({
   camera.lookAt(0, 0, 0);
 
   const geometry = new SphereGeometry(1, 8, 6);
-  const material = new MeshStandardMaterial({ color: "#ffffff" });
-  const mesh = new InstancedMesh(
-    geometry,
-    material,
-    MAX_INSTANCE_COUNT,
-  );
+  const material = new MeshStandardMaterial({ color: '#ffffff' });
+  const mesh = new InstancedMesh(geometry, material, MAX_INSTANCE_COUNT);
   mesh.instanceMatrix.setUsage(DynamicDrawUsage);
   mesh.castShadow = true;
   mesh.frustumCulled = false;
   root.add(mesh);
   root.userData.instances = mesh;
 
-  const directionalLight = new DirectionalLight("#ffffff", 1);
+  const directionalLight = new DirectionalLight('#ffffff', 1);
   directionalLight.position.set(-8, 10, 12);
   directionalLight.castShadow = true;
-  const ambientLight = new AmbientLight("#ffffff", 0.15);
+  const ambientLight = new AmbientLight('#ffffff', 0.15);
   scene.add(root, directionalLight, ambientLight);
 
   let materializedAssets = initialMaterializedAssets;
@@ -575,7 +553,7 @@ export const createMorphShapesProgram: VizThreeProgramFactory = ({
   >();
   let targetA: Vector3[] = [];
   let targetB: Vector3[] = [];
-  let targetKey = "";
+  let targetKey = '';
   let targetsVersion = 0;
   let lastAppliedTargetsVersion = -1;
   let lastFrame: number | undefined;
@@ -602,20 +580,11 @@ export const createMorphShapesProgram: VizThreeProgramFactory = ({
     modelEvenness: number;
     seed: string;
   }): Vector3[] => {
-    if (descriptor.shape === "pyramid") {
-      return applyTransform(
-        generatePyramidPositions(gridSize),
-        descriptor,
-      );
+    if (descriptor.shape === 'pyramid') {
+      return applyTransform(generatePyramidPositions(gridSize), descriptor);
     }
-    if (
-      descriptor.shape !== "model" &&
-      descriptor.shape !== "custom-text"
-    ) {
-      return applyTransform(
-        generateCubeFramePositions(gridSize),
-        descriptor,
-      );
+    if (descriptor.shape !== 'model' && descriptor.shape !== 'custom-text') {
+      return applyTransform(generateCubeFramePositions(gridSize), descriptor);
     }
 
     const key = createShapeKey({
@@ -634,14 +603,13 @@ export const createMorphShapesProgram: VizThreeProgramFactory = ({
       ? materializedAssets.get(descriptor.modelAssetId)
       : undefined;
     const failedWithCurrentSource =
-      failedShapeSources.has(key) &&
-      failedShapeSources.get(key) === modelAsset;
+      failedShapeSources.has(key) && failedShapeSources.get(key) === modelAsset;
 
     if (!pendingShapes.has(key) && !failedWithCurrentSource) {
       pendingShapes.add(key);
       const random = createSeededRandom(key);
       const request =
-        descriptor.shape === "custom-text"
+        descriptor.shape === 'custom-text'
           ? sampleTextPoints({
               descriptor,
               desiredCount: modelPointCount,
@@ -649,7 +617,7 @@ export const createMorphShapesProgram: VizThreeProgramFactory = ({
             })
           : sampleModelPoints({
               asset:
-                modelAsset?.kind === "binary"
+                modelAsset?.kind === 'binary' || modelAsset?.kind === 'model'
                   ? modelAsset
                   : undefined,
               url: descriptor.modelUrl,
@@ -663,10 +631,7 @@ export const createMorphShapesProgram: VizThreeProgramFactory = ({
           failedShapeSources.delete(key);
           shapeCache.set(
             key,
-            fitPointCloudToGrid(
-              applyTransform(points, descriptor),
-              gridSize,
-            ),
+            fitPointCloudToGrid(applyTransform(points, descriptor), gridSize),
           );
           targetsVersion += 1;
           update(lastNode, materializedAssets);
@@ -680,17 +645,14 @@ export const createMorphShapesProgram: VizThreeProgramFactory = ({
         });
     }
 
-    return applyTransform(
-      generateCubeFramePositions(gridSize),
-      descriptor,
-    );
+    return applyTransform(generateCubeFramePositions(gridSize), descriptor);
   };
 
   const refreshTargets = (
     parameters: Readonly<Record<string, unknown>>,
   ): void => {
-    const shapeA = readShapeDescriptor(parameters.shapeA, "cube");
-    const shapeB = readShapeDescriptor(parameters.shapeB, "pyramid");
+    const shapeA = readShapeDescriptor(parameters.shapeA, 'cube');
+    const shapeB = readShapeDescriptor(parameters.shapeB, 'pyramid');
     const gridSize = Math.max(
       1,
       Math.min(100, Math.round(asNumber(parameters.gridSize, 5))),
@@ -706,7 +668,7 @@ export const createMorphShapesProgram: VizThreeProgramFactory = ({
       0.2,
       Math.min(1, asNumber(parameters.modelEvenness, 0.7)),
     );
-    const seed = asString(parameters.seed, "morph-shapes");
+    const seed = asString(parameters.seed, 'morph-shapes');
     const nextTargetKey = JSON.stringify({
       shapeA,
       shapeB,
@@ -807,8 +769,7 @@ export const createMorphShapesProgram: VizThreeProgramFactory = ({
         }
       } else {
         resolveTarget(index, currentSample, targetPosition);
-        const response =
-          1 - Math.pow(1 - currentSample[2], frame + 1);
+        const response = 1 - Math.pow(1 - currentSample[2], frame + 1);
         position.copy(targetPosition).multiplyScalar(response);
       }
 
@@ -851,23 +812,14 @@ export const createMorphShapesProgram: VizThreeProgramFactory = ({
     }
     const parameters = nextNode.parameters;
     refreshTargets(parameters);
-    const frame = Math.max(
-      0,
-      Math.round(asNumber(parameters.frame, 0)),
-    );
+    const frame = Math.max(0, Math.round(asNumber(parameters.frame, 0)));
     const currentSample: MorphSample = [
       Math.max(0, Math.min(1, asNumber(parameters.morphT, 0))),
       Math.max(0, asNumber(parameters.explosionShift, 0)),
-      Math.max(
-        0.01,
-        Math.min(1, asNumber(parameters.animationSpeed, 0.08)),
-      ),
+      Math.max(0.01, Math.min(1, asNumber(parameters.animationSpeed, 0.08))),
     ];
     const history = asMorphHistory(parameters.morphHistory);
-    const sphereSize = Math.max(
-      0.01,
-      asNumber(parameters.sphereSize, 0.15),
-    );
+    const sphereSize = Math.max(0.01, asNumber(parameters.sphereSize, 0.15));
     const canStepSequentially =
       lastFrame !== undefined &&
       frame === lastFrame + 1 &&
@@ -885,32 +837,21 @@ export const createMorphShapesProgram: VizThreeProgramFactory = ({
     }
 
     color
-      .set(asString(parameters.color, "rgb(0, 200, 255)"))
-      .multiplyScalar(
-        Math.max(0.2, asNumber(parameters.glowIntensity, 1)),
-      );
+      .set(asString(parameters.color, 'rgb(0, 200, 255)'))
+      .multiplyScalar(Math.max(0.2, asNumber(parameters.glowIntensity, 1)));
     material.color.copy(color);
     const additive = asBoolean(parameters.additiveGlow, false);
     material.transparent = additive;
     material.depthWrite = !additive;
-    material.blending = additive
-      ? AdditiveBlending
-      : NormalBlending;
+    material.blending = additive ? AdditiveBlending : NormalBlending;
     if (additive !== additiveMode) {
       material.needsUpdate = true;
       additiveMode = additive;
     }
 
-    const quaternion = asQuaternionTuple(
-      parameters.rotationQuaternion,
-    );
+    const quaternion = asQuaternionTuple(parameters.rotationQuaternion);
     root.quaternion
-      .set(
-        quaternion[0],
-        quaternion[1],
-        quaternion[2],
-        quaternion[3],
-      )
+      .set(quaternion[0], quaternion[1], quaternion[2], quaternion[3])
       .normalize();
     lastFrame = frame;
     lastAppliedTargetsVersion = targetsVersion;
@@ -928,10 +869,7 @@ export const createMorphShapesProgram: VizThreeProgramFactory = ({
       camera.aspect = nextWidth / Math.max(nextHeight, 1);
       camera.updateProjectionMatrix();
     },
-    render(
-      renderer: WebGLRenderer,
-      renderTarget: WebGLRenderTarget,
-    ) {
+    render(renderer: WebGLRenderer, renderTarget: WebGLRenderTarget) {
       const previousShadowEnabled = renderer.shadowMap.enabled;
       const previousToneMapping = renderer.toneMapping;
       const previousExposure = renderer.toneMappingExposure;

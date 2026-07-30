@@ -269,8 +269,6 @@ export function computeSessionStatistics(
 
   // Extract frame time data (flatten all frame times from all snapshots)
   const allFrameTimes = snapshots.flatMap((s) => s.frameTimes);
-  const maxFrameTimeValues = snapshots.map((s) => s.maxFrameTime);
-  const meanFrameTimeValues = snapshots.map((s) => s.meanFrameTime);
 
   // Count dropped frames (below 30 FPS)
   const droppedFrames = editorFPSValues.filter((fps) => fps < 30).length;

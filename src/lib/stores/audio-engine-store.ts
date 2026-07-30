@@ -1,9 +1,7 @@
 import { create } from 'zustand';
 
 type AudioSourceNode =
-  | MediaElementAudioSourceNode
-  | MediaStreamAudioSourceNode
-  | null;
+  MediaElementAudioSourceNode | MediaStreamAudioSourceNode | null;
 
 interface AudioEngineStore {
   audioBuffer: AudioBuffer | null;
@@ -12,6 +10,7 @@ interface AudioEngineStore {
   audioAnalyzer: AnalyserNode | null;
   gainNode: GainNode | null;
   audioElementRef: { current: HTMLAudioElement | null };
+  elementUrl: string | null;
   tabCaptureStream: MediaStream | null;
   setAudioBuffer: (audioBuffer: AudioBuffer | null) => void;
   setAudioContext: (audioContext: AudioContext) => void;
@@ -54,15 +53,24 @@ const useAudioEngineStore = create<AudioEngineStore>((set, get) => ({
   audioAnalyzer: null,
   gainNode: null,
   audioElementRef: { current: null },
+  elementUrl: null,
   tabCaptureStream: null,
   setAudioBuffer: (audioBuffer) => set({ audioBuffer }),
   setAudioContext: (audioContext) => set({ audioContext }),
   setAnalyzer: (audioAnalyzer) => set({ audioAnalyzer }),
   setGainNode: (gainNode) => set({ gainNode }),
-  setAudioElementRef: (audioElementRef) => set({ audioElementRef }),
+  setAudioElementRef: (audioElementRef) => {
+    set({ audioElementRef });
+    const audioElement = audioElementRef.current;
+    const elementUrl = get().elementUrl;
+    if (audioElement && elementUrl) {
+      resetElementSource(audioElement, elementUrl);
+    }
+  },
   setAudioSource: (node) => set({ audioSource: { current: node } }),
   setTabCaptureStream: (tabCaptureStream) => set({ tabCaptureStream }),
   loadAudioUrl: (url) => {
+    set({ elementUrl: url });
     const audioElement = get().audioElementRef.current;
 
     if (!audioElement) {
@@ -72,6 +80,7 @@ const useAudioEngineStore = create<AudioEngineStore>((set, get) => ({
     resetElementSource(audioElement, url);
   },
   attachStreamToElement: async (stream) => {
+    set({ elementUrl: null });
     const audioElement = get().audioElementRef.current;
 
     if (!audioElement) {
@@ -86,6 +95,7 @@ const useAudioEngineStore = create<AudioEngineStore>((set, get) => ({
     await audioElement.play().catch(() => {});
   },
   clearElementSource: () => {
+    set({ elementUrl: null });
     const audioElement = get().audioElementRef.current;
 
     if (!audioElement) {
@@ -96,6 +106,7 @@ const useAudioEngineStore = create<AudioEngineStore>((set, get) => ({
     resetElementSource(audioElement, null);
   },
   restoreElementUrl: (url) => {
+    set({ elementUrl: url });
     const audioElement = get().audioElementRef.current;
 
     if (!audioElement) {
@@ -124,6 +135,7 @@ const useAudioEngineStore = create<AudioEngineStore>((set, get) => ({
       audioContext: null,
       audioAnalyzer: null,
       gainNode: null,
+      elementUrl: null,
       tabCaptureStream: null,
     });
   },

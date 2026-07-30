@@ -1,13 +1,13 @@
 import type {
+  VizCapabilityPack,
+  VizCapabilityPackManifest,
+} from './capabilities.js';
+import type {
   VizComponentImplementation,
   VizComponentInputSourceKind,
   VizComponentSettingCondition,
   VizComponentSettingDefinition,
-} from "./components.js";
-import type {
-  VizCapabilityPack,
-  VizCapabilityPackManifest,
-} from "./capabilities.js";
+} from './components.js';
 
 export interface VizComponentRegistry {
   get(id: string): VizComponentImplementation | undefined;
@@ -24,50 +24,50 @@ export interface VizComponentRegistration {
 
 export interface VizComponentValidationIssue {
   code:
-    | "missing-component-id"
-    | "missing-component-name"
-    | "duplicate-component-id"
-    | "duplicate-input-key"
-    | "invalid-input-key"
-    | "invalid-runtime-input-binding"
-    | "empty-supported-sources"
-    | "invalid-default-asset"
-    | "authoring-component-id-mismatch"
-    | "invalid-authoring-schema"
-    | "duplicate-setting-path"
-    | "invalid-setting-definition"
-    | "invalid-setting-condition"
-    | "invalid-component-preset"
-    | "invalid-capability-pack-manifest"
-    | "duplicate-capability-pack-id";
+    | 'missing-component-id'
+    | 'missing-component-name'
+    | 'duplicate-component-id'
+    | 'duplicate-input-key'
+    | 'invalid-input-key'
+    | 'invalid-runtime-input-binding'
+    | 'empty-supported-sources'
+    | 'invalid-default-asset'
+    | 'authoring-component-id-mismatch'
+    | 'invalid-authoring-schema'
+    | 'duplicate-setting-path'
+    | 'invalid-setting-definition'
+    | 'invalid-setting-condition'
+    | 'invalid-component-preset'
+    | 'invalid-capability-pack-manifest'
+    | 'duplicate-capability-pack-id';
   componentId?: string;
   path: string;
   message: string;
 }
 
 const VALID_INPUT_SOURCE_KINDS = new Set<VizComponentInputSourceKind>([
-  "literal",
-  "asset-ref",
-  "graph-output",
-  "artifact-feature",
+  'literal',
+  'asset-ref',
+  'graph-output',
+  'artifact-feature',
 ]);
 
 const VALID_RUNTIME_INPUT_BINDINGS = new Set([
-  "audio.frequency-data",
-  "audio.time-domain-data",
-  "audio.sample-rate",
-  "audio.fft-size",
-  "audio.frequency-analysis",
+  'audio.frequency-data',
+  'audio.time-domain-data',
+  'audio.sample-rate',
+  'audio.fft-size',
+  'audio.frequency-analysis',
 ]);
 
 const isNonEmptyString = (value: unknown): value is string => {
-  return typeof value === "string" && value.trim().length > 0;
+  return typeof value === 'string' && value.trim().length > 0;
 };
 
 const isValidSettingCondition = (
   condition: VizComponentSettingCondition,
 ): boolean => {
-  if ("conditions" in condition) {
+  if ('conditions' in condition) {
     return (
       condition.conditions.length > 0 &&
       condition.conditions.every(isValidSettingCondition)
@@ -76,8 +76,8 @@ const isValidSettingCondition = (
 
   return (
     isNonEmptyString(condition.path) &&
-    ["equals", "not-equals", "in", "not-in"].includes(condition.operator) &&
-    (condition.operator !== "in" && condition.operator !== "not-in"
+    ['equals', 'not-equals', 'in', 'not-in'].includes(condition.operator) &&
+    (condition.operator !== 'in' && condition.operator !== 'not-in'
       ? true
       : Array.isArray(condition.value))
   );
@@ -93,7 +93,7 @@ const validateSettingDefinition = (
 
   if (seenPaths.has(path)) {
     issues.push({
-      code: "duplicate-setting-path",
+      code: 'duplicate-setting-path',
       componentId,
       path,
       message: `Duplicate component setting path "${path}".`,
@@ -104,7 +104,7 @@ const validateSettingDefinition = (
 
   if (!isNonEmptyString(definition.label)) {
     issues.push({
-      code: "invalid-setting-definition",
+      code: 'invalid-setting-definition',
       componentId,
       path: `${path}.label`,
       message: `Component setting "${path}" must have a non-empty label.`,
@@ -114,18 +114,18 @@ const validateSettingDefinition = (
   const condition = definition.visibleWhen;
   if (condition !== undefined && !isValidSettingCondition(condition)) {
     issues.push({
-      code: "invalid-setting-condition",
+      code: 'invalid-setting-condition',
       componentId,
       path: `${path}.visibleWhen`,
       message: `Component setting "${path}" has an invalid visibility condition.`,
     });
   }
 
-  if (definition.kind === "group") {
+  if (definition.kind === 'group') {
     for (const [key, child] of Object.entries(definition.fields)) {
       if (!isNonEmptyString(key)) {
         issues.push({
-          code: "invalid-setting-definition",
+          code: 'invalid-setting-definition',
           componentId,
           path,
           message: `Component setting group "${path}" contains an empty field key.`,
@@ -144,7 +144,7 @@ const validateSettingDefinition = (
     return issues;
   }
 
-  if (definition.kind === "number") {
+  if (definition.kind === 'number') {
     if (
       !Number.isFinite(definition.defaultValue) ||
       !Number.isFinite(definition.min) ||
@@ -154,28 +154,28 @@ const validateSettingDefinition = (
       definition.defaultValue > definition.max
     ) {
       issues.push({
-        code: "invalid-setting-definition",
+        code: 'invalid-setting-definition',
         componentId,
         path,
         message: `Number setting "${path}" has invalid bounds or default value.`,
       });
     }
-  } else if (definition.kind === "select") {
+  } else if (definition.kind === 'select') {
     if (
       definition.options.length === 0 ||
       !definition.options.includes(definition.defaultValue)
     ) {
       issues.push({
-        code: "invalid-setting-definition",
+        code: 'invalid-setting-definition',
         componentId,
         path,
         message: `Select setting "${path}" must contain its default value in its options.`,
       });
     }
-  } else if (definition.kind === "action") {
+  } else if (definition.kind === 'action') {
     if (!isNonEmptyString(definition.actionId)) {
       issues.push({
-        code: "invalid-setting-definition",
+        code: 'invalid-setting-definition',
         componentId,
         path,
         message: `Action setting "${path}" must declare a non-empty action id.`,
@@ -193,39 +193,40 @@ export const validateVizComponentImplementation = (
 
   if (!isNonEmptyString(component.id)) {
     issues.push({
-      code: "missing-component-id",
-      path: "id",
-      message: "Component id must be a non-empty string.",
+      code: 'missing-component-id',
+      path: 'id',
+      message: 'Component id must be a non-empty string.',
     });
   }
 
   if (!isNonEmptyString(component.name)) {
     issues.push({
-      code: "missing-component-name",
+      code: 'missing-component-name',
       componentId: component.id,
-      path: `${component.id || "<missing-id>"}.name`,
-      message: "Component name must be a non-empty string.",
+      path: `${component.id || '<missing-id>'}.name`,
+      message: 'Component name must be a non-empty string.',
     });
   }
 
   if (component.authoring !== undefined) {
     if (
       component.authoring.schemaVersion !== 1 ||
-      component.authoring.settings.kind !== "group"
+      component.authoring.settings.kind !== 'group'
     ) {
       issues.push({
-        code: "invalid-authoring-schema",
+        code: 'invalid-authoring-schema',
         componentId: component.id,
-        path: `${component.id || "<missing-id>"}.authoring`,
-        message: "Component authoring schema must use schemaVersion 1 and a root group.",
+        path: `${component.id || '<missing-id>'}.authoring`,
+        message:
+          'Component authoring schema must use schemaVersion 1 and a root group.',
       });
     }
 
     if (component.authoring.componentId !== component.id) {
       issues.push({
-        code: "authoring-component-id-mismatch",
+        code: 'authoring-component-id-mismatch',
         componentId: component.id,
-        path: `${component.id || "<missing-id>"}.authoring.componentId`,
+        path: `${component.id || '<missing-id>'}.authoring.componentId`,
         message: `Component authoring id "${component.authoring.componentId}" does not match component id "${component.id}".`,
       });
     }
@@ -247,7 +248,7 @@ export const validateVizComponentImplementation = (
         presetIds.has(preset.id)
       ) {
         issues.push({
-          code: "invalid-component-preset",
+          code: 'invalid-component-preset',
           componentId: component.id,
           path: `${component.id}.authoring.presets`,
           message: `Component "${component.id}" has an invalid or duplicate preset id.`,
@@ -260,21 +261,21 @@ export const validateVizComponentImplementation = (
   const seenInputKeys = new Set<string>();
 
   for (const input of component.inputs ?? []) {
-    const pathPrefix = `${component.id || "<missing-id>"}.inputs.${input.key || "<missing-key>"}`;
+    const pathPrefix = `${component.id || '<missing-id>'}.inputs.${input.key || '<missing-key>'}`;
 
     if (!isNonEmptyString(input.key)) {
       issues.push({
-        code: "invalid-input-key",
+        code: 'invalid-input-key',
         componentId: component.id,
         path: pathPrefix,
-        message: "Component input key must be a non-empty string.",
+        message: 'Component input key must be a non-empty string.',
       });
       continue;
     }
 
     if (seenInputKeys.has(input.key)) {
       issues.push({
-        code: "duplicate-input-key",
+        code: 'duplicate-input-key',
         componentId: component.id,
         path: pathPrefix,
         message: `Duplicate component input key "${input.key}".`,
@@ -289,16 +290,19 @@ export const validateVizComponentImplementation = (
       !VALID_RUNTIME_INPUT_BINDINGS.has(input.runtimeBinding)
     ) {
       issues.push({
-        code: "invalid-runtime-input-binding",
+        code: 'invalid-runtime-input-binding',
         componentId: component.id,
         path: `${pathPrefix}.runtimeBinding`,
         message: `Component input "${input.key}" references unknown runtime binding "${String(input.runtimeBinding)}".`,
       });
     }
 
-    if (!Array.isArray(input.supportedSources) || input.supportedSources.length === 0) {
+    if (
+      !Array.isArray(input.supportedSources) ||
+      input.supportedSources.length === 0
+    ) {
       issues.push({
-        code: "empty-supported-sources",
+        code: 'empty-supported-sources',
         componentId: component.id,
         path: `${pathPrefix}.supportedSources`,
         message: `Component input "${input.key}" must declare at least one supported source kind.`,
@@ -309,7 +313,7 @@ export const validateVizComponentImplementation = (
     for (const sourceKind of input.supportedSources) {
       if (!VALID_INPUT_SOURCE_KINDS.has(sourceKind)) {
         issues.push({
-          code: "empty-supported-sources",
+          code: 'empty-supported-sources',
           componentId: component.id,
           path: `${pathPrefix}.supportedSources`,
           message: `Component input "${input.key}" references unknown source kind "${String(sourceKind)}".`,
@@ -319,10 +323,10 @@ export const validateVizComponentImplementation = (
 
     if (
       input.defaultAsset !== undefined &&
-      !input.supportedSources.includes("asset-ref")
+      !input.supportedSources.includes('asset-ref')
     ) {
       issues.push({
-        code: "invalid-default-asset",
+        code: 'invalid-default-asset',
         componentId: component.id,
         path: `${pathPrefix}.defaultAsset`,
         message: `Component input "${input.key}" declares a default asset without supporting asset-ref sources.`,
@@ -348,7 +352,7 @@ export const validateVizComponentRegistry = (
 
     if (seenComponentIds.has(component.id)) {
       issues.push({
-        code: "duplicate-component-id",
+        code: 'duplicate-component-id',
         componentId: component.id,
         path: component.id,
         message: `Duplicate component id "${component.id}" in registry.`,
@@ -370,11 +374,13 @@ export const createVizComponentRegistry = (
 
   if ((options.strict ?? false) && issues.length > 0) {
     throw new Error(
-      `Invalid Viz component registry: ${issues.map((issue) => issue.message).join("; ")}`,
+      `Invalid Viz component registry: ${issues.map((issue) => issue.message).join('; ')}`,
     );
   }
 
-  const componentMap = new Map(components.map((component) => [component.id, component]));
+  const componentMap = new Map(
+    components.map((component) => [component.id, component]),
+  );
   const registrations = components.map((component) => ({ component }));
   const registrationMap = new Map(
     registrations.map((registration) => [
@@ -407,7 +413,7 @@ export const createVizComponentRegistryFromCapabilityPacks = (
       !isNonEmptyString(pack.manifest.version)
     ) {
       packIssues.push({
-        code: "invalid-capability-pack-manifest",
+        code: 'invalid-capability-pack-manifest',
         path,
         message: `Capability pack at index ${index} must declare non-empty id and version values.`,
       });
@@ -416,7 +422,7 @@ export const createVizComponentRegistryFromCapabilityPacks = (
 
     if (seenPackIds.has(pack.manifest.id)) {
       packIssues.push({
-        code: "duplicate-capability-pack-id",
+        code: 'duplicate-capability-pack-id',
         path: `${path}.id`,
         message: `Duplicate capability pack id "${pack.manifest.id}".`,
       });
@@ -432,13 +438,15 @@ export const createVizComponentRegistryFromCapabilityPacks = (
       capabilityPack: pack.manifest,
     })),
   );
-  const components = registrations.map((registration) => registration.component);
+  const components = registrations.map(
+    (registration) => registration.component,
+  );
   const registry = createVizComponentRegistry(components);
   const issues = [...packIssues, ...registry.getValidationIssues()];
 
   if ((options.strict ?? false) && issues.length > 0) {
     throw new Error(
-      `Invalid Viz component registry: ${issues.map((issue) => issue.message).join("; ")}`,
+      `Invalid Viz component registry: ${issues.map((issue) => issue.message).join('; ')}`,
     );
   }
 

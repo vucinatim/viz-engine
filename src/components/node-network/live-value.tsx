@@ -8,10 +8,7 @@ interface LiveValueProps {
   type: string;
 }
 
-export const formatNodeLiveValue = (
-  value: unknown,
-  type: string,
-): string => {
+export const formatNodeLiveValue = (value: unknown, type: string): string => {
   switch (type) {
     case 'number':
       return typeof value === 'number' && Number.isFinite(value)

@@ -1,14 +1,14 @@
 export type VizNodeHandleType =
-  | "number"
-  | "string"
-  | "boolean"
-  | "color"
-  | "file"
-  | "vector3"
-  | "Uint8Array"
-  | "FrequencyAnalysis"
-  | "object"
-  | "math-op";
+  | 'number'
+  | 'string'
+  | 'boolean'
+  | 'color'
+  | 'file'
+  | 'vector3'
+  | 'Uint8Array'
+  | 'FrequencyAnalysis'
+  | 'object'
+  | 'math-op';
 
 export interface VizNodeFrequencyAnalysis {
   frequencyData: Uint8Array;
@@ -57,29 +57,29 @@ export const EMPTY_NODE_FREQUENCY_ANALYSIS: VizNodeFrequencyAnalysis = {
 
 const getFallbackValue = (type: VizNodeHandleType): unknown => {
   switch (type) {
-    case "number":
+    case 'number':
       return 0;
-    case "string":
-    case "color":
-      return "";
-    case "boolean":
+    case 'string':
+    case 'color':
+      return '';
+    case 'boolean':
       return false;
-    case "Uint8Array":
+    case 'Uint8Array':
       return new Uint8Array();
-    case "FrequencyAnalysis":
+    case 'FrequencyAnalysis':
       return EMPTY_NODE_FREQUENCY_ANALYSIS;
-    case "object":
+    case 'object':
       return {};
-    case "vector3":
+    case 'vector3':
       return { x: 0, y: 0, z: 0 };
-    case "file":
-    case "math-op":
+    case 'file':
+    case 'math-op':
       return undefined;
   }
 };
 
 export const createNodeAuthoringDefinition = <
-  TDefinition extends Omit<VizNodeAuthoringDefinition, "computeSignal"> & {
+  TDefinition extends Omit<VizNodeAuthoringDefinition, 'computeSignal'> & {
     computeSignal(
       inputs: Record<string, any>,
       context: VizNodeAnimationInput,
@@ -108,12 +108,12 @@ export const createNodeAuthoringDefinition = <
 });
 
 export enum VizNodeMathOperation {
-  Add = "add",
-  Subtract = "subtract",
-  Multiply = "multiply",
-  Divide = "divide",
-  Power = "power",
-  Max = "max",
-  Min = "min",
-  Modulo = "modulo",
+  Add = 'add',
+  Subtract = 'subtract',
+  Multiply = 'multiply',
+  Divide = 'divide',
+  Power = 'power',
+  Max = 'max',
+  Min = 'min',
+  Modulo = 'modulo',
 }

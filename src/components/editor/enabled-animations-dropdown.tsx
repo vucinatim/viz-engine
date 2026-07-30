@@ -1,15 +1,12 @@
-'use client';
-
-import { destructureParameterId } from '@/lib/id-utils';
 import editorControl from '@/lib/editor-control';
+import { destructureParameterId } from '@/lib/id-utils';
 import useEditorLayerProjectionStore from '@/lib/stores/editor-layer-projection-store';
-import { useCallback, useMemo } from 'react';
-import useNodeNetworkStore, {
-} from '../node-network/node-network-store';
 import {
   selectParameterGraphBindings,
   useVizSessionSelector,
 } from '@/lib/viz-session';
+import { useCallback, useMemo } from 'react';
+import useNodeNetworkStore from '../node-network/node-network-store';
 import { Badge } from '../ui/badge';
 import SearchSelect from '../ui/search-select';
 import AnimationItem from './animation-item';
@@ -30,13 +27,10 @@ const EnabledAnimationsDropdown = () => {
   const layers = useEditorLayerProjectionStore((state) => state.layers);
 
   // Memoize the click handler
-  const handleSelect = useCallback(
-    (animation: any) => {
-      editorControl.nodeEditor.openNetwork(animation.parameterId);
-      editorControl.nodeEditor.setShouldForceShowOverlay(true);
-    },
-    [],
-  );
+  const handleSelect = useCallback((animation: any) => {
+    editorControl.nodeEditor.openNetwork(animation.parameterId);
+    editorControl.nodeEditor.setShouldForceShowOverlay(true);
+  }, []);
 
   // Check if animation is currently active
   const isActiveAnimation = useCallback(

@@ -1,4 +1,4 @@
-import type { VizRenderThreeProgramNode } from "@viz-engine/contracts";
+import type { VizRenderThreeProgramNode } from '@viz-engine/contracts';
 import {
   ACESFilmicToneMapping,
   AmbientLight,
@@ -18,21 +18,19 @@ import {
   ShadowMaterial,
   type WebGLRenderTarget,
   type WebGLRenderer,
-} from "three";
-import type { VizThreeProgramFactory } from "./types.js";
+} from 'three';
+import type { VizThreeProgramFactory } from './types.js';
 
-const PROGRAM_ID = "viz-core/instanced-supercube/v1";
+const PROGRAM_ID = 'viz-core/instanced-supercube/v1';
 const MAX_GRID_SIZE = 8;
 const MAX_CAPACITY = 8 * (12 * MAX_GRID_SIZE - 16);
 const SUB_CUBE_SIZE = 3 / 5;
 
 const asNumber = (value: unknown, fallback: number): number =>
-  typeof value === "number" && Number.isFinite(value)
-    ? value
-    : fallback;
+  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 
 const asString = (value: unknown, fallback: string): string =>
-  typeof value === "string" && value.length > 0 ? value : fallback;
+  typeof value === 'string' && value.length > 0 ? value : fallback;
 
 const assertProgram = (node: VizRenderThreeProgramNode): void => {
   if (node.programId !== PROGRAM_ID) {
@@ -58,8 +56,7 @@ const updateInstanceLayout = ({
   dummy: Object3D;
 }): void => {
   const centerOffset = (gridSize - 1) / 2;
-  const explosionScale =
-    1 + (explosionFactor - 1) * explosionShift;
+  const explosionScale = 1 + (explosionFactor - 1) * explosionShift;
   let instanceIndex = 0;
 
   for (let hx = -1; hx <= 1; hx += 2) {
@@ -122,22 +119,18 @@ export const createInstancedSupercubeProgram: VizThreeProgramFactory = ({
   camera.position.set(0, 0, 20);
   camera.lookAt(0, 0, 0);
 
-  const geometry = new BoxGeometry(
-    SUB_CUBE_SIZE,
-    SUB_CUBE_SIZE,
-    SUB_CUBE_SIZE,
-  );
-  const material = new MeshStandardMaterial({ color: "#ff0000" });
+  const geometry = new BoxGeometry(SUB_CUBE_SIZE, SUB_CUBE_SIZE, SUB_CUBE_SIZE);
+  const material = new MeshStandardMaterial({ color: '#ff0000' });
   const mesh = new InstancedMesh(geometry, material, MAX_CAPACITY);
   mesh.castShadow = true;
   mesh.frustumCulled = false;
   mesh.instanceMatrix.setUsage(DynamicDrawUsage);
 
-  const directionalLight = new DirectionalLight("#ffffff", 1);
+  const directionalLight = new DirectionalLight('#ffffff', 1);
   directionalLight.position.set(-8, 10, 12);
   directionalLight.castShadow = true;
   directionalLight.shadow.mapSize.set(2048, 2048);
-  const ambientLight = new AmbientLight("#ffffff", 0.2);
+  const ambientLight = new AmbientLight('#ffffff', 0.2);
 
   const shadowGeometry = new PlaneGeometry(100, 100);
   const shadowMaterial = new ShadowMaterial({ opacity: 0.3 });
@@ -158,18 +151,13 @@ export const createInstancedSupercubeProgram: VizThreeProgramFactory = ({
     );
     const rotation = asNumber(parameters.rotation, 0);
 
-    material.color.set(
-      asString(parameters.color, "rgb(255, 0, 0)"),
-    );
+    material.color.set(asString(parameters.color, 'rgb(255, 0, 0)'));
     mesh.rotation.set(rotation, rotation, 0);
     updateInstanceLayout({
       mesh,
       gridSize,
       spacing: Math.max(0, asNumber(parameters.spacing, 4)),
-      explosionFactor: Math.max(
-        1,
-        asNumber(parameters.explosionFactor, 1.67),
-      ),
+      explosionFactor: Math.max(1, asNumber(parameters.explosionFactor, 1.67)),
       explosionShift: Math.min(
         1,
         Math.max(0, asNumber(parameters.explosionShift, 0)),
@@ -190,10 +178,7 @@ export const createInstancedSupercubeProgram: VizThreeProgramFactory = ({
       camera.aspect = nextWidth / Math.max(nextHeight, 1);
       camera.updateProjectionMatrix();
     },
-    render(
-      renderer: WebGLRenderer,
-      renderTarget: WebGLRenderTarget,
-    ) {
+    render(renderer: WebGLRenderer, renderTarget: WebGLRenderTarget) {
       const previousShadowEnabled = renderer.shadowMap.enabled;
       const previousShadowType = renderer.shadowMap.type;
       const previousToneMapping = renderer.toneMapping;

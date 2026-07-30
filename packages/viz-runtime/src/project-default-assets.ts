@@ -1,15 +1,13 @@
 import type {
   VizComponentDefinition,
   VizProjectDocument,
-} from "@viz-engine/contracts";
+} from '@viz-engine/contracts';
 
 const clone = <T>(value: T): T => structuredClone(value);
 
 export const applyVizComponentDefaultAssets = (
   project: VizProjectDocument,
-  getComponent: (
-    componentId: string,
-  ) => VizComponentDefinition | undefined,
+  getComponent: (componentId: string) => VizComponentDefinition | undefined,
 ): VizProjectDocument => {
   const assetRefs = [...(project.assetRefs ?? [])];
   const knownAssetIds = new Set(assetRefs.map((asset) => asset.id));
@@ -39,7 +37,7 @@ export const applyVizComponentDefaultAssets = (
           changed = true;
         }
         inputs[input.key] = {
-          kind: "asset-ref",
+          kind: 'asset-ref',
           assetId: asset.id,
         };
         layerChanged = true;

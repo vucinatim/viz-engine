@@ -1,21 +1,13 @@
-import type { VizActionActor } from "./actions.js";
-import type {
-  VizArtifactId,
-  VizJobId,
-  VizProjectId,
-} from "./ids.js";
-import type { VizJobEvent, VizJobRecord } from "./jobs.js";
+import type { VizActionActor } from './actions.js';
+import type { VizArtifactId, VizJobId, VizProjectId } from './ids.js';
+import type { VizJobEvent, VizJobRecord } from './jobs.js';
 
 export const VIZ_RENDER_REQUEST_SCHEMA_VERSION = 1 as const;
 export const VIZ_RENDER_RESULT_SCHEMA_VERSION = 1 as const;
 
-export type VizRenderIntent =
-  | "preview"
-  | "candidate"
-  | "final"
-  | "integration";
+export type VizRenderIntent = 'preview' | 'candidate' | 'final' | 'integration';
 
-export type VizRenderQuality = "draft" | "standard" | "high";
+export type VizRenderQuality = 'draft' | 'standard' | 'high';
 
 export interface VizRenderProjectSource {
   projectId: VizProjectId;
@@ -40,35 +32,34 @@ export interface VizRenderRequestBase {
 }
 
 export interface VizStillRenderRequest extends VizRenderRequestBase {
-  kind: "still";
+  kind: 'still';
   frame: number;
-  format: "svg" | "png" | "jpeg" | "webp";
+  format: 'svg' | 'png' | 'jpeg' | 'webp';
 }
 
-export interface VizContactSheetRenderRequest
-  extends VizRenderRequestBase {
-  kind: "contact-sheet";
+export interface VizContactSheetRenderRequest extends VizRenderRequestBase {
+  kind: 'contact-sheet';
   frames: number[];
   columns?: number;
   gap?: number;
-  format: "svg" | "png" | "jpeg" | "webp";
+  format: 'svg' | 'png' | 'jpeg' | 'webp';
 }
 
 export interface VizClipRenderRequest extends VizRenderRequestBase {
-  kind: "clip";
+  kind: 'clip';
   startFrame: number;
   frameCount: number;
   fps: number;
-  format: "mp4" | "webm";
+  format: 'mp4' | 'webm';
   includeAudio: boolean;
 }
 
 export interface VizVideoRenderRequest extends VizRenderRequestBase {
-  kind: "video";
+  kind: 'video';
   startFrame: number;
   frameCount: number;
   fps: number;
-  format: "mp4" | "webm";
+  format: 'mp4' | 'webm';
   includeAudio: boolean;
 }
 
@@ -79,19 +70,19 @@ export type VizRenderRequest =
   | VizVideoRenderRequest;
 
 export type VizRenderOutputRole =
-  | "still"
-  | "contact-sheet"
-  | "preview-clip"
-  | "final-video"
-  | "frame-sample"
-  | "diagnostic";
+  | 'still'
+  | 'contact-sheet'
+  | 'preview-clip'
+  | 'final-video'
+  | 'frame-sample'
+  | 'diagnostic';
 
 export interface VizRenderOutputArtifact {
   id: VizArtifactId;
-  kind: "render-output";
+  kind: 'render-output';
   role: VizRenderOutputRole;
   label: string;
-  format: VizRenderRequest["format"];
+  format: VizRenderRequest['format'];
   mimeType: string;
   uri: string;
   contentIdentity: string;
@@ -104,7 +95,7 @@ export interface VizRenderOutputArtifact {
 }
 
 export interface VizMediaStreamProbe {
-  kind: "video" | "audio";
+  kind: 'video' | 'audio';
   codec: string;
   durationSeconds?: number;
   width?: number;
@@ -149,7 +140,7 @@ export interface VizRenderPerformanceFeedback {
 }
 
 export interface VizRenderDiagnostic {
-  severity: "info" | "warning" | "error";
+  severity: 'info' | 'warning' | 'error';
   code: string;
   message: string;
   frame?: number;
@@ -168,7 +159,7 @@ export interface VizRenderExecutionIdentity {
 export interface VizRenderSuccess {
   schemaVersion: typeof VIZ_RENDER_RESULT_SCHEMA_VERSION;
   ok: true;
-  status: "succeeded";
+  status: 'succeeded';
   executionIdentity: VizRenderExecutionIdentity;
   outputs: VizRenderOutputArtifact[];
   diagnostics: VizRenderDiagnostic[];
@@ -182,15 +173,12 @@ export type VizRenderJobRecord = VizJobRecord<
   VizRenderSuccess
 >;
 
-export type VizRenderJobEvent = VizJobEvent<
-  VizRenderRequest,
-  VizRenderSuccess
->;
+export type VizRenderJobEvent = VizJobEvent<VizRenderRequest, VizRenderSuccess>;
 
 export interface VizRenderJobSummary {
   id: VizJobId;
   kind: string;
-  status: VizRenderJobRecord["status"];
+  status: VizRenderJobRecord['status'];
   requestedBy: VizActionActor;
   requestedAt: string;
   updatedAt: string;

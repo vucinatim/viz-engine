@@ -1,9 +1,9 @@
+import { vizControl } from '@/lib/viz-session';
 import {
   executeVizControlRequest,
   VIZ_CONTROL_PROTOCOL_VERSION,
   type VizControlEvent,
 } from '@viz-engine/editor-control';
-import { vizControl } from '@/lib/viz-session';
 
 interface BridgeRequest {
   targetEditorInstanceId: string;

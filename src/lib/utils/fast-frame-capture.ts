@@ -39,12 +39,7 @@ export function fastCaptureCanvas(
   containerElement: HTMLElement,
   options: FastCaptureOptions,
 ): HTMLCanvasElement {
-  const {
-    width,
-    height,
-    backgroundColor = '#000000',
-    quality = 0.95,
-  } = options;
+  const { width, height, backgroundColor = '#000000' } = options;
 
   // Find all canvas elements that are layers
   const canvases = Array.from(

@@ -55,7 +55,10 @@ type RhythmLabState = {
   analysisMeta: RhythmLabAnalysisMeta | null;
   isComputing: boolean;
   setOutputView: (value: string) => void;
-  setParam: (key: keyof RhythmLabParams, value: RhythmLabParams[keyof RhythmLabParams]) => void;
+  setParam: (
+    key: keyof RhythmLabParams,
+    value: RhythmLabParams[keyof RhythmLabParams],
+  ) => void;
   setEnabledStage: (id: string, enabled: boolean) => void;
   setOnsetEnv: (env: Float32Array | null) => void;
   setTempogramCurve: (curve: Float32Array | null) => void;

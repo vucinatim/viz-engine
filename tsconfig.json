@@ -5,11 +5,7 @@
     "jsx": "react-jsx",
     "incremental": true
   },
-  "include": [
-    "vite-imports.d.ts",
-    "**/*.ts",
-    "**/*.tsx"
-  ],
+  "include": ["vite-imports.d.ts", "**/*.ts", "**/*.tsx"],
   "exclude": [
     "node_modules",
     "playground/vite.config.ts",

@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
+import { useEffect } from 'react';
 
 const useAudioPlaybackSync = () => {
   const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);

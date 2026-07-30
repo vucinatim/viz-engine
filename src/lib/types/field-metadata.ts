@@ -1,10 +1,10 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export enum InputType {
-  Color = "color",
-  Slider = "slider",
-  Select = "select",
-  Toggle = "toggle",
+  Color = 'color',
+  Slider = 'slider',
+  Select = 'select',
+  Toggle = 'toggle',
 }
 
 interface FieldMetadata {
@@ -19,11 +19,11 @@ export function meta(metadata: FieldMetadata): string {
 
 export function getMetadata(schema: unknown): FieldMetadata | null {
   if (!(schema instanceof z.ZodType)) {
-    console.error("Schema is not a zod type");
+    console.error('Schema is not a zod type');
     return null;
   }
   if (!schema || !schema.description) {
-    console.error("Schema has no description");
+    console.error('Schema has no description');
     return null;
   }
 
@@ -32,12 +32,12 @@ export function getMetadata(schema: unknown): FieldMetadata | null {
     const description = schema.description;
     if (description) {
       const parsed = JSON.parse(description);
-      if (parsed && typeof parsed === "object") {
+      if (parsed && typeof parsed === 'object') {
         return parsed as FieldMetadata;
       }
     }
   } catch (error) {
-    console.error("Failed to parse metadata:", error);
+    console.error('Failed to parse metadata:', error);
   }
   return null;
 }

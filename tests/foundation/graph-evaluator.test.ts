@@ -1,27 +1,27 @@
-import type { VizNodeImplementation } from "@viz-engine/contracts";
-import { createCoreNodeRegistry } from "@viz-engine/nodes-core";
+import type { VizNodeImplementation } from '@viz-engine/contracts';
 import {
   exampleAudioTimelineArtifact,
   exampleMainReactivityGraph,
   exampleProjectDocument,
   exampleResolvedArtifacts,
   exampleResolvedAssets,
-} from "@viz-engine/example-projects";
+} from '@viz-engine/example-projects';
+import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
 import {
   createVizNodeRegistry,
   createVizRuntimeSession,
   evaluateSingleVizGraph,
-} from "@viz-engine/runtime";
-import { describe, expect, it } from "vitest";
+} from '@viz-engine/runtime';
+import { describe, expect, it } from 'vitest';
 
-describe("Viz graph evaluation", () => {
-  it("evaluates embedded graph outputs deterministically from project-scoped inputs", () => {
+describe('Viz graph evaluation', () => {
+  it('evaluates embedded graph outputs deterministically from project-scoped inputs', () => {
     const session = createVizRuntimeSession({
       project: exampleProjectDocument,
-      mode: "render",
+      mode: 'render',
       resolvedAssets: exampleResolvedAssets,
       resolvedArtifacts: exampleResolvedArtifacts,
-      seed: "graph-seed",
+      seed: 'graph-seed',
     });
 
     const result = evaluateSingleVizGraph({
@@ -32,53 +32,53 @@ describe("Viz graph evaluation", () => {
     });
 
     expect(result.issues).toHaveLength(0);
-    expect(typeof result.values.barsBass).toBe("number");
-    expect(typeof result.values.barsLoudness).toBe("number");
-    expect(typeof result.values.bloomIntensity).toBe("number");
+    expect(typeof result.values.barsBass).toBe('number');
+    expect(typeof result.values.barsLoudness).toBe('number');
+    expect(typeof result.values.bloomIntensity).toBe('number');
     expect(result.values.barsBass).not.toBe(result.values.barsLoudness);
-    expect(result.nodes["node-bars-bass-scale"]?.inputs).toMatchObject({
+    expect(result.nodes['node-bars-bass-scale']?.inputs).toMatchObject({
       factor: 0.92,
     });
-    expect(typeof result.nodes["node-bars-bass-scale"]?.outputs.value).toBe(
-      "number",
+    expect(typeof result.nodes['node-bars-bass-scale']?.outputs.value).toBe(
+      'number',
     );
   });
 
-  it("reports graph cycles explicitly instead of recursing forever", () => {
+  it('reports graph cycles explicitly instead of recursing forever', () => {
     const session = createVizRuntimeSession({
       project: {
         ...exampleProjectDocument,
         graphs: [
           {
-            id: "graph-cycle-test",
-            name: "Cycle Test",
+            id: 'graph-cycle-test',
+            name: 'Cycle Test',
             nodes: [
               {
-                id: "node-a",
-                type: "add",
+                id: 'node-a',
+                type: 'add',
                 inputs: {
                   a: {
-                    kind: "node-output",
-                    nodeId: "node-b",
-                    output: "value",
+                    kind: 'node-output',
+                    nodeId: 'node-b',
+                    output: 'value',
                   },
                   b: {
-                    kind: "literal",
+                    kind: 'literal',
                     value: 1,
                   },
                 },
               },
               {
-                id: "node-b",
-                type: "add",
+                id: 'node-b',
+                type: 'add',
                 inputs: {
                   a: {
-                    kind: "node-output",
-                    nodeId: "node-a",
-                    output: "value",
+                    kind: 'node-output',
+                    nodeId: 'node-a',
+                    output: 'value',
                   },
                   b: {
-                    kind: "literal",
+                    kind: 'literal',
                     value: 1,
                   },
                 },
@@ -86,16 +86,16 @@ describe("Viz graph evaluation", () => {
             ],
             outputs: [
               {
-                key: "value",
-                nodeId: "node-a",
-                output: "value",
+                key: 'value',
+                nodeId: 'node-a',
+                output: 'value',
               },
             ],
           },
         ],
       },
-      mode: "render",
-      seed: "graph-cycle-seed",
+      mode: 'render',
+      seed: 'graph-cycle-seed',
     });
 
     const [cycleGraph] = session.project.graphs ?? [];
@@ -109,46 +109,48 @@ describe("Viz graph evaluation", () => {
       registry: createCoreNodeRegistry(),
     });
 
-    expect(result.issues.some((issue) => issue.code === "graph-cycle")).toBe(true);
+    expect(result.issues.some((issue) => issue.code === 'graph-cycle')).toBe(
+      true,
+    );
   });
 
-  it("replays temporal nodes deterministically with fixed-step frame time", () => {
+  it('replays temporal nodes deterministically with fixed-step frame time', () => {
     const session = createVizRuntimeSession({
       project: {
         ...exampleProjectDocument,
         graphs: [
           {
-            id: "graph-temporal-decay-test",
-            name: "Temporal Decay Test",
+            id: 'graph-temporal-decay-test',
+            name: 'Temporal Decay Test',
             inputs: {
               fluxSource: {
-                kind: "artifact-feature",
+                kind: 'artifact-feature',
                 artifactId: exampleAudioTimelineArtifact.id,
-                feature: "spectral-flux",
+                feature: 'spectral-flux',
               },
             },
             nodes: [
               {
-                id: "node-flux-input",
-                type: "graph-input",
+                id: 'node-flux-input',
+                type: 'graph-input',
                 inputs: {
                   inputKey: {
-                    kind: "literal",
-                    value: "fluxSource",
+                    kind: 'literal',
+                    value: 'fluxSource',
                   },
                 },
               },
               {
-                id: "node-flux-decay",
-                type: "decay",
+                id: 'node-flux-decay',
+                type: 'decay',
                 inputs: {
                   value: {
-                    kind: "node-output",
-                    nodeId: "node-flux-input",
-                    output: "value",
+                    kind: 'node-output',
+                    nodeId: 'node-flux-input',
+                    output: 'value',
                   },
                   falloffPerSecond: {
-                    kind: "literal",
+                    kind: 'literal',
                     value: 0.35,
                   },
                 },
@@ -156,15 +158,15 @@ describe("Viz graph evaluation", () => {
             ],
             outputs: [
               {
-                key: "decayedFlux",
-                nodeId: "node-flux-decay",
-                output: "value",
+                key: 'decayedFlux',
+                nodeId: 'node-flux-decay',
+                output: 'value',
               },
             ],
           },
         ],
       },
-      mode: "render",
+      mode: 'render',
       resolvedArtifacts: [
         {
           ...exampleResolvedArtifacts[0]!,
@@ -179,20 +181,20 @@ describe("Viz graph evaluation", () => {
             frameAlignment: {
               fps: 30,
               frameCount: 4,
-              alignment: "frame-centered",
+              alignment: 'frame-centered',
             },
             featureSeries: [
               {
-                name: "spectral-flux",
-                unit: "unit",
-                normalization: "artifact-peak",
+                name: 'spectral-flux',
+                unit: 'unit',
+                normalization: 'artifact-peak',
                 values: [1, 0, 0.1, 0],
               },
             ],
           },
         },
       ],
-      seed: "graph-temporal-seed",
+      seed: 'graph-temporal-seed',
     });
 
     const [temporalGraph] = session.project.graphs ?? [];
@@ -225,27 +227,32 @@ describe("Viz graph evaluation", () => {
     expect(frameTwo.values.decayedFlux).toBeCloseTo(0.9766666667, 6);
   });
 
-  it("reuses temporal graph checkpoints on repeated evaluation within one runtime session", () => {
+  it('reuses temporal graph checkpoints on repeated evaluation within one runtime session', () => {
     let stepCalls = 0;
 
     const countingDecayNode: VizNodeImplementation = {
-      type: "counting-decay",
-      name: "Counting Decay",
-      category: "temporal",
+      type: 'counting-decay',
+      name: 'Counting Decay',
+      category: 'temporal',
       outputs: [
         {
-          key: "value",
-          label: "Value",
+          key: 'value',
+          label: 'Value',
         },
       ],
       createInitialState: () => 0,
       step: ({ inputs, previousState, deltaTimeSeconds }) => {
         stepCalls += 1;
-        const incoming = typeof inputs.value === "number" ? inputs.value : 0;
-        const previous = typeof previousState === "number" ? previousState : 0;
+        const incoming = typeof inputs.value === 'number' ? inputs.value : 0;
+        const previous = typeof previousState === 'number' ? previousState : 0;
         const falloff =
-          typeof inputs.falloffPerSecond === "number" ? inputs.falloffPerSecond : 0;
-        const nextValue = Math.max(incoming, Math.max(0, previous - falloff * deltaTimeSeconds));
+          typeof inputs.falloffPerSecond === 'number'
+            ? inputs.falloffPerSecond
+            : 0;
+        const nextValue = Math.max(
+          incoming,
+          Math.max(0, previous - falloff * deltaTimeSeconds),
+        );
 
         return {
           state: nextValue,
@@ -261,37 +268,37 @@ describe("Viz graph evaluation", () => {
         ...exampleProjectDocument,
         graphs: [
           {
-            id: "graph-temporal-checkpoint-test",
-            name: "Temporal Checkpoint Test",
+            id: 'graph-temporal-checkpoint-test',
+            name: 'Temporal Checkpoint Test',
             inputs: {
               fluxSource: {
-                kind: "artifact-feature",
+                kind: 'artifact-feature',
                 artifactId: exampleAudioTimelineArtifact.id,
-                feature: "spectral-flux",
+                feature: 'spectral-flux',
               },
             },
             nodes: [
               {
-                id: "node-flux-input",
-                type: "graph-input",
+                id: 'node-flux-input',
+                type: 'graph-input',
                 inputs: {
                   inputKey: {
-                    kind: "literal",
-                    value: "fluxSource",
+                    kind: 'literal',
+                    value: 'fluxSource',
                   },
                 },
               },
               {
-                id: "node-decay",
-                type: "counting-decay",
+                id: 'node-decay',
+                type: 'counting-decay',
                 inputs: {
                   value: {
-                    kind: "node-output",
-                    nodeId: "node-flux-input",
-                    output: "value",
+                    kind: 'node-output',
+                    nodeId: 'node-flux-input',
+                    output: 'value',
                   },
                   falloffPerSecond: {
-                    kind: "literal",
+                    kind: 'literal',
                     value: 0.35,
                   },
                 },
@@ -299,17 +306,17 @@ describe("Viz graph evaluation", () => {
             ],
             outputs: [
               {
-                key: "value",
-                nodeId: "node-decay",
-                output: "value",
+                key: 'value',
+                nodeId: 'node-decay',
+                output: 'value',
               },
             ],
           },
         ],
       },
-      mode: "render",
+      mode: 'render',
       resolvedArtifacts: exampleResolvedArtifacts,
-      seed: "graph-temporal-checkpoint-seed",
+      seed: 'graph-temporal-checkpoint-seed',
       graphCheckpointIntervalFrames: 15,
     });
 
@@ -329,13 +336,11 @@ describe("Viz graph evaluation", () => {
     });
 
     expect(stepCalls).toBe(61);
-    expect(session.listGraphCheckpoints("graph-temporal-checkpoint-test").map((checkpoint) => checkpoint.frame)).toEqual([
-      0,
-      15,
-      30,
-      45,
-      60,
-    ]);
+    expect(
+      session
+        .listGraphCheckpoints('graph-temporal-checkpoint-test')
+        .map((checkpoint) => checkpoint.frame),
+    ).toEqual([0, 15, 30, 45, 60]);
 
     evaluateSingleVizGraph({
       graph: temporalGraph!,
@@ -345,14 +350,10 @@ describe("Viz graph evaluation", () => {
     });
 
     expect(stepCalls).toBe(91);
-    expect(session.listGraphCheckpoints("graph-temporal-checkpoint-test").map((checkpoint) => checkpoint.frame)).toEqual([
-      0,
-      15,
-      30,
-      45,
-      60,
-      75,
-      90,
-    ]);
+    expect(
+      session
+        .listGraphCheckpoints('graph-temporal-checkpoint-test')
+        .map((checkpoint) => checkpoint.frame),
+    ).toEqual([0, 15, 30, 45, 60, 75, 90]);
   });
 });

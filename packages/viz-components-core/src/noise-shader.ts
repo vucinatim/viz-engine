@@ -1,9 +1,9 @@
 import type {
   VizComponentImplementation,
   VizRenderShaderNode,
-} from "@viz-engine/contracts";
-import { noiseShaderAuthoring } from "./authoring/noise-shader.js";
-import { asBoolean, asNumber, asRecord, asString } from "./shared.js";
+} from '@viz-engine/contracts';
+import { noiseShaderAuthoring } from './authoring/noise-shader.js';
+import { asBoolean, asNumber, asRecord, asString } from './shared.js';
 
 export const noiseShaderVertexShader = `
         varying vec2 vUv;
@@ -310,30 +310,30 @@ const noiseTypeIds: Record<string, number> = {
 const colorModeIds: Record<string, number> = {
   gradient: 0,
   palette: 1,
-  "hue-shift": 2,
+  'hue-shift': 2,
   monochrome: 3,
 };
 
 export const noiseShaderComponent: VizComponentImplementation = {
-  id: "noise-shader",
-  name: "Noise Shader",
-  rendererFamily: "three",
-  implementationVersion: "1.0.0",
+  id: 'noise-shader',
+  name: 'Noise Shader',
+  rendererFamily: 'three',
+  implementationVersion: '1.0.0',
   authoring: noiseShaderAuthoring,
-  description: "Deterministic package-runtime procedural noise shader.",
+  description: 'Deterministic package-runtime procedural noise shader.',
   render: ({ viewport, frameContext, layer, settings }) => {
     const noise = asRecord(settings.noise);
     const animation = asRecord(settings.animation);
     const distortion = asRecord(settings.distortion);
     const color = asRecord(settings.color);
     const output = asRecord(settings.output);
-    const noiseType = asString(noise.type, "fbm");
-    const colorMode = asString(color.mode, "gradient");
+    const noiseType = asString(noise.type, 'fbm');
+    const colorMode = asString(color.mode, 'gradient');
 
     return {
-      kind: "shader",
+      kind: 'shader',
       id: layer.id,
-      programId: "viz-core/noise-shader/v1",
+      programId: 'viz-core/noise-shader/v1',
       x: 0,
       y: 0,
       width: viewport.width,
@@ -343,7 +343,7 @@ export const noiseShaderComponent: VizComponentImplementation = {
       uniforms: {
         u_time: frameContext.timeInSeconds,
         u_resolution: {
-          type: "vec2",
+          type: 'vec2',
           value: [viewport.width, viewport.height],
         },
         u_noiseType: noiseTypeIds[noiseType] ?? 2,
@@ -360,16 +360,16 @@ export const noiseShaderComponent: VizComponentImplementation = {
         u_distortionScale: asNumber(distortion.scale, 2),
         u_colorMode: colorModeIds[colorMode] ?? 0,
         u_color1: {
-          type: "color",
-          value: asString(color.color1, "#000000"),
+          type: 'color',
+          value: asString(color.color1, '#000000'),
         },
         u_color2: {
-          type: "color",
-          value: asString(color.color2, "#ffffff"),
+          type: 'color',
+          value: asString(color.color2, '#ffffff'),
         },
         u_color3: {
-          type: "color",
-          value: asString(color.color3, "#ff0000"),
+          type: 'color',
+          value: asString(color.color3, '#ff0000'),
         },
         u_hueShift: asNumber(color.hueShift, 1),
         u_saturation: asNumber(color.saturation, 1),

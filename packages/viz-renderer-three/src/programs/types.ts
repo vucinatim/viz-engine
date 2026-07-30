@@ -1,17 +1,15 @@
 import type {
   VizMaterializedAsset,
   VizRenderThreeProgramNode,
-} from "@viz-engine/contracts";
+} from '@viz-engine/contracts';
 import type {
   Camera,
   Group,
   Scene,
   WebGLRenderTarget,
   WebGLRenderer,
-} from "three";
-import type {
-  VizThreeModelResourceManager,
-} from "../model-resources.js";
+} from 'three';
+import type { VizThreeModelResourceManager } from '../model-resources.js';
 
 export interface VizThreeProgramInstance {
   readonly programId: string;
@@ -23,10 +21,7 @@ export interface VizThreeProgramInstance {
     materializedAssets?: ReadonlyMap<string, VizMaterializedAsset>,
   ): void;
   resize(width: number, height: number): void;
-  render(
-    renderer: WebGLRenderer,
-    renderTarget: WebGLRenderTarget,
-  ): void;
+  render(renderer: WebGLRenderer, renderTarget: WebGLRenderTarget): void;
   whenReady?(): Promise<void>;
   dispose(): void;
 }

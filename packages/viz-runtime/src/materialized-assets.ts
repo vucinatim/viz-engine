@@ -1,14 +1,14 @@
 import type {
   VizMaterializedAsset,
   VizResolvedAsset,
-} from "@viz-engine/contracts";
+} from '@viz-engine/contracts';
 
 const getNumericMetadataValue = (
   metadata: Record<string, unknown> | undefined,
   key: string,
 ): number | undefined => {
   const value = metadata?.[key];
-  return typeof value === "number" ? value : undefined;
+  return typeof value === 'number' ? value : undefined;
 };
 
 const createOptionalAssetFields = (asset: VizResolvedAsset) => ({
@@ -19,23 +19,23 @@ const createOptionalAssetFields = (asset: VizResolvedAsset) => ({
 export const materializeVizResolvedAsset = (
   asset: VizResolvedAsset,
 ): VizMaterializedAsset => {
-  if (asset.kind === "audio") {
+  if (asset.kind === 'audio') {
     return {
       id: asset.id,
-      kind: "audio",
+      kind: 'audio',
       source: asset.source,
       ...createOptionalAssetFields(asset),
       audioSourceUri: asset.uri,
     };
   }
 
-  if (asset.kind === "image") {
-    const width = getNumericMetadataValue(asset.metadata, "width");
-    const height = getNumericMetadataValue(asset.metadata, "height");
+  if (asset.kind === 'image') {
+    const width = getNumericMetadataValue(asset.metadata, 'width');
+    const height = getNumericMetadataValue(asset.metadata, 'height');
 
     return {
       id: asset.id,
-      kind: "image",
+      kind: 'image',
       source: asset.source,
       ...createOptionalAssetFields(asset),
       imageSourceUri: asset.uri,
@@ -44,13 +44,13 @@ export const materializeVizResolvedAsset = (
     };
   }
 
-  if (asset.kind === "video") {
-    const width = getNumericMetadataValue(asset.metadata, "width");
-    const height = getNumericMetadataValue(asset.metadata, "height");
+  if (asset.kind === 'video') {
+    const width = getNumericMetadataValue(asset.metadata, 'width');
+    const height = getNumericMetadataValue(asset.metadata, 'height');
 
     return {
       id: asset.id,
-      kind: "video",
+      kind: 'video',
       source: asset.source,
       ...createOptionalAssetFields(asset),
       videoSourceUri: asset.uri,
@@ -59,10 +59,10 @@ export const materializeVizResolvedAsset = (
     };
   }
 
-  if (asset.kind === "model") {
+  if (asset.kind === 'model') {
     return {
       id: asset.id,
-      kind: "model",
+      kind: 'model',
       source: asset.source,
       ...createOptionalAssetFields(asset),
       ...(asset.bytes === undefined ? {} : { bytes: asset.bytes }),
@@ -72,7 +72,7 @@ export const materializeVizResolvedAsset = (
 
   return {
     id: asset.id,
-    kind: "binary",
+    kind: 'binary',
     source: asset.source,
     ...createOptionalAssetFields(asset),
     ...(asset.bytes === undefined ? {} : { bytes: asset.bytes }),

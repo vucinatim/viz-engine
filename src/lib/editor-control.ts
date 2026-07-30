@@ -1,9 +1,7 @@
 import type { Comp } from '@/components/config/create-component';
-import type { LayerSettings } from '@/components/editor/layer-settings';
 import type { VType } from '@/components/config/types';
-import useNodeNetworkStore, {
-} from '@/components/node-network/node-network-store';
-import { vizSessionActions } from '@/lib/viz-session';
+import type { LayerSettings } from '@/components/editor/layer-settings';
+import useNodeNetworkStore from '@/components/node-network/node-network-store';
 import {
   loadProject,
   loadProjectFromUrl,
@@ -17,12 +15,14 @@ import type {
   VizSessionAudioState,
   VizSessionPreviewState,
 } from '@/lib/viz-session';
-import type { VizEditorAudioAnalyzerState } from '@viz-engine/editor-session';
-import type { VizProjectDocument } from '@viz-engine/contracts';
 import {
   getVizSessionState,
   resolveNetworkIdForParameter,
+  vizSessionActions,
 } from '@/lib/viz-session';
+import type { VizProjectDocument } from '@viz-engine/contracts';
+import type { VizEditorAudioAnalyzerState } from '@viz-engine/editor-session';
+import { toast } from 'sonner';
 
 type LayerPreset = {
   name: string;
@@ -83,6 +83,28 @@ export const editorControl = {
     ) {
       vizSessionActions.project.updateLayerValue(layerId, path, value);
     },
+    attachLayerFileAsset(
+      layerId: string,
+      path: (string | number)[],
+      file: File,
+    ) {
+      return vizSessionActions.project.attachLayerFileAsset(
+        layerId,
+        path,
+        file,
+      );
+    },
+    attachLayerExternalAsset(
+      layerId: string,
+      path: (string | number)[],
+      uri: string,
+    ) {
+      return vizSessionActions.project.attachLayerExternalAsset(
+        layerId,
+        path,
+        uri,
+      );
+    },
     applyLayerPreset(layerId: string, preset: LayerPreset) {
       vizSessionActions.project.applyLayerPreset(layerId, preset);
     },
@@ -95,10 +117,14 @@ export const editorControl = {
   },
   history: {
     undo() {
-      vizSessionActions.history.undo();
+      if (vizSessionActions.history.undo()) {
+        toast.success('Undo', { duration: 1500 });
+      }
     },
     redo() {
-      vizSessionActions.history.redo();
+      if (vizSessionActions.history.redo()) {
+        toast.success('Redo', { duration: 1500 });
+      }
     },
     undoNodeEditor(networkId: string) {
       vizSessionActions.history.undoNodeEditor(networkId);
@@ -163,12 +189,14 @@ export const editorControl = {
   },
   nodeEditor: {
     openNetwork(parameterId: string) {
-      useNodeNetworkStore.getState().setOpenNetwork(
-        resolveNetworkIdForParameter(
-          getVizSessionState().project.workingProject,
-          parameterId,
-        ),
-      );
+      useNodeNetworkStore
+        .getState()
+        .setOpenNetwork(
+          resolveNetworkIdForParameter(
+            getVizSessionState().project.workingProject,
+            parameterId,
+          ),
+        );
     },
     closeNetwork() {
       useNodeNetworkStore.getState().setOpenNetwork(null);
@@ -182,22 +210,14 @@ export const editorControl = {
     focus() {
       useNodeNetworkStore.getState().setShouldForceShowOverlay(true);
     },
-    setAnimationEnabled(
-      parameterId: string,
-      isEnabled: boolean,
-      type: VType,
-    ) {
+    setAnimationEnabled(parameterId: string, isEnabled: boolean, type: VType) {
       const uiStore = useNodeNetworkStore.getState();
       const beforeGraphId = resolveNetworkIdForParameter(
         getVizSessionState().project.workingProject,
         parameterId,
       );
 
-      vizSessionActions.graph.setNetworkEnabled(
-        parameterId,
-        isEnabled,
-        type,
-      );
+      vizSessionActions.graph.setNetworkEnabled(parameterId, isEnabled, type);
 
       const afterGraphId = resolveNetworkIdForParameter(
         getVizSessionState().project.workingProject,

@@ -1,6 +1,3 @@
-'use client';
-
-import { lazy, Suspense, useEffect } from 'react';
 import AudioPanel from '@/components/audio/audio-panel';
 import AmbientBackground from '@/components/editor/ambient-background';
 import EditorAudioSessionManager from '@/components/editor/editor-audio-session-manager';
@@ -11,29 +8,34 @@ import EditorProjectManager from '@/components/editor/editor-project-manager';
 import LayersConfigPanel from '@/components/editor/layers-config-panel';
 import ProjectDropzone from '@/components/editor/project-dropzone';
 import RemotionPlayer from '@/components/editor/remotion-player';
-import { useProfilerMonitors } from '@/lib/hooks/use-profiler-monitors';
+import useNodeNetworkStore from '@/components/node-network/node-network-store';
 import editorControl from '@/lib/editor-control';
-import {
-  vizControl,
-  vizSessionStore,
-} from '@/lib/viz-session';
+import { useProfilerMonitors } from '@/lib/hooks/use-profiler-monitors';
 import useBodyProps from '@/lib/stores/body-props-store';
 import useEditorStore from '@/lib/stores/editor-store';
+import { useNodeGraphClipboardStore } from '@/lib/stores/node-graph-clipboard-store';
 import useProfilerStore from '@/lib/stores/profiler-store';
-import useNodeNetworkStore from '@/components/node-network/node-network-store';
+import { vizControl, vizSessionStore } from '@/lib/viz-session';
+import { Suspense, lazy, useEffect } from 'react';
 
 declare global {
   interface Window {
     __vizEditorDebug?: {
       editorControl: typeof editorControl;
+      nodeGraphClipboardStore: typeof useNodeGraphClipboardStore;
+      nodeNetworkStore: typeof useNodeNetworkStore;
       vizControl: typeof vizControl;
       vizSessionStore: typeof vizSessionStore;
     };
   }
 }
 
-const AnimationBuilder = lazy(() => import('@/components/editor/animation-builder'));
-const RhythmLabPanel = lazy(() => import('@/components/editor/rhythm-lab-panel'));
+const AnimationBuilder = lazy(
+  () => import('@/components/editor/animation-builder'),
+);
+const RhythmLabPanel = lazy(
+  () => import('@/components/editor/rhythm-lab-panel'),
+);
 const ProfilerPanel = lazy(async () => {
   const module = await import('@/components/editor/profiler-panel');
   return { default: module.ProfilerPanel };
@@ -58,6 +60,8 @@ export default function EditorPage() {
 
     window.__vizEditorDebug = {
       editorControl,
+      nodeGraphClipboardStore: useNodeGraphClipboardStore,
+      nodeNetworkStore: useNodeNetworkStore,
       vizControl,
       vizSessionStore,
     };
@@ -68,7 +72,10 @@ export default function EditorPage() {
   }, []);
 
   return (
-    <main className="relative h-screen w-screen" {...props}>
+    <main
+      className="relative h-screen w-screen"
+      data-testid="viz-editor"
+      {...props}>
       <EditorCompRegistryManager />
       <EditorProjectManager />
       <EditorAudioSessionManager />
@@ -81,7 +88,7 @@ export default function EditorPage() {
         <div className="absolute inset-0 bg-zinc-900">
           {ambientMode && <AmbientBackground />}
         </div>
-        <div className="z-10 mx-3 -mb-1 mt-3 overflow-hidden rounded-md border border-gray-600/20 bg-zinc-800/70">
+        <div className="z-10 mx-3 mt-3 -mb-1 overflow-hidden rounded-md border border-gray-600/20 bg-zinc-800/70">
           <EditorHeader />
         </div>
         <EditorLayout

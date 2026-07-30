@@ -471,127 +471,6 @@ function drawAreaChart(
   ctx.stroke();
 }
 
-// Draw bar chart
-function drawBarChart(
-  ctx: OffscreenCanvasRenderingContext2D,
-  data: Array<{ name: string; value: number }>,
-  width: number,
-  height: number,
-  padding: number,
-  color: string,
-) {
-  if (data.length === 0) return;
-
-  const chartWidth = width - 2 * padding;
-  const chartHeight = height - 2 * padding - 80;
-
-  const barWidth = (chartWidth / data.length) * 0.8; // Increased back to 0.8 for better bar width
-  const barSpacing = (chartWidth / data.length) * 0.2; // Reduced back to 0.2 for less gap
-
-  // Find data bounds
-  const values = data.map((d) => d.value);
-  const maxValue = Math.max(...values);
-  const minValue = Math.min(...values);
-  const valueRange = maxValue - minValue;
-  const paddedMax = maxValue + valueRange * 0.1;
-  const paddedMin = Math.max(0, minValue - valueRange * 0.1);
-
-  // Draw bars
-  data.forEach((item, index) => {
-    const x = padding + index * (barWidth + barSpacing) + barSpacing / 2;
-    const barHeight =
-      ((item.value - paddedMin) / (paddedMax - paddedMin)) * chartHeight;
-    const y = padding + 80 + chartHeight - barHeight;
-
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, barWidth, barHeight);
-
-    // Draw value label
-    ctx.fillStyle = '#111827'; // Dark text for light mode
-    ctx.font =
-      '20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    ctx.fillText(item.value.toFixed(1), x + barWidth / 2, y - 2);
-
-    // Draw name label with multi-line support
-    ctx.fillStyle = '#111827'; // Darker text for better visibility
-    ctx.textBaseline = 'top';
-
-    // Split long names into two lines
-    const maxCharsPerLine = 12;
-    const name = item.name;
-    if (name.length > maxCharsPerLine) {
-      let splitPoint = -1;
-
-      // First, look for parentheses patterns like "(Neural Network)"
-      const parenMatch = name.match(/^(.+?)\s*\(([^)]+)\)$/);
-      if (parenMatch) {
-        const mainPart = parenMatch[1].trim();
-        const parenPart = `(${parenMatch[2]})`;
-
-        // If main part is short enough, split before parentheses
-        if (mainPart.length <= maxCharsPerLine) {
-          ctx.fillText(
-            mainPart,
-            x + barWidth / 2,
-            padding + 80 + chartHeight + 5,
-          );
-          ctx.fillText(
-            parenPart,
-            x + barWidth / 2,
-            padding + 80 + chartHeight + 25,
-          );
-        } else {
-          // Main part is too long, use regular splitting
-          const midPoint = Math.floor(name.length / 2);
-          splitPoint = midPoint;
-
-          // Find a good split point (space or dash)
-          for (let i = 0; i < Math.min(6, name.length - midPoint); i++) {
-            const char = name[midPoint + i];
-            if (char === ' ' || char === '-' || char === '_') {
-              splitPoint = midPoint + i;
-              break;
-            }
-          }
-
-          const line1 = name.substring(0, splitPoint).trim();
-          const line2 = name.substring(splitPoint).trim();
-
-          ctx.fillText(line1, x + barWidth / 2, padding + 80 + chartHeight + 5);
-          ctx.fillText(
-            line2,
-            x + barWidth / 2,
-            padding + 80 + chartHeight + 25,
-          );
-        }
-      } else {
-        // No parentheses pattern, use regular splitting
-        const midPoint = Math.floor(name.length / 2);
-        splitPoint = midPoint;
-
-        // Find a good split point (space or dash)
-        for (let i = 0; i < Math.min(6, name.length - midPoint); i++) {
-          const char = name[midPoint + i];
-          if (char === ' ' || char === '-' || char === '_') {
-            splitPoint = midPoint + i;
-            break;
-          }
-        }
-
-        const line1 = name.substring(0, splitPoint).trim();
-        const line2 = name.substring(splitPoint).trim();
-
-        ctx.fillText(line1, x + barWidth / 2, padding + 80 + chartHeight + 5);
-        ctx.fillText(line2, x + barWidth / 2, padding + 80 + chartHeight + 25);
-      }
-    } else {
-      ctx.fillText(name, x + barWidth / 2, padding + 80 + chartHeight + 5);
-    }
-  });
-}
-
 // Draw grouped bar chart for comparing two metrics
 function drawGroupedBarChart(
   ctx: OffscreenCanvasRenderingContext2D,
@@ -768,12 +647,12 @@ export async function exportFPSChart(
 
   // Prepare data
   const startTime = session.snapshots[0]?.timestamp || 0;
-  const timeSeriesData = session.snapshots.map((snapshot, index) => ({
+  const timeSeriesData = session.snapshots.map((snapshot) => ({
     x: (snapshot.timestamp - startTime) / 1000, // Convert to seconds
     y: snapshot.editorFPS,
   }));
 
-  const avgFPSData = session.snapshots.map((snapshot, index) => ({
+  const avgFPSData = session.snapshots.map((snapshot) => ({
     x: (snapshot.timestamp - startTime) / 1000, // Convert to seconds
     y: snapshot.editorAvgFPS,
   }));
@@ -1164,9 +1043,6 @@ export async function exportNodeNetworkPerformanceChart(
 
   const nodeNetworkPerformanceData = Array.from(networkMap.entries()).map(
     ([parameterId, data]) => {
-      const network = session.snapshots[0].nodeNetworks.find(
-        (n) => n.parameterId === parameterId,
-      );
       const avgComputeTime =
         data.computeTimes.reduce((a, b) => a + b, 0) / data.computeTimes.length;
       const maxComputeTime = Math.max(...data.computeTimes);

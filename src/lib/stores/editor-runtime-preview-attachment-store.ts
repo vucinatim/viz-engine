@@ -3,8 +3,8 @@ import type {
   VizSessionRuntimePreviewAudioFrameData,
   VizSessionRuntimePreviewFrame,
 } from '@/lib/viz-session/types';
-import type { VizRenderPlan } from '@viz-engine/contracts';
 import type { PlayerRef } from '@remotion/player';
+import type { VizRenderPlan } from '@viz-engine/contracts';
 import { create } from 'zustand';
 
 interface EditorRuntimePreviewAttachmentStore {
@@ -142,8 +142,7 @@ const useEditorRuntimePreviewAttachmentStore =
     whenRuntimeResourcesReady: async () => {
       await Promise.all(
         [...get().layerAttachments.values()].map(
-          (attachment) =>
-            attachment.whenReady?.() ?? Promise.resolve(),
+          (attachment) => attachment.whenReady?.() ?? Promise.resolve(),
         ),
       );
     },
@@ -169,17 +168,14 @@ export const waitForEditorRuntimePreviewAttachments = (
   const missingLayerIds = () => {
     const attachments =
       useEditorRuntimePreviewAttachmentStore.getState().layerAttachments;
-    return expectedLayerIds.filter(
-      (layerId) => !attachments.has(layerId),
-    );
+    return expectedLayerIds.filter((layerId) => !attachments.has(layerId));
   };
   if (missingLayerIds().length === 0) {
     return Promise.resolve();
   }
 
   return new Promise<void>((resolve, reject) => {
-    const timeoutMilliseconds =
-      options.timeoutMilliseconds ?? 5_000;
+    const timeoutMilliseconds = options.timeoutMilliseconds ?? 5_000;
     let settled = false;
     let unsubscribe: () => void = () => undefined;
     const cleanup = () => {
@@ -187,9 +183,7 @@ export const waitForEditorRuntimePreviewAttachments = (
       clearTimeout(timeout);
       options.signal?.removeEventListener('abort', handleAbort);
     };
-    const finish = (
-      outcome: { ok: true } | { ok: false; error: Error },
-    ) => {
+    const finish = (outcome: { ok: true } | { ok: false; error: Error }) => {
       if (settled) {
         return;
       }
@@ -217,13 +211,11 @@ export const waitForEditorRuntimePreviewAttachments = (
         ),
       });
     }, timeoutMilliseconds);
-    unsubscribe = useEditorRuntimePreviewAttachmentStore.subscribe(
-      () => {
-        if (missingLayerIds().length === 0) {
-          finish({ ok: true });
-        }
-      },
-    );
+    unsubscribe = useEditorRuntimePreviewAttachmentStore.subscribe(() => {
+      if (missingLayerIds().length === 0) {
+        finish({ ok: true });
+      }
+    });
     options.signal?.addEventListener('abort', handleAbort, {
       once: true,
     });

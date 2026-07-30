@@ -37,11 +37,7 @@ const JobStatusIcon = ({
 }: {
   status: VizControlJobSummary['status'];
 }) => {
-  if (
-    status === 'queued' ||
-    status === 'validating' ||
-    status === 'running'
-  ) {
+  if (status === 'queued' || status === 'validating' || status === 'running') {
     return <Loader2 className="h-3.5 w-3.5 animate-spin" />;
   }
   if (status === 'succeeded') {
@@ -54,8 +50,8 @@ const JobStatusIcon = ({
 };
 
 const JobStatusButton = () => {
-  const [jobs, setJobs] = useState<VizControlJobSummary[]>(
-    () => vizControl.listJobs(),
+  const [jobs, setJobs] = useState<VizControlJobSummary[]>(() =>
+    vizControl.listJobs(),
   );
 
   useEffect(
@@ -117,7 +113,7 @@ const JobStatusButton = () => {
                         <span className="truncate text-xs font-medium">
                           {summary.kind}
                         </span>
-                        <span className="text-[10px] uppercase tracking-wide text-white/45">
+                        <span className="text-[10px] tracking-wide text-white/45 uppercase">
                           {summary.status}
                         </span>
                       </div>

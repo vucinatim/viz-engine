@@ -121,9 +121,7 @@ describe('createIdbJsonStorage', () => {
     const writes: Promise<void>[] = [];
 
     for (let revision = 1; revision <= 40; revision += 1) {
-      writes.push(
-        storage.setItem('session', JSON.stringify({ revision })),
-      );
+      writes.push(storage.setItem('session', JSON.stringify({ revision })));
       await vi.advanceTimersByTimeAsync(10);
     }
 

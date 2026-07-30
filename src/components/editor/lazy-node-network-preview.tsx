@@ -1,5 +1,3 @@
-'use client';
-
 import { memo, useEffect, useRef, useState } from 'react';
 import NodeNetworkPreview from './node-network-preview';
 
@@ -21,7 +19,6 @@ const LazyNodeNetworkPreview = memo(
     width = 120,
     height = 68,
   }: LazyNodeNetworkPreviewProps) => {
-    const [isVisible, setIsVisible] = useState(false);
     const [hasRendered, setHasRendered] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -30,7 +27,6 @@ const LazyNodeNetworkPreview = memo(
         (entries) => {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
-              setIsVisible(true);
               setHasRendered(true);
               // Once rendered, we can disconnect to save resources
               observer.disconnect();

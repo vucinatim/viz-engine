@@ -1,13 +1,8 @@
-import type { VizActionActor } from "./actions.js";
-import type { VizJobId } from "./ids.js";
+import type { VizActionActor } from './actions.js';
+import type { VizJobId } from './ids.js';
 
 export type VizJobStatus =
-  | "queued"
-  | "validating"
-  | "running"
-  | "succeeded"
-  | "failed"
-  | "cancelled";
+  'queued' | 'validating' | 'running' | 'succeeded' | 'failed' | 'cancelled';
 
 export interface VizJobProgress {
   stage: string;
@@ -23,10 +18,7 @@ export interface VizJobFailure {
   details?: Record<string, unknown>;
 }
 
-export interface VizJobRecord<
-  TRequest = unknown,
-  TResult = unknown,
-> {
+export interface VizJobRecord<TRequest = unknown, TResult = unknown> {
   schemaVersion: 1;
   id: VizJobId;
   kind: string;
@@ -44,10 +36,7 @@ export interface VizJobRecord<
   completedAt?: string;
 }
 
-export interface VizJobEvent<
-  TRequest = unknown,
-  TResult = unknown,
-> {
+export interface VizJobEvent<TRequest = unknown, TResult = unknown> {
   sequence: number;
   job: VizJobRecord<TRequest, TResult>;
 }

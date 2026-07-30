@@ -1,4 +1,10 @@
-# System Architecture
+# V1 System Architecture (Historical Thesis Reference)
+
+> This document describes the original Next.js-era VizEngine architecture. It
+> is retained as thesis and product-reference material, not as current V2
+> architecture. Start with [the current state](../current-state.md) and
+> [V2 architecture vision](../visions/v2-product-architecture-and-parity-alignment.md)
+> for implementation decisions.
 
 ## Chapter 1: System Overview
 

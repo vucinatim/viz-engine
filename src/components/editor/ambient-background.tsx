@@ -1,5 +1,5 @@
-import useEditorStore from '@/lib/stores/editor-store';
 import useEditorLayerProjectionStore from '@/lib/stores/editor-layer-projection-store';
+import useEditorStore from '@/lib/stores/editor-store';
 import LayerMirrorCanvas from './layer-mirror-canvas';
 
 const AmbientBackground = () => {

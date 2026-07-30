@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { CompDefinitionMap } from '@/components/comps';
+import useCompStore from '@/lib/stores/comp-store';
+import { getProjectedLayers } from '@/lib/stores/editor-layer-projection-store';
 import useEditorProjectStore from '@/lib/stores/editor-project-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
-import { getProjectedLayers } from '@/lib/stores/editor-layer-projection-store';
-import useCompStore from '@/lib/stores/comp-store';
 import { vizSessionStore } from '@/lib/viz-session';
 import { createTestProject } from './viz-session-test-utils';
 
@@ -17,9 +17,7 @@ describe('Editor project store', () => {
     useCompStore.setState({
       comps: Array.from(CompDefinitionMap.values()),
     });
-    useEditorProjectStore
-      .getState()
-      .importWorkingProject(createTestProject());
+    useEditorProjectStore.getState().importWorkingProject(createTestProject());
     useEditorRuntimePreviewAttachmentStore.getState().reset();
   });
 
@@ -48,7 +46,9 @@ describe('Editor project store', () => {
       appearance: { opacity: 0.8 },
       color: '#ff00ff',
     });
-    expect(vizSessionStore.getState().project.workingProject.layers[0].settings).toMatchObject({
+    expect(
+      vizSessionStore.getState().project.workingProject.layers[0].settings,
+    ).toMatchObject({
       appearance: { opacity: 0.8 },
       color: '#ff00ff',
     });

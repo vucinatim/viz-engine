@@ -1,62 +1,66 @@
-import { exampleProjectBundleDirectoryUrl } from "@viz-engine/example-projects/node";
-import {
-  exampleProjectDocument,
-  exampleResolvedArtifacts,
-  exampleResolvedAssets,
-} from "@viz-engine/example-projects";
-import {
-  createVizControl,
-  createVizSessionHost,
-} from "@viz-engine/editor-control";
-import { createVizNodeControl } from "@viz-engine/editor-control/node";
-import { loadLocalVizProjectBundle } from "@viz-engine/dev-cli";
 import {
   coreComponentCapabilityPack,
   defineVizComponentAuthoring,
   v,
-} from "@viz-engine/components-core";
+} from '@viz-engine/components-core';
 import {
   createVizComponentRegistryFromCapabilityPacks,
   type VizComponentImplementation,
-} from "@viz-engine/contracts";
-import { mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+} from '@viz-engine/contracts';
+import {
+  createVizControl,
+  createVizSessionHost,
+} from '@viz-engine/editor-control';
+import { createVizNodeControl } from '@viz-engine/editor-control/node';
+import {
+  exampleProjectDocument,
+  exampleResolvedArtifacts,
+  exampleResolvedAssets,
+} from '@viz-engine/example-projects';
+import { exampleProjectBundleDirectoryUrl } from '@viz-engine/example-projects/node';
+import { loadLocalVizProjectBundle } from '@viz-engine/project-bundle/node';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
 
-describe("Viz local editor control surface", () => {
-  it("opens the canonical example project and exposes stable scene state", () => {
+describe('Viz local editor control surface', () => {
+  it('opens the canonical example project and exposes stable scene state', () => {
     const control = createVizControl();
     const snapshot = control.openExampleProject();
 
-    expect(snapshot.source.kind).toBe("example");
-    expect(snapshot.session.workingProject.projectId).toBe("project-example-reactive-bars");
+    expect(snapshot.source.kind).toBe('example');
+    expect(snapshot.session.workingProject.projectId).toBe(
+      'project-example-reactive-bars',
+    );
     expect(snapshot.graphSummaries).toEqual([
       {
-        graphId: "graph-main-reactivity",
-        name: "Main Reactivity Graph",
+        graphId: 'graph-main-reactivity',
+        name: 'Main Reactivity Graph',
         nodeCount: 9,
-        outputKeys: ["barsBass", "barsLoudness", "bloomIntensity"],
+        outputKeys: ['barsBass', 'barsLoudness', 'bloomIntensity'],
       },
     ]);
-    expect(snapshot.transport.mode).toBe("live");
-    expect(control.inspectComponents().some((component) => component.componentId === "feature-channel-bars")).toBe(
-      true,
-    );
+    expect(snapshot.transport.mode).toBe('live');
+    expect(
+      control
+        .inspectComponents()
+        .some((component) => component.componentId === 'feature-channel-bars'),
+    ).toBe(true);
   });
 
-  it("inspects an explicitly injected project-local capability pack", () => {
+  it('inspects an explicitly injected project-local capability pack', () => {
     const localComponent: VizComponentImplementation = {
-      id: "project-signal-ribbon",
-      name: "Project Signal Ribbon",
-      rendererFamily: "three",
-      implementationVersion: "1.0.0",
+      id: 'project-signal-ribbon',
+      name: 'Project Signal Ribbon',
+      rendererFamily: 'three',
+      implementationVersion: '1.0.0',
       authoring: defineVizComponentAuthoring({
-        componentId: "project-signal-ribbon",
+        componentId: 'project-signal-ribbon',
         config: v.config({
           color: v.color({
-            label: "Color",
-            defaultValue: "#88f3ff",
+            label: 'Color',
+            defaultValue: '#88f3ff',
           }),
         }),
       }),
@@ -67,8 +71,8 @@ describe("Viz local editor control surface", () => {
         coreComponentCapabilityPack,
         {
           manifest: {
-            id: "project/production-proof",
-            version: "1.0.0",
+            id: 'project/production-proof',
+            version: '1.0.0',
           },
           components: [localComponent],
         },
@@ -81,40 +85,40 @@ describe("Viz local editor control surface", () => {
       .find((component) => component.componentId === localComponent.id);
 
     expect(summary).toMatchObject({
-      componentId: "project-signal-ribbon",
-      implementationVersion: "1.0.0",
-      compatibility: "render-safe",
+      componentId: 'project-signal-ribbon',
+      implementationVersion: '1.0.0',
+      compatibility: 'render-safe',
       capabilityPack: {
-        id: "project/production-proof",
-        version: "1.0.0",
+        id: 'project/production-proof',
+        version: '1.0.0',
       },
       authoring: {
         schemaVersion: 1,
-        componentId: "project-signal-ribbon",
+        componentId: 'project-signal-ribbon',
       },
     });
   });
 
-  it("mutates the working head and exposes updated frame and debug snapshots", () => {
+  it('mutates the working head and exposes updated frame and debug snapshots', () => {
     const control = createVizControl();
     control.openExampleProject();
 
     const mutation = control.applyActions([
       {
-        type: "layer.settings.set",
+        type: 'layer.settings.set',
         payload: {
-          layerId: "layer-background",
-          path: "color",
-          value: "#03111c",
+          layerId: 'layer-background',
+          path: 'color',
+          value: '#03111c',
         },
       },
       {
-        type: "layer.input.set",
+        type: 'layer.input.set',
         payload: {
-          layerId: "layer-bars",
-          inputKey: "gain",
+          layerId: 'layer-bars',
+          inputKey: 'gain',
           valueSource: {
-            kind: "literal",
+            kind: 'literal',
             value: 0.35,
           },
         },
@@ -131,28 +135,34 @@ describe("Viz local editor control surface", () => {
 
     expect(frameInspection.framePlan.issues).toHaveLength(0);
     expect(
-      frameInspection.framePlan.layers.find((layer) => layer.layerId === "layer-bars")?.resolvedInputs.gain.value,
+      frameInspection.framePlan.layers.find(
+        (layer) => layer.layerId === 'layer-bars',
+      )?.resolvedInputs.gain.value,
     ).toBe(0.35);
     expect(debugSnapshot.renderPlan.issues).toHaveLength(0);
-    expect(debugSnapshot.svg).toContain("data-layer-id=\"layer-bars\"");
+    expect(debugSnapshot.svg).toContain('data-layer-id="layer-bars"');
   });
 
-  it("opens bundle-backed projects and exports a mutated working head", () => {
+  it('opens bundle-backed projects and exports a mutated working head', () => {
     const control = createVizNodeControl();
-    const tempDirectory = mkdtempSync(join(tmpdir(), "viz-editor-control-export-"));
+    const tempDirectory = mkdtempSync(
+      join(tmpdir(), 'viz-editor-control-export-'),
+    );
 
     try {
-      const snapshot = control.openBundleProject(exampleProjectBundleDirectoryUrl);
-      expect(snapshot.source.kind).toBe("bundle");
+      const snapshot = control.openBundleProject(
+        exampleProjectBundleDirectoryUrl,
+      );
+      expect(snapshot.source.kind).toBe('bundle');
 
       const mutation = control.applyAction({
-        type: "graph.output.set",
+        type: 'graph.output.set',
         payload: {
-          graphId: "graph-main-reactivity",
+          graphId: 'graph-main-reactivity',
           output: {
-            key: "barsGainOperator",
-            nodeId: "node-bars-bass-scale",
-            output: "value",
+            key: 'barsGainOperator',
+            nodeId: 'node-bars-bass-scale',
+            output: 'value',
           },
         },
       });
@@ -164,13 +174,17 @@ describe("Viz local editor control surface", () => {
 
       expect(exportResult.issues).toHaveLength(0);
       expect(reloaded.issues).toHaveLength(0);
-      expect(reloaded.project.graphs?.[0]?.outputs.some((output) => output.key === "barsGainOperator")).toBe(true);
+      expect(
+        reloaded.project.graphs?.[0]?.outputs.some(
+          (output) => output.key === 'barsGainOperator',
+        ),
+      ).toBe(true);
     } finally {
       rmSync(tempDirectory, { recursive: true, force: true });
     }
   });
 
-  it("keeps explicit preview and audio diagnostics without UI scraping", () => {
+  it('keeps explicit preview and audio diagnostics without UI scraping', () => {
     const control = createVizControl();
     control.openExampleProject();
 
@@ -178,29 +192,29 @@ describe("Viz local editor control surface", () => {
     control.play();
     control.pause();
     control.attachAudioSource({
-      kind: "file",
-      id: "audio-main",
-      label: "Main Track",
+      kind: 'file',
+      id: 'audio-main',
+      label: 'Main Track',
     });
-    control.setAudioAnalyzerState("active");
+    control.setAudioAnalyzerState('active');
     control.setLiveInputAvailable(true);
 
     const snapshot = control.getSnapshot();
 
     expect(snapshot.session.previewState.currentFrame).toBe(48);
     expect(snapshot.session.previewState.isPlaying).toBe(false);
-    expect(snapshot.audioDiagnostics.inputMode).toBe("hybrid");
+    expect(snapshot.audioDiagnostics.inputMode).toBe('hybrid');
     expect(snapshot.audioDiagnostics.usesLiveAudio).toBe(true);
     expect(snapshot.audioDiagnostics.usesBakedArtifacts).toBe(true);
   });
 
-  it("selects the project-declared baked audio source when project resources open", () => {
+  it('selects the project-declared baked audio source when project resources open', () => {
     const control = createVizControl();
     const nonProjectAudio = {
       ...exampleResolvedAssets[0]!,
-      id: "asset-unrelated-audio",
-      kind: "audio" as const,
-      uri: "file:///unrelated.mp3",
+      id: 'asset-unrelated-audio',
+      kind: 'audio' as const,
+      uri: 'file:///unrelated.mp3',
     };
 
     const snapshot = control.openProject({
@@ -208,34 +222,34 @@ describe("Viz local editor control surface", () => {
       resolvedAssets: [nonProjectAudio, ...exampleResolvedAssets],
       resolvedArtifacts: exampleResolvedArtifacts,
       source: {
-        kind: "memory",
-        label: "Canonical project audio proof",
+        kind: 'memory',
+        label: 'Canonical project audio proof',
       },
     });
 
     const audioRef = exampleProjectDocument.assetRefs?.find(
-      (asset) => asset.kind === "audio",
+      (asset) => asset.kind === 'audio',
     );
     const resolvedAudio = exampleResolvedAssets.find(
       (asset) => asset.id === audioRef?.id,
     );
 
     expect(snapshot.audioSession.source).toEqual({
-      kind: "media-element",
+      kind: 'media-element',
       id: audioRef?.id,
       label: audioRef?.label,
       uri: resolvedAudio?.uri,
     });
   });
 
-  it("exposes ui-state mutation, graph runtime inspection, and transport advancement", () => {
+  it('exposes ui-state mutation, graph runtime inspection, and transport advancement', () => {
     const control = createVizControl();
     control.openExampleProject();
 
     control.setUiState({
-      activePanel: "graph",
-      selectedLayerId: "layer-bars",
-      selectedGraphId: "graph-main-reactivity",
+      activePanel: 'graph',
+      selectedLayerId: 'layer-bars',
+      selectedGraphId: 'graph-main-reactivity',
     });
 
     control.seekToFrame(24);
@@ -247,21 +261,23 @@ describe("Viz local editor control surface", () => {
     const graphRuntime = control.inspectGraphRuntime();
     const expectedFrame = 24 + Math.floor(snapshot.transport.fps * 0.5);
 
-    expect(snapshot.session.uiState.activePanel).toBe("graph");
-    expect(snapshot.session.uiState.selectedLayerId).toBe("layer-bars");
-    expect(snapshot.session.uiState.selectedGraphId).toBe("graph-main-reactivity");
+    expect(snapshot.session.uiState.activePanel).toBe('graph');
+    expect(snapshot.session.uiState.selectedLayerId).toBe('layer-bars');
+    expect(snapshot.session.uiState.selectedGraphId).toBe(
+      'graph-main-reactivity',
+    );
     expect(snapshot.session.previewState.currentFrame).toBe(expectedFrame);
 
     expect(graphRuntime.frame).toBe(expectedFrame);
     expect(graphRuntime.graphs).toHaveLength(1);
-    expect(graphRuntime.graphs[0]?.graphId).toBe("graph-main-reactivity");
+    expect(graphRuntime.graphs[0]?.graphId).toBe('graph-main-reactivity');
     expect(graphRuntime.graphs[0]?.values).toMatchObject({
       barsBass: expect.any(Number),
       barsLoudness: expect.any(Number),
       bloomIntensity: expect.any(Number),
     });
     expect(
-      graphRuntime.graphs[0]?.nodes["node-bars-bass-scale"]?.outputs.value,
+      graphRuntime.graphs[0]?.nodes['node-bars-bass-scale']?.outputs.value,
     ).toEqual(expect.any(Number));
     expect(graphRuntime.graphs[0]?.checkpoint?.frame).toBe(expectedFrame);
 
@@ -271,57 +287,60 @@ describe("Viz local editor control surface", () => {
     expect(projectInspection.issues).toHaveLength(0);
   });
 
-  it("undoes and redoes through the same canonical action session", () => {
+  it('undoes and redoes through the same canonical action session', () => {
     const control = createVizControl();
     control.openExampleProject();
     control.applyAction({
-      type: "layer.settings.set",
+      type: 'layer.settings.set',
       payload: {
-        layerId: "layer-background",
-        path: "color",
-        value: "#123456",
+        layerId: 'layer-background',
+        path: 'color',
+        value: '#123456',
       },
     });
 
     expect(
-      control.getWorkingProject().layers.find(
-        (layer) => layer.id === "layer-background",
-      )?.settings?.color,
-    ).toBe("#123456");
+      control
+        .getWorkingProject()
+        .layers.find((layer) => layer.id === 'layer-background')?.settings
+        ?.color,
+    ).toBe('#123456');
     control.undo();
     expect(
-      control.getWorkingProject().layers.find(
-        (layer) => layer.id === "layer-background",
-      )?.settings?.color,
-    ).not.toBe("#123456");
+      control
+        .getWorkingProject()
+        .layers.find((layer) => layer.id === 'layer-background')?.settings
+        ?.color,
+    ).not.toBe('#123456');
     control.redo();
     expect(
-      control.getWorkingProject().layers.find(
-        (layer) => layer.id === "layer-background",
-      )?.settings?.color,
-    ).toBe("#123456");
+      control
+        .getWorkingProject()
+        .layers.find((layer) => layer.id === 'layer-background')?.settings
+        ?.color,
+    ).toBe('#123456');
   });
 
-  it("shares one revision-safe host across human and agent controls", () => {
+  it('shares one revision-safe host across human and agent controls', () => {
     const host = createVizSessionHost({
-      actor: { kind: "user", id: "studio-user" },
+      actor: { kind: 'user', id: 'studio-user' },
       initialProject: {
         project: exampleProjectDocument,
         resolvedAssets: exampleResolvedAssets,
         resolvedArtifacts: exampleResolvedArtifacts,
         source: {
-          kind: "memory",
-          label: "Shared host proof",
+          kind: 'memory',
+          label: 'Shared host proof',
         },
       },
     });
     const human = createVizControl({
       host,
-      actor: { kind: "user", id: "studio-user" },
+      actor: { kind: 'user', id: 'studio-user' },
     });
     const agent = createVizControl({
       host,
-      actor: { kind: "agent", id: "codex" },
+      actor: { kind: 'agent', id: 'codex' },
     });
     const observedRevisions: number[] = [];
     const unsubscribe = agent.subscribe((snapshot) => {
@@ -329,31 +348,31 @@ describe("Viz local editor control surface", () => {
     });
 
     const humanMutation = human.applyAction({
-      type: "layer.settings.set",
+      type: 'layer.settings.set',
       payload: {
-        layerId: "layer-background",
-        path: "color",
-        value: "#102030",
+        layerId: 'layer-background',
+        path: 'color',
+        value: '#102030',
       },
     });
-    expect(humanMutation.transactionResult.status).toBe("applied");
+    expect(humanMutation.transactionResult.status).toBe('applied');
     expect(humanMutation.snapshot.session.revision).toBe(1);
 
     const staleAgentMutation = agent.applyTransaction({
-      id: "agent-stale",
+      id: 'agent-stale',
       expectedRevision: 0,
       actions: [
         {
-          type: "layer.settings.set",
+          type: 'layer.settings.set',
           payload: {
-            layerId: "layer-bars",
-            path: "gain",
+            layerId: 'layer-bars',
+            path: 'gain',
             value: 0.2,
           },
         },
       ],
     });
-    expect(staleAgentMutation.transactionResult.status).toBe("conflict");
+    expect(staleAgentMutation.transactionResult.status).toBe('conflict');
     expect(staleAgentMutation.transactionResult.conflict).toEqual({
       expectedRevision: 0,
       actualRevision: 1,
@@ -361,50 +380,52 @@ describe("Viz local editor control surface", () => {
     expect(host.getSnapshot().session.revision).toBe(1);
 
     const dryRun = agent.applyTransaction({
-      id: "agent-dry-run",
+      id: 'agent-dry-run',
       expectedRevision: 1,
       dryRun: true,
       actions: [
         {
-          type: "layer.settings.set",
+          type: 'layer.settings.set',
           payload: {
-            layerId: "layer-bars",
-            path: "gain",
+            layerId: 'layer-bars',
+            path: 'gain',
             value: 0.25,
           },
         },
       ],
     });
-    expect(dryRun.transactionResult.status).toBe("dry-run");
-    expect(dryRun.transactionResult.candidateProject.layers.find(
-      (layer) => layer.id === "layer-bars",
-    )?.settings?.gain).toBe(0.25);
+    expect(dryRun.transactionResult.status).toBe('dry-run');
+    expect(
+      dryRun.transactionResult.candidateProject.layers.find(
+        (layer) => layer.id === 'layer-bars',
+      )?.settings?.gain,
+    ).toBe(0.25);
     expect(host.getSnapshot().session.revision).toBe(1);
     expect(host.getSnapshot().session.actionHistory).toHaveLength(1);
 
     const agentMutation = agent.applyTransaction({
-      id: "agent-atomic-edit",
+      id: 'agent-atomic-edit',
       expectedRevision: 1,
       actions: [
         {
-          type: "layer.settings.set",
+          type: 'layer.settings.set',
           payload: {
-            layerId: "layer-bars",
-            path: "gain",
+            layerId: 'layer-bars',
+            path: 'gain',
             value: 0.3,
           },
         },
         {
-          type: "layer.settings.set",
+          type: 'layer.settings.set',
           payload: {
-            layerId: "layer-bloom",
-            path: "intensity",
+            layerId: 'layer-bloom',
+            path: 'intensity',
             value: 0.4,
           },
         },
       ],
     });
-    expect(agentMutation.transactionResult.status).toBe("applied");
+    expect(agentMutation.transactionResult.status).toBe('applied');
     expect(agentMutation.snapshot.session.revision).toBe(2);
     expect(
       agentMutation.transactionResult.actionEnvelopes.map((entry) => ({
@@ -413,33 +434,34 @@ describe("Viz local editor control surface", () => {
       })),
     ).toEqual([
       {
-        transactionId: "agent-atomic-edit",
-        actor: { kind: "agent", id: "codex" },
+        transactionId: 'agent-atomic-edit',
+        actor: { kind: 'agent', id: 'codex' },
       },
       {
-        transactionId: "agent-atomic-edit",
-        actor: { kind: "agent", id: "codex" },
+        transactionId: 'agent-atomic-edit',
+        actor: { kind: 'agent', id: 'codex' },
       },
     ]);
     expect(human.getSnapshot().session.revision).toBe(2);
     expect(
-      human.getWorkingProject().layers.find(
-        (layer) => layer.id === "layer-bars",
-      )?.settings?.gain,
+      human
+        .getWorkingProject()
+        .layers.find((layer) => layer.id === 'layer-bars')?.settings?.gain,
     ).toBe(0.3);
 
     human.undo();
     expect(host.getSnapshot().session.revision).toBe(3);
     expect(
-      agent.getWorkingProject().layers.find(
-        (layer) => layer.id === "layer-bars",
-      )?.settings?.gain,
+      agent
+        .getWorkingProject()
+        .layers.find((layer) => layer.id === 'layer-bars')?.settings?.gain,
     ).not.toBe(0.3);
     expect(
-      agent.getWorkingProject().layers.find(
-        (layer) => layer.id === "layer-background",
-      )?.settings?.color,
-    ).toBe("#102030");
+      agent
+        .getWorkingProject()
+        .layers.find((layer) => layer.id === 'layer-background')?.settings
+        ?.color,
+    ).toBe('#102030');
     expect(observedRevisions).toContain(2);
     expect(human.getHost()).toBe(agent.getHost());
 

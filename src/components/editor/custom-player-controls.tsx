@@ -1,5 +1,3 @@
-'use client';
-
 import editorControl from '@/lib/editor-control';
 import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
@@ -18,9 +16,7 @@ const CustomPlayerControls = ({
   className,
   durationInFrames,
 }: CustomPlayerControlsProps) => {
-  const isPlaying = useEditorPreviewStore(
-    (state) => state.transport.isPlaying,
-  );
+  const isPlaying = useEditorPreviewStore((state) => state.transport.isPlaying);
   const currentFrame = useEditorPreviewStore(
     (state) => state.transport.currentFrame,
   );
@@ -96,12 +92,9 @@ const CustomPlayerControls = ({
     editorControl.preview.togglePlayback();
   }, []);
 
-  const handleSeek = useCallback(
-    (newTime: number) => {
-      editorControl.preview.seekToSeconds(newTime);
-    },
-    [],
-  );
+  const handleSeek = useCallback((newTime: number) => {
+    editorControl.preview.seekToSeconds(newTime);
+  }, []);
 
   const handleFullscreenToggle = useCallback(async () => {
     try {
@@ -131,7 +124,7 @@ const CustomPlayerControls = ({
   return (
     <div
       className={cn(
-        'absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 transition-all duration-200 ease-out',
+        'absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 transition-all duration-200 ease-out',
         isHovered
           ? 'translate-y-0 opacity-100'
           : 'pointer-events-none translate-y-4 opacity-0',
@@ -142,6 +135,8 @@ const CustomPlayerControls = ({
         <Button
           variant="ghost"
           size="sm"
+          aria-label={isPlaying ? 'Pause preview' : 'Play preview'}
+          data-testid="preview-playback-toggle"
           onClick={handlePlayPause}
           className="pointer-events-auto h-10 w-10 p-0 text-white transition-colors hover:bg-white/20">
           {isPlaying ? <Pause size={20} /> : <Play size={20} />}

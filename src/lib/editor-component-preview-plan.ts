@@ -1,12 +1,11 @@
 import type { Comp } from '@/components/config/create-component';
+import { studioComponentRegistry } from '@/lib/viz-capabilities';
 import {
   applyEditorDefaultNetworks,
   createEmptyVizProjectDocument,
   toEditorComponentId,
 } from '@/lib/viz-session/project-adapters';
-import {
-  resolveBundledStageModelAssets,
-} from '@viz-engine/components-core';
+import { resolveBundledStageModelAssets } from '@viz-engine/components-core';
 import type { VizProjectDocument, VizRenderPlan } from '@viz-engine/contracts';
 import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
 import {
@@ -14,7 +13,6 @@ import {
   createVizRenderPlan,
   createVizRuntimeSession,
 } from '@viz-engine/runtime';
-import { studioComponentRegistry } from '@/lib/viz-capabilities';
 
 const componentRegistry = studioComponentRegistry;
 const nodeRegistry = createCoreNodeRegistry();
@@ -94,9 +92,7 @@ export const createEditorComponentPreviewPlan = ({
     project,
     mode: 'live',
     seed: `component-preview-${componentId}`,
-    resolvedAssets: resolveBundledStageModelAssets(
-      project.assetRefs ?? [],
-    ),
+    resolvedAssets: resolveBundledStageModelAssets(project.assetRefs ?? []),
   });
 
   return createVizRenderPlan({
@@ -107,8 +103,7 @@ export const createEditorComponentPreviewPlan = ({
     runtimeInputs: {
       audio: {
         frequencyData: audioFrameData.frequencyData,
-        timeDomainData:
-          audioFrameData.timeDomainData ?? new Uint8Array(),
+        timeDomainData: audioFrameData.timeDomainData ?? new Uint8Array(),
         sampleRate: audioFrameData.sampleRate,
         fftSize: audioFrameData.fftSize,
         minDecibels: -90,

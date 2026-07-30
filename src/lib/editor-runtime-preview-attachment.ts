@@ -5,13 +5,13 @@ import type {
   VizSessionRuntimePreviewAudioFrameData,
   VizSessionRuntimePreviewFrame,
 } from '@/lib/viz-session/types';
+import type { VizRenderPlan } from '@viz-engine/contracts';
 import {
   createVizThreePreviewController,
   type VizThreePreviewCameraPose,
   type VizThreePreviewController,
   type VizThreeProgramRegistry,
 } from '@viz-engine/renderer-three';
-import type { VizRenderPlan } from '@viz-engine/contracts';
 import * as THREE from 'three';
 
 type WithDebug = (
@@ -103,16 +103,16 @@ export const createEditorRuntimePreviewAttachment = ({
       ['camera', 'cinematicMode'],
       false,
     );
-    editorControl.project.updateLayerValue(
-      layer.id,
-      ['camera', 'position'],
-      { x, y, z },
-    );
-    editorControl.project.updateLayerValue(
-      layer.id,
-      ['camera', 'rotation'],
-      { x: rotationX, y: rotationY, z: rotationZ },
-    );
+    editorControl.project.updateLayerValue(layer.id, ['camera', 'position'], {
+      x,
+      y,
+      z,
+    });
+    editorControl.project.updateLayerValue(layer.id, ['camera', 'rotation'], {
+      x: rotationX,
+      y: rotationY,
+      z: rotationZ,
+    });
   };
 
   const deactivateFlyCamera = () => {
@@ -200,10 +200,7 @@ export const createEditorRuntimePreviewAttachment = ({
 
     try {
       const request = canvas.requestPointerLock() as unknown;
-      if (
-        request &&
-        typeof (request as Promise<void>).catch === 'function'
-      ) {
+      if (request && typeof (request as Promise<void>).catch === 'function') {
         void (request as Promise<void>).catch(() => {
           // Keyboard controls remain available if pointer lock is denied.
         });
@@ -322,8 +319,7 @@ export const createEditorRuntimePreviewAttachment = ({
         mirrorToCanvases(canvas, mirrorCanvases);
       }
     },
-    whenReady: () =>
-      runtimePreviewController?.whenReady() ?? Promise.resolve(),
+    whenReady: () => runtimePreviewController?.whenReady() ?? Promise.resolve(),
     activateFlyCameraMode,
     destroy: () => {
       deactivateFlyCamera();

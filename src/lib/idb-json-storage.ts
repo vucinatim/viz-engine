@@ -70,10 +70,7 @@ export const createIdbJsonStorage = (opts: IdbJsonStorageOptions = {}) => {
       await nextWrite;
       writes.forEach(({ resolve }) => resolve());
     } catch (error) {
-      if (
-        latestValues.get(key) === value &&
-        !pendingValues.has(key)
-      ) {
+      if (latestValues.get(key) === value && !pendingValues.has(key)) {
         latestValues.delete(key);
       }
       writes.forEach(({ reject }) => reject(error));

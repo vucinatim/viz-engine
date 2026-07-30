@@ -1,4 +1,4 @@
-import type { VizRenderThreeProgramNode } from "@viz-engine/contracts";
+import type { VizRenderThreeProgramNode } from '@viz-engine/contracts';
 import {
   BoxGeometry,
   Color,
@@ -6,7 +6,6 @@ import {
   FogExp2,
   Group,
   InstancedMesh,
-  type InterleavedBufferAttribute,
   Matrix4,
   Mesh,
   MeshBasicMaterial,
@@ -16,19 +15,20 @@ import {
   Scene,
   SphereGeometry,
   Vector2,
+  type InterleavedBufferAttribute,
   type WebGLRenderTarget,
   type WebGLRenderer,
-} from "three";
-import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
-import { LineSegments2 } from "three/examples/jsm/lines/LineSegments2.js";
-import { LineSegmentsGeometry } from "three/examples/jsm/lines/LineSegmentsGeometry.js";
+} from 'three';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
 import {
   createVizThreePostProcessingPipeline,
   type VizThreePostProcessingSettings,
-} from "./post-processing.js";
-import type { VizThreeProgramFactory } from "./types.js";
+} from './post-processing.js';
+import type { VizThreeProgramFactory } from './types.js';
 
-const PROGRAM_ID = "viz-core/light-tunnel/v1";
+const PROGRAM_ID = 'viz-core/light-tunnel/v1';
 const MAX_TUNNEL_DEPTH = 40;
 const CUBES_PER_RING = 8;
 const MAX_CUBE_COUNT = MAX_TUNNEL_DEPTH * CUBES_PER_RING;
@@ -81,15 +81,13 @@ const CUBE_EDGES = [
 ] as const;
 
 const asNumber = (value: unknown, fallback: number): number =>
-  typeof value === "number" && Number.isFinite(value)
-    ? value
-    : fallback;
+  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 
 const asBoolean = (value: unknown, fallback: boolean): boolean =>
-  typeof value === "boolean" ? value : fallback;
+  typeof value === 'boolean' ? value : fallback;
 
 const asString = (value: unknown, fallback: string): string =>
-  typeof value === "string" && value.length > 0 ? value : fallback;
+  typeof value === 'string' && value.length > 0 ? value : fallback;
 
 const asStringArray = (
   value: unknown,
@@ -100,8 +98,7 @@ const asStringArray = (
   }
 
   const result = value.filter(
-    (entry): entry is string =>
-      typeof entry === "string" && entry.length > 0,
+    (entry): entry is string => typeof entry === 'string' && entry.length > 0,
   );
   return result.length > 0 ? result : [...fallback];
 };
@@ -110,7 +107,7 @@ const asNumberArray = (value: unknown): number[] =>
   Array.isArray(value)
     ? value.filter(
         (entry): entry is number =>
-          typeof entry === "number" && Number.isFinite(entry),
+          typeof entry === 'number' && Number.isFinite(entry),
       )
     : [];
 
@@ -123,9 +120,7 @@ const assertProgram = (node: VizRenderThreeProgramNode): void => {
 };
 
 const easeInOutCubic = (value: number): number =>
-  value < 0.5
-    ? 4 * value * value * value
-    : 1 - Math.pow(-2 * value + 2, 3) / 2;
+  value < 0.5 ? 4 * value * value * value : 1 - Math.pow(-2 * value + 2, 3) / 2;
 
 const hashString = (value: string): number => {
   let hash = 2166136261;
@@ -151,20 +146,20 @@ const resolveCubeColor = ({
   sourceRing: number;
   cubeIndex: number;
 }): string => {
-  if (colorMode === "Single" || palette.length === 0) {
+  if (colorMode === 'Single' || palette.length === 0) {
     return edgeColor;
   }
 
-  if (colorMode === "Random") {
+  if (colorMode === 'Random') {
     const hash = hashString(`${seed}:${sourceRing}:${cubeIndex}`);
     return palette[hash % palette.length] ?? edgeColor;
   }
 
-  if (colorMode === "Spiral") {
+  if (colorMode === 'Spiral') {
     return palette[(sourceRing + cubeIndex) % palette.length] ?? edgeColor;
   }
 
-  if (colorMode === "Depth") {
+  if (colorMode === 'Depth') {
     return palette[sourceRing % palette.length] ?? edgeColor;
   }
 
@@ -205,23 +200,11 @@ const readPostProcessingSettings = (
   parameters: Readonly<Record<string, unknown>>,
 ): VizThreePostProcessingSettings => ({
   bloomEnabled: asBoolean(parameters.bloomEnabled, true),
-  bloomStrength: Math.max(
-    0,
-    asNumber(parameters.bloomStrength, 0.5),
-  ),
+  bloomStrength: Math.max(0, asNumber(parameters.bloomStrength, 0.5)),
   bloomRadius: Math.max(0, asNumber(parameters.bloomRadius, 0.8)),
-  bloomThreshold: Math.max(
-    0,
-    asNumber(parameters.bloomThreshold, 0.1),
-  ),
-  depthOfFieldEnabled: asBoolean(
-    parameters.depthOfFieldEnabled,
-    false,
-  ),
-  depthOfFieldFocus: Math.max(
-    0,
-    asNumber(parameters.depthOfFieldFocus, 1),
-  ),
+  bloomThreshold: Math.max(0, asNumber(parameters.bloomThreshold, 0.1)),
+  depthOfFieldEnabled: asBoolean(parameters.depthOfFieldEnabled, false),
+  depthOfFieldFocus: Math.max(0, asNumber(parameters.depthOfFieldFocus, 1)),
   depthOfFieldAperture: Math.max(
     0,
     asNumber(parameters.depthOfFieldAperture, 0.0011),
@@ -237,7 +220,7 @@ export const createLightTunnelProgram: VizThreeProgramFactory = ({
   assertProgram(node);
 
   const scene = new Scene();
-  scene.fog = new FogExp2("#000000", 0.095);
+  scene.fog = new FogExp2('#000000', 0.095);
   const root = new Group();
   const camera = new PerspectiveCamera(
     75,
@@ -255,7 +238,7 @@ export const createLightTunnelProgram: VizThreeProgramFactory = ({
   edgeGeometry.setColors(edgeColors);
   edgeGeometry.instanceCount = 0;
   const edgeMaterial = new LineMaterial({
-    color: "#ffffff",
+    color: '#ffffff',
     linewidth: 5.5,
     resolution: new Vector2(width, height),
     vertexColors: true,
@@ -265,7 +248,7 @@ export const createLightTunnelProgram: VizThreeProgramFactory = ({
 
   const solidGeometry = new BoxGeometry(1, 1, 1);
   const solidMaterial = new MeshStandardMaterial({
-    color: "#0a0a0a",
+    color: '#0a0a0a',
     metalness: 0.7,
     roughness: 0.77,
   });
@@ -283,8 +266,8 @@ export const createLightTunnelProgram: VizThreeProgramFactory = ({
   const lights: PointLight[] = [];
   const helpers: Mesh[] = [];
   for (let index = 0; index < MAX_LIGHT_COUNT; index += 1) {
-    const light = new PointLight("#ffffff", 0, 100);
-    const helperMaterial = new MeshBasicMaterial({ color: "#ffffff" });
+    const light = new PointLight('#ffffff', 0, 100);
+    const helperMaterial = new MeshBasicMaterial({ color: '#ffffff' });
     const helper = new Mesh(helperGeometry, helperMaterial);
     helper.visible = false;
     lightCircle.add(light, helper);
@@ -314,7 +297,7 @@ export const createLightTunnelProgram: VizThreeProgramFactory = ({
     assertProgram(nextNode);
     const parameters = nextNode.parameters;
     const time = Math.max(0, asNumber(parameters.time, 0));
-    const seed = asString(parameters.seed, "light-tunnel");
+    const seed = asString(parameters.seed, 'light-tunnel');
     const cubeSize = Math.max(0.01, asNumber(parameters.cubeSize, 2.5));
     const spacing = Math.max(0, asNumber(parameters.spacing, 1.3));
     const ringSpacing = cubeSize + spacing;
@@ -322,49 +305,30 @@ export const createLightTunnelProgram: VizThreeProgramFactory = ({
       MAX_TUNNEL_DEPTH,
       Math.max(1, Math.round(asNumber(parameters.tunnelDepth, 13))),
     );
-    const renderMode = asString(parameters.renderMode, "Solid");
-    const colorMode = asString(parameters.colorMode, "Alternating");
-    const baseEdgeColor = asString(parameters.edgeColor, "#00FFFF");
+    const renderMode = asString(parameters.renderMode, 'Solid');
+    const colorMode = asString(parameters.colorMode, 'Alternating');
+    const baseEdgeColor = asString(parameters.edgeColor, '#00FFFF');
     const colorPalette = asStringArray(parameters.colorPalette, [
-      "#FF00FF",
-      "#00FFFF",
+      '#FF00FF',
+      '#00FFFF',
     ]);
-    const glowIntensity = Math.max(
-      0,
-      asNumber(parameters.glowIntensity, 1.8),
-    );
-    const tunnelSpeed = Math.max(
-      0,
-      asNumber(parameters.tunnelSpeed, 0.5),
-    );
+    const glowIntensity = Math.max(0, asNumber(parameters.glowIntensity, 1.8));
+    const tunnelSpeed = Math.max(0, asNumber(parameters.tunnelSpeed, 0.5));
     const travel = time * tunnelSpeed;
-    const wrapCount =
-      ringSpacing > 0 ? Math.floor(travel / ringSpacing) : 0;
-    const tunnelOffset =
-      ringSpacing > 0 ? travel % ringSpacing : 0;
+    const wrapCount = ringSpacing > 0 ? Math.floor(travel / ringSpacing) : 0;
+    const tunnelOffset = ringSpacing > 0 ? travel % ringSpacing : 0;
     const activeWaveAges = asNumberArray(parameters.activeWaveAges);
-    const waveSpeed = Math.max(
-      0.0001,
-      asNumber(parameters.waveSpeed, 8.5),
-    );
+    const waveSpeed = Math.max(0.0001, asNumber(parameters.waveSpeed, 8.5));
     const waveDuration = Math.max(
       0.0001,
       asNumber(parameters.waveDuration, 0.4),
     );
-    const waveAmplitude = Math.max(
-      0,
-      asNumber(parameters.waveAmplitude, 1),
-    );
+    const waveAmplitude = Math.max(0, asNumber(parameters.waveAmplitude, 1));
     let cubeCount = 0;
     let segmentCount = 0;
 
-    for (
-      let logicalRing = 0;
-      logicalRing < tunnelDepth;
-      logicalRing += 1
-    ) {
-      const sourceRing =
-        (logicalRing + wrapCount) % tunnelDepth;
+    for (let logicalRing = 0; logicalRing < tunnelDepth; logicalRing += 1) {
+      const sourceRing = (logicalRing + wrapCount) % tunnelDepth;
       const z = -logicalRing * ringSpacing + tunnelOffset;
       const ringWaveDisplacement = resolveWaveDisplacement({
         activeWaveAges,
@@ -374,11 +338,7 @@ export const createLightTunnelProgram: VizThreeProgramFactory = ({
         waveAmplitude,
       });
 
-      for (
-        let cubeIndex = 0;
-        cubeIndex < CUBES_PER_RING;
-        cubeIndex += 1
-      ) {
+      for (let cubeIndex = 0; cubeIndex < CUBES_PER_RING; cubeIndex += 1) {
         const gridPosition = GRID_POSITIONS[cubeIndex]!;
         const direction = CENTER_DIRECTIONS.get(cubeIndex);
         const x =
@@ -426,78 +386,52 @@ export const createLightTunnelProgram: VizThreeProgramFactory = ({
     }
 
     solidCubes.count = cubeCount;
-    solidCubes.visible = renderMode === "Solid";
+    solidCubes.visible = renderMode === 'Solid';
     solidCubes.instanceMatrix.needsUpdate = true;
     edgeGeometry.instanceCount = segmentCount;
     (
-      edgeGeometry.attributes
-        .instanceStart as InterleavedBufferAttribute
+      edgeGeometry.attributes.instanceStart as InterleavedBufferAttribute
     ).data.needsUpdate = true;
     (
-      edgeGeometry.attributes
-        .instanceColorStart as InterleavedBufferAttribute
+      edgeGeometry.attributes.instanceColorStart as InterleavedBufferAttribute
     ).data.needsUpdate = true;
     edgeMaterial.linewidth = Math.max(
       0,
       asNumber(parameters.edgeThickness, 5.5),
     );
 
-    solidMaterial.color.set(
-      asString(parameters.solidCubeColor, "#0a0a0a"),
-    );
-    solidMaterial.metalness = Math.max(
-      0,
-      asNumber(parameters.metalness, 0.7),
-    );
-    solidMaterial.roughness = Math.max(
-      0,
-      asNumber(parameters.roughness, 0.77),
-    );
+    solidMaterial.color.set(asString(parameters.solidCubeColor, '#0a0a0a'));
+    solidMaterial.metalness = Math.max(0, asNumber(parameters.metalness, 0.7));
+    solidMaterial.roughness = Math.max(0, asNumber(parameters.roughness, 0.77));
     solidMaterial.envMapIntensity = Math.max(
       0,
       asNumber(parameters.envMapIntensity, 0),
     );
     emissiveColor
-      .set(
-        asString(
-          parameters.solidEmissiveColor,
-          "rgb(0, 0, 0)",
-        ),
-      )
+      .set(asString(parameters.solidEmissiveColor, 'rgb(0, 0, 0)'))
       .multiplyScalar(
-        Math.max(
-          0,
-          asNumber(parameters.solidEmissiveIntensity, 0),
-        ),
+        Math.max(0, asNumber(parameters.solidEmissiveIntensity, 0)),
       );
     solidMaterial.emissive.copy(emissiveColor);
 
     const lightsEnabled =
-      renderMode === "Solid" &&
-      asBoolean(parameters.enableLights, true);
+      renderMode === 'Solid' && asBoolean(parameters.enableLights, true);
     const lightCount = Math.min(
       MAX_LIGHT_COUNT,
       Math.max(0, Math.round(asNumber(parameters.lightCount, 6))),
     );
-    const lightRadius = Math.max(
-      0,
-      asNumber(parameters.lightCircleRadius, 7),
-    );
+    const lightRadius = Math.max(0, asNumber(parameters.lightCircleRadius, 7));
     const lightIntensity = Math.max(
       0,
       asNumber(parameters.lightIntensity, 100),
     );
-    const lightDistance = Math.max(
-      0,
-      asNumber(parameters.lightDistance, 100),
-    );
+    const lightDistance = Math.max(0, asNumber(parameters.lightDistance, 100));
     lightCircle.position.z = -Math.max(
       0,
       asNumber(parameters.lightCircleDistance, 7),
     );
     lightCircle.rotation.z =
-      -time *
-      Math.max(0, asNumber(parameters.lightRotationSpeed, 0.15));
+      -time * Math.max(0, asNumber(parameters.lightRotationSpeed, 0.15));
 
     for (let index = 0; index < MAX_LIGHT_COUNT; index += 1) {
       const light = lights[index]!;
@@ -513,10 +447,9 @@ export const createLightTunnelProgram: VizThreeProgramFactory = ({
       const x = Math.cos(angle) * lightRadius;
       const y = Math.sin(angle) * lightRadius;
       const color =
-        colorMode === "Single"
+        colorMode === 'Single'
           ? baseEdgeColor
-          : colorPalette[index % colorPalette.length] ??
-            baseEdgeColor;
+          : (colorPalette[index % colorPalette.length] ?? baseEdgeColor);
       light.position.set(x, y, 0);
       light.color.set(color);
       light.intensity = lightIntensity;
@@ -528,10 +461,7 @@ export const createLightTunnelProgram: VizThreeProgramFactory = ({
     root.rotation.z =
       time * Math.max(0, asNumber(parameters.rotationSpeed, 0.05));
     if (scene.fog instanceof FogExp2) {
-      scene.fog.density = Math.max(
-        0,
-        asNumber(parameters.fogDensity, 0.095),
-      );
+      scene.fog.density = Math.max(0, asNumber(parameters.fogDensity, 0.095));
     }
     postProcessing.update(readPostProcessingSettings(parameters));
   };
@@ -550,10 +480,7 @@ export const createLightTunnelProgram: VizThreeProgramFactory = ({
       edgeMaterial.resolution.set(nextWidth, nextHeight);
       postProcessing.resize(nextWidth, nextHeight);
     },
-    render(
-      renderer: WebGLRenderer,
-      renderTarget: WebGLRenderTarget,
-    ) {
+    render(renderer: WebGLRenderer, renderTarget: WebGLRenderTarget) {
       postProcessing.render(renderer, renderTarget);
     },
     dispose() {

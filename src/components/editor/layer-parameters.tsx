@@ -1,4 +1,5 @@
 import editorControl from '@/lib/editor-control';
+import useEditorGraphStore from '@/lib/stores/editor-graph-store';
 import { cn } from '@/lib/utils';
 import {
   selectParameterGraphBindings,
@@ -13,9 +14,7 @@ import {
   GroupConfigOption,
   VConfigType,
 } from '../config/config';
-import useNodeNetworkStore, {
-} from '../node-network/node-network-store';
-import useEditorGraphStore from '@/lib/stores/editor-graph-store';
+import useNodeNetworkStore from '../node-network/node-network-store';
 import { Button } from '../ui/button';
 import CollapsibleGroup from '../ui/collapsible-group';
 import SimpleTooltip from '../ui/simple-tooltip';
@@ -36,16 +35,15 @@ const LayerParameters = ({ layerId, config }: LayerParametersProps) => {
   // Get all current values once for visibleIf checks
   const allValues = useVizSessionSelector(
     (state) =>
-      state.project.workingProject.layers.find(
-        (layer) => layer.id === layerId,
-      )?.settings,
+      state.project.workingProject.layers.find((layer) => layer.id === layerId)
+        ?.settings,
   );
 
   // Helper function to get animated parameters in a group
   const getAnimatedParamsInGroup = (groupOption: GroupConfigOption<any>) => {
     const animatedParams: string[] = [];
 
-    Object.entries(groupOption.options).forEach(([innerKey, innerOption]) => {
+    Object.values(groupOption.options).forEach((innerOption) => {
       if (innerOption instanceof ConfigParam && innerOption.isAnimatable) {
         const isAnimated = !!parameterGraphBindings[innerOption.id];
         if (isAnimated) {
@@ -72,12 +70,11 @@ const LayerParameters = ({ layerId, config }: LayerParametersProps) => {
                 label={option.label}
                 description={option.description}
                 animatedParams={getAnimatedParamsInGroup(option)}>
-                <div className="flex flex-col pb-0 pt-2">
+                <div className="flex flex-col pt-2 pb-0">
                   {Object.entries(option.options).map(
                     ([innerKey, innerOption]) => {
                       const opt = innerOption as
-                        | ConfigParam<any>
-                        | ButtonConfigOption;
+                        ConfigParam<any> | ButtonConfigOption;
                       const isHidden =
                         typeof opt.visibleIf === 'function' &&
                         !opt.visibleIf(allValues ?? {});
@@ -90,7 +87,7 @@ const LayerParameters = ({ layerId, config }: LayerParametersProps) => {
                             <SimpleTooltip
                               text={opt.description}
                               trigger={
-                                <div className="mb-2 flex items-center gap-x-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                <div className="mb-2 flex items-center gap-x-2 text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                   {opt.description && (
                                     <Info className="h-3 w-3 opacity-50" />
                                   )}
@@ -120,7 +117,7 @@ const LayerParameters = ({ layerId, config }: LayerParametersProps) => {
                 <SimpleTooltip
                   text={option.description}
                   trigger={
-                    <div className="mb-2 flex items-center gap-x-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    <div className="mb-2 flex items-center gap-x-2 text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       {option.description && (
                         <Info className="h-3 w-3 opacity-50" />
                       )}
@@ -195,7 +192,7 @@ const ParameterField = memo(
           trigger={
             <div
               className={cn(
-                'mb-2 mr-1 flex items-center gap-x-2 text-2xs font-medium leading-none',
+                'text-2xs mr-1 mb-2 flex items-center gap-x-2 leading-none font-medium',
                 isAnimated && !isHighlighted && 'text-animation-blue',
                 isAnimated && isHighlighted && 'text-animation-purple',
               )}>
@@ -229,6 +226,21 @@ const ParameterField = memo(
                 editorControl.history.endGesture(
                   `${layerId}:${paramPath.join('.')}`,
                 );
+              },
+              async (selection) => {
+                const asset =
+                  selection.kind === 'file'
+                    ? await editorControl.project.attachLayerFileAsset(
+                        layerId,
+                        paramPath,
+                        selection.file,
+                      )
+                    : await editorControl.project.attachLayerExternalAsset(
+                        layerId,
+                        paramPath,
+                        selection.uri,
+                      );
+                return `asset:${asset.id}`;
               },
             )}
           </div>
@@ -314,8 +326,8 @@ export const AnimatedLiveValue = ({
   parameterId: string;
   className?: string;
 }) => {
-  const value = useVizSessionSelector(
-    (state) => selectRuntimeGraphValueForParameter(state, parameterId),
+  const value = useVizSessionSelector((state) =>
+    selectRuntimeGraphValueForParameter(state, parameterId),
   );
 
   if (value === undefined) return null;

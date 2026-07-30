@@ -34,9 +34,8 @@ const isEditorSignal = (value: unknown): value is EditorSignal => {
     typeof value === 'object' &&
     value !== null &&
     typeof (value as Record<string, unknown>).editorInstanceId === 'string' &&
-    (
-      (value as Record<string, unknown>).editorInstanceId as string
-    ).trim().length > 0
+    ((value as Record<string, unknown>).editorInstanceId as string).trim()
+      .length > 0
   );
 };
 
@@ -56,10 +55,7 @@ const isBridgeResponse = (value: unknown): value is BridgeResponse => {
 };
 
 const isBridgeEvent = (value: unknown): value is BridgeEvent => {
-  return (
-    isEditorSignal(value) &&
-    'event' in value
-  );
+  return isEditorSignal(value) && 'event' in value;
 };
 
 const sendJson = (
@@ -167,10 +163,7 @@ export const createVizControlBridgePlugin = (): Plugin => {
       installSocketHandlers(server);
 
       server.middlewares.use(async (request, response, next) => {
-        const requestUrl = new URL(
-          request.url ?? '/',
-          'http://localhost',
-        );
+        const requestUrl = new URL(request.url ?? '/', 'http://localhost');
 
         if (
           request.method === 'GET' &&
@@ -196,10 +189,7 @@ export const createVizControlBridgePlugin = (): Plugin => {
           return;
         }
 
-        if (
-          request.method === 'GET' &&
-          requestUrl.pathname === EVENTS_PATH
-        ) {
+        if (request.method === 'GET' && requestUrl.pathname === EVENTS_PATH) {
           response.statusCode = 200;
           response.setHeader('Content-Type', 'text/event-stream');
           response.setHeader('Cache-Control', 'no-cache, no-transform');
@@ -213,10 +203,7 @@ export const createVizControlBridgePlugin = (): Plugin => {
           return;
         }
 
-        if (
-          request.method !== 'POST' ||
-          requestUrl.pathname !== REQUEST_PATH
-        ) {
+        if (request.method !== 'POST' || requestUrl.pathname !== REQUEST_PATH) {
           next();
           return;
         }

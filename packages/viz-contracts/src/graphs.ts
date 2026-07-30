@@ -1,20 +1,23 @@
-import type { VizGraphId } from "./ids.js";
-import type { VizValueSource } from "./project.js";
-import type { VizFrameContext } from "./runtime.js";
+import type { VizGraphId } from './ids.js';
+import type { VizValueSource } from './project.js';
+import type { VizFrameContext } from './runtime.js';
 
-export type VizGraphInputSource = Exclude<VizValueSource, { kind: "graph-output" }>;
+export type VizGraphInputSource = Exclude<
+  VizValueSource,
+  { kind: 'graph-output' }
+>;
 
 export type VizGraphNodeInputBinding =
   | {
-      kind: "literal";
+      kind: 'literal';
       value: unknown;
     }
   | {
-      kind: "graph-input";
+      kind: 'graph-input';
       inputKey: string;
     }
   | {
-      kind: "node-output";
+      kind: 'node-output';
       nodeId: string;
       output: string;
       edgeId?: string;
@@ -23,14 +26,23 @@ export type VizGraphNodeInputBinding =
 export interface VizNodeGraphNode {
   id: string;
   type: string;
+  position?: {
+    x: number;
+    y: number;
+  };
   inputs?: Record<string, VizGraphNodeInputBinding>;
   metadata?: Record<string, unknown>;
 }
 
 export interface VizNodeGraphOutputBinding {
   key: string;
-  nodeId: string;
-  output: string;
+  nodeId?: string;
+  output?: string;
+  valueType?: VizNodeAuthoringValueType;
+  position?: {
+    x: number;
+    y: number;
+  };
 }
 
 export interface VizNodeGraphDocument {
@@ -57,16 +69,16 @@ export interface VizNodeDefinitionOutput {
 }
 
 export type VizNodeAuthoringValueType =
-  | "number"
-  | "string"
-  | "boolean"
-  | "color"
-  | "file"
-  | "vector3"
-  | "Uint8Array"
-  | "FrequencyAnalysis"
-  | "object"
-  | "math-op";
+  | 'number'
+  | 'string'
+  | 'boolean'
+  | 'color'
+  | 'file'
+  | 'vector3'
+  | 'Uint8Array'
+  | 'FrequencyAnalysis'
+  | 'object'
+  | 'math-op';
 
 export interface VizNodeAuthoringPort {
   key: string;
@@ -79,7 +91,7 @@ export interface VizNodeAuthoring {
   outputs: VizNodeAuthoringPort[];
 }
 
-export type VizNodeCategory = "pure" | "temporal";
+export type VizNodeCategory = 'pure' | 'temporal';
 
 export interface VizNodeDefinition {
   type: string;
@@ -123,13 +135,13 @@ export interface VizNodeImplementation extends VizNodeDefinition {
 
 export interface VizGraphEvaluationIssue {
   code:
-    | "missing-graph"
-    | "missing-graph-input"
-    | "missing-node"
-    | "missing-node-output"
-    | "invalid-graph"
-    | "graph-cycle"
-    | "node-evaluation-failed";
+    | 'missing-graph'
+    | 'missing-graph-input'
+    | 'missing-node'
+    | 'missing-node-output'
+    | 'invalid-graph'
+    | 'graph-cycle'
+    | 'node-evaluation-failed';
   graphId: VizGraphId;
   nodeId?: string;
   inputKey?: string;

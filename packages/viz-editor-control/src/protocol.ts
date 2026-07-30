@@ -1,9 +1,9 @@
+import type { VizAudioFeatureBakeJobRequest } from '@viz-engine/bake';
 import type {
   VizProjectTransaction,
   VizRenderRequest,
-} from "@viz-engine/contracts";
-import type { VizAudioFeatureBakeJobRequest } from "@viz-engine/bake";
-import { z } from "zod";
+} from '@viz-engine/contracts';
+import { z } from 'zod';
 
 export const VIZ_CONTROL_PROTOCOL_VERSION = 1 as const;
 
@@ -13,14 +13,8 @@ const unknownRecord = z.record(z.unknown());
 const assetRefSchema = z
   .object({
     id: nonEmptyString,
-    kind: z.enum(["audio", "image", "video", "model", "binary"]),
-    source: z.enum([
-      "local",
-      "bundle",
-      "cloud",
-      "external",
-      "generated",
-    ]),
+    kind: z.enum(['audio', 'image', 'video', 'model', 'binary']),
+    source: z.enum(['local', 'bundle', 'cloud', 'external', 'generated']),
     label: nonEmptyString,
     mimeType: z.string().optional(),
     originalFileName: z.string().optional(),
@@ -32,11 +26,11 @@ const artifactRefSchema = z
   .object({
     id: nonEmptyString,
     kind: z.enum([
-      "audio-feature-timeline",
-      "simulation-checkpoint",
-      "analysis-payload",
-      "derived-media",
-      "render-output",
+      'audio-feature-timeline',
+      'simulation-checkpoint',
+      'analysis-payload',
+      'derived-media',
+      'render-output',
     ]),
     label: nonEmptyString,
     sourceAssetId: nonEmptyString.optional(),
@@ -44,58 +38,58 @@ const artifactRefSchema = z
   })
   .strict();
 
-const valueSourceSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("literal"), value: z.unknown() }).strict(),
+const valueSourceSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('literal'), value: z.unknown() }).strict(),
   z
     .object({
-      kind: z.literal("asset-ref"),
+      kind: z.literal('asset-ref'),
       assetId: nonEmptyString,
     })
     .strict(),
   z
     .object({
-      kind: z.literal("graph-output"),
+      kind: z.literal('graph-output'),
       graphId: nonEmptyString,
       output: nonEmptyString,
     })
     .strict(),
   z
     .object({
-      kind: z.literal("artifact-feature"),
+      kind: z.literal('artifact-feature'),
       artifactId: nonEmptyString,
       feature: nonEmptyString,
     })
     .strict(),
 ]);
 
-const graphInputSourceSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("literal"), value: z.unknown() }).strict(),
+const graphInputSourceSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('literal'), value: z.unknown() }).strict(),
   z
     .object({
-      kind: z.literal("asset-ref"),
+      kind: z.literal('asset-ref'),
       assetId: nonEmptyString,
     })
     .strict(),
   z
     .object({
-      kind: z.literal("artifact-feature"),
+      kind: z.literal('artifact-feature'),
       artifactId: nonEmptyString,
       feature: nonEmptyString,
     })
     .strict(),
 ]);
 
-const graphNodeInputBindingSchema = z.discriminatedUnion("kind", [
-  z.object({ kind: z.literal("literal"), value: z.unknown() }).strict(),
+const graphNodeInputBindingSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('literal'), value: z.unknown() }).strict(),
   z
     .object({
-      kind: z.literal("graph-input"),
+      kind: z.literal('graph-input'),
       inputKey: nonEmptyString,
     })
     .strict(),
   z
     .object({
-      kind: z.literal("node-output"),
+      kind: z.literal('node-output'),
       nodeId: nonEmptyString,
       output: nonEmptyString,
       edgeId: nonEmptyString.optional(),
@@ -107,6 +101,12 @@ const graphNodeSchema = z
   .object({
     id: nonEmptyString,
     type: nonEmptyString,
+    position: z
+      .object({
+        x: z.number(),
+        y: z.number(),
+      })
+      .optional(),
     inputs: z.record(graphNodeInputBindingSchema).optional(),
     metadata: unknownRecord.optional(),
   })
@@ -115,8 +115,28 @@ const graphNodeSchema = z
 const graphOutputSchema = z
   .object({
     key: nonEmptyString,
-    nodeId: nonEmptyString,
-    output: nonEmptyString,
+    nodeId: nonEmptyString.optional(),
+    output: nonEmptyString.optional(),
+    valueType: z
+      .enum([
+        'number',
+        'string',
+        'boolean',
+        'color',
+        'file',
+        'vector3',
+        'Uint8Array',
+        'FrequencyAnalysis',
+        'object',
+        'math-op',
+      ])
+      .optional(),
+    position: z
+      .object({
+        x: z.number(),
+        y: z.number(),
+      })
+      .optional(),
   })
   .strict();
 
@@ -140,33 +160,26 @@ const layerSchema = z
     enabled: z.boolean(),
     opacity: z.number().finite(),
     blendMode: z.enum([
-      "normal",
-      "multiply",
-      "screen",
-      "overlay",
-      "darken",
-      "lighten",
-      "color-dodge",
-      "color-burn",
-      "hard-light",
-      "soft-light",
-      "difference",
-      "exclusion",
-      "hue",
-      "saturation",
-      "color",
-      "luminosity",
-      "add",
+      'normal',
+      'multiply',
+      'screen',
+      'overlay',
+      'darken',
+      'lighten',
+      'color-dodge',
+      'color-burn',
+      'hard-light',
+      'soft-light',
+      'difference',
+      'exclusion',
+      'hue',
+      'saturation',
+      'color',
+      'luminosity',
+      'add',
     ]),
     rendererFamily: z
-      .enum([
-        "three",
-        "canvas2d",
-        "webgpu",
-        "video",
-        "image",
-        "unknown",
-      ])
+      .enum(['three', 'canvas2d', 'webgpu', 'video', 'image', 'unknown'])
       .optional(),
     transform: z
       .object({
@@ -194,19 +207,10 @@ const layerSchema = z
     requiredArtifactIds: z.array(nonEmptyString).optional(),
     renderPolicy: z
       .object({
-        supportedModes: z
-          .array(z.enum(["live", "render", "bake"]))
-          .optional(),
+        supportedModes: z.array(z.enum(['live', 'render', 'bake'])).optional(),
         requiresBake: z.boolean().optional(),
         preferredRendererFamily: z
-          .enum([
-            "three",
-            "canvas2d",
-            "webgpu",
-            "video",
-            "image",
-            "unknown",
-          ])
+          .enum(['three', 'canvas2d', 'webgpu', 'video', 'image', 'unknown'])
           .optional(),
       })
       .strict()
@@ -214,16 +218,16 @@ const layerSchema = z
   })
   .strict();
 
-const projectActionSchema = z.discriminatedUnion("type", [
+const projectActionSchema = z.discriminatedUnion('type', [
   z
     .object({
-      type: z.literal("asset.attach"),
+      type: z.literal('asset.attach'),
       payload: z.object({ asset: assetRefSchema }).strict(),
     })
     .strict(),
   z
     .object({
-      type: z.literal("asset.replace"),
+      type: z.literal('asset.replace'),
       payload: z
         .object({
           assetId: nonEmptyString,
@@ -234,13 +238,13 @@ const projectActionSchema = z.discriminatedUnion("type", [
     .strict(),
   z
     .object({
-      type: z.literal("artifact.attach"),
+      type: z.literal('artifact.attach'),
       payload: z.object({ artifact: artifactRefSchema }).strict(),
     })
     .strict(),
   z
     .object({
-      type: z.literal("layer.create"),
+      type: z.literal('layer.create'),
       payload: z
         .object({
           layerId: nonEmptyString.optional(),
@@ -252,13 +256,13 @@ const projectActionSchema = z.discriminatedUnion("type", [
     .strict(),
   z
     .object({
-      type: z.literal("layer.remove"),
+      type: z.literal('layer.remove'),
       payload: z.object({ layerId: nonEmptyString }).strict(),
     })
     .strict(),
   z
     .object({
-      type: z.literal("layer.move"),
+      type: z.literal('layer.move'),
       payload: z
         .object({
           layerId: nonEmptyString,
@@ -269,7 +273,7 @@ const projectActionSchema = z.discriminatedUnion("type", [
     .strict(),
   z
     .object({
-      type: z.literal("layer.replace"),
+      type: z.literal('layer.replace'),
       payload: z
         .object({
           layerId: nonEmptyString,
@@ -280,7 +284,7 @@ const projectActionSchema = z.discriminatedUnion("type", [
     .strict(),
   z
     .object({
-      type: z.literal("layer.settings.set"),
+      type: z.literal('layer.settings.set'),
       payload: z
         .object({
           layerId: nonEmptyString,
@@ -292,7 +296,7 @@ const projectActionSchema = z.discriminatedUnion("type", [
     .strict(),
   z
     .object({
-      type: z.literal("layer.input.set"),
+      type: z.literal('layer.input.set'),
       payload: z
         .object({
           layerId: nonEmptyString,
@@ -304,7 +308,7 @@ const projectActionSchema = z.discriminatedUnion("type", [
     .strict(),
   z
     .object({
-      type: z.literal("timeline.set"),
+      type: z.literal('timeline.set'),
       payload: z
         .object({
           timeline: z
@@ -320,7 +324,7 @@ const projectActionSchema = z.discriminatedUnion("type", [
     .strict(),
   z
     .object({
-      type: z.literal("graph.create"),
+      type: z.literal('graph.create'),
       payload: z
         .object({
           graphId: nonEmptyString.optional(),
@@ -331,7 +335,7 @@ const projectActionSchema = z.discriminatedUnion("type", [
     .strict(),
   z
     .object({
-      type: z.literal("graph.replace"),
+      type: z.literal('graph.replace'),
       payload: z
         .object({
           graphId: nonEmptyString,
@@ -342,13 +346,13 @@ const projectActionSchema = z.discriminatedUnion("type", [
     .strict(),
   z
     .object({
-      type: z.literal("graph.remove"),
+      type: z.literal('graph.remove'),
       payload: z.object({ graphId: nonEmptyString }).strict(),
     })
     .strict(),
   z
     .object({
-      type: z.literal("graph.input.set"),
+      type: z.literal('graph.input.set'),
       payload: z
         .object({
           graphId: nonEmptyString,
@@ -360,12 +364,18 @@ const projectActionSchema = z.discriminatedUnion("type", [
     .strict(),
   z
     .object({
-      type: z.literal("graph.node.add"),
+      type: z.literal('graph.node.add'),
       payload: z
         .object({
           graphId: nonEmptyString,
           nodeId: nonEmptyString.optional(),
           nodeType: nonEmptyString,
+          position: z
+            .object({
+              x: z.number(),
+              y: z.number(),
+            })
+            .optional(),
           initialInputs: z.record(graphNodeInputBindingSchema).optional(),
           metadata: unknownRecord.optional(),
         })
@@ -374,7 +384,19 @@ const projectActionSchema = z.discriminatedUnion("type", [
     .strict(),
   z
     .object({
-      type: z.literal("graph.node.remove"),
+      type: z.literal('graph.node.position.set'),
+      payload: z
+        .object({
+          graphId: nonEmptyString,
+          nodeId: nonEmptyString,
+          position: z.object({ x: z.number(), y: z.number() }).strict(),
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal('graph.node.remove'),
       payload: z
         .object({
           graphId: nonEmptyString,
@@ -385,7 +407,7 @@ const projectActionSchema = z.discriminatedUnion("type", [
     .strict(),
   z
     .object({
-      type: z.literal("graph.node.input.set"),
+      type: z.literal('graph.node.input.set'),
       payload: z
         .object({
           graphId: nonEmptyString,
@@ -398,11 +420,45 @@ const projectActionSchema = z.discriminatedUnion("type", [
     .strict(),
   z
     .object({
-      type: z.literal("graph.output.set"),
+      type: z.literal('graph.output.set'),
       payload: z
         .object({
           graphId: nonEmptyString,
           output: graphOutputSchema,
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal('graph.output.remove'),
+      payload: z
+        .object({
+          graphId: nonEmptyString,
+          outputKey: nonEmptyString,
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal('graph.output.position.set'),
+      payload: z
+        .object({
+          graphId: nonEmptyString,
+          outputKey: nonEmptyString,
+          position: z.object({ x: z.number(), y: z.number() }).strict(),
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal('graph.enabled.set'),
+      payload: z
+        .object({
+          graphId: nonEmptyString,
+          enabled: z.boolean(),
         })
         .strict(),
     })
@@ -420,9 +476,9 @@ const projectTransactionSchema = z
 
 const audioFeatureBakeJobRequestSchema = z
   .object({
-    kind: z.literal("audio-feature-timeline"),
+    kind: z.literal('audio-feature-timeline'),
     sourceAssetId: nonEmptyString,
-    profile: z.literal("standard"),
+    profile: z.literal('standard'),
     fps: z.number().finite().positive(),
     expectedSourceContentIdentity: nonEmptyString.optional(),
     artifactId: nonEmptyString.optional(),
@@ -433,7 +489,7 @@ const audioFeatureBakeJobRequestSchema = z
       .int()
       .min(32)
       .refine((value) => (value & (value - 1)) === 0, {
-        message: "fftSize must be a power of two.",
+        message: 'fftSize must be a power of two.',
       })
       .optional(),
     minDecibels: z.number().finite().optional(),
@@ -453,8 +509,8 @@ const audioFeatureBakeJobRequestSchema = z
       request.maxDecibels === undefined ||
       request.minDecibels < request.maxDecibels,
     {
-      message: "minDecibels must be lower than maxDecibels.",
-      path: ["minDecibels"],
+      message: 'minDecibels must be lower than maxDecibels.',
+      path: ['minDecibels'],
     },
   );
 
@@ -467,12 +523,7 @@ const renderRequestBaseShape = {
       expectedContentIdentity: nonEmptyString.optional(),
     })
     .strict(),
-  intent: z.enum([
-    "preview",
-    "candidate",
-    "final",
-    "integration",
-  ]),
+  intent: z.enum(['preview', 'candidate', 'final', 'integration']),
   executorId: nonEmptyString,
   outputLabel: nonEmptyString,
   viewport: z
@@ -482,92 +533,92 @@ const renderRequestBaseShape = {
       backgroundColor: z.string().optional(),
     })
     .strict(),
-  quality: z.enum(["draft", "standard", "high"]),
+  quality: z.enum(['draft', 'standard', 'high']),
 };
 
-const renderRequestSchema = z.discriminatedUnion("kind", [
+const renderRequestSchema = z.discriminatedUnion('kind', [
   z
     .object({
       ...renderRequestBaseShape,
-      kind: z.literal("still"),
+      kind: z.literal('still'),
       frame: z.number().int().nonnegative(),
-      format: z.enum(["svg", "png", "jpeg", "webp"]),
+      format: z.enum(['svg', 'png', 'jpeg', 'webp']),
     })
     .strict(),
   z
     .object({
       ...renderRequestBaseShape,
-      kind: z.literal("contact-sheet"),
+      kind: z.literal('contact-sheet'),
       frames: z
         .array(z.number().int().nonnegative())
         .min(1)
         .max(256)
         .refine((frames) => new Set(frames).size === frames.length, {
-          message: "Contact-sheet frames must be unique.",
+          message: 'Contact-sheet frames must be unique.',
         }),
       columns: z.number().int().positive().optional(),
       gap: z.number().int().min(0).max(256).optional(),
-      format: z.enum(["svg", "png", "jpeg", "webp"]),
+      format: z.enum(['svg', 'png', 'jpeg', 'webp']),
     })
     .strict(),
   z
     .object({
       ...renderRequestBaseShape,
-      kind: z.literal("clip"),
+      kind: z.literal('clip'),
       startFrame: z.number().int().nonnegative(),
       frameCount: z.number().int().positive(),
       fps: z.number().int().positive(),
-      format: z.enum(["mp4", "webm"]),
+      format: z.enum(['mp4', 'webm']),
       includeAudio: z.boolean(),
     })
     .strict(),
   z
     .object({
       ...renderRequestBaseShape,
-      kind: z.literal("video"),
+      kind: z.literal('video'),
       startFrame: z.number().int().nonnegative(),
       frameCount: z.number().int().positive(),
       fps: z.number().int().positive(),
-      format: z.enum(["mp4", "webm"]),
+      format: z.enum(['mp4', 'webm']),
       includeAudio: z.boolean(),
     })
     .strict(),
 ]);
 
-const controlRequestSchema = z.discriminatedUnion("operation", [
+const controlRequestSchema = z.discriminatedUnion('operation', [
   z
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
-      operation: z.literal("control.discover"),
+      operation: z.literal('control.discover'),
     })
     .strict(),
   z
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
-      operation: z.literal("control.snapshot"),
+      operation: z.literal('control.snapshot'),
     })
     .strict(),
   z
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
-      operation: z.literal("project.inspect"),
+      operation: z.literal('project.inspect'),
     })
     .strict(),
   z
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
-      operation: z.literal("component.inspect"),
+      operation: z.literal('component.inspect'),
     })
     .strict(),
   z
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
-      operation: z.literal("graph.inspect"),
+      operation: z.literal('graph.inspect'),
       graphId: nonEmptyString.optional(),
     })
     .strict(),
@@ -575,7 +626,7 @@ const controlRequestSchema = z.discriminatedUnion("operation", [
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
-      operation: z.literal("transaction.apply"),
+      operation: z.literal('transaction.apply'),
       transaction: projectTransactionSchema,
     })
     .strict(),
@@ -583,35 +634,35 @@ const controlRequestSchema = z.discriminatedUnion("operation", [
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
-      operation: z.literal("history.undo"),
+      operation: z.literal('history.undo'),
     })
     .strict(),
   z
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
-      operation: z.literal("history.redo"),
+      operation: z.literal('history.redo'),
     })
     .strict(),
   z
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
-      operation: z.literal("preview.play"),
+      operation: z.literal('preview.play'),
     })
     .strict(),
   z
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
-      operation: z.literal("preview.pause"),
+      operation: z.literal('preview.pause'),
     })
     .strict(),
   z
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
-      operation: z.literal("preview.seek"),
+      operation: z.literal('preview.seek'),
       frame: z.number().int().nonnegative(),
     })
     .strict(),
@@ -619,14 +670,14 @@ const controlRequestSchema = z.discriminatedUnion("operation", [
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
-      operation: z.literal("job.list"),
+      operation: z.literal('job.list'),
     })
     .strict(),
   z
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
-      operation: z.literal("job.inspect"),
+      operation: z.literal('job.inspect'),
       jobId: nonEmptyString,
     })
     .strict(),
@@ -634,7 +685,7 @@ const controlRequestSchema = z.discriminatedUnion("operation", [
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
-      operation: z.literal("audio-bake.start"),
+      operation: z.literal('audio-bake.start'),
       request: audioFeatureBakeJobRequestSchema,
     })
     .strict(),
@@ -642,7 +693,7 @@ const controlRequestSchema = z.discriminatedUnion("operation", [
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
-      operation: z.literal("render.start"),
+      operation: z.literal('render.start'),
       request: renderRequestSchema,
     })
     .strict(),
@@ -650,7 +701,7 @@ const controlRequestSchema = z.discriminatedUnion("operation", [
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
-      operation: z.literal("job.cancel"),
+      operation: z.literal('job.cancel'),
       jobId: nonEmptyString,
     })
     .strict(),
@@ -658,7 +709,7 @@ const controlRequestSchema = z.discriminatedUnion("operation", [
     .object({
       protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
       id: nonEmptyString,
-      operation: z.literal("audio-bake.attach"),
+      operation: z.literal('audio-bake.attach'),
       jobId: nonEmptyString,
       expectedRevision: z.number().int().nonnegative().optional(),
     })
@@ -671,54 +722,51 @@ interface VizControlRequestBase {
 }
 
 export type VizControlRequest =
-  | (VizControlRequestBase & { operation: "control.discover" })
-  | (VizControlRequestBase & { operation: "control.snapshot" })
-  | (VizControlRequestBase & { operation: "project.inspect" })
-  | (VizControlRequestBase & { operation: "component.inspect" })
+  | (VizControlRequestBase & { operation: 'control.discover' })
+  | (VizControlRequestBase & { operation: 'control.snapshot' })
+  | (VizControlRequestBase & { operation: 'project.inspect' })
+  | (VizControlRequestBase & { operation: 'component.inspect' })
   | (VizControlRequestBase & {
-      operation: "graph.inspect";
+      operation: 'graph.inspect';
       graphId?: string;
     })
   | (VizControlRequestBase & {
-      operation: "transaction.apply";
+      operation: 'transaction.apply';
       transaction: VizProjectTransaction;
     })
-  | (VizControlRequestBase & { operation: "history.undo" })
-  | (VizControlRequestBase & { operation: "history.redo" })
-  | (VizControlRequestBase & { operation: "preview.play" })
-  | (VizControlRequestBase & { operation: "preview.pause" })
+  | (VizControlRequestBase & { operation: 'history.undo' })
+  | (VizControlRequestBase & { operation: 'history.redo' })
+  | (VizControlRequestBase & { operation: 'preview.play' })
+  | (VizControlRequestBase & { operation: 'preview.pause' })
   | (VizControlRequestBase & {
-      operation: "preview.seek";
+      operation: 'preview.seek';
       frame: number;
     })
-  | (VizControlRequestBase & { operation: "job.list" })
+  | (VizControlRequestBase & { operation: 'job.list' })
   | (VizControlRequestBase & {
-      operation: "job.inspect";
+      operation: 'job.inspect';
       jobId: string;
     })
   | (VizControlRequestBase & {
-      operation: "audio-bake.start";
+      operation: 'audio-bake.start';
       request: VizAudioFeatureBakeJobRequest;
     })
   | (VizControlRequestBase & {
-      operation: "render.start";
+      operation: 'render.start';
       request: VizRenderRequest;
     })
   | (VizControlRequestBase & {
-      operation: "job.cancel";
+      operation: 'job.cancel';
       jobId: string;
     })
   | (VizControlRequestBase & {
-      operation: "audio-bake.attach";
+      operation: 'audio-bake.attach';
       jobId: string;
       expectedRevision?: number;
     });
 
 export interface VizControlProtocolError {
-  code:
-    | "invalid-request"
-    | "unsupported-operation"
-    | "operation-failed";
+  code: 'invalid-request' | 'unsupported-operation' | 'operation-failed';
   message: string;
   issues?: Array<{
     path: Array<string | number>;
@@ -737,15 +785,15 @@ export interface VizControlResponse {
 
 export interface VizControlEvent {
   protocolVersion: typeof VIZ_CONTROL_PROTOCOL_VERSION;
-  type: "snapshot";
+  type: 'snapshot';
   revision: number;
   snapshot: unknown;
 }
 
 export interface VizControlDiscovery {
   protocolVersion: typeof VIZ_CONTROL_PROTOCOL_VERSION;
-  control: "VizControl";
-  operations: VizControlRequest["operation"][];
+  control: 'VizControl';
+  operations: VizControlRequest['operation'][];
   transaction: {
     atomic: true;
     expectedRevision: true;
@@ -756,25 +804,25 @@ export interface VizControlDiscovery {
 
 export const vizControlDiscovery: VizControlDiscovery = {
   protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
-  control: "VizControl",
+  control: 'VizControl',
   operations: [
-    "control.discover",
-    "control.snapshot",
-    "project.inspect",
-    "component.inspect",
-    "graph.inspect",
-    "transaction.apply",
-    "history.undo",
-    "history.redo",
-    "preview.play",
-    "preview.pause",
-    "preview.seek",
-    "job.list",
-    "job.inspect",
-    "audio-bake.start",
-    "render.start",
-    "job.cancel",
-    "audio-bake.attach",
+    'control.discover',
+    'control.snapshot',
+    'project.inspect',
+    'component.inspect',
+    'graph.inspect',
+    'transaction.apply',
+    'history.undo',
+    'history.redo',
+    'preview.play',
+    'preview.pause',
+    'preview.seek',
+    'job.list',
+    'job.inspect',
+    'audio-bake.start',
+    'render.start',
+    'job.cancel',
+    'audio-bake.attach',
   ],
   transaction: {
     atomic: true,
@@ -795,8 +843,8 @@ export const decodeVizProjectTransaction = (
     return {
       ok: false,
       error: {
-        code: "invalid-request",
-        message: "Invalid Viz project transaction.",
+        code: 'invalid-request',
+        message: 'Invalid Viz project transaction.',
         issues: parsed.error.issues.map((issue) => ({
           path: issue.path,
           message: issue.message,
@@ -822,8 +870,8 @@ export const decodeVizControlRequest = (
     return {
       ok: false,
       error: {
-        code: "invalid-request",
-        message: "Invalid Viz control request.",
+        code: 'invalid-request',
+        message: 'Invalid Viz control request.',
         issues: parsed.error.issues.map((issue) => ({
           path: issue.path,
           message: issue.message,

@@ -6,28 +6,27 @@ import {
   createEditorComponentPreviewPlan,
   isEditorComponentRuntimeBacked,
 } from '@/lib/editor-component-preview-plan';
-import { applyVizComponentDefaultAssets } from '@viz-engine/runtime';
-import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
+import { studioCatalogComponents } from '@/lib/viz-capabilities';
 import { createVizSessionRuntimePreviewFrame } from '@/lib/viz-session';
 import { createVizSessionRuntimePreviewPlan } from '@/lib/viz-session/runtime-preview-plan';
-import { createTestProject } from './viz-session-test-utils';
 import { createCoreComponentRegistry } from '@viz-engine/components-core';
-import { studioCatalogComponents } from '@/lib/viz-capabilities';
+import type { VizAudioFeatureTimelineArtifact } from '@viz-engine/contracts';
+import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
 import {
-  createSignalCathedralProject,
   SIGNAL_CATHEDRAL_AUDIO_ARTIFACT_ID,
   SIGNAL_CATHEDRAL_AUDIO_ASSET_ID,
   SIGNAL_CATHEDRAL_GRAPH_ID,
+  createSignalCathedralProject,
 } from '@viz-engine/production-signal-cathedral';
-import type { VizAudioFeatureTimelineArtifact } from '@viz-engine/contracts';
+import { applyVizComponentDefaultAssets } from '@viz-engine/runtime';
+import { createTestProject } from './viz-session-test-utils';
 
 const FullscreenShader = CompDefinitionMap.get('Fullscreen Shader')!;
 const StageScene = CompDefinitionMap.get('Stage Scene')!;
 
 const audioFrameData = {
-  frequencyData: Uint8Array.from(
-    { length: 128 },
-    (_, index) => Math.max(0, 255 - index * 2),
+  frequencyData: Uint8Array.from({ length: 128 }, (_, index) =>
+    Math.max(0, 255 - index * 2),
   ),
   timeDomainData: new Uint8Array(128),
   sampleRate: 44100,
@@ -80,10 +79,7 @@ describe('Editor runtime preview planning', () => {
     if (!curveSpectrum) {
       throw new Error('Expected Curve Spectrum component.');
     }
-    const project = createTestProject(
-      curveSpectrum,
-      'curve-spectrum-runtime',
-    );
+    const project = createTestProject(curveSpectrum, 'curve-spectrum-runtime');
     const renderPlan = createVizSessionRuntimePreviewPlan({
       project,
       projectRevision: 2,
@@ -99,9 +95,9 @@ describe('Editor runtime preview planning', () => {
       isPlaying: true,
     });
 
-    expect(
-      renderPlan.layers[0]?.resolvedInputs.spectrum?.value,
-    ).toBe(audioFrameData.frequencyData);
+    expect(renderPlan.layers[0]?.resolvedInputs.spectrum?.value).toBe(
+      audioFrameData.frequencyData,
+    );
     expect(renderPlan.layers[0]?.node?.kind).toBe('group');
     expect(renderPlan.issues).toEqual([]);
   });
@@ -179,10 +175,7 @@ describe('Editor runtime preview planning', () => {
   });
 
   it('evaluates editor node graphs into runtime component settings', () => {
-    const project = createTestProject(
-      FullscreenShader,
-      'node-driven-shader',
-    );
+    const project = createTestProject(FullscreenShader, 'node-driven-shader');
     project.graphs = [
       {
         id: 'node-driven-shader:speed',
@@ -348,9 +341,7 @@ describe('Editor runtime preview planning', () => {
     expect(renderPlan.issues).toEqual([]);
     expect(renderPlan.materializedAssets).toHaveLength(4);
     expect(
-      renderPlan.materializedAssets.every(
-        (asset) => asset.kind === 'model',
-      ),
+      renderPlan.materializedAssets.every((asset) => asset.kind === 'model'),
     ).toBe(true);
     expect(node.parameters).toMatchObject({
       djModelAssetId: 'viz-builtin-stage-female-dj',
@@ -380,9 +371,8 @@ describe('Editor runtime preview planning', () => {
       },
     };
     const registry = createCoreComponentRegistry();
-    const normalized = applyVizComponentDefaultAssets(
-      project,
-      (componentId) => registry.get(componentId),
+    const normalized = applyVizComponentDefaultAssets(project, (componentId) =>
+      registry.get(componentId),
     );
 
     expect(

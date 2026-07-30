@@ -1,5 +1,3 @@
-'use client';
-
 import editorControl from '@/lib/editor-control';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
@@ -497,10 +495,7 @@ const WaveformDisplay = ({
   const visualTimeRef = useRef(
     useEditorAudioSessionStore.getState().visualTime,
   );
-  const isPlaying = useEditorPreviewStore(
-    (state) => state.transport.isPlaying,
-  );
-  const isRhythmLabOpen = useEditorStore((s) => s.isRhythmLabOpen);
+  const isPlaying = useEditorPreviewStore((state) => state.transport.isPlaying);
   const rhythmSelection = useEditorStore((s) => s.rhythmSelection);
   const [viewMode, setViewMode] = useState<'static' | 'follow'>('static');
   const selectionOverlayRef = useRef<HTMLDivElement>(null);
@@ -702,7 +697,7 @@ const WaveformDisplay = ({
       }
 
       const width = endAtDrag - startAtDrag;
-      let center = localX / rect.width;
+      const center = localX / rect.width;
       let newStart = center - width / 2;
       let newEnd = center + width / 2;
       if (newStart < 0) {
@@ -754,7 +749,7 @@ const WaveformDisplay = ({
           onClick={() =>
             setViewMode((mode) => (mode === 'static' ? 'follow' : 'static'))
           }
-          className="absolute right-2 top-2 rounded-md border border-white/20 bg-black/50 px-2 py-1 text-[10px] uppercase tracking-wide text-white/70 hover:text-white">
+          className="absolute top-2 right-2 rounded-md border border-white/20 bg-black/50 px-2 py-1 text-[10px] tracking-wide text-white/70 uppercase hover:text-white">
           {viewMode === 'follow' ? 'Follow' : 'Static'}
         </button>
         {isLoading && (
@@ -794,8 +789,8 @@ const WaveformDisplay = ({
             style={{
               width: `${selectionDuration * 100}%`,
             }}>
-            <div className="absolute left-0 top-0 h-full w-1 bg-cyan-300" />
-            <div className="absolute right-0 top-0 h-full w-1 bg-cyan-300" />
+            <div className="absolute top-0 left-0 h-full w-1 bg-cyan-300" />
+            <div className="absolute top-0 right-0 h-full w-1 bg-cyan-300" />
           </div>
         </div>
       </div>

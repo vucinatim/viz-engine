@@ -11,10 +11,10 @@ import type {
   VizRenderSuccess,
   VizResolvedArtifact,
   VizResolvedAsset,
-} from "@viz-engine/contracts";
+} from '@viz-engine/contracts';
 
 export const VIZ_RENDER_JOB_SERVICE_VERSION =
-  "viz-render.job-service.v1" as const;
+  'viz-render.job-service.v1' as const;
 
 export interface VizRenderSource {
   project: VizProjectDocument;
@@ -32,11 +32,11 @@ export interface VizRenderSourceResolver {
 }
 
 export interface VizRenderExecutorResult {
-  outputs: VizRenderSuccess["outputs"];
+  outputs: VizRenderSuccess['outputs'];
   diagnostics: VizRenderDiagnostic[];
   performance: VizRenderPerformanceFeedback;
-  mediaProbe?: VizRenderSuccess["mediaProbe"];
-  visualFeedback?: VizRenderSuccess["visualFeedback"];
+  mediaProbe?: VizRenderSuccess['mediaProbe'];
+  visualFeedback?: VizRenderSuccess['visualFeedback'];
 }
 
 export interface VizRenderExecutionContext {
@@ -51,13 +51,11 @@ export interface VizRenderExecutor {
   version: string;
   rendererIdentity: string;
   supports(request: VizRenderRequest): boolean;
-  execute(
-    context: VizRenderExecutionContext,
-  ): Promise<VizRenderExecutorResult>;
+  execute(context: VizRenderExecutionContext): Promise<VizRenderExecutorResult>;
 }
 
 export interface VizRenderRequestIssue {
-  code: "invalid-request";
+  code: 'invalid-request';
   message: string;
 }
 
@@ -96,24 +94,24 @@ export const validateVizRenderRequest = (
   const issues: VizRenderRequestIssue[] = [];
   const invalidCommon =
     request.schemaVersion !== 1 ||
-    typeof request.source?.projectId !== "string" ||
+    typeof request.source?.projectId !== 'string' ||
     request.source.projectId.trim().length === 0 ||
-    typeof request.executorId !== "string" ||
+    typeof request.executorId !== 'string' ||
     request.executorId.trim().length === 0 ||
-    typeof request.outputLabel !== "string" ||
+    typeof request.outputLabel !== 'string' ||
     request.outputLabel.trim().length === 0 ||
     !isPositiveInteger(request.viewport.width) ||
     !isPositiveInteger(request.viewport.height) ||
-    !["preview", "candidate", "final", "integration"].includes(
+    !['preview', 'candidate', 'final', 'integration'].includes(
       request.intent,
     ) ||
-    !["draft", "standard", "high"].includes(request.quality);
+    !['draft', 'standard', 'high'].includes(request.quality);
 
   if (invalidCommon) {
     issues.push({
-      code: "invalid-request",
+      code: 'invalid-request',
       message:
-        "Render request requires schema version 1, project/executor/output identities, a supported intent/quality, and positive integer dimensions.",
+        'Render request requires schema version 1, project/executor/output identities, a supported intent/quality, and positive integer dimensions.',
     });
   }
 
@@ -122,8 +120,8 @@ export const validateVizRenderRequest = (
     !isNonNegativeInteger(request.source.expectedRevision)
   ) {
     issues.push({
-      code: "invalid-request",
-      message: "Expected project revision must be a non-negative integer.",
+      code: 'invalid-request',
+      message: 'Expected project revision must be a non-negative integer.',
     });
   }
   if (
@@ -131,50 +129,49 @@ export const validateVizRenderRequest = (
     request.source.expectedContentIdentity.trim().length === 0
   ) {
     issues.push({
-      code: "invalid-request",
-      message: "Expected project content identity must be non-empty.",
+      code: 'invalid-request',
+      message: 'Expected project content identity must be non-empty.',
     });
   }
 
-  if (request.kind === "still") {
+  if (request.kind === 'still') {
     if (
       !isNonNegativeInteger(request.frame) ||
-      !["svg", "png", "jpeg", "webp"].includes(request.format)
+      !['svg', 'png', 'jpeg', 'webp'].includes(request.format)
     ) {
       issues.push({
-        code: "invalid-request",
+        code: 'invalid-request',
         message:
-          "Still requests require a non-negative integer frame and supported image format.",
+          'Still requests require a non-negative integer frame and supported image format.',
       });
     }
-  } else if (request.kind === "contact-sheet") {
+  } else if (request.kind === 'contact-sheet') {
     if (
       request.frames.length === 0 ||
       request.frames.some((frame) => !isNonNegativeInteger(frame)) ||
       new Set(request.frames).size !== request.frames.length ||
-      (request.columns !== undefined &&
-        !isPositiveInteger(request.columns)) ||
+      (request.columns !== undefined && !isPositiveInteger(request.columns)) ||
       (request.gap !== undefined &&
         (!isNonNegativeInteger(request.gap) || request.gap > 256)) ||
-      !["svg", "png", "jpeg", "webp"].includes(request.format)
+      !['svg', 'png', 'jpeg', 'webp'].includes(request.format)
     ) {
       issues.push({
-        code: "invalid-request",
+        code: 'invalid-request',
         message:
-          "Contact-sheet requests require unique non-negative frames, optional positive columns, an integer gap from 0 to 256, and a supported image format.",
+          'Contact-sheet requests require unique non-negative frames, optional positive columns, an integer gap from 0 to 256, and a supported image format.',
       });
     }
   } else if (
     !isNonNegativeInteger(request.startFrame) ||
     !isPositiveInteger(request.frameCount) ||
     !isPositiveInteger(request.fps) ||
-    !["mp4", "webm"].includes(request.format) ||
-    typeof request.includeAudio !== "boolean"
+    !['mp4', 'webm'].includes(request.format) ||
+    typeof request.includeAudio !== 'boolean'
   ) {
     issues.push({
-      code: "invalid-request",
+      code: 'invalid-request',
       message:
-        "Clip/video requests require a non-negative start, positive frame count/FPS, audio policy, and supported video format.",
+        'Clip/video requests require a non-negative start, positive frame count/FPS, audio policy, and supported video format.',
     });
   }
 
@@ -187,20 +184,17 @@ const stableValue = (value: unknown): unknown => {
   }
   if (value instanceof ArrayBuffer) {
     return {
-      kind: "array-buffer",
+      kind: 'array-buffer',
       byteLength: value.byteLength,
     };
   }
-  if (
-    ArrayBuffer.isView(value) &&
-    !(value instanceof DataView)
-  ) {
+  if (ArrayBuffer.isView(value) && !(value instanceof DataView)) {
     return {
       kind: value.constructor.name,
       byteLength: value.byteLength,
     };
   }
-  if (value && typeof value === "object") {
+  if (value && typeof value === 'object') {
     return Object.fromEntries(
       Object.entries(value as Record<string, unknown>)
         .sort(([left], [right]) => left.localeCompare(right))
@@ -216,13 +210,13 @@ const fnv1a = (value: string): string => {
     hash ^= value.charCodeAt(index);
     hash = Math.imul(hash, 0x01000193);
   }
-  return (hash >>> 0).toString(16).padStart(8, "0");
+  return (hash >>> 0).toString(16).padStart(8, '0');
 };
 
 export const createVizRenderSourceContentIdentity = (
   source: Pick<
     VizRenderSource,
-    "project" | "resolvedAssets" | "resolvedArtifacts"
+    'project' | 'resolvedAssets' | 'resolvedArtifacts'
   >,
 ): string => {
   const descriptor = {
@@ -249,10 +243,8 @@ export const createVizRenderSourceContentIdentity = (
   )}`;
 };
 
-const isTerminal = (status: VizRenderJobRecord["status"]): boolean =>
-  status === "succeeded" ||
-  status === "failed" ||
-  status === "cancelled";
+const isTerminal = (status: VizRenderJobRecord['status']): boolean =>
+  status === 'succeeded' || status === 'failed' || status === 'cancelled';
 
 export const createVizRenderJobService = ({
   sourceResolver,
@@ -263,7 +255,7 @@ export const createVizRenderJobService = ({
   const executorMap = new Map<string, VizRenderExecutor>();
   for (const executor of executors) {
     if (executor.id.trim().length === 0) {
-      throw new Error("Render executor id must be non-empty.");
+      throw new Error('Render executor id must be non-empty.');
     }
     if (executorMap.has(executor.id)) {
       throw new Error(`Duplicate render executor id "${executor.id}".`);
@@ -276,10 +268,7 @@ export const createVizRenderJobService = ({
   const listeners = new Set<
     (event: VizJobEvent<VizRenderRequest, VizRenderSuccess>) => void
   >();
-  const waiters = new Map<
-    VizJobId,
-    Set<(job: VizRenderJobRecord) => void>
-  >();
+  const waiters = new Map<VizJobId, Set<(job: VizRenderJobRecord) => void>>();
   let sequence = 0;
   let fallbackJobCounter = 0;
 
@@ -288,7 +277,7 @@ export const createVizRenderJobService = ({
       return createJobId();
     }
     fallbackJobCounter += 1;
-    return typeof globalThis.crypto?.randomUUID === "function"
+    return typeof globalThis.crypto?.randomUUID === 'function'
       ? `render-${globalThis.crypto.randomUUID()}`
       : `render-${fallbackJobCounter}`;
   };
@@ -325,13 +314,13 @@ export const createVizRenderJobService = ({
   };
   const finishCancelled = (
     jobId: VizJobId,
-    message = "Render was cancelled.",
+    message = 'Render was cancelled.',
   ): void => {
     update(jobId, {
-      status: "cancelled",
+      status: 'cancelled',
       completedAt: timestamp(),
       progress: {
-        stage: "cancelled",
+        stage: 'cancelled',
         completed: 0,
         total: 0,
         progress: 0,
@@ -340,17 +329,13 @@ export const createVizRenderJobService = ({
     });
     controllers.delete(jobId);
   };
-  const fail = (
-    jobId: VizJobId,
-    code: string,
-    message: string,
-  ): void => {
+  const fail = (jobId: VizJobId, code: string, message: string): void => {
     update(jobId, {
-      status: "failed",
+      status: 'failed',
       completedAt: timestamp(),
       failure: { code, message },
       progress: {
-        stage: "failed",
+        stage: 'failed',
         completed: 0,
         total: 0,
         progress: 0,
@@ -372,10 +357,10 @@ export const createVizRenderJobService = ({
     }
 
     update(jobId, {
-      status: "validating",
+      status: 'validating',
       startedAt: timestamp(),
       progress: {
-        stage: "validating",
+        stage: 'validating',
         completed: 0,
         total: 1,
         progress: 0,
@@ -387,7 +372,7 @@ export const createVizRenderJobService = ({
       fail(
         jobId,
         requestIssues[0]!.code,
-        requestIssues.map((issue) => issue.message).join(" "),
+        requestIssues.map((issue) => issue.message).join(' '),
       );
       return;
     }
@@ -396,7 +381,7 @@ export const createVizRenderJobService = ({
     if (!executor || !executor.supports(initial.request)) {
       fail(
         jobId,
-        "unsupported-render-request",
+        'unsupported-render-request',
         `Executor "${initial.request.executorId}" does not support ${initial.request.kind}/${initial.request.format}.`,
       );
       return;
@@ -404,10 +389,7 @@ export const createVizRenderJobService = ({
 
     let source: VizRenderSource;
     try {
-      source = await sourceResolver.resolve(
-        initial.request,
-        controller.signal,
-      );
+      source = await sourceResolver.resolve(initial.request, controller.signal);
     } catch (error) {
       if (controller.signal.aborted) {
         finishCancelled(jobId);
@@ -415,10 +397,10 @@ export const createVizRenderJobService = ({
       }
       fail(
         jobId,
-        "source-resolution-failed",
+        'source-resolution-failed',
         error instanceof Error
           ? error.message
-          : "Render source resolution failed.",
+          : 'Render source resolution failed.',
       );
       return;
     }
@@ -429,7 +411,7 @@ export const createVizRenderJobService = ({
     if (source.project.projectId !== initial.request.source.projectId) {
       fail(
         jobId,
-        "project-identity-mismatch",
+        'project-identity-mismatch',
         `Resolved project "${source.project.projectId}" does not match requested project "${initial.request.source.projectId}".`,
       );
       return;
@@ -440,29 +422,28 @@ export const createVizRenderJobService = ({
     ) {
       fail(
         jobId,
-        "project-revision-mismatch",
-        `Resolved revision ${source.revision ?? "none"} does not match expected revision ${initial.request.source.expectedRevision}.`,
+        'project-revision-mismatch',
+        `Resolved revision ${source.revision ?? 'none'} does not match expected revision ${initial.request.source.expectedRevision}.`,
       );
       return;
     }
     if (
       initial.request.source.expectedContentIdentity !== undefined &&
-      source.contentIdentity !==
-        initial.request.source.expectedContentIdentity
+      source.contentIdentity !== initial.request.source.expectedContentIdentity
     ) {
       fail(
         jobId,
-        "project-content-identity-mismatch",
+        'project-content-identity-mismatch',
         `Resolved project content identity "${source.contentIdentity}" does not match expected identity "${initial.request.source.expectedContentIdentity}".`,
       );
       return;
     }
 
     update(jobId, {
-      status: "running",
+      status: 'running',
       inputIdentity: source.contentIdentity,
       progress: {
-        stage: "rendering",
+        stage: 'rendering',
         completed: 0,
         total: 0,
         progress: 0,
@@ -487,8 +468,8 @@ export const createVizRenderJobService = ({
       if (execution.outputs.length === 0) {
         fail(
           jobId,
-          "render-produced-no-output",
-          "Render executor completed without materializing an output.",
+          'render-produced-no-output',
+          'Render executor completed without materializing an output.',
         );
         return;
       }
@@ -496,7 +477,7 @@ export const createVizRenderJobService = ({
       const result: VizRenderSuccess = {
         schemaVersion: 1,
         ok: true,
-        status: "succeeded",
+        status: 'succeeded',
         executionIdentity: {
           executorId: executor.id,
           executorVersion: executor.version,
@@ -517,11 +498,11 @@ export const createVizRenderJobService = ({
           : { visualFeedback: execution.visualFeedback }),
       };
       update(jobId, {
-        status: "succeeded",
+        status: 'succeeded',
         completedAt: timestamp(),
         result,
         progress: {
-          stage: "succeeded",
+          stage: 'succeeded',
           completed: execution.outputs.length,
           total: execution.outputs.length,
           progress: 1,
@@ -535,17 +516,14 @@ export const createVizRenderJobService = ({
       }
       fail(
         jobId,
-        "render-execution-failed",
-        error instanceof Error ? error.message : "Render execution failed.",
+        'render-execution-failed',
+        error instanceof Error ? error.message : 'Render execution failed.',
       );
     }
   };
 
   return {
-    start: (
-      request,
-      requestedBy = { kind: "agent", id: "local-render" },
-    ) => {
+    start: (request, requestedBy = { kind: 'agent', id: 'local-render' }) => {
       const id = createId();
       if (jobs.has(id)) {
         throw new Error(`Render job id "${id}" already exists.`);
@@ -555,13 +533,13 @@ export const createVizRenderJobService = ({
         schemaVersion: 1,
         id,
         kind: `render-${request.kind}`,
-        status: "queued",
+        status: 'queued',
         request: clone(request),
         requestedBy: clone(requestedBy),
         requestedAt,
         updatedAt: requestedAt,
         progress: {
-          stage: "queued",
+          stage: 'queued',
           completed: 0,
           total: 0,
           progress: 0,
@@ -593,8 +571,8 @@ export const createVizRenderJobService = ({
             total: 0,
             progress: 0,
           }),
-          stage: "cancelling",
-          message: "Cancellation requested.",
+          stage: 'cancelling',
+          message: 'Cancellation requested.',
         },
       });
       controllers.get(jobId)?.abort();
@@ -603,9 +581,7 @@ export const createVizRenderJobService = ({
     wait: (jobId) => {
       const job = jobs.get(jobId);
       if (!job) {
-        return Promise.reject(
-          new Error(`Unknown render job "${jobId}".`),
-        );
+        return Promise.reject(new Error(`Unknown render job "${jobId}".`));
       }
       if (isTerminal(job.status)) {
         return Promise.resolve(clone(job));

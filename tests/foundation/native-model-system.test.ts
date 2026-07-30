@@ -4,10 +4,7 @@ import {
   sampleVizModelClipTime,
   VizThreeModelResourceError,
   type VizThreeModelDecoder,
-} from "@viz-engine/renderer-three";
-import {
-  createVizStageCharacterController,
-} from "../../packages/viz-renderer-three/src/programs/stage-characters";
+} from '@viz-engine/renderer-three';
 import {
   AnimationClip,
   Bone,
@@ -22,42 +19,39 @@ import {
   Skeleton,
   SkinnedMesh,
   Uint16BufferAttribute,
-} from "three";
-import { describe, expect, it, vi } from "vitest";
+} from 'three';
+import { describe, expect, it, vi } from 'vitest';
+import { createVizStageCharacterController } from '../../packages/viz-renderer-three/src/programs/stage-characters';
 
-const createModelAsset = (id = "model-stage-dancer") => ({
+const createModelAsset = (id = 'model-stage-dancer') => ({
   id,
-  kind: "model" as const,
-  source: "bundle" as const,
-  mimeType: "model/gltf-binary",
+  kind: 'model' as const,
+  source: 'bundle' as const,
+  mimeType: 'model/gltf-binary',
   modelSourceUri: `/models/${id}.glb`,
   metadata: {
-    contentIdentity: "sha256:shared-model-content",
-    modelFormat: "glb",
+    contentIdentity: 'sha256:shared-model-content',
+    modelFormat: 'glb',
   },
 });
 
 const createDecodedModel = () => {
   const scene = new Group();
-  scene.name = "Dancer";
+  scene.name = 'Dancer';
   scene.add(
     new Mesh(
       new BoxGeometry(1, 2, 1),
-      new MeshBasicMaterial({ color: "#ff00ff" }),
+      new MeshBasicMaterial({ color: '#ff00ff' }),
     ),
   );
   return {
     scene,
     animations: [
-      new AnimationClip("Dance", 2, [
-        new NumberKeyframeTrack(
-          ".position[x]",
-          [0, 2],
-          [0, 10],
-        ),
+      new AnimationClip('Dance', 2, [
+        new NumberKeyframeTrack('.position[x]', [0, 2], [0, 10]),
       ]),
     ],
-    sourceFormat: "glb" as const,
+    sourceFormat: 'glb' as const,
   };
 };
 
@@ -65,37 +59,28 @@ const createSkinnedDecodedModel = () => {
   const scene = new Group();
   const geometry = new BufferGeometry();
   geometry.setAttribute(
-    "position",
-    new Float32BufferAttribute(
-      [-0.5, 0, 0, 0.5, 0, 0, 0, 2, 0],
-      3,
-    ),
+    'position',
+    new Float32BufferAttribute([-0.5, 0, 0, 0.5, 0, 0, 0, 2, 0], 3),
   );
   geometry.setAttribute(
-    "uv",
+    'uv',
     new Float32BufferAttribute([0, 0, 1, 0, 0.5, 1], 2),
   );
   geometry.setAttribute(
-    "skinIndex",
-    new Uint16BufferAttribute(
-      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      4,
-    ),
+    'skinIndex',
+    new Uint16BufferAttribute([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 4),
   );
   geometry.setAttribute(
-    "skinWeight",
-    new Float32BufferAttribute(
-      [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
-      4,
-    ),
+    'skinWeight',
+    new Float32BufferAttribute([1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], 4),
   );
   const bone = new Bone();
-  bone.name = "Root";
+  bone.name = 'Root';
   const mesh = new SkinnedMesh(
     geometry,
-    new MeshBasicMaterial({ color: "#ffffff" }),
+    new MeshBasicMaterial({ color: '#ffffff' }),
   );
-  mesh.name = "Character";
+  mesh.name = 'Character';
   scene.add(bone, mesh);
   mesh.bind(new Skeleton([bone]));
   scene.updateMatrixWorld(true);
@@ -103,33 +88,27 @@ const createSkinnedDecodedModel = () => {
   return {
     scene,
     animations: [
-      new AnimationClip("Dance", 1, [
-        new NumberKeyframeTrack(
-          "Root.rotation[z]",
-          [0, 0.5, 1],
-          [0, 0.3, 0],
-        ),
+      new AnimationClip('Dance', 1, [
+        new NumberKeyframeTrack('Root.rotation[z]', [0, 0.5, 1], [0, 0.3, 0]),
       ]),
     ],
-    sourceFormat: "glb" as const,
+    sourceFormat: 'glb' as const,
   };
 };
 
 const readCrowdMatrices = (root: Group): number[][] =>
   (root.userData.modelCrowd as Group[]).map((group) => {
     const mesh = group.children[0] as InstancedMesh;
-    return Array.from(
-      mesh.instanceMatrix.array.slice(0, mesh.count * 16),
-    );
+    return Array.from(mesh.instanceMatrix.array.slice(0, mesh.count * 16));
   });
 
-describe("native model resources", () => {
-  it("deduplicates by content identity and exposes a renderer-neutral manifest", async () => {
+describe('native model resources', () => {
+  it('deduplicates by content identity and exposes a renderer-neutral manifest', async () => {
     const decode = vi.fn(async () => createDecodedModel());
     const decoder: VizThreeModelDecoder = { decode };
     const manager = createVizThreeModelResourceManager({ decoder });
-    const first = manager.acquire(createModelAsset("model-a"));
-    const second = manager.acquire(createModelAsset("model-b"));
+    const first = manager.acquire(createModelAsset('model-a'));
+    const second = manager.acquire(createModelAsset('model-b'));
 
     const [firstResource, secondResource] = await Promise.all([
       first.ready,
@@ -140,9 +119,9 @@ describe("native model resources", () => {
     expect(secondResource).toBe(firstResource);
     expect(firstResource.manifest).toMatchObject({
       schemaVersion: 1,
-      assetId: "model-a",
-      contentIdentity: "sha256:shared-model-content",
-      sourceFormat: "glb",
+      assetId: 'model-a',
+      contentIdentity: 'sha256:shared-model-content',
+      sourceFormat: 'glb',
       capabilities: {
         staticMesh: true,
         transformAnimation: true,
@@ -150,17 +129,15 @@ describe("native model resources", () => {
     });
     expect(firstResource.manifest.animationClips).toEqual([
       expect.objectContaining({
-        name: "Dance",
+        name: 'Dance',
         durationSeconds: 2,
         trackCount: 1,
       }),
     ]);
-    expect(firstResource.instantiate()).not.toBe(
-      firstResource.instantiate(),
-    );
+    expect(firstResource.instantiate()).not.toBe(firstResource.instantiate());
     expect(manager.getDiagnostics()).toEqual([
       expect.objectContaining({
-        status: "ready",
+        status: 'ready',
         references: 2,
       }),
     ]);
@@ -170,18 +147,18 @@ describe("native model resources", () => {
     manager.dispose();
   });
 
-  it("cancels an unreferenced in-flight load and reports a structured error", async () => {
+  it('cancels an unreferenced in-flight load and reports a structured error', async () => {
     const decoder: VizThreeModelDecoder = {
       decode: (_asset, signal) =>
         new Promise((_resolve, reject) => {
           signal.addEventListener(
-            "abort",
+            'abort',
             () =>
               reject(
                 new VizThreeModelResourceError({
-                  code: "MODEL_RESOURCE_LOAD_CANCELLED",
-                  assetId: "model-stage-dancer",
-                  message: "cancelled",
+                  code: 'MODEL_RESOURCE_LOAD_CANCELLED',
+                  assetId: 'model-stage-dancer',
+                  message: 'cancelled',
                 }),
               ),
             { once: true },
@@ -195,22 +172,22 @@ describe("native model resources", () => {
     lease.release();
 
     await expect(loading).resolves.toMatchObject({
-      code: "MODEL_RESOURCE_LOAD_CANCELLED",
-      assetId: "model-stage-dancer",
+      code: 'MODEL_RESOURCE_LOAD_CANCELLED',
+      assetId: 'model-stage-dancer',
     });
     expect(manager.getDiagnostics()).toEqual([]);
     manager.dispose();
   });
 
-  it("keeps non-critical dependency failures as inspectable warnings", async () => {
+  it('keeps non-critical dependency failures as inspectable warnings', async () => {
     const decoder: VizThreeModelDecoder = {
       decode: async () => ({
         ...createDecodedModel(),
         warnings: [
           {
-            code: "MODEL_DEPENDENCY_LOAD_FAILED",
-            uri: "/models/missing-normal.png",
-            message: "Optional normal map is missing.",
+            code: 'MODEL_DEPENDENCY_LOAD_FAILED',
+            uri: '/models/missing-normal.png',
+            message: 'Optional normal map is missing.',
           },
         ],
       }),
@@ -221,22 +198,20 @@ describe("native model resources", () => {
 
     expect(resource.warnings).toEqual([
       {
-        code: "MODEL_DEPENDENCY_LOAD_FAILED",
-        uri: "/models/missing-normal.png",
-        message: "Optional normal map is missing.",
+        code: 'MODEL_DEPENDENCY_LOAD_FAILED',
+        uri: '/models/missing-normal.png',
+        message: 'Optional normal map is missing.',
       },
     ]);
-    expect(manager.getDiagnostics()[0]?.warnings).toEqual(
-      resource.warnings,
-    );
+    expect(manager.getDiagnostics()[0]?.warnings).toEqual(resource.warnings);
 
     lease.release();
     manager.dispose();
   });
 });
 
-describe("deterministic model animation", () => {
-  it("samples loop, once, and ping-pong modes from absolute time", () => {
+describe('deterministic model animation', () => {
+  it('samples loop, once, and ping-pong modes from absolute time', () => {
     expect(
       sampleVizModelClipTime({
         timelineTimeSeconds: 2.5,
@@ -247,14 +222,14 @@ describe("deterministic model animation", () => {
       sampleVizModelClipTime({
         timelineTimeSeconds: 3,
         clipDurationSeconds: 2,
-        loopMode: "once",
+        loopMode: 'once',
       }),
     ).toBe(2);
     expect(
       sampleVizModelClipTime({
         timelineTimeSeconds: 3,
         clipDurationSeconds: 2,
-        loopMode: "ping-pong",
+        loopMode: 'ping-pong',
       }),
     ).toBeCloseTo(1);
     expect(
@@ -267,14 +242,10 @@ describe("deterministic model animation", () => {
     ).toBeCloseTo(0.25);
   });
 
-  it("is seek-order independent rather than delta-time accumulated", () => {
+  it('is seek-order independent rather than delta-time accumulated', () => {
     const root = new Group();
-    const clip = new AnimationClip("Move", 2, [
-      new NumberKeyframeTrack(
-        ".position[x]",
-        [0, 2],
-        [0, 10],
-      ),
+    const clip = new AnimationClip('Move', 2, [
+      new NumberKeyframeTrack('.position[x]', [0, 2], [0, 10]),
     ]);
     const player = createVizThreeDeterministicClipPlayer({
       root,
@@ -292,8 +263,8 @@ describe("deterministic model animation", () => {
   });
 });
 
-describe("Stage character realization", () => {
-  it("realizes deterministic model crowds and safe visibility lifecycle", async () => {
+describe('Stage character realization', () => {
+  it('realizes deterministic model crowds and safe visibility lifecycle', async () => {
     const createController = () => {
       const root = new Group();
       const fallbackDj = new Group();
@@ -317,13 +288,13 @@ describe("Stage character realization", () => {
         invalidate,
       });
       const materializedAssets = new Map(
-        ["dj", "female", "male", "cheer"].map((id) => [
+        ['dj', 'female', 'male', 'cheer'].map((id) => [
           id,
           {
             ...createModelAsset(id),
             metadata: {
               contentIdentity: `sha256:${id}`,
-              modelFormat: "glb",
+              modelFormat: 'glb',
             },
           },
         ]),
@@ -347,8 +318,8 @@ describe("Stage character realization", () => {
         showDj: true,
         crowdCount: 12,
         animationSpeed: 1.5,
-        djAssetId: "dj",
-        crowdAssetIds: ["female", "male", "cheer"],
+        djAssetId: 'dj',
+        crowdAssetIds: ['female', 'male', 'cheer'],
         materializedAssets: instance.materializedAssets,
       });
 
@@ -359,14 +330,13 @@ describe("Stage character realization", () => {
       second.controller.whenReady(),
     ]);
 
-    expect(first.root.userData.characterMode).toBe("model");
+    expect(first.root.userData.characterMode).toBe('model');
     expect(first.fallbackDj.visible).toBe(false);
     expect(first.fallbackCrowd.visible).toBe(false);
     expect(first.invalidate).toHaveBeenCalled();
     expect(
       (first.root.userData.modelCrowd as Group[]).reduce(
-        (count, group) =>
-          count + (group.children[0] as InstancedMesh).count,
+        (count, group) => count + (group.children[0] as InstancedMesh).count,
         0,
       ),
     ).toBe(12);
@@ -380,13 +350,11 @@ describe("Stage character realization", () => {
       showDj: false,
       crowdCount: 0,
       animationSpeed: 1,
-      djAssetId: "dj",
-      crowdAssetIds: ["female", "male", "cheer"],
+      djAssetId: 'dj',
+      crowdAssetIds: ['female', 'male', 'cheer'],
       materializedAssets: first.materializedAssets,
     });
-    expect((first.root.userData.djModel as Group).visible).toBe(
-      false,
-    );
+    expect((first.root.userData.djModel as Group).visible).toBe(false);
     expect(
       (first.root.userData.modelCrowd as Group[]).every(
         (group) => !group.visible,
@@ -397,6 +365,6 @@ describe("Stage character realization", () => {
     second.controller.dispose();
     first.manager.dispose();
     second.manager.dispose();
-    expect(first.root.userData.characterMode).toBe("disposed");
+    expect(first.root.userData.characterMode).toBe('disposed');
   });
 });

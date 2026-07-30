@@ -1,5 +1,3 @@
-'use client';
-
 import { Button } from '@/components/ui/button';
 import useExportStore, { ExportLog } from '@/lib/stores/export-store';
 import { Copy, Terminal } from 'lucide-react';
@@ -90,7 +88,7 @@ const ExportConsole = () => {
     try {
       await navigator.clipboard.writeText(logsText);
       toast.success('Logs copied to clipboard');
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy logs');
     }
   };
@@ -135,16 +133,16 @@ const ExportConsole = () => {
               <div
                 key={log.id}
                 className={`flex items-start gap-2 py-1 ${getLogColor(log.type)}`}>
-                <span className="select-none opacity-70">
+                <span className="opacity-70 select-none">
                   {getLogIcon(log.type)}
                 </span>
-                <span className="min-w-[90px] select-none opacity-50">
+                <span className="min-w-[90px] opacity-50 select-none">
                   [{formatTimestamp(log.timestamp)}]
                 </span>
                 <div className="flex-1">
                   <span>{log.message}</span>
                   {log.duration !== undefined && (
-                    <span className="text-animation-purple ml-2">
+                    <span className="ml-2 text-animation-purple">
                       ({formatDuration(log.duration)})
                     </span>
                   )}

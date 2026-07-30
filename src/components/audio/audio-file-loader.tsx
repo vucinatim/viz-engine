@@ -29,16 +29,13 @@ const AudioFileLoader = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      if (acceptedFiles.length > 0) {
-        const objectUrl = URL.createObjectURL(acceptedFiles[0]);
-        editorControl.audio.attachLocalFile(acceptedFiles[0], objectUrl);
-        setSelectedFile(acceptedFiles[0].name);
-      }
-    },
-    [],
-  );
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+      const objectUrl = URL.createObjectURL(acceptedFiles[0]);
+      editorControl.audio.attachLocalFile(acceptedFiles[0], objectUrl);
+      setSelectedFile(acceptedFiles[0].name);
+    }
+  }, []);
   const { getRootProps, isDragActive, isDragReject, fileRejections } =
     useDropzone({
       onDrop,
@@ -54,8 +51,7 @@ const AudioFileLoader = () => {
     const files = getBundledAudioFiles();
     setAudioFiles(files);
     editorControl.audio.setTrackList(files);
-    const activeSource =
-      useEditorAudioSessionStore.getState().session.source;
+    const activeSource = useEditorAudioSessionStore.getState().session.source;
     if (activeSource) {
       setSelectedFile(activeSource.label ?? activeSource.id);
       return;
@@ -101,7 +97,7 @@ const AudioFileLoader = () => {
           'pointer-events-none absolute inset-0 z-50 flex flex-col items-center justify-center gap-y-2 bg-white/20 opacity-0 backdrop-blur-sm transition-opacity',
           isDragActive && 'opacity-1',
           isDragReject && !isAudioReject && 'opacity-0',
-          isAudioReject && 'opacity-1 bg-rose-500/20',
+          isAudioReject && 'bg-rose-500/20 opacity-1',
         )}>
         <div>{isAudioReject ? <AlertCircle /> : <Music />}</div>
         <p>{isAudioReject ? 'File type not supported' : 'Load audio file'}</p>

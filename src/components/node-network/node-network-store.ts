@@ -2,6 +2,8 @@ import { Edge } from '@xyflow/react';
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 
+import useEditorGraphStore from '@/lib/stores/editor-graph-store';
+import type { VizGraphFragment } from '@/lib/viz-session/graph-fragments';
 import {
   NodeHandleType,
   canConnectTypes,
@@ -10,7 +12,6 @@ import {
 } from '../config/node-types';
 import { VType } from '../config/types';
 import { GraphNode, GraphNodeData, NodeNetwork } from './graph-types';
-import useEditorGraphStore from '@/lib/stores/editor-graph-store';
 
 interface NodeNetworkStore {
   openNetwork: string | null;
@@ -76,10 +77,6 @@ export const getNodeNetworks = () => useEditorGraphStore.getState().networks;
 export const getNodeNetwork = (parameterId: string) =>
   useEditorGraphStore.getState().networks[parameterId];
 
-export const setNodeNetwork = (parameterId: string, network: NodeNetwork) => {
-  useEditorGraphStore.getState().setNetwork(parameterId, network);
-};
-
 export const setNodeNetworkEnabled = (
   parameterId: string,
   isEnabled: boolean,
@@ -105,10 +102,14 @@ export const addNodeToNetwork = (parameterId: string, node: GraphNode) => {
   useEditorGraphStore.getState().addNodeToNetwork(parameterId, node);
 };
 
-export const setNodesInNetwork = (
+export const pasteGraphFragment = (
   parameterId: string,
-  nodes: GraphNode[],
-) => {
+  fragment: VizGraphFragment,
+  position: { x: number; y: number },
+) =>
+  useEditorGraphStore.getState().pasteFragment(parameterId, fragment, position);
+
+export const setNodesInNetwork = (parameterId: string, nodes: GraphNode[]) => {
   useEditorGraphStore.getState().setNodesInNetwork(parameterId, nodes);
 };
 
@@ -193,7 +194,9 @@ const getNodeOutputType = (
   node: GraphNode,
   outputId: string,
 ): NodeHandleType | null => {
-  const output = node.data.definition.outputs.find((candidate) => candidate.id === outputId);
+  const output = node.data.definition.outputs.find(
+    (candidate) => candidate.id === outputId,
+  );
   return output ? (output.type as NodeHandleType) : null;
 };
 
@@ -201,7 +204,9 @@ const getNodeInputType = (
   node: GraphNode,
   inputId: string,
 ): NodeHandleType | null => {
-  const input = node.data.definition.inputs.find((candidate) => candidate.id === inputId);
+  const input = node.data.definition.inputs.find(
+    (candidate) => candidate.id === inputId,
+  );
   return input ? (input.type as NodeHandleType) : null;
 };
 

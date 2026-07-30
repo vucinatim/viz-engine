@@ -2,17 +2,17 @@ import type {
   VizArtifactId,
   VizExecutionMode,
   VizFrameContext,
-  VizGraphEvaluationResult,
   VizGraphEvaluationIssue,
+  VizGraphEvaluationResult,
   VizGraphId,
   VizMaterializedAsset,
   VizProjectDocument,
   VizResolvedArtifact,
   VizResolvedAsset,
-} from "@viz-engine/contracts";
-import { createFrameContext } from "./frame-context.js";
-import { materializeVizResolvedAssets } from "./materialized-assets.js";
-import { assertValidProjectDocument } from "./validation.js";
+} from '@viz-engine/contracts';
+import { createFrameContext } from './frame-context.js';
+import { materializeVizResolvedAssets } from './materialized-assets.js';
+import { assertValidProjectDocument } from './validation.js';
 
 export interface CreateVizRuntimeSessionOptions {
   project: VizProjectDocument;
@@ -27,7 +27,7 @@ export interface VizGraphRuntimeCheckpoint {
   graphId: VizGraphId;
   frame: number;
   values: Record<string, unknown>;
-  nodes: VizGraphEvaluationResult["nodes"];
+  nodes: VizGraphEvaluationResult['nodes'];
   issues: VizGraphEvaluationIssue[];
   nodeStates: Record<string, unknown>;
 }
@@ -37,7 +37,7 @@ export interface VizRuntimeSession {
   readonly mode: VizExecutionMode;
   readonly seed: string;
   getFrameContext(frame: number): VizFrameContext;
-  getOrderedLayers(): VizProjectDocument["layers"];
+  getOrderedLayers(): VizProjectDocument['layers'];
   getResolvedAssetMap(): ReadonlyMap<string, VizResolvedAsset>;
   getMaterializedAssetMap(): ReadonlyMap<string, VizMaterializedAsset>;
   getResolvedArtifactMap(): ReadonlyMap<VizArtifactId, VizResolvedArtifact>;
@@ -67,11 +67,15 @@ const cloneGraphRuntimeCheckpoint = (
   };
 };
 
-export const orderProjectLayers = (project: VizProjectDocument): VizProjectDocument["layers"] => {
+export const orderProjectLayers = (
+  project: VizProjectDocument,
+): VizProjectDocument['layers'] => {
   const layersById = new Map(project.layers.map((layer) => [layer.id, layer]));
   const orderedLayers = project.layerOrder
     .map((layerId) => layersById.get(layerId))
-    .filter((layer): layer is VizProjectDocument["layers"][number] => Boolean(layer));
+    .filter((layer): layer is VizProjectDocument['layers'][number] =>
+      Boolean(layer),
+    );
 
   for (const layer of project.layers) {
     if (project.layerOrder.includes(layer.id)) {
@@ -89,17 +93,27 @@ export const createVizRuntimeSession = ({
   mode,
   resolvedAssets = [],
   resolvedArtifacts = [],
-  seed = "viz-default-seed",
+  seed = 'viz-default-seed',
   graphCheckpointIntervalFrames = 30,
 }: CreateVizRuntimeSessionOptions): VizRuntimeSession => {
   assertValidProjectDocument(project);
 
   const assetMap = new Map(resolvedAssets.map((asset) => [asset.id, asset]));
   const materializedAssets = materializeVizResolvedAssets(resolvedAssets);
-  const materializedAssetMap = new Map(materializedAssets.map((asset) => [asset.id, asset]));
-  const artifactMap = new Map(resolvedArtifacts.map((artifact) => [artifact.id, artifact]));
-  const graphCheckpointStore = new Map<VizGraphId, Map<number, VizGraphRuntimeCheckpoint>>();
-  const checkpointInterval = Math.max(1, Math.trunc(graphCheckpointIntervalFrames));
+  const materializedAssetMap = new Map(
+    materializedAssets.map((asset) => [asset.id, asset]),
+  );
+  const artifactMap = new Map(
+    resolvedArtifacts.map((artifact) => [artifact.id, artifact]),
+  );
+  const graphCheckpointStore = new Map<
+    VizGraphId,
+    Map<number, VizGraphRuntimeCheckpoint>
+  >();
+  const checkpointInterval = Math.max(
+    1,
+    Math.trunc(graphCheckpointIntervalFrames),
+  );
 
   return {
     project,
@@ -136,7 +150,9 @@ export const createVizRuntimeSession = ({
         bestCheckpoint = checkpoint;
       }
 
-      return bestCheckpoint ? cloneGraphRuntimeCheckpoint(bestCheckpoint) : undefined;
+      return bestCheckpoint
+        ? cloneGraphRuntimeCheckpoint(bestCheckpoint)
+        : undefined;
     },
     listGraphCheckpoints: (graphId) => {
       const checkpoints = graphCheckpointStore.get(graphId);
@@ -150,7 +166,9 @@ export const createVizRuntimeSession = ({
         .map((checkpoint) => cloneGraphRuntimeCheckpoint(checkpoint));
     },
     setGraphCheckpoint: (checkpoint) => {
-      const existing = graphCheckpointStore.get(checkpoint.graphId) ?? new Map<number, VizGraphRuntimeCheckpoint>();
+      const existing =
+        graphCheckpointStore.get(checkpoint.graphId) ??
+        new Map<number, VizGraphRuntimeCheckpoint>();
       existing.set(checkpoint.frame, cloneGraphRuntimeCheckpoint(checkpoint));
       graphCheckpointStore.set(checkpoint.graphId, existing);
     },

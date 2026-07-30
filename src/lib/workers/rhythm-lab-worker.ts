@@ -1,4 +1,9 @@
-import { beatTrack, onsetStrength, tempogram, tempo } from '@viz-engine/rhythm-core';
+import {
+  beatTrack,
+  onsetStrength,
+  tempo,
+  tempogram,
+} from '@viz-engine/rhythm-core';
 
 type OnsetAggregate = 'mean' | 'median' | 'max';
 

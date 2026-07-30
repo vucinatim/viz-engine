@@ -1,4 +1,4 @@
-import type { VizBlendMode } from "./project.js";
+import type { VizBlendMode } from './project.js';
 
 export interface VizRenderStyle {
   fill?: string;
@@ -16,10 +16,10 @@ export interface VizRenderTransform {
   rotationDegrees?: number;
 }
 
-export type VizRenderImageFitMode = "fill" | "contain" | "cover";
+export type VizRenderImageFitMode = 'fill' | 'contain' | 'cover';
 
 export interface VizRenderGroupNode {
-  kind: "group";
+  kind: 'group';
   id?: string;
   transform?: VizRenderTransform;
   style?: VizRenderStyle;
@@ -27,7 +27,7 @@ export interface VizRenderGroupNode {
 }
 
 export interface VizRenderRectNode {
-  kind: "rect";
+  kind: 'rect';
   id?: string;
   x: number;
   y: number;
@@ -38,7 +38,7 @@ export interface VizRenderRectNode {
 }
 
 export interface VizRenderCircleNode {
-  kind: "circle";
+  kind: 'circle';
   id?: string;
   cx: number;
   cy: number;
@@ -58,17 +58,17 @@ export interface VizRenderPolylineGlow {
 }
 
 export interface VizRenderPolylineNode {
-  kind: "polyline";
+  kind: 'polyline';
   id?: string;
   points: VizRenderPoint[];
-  lineCap?: "butt" | "round" | "square";
-  lineJoin?: "miter" | "round" | "bevel";
+  lineCap?: 'butt' | 'round' | 'square';
+  lineJoin?: 'miter' | 'round' | 'bevel';
   style?: VizRenderStyle;
   glow?: VizRenderPolylineGlow;
 }
 
 export interface VizRenderImageNode {
-  kind: "image";
+  kind: 'image';
   id?: string;
   assetId: string;
   x: number;
@@ -79,23 +79,19 @@ export interface VizRenderImageNode {
   style?: VizRenderStyle;
 }
 
-export type VizRenderTextAnchor = "start" | "middle" | "end";
+export type VizRenderTextAnchor = 'start' | 'middle' | 'end';
 
-export type VizRenderTextBaseline =
-  | "top"
-  | "middle"
-  | "alphabetic"
-  | "bottom";
+export type VizRenderTextBaseline = 'top' | 'middle' | 'alphabetic' | 'bottom';
 
 export interface VizRenderTextNode {
-  kind: "text";
+  kind: 'text';
   id?: string;
   x: number;
   y: number;
   text: string;
   fontSize: number;
   fontFamily?: string;
-  fontWeight?: number | "normal" | "bold";
+  fontWeight?: number | 'normal' | 'bold';
   anchor?: VizRenderTextAnchor;
   baseline?: VizRenderTextBaseline;
   style?: VizRenderStyle;
@@ -105,24 +101,24 @@ export type VizShaderUniformValue =
   | number
   | boolean
   | {
-      type: "color";
+      type: 'color';
       value: string;
     }
   | {
-      type: "vec2";
+      type: 'vec2';
       value: [number, number];
     }
   | {
-      type: "vec3";
+      type: 'vec3';
       value: [number, number, number];
     }
   | {
-      type: "vec4";
+      type: 'vec4';
       value: [number, number, number, number];
     };
 
 export interface VizRenderShaderNode {
-  kind: "shader";
+  kind: 'shader';
   id?: string;
   programId: string;
   x: number;
@@ -147,7 +143,7 @@ export type VizRenderProgramValue =
     };
 
 export interface VizRenderThreeProgramNode {
-  kind: "three-program";
+  kind: 'three-program';
   id?: string;
   programId: string;
   parameters: Record<string, VizRenderProgramValue>;

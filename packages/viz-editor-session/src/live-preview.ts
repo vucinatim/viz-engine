@@ -1,4 +1,4 @@
-import type { VizArtifactId, VizExecutionMode } from "@viz-engine/contracts";
+import type { VizArtifactId, VizExecutionMode } from '@viz-engine/contracts';
 
 export interface VizEditorTransportState {
   fps: number;
@@ -31,9 +31,11 @@ export interface VizEditorTransportController {
   advanceBySeconds(seconds: number): VizEditorTransportState;
 }
 
-export type VizEditorAudioSourceKind = "file" | "media-element" | "stream";
-export type VizEditorAudioAnalyzerState = "idle" | "active" | "error" | "unavailable";
-export type VizEditorPreviewInputMode = "none" | "baked-only" | "live-only" | "hybrid";
+export type VizEditorAudioSourceKind = 'file' | 'media-element' | 'stream';
+export type VizEditorAudioAnalyzerState =
+  'idle' | 'active' | 'error' | 'unavailable';
+export type VizEditorPreviewInputMode =
+  'none' | 'baked-only' | 'live-only' | 'hybrid';
 
 export interface VizEditorAudioSource {
   kind: VizEditorAudioSourceKind;
@@ -71,14 +73,20 @@ export interface VizEditorAudioSessionController {
   getState(): VizEditorAudioSessionState;
   attachSource(source: VizEditorAudioSource): VizEditorAudioSessionState;
   clearSource(): VizEditorAudioSessionState;
-  setAnalyzerState(state: VizEditorAudioAnalyzerState): VizEditorAudioSessionState;
-  setBakedArtifactId(artifactId: VizArtifactId | undefined): VizEditorAudioSessionState;
+  setAnalyzerState(
+    state: VizEditorAudioAnalyzerState,
+  ): VizEditorAudioSessionState;
+  setBakedArtifactId(
+    artifactId: VizArtifactId | undefined,
+  ): VizEditorAudioSessionState;
   setBakedArtifactAvailable(available: boolean): VizEditorAudioSessionState;
   setLiveInputAvailable(available: boolean): VizEditorAudioSessionState;
   getDiagnostics(): VizEditorLiveInputDiagnostics;
 }
 
-const cloneTransportState = (state: VizEditorTransportState): VizEditorTransportState => ({
+const cloneTransportState = (
+  state: VizEditorTransportState,
+): VizEditorTransportState => ({
   ...state,
 });
 
@@ -109,7 +117,7 @@ export const createVizEditorTransportController = ({
   currentFrame = 0,
   isPlaying = false,
   loop = true,
-  mode = "live",
+  mode = 'live',
   onStateChange,
 }: CreateVizEditorTransportControllerOptions): VizEditorTransportController => {
   const normalizedFps = Math.max(1, Math.trunc(fps));
@@ -131,7 +139,9 @@ export const createVizEditorTransportController = ({
     return snapshot;
   };
 
-  const applyWholeFrameAdvance = (frameDelta: number): VizEditorTransportState => {
+  const applyWholeFrameAdvance = (
+    frameDelta: number,
+  ): VizEditorTransportState => {
     if (frameDelta <= 0) {
       return emit();
     }
@@ -232,33 +242,40 @@ export const getVizEditorLiveInputDiagnostics = (
   const usesLiveAudio =
     state.source !== undefined &&
     state.liveInputAvailable &&
-    state.analyzerState === "active";
-  const usesBakedArtifacts = state.bakedArtifactAvailable && state.bakedArtifactId !== undefined;
+    state.analyzerState === 'active';
+  const usesBakedArtifacts =
+    state.bakedArtifactAvailable && state.bakedArtifactId !== undefined;
 
-  let inputMode: VizEditorPreviewInputMode = "none";
+  let inputMode: VizEditorPreviewInputMode = 'none';
 
   if (usesLiveAudio && usesBakedArtifacts) {
-    inputMode = "hybrid";
+    inputMode = 'hybrid';
   } else if (usesLiveAudio) {
-    inputMode = "live-only";
+    inputMode = 'live-only';
   } else if (usesBakedArtifacts) {
-    inputMode = "baked-only";
+    inputMode = 'baked-only';
   }
 
   const issues: string[] = [];
 
   if (state.source && !usesLiveAudio && !usesBakedArtifacts) {
     issues.push(
-      "Preview has an audio source attached but neither live analysis nor baked artifact inputs are currently available.",
+      'Preview has an audio source attached but neither live analysis nor baked artifact inputs are currently available.',
     );
   }
 
-  if (state.analyzerState === "error") {
-    issues.push("Live analyzer is in an error state.");
+  if (state.analyzerState === 'error') {
+    issues.push('Live analyzer is in an error state.');
   }
 
-  if (state.source && state.analyzerState === "unavailable" && !usesBakedArtifacts) {
-    issues.push("Live analyzer is unavailable and there is no baked artifact fallback.");
+  if (
+    state.source &&
+    state.analyzerState === 'unavailable' &&
+    !usesBakedArtifacts
+  ) {
+    issues.push(
+      'Live analyzer is unavailable and there is no baked artifact fallback.',
+    );
   }
 
   return {
@@ -271,7 +288,7 @@ export const getVizEditorLiveInputDiagnostics = (
 
 export const createVizEditorAudioSessionController = ({
   source,
-  analyzerState = "idle",
+  analyzerState = 'idle',
   bakedArtifactId,
   bakedArtifactAvailable = false,
   liveInputAvailable = false,

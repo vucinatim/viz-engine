@@ -1,6 +1,4 @@
-import {
-  clearStaleNodeNetworks,
-} from '@/components/node-network/node-network-store';
+import { clearStaleNodeNetworks } from '@/components/node-network/node-network-store';
 import useRecorderStore from '@/lib/stores/performance-recorder-store';
 import useProfilerStore from '@/lib/stores/profiler-store';
 import {
@@ -166,7 +164,6 @@ export function ProfilerPanel() {
   const [isRecorderExpanded, setIsRecorderExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [autoDuration, setAutoDuration] = useState<number>(0); // 0 = manual stop
-  const [showMethodology, setShowMethodology] = useState(false);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null,
   );
@@ -581,7 +578,7 @@ export function ProfilerPanel() {
           <MetricCard title="GPU" icon={<Activity className="h-4 w-4" />}>
             {gpu.available ? (
               <>
-                <div className="mb-2 break-words font-mono text-xs text-white">
+                <div className="mb-2 font-mono text-xs break-words text-white">
                   {gpu.renderer}
                 </div>
                 <MetricRow label="Vendor" value={gpu.vendor} />

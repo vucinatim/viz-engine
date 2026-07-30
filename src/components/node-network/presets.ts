@@ -1,3 +1,7 @@
+import type {
+  VizGraphNodeInputBinding,
+  VizNodeGraphDocument,
+} from '@viz-engine/contracts';
 import { Edge } from '@xyflow/react';
 import { NodeHandleType } from '../config/node-types';
 import {
@@ -137,6 +141,69 @@ export const instantiatePreset = (
   const finalNodes = preset.autoPlace ? autoLayoutNodes(nodes, edges) : nodes;
 
   return { nodes: finalNodes, edges };
+};
+
+export const instantiateCanonicalPreset = (
+  preset: NodeNetworkPreset,
+  graphId: string,
+  outputType: NodeHandleType = preset.outputType,
+): VizNodeGraphDocument => {
+  const { nodes, edges } = instantiatePreset(preset, graphId, outputType);
+  const outputNode = nodes.find(
+    (node) => node.data.definition.label === 'Output',
+  );
+  const outputEdge = outputNode
+    ? edges.find((edge) => edge.target === outputNode.id)
+    : undefined;
+  const runtimeNodes = nodes.filter((node) => node !== outputNode);
+
+  return {
+    id: graphId,
+    name: graphId,
+    enabled: true,
+    nodes: runtimeNodes.map((node) => {
+      const inputs: Record<string, VizGraphNodeInputBinding> =
+        Object.fromEntries(
+          Object.entries(node.data.inputValues ?? {}).map(
+            ([inputKey, value]) => [
+              inputKey,
+              { kind: 'literal' as const, value: structuredClone(value) },
+            ],
+          ),
+        );
+
+      for (const edge of edges.filter((edge) => edge.target === node.id)) {
+        inputs[edge.targetHandle ?? '__viz_default_input__'] = {
+          kind: 'node-output',
+          nodeId: edge.source,
+          output: edge.sourceHandle ?? '__viz_default_output__',
+          edgeId: edge.id,
+        };
+      }
+
+      return {
+        id: node.id,
+        type: node.data.portableNodeType ?? node.data.definition.label,
+        position: structuredClone(node.position),
+        ...(Object.keys(inputs).length > 0 ? { inputs } : {}),
+      };
+    }),
+    outputs: [
+      {
+        key: 'value',
+        valueType: outputType,
+        ...(outputNode
+          ? { position: structuredClone(outputNode.position) }
+          : {}),
+        ...(outputEdge
+          ? {
+              nodeId: outputEdge.source,
+              output: outputEdge.sourceHandle ?? '__viz_default_output__',
+            }
+          : {}),
+      },
+    ],
+  };
 };
 
 // ===== SIMPLE STARTER PRESETS =====

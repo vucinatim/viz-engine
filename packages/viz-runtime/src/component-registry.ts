@@ -1,7 +1,7 @@
 export {
   createVizComponentRegistry,
-  type VizComponentRegistry,
-  type VizComponentValidationIssue,
   validateVizComponentImplementation,
   validateVizComponentRegistry,
-} from "@viz-engine/contracts";
+  type VizComponentRegistry,
+  type VizComponentValidationIssue,
+} from '@viz-engine/contracts';

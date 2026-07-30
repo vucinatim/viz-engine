@@ -1,11 +1,11 @@
-import type { VizArtifactId, VizAssetId } from "./ids.js";
+import type { VizArtifactId, VizAssetId } from './ids.js';
 
 export type VizArtifactKind =
-  | "audio-feature-timeline"
-  | "simulation-checkpoint"
-  | "analysis-payload"
-  | "derived-media"
-  | "render-output";
+  | 'audio-feature-timeline'
+  | 'simulation-checkpoint'
+  | 'analysis-payload'
+  | 'derived-media'
+  | 'render-output';
 
 export interface VizArtifactRef {
   id: VizArtifactId;

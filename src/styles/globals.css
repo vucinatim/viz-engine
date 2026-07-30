@@ -1,7 +1,7 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@source "../**/*.{ts,tsx}";
-@source "../../apps/**/*.{ts,tsx}";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@source '../**/*.{ts,tsx}';
+@source '../../apps/**/*.{ts,tsx}';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -25,8 +25,8 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
-  --color-animation-blue: #28B1C6;
-  --color-animation-purple: #9B6EC9;
+  --color-animation-blue: #28b1c6;
+  --color-animation-purple: #9b6ec9;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

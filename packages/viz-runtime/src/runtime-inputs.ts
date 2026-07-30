@@ -3,28 +3,28 @@ import type {
   VizComponentRuntimeInputBinding,
   VizRuntimeAudioFrameSnapshot,
   VizRuntimeInputs,
-} from "@viz-engine/contracts";
+} from '@viz-engine/contracts';
 
 const resolveAudioBinding = (
   binding: VizComponentRuntimeInputBinding,
   audio: VizRuntimeAudioFrameSnapshot,
 ): unknown => {
   switch (binding) {
-    case "audio.frequency-data":
+    case 'audio.frequency-data':
       return audio.frequencyData;
-    case "audio.time-domain-data":
+    case 'audio.time-domain-data':
       return audio.timeDomainData;
-    case "audio.sample-rate":
+    case 'audio.sample-rate':
       return audio.sampleRate;
-    case "audio.fft-size":
+    case 'audio.fft-size':
       return audio.fftSize;
-    case "audio.frequency-analysis":
+    case 'audio.frequency-analysis':
       return {
-          frequencyData: audio.frequencyData,
-          sampleRate: audio.sampleRate,
-          fftSize: audio.fftSize,
-          minDecibels: audio.minDecibels,
-          maxDecibels: audio.maxDecibels,
+        frequencyData: audio.frequencyData,
+        sampleRate: audio.sampleRate,
+        fftSize: audio.fftSize,
+        minDecibels: audio.minDecibels,
+        maxDecibels: audio.maxDecibels,
       };
   }
 };
@@ -42,12 +42,7 @@ export const resolveVizComponentRuntimeInputValues = (
     (component.inputs ?? []).flatMap((input) =>
       input.runtimeBinding === undefined
         ? []
-        : [
-            [
-              input.key,
-              resolveAudioBinding(input.runtimeBinding, audio),
-            ],
-          ],
+        : [[input.key, resolveAudioBinding(input.runtimeBinding, audio)]],
     ),
   );
 };

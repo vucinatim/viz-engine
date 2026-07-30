@@ -3,13 +3,13 @@ import type {
   VizComponentSettingCondition,
   VizComponentSettingDefinition,
 } from '@viz-engine/contracts';
-import type { Comp } from './create-component';
 import {
-  type BaseConfigOption,
-  type ConfigParam,
   GroupConfigOption,
   v,
+  type BaseConfigOption,
+  type ConfigParam,
 } from './config';
+import type { Comp } from './create-component';
 
 const getValueAtPath = (
   value: Record<string, unknown>,

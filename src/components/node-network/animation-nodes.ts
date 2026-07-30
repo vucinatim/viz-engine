@@ -1,13 +1,14 @@
-import type { ComponentType } from 'react';
 import {
   createEditorOutputNodeDefinition,
-  editorNodeAuthoringDefinitions,
   editorNodeAuthoringDefinitionMap,
+  editorNodeAuthoringDefinitions,
   inputNodeAuthoringDefinition,
   type VizNodeAuthoringDefinition,
 } from '@viz-engine/nodes-core';
+import type { ComponentType } from 'react';
 
 import type { AnimNode } from '../config/create-node';
+import type { NodeHandleType } from '../config/node-types';
 import AdaptiveNormalizeQuantileBody from './bodies/adaptive-normalize-quantile-body';
 import EnvelopeFollowerBody from './bodies/envelope-follower-body';
 import frequencyBandBody from './bodies/frequency-band-body';
@@ -25,7 +26,6 @@ import ThresholdCounterBody from './bodies/threshold-counter-body';
 import TimeDomainSectionDetectorBody from './bodies/time-domain-section-detector-body';
 import TonalPresenceBody from './bodies/tonal-presence-body';
 import ValueMapperBody from './bodies/value-mapper-body';
-import type { NodeHandleType } from '../config/node-types';
 
 export type { AnimNode } from '../config/create-node';
 export type { AnimInputData } from '../config/node-types';
@@ -50,9 +50,7 @@ const customBodies: Readonly<Record<string, ComponentType<any>>> = {
   'HSL Color': HSLColorBody,
 };
 
-const toEditorNode = (
-  definition: VizNodeAuthoringDefinition,
-): AnimNode => ({
+const toEditorNode = (definition: VizNodeAuthoringDefinition): AnimNode => ({
   ...definition,
   inputs: definition.inputs as AnimNode['inputs'],
   outputs: definition.outputs as AnimNode['outputs'],

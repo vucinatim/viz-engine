@@ -1,23 +1,26 @@
-import { createCoreComponentRegistry } from "@viz-engine/components-core";
+import { createCoreComponentRegistry } from '@viz-engine/components-core';
+import type { VizRenderPlan } from '@viz-engine/contracts';
 import {
   exampleProjectDocument,
   exampleResolvedArtifacts,
   exampleResolvedAssets,
-} from "@viz-engine/example-projects";
-import { createCoreNodeRegistry } from "@viz-engine/nodes-core";
-import { renderVizRenderPlanToSvgMarkup } from "@viz-engine/renderer-svg";
-import { createVizRenderPlan, createVizRuntimeSession } from "@viz-engine/runtime";
-import { describe, expect, it } from "vitest";
-import type { VizRenderPlan } from "@viz-engine/contracts";
+} from '@viz-engine/example-projects';
+import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
+import { renderVizRenderPlanToSvgMarkup } from '@viz-engine/renderer-svg';
+import {
+  createVizRenderPlan,
+  createVizRuntimeSession,
+} from '@viz-engine/runtime';
+import { describe, expect, it } from 'vitest';
 
-describe("Viz SVG proof renderer", () => {
-  it("renders a deterministic SVG document from the shared render plan", () => {
+describe('Viz SVG proof renderer', () => {
+  it('renders a deterministic SVG document from the shared render plan', () => {
     const session = createVizRuntimeSession({
       project: exampleProjectDocument,
-      mode: "render",
+      mode: 'render',
       resolvedAssets: exampleResolvedAssets,
       resolvedArtifacts: exampleResolvedArtifacts,
-      seed: "svg-seed",
+      seed: 'svg-seed',
     });
 
     const renderPlan = createVizRenderPlan({
@@ -29,15 +32,15 @@ describe("Viz SVG proof renderer", () => {
 
     const markup = renderVizRenderPlanToSvgMarkup(renderPlan);
 
-    expect(markup.startsWith("<svg")).toBe(true);
-    expect(markup.includes("data-layer-id=\"layer-background\"")).toBe(true);
-    expect(markup.includes("data-layer-id=\"layer-cover\"")).toBe(true);
-    expect(markup.includes("data-layer-id=\"layer-bars\"")).toBe(true);
-    expect(markup.includes("data-layer-id=\"layer-bloom\"")).toBe(true);
-    expect(markup.includes("<image ")).toBe(true);
+    expect(markup.startsWith('<svg')).toBe(true);
+    expect(markup.includes('data-layer-id="layer-background"')).toBe(true);
+    expect(markup.includes('data-layer-id="layer-cover"')).toBe(true);
+    expect(markup.includes('data-layer-id="layer-bars"')).toBe(true);
+    expect(markup.includes('data-layer-id="layer-bloom"')).toBe(true);
+    expect(markup.includes('<image ')).toBe(true);
   });
 
-  it("renders portable text nodes with explicit alignment and escaped content", () => {
+  it('renders portable text nodes with explicit alignment and escaped content', () => {
     const renderPlan: VizRenderPlan = {
       frameContext: {
         frame: 0,
@@ -47,32 +50,32 @@ describe("Viz SVG proof renderer", () => {
         deltaTimeSeconds: 1 / 30,
         isFirstFrame: true,
         isLastFrame: true,
-        mode: "render",
-        seed: "text-node",
+        mode: 'render',
+        seed: 'text-node',
       },
       viewport: { width: 640, height: 360 },
       materializedAssets: [],
       issues: [],
       layers: [
         {
-          layerId: "text-layer",
-          componentId: "text-proof",
-          rendererFamily: "svg",
+          layerId: 'text-layer',
+          componentId: 'text-proof',
+          rendererFamily: 'svg',
           enabled: true,
           opacity: 1,
-          blendMode: "normal",
+          blendMode: 'normal',
           resolvedInputs: {},
           node: {
-            kind: "text",
+            kind: 'text',
             x: 320,
             y: 180,
-            text: "Value < 50 & rising",
+            text: 'Value < 50 & rising',
             fontSize: 24,
-            fontFamily: "sans-serif",
-            fontWeight: "bold",
-            anchor: "middle",
-            baseline: "middle",
-            style: { fill: "#ffffff" },
+            fontFamily: 'sans-serif',
+            fontWeight: 'bold',
+            anchor: 'middle',
+            baseline: 'middle',
+            style: { fill: '#ffffff' },
           },
         },
       ],
@@ -80,12 +83,12 @@ describe("Viz SVG proof renderer", () => {
 
     const markup = renderVizRenderPlanToSvgMarkup(renderPlan);
 
-    expect(markup).toContain("<text ");
+    expect(markup).toContain('<text ');
     expect(markup).toContain('text-anchor="middle"');
-    expect(markup).toContain("Value &lt; 50 &amp; rising");
+    expect(markup).toContain('Value &lt; 50 &amp; rising');
   });
 
-  it("renders portable polylines with round strokes and a glow pass", () => {
+  it('renders portable polylines with round strokes and a glow pass', () => {
     const renderPlan: VizRenderPlan = {
       frameContext: {
         frame: 2,
@@ -95,36 +98,36 @@ describe("Viz SVG proof renderer", () => {
         deltaTimeSeconds: 1 / 60,
         isFirstFrame: false,
         isLastFrame: false,
-        mode: "render",
-        seed: "polyline-node",
+        mode: 'render',
+        seed: 'polyline-node',
       },
       viewport: { width: 640, height: 360 },
       materializedAssets: [],
       issues: [],
       layers: [
         {
-          layerId: "polyline-layer",
-          componentId: "polyline-proof",
-          rendererFamily: "three",
+          layerId: 'polyline-layer',
+          componentId: 'polyline-proof',
+          rendererFamily: 'three',
           enabled: true,
           opacity: 1,
-          blendMode: "normal",
+          blendMode: 'normal',
           resolvedInputs: {},
           node: {
-            kind: "polyline",
+            kind: 'polyline',
             points: [
               { x: 0, y: 180 },
               { x: 1, y: 120 },
               { x: 2, y: 220 },
             ],
-            lineCap: "round",
-            lineJoin: "round",
+            lineCap: 'round',
+            lineJoin: 'round',
             style: {
-              stroke: "#34d399",
+              stroke: '#34d399',
               strokeWidth: 2,
             },
             glow: {
-              color: "#34d399",
+              color: '#34d399',
               blur: 10,
               opacity: 0.18,
             },
@@ -138,6 +141,6 @@ describe("Viz SVG proof renderer", () => {
     expect(markup.match(/<polyline /g)).toHaveLength(2);
     expect(markup).toContain('stroke-width="22"');
     expect(markup).toContain('stroke-linecap="round"');
-    expect(markup).toContain("points=\"0,180 1,120 2,220\"");
+    expect(markup).toContain('points="0,180 1,120 2,220"');
   });
 });

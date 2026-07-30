@@ -1,4 +1,4 @@
-export const DEFAULT_VIZ_CONTROL_URL = "http://localhost:4173";
+export const DEFAULT_VIZ_CONTROL_URL = 'http://localhost:4173';
 export const VIZ_CONTROL_PROTOCOL_VERSION = 1 as const;
 
 export interface LiveVizControlClientOptions {
@@ -28,12 +28,12 @@ export interface LiveVizControlDiscovery {
 
 const resolveBaseUrl = (baseUrl = DEFAULT_VIZ_CONTROL_URL): URL => {
   const url = new URL(baseUrl);
-  if (url.protocol !== "http:" && url.protocol !== "https:") {
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
     throw new Error(
       `Viz control URL must use http or https, received "${url.protocol}".`,
     );
   }
-  if (!url.pathname.endsWith("/")) {
+  if (!url.pathname.endsWith('/')) {
     url.pathname = `${url.pathname}/`;
   }
   return url;
@@ -41,7 +41,7 @@ const resolveBaseUrl = (baseUrl = DEFAULT_VIZ_CONTROL_URL): URL => {
 
 const resolveEndpoint = (baseUrl: string | undefined, path: string): URL => {
   const root = resolveBaseUrl(baseUrl);
-  return new URL(path.replace(/^\//, ""), root);
+  return new URL(path.replace(/^\//, ''), root);
 };
 
 const readJsonResponse = async (response: Response): Promise<unknown> => {
@@ -65,42 +65,42 @@ const getFetch = (
 ): typeof globalThis.fetch => {
   const resolved = fetchImplementation ?? globalThis.fetch;
   if (resolved === undefined) {
-    throw new Error("This Node runtime does not provide fetch.");
+    throw new Error('This Node runtime does not provide fetch.');
   }
   return resolved;
 };
 
 const decodeDiscovery = (value: unknown): LiveVizControlDiscovery => {
-  if (typeof value !== "object" || value === null) {
-    throw new Error("Viz control discovery response must be an object.");
+  if (typeof value !== 'object' || value === null) {
+    throw new Error('Viz control discovery response must be an object.');
   }
   const discovery = value as Record<string, unknown>;
   const transport = discovery.transport;
   const editor = discovery.editor;
   if (
-    typeof discovery.protocolVersion !== "number" ||
-    typeof transport !== "object" ||
+    typeof discovery.protocolVersion !== 'number' ||
+    typeof transport !== 'object' ||
     transport === null ||
-    typeof (transport as Record<string, unknown>).request !== "string" ||
-    typeof (transport as Record<string, unknown>).events !== "string" ||
-    typeof editor !== "object" ||
+    typeof (transport as Record<string, unknown>).request !== 'string' ||
+    typeof (transport as Record<string, unknown>).events !== 'string' ||
+    typeof editor !== 'object' ||
     editor === null ||
-    typeof (editor as Record<string, unknown>).connected !== "boolean"
+    typeof (editor as Record<string, unknown>).connected !== 'boolean'
   ) {
-    throw new Error("Viz control discovery response has an invalid shape.");
+    throw new Error('Viz control discovery response has an invalid shape.');
   }
   const editorRecord = editor as Record<string, unknown>;
   if (
     editorRecord.instanceId !== undefined &&
-    typeof editorRecord.instanceId !== "string"
+    typeof editorRecord.instanceId !== 'string'
   ) {
-    throw new Error("Viz control discovery editor instance id is invalid.");
+    throw new Error('Viz control discovery editor instance id is invalid.');
   }
   if (
     editorRecord.lastSeenAt !== undefined &&
-    typeof editorRecord.lastSeenAt !== "string"
+    typeof editorRecord.lastSeenAt !== 'string'
   ) {
-    throw new Error("Viz control discovery last-seen time is invalid.");
+    throw new Error('Viz control discovery last-seen time is invalid.');
   }
   return {
     protocolVersion: discovery.protocolVersion,
@@ -128,10 +128,10 @@ export const discoverLiveVizControl = async (
   discovery: LiveVizControlDiscovery;
 }> => {
   const response = await getFetch(options.fetch)(
-    resolveEndpoint(options.baseUrl, "/__viz-control__/discovery"),
+    resolveEndpoint(options.baseUrl, '/__viz-control__/discovery'),
     {
       headers: {
-        accept: "application/json",
+        accept: 'application/json',
       },
     },
   );
@@ -152,19 +152,19 @@ export const requestLiveVizControl = async (
   response: unknown;
 }> => {
   const response = await getFetch(options.fetch)(
-    resolveEndpoint(options.baseUrl, "/__viz-control__/request"),
+    resolveEndpoint(options.baseUrl, '/__viz-control__/request'),
     {
-      method: "POST",
+      method: 'POST',
       headers: {
-        accept: "application/json",
-        "content-type": "application/json",
+        accept: 'application/json',
+        'content-type': 'application/json',
       },
       body: JSON.stringify(request),
     },
   );
   const payload = await readJsonResponse(response);
   const protocolOk =
-    typeof payload === "object" &&
+    typeof payload === 'object' &&
     payload !== null &&
     (payload as Record<string, unknown>).ok === true;
   return {

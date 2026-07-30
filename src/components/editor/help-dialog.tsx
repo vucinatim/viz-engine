@@ -19,7 +19,7 @@ const isChromiumBrowser = () => {
     userAgent.includes('chromium') ||
     userAgent.includes('edg/') || // New Edge
     userAgent.includes('opr/') || // Opera
-    // @ts-ignore - Brave specific API
+    // @ts-expect-error -- Brave exposes this non-standard navigator property.
     (navigator.brave && typeof navigator.brave.isBrave === 'function');
 
   // Exclude Firefox which sometimes has chrome in user agent

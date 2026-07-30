@@ -1,7 +1,7 @@
 import { useStore } from 'zustand';
 
-import type { LayerSettings } from '@/components/editor/layer-settings';
 import type { Comp } from '@/components/config/create-component';
+import type { LayerSettings } from '@/components/editor/layer-settings';
 import { vizSessionActions, vizSessionStore } from '@/lib/viz-session';
 import type { VizProjectDocument } from '@viz-engine/contracts';
 

@@ -1,10 +1,10 @@
-import type { VizControl } from "./index.js";
+import type { VizControl } from './index.js';
 import {
   decodeVizControlRequest,
   VIZ_CONTROL_PROTOCOL_VERSION,
   vizControlDiscovery,
   type VizControlResponse,
-} from "./protocol.js";
+} from './protocol.js';
 
 const createPortableSnapshot = (control: VizControl) => {
   const snapshot = control.getSnapshot();
@@ -20,7 +20,7 @@ const createPortableSnapshot = (control: VizControl) => {
 
 const createPortableTransactionResult = (
   control: VizControl,
-  result: ReturnType<VizControl["applyTransaction"]>,
+  result: ReturnType<VizControl['applyTransaction']>,
 ) => {
   const transaction = result.transactionResult;
   return {
@@ -45,23 +45,21 @@ const createPortableTransactionResult = (
 const getUntrustedRequestIdentity = (
   value: unknown,
 ): { id: string; operation: string } => {
-  if (typeof value !== "object" || value === null) {
+  if (typeof value !== 'object' || value === null) {
     return {
-      id: "invalid-request",
-      operation: "unknown",
+      id: 'invalid-request',
+      operation: 'unknown',
     };
   }
 
   const record = value as Record<string, unknown>;
   return {
     id:
-      typeof record.id === "string" && record.id.trim().length > 0
+      typeof record.id === 'string' && record.id.trim().length > 0
         ? record.id
-        : "invalid-request",
+        : 'invalid-request',
     operation:
-      typeof record.operation === "string"
-        ? record.operation
-        : "unknown",
+      typeof record.operation === 'string' ? record.operation : 'unknown',
   };
 };
 
@@ -86,7 +84,7 @@ export const executeVizControlRequest = (
 
   try {
     switch (request.operation) {
-      case "control.discover":
+      case 'control.discover':
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
           id: request.id,
@@ -94,7 +92,7 @@ export const executeVizControlRequest = (
           ok: true,
           result: vizControlDiscovery,
         };
-      case "control.snapshot":
+      case 'control.snapshot':
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
           id: request.id,
@@ -102,7 +100,7 @@ export const executeVizControlRequest = (
           ok: true,
           result: control.getSnapshot(),
         };
-      case "project.inspect":
+      case 'project.inspect':
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
           id: request.id,
@@ -110,7 +108,7 @@ export const executeVizControlRequest = (
           ok: true,
           result: control.inspectProject(),
         };
-      case "component.inspect":
+      case 'component.inspect':
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
           id: request.id,
@@ -118,7 +116,7 @@ export const executeVizControlRequest = (
           ok: true,
           result: control.inspectComponents(),
         };
-      case "graph.inspect":
+      case 'graph.inspect':
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
           id: request.id,
@@ -129,7 +127,7 @@ export const executeVizControlRequest = (
               ? control.inspectGraphs()
               : control.inspectGraph(request.graphId),
         };
-      case "transaction.apply": {
+      case 'transaction.apply': {
         const result = control.applyTransaction(request.transaction);
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
@@ -139,7 +137,7 @@ export const executeVizControlRequest = (
           result: createPortableTransactionResult(control, result),
         };
       }
-      case "history.undo": {
+      case 'history.undo': {
         control.undo();
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
@@ -149,7 +147,7 @@ export const executeVizControlRequest = (
           result: createPortableSnapshot(control),
         };
       }
-      case "history.redo": {
+      case 'history.redo': {
         control.redo();
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
@@ -159,7 +157,7 @@ export const executeVizControlRequest = (
           result: createPortableSnapshot(control),
         };
       }
-      case "preview.play": {
+      case 'preview.play': {
         control.play();
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
@@ -169,7 +167,7 @@ export const executeVizControlRequest = (
           result: createPortableSnapshot(control),
         };
       }
-      case "preview.pause": {
+      case 'preview.pause': {
         control.pause();
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
@@ -179,7 +177,7 @@ export const executeVizControlRequest = (
           result: createPortableSnapshot(control),
         };
       }
-      case "preview.seek": {
+      case 'preview.seek': {
         control.seekToFrame(request.frame);
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
@@ -189,7 +187,7 @@ export const executeVizControlRequest = (
           result: createPortableSnapshot(control),
         };
       }
-      case "job.list":
+      case 'job.list':
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
           id: request.id,
@@ -197,7 +195,7 @@ export const executeVizControlRequest = (
           ok: true,
           result: control.listJobs(),
         };
-      case "job.inspect":
+      case 'job.inspect':
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
           id: request.id,
@@ -205,7 +203,7 @@ export const executeVizControlRequest = (
           ok: true,
           result: control.inspectJob(request.jobId),
         };
-      case "audio-bake.start":
+      case 'audio-bake.start':
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
           id: request.id,
@@ -213,7 +211,7 @@ export const executeVizControlRequest = (
           ok: true,
           result: control.startAudioFeatureBake(request.request),
         };
-      case "render.start":
+      case 'render.start':
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
           id: request.id,
@@ -221,7 +219,7 @@ export const executeVizControlRequest = (
           ok: true,
           result: control.startRender(request.request),
         };
-      case "job.cancel":
+      case 'job.cancel':
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
           id: request.id,
@@ -229,7 +227,7 @@ export const executeVizControlRequest = (
           ok: true,
           result: control.cancelJob(request.jobId),
         };
-      case "audio-bake.attach": {
+      case 'audio-bake.attach': {
         const result = control.attachAudioFeatureBakeOutput(
           request.jobId,
           request.expectedRevision,
@@ -250,11 +248,11 @@ export const executeVizControlRequest = (
       operation: request.operation,
       ok: false,
       error: {
-        code: "operation-failed",
+        code: 'operation-failed',
         message:
           error instanceof Error
             ? error.message
-            : "Viz control operation failed.",
+            : 'Viz control operation failed.',
       },
     };
   }

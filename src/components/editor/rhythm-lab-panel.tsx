@@ -1,5 +1,3 @@
-'use client';
-
 import editorControl from '@/lib/editor-control';
 import {
   OUTPUT_VIEW_OPTIONS,

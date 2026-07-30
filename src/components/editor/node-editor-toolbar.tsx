@@ -1,3 +1,9 @@
+import editorControl from '@/lib/editor-control';
+import {
+  describeProjectGraph,
+  getRuntimeGraphValue,
+  useVizSessionSelector,
+} from '@/lib/viz-session';
 import {
   Copy,
   FileJson,
@@ -11,14 +17,13 @@ import {
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useRafLoop } from 'react-use';
 import { toast } from 'sonner';
-import editorControl from '@/lib/editor-control';
 import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
-import { getRuntimeGraphValue } from '@/lib/viz-session';
 import useEditorGraphStore from '../../lib/stores/editor-graph-store';
 import { useHistoryStore } from '../../lib/stores/history-store';
 import { cn } from '../../lib/utils';
 import { NodeHandleType } from '../config/node-types';
-import useNodeNetworkStore, {
+import { isProtectedGraphNode } from '../node-network/graph-types';
+import {
   applyPresetToNodeNetwork,
   getNodeNetwork,
   setEdgesInNetwork,
@@ -30,11 +35,6 @@ import { getPresetsForType } from '../node-network/presets';
 import { Button } from '../ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import SearchSelect from '../ui/search-select';
-import {
-  describeProjectGraph,
-  useVizSessionSelector,
-} from '@/lib/viz-session';
-import { isProtectedGraphNode } from '../node-network/graph-types';
 
 interface NodeEditorToolbarProps {
   nodeNetworkId: string;
@@ -57,12 +57,8 @@ const NodeEditorToolbar = ({
     editorControl.history.redoNodeEditor(nodeNetworkId);
   }, [nodeNetworkId]);
 
-  const canUndo = useHistoryStore(
-    (state) => state.canUndo(),
-  );
-  const canRedo = useHistoryStore(
-    (state) => state.canRedo(),
-  );
+  const canUndo = useHistoryStore((state) => state.canUndo());
+  const canRedo = useHistoryStore((state) => state.canRedo());
 
   const project = useVizSessionSelector(
     (state) => state.project.workingProject,
@@ -157,9 +153,7 @@ const NodeEditorToolbar = ({
       .getNodes()
       .filter((node: any) => node.selected);
 
-    return selectedNodes.some(
-      (node: any) => !isProtectedGraphNode(node),
-    );
+    return selectedNodes.some((node: any) => !isProtectedGraphNode(node));
   };
 
   const handleCopyGraphJson = async () => {
@@ -221,7 +215,7 @@ const NodeEditorToolbar = ({
   };
 
   return (
-    <div className="absolute left-4 right-4 top-4 z-10">
+    <div className="absolute top-4 right-4 left-4 z-10">
       <div className="flex items-center justify-between rounded-lg border border-white/10 bg-black/20 px-4 py-2 backdrop-blur-md">
         {/* Left Section - Animation Info & Actions */}
         <div className="flex items-center gap-4">
@@ -365,7 +359,7 @@ const LiveValueDisplay = ({
 
   return (
     <div className="flex items-center gap-2">
-      <span className="whitespace-nowrap text-xs text-white/60">
+      <span className="text-xs whitespace-nowrap text-white/60">
         Live Output
       </span>
       <span ref={ref} className="font-mono text-sm text-white">

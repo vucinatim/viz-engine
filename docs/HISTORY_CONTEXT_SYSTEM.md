@@ -344,7 +344,7 @@ src/
 
 ## Related Documentation
 
-- `docs/SYSTEM_ARCHITECTURE.md` - Overall app architecture
+- `docs/thesis/v1-system-architecture.md` - Historical V1 app architecture
 - `docs/KEYBOARD_SHORTCUTS.md` - Complete shortcut reference
 - `docs/interactive-node-flow.md` - Node editor flow
 > Historical V1 reference only. The active history architecture is the

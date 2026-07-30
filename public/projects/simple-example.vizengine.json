@@ -136,41 +136,18 @@
           {
             "id": "layer-Simple Cube-1760551531201:color-input-node",
             "type": "Input",
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": -849.7420269530635,
-                  "y": -4.783648023702398
-                },
-                "nodeType": "NodeRenderer"
-              }
-            }
-          },
-          {
-            "id": "layer-Simple Cube-1760551531201:color-output-node",
-            "type": "Output",
-            "inputs": {
-              "output": {
-                "kind": "node-output",
-                "nodeId": "layer-Simple Cube-1760551531201:color-node-1760551929662",
-                "output": "color",
-                "edgeId": "xy-edge__layer-Simple Cube-1760551531201:color-node-1760551929662color-layer-Simple Cube-1760551531201:color-output-nodeoutput"
-              }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": 867.8790346180135,
-                  "y": 8.40912460699343
-                },
-                "nodeType": "NodeRenderer",
-                "outputType": "color"
-              }
+            "position": {
+              "x": -849.7420269530635,
+              "y": -4.783648023702398
             }
           },
           {
             "id": "layer-Simple Cube-1760551531201:color-node-1760551929662",
             "type": "HSL Color",
+            "position": {
+              "x": 552.6938932501864,
+              "y": -16.987506884648127
+            },
             "inputs": {
               "h": {
                 "kind": "node-output",
@@ -186,20 +163,15 @@
                 "kind": "literal",
                 "value": 50
               }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": 552.6938932501864,
-                  "y": -16.987506884648127
-                },
-                "nodeType": "NodeRenderer"
-              }
             }
           },
           {
             "id": "layer-Simple Cube-1760551531201:color-node-1760552015278",
             "type": "Band Info",
+            "position": {
+              "x": -663.2601871297501,
+              "y": -19.42885612837719
+            },
             "inputs": {
               "data": {
                 "kind": "node-output",
@@ -207,20 +179,15 @@
                 "output": "audioSignal",
                 "edgeId": "xy-edge__layer-Simple Cube-1760551531201:color-input-nodeaudioSignal-layer-Simple Cube-1760551531201:color-node-1760552015278data"
               }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": -663.2601871297501,
-                  "y": -19.42885612837719
-                },
-                "nodeType": "NodeRenderer"
-              }
             }
           },
           {
             "id": "layer-Simple Cube-1760551531201:color-node-1760552061000",
             "type": "Math",
+            "position": {
+              "x": 229.38306589266926,
+              "y": -32.992658778794635
+            },
             "inputs": {
               "a": {
                 "kind": "node-output",
@@ -236,20 +203,15 @@
                 "kind": "literal",
                 "value": "multiply"
               }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": 229.38306589266926,
-                  "y": -32.992658778794635
-                },
-                "nodeType": "NodeRenderer"
-              }
             }
           },
           {
             "id": "layer-Simple Cube-1760551531201:color-node-1760552103881",
             "type": "Envelope Follower",
+            "position": {
+              "x": -47.61601962252212,
+              "y": -58.723544904954835
+            },
             "inputs": {
               "value": {
                 "kind": "node-output",
@@ -265,20 +227,15 @@
                 "kind": "literal",
                 "value": "500"
               }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": -47.61601962252212,
-                  "y": -58.723544904954835
-                },
-                "nodeType": "NodeRenderer"
-              }
             }
           },
           {
             "id": "layer-Simple Cube-1760551531201:color-node-1760552203968",
             "type": "Normalize",
+            "position": {
+              "x": -370.13713584909897,
+              "y": -63.122330565765736
+            },
             "inputs": {
               "value": {
                 "kind": "node-output",
@@ -302,30 +259,21 @@
                 "kind": "literal",
                 "value": 1
               }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": -370.13713584909897,
-                  "y": -63.122330565765736
-                },
-                "nodeType": "NodeRenderer"
-              }
             }
           }
         ],
         "outputs": [
           {
             "key": "value",
-            "nodeId": "layer-Simple Cube-1760551531201:color-output-node",
-            "output": "value"
+            "nodeId": "layer-Simple Cube-1760551531201:color-node-1760551929662",
+            "output": "color",
+            "valueType": "color",
+            "position": {
+              "x": 867.8790346180135,
+              "y": 8.40912460699343
+            }
           }
-        ],
-        "metadata": {
-          "vizEditor": {
-            "isMinimized": false
-          }
-        }
+        ]
       },
       {
         "id": "layer-Simple Cube-1760551531201:size",
@@ -335,19 +283,18 @@
           {
             "id": "layer-Simple Cube-1760551531201:size-input-node",
             "type": "Input",
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": 0,
-                  "y": 0
-                },
-                "nodeType": "NodeRenderer"
-              }
+            "position": {
+              "x": 0,
+              "y": 0
             }
           },
           {
             "id": "layer-Simple Cube-1760551531201:size-preset-0-band",
             "type": "Frequency Band",
+            "position": {
+              "x": 280,
+              "y": 0
+            },
             "inputs": {
               "startFrequency": {
                 "kind": "literal",
@@ -363,20 +310,15 @@
                 "output": "frequencyAnalysis",
                 "edgeId": "layer-Simple Cube-1760551531201:size-edge-0"
               }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": 280,
-                  "y": 0
-                },
-                "nodeType": "NodeRenderer"
-              }
             }
           },
           {
             "id": "layer-Simple Cube-1760551531201:size-preset-1-info",
             "type": "Band Info",
+            "position": {
+              "x": 560,
+              "y": 0
+            },
             "inputs": {
               "data": {
                 "kind": "node-output",
@@ -384,20 +326,15 @@
                 "output": "bandData",
                 "edgeId": "layer-Simple Cube-1760551531201:size-edge-1"
               }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": 560,
-                  "y": 0
-                },
-                "nodeType": "NodeRenderer"
-              }
             }
           },
           {
             "id": "layer-Simple Cube-1760551531201:size-preset-2-env",
             "type": "Envelope Follower",
+            "position": {
+              "x": 840,
+              "y": 0
+            },
             "inputs": {
               "attackMs": {
                 "kind": "literal",
@@ -413,20 +350,15 @@
                 "output": "average",
                 "edgeId": "layer-Simple Cube-1760551531201:size-edge-2"
               }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": 840,
-                  "y": 0
-                },
-                "nodeType": "NodeRenderer"
-              }
             }
           },
           {
             "id": "layer-Simple Cube-1760551531201:size-preset-3-adapt",
             "type": "Adaptive Normalize (Quantile)",
+            "position": {
+              "x": 1120,
+              "y": 0
+            },
             "inputs": {
               "windowMs": {
                 "kind": "literal",
@@ -450,20 +382,15 @@
                 "output": "env",
                 "edgeId": "layer-Simple Cube-1760551531201:size-edge-3"
               }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": 1120,
-                  "y": 0
-                },
-                "nodeType": "NodeRenderer"
-              }
             }
           },
           {
             "id": "layer-Simple Cube-1760551531201:size-preset-4-gate",
             "type": "Hysteresis Gate",
+            "position": {
+              "x": 1400,
+              "y": 0
+            },
             "inputs": {
               "low": {
                 "kind": "literal",
@@ -479,42 +406,15 @@
                 "output": "result",
                 "edgeId": "layer-Simple Cube-1760551531201:size-edge-4"
               }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": 1400,
-                  "y": 0
-                },
-                "nodeType": "NodeRenderer"
-              }
-            }
-          },
-          {
-            "id": "layer-Simple Cube-1760551531201:size-output-node",
-            "type": "Output",
-            "inputs": {
-              "output": {
-                "kind": "node-output",
-                "nodeId": "layer-Simple Cube-1760551531201:size-node-1760552578957",
-                "output": "result",
-                "edgeId": "xy-edge__layer-Simple Cube-1760551531201:size-node-1760552578957result-layer-Simple Cube-1760551531201:size-output-nodeoutput"
-              }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": 2112,
-                  "y": -4
-                },
-                "nodeType": "NodeRenderer",
-                "outputType": "number"
-              }
             }
           },
           {
             "id": "layer-Simple Cube-1760551531201:size-node-1760552578957",
             "type": "Math",
+            "position": {
+              "x": 1775,
+              "y": 23
+            },
             "inputs": {
               "a": {
                 "kind": "node-output",
@@ -530,30 +430,21 @@
                 "kind": "literal",
                 "value": "add"
               }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": 1775,
-                  "y": 23
-                },
-                "nodeType": "NodeRenderer"
-              }
             }
           }
         ],
         "outputs": [
           {
             "key": "value",
-            "nodeId": "layer-Simple Cube-1760551531201:size-output-node",
-            "output": "value"
+            "nodeId": "layer-Simple Cube-1760551531201:size-node-1760552578957",
+            "output": "result",
+            "valueType": "number",
+            "position": {
+              "x": 2112,
+              "y": -4
+            }
           }
-        ],
-        "metadata": {
-          "vizEditor": {
-            "isMinimized": false
-          }
-        }
+        ]
       },
       {
         "id": "layer-Fullscreen Shader-1760552636719:color",
@@ -563,41 +454,18 @@
           {
             "id": "layer-Fullscreen Shader-1760552636719:color-input-node",
             "type": "Input",
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": -874,
-                  "y": 168
-                },
-                "nodeType": "NodeRenderer"
-              }
-            }
-          },
-          {
-            "id": "layer-Fullscreen Shader-1760552636719:color-output-node",
-            "type": "Output",
-            "inputs": {
-              "output": {
-                "kind": "node-output",
-                "nodeId": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-e6tlb3cq7",
-                "output": "color",
-                "edgeId": "xy-edge__layer-Fullscreen Shader-1760552636719:color-node-1760552689219-e6tlb3cq7color-layer-Fullscreen Shader-1760552636719:color-output-nodeoutput"
-              }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": 952,
-                  "y": 178
-                },
-                "nodeType": "NodeRenderer",
-                "outputType": "color"
-              }
+            "position": {
+              "x": -874,
+              "y": 168
             }
           },
           {
             "id": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-e6tlb3cq7",
             "type": "HSL Color",
+            "position": {
+              "x": 572.8080897921243,
+              "y": 171.81669606953037
+            },
             "inputs": {
               "h": {
                 "kind": "node-output",
@@ -613,20 +481,15 @@
                 "kind": "literal",
                 "value": 50
               }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": 572.8080897921243,
-                  "y": 171.81669606953037
-                },
-                "nodeType": "NodeRenderer"
-              }
             }
           },
           {
             "id": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-rn1gmhbdy",
             "type": "Band Info",
+            "position": {
+              "x": -643.1459905878123,
+              "y": 169.3753468258013
+            },
             "inputs": {
               "data": {
                 "kind": "node-output",
@@ -634,20 +497,15 @@
                 "output": "audioSignal",
                 "edgeId": "xy-edge__layer-Fullscreen Shader-1760552636719:color-input-nodeaudioSignal-layer-Fullscreen Shader-1760552636719:color-node-1760552689219-rn1gmhbdydata"
               }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": -643.1459905878123,
-                  "y": 169.3753468258013
-                },
-                "nodeType": "NodeRenderer"
-              }
             }
           },
           {
             "id": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-md27mpewl",
             "type": "Math",
+            "position": {
+              "x": 249.49726243460714,
+              "y": 155.81154417538386
+            },
             "inputs": {
               "a": {
                 "kind": "node-output",
@@ -663,20 +521,15 @@
                 "kind": "literal",
                 "value": "multiply"
               }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": 249.49726243460714,
-                  "y": 155.81154417538386
-                },
-                "nodeType": "NodeRenderer"
-              }
             }
           },
           {
             "id": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-rm0435eej",
             "type": "Envelope Follower",
+            "position": {
+              "x": -27.501823080584245,
+              "y": 130.08065804922367
+            },
             "inputs": {
               "value": {
                 "kind": "node-output",
@@ -692,20 +545,15 @@
                 "kind": "literal",
                 "value": "1000"
               }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": -27.501823080584245,
-                  "y": 130.08065804922367
-                },
-                "nodeType": "NodeRenderer"
-              }
             }
           },
           {
             "id": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-wxqk5y2l5",
             "type": "Normalize",
+            "position": {
+              "x": -350.0229393071611,
+              "y": 125.68187238841276
+            },
             "inputs": {
               "value": {
                 "kind": "node-output",
@@ -729,30 +577,21 @@
                 "kind": "literal",
                 "value": 1
               }
-            },
-            "metadata": {
-              "vizEditor": {
-                "position": {
-                  "x": -350.0229393071611,
-                  "y": 125.68187238841276
-                },
-                "nodeType": "NodeRenderer"
-              }
             }
           }
         ],
         "outputs": [
           {
             "key": "value",
-            "nodeId": "layer-Fullscreen Shader-1760552636719:color-output-node",
-            "output": "value"
+            "nodeId": "layer-Fullscreen Shader-1760552636719:color-node-1760552689219-e6tlb3cq7",
+            "output": "color",
+            "valueType": "color",
+            "position": {
+              "x": 952,
+              "y": 178
+            }
           }
-        ],
-        "metadata": {
-          "vizEditor": {
-            "isMinimized": false
-          }
-        }
+        ]
       }
     ]
   },

@@ -3,17 +3,17 @@ import type {
   VizJobEvent,
   VizJobId,
   VizJobRecord,
-} from "@viz-engine/contracts";
+} from '@viz-engine/contracts';
 import {
   executeVizAudioFeatureBakeAsync,
   type VizAudioFeatureBakeRequest,
   type VizAudioFeatureBakeResult,
   type VizAudioPcmSource,
-} from "./audio-feature-bake.js";
+} from './audio-feature-bake.js';
 
 export type VizAudioFeatureBakeJobRequest = Omit<
   VizAudioFeatureBakeRequest,
-  "sourceContentIdentity"
+  'sourceContentIdentity'
 > & {
   expectedSourceContentIdentity?: string;
 };
@@ -63,19 +63,13 @@ export interface VizAudioFeatureBakeJobService {
   list(): VizAudioFeatureBakeJobRecord[];
   cancel(jobId: VizJobId): VizAudioFeatureBakeJobRecord | undefined;
   wait(jobId: VizJobId): Promise<VizAudioFeatureBakeJobRecord>;
-  subscribe(
-    listener: (event: VizAudioFeatureBakeJobEvent) => void,
-  ): () => void;
+  subscribe(listener: (event: VizAudioFeatureBakeJobEvent) => void): () => void;
 }
 
 const clone = <T>(value: T): T => structuredClone(value);
 
-const isTerminal = (
-  status: VizAudioFeatureBakeJobRecord["status"],
-): boolean =>
-  status === "succeeded" ||
-  status === "failed" ||
-  status === "cancelled";
+const isTerminal = (status: VizAudioFeatureBakeJobRecord['status']): boolean =>
+  status === 'succeeded' || status === 'failed' || status === 'cancelled';
 
 export const createVizAudioFeatureBakeJobService = ({
   sourceResolver,
@@ -86,9 +80,7 @@ export const createVizAudioFeatureBakeJobService = ({
 }: CreateVizAudioFeatureBakeJobServiceOptions): VizAudioFeatureBakeJobService => {
   const jobs = new Map<VizJobId, VizAudioFeatureBakeJobRecord>();
   const controllers = new Map<VizJobId, AbortController>();
-  const listeners = new Set<
-    (event: VizAudioFeatureBakeJobEvent) => void
-  >();
+  const listeners = new Set<(event: VizAudioFeatureBakeJobEvent) => void>();
   const waiters = new Map<
     VizJobId,
     Set<(job: VizAudioFeatureBakeJobRecord) => void>
@@ -101,7 +93,7 @@ export const createVizAudioFeatureBakeJobService = ({
       return createJobId();
     }
     fallbackJobCounter += 1;
-    return typeof globalThis.crypto?.randomUUID === "function"
+    return typeof globalThis.crypto?.randomUUID === 'function'
       ? `audio-bake-${globalThis.crypto.randomUUID()}`
       : `audio-bake-${fallbackJobCounter}`;
   };
@@ -144,14 +136,14 @@ export const createVizAudioFeatureBakeJobService = ({
   };
   const completeCancelled = (
     jobId: VizJobId,
-    message = "Audio bake was cancelled.",
+    message = 'Audio bake was cancelled.',
   ): void => {
     const completedAt = timestamp();
     update(jobId, {
-      status: "cancelled",
+      status: 'cancelled',
       completedAt,
       progress: {
-        stage: "cancelled",
+        stage: 'cancelled',
         completed: 0,
         total: 0,
         progress: 0,
@@ -160,18 +152,14 @@ export const createVizAudioFeatureBakeJobService = ({
     });
     controllers.delete(jobId);
   };
-  const fail = (
-    jobId: VizJobId,
-    code: string,
-    message: string,
-  ): void => {
+  const fail = (jobId: VizJobId, code: string, message: string): void => {
     const completedAt = timestamp();
     update(jobId, {
-      status: "failed",
+      status: 'failed',
       completedAt,
       failure: { code, message },
       progress: {
-        stage: "failed",
+        stage: 'failed',
         completed: 0,
         total: 0,
         progress: 0,
@@ -192,10 +180,10 @@ export const createVizAudioFeatureBakeJobService = ({
       return;
     }
     update(jobId, {
-      status: "validating",
+      status: 'validating',
       startedAt: timestamp(),
       progress: {
-        stage: "validating",
+        stage: 'validating',
         completed: 0,
         total: 1,
         progress: 0,
@@ -204,10 +192,7 @@ export const createVizAudioFeatureBakeJobService = ({
 
     let source: VizResolvedAudioBakeSource;
     try {
-      source = await sourceResolver.resolve(
-        initial.request,
-        controller.signal,
-      );
+      source = await sourceResolver.resolve(initial.request, controller.signal);
     } catch (error) {
       if (controller.signal.aborted) {
         completeCancelled(jobId);
@@ -215,10 +200,10 @@ export const createVizAudioFeatureBakeJobService = ({
       }
       fail(
         jobId,
-        "source-resolution-failed",
+        'source-resolution-failed',
         error instanceof Error
           ? error.message
-          : "Audio source resolution failed.",
+          : 'Audio source resolution failed.',
       );
       return;
     }
@@ -233,17 +218,17 @@ export const createVizAudioFeatureBakeJobService = ({
     ) {
       fail(
         jobId,
-        "source-identity-mismatch",
+        'source-identity-mismatch',
         `Resolved source identity "${source.sourceContentIdentity}" does not match expected identity "${initial.request.expectedSourceContentIdentity}".`,
       );
       return;
     }
 
     update(jobId, {
-      status: "running",
+      status: 'running',
       inputIdentity: source.sourceContentIdentity,
       progress: {
-        stage: "analyzing",
+        stage: 'analyzing',
         completed: 0,
         total: 0,
         progress: 0,
@@ -258,9 +243,7 @@ export const createVizAudioFeatureBakeJobService = ({
       source.pcm,
       {
         shouldCancel: () => controller.signal.aborted,
-        ...(yieldEveryFrames === undefined
-          ? {}
-          : { yieldEveryFrames }),
+        ...(yieldEveryFrames === undefined ? {} : { yieldEveryFrames }),
         ...(yieldToHost === undefined ? {} : { yieldToHost }),
         onProgress: (progress) => {
           const emitStride = Math.max(
@@ -269,13 +252,12 @@ export const createVizAudioFeatureBakeJobService = ({
           );
           const shouldEmit =
             progress.completedFrames === progress.totalFrames ||
-            progress.completedFrames - lastEmittedCompleted >=
-              emitStride;
+            progress.completedFrames - lastEmittedCompleted >= emitStride;
           update(
             jobId,
             {
               progress: {
-                stage: "analyzing",
+                stage: 'analyzing',
                 completed: progress.completedFrames,
                 total: progress.totalFrames,
                 progress: progress.progress,
@@ -291,28 +273,25 @@ export const createVizAudioFeatureBakeJobService = ({
     );
 
     if (!result.ok) {
-      if (result.status === "cancelled" || controller.signal.aborted) {
-        completeCancelled(
-          jobId,
-          result.issues[0]?.message,
-        );
+      if (result.status === 'cancelled' || controller.signal.aborted) {
+        completeCancelled(jobId, result.issues[0]?.message);
         return;
       }
       fail(
         jobId,
-        result.issues[0]?.code ?? "audio-bake-failed",
-        result.issues.map((issue) => issue.message).join(" "),
+        result.issues[0]?.code ?? 'audio-bake-failed',
+        result.issues.map((issue) => issue.message).join(' '),
       );
       return;
     }
 
     const completedAt = timestamp();
     update(jobId, {
-      status: "succeeded",
+      status: 'succeeded',
       completedAt,
       result,
       progress: {
-        stage: "succeeded",
+        stage: 'succeeded',
         completed: result.metrics.frameCount,
         total: result.metrics.frameCount,
         progress: 1,
@@ -321,9 +300,9 @@ export const createVizAudioFeatureBakeJobService = ({
     controllers.delete(jobId);
   };
 
-  const start: VizAudioFeatureBakeJobService["start"] = (
+  const start: VizAudioFeatureBakeJobService['start'] = (
     request,
-    requestedBy = { kind: "agent", id: "local-audio-bake" },
+    requestedBy = { kind: 'agent', id: 'local-audio-bake' },
   ) => {
     const id = createId();
     if (jobs.has(id)) {
@@ -333,14 +312,14 @@ export const createVizAudioFeatureBakeJobService = ({
     const job: VizAudioFeatureBakeJobRecord = {
       schemaVersion: 1,
       id,
-      kind: "audio-feature-timeline",
-      status: "queued",
+      kind: 'audio-feature-timeline',
+      status: 'queued',
       request: clone(request),
       requestedBy: clone(requestedBy),
       requestedAt,
       updatedAt: requestedAt,
       progress: {
-        stage: "queued",
+        stage: 'queued',
         completed: 0,
         total: 0,
         progress: 0,
@@ -376,8 +355,8 @@ export const createVizAudioFeatureBakeJobService = ({
             total: 0,
             progress: 0,
           }),
-          stage: "cancelling",
-          message: "Cancellation requested.",
+          stage: 'cancelling',
+          message: 'Cancellation requested.',
         },
       });
       controllers.get(jobId)?.abort();
@@ -386,9 +365,7 @@ export const createVizAudioFeatureBakeJobService = ({
     wait: (jobId) => {
       const job = jobs.get(jobId);
       if (!job) {
-        return Promise.reject(
-          new Error(`Unknown audio bake job "${jobId}".`),
-        );
+        return Promise.reject(new Error(`Unknown audio bake job "${jobId}".`));
       }
       if (isTerminal(job.status)) {
         return Promise.resolve(clone(job));

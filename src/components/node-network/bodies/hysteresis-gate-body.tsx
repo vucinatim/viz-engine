@@ -1,8 +1,5 @@
-import {
-  getRuntimeNodeInput,
-  getRuntimeNodeOutput,
-} from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
+import { getRuntimeNodeInput, getRuntimeNodeOutput } from '@/lib/viz-session';
 import { D3DragEvent, drag } from 'd3-drag';
 import { select } from 'd3-selection';
 import { memo, useEffect, useRef } from 'react';
@@ -108,7 +105,7 @@ const HysteresisGateBody = ({
       <div ref={trackRef} className="relative h-6 w-full rounded bg-zinc-800">
         <div
           ref={fillRef}
-          className="absolute left-0 top-0 h-full rounded-l bg-zinc-500/40"
+          className="absolute top-0 left-0 h-full rounded-l bg-zinc-500/40"
           style={{ width: '0%' }}
         />
         <div
@@ -121,7 +118,7 @@ const HysteresisGateBody = ({
           className="absolute top-0 h-full w-1 cursor-ew-resize bg-orange-500"
           title="High threshold"
         />
-        <div className="pointer-events-none absolute inset-0 border-l-2 border-r-2 border-transparent" />
+        <div className="pointer-events-none absolute inset-0 border-r-2 border-l-2 border-transparent" />
         <div
           ref={gatedRef}
           className="pointer-events-none absolute -top-5 right-0 rounded px-1 text-[10px]"

@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
 import { VIZ_PROJECT_SCHEMA_VERSION } from '@viz-engine/contracts';
 import { validateProjectDocument } from '@viz-engine/runtime';
+import { describe, expect, it } from 'vitest';
 
 describe('Bundled sample project files', () => {
   it('use the canonical project persistence shape', () => {
@@ -19,10 +19,7 @@ describe('Bundled sample project files', () => {
         fs.readFileSync(path.join(projectsDir, fileName), 'utf8'),
       );
 
-      expect(projectFile).toHaveProperty(
-        'version',
-        VIZ_PROJECT_SCHEMA_VERSION,
-      );
+      expect(projectFile).toHaveProperty('version', VIZ_PROJECT_SCHEMA_VERSION);
       expect(projectFile).toHaveProperty('project');
       expect(projectFile.project).toHaveProperty(
         'schemaVersion',

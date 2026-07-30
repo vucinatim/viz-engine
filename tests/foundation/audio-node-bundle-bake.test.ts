@@ -1,46 +1,38 @@
-import { decodeVizAudioFileToPcm } from "@viz-engine/bake/node";
+import { decodeVizAudioFileToPcm } from '@viz-engine/bake/node';
+import { createCoreComponentRegistry } from '@viz-engine/components-core';
 import {
   VIZ_PROJECT_SCHEMA_VERSION,
   type VizProjectDocument,
-} from "@viz-engine/contracts";
-import { runVizCli } from "@viz-engine/dev-cli";
+} from '@viz-engine/contracts';
+import { inspectBundleFrame, runVizCli } from '@viz-engine/dev-cli';
+import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
 import {
-  inspectBundleFrame,
   loadLocalVizProjectBundle,
   writeLocalVizProjectBundle,
-} from "@viz-engine/dev-cli";
-import { sampleAudioFrameSnapshot } from "@viz-engine/runtime";
-import { createVizRemotionRenderPlan } from "@viz-engine/remotion-adapter";
-import { createCoreComponentRegistry } from "@viz-engine/components-core";
-import { createCoreNodeRegistry } from "@viz-engine/nodes-core";
-import {
-  mkdtempSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { pathToFileURL } from "node:url";
-import { spawnSync } from "node:child_process";
-import { afterEach, describe, expect, it } from "vitest";
+} from '@viz-engine/project-bundle/node';
+import { createVizRemotionRenderPlan } from '@viz-engine/remotion-adapter';
+import { sampleAudioFrameSnapshot } from '@viz-engine/runtime';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { afterEach, describe, expect, it } from 'vitest';
 
 const ffmpegAvailable =
-  spawnSync("ffmpeg", ["-version"], { stdio: "ignore" }).status === 0 &&
-  spawnSync("ffprobe", ["-version"], { stdio: "ignore" }).status === 0;
+  spawnSync('ffmpeg', ['-version'], { stdio: 'ignore' }).status === 0 &&
+  spawnSync('ffprobe', ['-version'], { stdio: 'ignore' }).status === 0;
 
 const temporaryDirectories: string[] = [];
 
-const createMonoWav = (
-  sampleRate: number,
-  durationSeconds: number,
-): Buffer => {
+const createMonoWav = (sampleRate: number, durationSeconds: number): Buffer => {
   const sampleCount = Math.floor(sampleRate * durationSeconds);
   const dataLength = sampleCount * 2;
   const buffer = Buffer.alloc(44 + dataLength);
-  buffer.write("RIFF", 0);
+  buffer.write('RIFF', 0);
   buffer.writeUInt32LE(36 + dataLength, 4);
-  buffer.write("WAVE", 8);
-  buffer.write("fmt ", 12);
+  buffer.write('WAVE', 8);
+  buffer.write('fmt ', 12);
   buffer.writeUInt32LE(16, 16);
   buffer.writeUInt16LE(1, 20);
   buffer.writeUInt16LE(1, 22);
@@ -48,7 +40,7 @@ const createMonoWav = (
   buffer.writeUInt32LE(sampleRate * 2, 28);
   buffer.writeUInt16LE(2, 32);
   buffer.writeUInt16LE(16, 34);
-  buffer.write("data", 36);
+  buffer.write('data', 36);
   buffer.writeUInt32LE(dataLength, 40);
   for (let index = 0; index < sampleCount; index += 1) {
     const sample = Math.sin((2 * Math.PI * 220 * index) / sampleRate);
@@ -63,13 +55,13 @@ afterEach(() => {
   }
 });
 
-describe.skipIf(!ffmpegAvailable)("Node audio decode and bundle bake", () => {
-  it("decodes real media and emits a portable reopenable baked bundle", async () => {
-    const root = mkdtempSync(join(tmpdir(), "viz-audio-bake-"));
+describe.skipIf(!ffmpegAvailable)('Node audio decode and bundle bake', () => {
+  it('decodes real media and emits a portable reopenable baked bundle', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'viz-audio-bake-'));
     temporaryDirectories.push(root);
-    const audioPath = join(root, "tone.wav");
-    const sourceBundle = join(root, "source");
-    const outputBundle = join(root, "output");
+    const audioPath = join(root, 'tone.wav');
+    const sourceBundle = join(root, 'source');
+    const outputBundle = join(root, 'output');
     writeFileSync(audioPath, createMonoWav(8_000, 0.5));
 
     const decoded = await decodeVizAudioFileToPcm(audioPath);
@@ -85,28 +77,28 @@ describe.skipIf(!ffmpegAvailable)("Node audio decode and bundle bake", () => {
 
     const project: VizProjectDocument = {
       schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-      projectId: "node-audio-bake",
-      name: "Node Audio Bake",
+      projectId: 'node-audio-bake',
+      name: 'Node Audio Bake',
       timeline: { fps: 10, durationInFrames: 5 },
       viewport: { width: 320, height: 180 },
-      layerOrder: ["spectrum"],
+      layerOrder: ['spectrum'],
       layers: [
         {
-          id: "spectrum",
-          name: "Spectrum",
-          componentId: "curve-spectrum",
+          id: 'spectrum',
+          name: 'Spectrum',
+          componentId: 'curve-spectrum',
           enabled: true,
           opacity: 1,
-          blendMode: "normal",
+          blendMode: 'normal',
         },
       ],
       assetRefs: [
         {
-          id: "tone",
-          kind: "audio",
-          source: "local",
-          label: "Tone",
-          mimeType: "audio/wav",
+          id: 'tone',
+          kind: 'audio',
+          source: 'local',
+          label: 'Tone',
+          mimeType: 'audio/wav',
         },
       ],
       artifactRefs: [],
@@ -116,11 +108,11 @@ describe.skipIf(!ffmpegAvailable)("Node audio decode and bundle bake", () => {
       project,
       resolvedAssets: [
         {
-          id: "tone",
-          kind: "audio",
-          source: "local",
+          id: 'tone',
+          kind: 'audio',
+          source: 'local',
           uri: pathToFileURL(audioPath).href,
-          mimeType: "audio/wav",
+          mimeType: 'audio/wav',
         },
       ],
       resolvedArtifacts: [],
@@ -128,23 +120,23 @@ describe.skipIf(!ffmpegAvailable)("Node audio decode and bundle bake", () => {
     expect(sourceWrite.issues).toEqual([]);
 
     const cli = await runVizCli([
-      "bundle",
-      "bake-audio",
-      "--dir",
+      'bundle',
+      'bake-audio',
+      '--dir',
       sourceBundle,
-      "--out",
+      '--out',
       outputBundle,
-      "--fft-size",
-      "256",
-      "--duration",
-      "0.2",
+      '--fft-size',
+      '256',
+      '--duration',
+      '0.2',
     ]);
     expect(cli).toMatchObject({
       ok: true,
-      command: "bundle bake-audio",
+      command: 'bundle bake-audio',
       payload: {
         job: {
-          status: "succeeded",
+          status: 'succeeded',
           metrics: { frameCount: 2 },
         },
       },
@@ -155,7 +147,7 @@ describe.skipIf(!ffmpegAvailable)("Node audio decode and bundle bake", () => {
     expect(reopened.project.artifactRefs).toHaveLength(1);
     const artifact = reopened.resolvedArtifacts[0]?.payload;
     expect(artifact).toMatchObject({
-      kind: "audio-feature-timeline",
+      kind: 'audio-feature-timeline',
       frameAlignment: { frameCount: 2 },
     });
     expect(
@@ -165,7 +157,7 @@ describe.skipIf(!ffmpegAvailable)("Node audio decode and bundle bake", () => {
         10,
       ),
     ).toMatchObject({
-      provenance: "baked",
+      provenance: 'baked',
       artifactFrame: 1,
     });
 
@@ -175,20 +167,17 @@ describe.skipIf(!ffmpegAvailable)("Node audio decode and bundle bake", () => {
       frameInspection.payload as {
         framePlan: {
           layers: Array<{
-            resolvedInputs: Record<
-              string,
-              { value?: unknown }
-            >;
+            resolvedInputs: Record<string, { value?: unknown }>;
           }>;
         };
       }
     ).framePlan;
-    expect(
-      framePlan.layers[0]?.resolvedInputs.spectrum?.value,
-    ).toBeInstanceOf(Uint8Array);
-    expect(
-      framePlan.layers[0]?.resolvedInputs.spectrum?.value,
-    ).toHaveLength(128);
+    expect(framePlan.layers[0]?.resolvedInputs.spectrum?.value).toBeInstanceOf(
+      Uint8Array,
+    );
+    expect(framePlan.layers[0]?.resolvedInputs.spectrum?.value).toHaveLength(
+      128,
+    );
 
     const remotionPlan = createVizRemotionRenderPlan({
       project: reopened.project,
@@ -198,9 +187,7 @@ describe.skipIf(!ffmpegAvailable)("Node audio decode and bundle bake", () => {
       registry: createCoreComponentRegistry(),
       nodeRegistry: createCoreNodeRegistry(),
     });
-    expect(
-      remotionPlan.layers[0]?.resolvedInputs.spectrum?.value,
-    ).toEqual(
+    expect(remotionPlan.layers[0]?.resolvedInputs.spectrum?.value).toEqual(
       framePlan.layers[0]?.resolvedInputs.spectrum?.value,
     );
   });

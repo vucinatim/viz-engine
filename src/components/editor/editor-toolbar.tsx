@@ -18,8 +18,8 @@ import {
   MenubarShortcut,
   MenubarTrigger,
 } from '@/components/ui/menubar';
-import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts';
 import editorControl from '@/lib/editor-control';
+import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts';
 import { getBundledSampleProjects } from '@/lib/public-manifests';
 import { useHistoryStore } from '@/lib/stores/history-store';
 import useProfilerStore from '@/lib/stores/profiler-store';

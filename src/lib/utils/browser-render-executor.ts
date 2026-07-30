@@ -27,16 +27,11 @@ export interface VizBrowserFrameCaptureInput {
 }
 
 export interface CreateVizBrowserRenderExecutorOptions {
-  captureFrame(
-    input: VizBrowserFrameCaptureInput,
-  ): Promise<HTMLCanvasElement>;
+  captureFrame(input: VizBrowserFrameCaptureInput): Promise<HTMLCanvasElement>;
   encodeVideo?: (input: {
     frames: Blob[];
     audioUrl: string | null;
-    request: Extract<
-      VizRenderRequest,
-      { kind: 'clip' | 'video' }
-    >;
+    request: Extract<VizRenderRequest, { kind: 'clip' | 'video' }>;
     signal: AbortSignal;
     onProgress(progress: number): void;
   }) => Promise<{
@@ -45,10 +40,7 @@ export interface CreateVizBrowserRenderExecutorOptions {
   }>;
   resolveAudioUrl?: (
     source: VizRenderSource,
-    request: Extract<
-      VizRenderRequest,
-      { kind: 'clip' | 'video' }
-    >,
+    request: Extract<VizRenderRequest, { kind: 'clip' | 'video' }>,
   ) => string | null;
   createObjectUrl?: (blob: Blob) => string;
 }
@@ -72,20 +64,14 @@ const percentile95 = (values: readonly number[]): number => {
   }
   const sorted = [...values].sort((left, right) => left - right);
   return sorted[
-    Math.min(
-      sorted.length - 1,
-      Math.ceil(sorted.length * 0.95) - 1,
-    )
+    Math.min(sorted.length - 1, Math.ceil(sorted.length * 0.95) - 1)
   ]!;
 };
 
 const createPerformance = (
   durations: readonly number[],
 ): VizRenderPerformanceFeedback => {
-  const total = durations.reduce(
-    (sum, duration) => sum + duration,
-    0,
-  );
+  const total = durations.reduce((sum, duration) => sum + duration, 0);
   return {
     evaluatedFrameCount: durations.length,
     renderedFrameCount: durations.length,
@@ -98,9 +84,7 @@ const createPerformance = (
   };
 };
 
-const sampleCanvasPixels = (
-  canvas: HTMLCanvasElement,
-): Uint8ClampedArray => {
+const sampleCanvasPixels = (canvas: HTMLCanvasElement): Uint8ClampedArray => {
   const sample = document.createElement('canvas');
   sample.width = 64;
   sample.height = 36;
@@ -111,12 +95,7 @@ const sampleCanvasPixels = (
     throw new Error('Could not create visual-feedback context.');
   }
   context.drawImage(canvas, 0, 0, sample.width, sample.height);
-  return context.getImageData(
-    0,
-    0,
-    sample.width,
-    sample.height,
-  ).data;
+  return context.getImageData(0, 0, sample.width, sample.height).data;
 };
 
 const createVisualMetric = (
@@ -133,8 +112,7 @@ const createVisualMetric = (
     const red = pixels[index] ?? 0;
     const green = pixels[index + 1] ?? 0;
     const blue = pixels[index + 2] ?? 0;
-    const luminance =
-      (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
+    const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
     luminanceTotal += luminance;
     if (luminance < 0.02) {
       darkPixels += 1;
@@ -142,9 +120,7 @@ const createVisualMetric = (
     if (previousPixels) {
       differenceTotal +=
         (Math.abs(red - (previousPixels[index] ?? 0)) +
-          Math.abs(
-            green - (previousPixels[index + 1] ?? 0),
-          ) +
+          Math.abs(green - (previousPixels[index + 1] ?? 0)) +
           Math.abs(blue - (previousPixels[index + 2] ?? 0))) /
         (3 * 255);
     }
@@ -152,10 +128,8 @@ const createVisualMetric = (
 
   return {
     frame,
-    averageLuminance:
-      pixelCount === 0 ? 0 : luminanceTotal / pixelCount,
-    darkPixelRatio:
-      pixelCount === 0 ? 1 : darkPixels / pixelCount,
+    averageLuminance: pixelCount === 0 ? 0 : luminanceTotal / pixelCount,
+    darkPixelRatio: pixelCount === 0 ? 1 : darkPixels / pixelCount,
     ...(previousPixels === undefined
       ? {}
       : {
@@ -172,8 +146,7 @@ const createVisualFeedback = (
   blankOrNearBlackFrames: captured
     .filter(
       ({ metric }) =>
-        metric.averageLuminance < 0.01 &&
-        metric.darkPixelRatio > 0.995,
+        metric.averageLuminance < 0.01 && metric.darkPixelRatio > 0.995,
     )
     .map(({ frame }) => frame),
   frozenFramePairs: captured.flatMap((entry, index) => {
@@ -203,9 +176,7 @@ const sha256 = async (blob: Blob): Promise<string> => {
     .join('');
 };
 
-const mimeTypeFor = (
-  format: VizRenderRequest['format'],
-): string =>
+const mimeTypeFor = (format: VizRenderRequest['format']): string =>
   format === 'png'
     ? 'image/png'
     : format === 'webp'
@@ -218,14 +189,8 @@ const mimeTypeFor = (
             ? 'video/webm'
             : 'image/svg+xml';
 
-const qualityFor = (
-  quality: VizRenderRequest['quality'],
-): number =>
-  quality === 'high'
-    ? 0.96
-    : quality === 'standard'
-      ? 0.9
-      : 0.78;
+const qualityFor = (quality: VizRenderRequest['quality']): number =>
+  quality === 'high' ? 0.96 : quality === 'standard' ? 0.9 : 0.78;
 
 const createOutput = async ({
   request,
@@ -243,9 +208,7 @@ const createOutput = async ({
   createObjectUrl(blob: Blob): string;
 }): Promise<VizRenderOutputArtifact> => {
   const hash = await sha256(blob);
-  const isImage =
-    request.kind === 'still' ||
-    request.kind === 'contact-sheet';
+  const isImage = request.kind === 'still' || request.kind === 'contact-sheet';
   return {
     id: `render-output-${hash.slice(0, 20)}`,
     kind: 'render-output',
@@ -301,11 +264,7 @@ const captureFrames = async (
       frame,
       canvas,
       durationMilliseconds,
-      metric: createVisualMetric(
-        frame,
-        pixels,
-        previousPixels,
-      ),
+      metric: createVisualMetric(frame, pixels, previousPixels),
     });
     previousPixels = pixels;
     context.onProgress({
@@ -329,22 +288,14 @@ const executeImageRender = async (
   options: CreateVizBrowserRenderExecutorOptions,
 ): Promise<VizRenderExecutorResult> => {
   const { request } = context;
-  if (
-    request.kind !== 'still' &&
-    request.kind !== 'contact-sheet'
-  ) {
-    throw new Error(
-      `Browser image executor does not support ${request.kind}.`,
-    );
+  if (request.kind !== 'still' && request.kind !== 'contact-sheet') {
+    throw new Error(`Browser image executor does not support ${request.kind}.`);
   }
   if (request.format === 'svg') {
-    throw new Error(
-      'Browser WebGL executor cannot encode SVG output.',
-    );
+    throw new Error('Browser WebGL executor cannot encode SVG output.');
   }
 
-  const frames =
-    request.kind === 'still' ? [request.frame] : request.frames;
+  const frames = request.kind === 'still' ? [request.frame] : request.frames;
   const captured = await captureFrames(frames, context, options);
   const format = request.format;
   const quality = qualityFor(request.quality);
@@ -359,10 +310,8 @@ const executeImageRender = async (
     );
     const rows = Math.ceil(captured.length / columns);
     const gap = request.gap ?? 8;
-    const width =
-      columns * request.viewport.width + (columns - 1) * gap;
-    const height =
-      rows * request.viewport.height + (rows - 1) * gap;
+    const width = columns * request.viewport.width + (columns - 1) * gap;
+    const height = rows * request.viewport.height + (rows - 1) * gap;
     if (width > 16_384 || height > 16_384) {
       throw new Error(
         `Contact sheet ${width}x${height} exceeds the 16384px browser canvas limit.`,
@@ -375,8 +324,7 @@ const executeImageRender = async (
     if (!outputContext) {
       throw new Error('Could not create contact-sheet canvas.');
     }
-    outputContext.fillStyle =
-      request.viewport.backgroundColor ?? '#000000';
+    outputContext.fillStyle = request.viewport.backgroundColor ?? '#000000';
     outputContext.fillRect(0, 0, width, height);
     captured.forEach(({ canvas }, index) => {
       const column = index % columns;
@@ -425,9 +373,7 @@ const executeVideoRender = async (
     throw new Error('Expected a clip or video request.');
   }
   if (!options.encodeVideo) {
-    throw new Error(
-      'Browser video encoding is not available in this host.',
-    );
+    throw new Error('Browser video encoding is not available in this host.');
   }
   if (request.fps !== source.project.timeline.fps) {
     throw new Error(
@@ -459,11 +405,7 @@ const executeVideoRender = async (
     captured.push({
       frame,
       durationMilliseconds,
-      metric: createVisualMetric(
-        frame,
-        pixels,
-        previousPixels,
-      ),
+      metric: createVisualMetric(frame, pixels, previousPixels),
     });
     previousPixels = pixels;
     frameBlobs.push(
@@ -486,7 +428,7 @@ const executeVideoRender = async (
     }
   }
   const audioUrl = request.includeAudio
-    ? options.resolveAudioUrl?.(source, request) ?? null
+    ? (options.resolveAudioUrl?.(source, request) ?? null)
     : null;
   if (request.includeAudio && audioUrl === null) {
     throw new Error(
@@ -527,9 +469,7 @@ const executeVideoRender = async (
     outputs: [output],
     diagnostics: [],
     performance: {
-      ...createPerformance(
-        captured.map((entry) => entry.durationMilliseconds),
-      ),
+      ...createPerformance(captured.map((entry) => entry.durationMilliseconds)),
       encodeMilliseconds,
     },
     mediaProbe: encoded.probe,
@@ -544,14 +484,12 @@ export const createVizBrowserRenderExecutor = (
   version: VIZ_BROWSER_WEBGL_RENDER_EXECUTOR_VERSION,
   rendererIdentity: 'viz-renderer-three.browser-compositor.v1',
   supports: (request) =>
-    ((request.kind === 'still' ||
-      request.kind === 'contact-sheet') &&
+    ((request.kind === 'still' || request.kind === 'contact-sheet') &&
       request.format !== 'svg') ||
     ((request.kind === 'clip' || request.kind === 'video') &&
       options.encodeVideo !== undefined),
   execute: (context) =>
-    context.request.kind === 'still' ||
-    context.request.kind === 'contact-sheet'
+    context.request.kind === 'still' || context.request.kind === 'contact-sheet'
       ? executeImageRender(context, options)
       : executeVideoRender(context, options),
 });

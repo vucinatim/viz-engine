@@ -5,30 +5,30 @@
  * Orchestrates the entire pipeline from audio extraction to video encoding.
  */
 
-import {
-  createVizSessionRuntimePreviewFrame,
-  vizSessionActions,
-} from '../viz-session';
 import useEditorAudioSessionStore from '../stores/editor-audio-session-store';
+import { getProjectedLayers } from '../stores/editor-layer-projection-store';
 import useEditorPreviewStore from '../stores/editor-preview-store';
 import useEditorRuntimePreviewAttachmentStore from '../stores/editor-runtime-preview-attachment-store';
-import { getProjectedLayers } from '../stores/editor-layer-projection-store';
 import useExportStore, {
   ExportLog,
   ExportSettings,
 } from '../stores/export-store';
-import { fastCaptureFrame } from './fast-frame-capture';
 import {
-  BatchFrameWriter,
-  clearAllFrames,
-  getAllFrames,
-} from './frame-storage';
+  createVizSessionRuntimePreviewFrame,
+  vizSessionActions,
+} from '../viz-session';
 import {
   bakeBrowserAudioFeatures,
   loadAndDecodeBrowserAudio,
   sampleBrowserAudioBakeFrame,
   type BrowserAudioBake,
 } from './browser-audio-bake';
+import { fastCaptureFrame } from './fast-frame-capture';
+import {
+  BatchFrameWriter,
+  clearAllFrames,
+  getAllFrames,
+} from './frame-storage';
 import { downloadVideo, encodeVideo, initFFmpeg } from './video-encoder';
 
 // Helper to add logs to the export store
@@ -228,10 +228,7 @@ export async function exportVideo(
 
     // Analyze the audio data quality
     if (offlineAudioData.frameCount > 0) {
-      const firstFrame = sampleBrowserAudioBakeFrame(
-        offlineAudioData,
-        0,
-      );
+      const firstFrame = sampleBrowserAudioBakeFrame(offlineAudioData, 0);
       const freqMax = Math.max(...firstFrame.frequencyData);
       const freqMin = Math.min(...firstFrame.frequencyData);
       const freqAvg =
@@ -369,7 +366,7 @@ export async function exportVideo(
         });
       },
     );
-    const encodeDuration = encodeTimer.end();
+    encodeTimer.end();
     const videoSizeMB = (videoBlob.size / 1024 / 1024).toFixed(2);
     log(
       'success',
@@ -501,9 +498,6 @@ async function renderFrames(
     `${totalFrames} frames @ ${width}x${height}`,
   );
 
-  // Get stores
-  const exportStore = useExportStore.getState();
-  const previewStore = useEditorPreviewStore.getState();
   const runtimePreviewAttachments =
     useEditorRuntimePreviewAttachmentStore.getState();
 
@@ -601,10 +595,7 @@ async function renderFrames(
       );
 
       if (frameIndex === 0) {
-        log(
-          'info',
-          'Waiting for deterministic runtime resources',
-        );
+        log('info', 'Waiting for deterministic runtime resources');
         await useEditorRuntimePreviewAttachmentStore
           .getState()
           .whenRuntimeResourcesReady();
@@ -680,7 +671,6 @@ async function renderFrames(
     // Always close the batch frame writer, even on error/cancellation
     frameWriter.close();
     log('info', 'Batch frame writer closed');
-
   }
 }
 

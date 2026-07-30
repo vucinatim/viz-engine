@@ -6,48 +6,75 @@ import type {
   VizProjectDocument,
   VizResolvedArtifact,
   VizResolvedAsset,
-} from "@viz-engine/contracts";
+} from '@viz-engine/contracts';
 import {
-  VIZ_PROJECT_BUNDLE_MANIFEST_KIND,
-  VIZ_PROJECT_BUNDLE_MANIFEST_SCHEMA_VERSION,
   VIZ_EXECUTION_MANIFEST_KIND,
   VIZ_EXECUTION_MANIFEST_SCHEMA_VERSION,
-} from "@viz-engine/contracts";
-import { createHash } from "node:crypto";
+  VIZ_PROJECT_BUNDLE_MANIFEST_KIND,
+  VIZ_PROJECT_BUNDLE_MANIFEST_SCHEMA_VERSION,
+} from '@viz-engine/contracts';
+import { createHash } from 'node:crypto';
 import {
   copyFileSync,
   existsSync,
   mkdirSync,
   readFileSync,
   writeFileSync,
-} from "node:fs";
-import { basename, extname, resolve } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+} from 'node:fs';
+import { basename, extname, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import {
+  VIZ_AUDIO_ARTIFACT_CONTAINER_ENCODING,
+  decodeVizAudioArtifactContainer,
+  encodeVizAudioArtifactContainer,
+  isVizAudioArtifactContainerPayload,
+} from './audio-artifact-container.js';
+import {
+  createVizExecutionManifest,
+  type VizExecutionManifestEnvironment,
+} from './execution-manifest.js';
 
+export {
+  VIZ_AUDIO_ARTIFACT_CONTAINER_ENCODING,
+  decodeVizAudioArtifactContainer,
+  encodeVizAudioArtifactContainer,
+  isVizAudioArtifactContainerPayload,
+} from './audio-artifact-container.js';
+export {
+  createVizExecutionManifest,
+  type CreateVizExecutionManifestOptions,
+  type VizExecutionManifestEnvironment,
+  type VizExecutionNodePackageRegistration,
+  type VizExecutionRendererProgramRegistration,
+} from './execution-manifest.js';
+
+/** A validation failure found while loading a bundle from local storage. */
 export interface LocalVizProjectBundleValidationIssue {
   code:
-    | "invalid-manifest-kind"
-    | "invalid-manifest-schema-version"
-    | "invalid-execution-manifest-kind"
-    | "invalid-execution-manifest-schema-version"
-    | "invalid-execution-manifest-json"
-    | "invalid-execution-identity"
-    | "execution-project-mismatch"
-    | "execution-content-identity-mismatch"
-    | "invalid-artifact-json"
-    | "missing-project-file"
-    | "missing-execution-manifest-file"
-    | "missing-asset-file"
-    | "missing-artifact-file"
-    | "missing-execution-component"
-    | "missing-execution-node"
-    | "missing-execution-asset"
-    | "missing-execution-artifact"
-    | "missing-execution-bake"
-    | "missing-asset-entry"
-    | "missing-artifact-entry"
-    | "orphan-asset-entry"
-    | "orphan-artifact-entry";
+    | 'invalid-manifest-kind'
+    | 'invalid-manifest-schema-version'
+    | 'invalid-execution-manifest-kind'
+    | 'invalid-execution-manifest-schema-version'
+    | 'invalid-execution-manifest-json'
+    | 'invalid-execution-identity'
+    | 'execution-project-mismatch'
+    | 'execution-content-identity-mismatch'
+    | 'invalid-artifact-container'
+    | 'invalid-artifact-encoding'
+    | 'invalid-artifact-json'
+    | 'missing-project-file'
+    | 'missing-execution-manifest-file'
+    | 'missing-asset-file'
+    | 'missing-artifact-file'
+    | 'missing-execution-component'
+    | 'missing-execution-node'
+    | 'missing-execution-asset'
+    | 'missing-execution-artifact'
+    | 'missing-execution-bake'
+    | 'missing-asset-entry'
+    | 'missing-artifact-entry'
+    | 'orphan-asset-entry'
+    | 'orphan-artifact-entry';
   message: string;
   path?: string;
 }
@@ -67,16 +94,16 @@ export interface WriteLocalVizProjectBundleOptions {
   project: VizProjectDocument;
   resolvedAssets: VizResolvedAsset[];
   resolvedArtifacts: VizResolvedArtifact[];
-  executionManifest?: VizExecutionManifest;
+  executionEnvironment?: VizExecutionManifestEnvironment;
 }
 
 export interface LocalVizProjectBundleWriteIssue {
   code:
-    | "missing-resolved-asset"
-    | "missing-resolved-artifact"
-    | "unsupported-asset-uri"
-    | "unsupported-artifact-payload"
-    | "invalid-data-uri";
+    | 'missing-resolved-asset'
+    | 'missing-resolved-artifact'
+    | 'unsupported-asset-uri'
+    | 'unsupported-artifact-payload'
+    | 'invalid-data-uri';
   message: string;
   path?: string;
 }
@@ -84,77 +111,80 @@ export interface LocalVizProjectBundleWriteIssue {
 export interface WrittenLocalVizProjectBundle {
   bundleDirectory: string;
   manifest: VizProjectBundleManifest;
+  executionManifest?: VizExecutionManifest;
   issues: LocalVizProjectBundleWriteIssue[];
 }
 
 const readJsonFile = <T>(filePath: string): T => {
-  return JSON.parse(readFileSync(filePath, "utf8")) as T;
+  return JSON.parse(readFileSync(filePath, 'utf8')) as T;
 };
 
 const sha256File = (filePath: string): string =>
-  `sha256:${createHash("sha256")
-    .update(readFileSync(filePath))
-    .digest("hex")}`;
+  `sha256:${createHash('sha256').update(readFileSync(filePath)).digest('hex')}`;
 
 const isNonEmptyString = (value: unknown): value is string =>
-  typeof value === "string" && value.trim().length > 0;
+  typeof value === 'string' && value.trim().length > 0;
 
 const isSha256Identity = (value: unknown): value is string =>
-  typeof value === "string" && /^sha256:[0-9a-f]{64}$/.test(value);
+  typeof value === 'string' && /^sha256:[0-9a-f]{64}$/.test(value);
 
-const normalizeBundleDirectoryInput = (bundleDirectoryInput: string): string => {
-  return bundleDirectoryInput.startsWith("file:")
+const normalizeBundleDirectoryInput = (
+  bundleDirectoryInput: string,
+): string => {
+  return bundleDirectoryInput.startsWith('file:')
     ? fileURLToPath(bundleDirectoryInput)
     : bundleDirectoryInput;
 };
 
 const inferAssetExtension = (asset: VizResolvedAsset): string => {
-  if (asset.kind === "audio") {
-    return ".bin";
+  if (asset.kind === 'audio') {
+    return '.bin';
   }
 
-  if (asset.kind === "image") {
-    return asset.mimeType === "image/svg+xml" ? ".svg" : ".img";
+  if (asset.kind === 'image') {
+    return asset.mimeType === 'image/svg+xml' ? '.svg' : '.img';
   }
 
-  if (asset.kind === "video") {
-    return ".video";
+  if (asset.kind === 'video') {
+    return '.video';
   }
 
-  if (asset.kind === "model") {
-    if (asset.mimeType === "model/gltf-binary") {
-      return ".glb";
+  if (asset.kind === 'model') {
+    if (asset.mimeType === 'model/gltf-binary') {
+      return '.glb';
     }
-    if (asset.mimeType === "model/gltf+json") {
-      return ".gltf";
+    if (asset.mimeType === 'model/gltf+json') {
+      return '.gltf';
     }
     if (
-      asset.mimeType === "application/vnd.autodesk.fbx" ||
-      asset.uri.toLowerCase().endsWith(".fbx")
+      asset.mimeType === 'application/vnd.autodesk.fbx' ||
+      asset.uri.toLowerCase().endsWith('.fbx')
     ) {
-      return ".fbx";
+      return '.fbx';
     }
-    return ".model";
+    return '.model';
   }
 
-  return ".bin";
+  return '.bin';
 };
 
 const decodeDataUri = (uri: string): Uint8Array | undefined => {
-  const matches = uri.match(/^data:([^;,]+)?(?:;charset=[^;,]+)?(;base64)?,(.*)$/);
+  const matches = uri.match(
+    /^data:([^;,]+)?(?:;charset=[^;,]+)?(;base64)?,(.*)$/,
+  );
 
   if (!matches) {
     return undefined;
   }
 
   const base64Flag = matches[2];
-  const rawPayload = matches[3] ?? "";
+  const rawPayload = matches[3] ?? '';
 
   if (base64Flag) {
-    return Uint8Array.from(Buffer.from(rawPayload, "base64"));
+    return Uint8Array.from(Buffer.from(rawPayload, 'base64'));
   }
 
-  return Uint8Array.from(Buffer.from(decodeURIComponent(rawPayload), "utf8"));
+  return Uint8Array.from(Buffer.from(decodeURIComponent(rawPayload), 'utf8'));
 };
 
 const asUint8Array = (bytes: ArrayBuffer): Uint8Array => {
@@ -162,7 +192,7 @@ const asUint8Array = (bytes: ArrayBuffer): Uint8Array => {
 };
 
 const createWriteIssue = (
-  code: LocalVizProjectBundleWriteIssue["code"],
+  code: LocalVizProjectBundleWriteIssue['code'],
   message: string,
   path?: string,
 ): LocalVizProjectBundleWriteIssue => ({
@@ -180,17 +210,17 @@ const writeResolvedAssetFile = (
     return undefined;
   }
 
-  if (asset.uri.startsWith("file:")) {
+  if (asset.uri.startsWith('file:')) {
     copyFileSync(fileURLToPath(asset.uri), outputPath);
     return undefined;
   }
 
-  if (asset.uri.startsWith("data:")) {
+  if (asset.uri.startsWith('data:')) {
     const decoded = decodeDataUri(asset.uri);
 
     if (!decoded) {
       return createWriteIssue(
-        "invalid-data-uri",
+        'invalid-data-uri',
         `Resolved asset "${asset.id}" has an invalid data URI and could not be exported.`,
         outputPath,
       );
@@ -201,7 +231,7 @@ const writeResolvedAssetFile = (
   }
 
   return createWriteIssue(
-    "unsupported-asset-uri",
+    'unsupported-asset-uri',
     `Resolved asset "${asset.id}" uses unsupported export URI "${asset.uri}".`,
     outputPath,
   );
@@ -210,26 +240,31 @@ const writeResolvedAssetFile = (
 const writeResolvedArtifactFile = (
   artifact: VizResolvedArtifact,
   outputPath: string,
+  useAudioContainer: boolean,
 ): LocalVizProjectBundleWriteIssue | undefined => {
   if (artifact.payload !== undefined) {
-    writeFileSync(outputPath, `${JSON.stringify(artifact.payload, null, 2)}\n`);
+    const encoded =
+      useAudioContainer && isVizAudioArtifactContainerPayload(artifact.payload)
+        ? encodeVizAudioArtifactContainer(artifact.payload)
+        : `${JSON.stringify(artifact.payload, null, 2)}\n`;
+    writeFileSync(outputPath, encoded);
     return undefined;
   }
 
-  if (artifact.uri.startsWith("file:")) {
+  if (artifact.uri.startsWith('file:')) {
     copyFileSync(fileURLToPath(artifact.uri), outputPath);
     return undefined;
   }
 
   return createWriteIssue(
-    "unsupported-artifact-payload",
+    'unsupported-artifact-payload',
     `Resolved artifact "${artifact.id}" is not exportable because it has no serializable payload or file URI.`,
     outputPath,
   );
 };
 
 const createIssue = (
-  code: LocalVizProjectBundleValidationIssue["code"],
+  code: LocalVizProjectBundleValidationIssue['code'],
   message: string,
   path?: string,
 ): LocalVizProjectBundleValidationIssue => ({
@@ -251,24 +286,23 @@ const validateExecutionManifest = ({
 }): LocalVizProjectBundleValidationIssue[] => {
   const issues: LocalVizProjectBundleValidationIssue[] = [];
   const executionPath =
-    bundleManifest.executionManifestFile ?? "execution-manifest.json";
+    bundleManifest.executionManifestFile ?? 'execution-manifest.json';
 
   if (executionManifest.kind !== VIZ_EXECUTION_MANIFEST_KIND) {
     issues.push(
       createIssue(
-        "invalid-execution-manifest-kind",
+        'invalid-execution-manifest-kind',
         `Execution manifest kind must be "${VIZ_EXECUTION_MANIFEST_KIND}".`,
         executionPath,
       ),
     );
   }
   if (
-    executionManifest.schemaVersion !==
-    VIZ_EXECUTION_MANIFEST_SCHEMA_VERSION
+    executionManifest.schemaVersion !== VIZ_EXECUTION_MANIFEST_SCHEMA_VERSION
   ) {
     issues.push(
       createIssue(
-        "invalid-execution-manifest-schema-version",
+        'invalid-execution-manifest-schema-version',
         `Execution manifest schemaVersion must be ${VIZ_EXECUTION_MANIFEST_SCHEMA_VERSION}.`,
         executionPath,
       ),
@@ -280,7 +314,7 @@ const validateExecutionManifest = ({
   ) {
     issues.push(
       createIssue(
-        "execution-project-mismatch",
+        'execution-project-mismatch',
         `Execution manifest project identity does not match project "${project.projectId}" schema ${project.schemaVersion}.`,
         executionPath,
       ),
@@ -294,8 +328,8 @@ const validateExecutionManifest = ({
   ) {
     issues.push(
       createIssue(
-        "execution-content-identity-mismatch",
-        "Execution manifest project content identity does not match the bundled project file.",
+        'execution-content-identity-mismatch',
+        'Execution manifest project content identity does not match the bundled project file.',
         bundleManifest.projectFile,
       ),
     );
@@ -323,8 +357,7 @@ const validateExecutionManifest = ({
     ) ||
     capabilityIdentities.some(
       (identity) =>
-        !isNonEmptyString(identity.id) ||
-        !isNonEmptyString(identity.version),
+        !isNonEmptyString(identity.id) || !isNonEmptyString(identity.version),
     ) ||
     !isNonEmptyString(executionManifest.renderer.backend.id) ||
     !isNonEmptyString(executionManifest.renderer.backend.version) ||
@@ -344,17 +377,15 @@ const validateExecutionManifest = ({
   ) {
     issues.push(
       createIssue(
-        "invalid-execution-identity",
-        "Execution manifest package, capability, component, node, renderer, and bake identities must be non-empty.",
+        'invalid-execution-identity',
+        'Execution manifest package, capability, component, node, renderer, and bake identities must be non-empty.',
         executionPath,
       ),
     );
   }
 
   const componentIds = new Set(
-    executionManifest.components.map(
-      (component) => component.componentId,
-    ),
+    executionManifest.components.map((component) => component.componentId),
   );
   for (const componentId of new Set(
     project.layers.map((layer) => layer.componentId),
@@ -362,7 +393,7 @@ const validateExecutionManifest = ({
     if (!componentIds.has(componentId)) {
       issues.push(
         createIssue(
-          "missing-execution-component",
+          'missing-execution-component',
           `Project component "${componentId}" is missing from the execution manifest.`,
           executionPath,
         ),
@@ -383,7 +414,7 @@ const validateExecutionManifest = ({
     if (!nodeTypes.has(nodeType)) {
       issues.push(
         createIssue(
-          "missing-execution-node",
+          'missing-execution-node',
           `Project node type "${nodeType}" is missing from the execution manifest.`,
           executionPath,
         ),
@@ -402,7 +433,7 @@ const validateExecutionManifest = ({
     if (!identity) {
       issues.push(
         createIssue(
-          "missing-execution-asset",
+          'missing-execution-asset',
           `Project asset "${assetRef.id}" is missing from the execution manifest.`,
           executionPath,
         ),
@@ -411,9 +442,7 @@ const validateExecutionManifest = ({
     }
     const entry = assetEntries.get(assetRef.id);
     const assetPath =
-      entry === undefined
-        ? undefined
-        : resolve(bundleDirectory, entry.path);
+      entry === undefined ? undefined : resolve(bundleDirectory, entry.path);
     if (
       !isSha256Identity(identity.contentIdentity) ||
       (assetPath !== undefined &&
@@ -422,7 +451,7 @@ const validateExecutionManifest = ({
     ) {
       issues.push(
         createIssue(
-          "execution-content-identity-mismatch",
+          'execution-content-identity-mismatch',
           `Execution identity for asset "${assetRef.id}" does not match the bundled file.`,
           entry?.path ?? executionPath,
         ),
@@ -447,7 +476,7 @@ const validateExecutionManifest = ({
     if (!identity) {
       issues.push(
         createIssue(
-          "missing-execution-artifact",
+          'missing-execution-artifact',
           `Project artifact "${artifactRef.id}" is missing from the execution manifest.`,
           executionPath,
         ),
@@ -456,9 +485,7 @@ const validateExecutionManifest = ({
     }
     const entry = artifactEntries.get(artifactRef.id);
     const artifactPath =
-      entry === undefined
-        ? undefined
-        : resolve(bundleDirectory, entry.path);
+      entry === undefined ? undefined : resolve(bundleDirectory, entry.path);
     if (
       !isSha256Identity(identity.contentIdentity) ||
       (artifactPath !== undefined &&
@@ -467,7 +494,7 @@ const validateExecutionManifest = ({
     ) {
       issues.push(
         createIssue(
-          "execution-content-identity-mismatch",
+          'execution-content-identity-mismatch',
           `Execution identity for artifact "${artifactRef.id}" does not match the bundled file.`,
           entry?.path ?? executionPath,
         ),
@@ -475,7 +502,7 @@ const validateExecutionManifest = ({
     }
 
     if (
-      artifactRef.kind === "audio-feature-timeline" &&
+      artifactRef.kind === 'audio-feature-timeline' &&
       !executionManifest.bakes.some(
         (bake) =>
           bake.artifactId === artifactRef.id &&
@@ -484,7 +511,7 @@ const validateExecutionManifest = ({
     ) {
       issues.push(
         createIssue(
-          "missing-execution-bake",
+          'missing-execution-bake',
           `Audio artifact "${artifactRef.id}" is missing its bake execution identity.`,
           executionPath,
         ),
@@ -511,9 +538,9 @@ export const validateLocalVizProjectBundle = ({
   if (manifest.kind !== VIZ_PROJECT_BUNDLE_MANIFEST_KIND) {
     issues.push(
       createIssue(
-        "invalid-manifest-kind",
+        'invalid-manifest-kind',
         `Bundle manifest kind must be "${VIZ_PROJECT_BUNDLE_MANIFEST_KIND}".`,
-        "bundle-manifest.json",
+        'bundle-manifest.json',
       ),
     );
   }
@@ -521,9 +548,9 @@ export const validateLocalVizProjectBundle = ({
   if (manifest.schemaVersion !== VIZ_PROJECT_BUNDLE_MANIFEST_SCHEMA_VERSION) {
     issues.push(
       createIssue(
-        "invalid-manifest-schema-version",
+        'invalid-manifest-schema-version',
         `Bundle manifest schemaVersion must be ${VIZ_PROJECT_BUNDLE_MANIFEST_SCHEMA_VERSION}.`,
-        "bundle-manifest.json",
+        'bundle-manifest.json',
       ),
     );
   }
@@ -536,7 +563,7 @@ export const validateLocalVizProjectBundle = ({
     if (!existsSync(executionManifestPath)) {
       issues.push(
         createIssue(
-          "missing-execution-manifest-file",
+          'missing-execution-manifest-file',
           `Execution manifest file "${manifest.executionManifestFile}" does not exist in the bundle directory.`,
           manifest.executionManifestFile,
         ),
@@ -558,18 +585,22 @@ export const validateLocalVizProjectBundle = ({
   if (!existsSync(projectPath)) {
     issues.push(
       createIssue(
-        "missing-project-file",
+        'missing-project-file',
         `Project file "${manifest.projectFile}" does not exist in the bundle directory.`,
         manifest.projectFile,
       ),
     );
   }
 
-  const assetEntryIds = new Set<VizAssetId>(manifest.assetEntries.map((entry) => entry.assetId));
+  const assetEntryIds = new Set<VizAssetId>(
+    manifest.assetEntries.map((entry) => entry.assetId),
+  );
   const artifactEntryIds = new Set<VizArtifactId>(
     manifest.artifactEntries.map((entry) => entry.artifactId),
   );
-  const projectAssetIds = new Set<VizAssetId>((project.assetRefs ?? []).map((entry) => entry.id));
+  const projectAssetIds = new Set<VizAssetId>(
+    (project.assetRefs ?? []).map((entry) => entry.id),
+  );
   const projectArtifactIds = new Set<VizArtifactId>(
     (project.artifactRefs ?? []).map((entry) => entry.id),
   );
@@ -580,7 +611,7 @@ export const validateLocalVizProjectBundle = ({
     if (!existsSync(assetPath)) {
       issues.push(
         createIssue(
-          "missing-asset-file",
+          'missing-asset-file',
           `Asset file "${entry.path}" for asset "${entry.assetId}" does not exist.`,
           entry.path,
         ),
@@ -590,7 +621,7 @@ export const validateLocalVizProjectBundle = ({
     if (!projectAssetIds.has(entry.assetId)) {
       issues.push(
         createIssue(
-          "orphan-asset-entry",
+          'orphan-asset-entry',
           `Bundle asset entry "${entry.assetId}" is not referenced by the project document.`,
           entry.path,
         ),
@@ -601,10 +632,24 @@ export const validateLocalVizProjectBundle = ({
   for (const entry of manifest.artifactEntries) {
     const artifactPath = resolve(bundleDirectory, entry.path);
 
+    if (
+      entry.encoding !== undefined &&
+      entry.encoding !== 'json' &&
+      entry.encoding !== VIZ_AUDIO_ARTIFACT_CONTAINER_ENCODING
+    ) {
+      issues.push(
+        createIssue(
+          'invalid-artifact-encoding',
+          `Artifact "${entry.artifactId}" uses unsupported encoding "${String(entry.encoding)}".`,
+          entry.path,
+        ),
+      );
+    }
+
     if (!existsSync(artifactPath)) {
       issues.push(
         createIssue(
-          "missing-artifact-file",
+          'missing-artifact-file',
           `Artifact file "${entry.path}" for artifact "${entry.artifactId}" does not exist.`,
           entry.path,
         ),
@@ -614,7 +659,7 @@ export const validateLocalVizProjectBundle = ({
     if (!projectArtifactIds.has(entry.artifactId)) {
       issues.push(
         createIssue(
-          "orphan-artifact-entry",
+          'orphan-artifact-entry',
           `Bundle artifact entry "${entry.artifactId}" is not referenced by the project document.`,
           entry.path,
         ),
@@ -626,9 +671,9 @@ export const validateLocalVizProjectBundle = ({
     if (!assetEntryIds.has(assetId)) {
       issues.push(
         createIssue(
-          "missing-asset-entry",
+          'missing-asset-entry',
           `Project asset "${assetId}" is missing a corresponding bundle asset entry.`,
-          "bundle-manifest.json",
+          'bundle-manifest.json',
         ),
       );
     }
@@ -638,9 +683,9 @@ export const validateLocalVizProjectBundle = ({
     if (!artifactEntryIds.has(artifactId)) {
       issues.push(
         createIssue(
-          "missing-artifact-entry",
+          'missing-artifact-entry',
           `Project artifact "${artifactId}" is missing a corresponding bundle artifact entry.`,
-          "bundle-manifest.json",
+          'bundle-manifest.json',
         ),
       );
     }
@@ -653,7 +698,7 @@ export const loadLocalVizProjectBundle = (
   bundleDirectoryInput: string,
 ): LoadedLocalVizProjectBundle => {
   const bundleDirectory = normalizeBundleDirectoryInput(bundleDirectoryInput);
-  const manifestPath = resolve(bundleDirectory, "bundle-manifest.json");
+  const manifestPath = resolve(bundleDirectory, 'bundle-manifest.json');
   const manifest = readJsonFile<VizProjectBundleManifest>(manifestPath);
   const projectPath = resolve(bundleDirectory, manifest.projectFile);
   const project = readJsonFile<VizProjectDocument>(projectPath);
@@ -666,12 +711,13 @@ export const loadLocalVizProjectBundle = (
     );
     if (existsSync(executionManifestPath)) {
       try {
-        executionManifest =
-          readJsonFile<VizExecutionManifest>(executionManifestPath);
+        executionManifest = readJsonFile<VizExecutionManifest>(
+          executionManifestPath,
+        );
       } catch (error) {
         executionIssues.push(
           createIssue(
-            "invalid-execution-manifest-json",
+            'invalid-execution-manifest-json',
             error instanceof Error
               ? `Execution manifest "${manifest.executionManifestFile}" could not be parsed as JSON: ${error.message}`
               : `Execution manifest "${manifest.executionManifestFile}" could not be parsed as JSON.`,
@@ -684,57 +730,62 @@ export const loadLocalVizProjectBundle = (
   const issues = validateLocalVizProjectBundle({
     bundleDirectory,
     manifest,
-    ...(executionManifest === undefined
-      ? {}
-      : { executionManifest }),
+    ...(executionManifest === undefined ? {} : { executionManifest }),
     project,
   });
   issues.push(...executionIssues);
 
-  const resolvedAssets: VizResolvedAsset[] = manifest.assetEntries.map((entry) => ({
-    id: entry.assetId,
-    kind: entry.kind,
-    source: "bundle",
-    uri: pathToFileURL(resolve(bundleDirectory, entry.path)).href,
-    ...(entry.mimeType === undefined ? {} : { mimeType: entry.mimeType }),
-    ...(entry.metadata === undefined ? {} : { metadata: entry.metadata }),
-  }));
-
-  const resolvedArtifacts: VizResolvedArtifact[] = manifest.artifactEntries.map((entry) => {
-    const artifactPath = resolve(bundleDirectory, entry.path);
-    let payload: unknown;
-
-    if (existsSync(artifactPath)) {
-      try {
-        payload = readJsonFile<unknown>(artifactPath);
-      } catch (error) {
-        issues.push(
-          createIssue(
-            "invalid-artifact-json",
-            error instanceof Error
-              ? `Artifact file "${entry.path}" for artifact "${entry.artifactId}" could not be parsed as JSON: ${error.message}`
-              : `Artifact file "${entry.path}" for artifact "${entry.artifactId}" could not be parsed as JSON.`,
-            entry.path,
-          ),
-        );
-      }
-    }
-
-    return {
-      id: entry.artifactId,
+  const resolvedAssets: VizResolvedAsset[] = manifest.assetEntries.map(
+    (entry) => ({
+      id: entry.assetId,
       kind: entry.kind,
-      uri: pathToFileURL(artifactPath).href,
-      ...(payload === undefined ? {} : { payload }),
+      source: 'bundle',
+      uri: pathToFileURL(resolve(bundleDirectory, entry.path)).href,
+      ...(entry.mimeType === undefined ? {} : { mimeType: entry.mimeType }),
       ...(entry.metadata === undefined ? {} : { metadata: entry.metadata }),
-    };
-  });
+    }),
+  );
+
+  const resolvedArtifacts: VizResolvedArtifact[] = manifest.artifactEntries.map(
+    (entry) => {
+      const artifactPath = resolve(bundleDirectory, entry.path);
+      let payload: unknown;
+
+      if (existsSync(artifactPath)) {
+        try {
+          payload =
+            entry.encoding === VIZ_AUDIO_ARTIFACT_CONTAINER_ENCODING
+              ? decodeVizAudioArtifactContainer(readFileSync(artifactPath))
+              : readJsonFile<unknown>(artifactPath);
+        } catch (error) {
+          issues.push(
+            createIssue(
+              entry.encoding === VIZ_AUDIO_ARTIFACT_CONTAINER_ENCODING
+                ? 'invalid-artifact-container'
+                : 'invalid-artifact-json',
+              error instanceof Error
+                ? `Artifact file "${entry.path}" for artifact "${entry.artifactId}" could not be decoded: ${error.message}`
+                : `Artifact file "${entry.path}" for artifact "${entry.artifactId}" could not be decoded.`,
+              entry.path,
+            ),
+          );
+        }
+      }
+
+      return {
+        id: entry.artifactId,
+        kind: entry.kind,
+        uri: pathToFileURL(artifactPath).href,
+        ...(payload === undefined ? {} : { payload }),
+        ...(entry.metadata === undefined ? {} : { metadata: entry.metadata }),
+      };
+    },
+  );
 
   return {
     bundleDirectory,
     manifest,
-    ...(executionManifest === undefined
-      ? {}
-      : { executionManifest }),
+    ...(executionManifest === undefined ? {} : { executionManifest }),
     project,
     resolvedAssets,
     resolvedArtifacts,
@@ -747,16 +798,19 @@ export const writeLocalVizProjectBundle = ({
   project,
   resolvedAssets,
   resolvedArtifacts,
-  executionManifest,
+  executionEnvironment,
 }: WriteLocalVizProjectBundleOptions): WrittenLocalVizProjectBundle => {
-  const normalizedBundleDirectory = normalizeBundleDirectoryInput(bundleDirectory);
+  const normalizedBundleDirectory =
+    normalizeBundleDirectoryInput(bundleDirectory);
   const assetMap = new Map(resolvedAssets.map((asset) => [asset.id, asset]));
-  const artifactMap = new Map(resolvedArtifacts.map((artifact) => [artifact.id, artifact]));
+  const artifactMap = new Map(
+    resolvedArtifacts.map((artifact) => [artifact.id, artifact]),
+  );
   const issues: LocalVizProjectBundleWriteIssue[] = [];
 
   mkdirSync(normalizedBundleDirectory, { recursive: true });
-  mkdirSync(resolve(normalizedBundleDirectory, "assets"), { recursive: true });
-  mkdirSync(resolve(normalizedBundleDirectory, "baked"), { recursive: true });
+  mkdirSync(resolve(normalizedBundleDirectory, 'assets'), { recursive: true });
+  mkdirSync(resolve(normalizedBundleDirectory, 'baked'), { recursive: true });
 
   const assetEntries = (project.assetRefs ?? []).flatMap((assetRef) => {
     const resolvedAsset = assetMap.get(assetRef.id);
@@ -764,15 +818,17 @@ export const writeLocalVizProjectBundle = ({
     if (!resolvedAsset) {
       issues.push(
         createWriteIssue(
-          "missing-resolved-asset",
+          'missing-resolved-asset',
           `Project asset "${assetRef.id}" is missing a resolved asset for bundle export.`,
-          "project.assetRefs",
+          'project.assetRefs',
         ),
       );
       return [];
     }
 
-    const extension = extname(assetRef.originalFileName ?? "") || inferAssetExtension(resolvedAsset);
+    const extension =
+      extname(assetRef.originalFileName ?? '') ||
+      inferAssetExtension(resolvedAsset);
     const relativePath = `assets/${assetRef.id}${extension}`;
     const outputPath = resolve(normalizedBundleDirectory, relativePath);
     const issue = writeResolvedAssetFile(resolvedAsset, outputPath);
@@ -786,70 +842,101 @@ export const writeLocalVizProjectBundle = ({
         assetId: assetRef.id,
         kind: assetRef.kind,
         path: relativePath,
-        ...(assetRef.mimeType === undefined ? {} : { mimeType: assetRef.mimeType }),
-        ...(assetRef.metadata === undefined ? {} : { metadata: assetRef.metadata }),
+        ...(assetRef.mimeType === undefined
+          ? {}
+          : { mimeType: assetRef.mimeType }),
+        ...(assetRef.metadata === undefined
+          ? {}
+          : { metadata: assetRef.metadata }),
       },
     ];
   });
 
-  const artifactEntries = (project.artifactRefs ?? []).flatMap((artifactRef) => {
-    const resolvedArtifact = artifactMap.get(artifactRef.id);
+  const artifactEntries = (project.artifactRefs ?? []).flatMap(
+    (artifactRef) => {
+      const resolvedArtifact = artifactMap.get(artifactRef.id);
 
-    if (!resolvedArtifact) {
-      issues.push(
-        createWriteIssue(
-          "missing-resolved-artifact",
-          `Project artifact "${artifactRef.id}" is missing a resolved artifact for bundle export.`,
-          "project.artifactRefs",
-        ),
+      if (!resolvedArtifact) {
+        issues.push(
+          createWriteIssue(
+            'missing-resolved-artifact',
+            `Project artifact "${artifactRef.id}" is missing a resolved artifact for bundle export.`,
+            'project.artifactRefs',
+          ),
+        );
+        return [];
+      }
+
+      const preferredName =
+        artifactRef.metadata &&
+        typeof artifactRef.metadata.fileName === 'string'
+          ? artifactRef.metadata.fileName
+          : `${artifactRef.id}.json`;
+      const useAudioContainer = isVizAudioArtifactContainerPayload(
+        resolvedArtifact.payload,
       );
-      return [];
-    }
+      const relativePath = useAudioContainer
+        ? `baked/${artifactRef.id}.vizaudio`
+        : `baked/${basename(preferredName)}`;
+      const outputPath = resolve(normalizedBundleDirectory, relativePath);
+      const issue = writeResolvedArtifactFile(
+        resolvedArtifact,
+        outputPath,
+        useAudioContainer,
+      );
 
-    const preferredName =
-      artifactRef.metadata && typeof artifactRef.metadata.fileName === "string"
-        ? artifactRef.metadata.fileName
-        : `${artifactRef.id}.json`;
-    const relativePath = `baked/${basename(preferredName)}`;
-    const outputPath = resolve(normalizedBundleDirectory, relativePath);
-    const issue = writeResolvedArtifactFile(resolvedArtifact, outputPath);
+      if (issue) {
+        issues.push(issue);
+      }
 
-    if (issue) {
-      issues.push(issue);
-    }
-
-    return [
-      {
-        artifactId: artifactRef.id,
-        kind: artifactRef.kind,
-        path: relativePath,
-        ...(artifactRef.metadata === undefined ? {} : { metadata: artifactRef.metadata }),
-      },
-    ];
-  });
+      return [
+        {
+          artifactId: artifactRef.id,
+          kind: artifactRef.kind,
+          path: relativePath,
+          ...(useAudioContainer
+            ? { encoding: VIZ_AUDIO_ARTIFACT_CONTAINER_ENCODING }
+            : {}),
+          ...(artifactRef.metadata === undefined
+            ? {}
+            : { metadata: artifactRef.metadata }),
+        },
+      ];
+    },
+  );
 
   const manifest: VizProjectBundleManifest = {
     schemaVersion: VIZ_PROJECT_BUNDLE_MANIFEST_SCHEMA_VERSION,
     kind: VIZ_PROJECT_BUNDLE_MANIFEST_KIND,
-    projectFile: "project.json",
-    ...(executionManifest === undefined
+    projectFile: 'project.json',
+    ...(executionEnvironment === undefined
       ? {}
-      : { executionManifestFile: "execution-manifest.json" }),
+      : { executionManifestFile: 'execution-manifest.json' }),
     assetEntries,
     artifactEntries,
   };
 
   writeFileSync(
-    resolve(normalizedBundleDirectory, "project.json"),
+    resolve(normalizedBundleDirectory, 'project.json'),
     `${JSON.stringify(project, null, 2)}\n`,
   );
   writeFileSync(
-    resolve(normalizedBundleDirectory, "bundle-manifest.json"),
+    resolve(normalizedBundleDirectory, 'bundle-manifest.json'),
     `${JSON.stringify(manifest, null, 2)}\n`,
   );
-  if (executionManifest !== undefined) {
+  const executionManifest =
+    executionEnvironment === undefined || issues.length > 0
+      ? undefined
+      : createVizExecutionManifest({
+          bundleDirectory: normalizedBundleDirectory,
+          bundleManifest: manifest,
+          project,
+          resolvedArtifacts,
+          environment: executionEnvironment,
+        });
+  if (executionManifest) {
     writeFileSync(
-      resolve(normalizedBundleDirectory, "execution-manifest.json"),
+      resolve(normalizedBundleDirectory, 'execution-manifest.json'),
       `${JSON.stringify(executionManifest, null, 2)}\n`,
     );
   }
@@ -857,6 +944,7 @@ export const writeLocalVizProjectBundle = ({
   return {
     bundleDirectory: normalizedBundleDirectory,
     manifest,
+    ...(executionManifest === undefined ? {} : { executionManifest }),
     issues,
   };
 };

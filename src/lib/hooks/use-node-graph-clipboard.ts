@@ -1,16 +1,24 @@
-import { useCallback, useRef } from 'react';
+import type { Edge, ReactFlowInstance } from '@xyflow/react';
+import { useCallback, type MutableRefObject } from 'react';
+
 import {
-  getNodeNetworks,
-  setEdgesInNetwork,
-  setNodeNetwork,
-  setNodesInNetwork,
-} from '../../components/node-network/node-network-store';
-import { useKeyboardShortcuts } from '../hooks/use-keyboard-shortcuts';
-import { useNodeGraphClipboardStore } from '../stores/node-graph-clipboard-store';
+  pasteGraphFragment,
+  type GraphNode,
+} from '@/components/node-network/node-network-store';
+import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts';
+import { useNodeGraphClipboardStore } from '@/lib/stores/node-graph-clipboard-store';
+import { getVizSessionState } from '@/lib/viz-session';
+import {
+  createVizGraphFragment,
+  type VizGraphFragment,
+} from '@/lib/viz-session/graph-fragments';
 
 interface UseNodeGraphClipboardOptions {
   parameterId: string;
-  reactFlowInstance: React.MutableRefObject<any>;
+  reactFlowInstance: MutableRefObject<ReactFlowInstance<
+    GraphNode,
+    Edge
+  > | null>;
   enabled?: boolean;
 }
 
@@ -19,279 +27,104 @@ export const useNodeGraphClipboard = ({
   reactFlowInstance,
   enabled = true,
 }: UseNodeGraphClipboardOptions) => {
-  const { copyNodes, pasteNodes, hasClipboardData } =
-    useNodeGraphClipboardStore();
+  const { setClipboard, hasClipboardData } = useNodeGraphClipboardStore();
 
-  // Store copied node IDs to work independently of current selection
-  const copiedNodeIdsRef = useRef<string[]>([]);
-
-  // Helper to extract boundary edges and filter nodes
-  const extractCopyData = useCallback(
-    (nodesToCopy: any[]) => {
-      if (!reactFlowInstance.current) return null;
-
-      // Filter out input and output nodes
-      const copyableNodes = nodesToCopy.filter(
-        (node: any) =>
-          !node.id.includes('-input-node') && !node.id.includes('-output-node'),
+  const copyNodeIds = useCallback(
+    (nodeIds: string[]): VizGraphFragment | null => {
+      const graph = getVizSessionState().project.workingProject.graphs?.find(
+        (candidate) => candidate.id === parameterId,
       );
+      if (!graph) {
+        return null;
+      }
 
-      if (copyableNodes.length === 0) return null;
-
-      const copyableNodeIds = copyableNodes.map((node: any) => node.id);
-      const allEdges = reactFlowInstance.current.getEdges();
-
-      // Get edges between copyable nodes
-      const internalEdges = allEdges.filter(
-        (edge: any) =>
-          copyableNodeIds.includes(edge.source) &&
-          copyableNodeIds.includes(edge.target),
-      );
-
-      // Get edges from input node to copyable nodes
-      const inputEdges = allEdges
-        .filter(
-          (edge: any) =>
-            edge.source.includes('-input-node') &&
-            copyableNodeIds.includes(edge.target),
-        )
-        .map((edge: any) => ({
-          boundaryHandle: edge.sourceHandle,
-          connectedNodeId: edge.target,
-          connectedHandle: edge.targetHandle,
-        }));
-
-      // Get edges from copyable nodes to output node
-      const outputEdges = allEdges
-        .filter(
-          (edge: any) =>
-            copyableNodeIds.includes(edge.source) &&
-            edge.target.includes('-output-node'),
-        )
-        .map((edge: any) => ({
-          boundaryHandle: edge.targetHandle,
-          connectedNodeId: edge.source,
-          connectedHandle: edge.sourceHandle,
-        }));
-
-      return {
-        copyableNodes,
-        copyableNodeIds,
-        internalEdges,
-        inputEdges,
-        outputEdges,
-      };
+      const fragment = createVizGraphFragment(graph, nodeIds);
+      if (fragment.nodes.length === 0) {
+        return null;
+      }
+      setClipboard(fragment);
+      return fragment;
     },
-    [reactFlowInstance],
+    [parameterId, setClipboard],
   );
 
   const copySelectedNodes = useCallback(() => {
-    if (!reactFlowInstance.current) return;
+    const nodeIds =
+      reactFlowInstance.current
+        ?.getNodes()
+        .filter((node) => node.selected)
+        .map((node) => node.id) ?? [];
+    copyNodeIds(nodeIds);
+  }, [copyNodeIds, reactFlowInstance]);
 
-    const selectedNodes = reactFlowInstance.current
-      .getNodes()
-      .filter((node: any) => node.selected);
-
-    const copyData = extractCopyData(selectedNodes);
-    if (!copyData) return;
-
-    copiedNodeIdsRef.current = copyData.copyableNodeIds;
-    copyNodes(
-      copyData.copyableNodes,
-      copyData.internalEdges,
-      copyData.inputEdges,
-      copyData.outputEdges,
-    );
-  }, [copyNodes, reactFlowInstance, extractCopyData]);
+  const copyNode = useCallback(
+    (nodeId: string) => copyNodeIds([nodeId]),
+    [copyNodeIds],
+  );
 
   const copyAllNodes = useCallback(() => {
-    if (!reactFlowInstance.current) return;
-
-    const allNodes = reactFlowInstance.current.getNodes();
-    const copyData = extractCopyData(allNodes);
-    if (!copyData) return;
-
-    copiedNodeIdsRef.current = copyData.copyableNodeIds;
-    copyNodes(
-      copyData.copyableNodes,
-      copyData.internalEdges,
-      copyData.inputEdges,
-      copyData.outputEdges,
+    copyNodeIds(
+      reactFlowInstance.current?.getNodes().map((node) => node.id) ?? [],
     );
-  }, [copyNodes, reactFlowInstance, extractCopyData]);
+  }, [copyNodeIds, reactFlowInstance]);
 
   const pasteNodesAtPosition = useCallback(
     (position: { x: number; y: number }) => {
-      const newNodes = pasteNodes(position, parameterId);
+      const fragment = useNodeGraphClipboardStore.getState().clipboard;
+      if (!fragment) {
+        return;
+      }
 
-      // Add the new nodes and edges to the network through the store
-      if (newNodes.length > 0) {
-        const clipboard = useNodeGraphClipboardStore.getState().clipboard;
-        if (clipboard) {
-          const newNodeIdMap = new Map<string, string>();
-          newNodes.forEach((newNode, index) => {
-            const originalNode = clipboard.nodes[index];
-            if (originalNode) {
-              newNodeIdMap.set(originalNode.id, newNode.id);
-            }
-          });
-
-          // Create edges between pasted nodes
-          const newInternalEdges = clipboard.edges.map((edge) => ({
-            ...edge,
-            id: `${parameterId}-edge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            source: newNodeIdMap.get(edge.source) || edge.source,
-            target: newNodeIdMap.get(edge.target) || edge.target,
-          }));
-
-          // Get current network state from the store
-          const currentNetwork = getNodeNetworks()[parameterId];
-
-          if (currentNetwork) {
-            // Find the input and output nodes of the target network
-            const inputNodeId = `${parameterId}-input-node`;
-            const outputNodeId = `${parameterId}-output-node`;
-
-            // Create edges from input node to pasted nodes
-            const newInputEdges = clipboard.inputEdges
-              .map((boundaryEdge) => {
-                const newTargetId = newNodeIdMap.get(
-                  boundaryEdge.connectedNodeId,
-                );
-                if (!newTargetId) return null;
-                return {
-                  id: `${parameterId}-edge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                  source: inputNodeId,
-                  sourceHandle: boundaryEdge.boundaryHandle,
-                  target: newTargetId,
-                  targetHandle: boundaryEdge.connectedHandle,
-                  animated: true,
-                  style: { stroke: 'white' },
-                };
-              })
-              .filter(Boolean);
-
-            // Create edges from pasted nodes to output node
-            const newOutputEdges = clipboard.outputEdges
-              .map((boundaryEdge) => {
-                const newSourceId = newNodeIdMap.get(
-                  boundaryEdge.connectedNodeId,
-                );
-                if (!newSourceId) return null;
-                return {
-                  id: `${parameterId}-edge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                  source: newSourceId,
-                  sourceHandle: boundaryEdge.connectedHandle,
-                  target: outputNodeId,
-                  targetHandle: boundaryEdge.boundaryHandle,
-                  animated: true,
-                  style: { stroke: 'white' },
-                };
-              })
-              .filter(Boolean);
-
-            // Combine all new edges
-            const allNewEdges = [
-              ...newInternalEdges,
-              ...newInputEdges,
-              ...newOutputEdges,
-            ];
-
-            // Clear all existing selections first (both nodes and edges)
-            const unselectedNodes = currentNetwork.nodes.map((node: any) => ({
-              ...node,
-              selected: false,
-            }));
-            const unselectedEdges = currentNetwork.edges.map((edge: any) => ({
-              ...edge,
-              selected: false,
-            }));
-
-            // Update the network with new nodes/edges and clear old selections
-            const updatedNetwork = {
-              ...currentNetwork,
-              nodes: [...unselectedNodes, ...(newNodes as any)],
-              edges: [...unselectedEdges, ...allNewEdges],
-            };
-
-            setNodeNetwork(parameterId, updatedNetwork);
-
-            // Now select the newly pasted nodes and edges
-            const finalNodes = updatedNetwork.nodes;
-            const finalEdges = updatedNetwork.edges;
-
-            const newlySelectedNodes = finalNodes.map((node: any) => {
-              const isNewlyPasted = newNodes.some(
-                (newNode: any) => newNode.id === node.id,
-              );
-              return { ...node, selected: isNewlyPasted };
-            });
-
-            const newlySelectedEdges = finalEdges.map((edge: any) => {
-              const isNewlyPasted = allNewEdges.some(
-                (newEdge: any) => newEdge.id === edge.id,
-              );
-              return { ...edge, selected: isNewlyPasted };
-            });
-
-            setNodesInNetwork(parameterId, newlySelectedNodes);
-            setEdgesInNetwork(parameterId, newlySelectedEdges);
-          }
-        }
+      const pastedNodeIds = new Set(
+        pasteGraphFragment(parameterId, fragment, position),
+      );
+      if (pastedNodeIds.size === 0) {
+        return;
       }
     },
-    [pasteNodes, parameterId],
+    [parameterId],
+  );
+
+  const duplicateNodeIds = useCallback(
+    (nodeIds: string[]) => {
+      const fragment = copyNodeIds(nodeIds);
+      if (!fragment) {
+        return;
+      }
+
+      const center = {
+        x:
+          fragment.nodes.reduce(
+            (sum, node) => sum + (node.position?.x ?? 0),
+            0,
+          ) / fragment.nodes.length,
+        y:
+          fragment.nodes.reduce(
+            (sum, node) => sum + (node.position?.y ?? 0),
+            0,
+          ) / fragment.nodes.length,
+      };
+      pasteNodesAtPosition({ x: center.x + 20, y: center.y + 20 });
+    },
+    [copyNodeIds, pasteNodesAtPosition],
   );
 
   const duplicateSelectedNodes = useCallback(() => {
-    if (!reactFlowInstance.current) return;
-
-    const selectedNodes = reactFlowInstance.current
-      .getNodes()
-      .filter((node: any) => node.selected);
-
-    const copyData = extractCopyData(selectedNodes);
-    if (!copyData) return;
-
-    // Copy to clipboard first (using the same logic as copySelectedNodes)
-    copyNodes(
-      copyData.copyableNodes,
-      copyData.internalEdges,
-      copyData.inputEdges,
-      copyData.outputEdges,
+    duplicateNodeIds(
+      reactFlowInstance.current
+        ?.getNodes()
+        .filter((node) => node.selected)
+        .map((node) => node.id) ?? [],
     );
+  }, [duplicateNodeIds, reactFlowInstance]);
 
-    // Calculate center of copyable nodes for offset
-    const center = {
-      x:
-        copyData.copyableNodes.reduce(
-          (sum: number, node: any) => sum + node.position.x,
-          0,
-        ) / copyData.copyableNodes.length,
-      y:
-        copyData.copyableNodes.reduce(
-          (sum: number, node: any) => sum + node.position.y,
-          0,
-        ) / copyData.copyableNodes.length,
-    };
+  const duplicateNode = useCallback(
+    (nodeId: string) => duplicateNodeIds([nodeId]),
+    [duplicateNodeIds],
+  );
 
-    // Paste with a small offset (20px down and right)
-    const offsetPosition = {
-      x: center.x + 20,
-      y: center.y + 20,
-    };
+  const canPaste = useCallback(() => hasClipboardData(), [hasClipboardData]);
 
-    pasteNodesAtPosition(offsetPosition);
-
-    // Note: Selection is now handled within pasteNodesAtPosition
-    // so we don't need to do anything extra here
-  }, [copyNodes, pasteNodesAtPosition, reactFlowInstance, extractCopyData]);
-
-  const canPaste = useCallback(() => {
-    return hasClipboardData();
-  }, [hasClipboardData]);
-
-  // Use the generic keyboard shortcuts hook
   useKeyboardShortcuts({
     enabled,
     shortcuts: [
@@ -299,36 +132,40 @@ export const useNodeGraphClipboard = ({
         key: 'c',
         ctrl: true,
         callback: copySelectedNodes,
-        enabled: enabled && !!reactFlowInstance.current,
+        enabled,
       },
       {
         key: 'v',
         ctrl: true,
         callback: () => {
-          // Paste at mouse position or center of view
-          const position = reactFlowInstance.current?.getViewport()?.center || {
-            x: 0,
-            y: 0,
-          };
-          pasteNodesAtPosition(position);
+          const viewport = reactFlowInstance.current?.getViewport();
+          pasteNodesAtPosition(
+            viewport
+              ? {
+                  x: -viewport.x / viewport.zoom,
+                  y: -viewport.y / viewport.zoom,
+                }
+              : { x: 0, y: 0 },
+          );
         },
-        enabled: enabled && !!reactFlowInstance.current && canPaste(),
+        enabled,
       },
       {
         key: 'd',
         ctrl: true,
         callback: duplicateSelectedNodes,
-        enabled: enabled && !!reactFlowInstance.current,
+        enabled,
       },
     ],
   });
 
   return {
     copySelectedNodes,
+    copyNode,
     copyAllNodes,
     pasteNodesAtPosition,
     duplicateSelectedNodes,
+    duplicateNode,
     canPaste,
-    copiedNodeIds: copiedNodeIdsRef.current,
   };
 };

@@ -1,11 +1,9 @@
-'use client';
-
 import { PipelineStageDefinition } from '@/lib/rhythm-lab/analysis-graph';
 import { STAGE_COLORS } from '@/lib/rhythm-lab/stage-colors';
-import useRhythmLabStore from '@/lib/stores/rhythm-lab-store';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 import useEditorStore from '@/lib/stores/editor-store';
+import useRhythmLabStore from '@/lib/stores/rhythm-lab-store';
 import { useEffect, useRef, useState } from 'react';
 import StageCard from './stage-card';
 import StageParams from './stage-params';
@@ -40,12 +38,7 @@ const OnsetCard = ({ stage }: OnsetCardProps) => {
       return;
     }
     const tick = () => {
-      if (
-        !audioBuffer ||
-        !onsetEnv ||
-        onsetEnv.length === 0 ||
-        !analysisMeta
-      ) {
+      if (!audioBuffer || !onsetEnv || onsetEnv.length === 0 || !analysisMeta) {
         setLevel(0);
         rafRef.current = requestAnimationFrame(tick);
         return;
@@ -96,8 +89,7 @@ const OnsetCard = ({ stage }: OnsetCardProps) => {
             }}
           />
         </div>
-      }
-    >
+      }>
       <div className="mb-3 grid grid-cols-2 gap-x-3 text-[11px] text-white/60">
         <div className="flex flex-col gap-1">
           <div>frames: {stats.frames}</div>

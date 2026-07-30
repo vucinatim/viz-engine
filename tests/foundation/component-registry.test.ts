@@ -15,29 +15,27 @@ import {
   simpleCubeComponent,
   stageSceneComponent,
   strobeLightComponent,
-} from "@viz-engine/components-core";
+} from '@viz-engine/components-core';
 import type {
   VizComponentImplementation,
   VizNodeImplementation,
   VizProjectDocument,
-} from "@viz-engine/contracts";
-import {
-  VIZ_PROJECT_SCHEMA_VERSION,
-} from "@viz-engine/contracts";
-import { createCoreNodeRegistry } from "@viz-engine/nodes-core";
+} from '@viz-engine/contracts';
+import { VIZ_PROJECT_SCHEMA_VERSION } from '@viz-engine/contracts';
+import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
 import {
   createVizComponentRegistry,
   createVizNodeRegistry,
   createVizRenderPlan,
   createVizRuntimeSession,
-} from "@viz-engine/runtime";
-import { describe, expect, it } from "vitest";
+} from '@viz-engine/runtime';
+import { describe, expect, it } from 'vitest';
 
-describe("Viz component authoring foundation", () => {
-  it("validates component registries and rejects duplicate component ids in strict mode", () => {
+describe('Viz component authoring foundation', () => {
+  it('validates component registries and rejects duplicate component ids in strict mode', () => {
     const duplicate: VizComponentImplementation = {
       ...featureChannelBarsComponent,
-      name: "Duplicate Feature Channel Bars",
+      name: 'Duplicate Feature Channel Bars',
     };
 
     expect(() =>
@@ -47,20 +45,20 @@ describe("Viz component authoring foundation", () => {
     ).toThrow(/Duplicate component id/);
   });
 
-  it("surfaces duplicate input keys through registry validation", () => {
+  it('surfaces duplicate input keys through registry validation', () => {
     const invalidComponent = {
       ...featureChannelBarsComponent,
-      id: "invalid-input-component",
+      id: 'invalid-input-component',
       inputs: [
         {
-          key: "gain",
-          label: "Gain A",
-          supportedSources: ["literal"],
+          key: 'gain',
+          label: 'Gain A',
+          supportedSources: ['literal'],
         },
         {
-          key: "gain",
-          label: "Gain B",
-          supportedSources: ["literal"],
+          key: 'gain',
+          label: 'Gain B',
+          supportedSources: ['literal'],
         },
       ],
     } satisfies VizComponentImplementation;
@@ -69,53 +67,51 @@ describe("Viz component authoring foundation", () => {
 
     expect(registry.getValidationIssues()).toEqual([
       {
-        code: "duplicate-input-key",
-        componentId: "invalid-input-component",
-        path: "invalid-input-component.inputs.gain",
+        code: 'duplicate-input-key',
+        componentId: 'invalid-input-component',
+        path: 'invalid-input-component.inputs.gain',
         message: 'Duplicate component input key "gain".',
       },
     ]);
   });
 
-  it("rejects a component default asset without an asset-ref input", () => {
+  it('rejects a component default asset without an asset-ref input', () => {
     const invalidComponent = {
       ...featureChannelBarsComponent,
-      id: "invalid-default-asset-component",
+      id: 'invalid-default-asset-component',
       inputs: [
         {
-          key: "model",
-          label: "Model",
-          supportedSources: ["literal"],
+          key: 'model',
+          label: 'Model',
+          supportedSources: ['literal'],
           defaultAsset: {
-            id: "default-model",
-            kind: "model",
-            source: "bundle",
-            label: "Default Model",
+            id: 'default-model',
+            kind: 'model',
+            source: 'bundle',
+            label: 'Default Model',
           },
         },
       ],
     } satisfies VizComponentImplementation;
 
     expect(
-      createVizComponentRegistry([
-        invalidComponent,
-      ]).getValidationIssues(),
+      createVizComponentRegistry([invalidComponent]).getValidationIssues(),
     ).toEqual([
       {
-        code: "invalid-default-asset",
-        componentId: "invalid-default-asset-component",
-        path: "invalid-default-asset-component.inputs.model.defaultAsset",
+        code: 'invalid-default-asset',
+        componentId: 'invalid-default-asset-component',
+        path: 'invalid-default-asset-component.inputs.model.defaultAsset',
         message:
           'Component input "model" declares a default asset without supporting asset-ref sources.',
       },
     ]);
   });
 
-  it("renders the V1-derived feature-channel-bars component through the canonical runtime path", () => {
+  it('renders the V1-derived feature-channel-bars component through the canonical runtime path', () => {
     const project: VizProjectDocument = {
       schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-      projectId: "project-component-proof",
-      name: "Component Proof",
+      projectId: 'project-component-proof',
+      name: 'Component Proof',
       timeline: {
         fps: 60,
         durationInFrames: 120,
@@ -124,22 +120,22 @@ describe("Viz component authoring foundation", () => {
         width: 1280,
         height: 720,
       },
-      layerOrder: ["layer-feature-bars"],
+      layerOrder: ['layer-feature-bars'],
       layers: [
         {
-          id: "layer-feature-bars",
-          name: "Feature Bars",
-          componentId: "feature-channel-bars",
+          id: 'layer-feature-bars',
+          name: 'Feature Bars',
+          componentId: 'feature-channel-bars',
           enabled: true,
           opacity: 1,
-          blendMode: "normal",
-          rendererFamily: "three",
+          blendMode: 'normal',
+          rendererFamily: 'three',
           inputs: {
-            kick: { kind: "literal", value: 0.2 },
-            snare: { kind: "literal", value: 0.35 },
-            bass: { kind: "literal", value: 0.5 },
-            melody: { kind: "literal", value: 0.7 },
-            percussion: { kind: "literal", value: 0.9 },
+            kick: { kind: 'literal', value: 0.2 },
+            snare: { kind: 'literal', value: 0.35 },
+            bass: { kind: 'literal', value: 0.5 },
+            melody: { kind: 'literal', value: 0.7 },
+            percussion: { kind: 'literal', value: 0.9 },
           },
         },
       ],
@@ -148,28 +144,28 @@ describe("Viz component authoring foundation", () => {
     const renderPlan = createVizRenderPlan({
       session: createVizRuntimeSession({
         project,
-        mode: "render",
+        mode: 'render',
         resolvedAssets: [],
         resolvedArtifacts: [],
-        seed: "component-proof-seed",
+        seed: 'component-proof-seed',
       }),
       frame: 12,
       registry: createCoreComponentRegistry(),
     });
 
     expect(renderPlan.issues).toHaveLength(0);
-    expect(renderPlan.layers[0]?.node?.kind).toBe("group");
+    expect(renderPlan.layers[0]?.node?.kind).toBe('group');
 
     const node = renderPlan.layers[0]?.node;
 
-    if (!node || node.kind !== "group") {
-      throw new Error("Expected group render node.");
+    if (!node || node.kind !== 'group') {
+      throw new Error('Expected group render node.');
     }
 
     expect(node.children).toHaveLength(10);
   });
 
-  it("renders preserved-editor stateless Canvas components deterministically", () => {
+  it('renders preserved-editor stateless Canvas components deterministically', () => {
     const registry = createCoreComponentRegistry();
     const renderComponent = (
       componentId: string,
@@ -181,15 +177,15 @@ describe("Viz component authoring foundation", () => {
         name: componentId,
         timeline: { fps: 60, durationInFrames: 120 },
         viewport: { width: 1280, height: 720 },
-        layerOrder: ["layer"],
+        layerOrder: ['layer'],
         layers: [
           {
-            id: "layer",
+            id: 'layer',
             name: componentId,
             componentId,
             enabled: true,
             opacity: 1,
-            blendMode: "normal",
+            blendMode: 'normal',
             settings,
           },
         ],
@@ -198,8 +194,8 @@ describe("Viz component authoring foundation", () => {
       return createVizRenderPlan({
         session: createVizRuntimeSession({
           project,
-          mode: "render",
-          seed: "preserved-editor-component-seed",
+          mode: 'render',
+          seed: 'preserved-editor-component-seed',
         }),
         frame: 42,
         registry,
@@ -213,19 +209,19 @@ describe("Viz component authoring foundation", () => {
       featureExtractionBarsComponent,
     );
 
-    const debugPlanA = renderComponent("debug-animation", {
+    const debugPlanA = renderComponent('debug-animation', {
       value: 37,
       midi: 64,
-      text: "E4",
-      color: "#60a5fa",
+      text: 'E4',
+      color: '#60a5fa',
     });
-    const debugPlanB = renderComponent("debug-animation", {
+    const debugPlanB = renderComponent('debug-animation', {
       value: 37,
       midi: 64,
-      text: "E4",
-      color: "#60a5fa",
+      text: 'E4',
+      color: '#60a5fa',
     });
-    const featurePlan = renderComponent("feature-extraction-bars", {
+    const featurePlan = renderComponent('feature-extraction-bars', {
       kick: 0.2,
       snare: 0.4,
       bass: 0.6,
@@ -235,40 +231,40 @@ describe("Viz component authoring foundation", () => {
 
     expect(debugPlanA.issues).toEqual([]);
     expect(debugPlanA).toEqual(debugPlanB);
-    expect(debugPlanA.layers[0]?.node?.kind).toBe("group");
+    expect(debugPlanA.layers[0]?.node?.kind).toBe('group');
     expect(featurePlan.issues).toEqual([]);
-    expect(featurePlan.layers[0]?.node?.kind).toBe("group");
+    expect(featurePlan.layers[0]?.node?.kind).toBe('group');
 
     const featureNode = featurePlan.layers[0]?.node;
-    if (!featureNode || featureNode.kind !== "group") {
-      throw new Error("Expected feature extraction group render node.");
+    if (!featureNode || featureNode.kind !== 'group') {
+      throw new Error('Expected feature extraction group render node.');
     }
     expect(featureNode.children).toHaveLength(21);
-    expect(featureNode.children.filter((node) => node.kind === "text")).toHaveLength(
-      10,
-    );
+    expect(
+      featureNode.children.filter((node) => node.kind === 'text'),
+    ).toHaveLength(10);
   });
 
-  it("derives strobe frames deterministically instead of accumulating time or using Math.random", () => {
+  it('derives strobe frames deterministically instead of accumulating time or using Math.random', () => {
     const createStrobePlan = (
       frame: number,
       settings: Record<string, unknown>,
     ) => {
       const project: VizProjectDocument = {
         schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-        projectId: "project-strobe",
-        name: "Strobe",
+        projectId: 'project-strobe',
+        name: 'Strobe',
         timeline: { fps: 60, durationInFrames: 120 },
         viewport: { width: 1280, height: 720 },
-        layerOrder: ["layer-strobe"],
+        layerOrder: ['layer-strobe'],
         layers: [
           {
-            id: "layer-strobe",
-            name: "Strobe Light",
-            componentId: "strobe-light",
+            id: 'layer-strobe',
+            name: 'Strobe Light',
+            componentId: 'strobe-light',
             enabled: true,
             opacity: 1,
-            blendMode: "normal",
+            blendMode: 'normal',
             settings,
           },
         ],
@@ -277,16 +273,16 @@ describe("Viz component authoring foundation", () => {
       return createVizRenderPlan({
         session: createVizRuntimeSession({
           project,
-          mode: "render",
-          seed: "strobe-seed",
+          mode: 'render',
+          seed: 'strobe-seed',
         }),
         frame,
         registry: createCoreComponentRegistry(),
       });
     };
     const settings = {
-      mode: "Intensity",
-      color: "#ffffff",
+      mode: 'Intensity',
+      color: '#ffffff',
       intensity: 1,
       strength: 0.8,
       dutyCycle: 0.5,
@@ -300,42 +296,42 @@ describe("Viz component authoring foundation", () => {
       strobeLightComponent,
     );
     expect(onPlan).toEqual(repeatedOnPlan);
-    expect(onPlan.layers[0]?.node?.kind).toBe("shader");
-    expect(offPlan.layers[0]?.node?.kind).toBe("shader");
+    expect(onPlan.layers[0]?.node?.kind).toBe('shader');
+    expect(offPlan.layers[0]?.node?.kind).toBe('shader');
 
     const onNode = onPlan.layers[0]?.node;
     const offNode = offPlan.layers[0]?.node;
     if (
       !onNode ||
-      onNode.kind !== "shader" ||
+      onNode.kind !== 'shader' ||
       !offNode ||
-      offNode.kind !== "shader"
+      offNode.kind !== 'shader'
     ) {
-      throw new Error("Expected strobe shader render nodes.");
+      throw new Error('Expected strobe shader render nodes.');
     }
 
     expect(onNode.uniforms.uStrength).toBe(0.8);
     expect(offNode.uniforms.uStrength).toBe(0);
   });
 
-  it("derives Simple Cube rotation from canonical frame time", () => {
+  it('derives Simple Cube rotation from canonical frame time', () => {
     const project: VizProjectDocument = {
       schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-      projectId: "project-simple-cube",
-      name: "Simple Cube",
+      projectId: 'project-simple-cube',
+      name: 'Simple Cube',
       timeline: { fps: 60, durationInFrames: 120 },
       viewport: { width: 1280, height: 720 },
-      layerOrder: ["layer-cube"],
+      layerOrder: ['layer-cube'],
       layers: [
         {
-          id: "layer-cube",
-          name: "Simple Cube",
-          componentId: "simple-cube",
+          id: 'layer-cube',
+          name: 'Simple Cube',
+          componentId: 'simple-cube',
           enabled: true,
           opacity: 1,
-          blendMode: "normal",
+          blendMode: 'normal',
           settings: {
-            color: "#ff00ff",
+            color: '#ff00ff',
             size: 1.5,
             rotationSpeedX: 2,
             rotationSpeedY: -1,
@@ -345,8 +341,8 @@ describe("Viz component authoring foundation", () => {
     };
     const session = createVizRuntimeSession({
       project,
-      mode: "render",
-      seed: "simple-cube-seed",
+      mode: 'render',
+      seed: 'simple-cube-seed',
     });
     const plan = createVizRenderPlan({
       session,
@@ -365,34 +361,34 @@ describe("Viz component authoring foundation", () => {
     expect(plan).toEqual(repeatedPlan);
 
     const node = plan.layers[0]?.node;
-    if (!node || node.kind !== "three-program") {
-      throw new Error("Expected Simple Cube Three program node.");
+    if (!node || node.kind !== 'three-program') {
+      throw new Error('Expected Simple Cube Three program node.');
     }
 
-    expect(node.programId).toBe("viz-core/simple-cube/v1");
+    expect(node.programId).toBe('viz-core/simple-cube/v1');
     expect(node.parameters.rotationX).toBe(1);
     expect(node.parameters.rotationY).toBe(-0.5);
   });
 
-  it("derives Fullscreen Shader uniforms from canonical frame time", () => {
+  it('derives Fullscreen Shader uniforms from canonical frame time', () => {
     const project: VizProjectDocument = {
       schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-      projectId: "project-fullscreen-shader",
-      name: "Fullscreen Shader",
+      projectId: 'project-fullscreen-shader',
+      name: 'Fullscreen Shader',
       timeline: { fps: 60, durationInFrames: 120 },
       viewport: { width: 1280, height: 720 },
-      layerOrder: ["layer-shader"],
+      layerOrder: ['layer-shader'],
       layers: [
         {
-          id: "layer-shader",
-          name: "Fullscreen Shader",
-          componentId: "fullscreen-shader",
+          id: 'layer-shader',
+          name: 'Fullscreen Shader',
+          componentId: 'fullscreen-shader',
           enabled: true,
           opacity: 1,
-          blendMode: "normal",
+          blendMode: 'normal',
           settings: {
-            shader: "Radial Ripple Grid",
-            color: "#00ffff",
+            shader: 'Radial Ripple Grid',
+            color: '#00ffff',
             speed: 2,
             scale: 0.5,
             intensity: 0.8,
@@ -407,8 +403,8 @@ describe("Viz component authoring foundation", () => {
     };
     const session = createVizRuntimeSession({
       project,
-      mode: "render",
-      seed: "fullscreen-shader-seed",
+      mode: 'render',
+      seed: 'fullscreen-shader-seed',
     });
     const createPlan = () =>
       createVizRenderPlan({
@@ -424,39 +420,39 @@ describe("Viz component authoring foundation", () => {
     expect(plan).toEqual(createPlan());
 
     const node = plan.layers[0]?.node;
-    if (!node || node.kind !== "shader") {
-      throw new Error("Expected Fullscreen Shader render node.");
+    if (!node || node.kind !== 'shader') {
+      throw new Error('Expected Fullscreen Shader render node.');
     }
 
     expect(node.programId).toBe(
-      "viz-core/fullscreen-shader/Radial Ripple Grid",
+      'viz-core/fullscreen-shader/Radial Ripple Grid',
     );
     expect(node.uniforms.uTime).toBe(1);
     expect(node.uniforms.uResolution).toEqual({
-      type: "vec2",
+      type: 'vec2',
       value: [1280, 720],
     });
   });
 
-  it("derives Noise Shader uniforms from canonical frame state", () => {
+  it('derives Noise Shader uniforms from canonical frame state', () => {
     const project: VizProjectDocument = {
       schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-      projectId: "project-noise-shader",
-      name: "Noise Shader",
+      projectId: 'project-noise-shader',
+      name: 'Noise Shader',
       timeline: { fps: 60, durationInFrames: 120 },
       viewport: { width: 1280, height: 720 },
-      layerOrder: ["layer-noise"],
+      layerOrder: ['layer-noise'],
       layers: [
         {
-          id: "layer-noise",
-          name: "Noise Shader",
-          componentId: "noise-shader",
+          id: 'layer-noise',
+          name: 'Noise Shader',
+          componentId: 'noise-shader',
           enabled: true,
           opacity: 1,
-          blendMode: "normal",
+          blendMode: 'normal',
           settings: {
             noise: {
-              type: "cellular",
+              type: 'cellular',
               scale: 4,
               octaves: 6,
               lacunarity: 2.5,
@@ -474,10 +470,10 @@ describe("Viz component authoring foundation", () => {
               scale: 1.25,
             },
             color: {
-              mode: "palette",
-              color1: "#112233",
-              color2: "#445566",
-              color3: "#778899",
+              mode: 'palette',
+              color1: '#112233',
+              color2: '#445566',
+              color3: '#778899',
               hueShift: 0.75,
               saturation: 1.2,
             },
@@ -493,8 +489,8 @@ describe("Viz component authoring foundation", () => {
     };
     const session = createVizRuntimeSession({
       project,
-      mode: "render",
-      seed: "noise-shader-seed",
+      mode: 'render',
+      seed: 'noise-shader-seed',
     });
     const createPlan = () =>
       createVizRenderPlan({
@@ -510,46 +506,46 @@ describe("Viz component authoring foundation", () => {
     expect(plan).toEqual(createPlan());
 
     const node = plan.layers[0]?.node;
-    if (!node || node.kind !== "shader") {
-      throw new Error("Expected Noise Shader render node.");
+    if (!node || node.kind !== 'shader') {
+      throw new Error('Expected Noise Shader render node.');
     }
 
-    expect(node.programId).toBe("viz-core/noise-shader/v1");
+    expect(node.programId).toBe('viz-core/noise-shader/v1');
     expect(node.uniforms).toMatchObject({
       u_time: 0.5,
-      u_resolution: { type: "vec2", value: [1280, 720] },
+      u_resolution: { type: 'vec2', value: [1280, 720] },
       u_noiseType: 4,
       u_scale: 4,
       u_distortionEnabled: 1,
       u_colorMode: 1,
-      u_color1: { type: "color", value: "#112233" },
+      u_color1: { type: 'color', value: '#112233' },
       u_invert: 1,
       u_posterize: 5,
     });
   });
 
-  it("derives Particle System simulation inputs from canonical frame state", () => {
+  it('derives Particle System simulation inputs from canonical frame state', () => {
     const project: VizProjectDocument = {
       schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-      projectId: "project-particle-system",
-      name: "Particle System",
+      projectId: 'project-particle-system',
+      name: 'Particle System',
       timeline: { fps: 60, durationInFrames: 180 },
       viewport: { width: 1280, height: 720 },
-      layerOrder: ["layer-particles"],
+      layerOrder: ['layer-particles'],
       layers: [
         {
-          id: "layer-particles",
-          name: "Particle System",
-          componentId: "particle-system",
+          id: 'layer-particles',
+          name: 'Particle System',
+          componentId: 'particle-system',
           enabled: true,
           opacity: 1,
-          blendMode: "normal",
+          blendMode: 'normal',
           settings: {
             appearance: {
-              startColor: "#ff00ff",
-              endColor: "#00ffff",
+              startColor: '#ff00ff',
+              endColor: '#00ffff',
               particleSize: 0.25,
-              blending: "additive",
+              blending: 'additive',
             },
             physics: {
               emissionRate: 10,
@@ -560,7 +556,7 @@ describe("Viz component authoring foundation", () => {
               spread: 0.5,
             },
             emission: {
-              emitterShape: "sphere",
+              emitterShape: 'sphere',
               emitterSize: 0.75,
             },
             rotation: {
@@ -574,8 +570,8 @@ describe("Viz component authoring foundation", () => {
     };
     const session = createVizRuntimeSession({
       project,
-      mode: "render",
-      seed: "particle-system-seed",
+      mode: 'render',
+      seed: 'particle-system-seed',
     });
     const createPlan = () =>
       createVizRenderPlan({
@@ -585,44 +581,44 @@ describe("Viz component authoring foundation", () => {
       });
     const plan = createPlan();
 
-    expect(
-      createCoreComponentRegistry().get(particleSystemComponent.id),
-    ).toBe(particleSystemComponent);
+    expect(createCoreComponentRegistry().get(particleSystemComponent.id)).toBe(
+      particleSystemComponent,
+    );
     expect(plan).toEqual(createPlan());
 
     const node = plan.layers[0]?.node;
-    if (!node || node.kind !== "three-program") {
-      throw new Error("Expected Particle System Three program node.");
+    if (!node || node.kind !== 'three-program') {
+      throw new Error('Expected Particle System Three program node.');
     }
 
-    expect(node.programId).toBe("viz-core/particle-system/v1");
+    expect(node.programId).toBe('viz-core/particle-system/v1');
     expect(node.parameters).toMatchObject({
       time: 1,
-      seed: "particle-system-seed",
+      seed: 'particle-system-seed',
       emissionRate: 10,
-      emitterShape: "sphere",
+      emitterShape: 'sphere',
       rotationX: 0.5,
       rotationY: 1,
       rotationZ: -0.25,
     });
   });
 
-  it("derives Orbiting Cubes scene state from canonical frame time", () => {
+  it('derives Orbiting Cubes scene state from canonical frame time', () => {
     const project: VizProjectDocument = {
       schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-      projectId: "project-orbiting-cubes",
-      name: "Orbiting Cubes",
+      projectId: 'project-orbiting-cubes',
+      name: 'Orbiting Cubes',
       timeline: { fps: 60, durationInFrames: 180 },
       viewport: { width: 1280, height: 720 },
-      layerOrder: ["layer-orbiting-cubes"],
+      layerOrder: ['layer-orbiting-cubes'],
       layers: [
         {
-          id: "layer-orbiting-cubes",
-          name: "Orbiting Cubes",
-          componentId: "orbiting-cubes",
+          id: 'layer-orbiting-cubes',
+          name: 'Orbiting Cubes',
+          componentId: 'orbiting-cubes',
           enabled: true,
           opacity: 1,
-          blendMode: "normal",
+          blendMode: 'normal',
           settings: {
             seed: 3499,
             maxCubes: 150,
@@ -637,8 +633,8 @@ describe("Viz component authoring foundation", () => {
     };
     const session = createVizRuntimeSession({
       project,
-      mode: "render",
-      seed: "orbiting-cubes-seed",
+      mode: 'render',
+      seed: 'orbiting-cubes-seed',
     });
     const createPlan = () =>
       createVizRenderPlan({
@@ -648,17 +644,17 @@ describe("Viz component authoring foundation", () => {
       });
     const plan = createPlan();
 
-    expect(
-      createCoreComponentRegistry().get(orbitingCubesComponent.id),
-    ).toBe(orbitingCubesComponent);
+    expect(createCoreComponentRegistry().get(orbitingCubesComponent.id)).toBe(
+      orbitingCubesComponent,
+    );
     expect(plan).toEqual(createPlan());
 
     const node = plan.layers[0]?.node;
-    if (!node || node.kind !== "three-program") {
-      throw new Error("Expected Orbiting Cubes Three program node.");
+    if (!node || node.kind !== 'three-program') {
+      throw new Error('Expected Orbiting Cubes Three program node.');
     }
 
-    expect(node.programId).toBe("viz-core/orbiting-cubes/v1");
+    expect(node.programId).toBe('viz-core/orbiting-cubes/v1');
     expect(node.parameters).toMatchObject({
       time: 1,
       seed: 3499,
@@ -671,53 +667,53 @@ describe("Viz component authoring foundation", () => {
     });
   });
 
-  it("applies canonical graph outputs to component settings before rendering", () => {
+  it('applies canonical graph outputs to component settings before rendering', () => {
     const project: VizProjectDocument = {
       schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-      projectId: "project-node-driven-simple-cube",
-      name: "Node-driven Simple Cube",
+      projectId: 'project-node-driven-simple-cube',
+      name: 'Node-driven Simple Cube',
       timeline: { fps: 60, durationInFrames: 120 },
       viewport: { width: 1280, height: 720 },
-      layerOrder: ["layer-cube"],
+      layerOrder: ['layer-cube'],
       layers: [
         {
-          id: "layer-cube",
-          name: "Simple Cube",
-          componentId: "simple-cube",
+          id: 'layer-cube',
+          name: 'Simple Cube',
+          componentId: 'simple-cube',
           enabled: true,
           opacity: 1,
-          blendMode: "normal",
+          blendMode: 'normal',
           settings: {
             size: 1,
           },
           inputs: {
             size: {
-              kind: "graph-output",
-              graphId: "graph-size",
-              output: "value",
+              kind: 'graph-output',
+              graphId: 'graph-size',
+              output: 'value',
             },
           },
         },
       ],
       graphs: [
         {
-          id: "graph-size",
-          name: "Size",
+          id: 'graph-size',
+          name: 'Size',
           nodes: [
             {
-              id: "node-size",
-              type: "multiply",
+              id: 'node-size',
+              type: 'multiply',
               inputs: {
-                value: { kind: "literal", value: 2 },
-                factor: { kind: "literal", value: 1.5 },
+                value: { kind: 'literal', value: 2 },
+                factor: { kind: 'literal', value: 1.5 },
               },
             },
           ],
           outputs: [
             {
-              key: "value",
-              nodeId: "node-size",
-              output: "value",
+              key: 'value',
+              nodeId: 'node-size',
+              output: 'value',
             },
           ],
         },
@@ -726,8 +722,8 @@ describe("Viz component authoring foundation", () => {
     const plan = createVizRenderPlan({
       session: createVizRuntimeSession({
         project,
-        mode: "render",
-        seed: "node-driven-component-seed",
+        mode: 'render',
+        seed: 'node-driven-component-seed',
       }),
       frame: 0,
       registry: createCoreComponentRegistry(),
@@ -736,61 +732,61 @@ describe("Viz component authoring foundation", () => {
 
     expect(plan.issues).toEqual([]);
     const node = plan.layers[0]?.node;
-    if (!node || node.kind !== "three-program") {
-      throw new Error("Expected Simple Cube Three program node.");
+    if (!node || node.kind !== 'three-program') {
+      throw new Error('Expected Simple Cube Three program node.');
     }
     expect(node.parameters.size).toBe(3);
   });
 
-  it("samples Heartbeat Monitor history from deterministic canonical frames", () => {
+  it('samples Heartbeat Monitor history from deterministic canonical frames', () => {
     const frameNode: VizNodeImplementation = {
-      type: "test-frame",
-      name: "Test Frame",
-      category: "pure",
-      outputs: [{ key: "value", label: "Value" }],
+      type: 'test-frame',
+      name: 'Test Frame',
+      category: 'pure',
+      outputs: [{ key: 'value', label: 'Value' }],
       evaluate: ({ frameContext }) => ({
         value: frameContext.frame,
       }),
     };
     const project: VizProjectDocument = {
       schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-      projectId: "project-heartbeat",
-      name: "Heartbeat",
+      projectId: 'project-heartbeat',
+      name: 'Heartbeat',
       timeline: { fps: 60, durationInFrames: 120 },
       viewport: { width: 4, height: 100 },
-      layerOrder: ["layer-heartbeat"],
+      layerOrder: ['layer-heartbeat'],
       layers: [
         {
-          id: "layer-heartbeat",
-          name: "Heartbeat Monitor",
-          componentId: "heartbeat-monitor",
+          id: 'layer-heartbeat',
+          name: 'Heartbeat Monitor',
+          componentId: 'heartbeat-monitor',
           enabled: true,
           opacity: 1,
-          blendMode: "normal",
+          blendMode: 'normal',
           settings: {
             yPosition: 50,
-            lineColor: "#34d399",
+            lineColor: '#34d399',
             lineWidth: 2,
           },
           inputs: {
             yPosition: {
-              kind: "graph-output",
-              graphId: "graph-heartbeat",
-              output: "value",
+              kind: 'graph-output',
+              graphId: 'graph-heartbeat',
+              output: 'value',
             },
           },
         },
       ],
       graphs: [
         {
-          id: "graph-heartbeat",
-          name: "Heartbeat Position",
-          nodes: [{ id: "node-frame", type: "test-frame" }],
+          id: 'graph-heartbeat',
+          name: 'Heartbeat Position',
+          nodes: [{ id: 'node-frame', type: 'test-frame' }],
           outputs: [
             {
-              key: "value",
-              nodeId: "node-frame",
-              output: "value",
+              key: 'value',
+              nodeId: 'node-frame',
+              output: 'value',
             },
           ],
         },
@@ -798,8 +794,8 @@ describe("Viz component authoring foundation", () => {
     };
     const session = createVizRuntimeSession({
       project,
-      mode: "render",
-      seed: "heartbeat-seed",
+      mode: 'render',
+      seed: 'heartbeat-seed',
     });
     const createPlan = () =>
       createVizRenderPlan({
@@ -817,12 +813,12 @@ describe("Viz component authoring foundation", () => {
     expect(plan.issues).toEqual([]);
 
     const node = plan.layers[0]?.node;
-    if (!node || node.kind !== "group") {
-      throw new Error("Expected Heartbeat Monitor group node.");
+    if (!node || node.kind !== 'group') {
+      throw new Error('Expected Heartbeat Monitor group node.');
     }
     const history = node.children[1];
-    if (!history || history.kind !== "polyline") {
-      throw new Error("Expected Heartbeat Monitor polyline.");
+    if (!history || history.kind !== 'polyline') {
+      throw new Error('Expected Heartbeat Monitor polyline.');
     }
 
     expect(history.points).toEqual([
@@ -833,24 +829,24 @@ describe("Viz component authoring foundation", () => {
     ]);
   });
 
-  it("derives Instanced Supercube response from canonical frame history", () => {
+  it('derives Instanced Supercube response from canonical frame history', () => {
     const project: VizProjectDocument = {
       schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-      projectId: "project-instanced-supercube",
-      name: "Instanced Supercube",
+      projectId: 'project-instanced-supercube',
+      name: 'Instanced Supercube',
       timeline: { fps: 60, durationInFrames: 180 },
       viewport: { width: 1280, height: 720 },
-      layerOrder: ["layer-supercube"],
+      layerOrder: ['layer-supercube'],
       layers: [
         {
-          id: "layer-supercube",
-          name: "Instanced Supercube",
-          componentId: "instanced-supercube",
+          id: 'layer-supercube',
+          name: 'Instanced Supercube',
+          componentId: 'instanced-supercube',
           enabled: true,
           opacity: 1,
-          blendMode: "normal",
+          blendMode: 'normal',
           settings: {
-            color: "rgb(255, 0, 0)",
+            color: 'rgb(255, 0, 0)',
             explosionFactor: 1.67,
             rotationSpeed: 0.2,
             animationSpeed: 0.08,
@@ -863,8 +859,8 @@ describe("Viz component authoring foundation", () => {
     };
     const session = createVizRuntimeSession({
       project,
-      mode: "render",
-      seed: "instanced-supercube-seed",
+      mode: 'render',
+      seed: 'instanced-supercube-seed',
     });
     const createPlan = () =>
       createVizRenderPlan({
@@ -881,11 +877,11 @@ describe("Viz component authoring foundation", () => {
     expect(plan.issues).toEqual([]);
 
     const node = plan.layers[0]?.node;
-    if (!node || node.kind !== "three-program") {
-      throw new Error("Expected Instanced Supercube Three program node.");
+    if (!node || node.kind !== 'three-program') {
+      throw new Error('Expected Instanced Supercube Three program node.');
     }
     expect(node.parameters).toMatchObject({
-      color: "rgb(255, 0, 0)",
+      color: 'rgb(255, 0, 0)',
       explosionFactor: 1.67,
       gridSize: 5,
       spacing: 4,
@@ -897,54 +893,54 @@ describe("Viz component authoring foundation", () => {
     );
   });
 
-  it("replays node-driven Supercube explosion smoothing across direct frames", () => {
+  it('replays node-driven Supercube explosion smoothing across direct frames', () => {
     const stepNode: VizNodeImplementation = {
-      type: "test-step",
-      name: "Test Step",
-      category: "pure",
-      outputs: [{ key: "value", label: "Value" }],
+      type: 'test-step',
+      name: 'Test Step',
+      category: 'pure',
+      outputs: [{ key: 'value', label: 'Value' }],
       evaluate: ({ frameContext }) => ({
         value: frameContext.frame >= 2 ? 1 : 0,
       }),
     };
     const project: VizProjectDocument = {
       schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-      projectId: "project-node-driven-supercube",
-      name: "Node-driven Supercube",
+      projectId: 'project-node-driven-supercube',
+      name: 'Node-driven Supercube',
       timeline: { fps: 60, durationInFrames: 120 },
       viewport: { width: 1280, height: 720 },
-      layerOrder: ["layer-supercube"],
+      layerOrder: ['layer-supercube'],
       layers: [
         {
-          id: "layer-supercube",
-          name: "Instanced Supercube",
-          componentId: "instanced-supercube",
+          id: 'layer-supercube',
+          name: 'Instanced Supercube',
+          componentId: 'instanced-supercube',
           enabled: true,
           opacity: 1,
-          blendMode: "normal",
+          blendMode: 'normal',
           settings: {
             animationSpeed: 0.5,
             explosionShift: 0,
           },
           inputs: {
             explosionShift: {
-              kind: "graph-output",
-              graphId: "graph-explosion",
-              output: "value",
+              kind: 'graph-output',
+              graphId: 'graph-explosion',
+              output: 'value',
             },
           },
         },
       ],
       graphs: [
         {
-          id: "graph-explosion",
-          name: "Explosion",
-          nodes: [{ id: "node-step", type: "test-step" }],
+          id: 'graph-explosion',
+          name: 'Explosion',
+          nodes: [{ id: 'node-step', type: 'test-step' }],
           outputs: [
             {
-              key: "value",
-              nodeId: "node-step",
-              output: "value",
+              key: 'value',
+              nodeId: 'node-step',
+              output: 'value',
             },
           ],
         },
@@ -953,8 +949,8 @@ describe("Viz component authoring foundation", () => {
     const plan = createVizRenderPlan({
       session: createVizRuntimeSession({
         project,
-        mode: "render",
-        seed: "node-driven-supercube-seed",
+        mode: 'render',
+        seed: 'node-driven-supercube-seed',
       }),
       frame: 3,
       registry: createCoreComponentRegistry(),
@@ -963,37 +959,37 @@ describe("Viz component authoring foundation", () => {
 
     expect(plan.issues).toEqual([]);
     const node = plan.layers[0]?.node;
-    if (!node || node.kind !== "three-program") {
-      throw new Error("Expected Instanced Supercube Three program node.");
+    if (!node || node.kind !== 'three-program') {
+      throw new Error('Expected Instanced Supercube Three program node.');
     }
     expect(node.parameters.explosionShift).toBe(0.75);
   });
 
-  it("derives Light Tunnel motion and wave events from canonical frame history", () => {
+  it('derives Light Tunnel motion and wave events from canonical frame history', () => {
     const triggerNode: VizNodeImplementation = {
-      type: "test-trigger",
-      name: "Test Trigger",
-      category: "pure",
-      outputs: [{ key: "value", label: "Value" }],
+      type: 'test-trigger',
+      name: 'Test Trigger',
+      category: 'pure',
+      outputs: [{ key: 'value', label: 'Value' }],
       evaluate: ({ frameContext }) => ({
         value: frameContext.frame === 2,
       }),
     };
     const project: VizProjectDocument = {
       schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-      projectId: "project-light-tunnel",
-      name: "Light Tunnel",
+      projectId: 'project-light-tunnel',
+      name: 'Light Tunnel',
       timeline: { fps: 60, durationInFrames: 180 },
       viewport: { width: 1280, height: 720 },
-      layerOrder: ["layer-light-tunnel"],
+      layerOrder: ['layer-light-tunnel'],
       layers: [
         {
-          id: "layer-light-tunnel",
-          name: "Light Tunnel",
-          componentId: "light-tunnel",
+          id: 'layer-light-tunnel',
+          name: 'Light Tunnel',
+          componentId: 'light-tunnel',
           enabled: true,
           opacity: 1,
-          blendMode: "normal",
+          blendMode: 'normal',
           settings: {
             structure: {
               cubeSize: 2.5,
@@ -1001,10 +997,10 @@ describe("Viz component authoring foundation", () => {
               tunnelDepth: 13,
             },
             appearance: {
-              renderMode: "Solid",
-              colorMode: "Random",
-              edgeColor: "#00ffff",
-              colorPalette: ["#ff00ff", "#00ffff"],
+              renderMode: 'Solid',
+              colorMode: 'Random',
+              edgeColor: '#00ffff',
+              colorPalette: ['#ff00ff', '#00ffff'],
             },
             animation: {
               tunnelSpeed: 0.5,
@@ -1018,24 +1014,24 @@ describe("Viz component authoring foundation", () => {
             },
           },
           inputs: {
-            "wave:triggerWave": {
-              kind: "graph-output",
-              graphId: "graph-wave",
-              output: "value",
+            'wave:triggerWave': {
+              kind: 'graph-output',
+              graphId: 'graph-wave',
+              output: 'value',
             },
           },
         },
       ],
       graphs: [
         {
-          id: "graph-wave",
-          name: "Wave trigger",
-          nodes: [{ id: "node-trigger", type: "test-trigger" }],
+          id: 'graph-wave',
+          name: 'Wave trigger',
+          nodes: [{ id: 'node-trigger', type: 'test-trigger' }],
           outputs: [
             {
-              key: "value",
-              nodeId: "node-trigger",
-              output: "value",
+              key: 'value',
+              nodeId: 'node-trigger',
+              output: 'value',
             },
           ],
         },
@@ -1043,8 +1039,8 @@ describe("Viz component authoring foundation", () => {
     };
     const session = createVizRuntimeSession({
       project,
-      mode: "render",
-      seed: "light-tunnel-seed",
+      mode: 'render',
+      seed: 'light-tunnel-seed',
     });
     const createPlan = () =>
       createVizRenderPlan({
@@ -1055,71 +1051,71 @@ describe("Viz component authoring foundation", () => {
       });
     const plan = createPlan();
 
-    expect(
-      createCoreComponentRegistry().get(lightTunnelComponent.id),
-    ).toBe(lightTunnelComponent);
+    expect(createCoreComponentRegistry().get(lightTunnelComponent.id)).toBe(
+      lightTunnelComponent,
+    );
     expect(plan).toEqual(createPlan());
     expect(plan.issues).toEqual([]);
 
     const node = plan.layers[0]?.node;
-    if (!node || node.kind !== "three-program") {
-      throw new Error("Expected Light Tunnel Three program node.");
+    if (!node || node.kind !== 'three-program') {
+      throw new Error('Expected Light Tunnel Three program node.');
     }
 
-    expect(node.programId).toBe("viz-core/light-tunnel/v1");
+    expect(node.programId).toBe('viz-core/light-tunnel/v1');
     expect(node.parameters).toMatchObject({
       time: 0.05,
-      seed: "light-tunnel-seed",
+      seed: 'light-tunnel-seed',
       cubeSize: 2.5,
       spacing: 1.3,
       tunnelDepth: 13,
-      renderMode: "Solid",
-      colorMode: "Random",
+      renderMode: 'Solid',
+      colorMode: 'Random',
       activeWaveAges: [1 / 60],
       tunnelSpeed: 0.5,
       rotationSpeed: 0.05,
     });
   });
 
-  it("projects node-driven Morph Shapes history and rotation deterministically", () => {
+  it('projects node-driven Morph Shapes history and rotation deterministically', () => {
     const stepNode: VizNodeImplementation = {
-      type: "test-morph-step",
-      name: "Test Morph Step",
-      category: "pure",
-      outputs: [{ key: "value", label: "Value" }],
+      type: 'test-morph-step',
+      name: 'Test Morph Step',
+      category: 'pure',
+      outputs: [{ key: 'value', label: 'Value' }],
       evaluate: ({ frameContext }) => ({
         value: frameContext.frame >= 2 ? 1 : 0,
       }),
     };
     const project: VizProjectDocument = {
       schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-      projectId: "project-morph-shapes",
-      name: "Morph Shapes",
+      projectId: 'project-morph-shapes',
+      name: 'Morph Shapes',
       timeline: { fps: 60, durationInFrames: 180 },
       viewport: { width: 1280, height: 720 },
       assetRefs: [
         {
-          id: "asset-morph-model",
-          kind: "binary",
-          source: "local",
-          label: "Morph model",
-          mimeType: "model/gltf-binary",
+          id: 'asset-morph-model',
+          kind: 'binary',
+          source: 'local',
+          label: 'Morph model',
+          mimeType: 'model/gltf-binary',
         },
       ],
-      layerOrder: ["layer-morph"],
+      layerOrder: ['layer-morph'],
       layers: [
         {
-          id: "layer-morph",
-          name: "Morph Shapes",
-          componentId: "morph-shapes",
+          id: 'layer-morph',
+          name: 'Morph Shapes',
+          componentId: 'morph-shapes',
           enabled: true,
           opacity: 1,
-          blendMode: "normal",
+          blendMode: 'normal',
           settings: {
             morphT: 0,
             explosionShift: 0,
             animationSpeed: 0.2,
-            color: "#00c8ff",
+            color: '#00c8ff',
             gridSize: 5,
             modelPointCount: 100,
             modelEvenness: 0.7,
@@ -1131,37 +1127,37 @@ describe("Viz component authoring foundation", () => {
               speed: 0.5,
             },
             shapeASettings: {
-              shape: "model",
-              modelUrl: "asset:asset-morph-model",
+              shape: 'model',
+              modelUrl: 'asset:asset-morph-model',
               position: { x: 0, y: 0, z: 0 },
               rotation: { x: 0, y: 0, z: 0 },
             },
             shapeBSettings: {
-              shape: "pyramid",
-              modelUrl: "",
+              shape: 'pyramid',
+              modelUrl: '',
               position: { x: 0, y: 0, z: 0 },
               rotation: { x: 0, y: 0, z: 0 },
             },
           },
           inputs: {
             morphT: {
-              kind: "graph-output",
-              graphId: "graph-morph",
-              output: "value",
+              kind: 'graph-output',
+              graphId: 'graph-morph',
+              output: 'value',
             },
           },
         },
       ],
       graphs: [
         {
-          id: "graph-morph",
-          name: "Morph step",
-          nodes: [{ id: "node-step", type: "test-morph-step" }],
+          id: 'graph-morph',
+          name: 'Morph step',
+          nodes: [{ id: 'node-step', type: 'test-morph-step' }],
           outputs: [
             {
-              key: "value",
-              nodeId: "node-step",
-              output: "value",
+              key: 'value',
+              nodeId: 'node-step',
+              output: 'value',
             },
           ],
         },
@@ -1169,15 +1165,15 @@ describe("Viz component authoring foundation", () => {
     };
     const session = createVizRuntimeSession({
       project,
-      mode: "render",
-      seed: "morph-shapes-seed",
+      mode: 'render',
+      seed: 'morph-shapes-seed',
       resolvedAssets: [
         {
-          id: "asset-morph-model",
-          kind: "binary",
-          source: "local",
-          uri: "memory://morph-model.glb",
-          mimeType: "model/gltf-binary",
+          id: 'asset-morph-model',
+          kind: 'binary',
+          source: 'local',
+          uri: 'memory://morph-model.glb',
+          mimeType: 'model/gltf-binary',
           bytes: new ArrayBuffer(8),
         },
       ],
@@ -1191,21 +1187,21 @@ describe("Viz component authoring foundation", () => {
       });
     const plan = createPlan();
 
-    expect(
-      createCoreComponentRegistry().get(morphShapesComponent.id),
-    ).toBe(morphShapesComponent);
+    expect(createCoreComponentRegistry().get(morphShapesComponent.id)).toBe(
+      morphShapesComponent,
+    );
     expect(plan).toEqual(createPlan());
     expect(plan.issues).toEqual([]);
 
     const node = plan.layers[0]?.node;
-    if (!node || node.kind !== "three-program") {
-      throw new Error("Expected Morph Shapes Three program node.");
+    if (!node || node.kind !== 'three-program') {
+      throw new Error('Expected Morph Shapes Three program node.');
     }
 
-    expect(node.programId).toBe("viz-core/morph-shapes/v1");
+    expect(node.programId).toBe('viz-core/morph-shapes/v1');
     expect(node.parameters).toMatchObject({
       frame: 3,
-      seed: "morph-shapes-seed",
+      seed: 'morph-shapes-seed',
       morphT: 1,
       explosionShift: 0,
       animationSpeed: 0.2,
@@ -1218,59 +1214,51 @@ describe("Viz component authoring foundation", () => {
       gridSize: 5,
       sphereSize: 0.15,
       shapeA: {
-        shape: "model",
-        modelUrl: "",
-        modelAssetId: "asset-morph-model",
+        shape: 'model',
+        modelUrl: '',
+        modelAssetId: 'asset-morph-model',
       },
     });
     const rotationQuaternion = node.parameters.rotationQuaternion;
     expect(Array.isArray(rotationQuaternion)).toBe(true);
     if (!Array.isArray(rotationQuaternion)) {
-      throw new Error("Expected Morph Shapes rotation quaternion.");
+      throw new Error('Expected Morph Shapes rotation quaternion.');
     }
-    expect(rotationQuaternion[1]).toBeCloseTo(
-      Math.sin(0.025 / 2),
-      12,
-    );
-    expect(rotationQuaternion[3]).toBeCloseTo(
-      Math.cos(0.025 / 2),
-      12,
-    );
+    expect(rotationQuaternion[1]).toBeCloseTo(Math.sin(0.025 / 2), 12);
+    expect(rotationQuaternion[3]).toBeCloseTo(Math.cos(0.025 / 2), 12);
   });
 
-  it("projects deterministic Neural Network topology and trigger history", () => {
+  it('projects deterministic Neural Network topology and trigger history', () => {
     const triggerNode: VizNodeImplementation = {
-      type: "test-neural-trigger",
-      name: "Test Neural Trigger",
-      category: "pure",
-      outputs: [{ key: "value", label: "Value" }],
+      type: 'test-neural-trigger',
+      name: 'Test Neural Trigger',
+      category: 'pure',
+      outputs: [{ key: 'value', label: 'Value' }],
       evaluate: ({ frameContext }) => ({
-        value:
-          frameContext.frame === 1 ||
-          frameContext.frame === 2,
+        value: frameContext.frame === 1 || frameContext.frame === 2,
       }),
     };
     const project: VizProjectDocument = {
       schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-      projectId: "project-neural-network",
-      name: "Neural Network",
+      projectId: 'project-neural-network',
+      name: 'Neural Network',
       timeline: { fps: 60, durationInFrames: 180 },
       viewport: { width: 1280, height: 720 },
-      layerOrder: ["layer-neural"],
+      layerOrder: ['layer-neural'],
       layers: [
         {
-          id: "layer-neural",
-          name: "Neural Network",
-          componentId: "neural-network",
+          id: 'layer-neural',
+          name: 'Neural Network',
+          componentId: 'neural-network',
           enabled: true,
           opacity: 1,
-          blendMode: "normal",
+          blendMode: 'normal',
           settings: {
             neuronCount: 6,
             seed: 42,
             tubeRadius: 0.25,
-            neuronColor: "#00ced1",
-            somaEmission: "#ff8ac9",
+            neuronColor: '#00ced1',
+            somaEmission: '#ff8ac9',
             emissiveIntensity: 2,
             metalness: 0,
             roughness: 0.9,
@@ -1293,25 +1281,23 @@ describe("Viz component authoring foundation", () => {
           },
           inputs: {
             trigger: {
-              kind: "graph-output",
-              graphId: "graph-neural",
-              output: "value",
+              kind: 'graph-output',
+              graphId: 'graph-neural',
+              output: 'value',
             },
           },
         },
       ],
       graphs: [
         {
-          id: "graph-neural",
-          name: "Neural trigger",
-          nodes: [
-            { id: "node-trigger", type: "test-neural-trigger" },
-          ],
+          id: 'graph-neural',
+          name: 'Neural trigger',
+          nodes: [{ id: 'node-trigger', type: 'test-neural-trigger' }],
           outputs: [
             {
-              key: "value",
-              nodeId: "node-trigger",
-              output: "value",
+              key: 'value',
+              nodeId: 'node-trigger',
+              output: 'value',
             },
           ],
         },
@@ -1319,8 +1305,8 @@ describe("Viz component authoring foundation", () => {
     };
     const session = createVizRuntimeSession({
       project,
-      mode: "render",
-      seed: "neural-network-seed",
+      mode: 'render',
+      seed: 'neural-network-seed',
     });
     const createPlan = () =>
       createVizRenderPlan({
@@ -1331,17 +1317,17 @@ describe("Viz component authoring foundation", () => {
       });
     const plan = createPlan();
 
-    expect(
-      createCoreComponentRegistry().get(neuralNetworkComponent.id),
-    ).toBe(neuralNetworkComponent);
+    expect(createCoreComponentRegistry().get(neuralNetworkComponent.id)).toBe(
+      neuralNetworkComponent,
+    );
     expect(plan).toEqual(createPlan());
     expect(plan.issues).toEqual([]);
 
     const node = plan.layers[0]?.node;
-    if (!node || node.kind !== "three-program") {
-      throw new Error("Expected Neural Network Three program node.");
+    if (!node || node.kind !== 'three-program') {
+      throw new Error('Expected Neural Network Three program node.');
     }
-    expect(node.programId).toBe("viz-core/neural-network/v1");
+    expect(node.programId).toBe('viz-core/neural-network/v1');
     expect(node.parameters).toMatchObject({
       time: 0.05,
       neuronCount: 6,
@@ -1353,7 +1339,7 @@ describe("Viz component authoring foundation", () => {
           age: 2 / 60,
           speed: 20,
           size: 0.4,
-          color: "#ff8ac9",
+          color: '#ff8ac9',
         },
       ],
       activationDecay: 2,
@@ -1362,28 +1348,28 @@ describe("Viz component authoring foundation", () => {
     });
   });
 
-  it("projects the complete Stage Scene contract from canonical frame state", () => {
+  it('projects the complete Stage Scene contract from canonical frame state', () => {
     const project: VizProjectDocument = {
       schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
-      projectId: "project-stage-scene",
-      name: "Stage Scene",
+      projectId: 'project-stage-scene',
+      name: 'Stage Scene',
       timeline: { fps: 60, durationInFrames: 3_600 },
       viewport: { width: 1280, height: 720 },
-      layerOrder: ["layer-stage"],
+      layerOrder: ['layer-stage'],
       layers: [
         {
-          id: "layer-stage",
-          name: "Stage Scene",
-          componentId: "stage-scene",
+          id: 'layer-stage',
+          name: 'Stage Scene',
+          componentId: 'stage-scene',
           enabled: true,
           opacity: 1,
-          blendMode: "normal",
+          blendMode: 'normal',
           settings: {
             camera: {
               position: { x: 1, y: 9, z: 42 },
               rotation: { x: 0.1, y: 0.2, z: 0.3 },
               cinematicMode: true,
-              cinematicPath: "Stage Circle",
+              cinematicPath: 'Stage Circle',
               cinematicDuration: 45,
               cinematicLookAt: { x: 0, y: 4, z: -2 },
               cinematicLerpSpeed: 0.2,
@@ -1408,28 +1394,28 @@ describe("Viz component authoring foundation", () => {
             },
             lasers: {
               enabled: true,
-              mode: "4",
-              colorMode: "single",
-              singleColor: "#ff2200",
+              mode: '4',
+              colorMode: 'single',
+              singleColor: '#ff2200',
               rotationSpeed: 1.5,
               maxConcurrentLasers: 8,
             },
             movingLights: {
               enabled: true,
-              mode: "2",
-              colorMode: "multi",
-              singleColor: "#ffffff",
+              mode: '2',
+              colorMode: 'multi',
+              singleColor: '#ffffff',
               intensity: 7,
               speed: 1.25,
             },
             beams: {
               enabled: true,
-              mode: "6",
-              colorMode: "single",
-              singleColor: "#88aaff",
+              mode: '6',
+              colorMode: 'single',
+              singleColor: '#88aaff',
               intensity: 2,
             },
-            stageLights: { enabled: true, color: "#8844ff" },
+            stageLights: { enabled: true, color: '#8844ff' },
             stageWash: { enabled: true, intensity: 12 },
             strobes: {
               enabled: true,
@@ -1438,14 +1424,14 @@ describe("Viz component authoring foundation", () => {
             },
             blinders: {
               enabled: true,
-              mode: "controlled",
+              mode: 'controlled',
               intensity: 0.8,
             },
             overheadBlinder: { enabled: true, intensity: 50 },
             accentLights: {
               enabled: true,
-              light1Color: "#ff00ff",
-              light2Color: "#00ffff",
+              light1Color: '#ff00ff',
+              light2Color: '#00ffff',
               djSpotIntensity: 2,
             },
             characters: { showDj: true, crowdCount: 250 },
@@ -1456,8 +1442,8 @@ describe("Viz component authoring foundation", () => {
     };
     const session = createVizRuntimeSession({
       project,
-      mode: "render",
-      seed: "stage-scene-seed",
+      mode: 'render',
+      seed: 'stage-scene-seed',
     });
     const createPlan = () =>
       createVizRenderPlan({
@@ -1467,34 +1453,34 @@ describe("Viz component authoring foundation", () => {
       });
     const plan = createPlan();
 
-    expect(
-      createCoreComponentRegistry().get(stageSceneComponent.id),
-    ).toBe(stageSceneComponent);
+    expect(createCoreComponentRegistry().get(stageSceneComponent.id)).toBe(
+      stageSceneComponent,
+    );
     expect(plan).toEqual(createPlan());
     expect(plan.issues).toEqual([]);
 
     const node = plan.layers[0]?.node;
-    if (!node || node.kind !== "three-program") {
-      throw new Error("Expected Stage Scene Three program node.");
+    if (!node || node.kind !== 'three-program') {
+      throw new Error('Expected Stage Scene Three program node.');
     }
-    expect(node.programId).toBe("viz-core/stage-scene/v1");
+    expect(node.programId).toBe('viz-core/stage-scene/v1');
     expect(node.parameters).toMatchObject({
       frame: 90,
       fps: 60,
       time: 1.5,
-      seed: "stage-scene-seed",
+      seed: 'stage-scene-seed',
       cameraPosition: [1, 9, 42],
       cameraRotation: [0.1, 0.2, 0.3],
-      cinematicPath: "Stage Circle",
+      cinematicPath: 'Stage Circle',
       cinematicDuration: 45,
       cinematicLookAt: [0, 4, -2],
       cinematicLerpSpeed: 0.2,
       shaderWallScale: 2.5,
-      laserMode: "4",
+      laserMode: '4',
       maximumLaserCount: 8,
-      movingLightMode: "2",
-      beamMode: "6",
-      stageLightColor: "#8844ff",
+      movingLightMode: '2',
+      beamMode: '6',
+      stageLightColor: '#8844ff',
       blinderIntensity: 0.8,
       crowdCount: 250,
       showHelpers: true,

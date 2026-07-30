@@ -1,5 +1,5 @@
-import { getRuntimeNodeOutput } from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
+import { getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
 import type { GraphNodeData } from '../graph-types';
@@ -42,8 +42,6 @@ const SpectralCentroidBody = ({ id: nodeId }: SpectralCentroidBodyProps) => {
     // Read outputs
     const output = getNodeOutput(nodeId);
     const centroid = Number(output?.centroid ?? 0);
-    const normalized = Number(output?.normalized ?? 0);
-
     // Maintain centroid history
     centroidRing.current.push(centroid);
     if (centroidRing.current.length > capacity) centroidRing.current.shift();
@@ -135,7 +133,7 @@ const SpectralCentroidBody = ({ id: nodeId }: SpectralCentroidBodyProps) => {
         </div>
       `;
       centroidTextRef.current.className = cn(
-        'pointer-events-none absolute right-2 top-2 flex flex-col items-end rounded bg-zinc-900/90 px-2 py-1',
+        'pointer-events-none absolute top-2 right-2 flex flex-col items-end rounded bg-zinc-900/90 px-2 py-1',
       );
     }
   });

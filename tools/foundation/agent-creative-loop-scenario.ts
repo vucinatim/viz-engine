@@ -2,8 +2,8 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { loadLocalVizProjectBundle } from '@viz-engine/dev-cli';
 import { createVizNodeControl } from '@viz-engine/editor-control/node';
+import { loadLocalVizProjectBundle } from '@viz-engine/project-bundle/node';
 
 const run = () => {
   const control = createVizNodeControl({
@@ -174,7 +174,9 @@ const run = () => {
           ok: true,
           revision: control.getSnapshot().session.revision,
           frame,
-          layerIds: debugSnapshot.renderPlan.layers.map((layer) => layer.layerId),
+          layerIds: debugSnapshot.renderPlan.layers.map(
+            (layer) => layer.layerId,
+          ),
           accentGraphValues: accentGraph?.values ?? {},
           graphCount: reloaded.project.graphs?.length ?? 0,
           bundleRoundtripVerified: true,

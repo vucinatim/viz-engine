@@ -1,8 +1,8 @@
+import { describe, expect, it } from 'vitest';
 import {
   comparePerformanceRecordings,
   summarizePerformanceRecording,
 } from '../../tools/foundation/compare-performance-recordings';
-import { describe, expect, it } from 'vitest';
 
 function recording(
   overrides: {
@@ -97,9 +97,7 @@ describe('performance recording comparison', () => {
 
     expect(comparison.pass).toBe(false);
     expect(
-      comparison.checks
-        .filter((check) => !check.pass)
-        .map((check) => check.id),
+      comparison.checks.filter((check) => !check.pass).map((check) => check.id),
     ).toEqual(
       expect.arrayContaining([
         'environment.gpu',

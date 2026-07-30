@@ -1,12 +1,18 @@
-import type { VizExecutionMode, VizProjectDocument, VizRenderPlan, VizResolvedArtifact, VizResolvedAsset } from "@viz-engine/contracts";
-import { renderVizRenderPlanToSvgMarkup } from "@viz-engine/renderer-svg";
+import type {
+  VizExecutionMode,
+  VizProjectDocument,
+  VizRenderPlan,
+  VizResolvedArtifact,
+  VizResolvedAsset,
+} from '@viz-engine/contracts';
+import { renderVizRenderPlanToSvgMarkup } from '@viz-engine/renderer-svg';
 import {
   createVizRenderPlan,
   createVizRuntimeSession,
   sampleProjectAudioFrameSnapshot,
   type VizComponentRegistry,
   type VizNodeRegistry,
-} from "@viz-engine/runtime";
+} from '@viz-engine/runtime';
 
 export interface VizRemotionCompositionConfig {
   id: string;
@@ -19,7 +25,7 @@ export interface VizRemotionCompositionConfig {
 export interface CreateVizRemotionFrameStateOptions {
   project: VizProjectDocument;
   frame: number;
-  mode?: Extract<VizExecutionMode, "render" | "bake">;
+  mode?: Extract<VizExecutionMode, 'render' | 'bake'>;
   resolvedAssets?: VizResolvedAsset[];
   resolvedArtifacts?: VizResolvedArtifact[];
   seed?: string;
@@ -45,7 +51,7 @@ export const createVizRemotionCompositionConfig = (
 export const createVizRemotionFrameState = ({
   project,
   frame,
-  mode = "render",
+  mode = 'render',
   resolvedAssets,
   resolvedArtifacts,
   seed,
@@ -74,9 +80,13 @@ export const createVizRemotionRenderPlan = ({
 }: CreateVizRemotionRenderPlanOptions): VizRenderPlan => {
   const session = createVizRuntimeSession({
     project: options.project,
-    mode: options.mode ?? "render",
-    ...(options.resolvedAssets === undefined ? {} : { resolvedAssets: options.resolvedAssets }),
-    ...(options.resolvedArtifacts === undefined ? {} : { resolvedArtifacts: options.resolvedArtifacts }),
+    mode: options.mode ?? 'render',
+    ...(options.resolvedAssets === undefined
+      ? {}
+      : { resolvedAssets: options.resolvedAssets }),
+    ...(options.resolvedArtifacts === undefined
+      ? {}
+      : { resolvedArtifacts: options.resolvedArtifacts }),
     ...(options.seed === undefined ? {} : { seed: options.seed }),
   });
 

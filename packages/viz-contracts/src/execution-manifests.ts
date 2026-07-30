@@ -1,12 +1,7 @@
-import type {
-  VizArtifactId,
-  VizAssetId,
-  VizProjectId,
-} from "./ids.js";
+import type { VizArtifactId, VizAssetId, VizProjectId } from './ids.js';
 
 export const VIZ_EXECUTION_MANIFEST_SCHEMA_VERSION = 1 as const;
-export const VIZ_EXECUTION_MANIFEST_KIND =
-  "viz.execution-manifest.v1" as const;
+export const VIZ_EXECUTION_MANIFEST_KIND = 'viz.execution-manifest.v1' as const;
 
 export interface VizExecutionPackageIdentity {
   packageId: string;
@@ -24,8 +19,7 @@ export interface VizExecutionComponentIdentity {
   capabilityPack: VizExecutionCapabilityIdentity;
 }
 
-export interface VizExecutionNodePackageIdentity
-  extends VizExecutionPackageIdentity {
+export interface VizExecutionNodePackageIdentity extends VizExecutionPackageIdentity {
   nodeTypes: string[];
 }
 
@@ -39,13 +33,11 @@ export interface VizExecutionContentIdentity {
   contentIdentity: string;
 }
 
-export interface VizExecutionAssetIdentity
-  extends VizExecutionContentIdentity {
+export interface VizExecutionAssetIdentity extends VizExecutionContentIdentity {
   assetId: VizAssetId;
 }
 
-export interface VizExecutionArtifactIdentity
-  extends VizExecutionContentIdentity {
+export interface VizExecutionArtifactIdentity extends VizExecutionContentIdentity {
   artifactId: VizArtifactId;
 }
 

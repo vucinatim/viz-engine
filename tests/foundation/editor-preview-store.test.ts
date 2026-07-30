@@ -63,9 +63,9 @@ describe('Editor preview transport store', () => {
       currentFrame: 0,
       isPlaying: false,
     });
-    expect(
-      useEditorRuntimePreviewAttachmentStore.getState().playerRef,
-    ).toBe(dummyPlayerRef);
+    expect(useEditorRuntimePreviewAttachmentStore.getState().playerRef).toBe(
+      dummyPlayerRef,
+    );
     expect(vizSessionStore.getState().preview).not.toHaveProperty('playerRef');
   });
 });

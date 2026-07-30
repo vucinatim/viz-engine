@@ -1,9 +1,3 @@
-'use client';
-
-import {
-  createVizSessionRuntimePreviewFrame,
-  vizSessionActions,
-} from '@/lib/viz-session';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -28,8 +22,12 @@ import {
   fastCaptureFrame,
   isTransparentBackground,
 } from '@/lib/utils/fast-frame-capture';
+import {
+  createVizSessionRuntimePreviewFrame,
+  vizSessionActions,
+} from '@/lib/viz-session';
 import { Download, Loader2 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface ExportImageDialogProps {
@@ -53,7 +51,6 @@ const ExportImageDialog = ({ open, onOpenChange }: ExportImageDialogProps) => {
   const [height, setHeight] = useState(1080);
   const [format, setFormat] = useState<ImageFormat>('jpeg');
   const [quality, setQuality] = useState(0.95);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const currentFrame = useEditorPreviewStore(
     (state) => state.transport.currentFrame,
@@ -118,9 +115,7 @@ const ExportImageDialog = ({ open, onOpenChange }: ExportImageDialogProps) => {
         // Get existing WebGL context (returns existing context if one exists)
         const gl = (canvas.getContext('webgl2') ||
           canvas.getContext('webgl')) as
-          | WebGL2RenderingContext
-          | WebGLRenderingContext
-          | null;
+          WebGL2RenderingContext | WebGLRenderingContext | null;
         if (gl) {
           // Ensure commands are flushed to the GPU, then block until done
           if ('flush' in gl && typeof (gl as any).flush === 'function') {
@@ -363,7 +358,6 @@ const ExportImageDialog = ({ open, onOpenChange }: ExportImageDialogProps) => {
             ) : imageUrl ? (
               <div className="relative w-full overflow-hidden rounded-lg border border-zinc-700 bg-black">
                 {/* Show exactly what will be downloaded */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={imageUrl}
                   alt="Export preview"

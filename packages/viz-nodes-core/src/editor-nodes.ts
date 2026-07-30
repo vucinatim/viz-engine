@@ -1,19 +1,18 @@
 import {
-  createNodeAuthoringDefinition as createNode,
   EMPTY_NODE_FREQUENCY_ANALYSIS,
   VizNodeMathOperation as MathOperation,
+  createNodeAuthoringDefinition as createNode,
   type VizNodeAuthoringDefinition as AnimNode,
-  type VizNodeAnimationInput as AnimInputData,
   type VizNodeFrequencyAnalysis as FrequencyAnalysis,
   type VizNodeHandleType as NodeHandleType,
-} from "./authoring.js";
+} from './authoring.js';
 // No external libraries; implement YIN inline
 export type {
   VizNodeAnimationInput as AnimInputData,
   VizNodeAuthoringDefinition as AnimNode,
-} from "./authoring.js";
+} from './authoring.js';
 
-// (legacy) ComputeFunction kept out; replaced by createNode's generics
+// Evaluation stays on the typed node contract rather than editor callbacks.
 
 const EMPTY_FREQUENCY_ANALYSIS: FrequencyAnalysis = {
   ...EMPTY_NODE_FREQUENCY_ANALYSIS,
@@ -22,7 +21,7 @@ const EMPTY_FREQUENCY_ANALYSIS: FrequencyAnalysis = {
 const toHexChannel = (value: number): string =>
   Math.round(Math.max(0, Math.min(255, value)))
     .toString(16)
-    .padStart(2, "0");
+    .padStart(2, '0');
 
 const rgbToHex = (red: number, green: number, blue: number): string =>
   `#${toHexChannel(red)}${toHexChannel(green)}${toHexChannel(blue)}`.toUpperCase();
@@ -356,7 +355,7 @@ const FrequencyBandNode = createNode({
   ],
   computeSignal: (
     { frequencyAnalysis, startFrequency, endFrequency },
-    context,
+    _context,
   ) => {
     if (
       !frequencyAnalysis ||
@@ -528,8 +527,7 @@ const PitchDetectionNode = createNode({
     // Only apply if we have room in our search range
     const tau2 = Math.min(tauMax, Math.round(refinedTau * 2));
     if (tau2 <= tauMax && tau2 >= tauMin) {
-      const costTau =
-        cmndf[Math.round(refinedTau)] || cmndf[tau0]!;
+      const costTau = cmndf[Math.round(refinedTau)] || cmndf[tau0]!;
       const costTau2 = cmndf[tau2]!;
       // Be more conservative - only switch if tau2 is significantly better
       if (isFinite(costTau2) && costTau2 + 0.05 < costTau) {
@@ -625,7 +623,7 @@ const ValueMapperNode = createNode({
     },
   ],
   outputs: [{ id: 'output', label: 'Output', type: 'string' }],
-  computeSignal: ({ input, mode, mapping, default: def }) => {
+  computeSignal: ({ input, mapping, default: def }) => {
     const mapObj = mapping as Record<string, any>;
     // Convert number input to string key for lookup
     const inputKey = String(Math.floor(typeof input === 'number' ? input : 0));
@@ -972,7 +970,6 @@ const HarmonicPresenceNode = createNode({
       const baseIdx = p.idx;
       let harmonicEnergy = 0;
       let coverage = 0;
-      let totalConsidered = 0;
       for (let k = 1; k <= maxH; k++) {
         const center = Math.round(baseIdx * k);
         if (center <= 0 || center >= n) break;
@@ -980,15 +977,12 @@ const HarmonicPresenceNode = createNode({
         const halfBins = Math.max(1, Math.ceil(center * tolRatio));
         const lo = Math.max(0, center - halfBins);
         const hi = Math.min(n - 1, center + halfBins);
-        let sum = 0;
         let sumElev = 0;
         for (let i = lo; i <= hi; i++) {
-          sum += data[i]!;
           sumElev += elevated[i]!;
         }
         const width = hi - lo + 1;
         const avgElev = sumElev / Math.max(1, width);
-        totalConsidered += sum;
         // Basic presence criterion for this harmonic
         const peakElev = Math.max(0, p.val - bandAvg);
         if (avgElev > minRel * (peakElev + eps)) {

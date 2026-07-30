@@ -1,13 +1,16 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { CompDefinitionMap } from '@/components/comps';
-import { useNodeNetworkStore } from '@/components/node-network/node-network-store';
 import { VType } from '@/components/config/types';
-import useEditorGraphStore from '@/lib/stores/editor-graph-store';
+import { useNodeNetworkStore } from '@/components/node-network/node-network-store';
+import {
+  assignDeterministicIdsToConfig,
+  getParameterIdsFromConfig,
+} from '@/lib/comp-utils/config-utils';
 import useCompStore from '@/lib/stores/comp-store';
+import useEditorGraphStore from '@/lib/stores/editor-graph-store';
 import useEditorProjectStore from '@/lib/stores/editor-project-store';
 import { useHistoryStore } from '@/lib/stores/history-store';
-import { assignDeterministicIdsToConfig, getParameterIdsFromConfig } from '@/lib/comp-utils/config-utils';
 import { vizSessionStore } from '@/lib/viz-session';
 import type { VizProjectDocument } from '@viz-engine/contracts';
 import { createTestProject } from './viz-session-test-utils';
@@ -127,9 +130,9 @@ describe('History store', () => {
     useHistoryStore.getState().undo();
 
     expect(
-      useEditorGraphStore.getState().networks[parameterId]?.nodes.some(
-        (node) => node.id === 'custom-node',
-      ),
+      useEditorGraphStore
+        .getState()
+        .networks[parameterId]?.nodes.some((node) => node.id === 'custom-node'),
     ).toBe(false);
   });
 });

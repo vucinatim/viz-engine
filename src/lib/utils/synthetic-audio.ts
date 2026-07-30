@@ -48,10 +48,6 @@ async function loadAudioData(): Promise<void> {
 
       // Process audio in chunks to create frames
       const framesPerSecond = 60;
-      const samplesPerFrame = Math.floor(sampleRate / framesPerSecond);
-      const totalFrames = Math.floor(
-        ((snippet.length / samplesPerFrame) * DURATION) / DURATION,
-      );
 
       const timeDomainFrames: Uint8Array[] = [];
       const frequencyFrames: Uint8Array[] = [];

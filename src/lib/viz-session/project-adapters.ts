@@ -5,6 +5,11 @@ import {
   safeVTypeToNodeHandleType,
 } from '@/components/config/node-types';
 import {
+  layerSettingsSchema,
+  type BlendingMode,
+  type LayerSettings,
+} from '@/components/editor/layer-settings';
+import {
   NodeDefinitionMap,
   createOutputNode,
   type AnimNode,
@@ -14,65 +19,27 @@ import type {
   NodeNetwork,
 } from '@/components/node-network/graph-types';
 import {
-  layerSettingsSchema,
-  type BlendingMode,
-  type LayerSettings,
-} from '@/components/editor/layer-settings';
-import { assignDeterministicIdsToConfig } from '@/lib/comp-utils/config-utils';
-import {
   getPresetById,
-  instantiatePreset,
+  instantiateCanonicalPreset,
 } from '@/components/node-network/presets';
+import { assignDeterministicIdsToConfig } from '@/lib/comp-utils/config-utils';
 import type { LayerData } from '@/lib/editor-layer-types';
 import type { EditorLayerUiState } from '@/lib/stores/editor-store';
+import { studioNodeRegistry } from '@/lib/viz-capabilities';
 import {
   type VizBlendMode,
   type VizGraphNodeInputBinding,
+  type VizLayer,
   type VizNodeGraphDocument,
   type VizProjectDocument,
-  type VizLayer,
 } from '@viz-engine/contracts';
 import type { Edge } from '@xyflow/react';
-import { studioNodeRegistry } from '@/lib/viz-capabilities';
 
 const DEFAULT_OUTPUT_HANDLE = '__viz_default_output__';
 const DEFAULT_INPUT_HANDLE = '__viz_default_input__';
 const GRAPH_OUTPUT_NODE_PREFIX = '__viz_graph_output__:';
 const GRAPH_OUTPUT_EDGE_PREFIX = '__viz_graph_output_edge__:';
-const EDITOR_NODE_METADATA_KEY = 'vizEditor';
-const EDITOR_GRAPH_METADATA_KEY = 'vizEditor';
-
-interface EditorNodeMetadata {
-  position?: { x: number; y: number };
-  nodeType?: string;
-  outputType?: string;
-}
-
-interface EditorGraphMetadata {
-  isMinimized?: boolean;
-  outputPositions?: Record<string, { x: number; y: number }>;
-}
-
 const clone = <T>(value: T): T => structuredClone(value);
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
-const readEditorNodeMetadata = (metadata: Record<string, unknown> | undefined) => {
-  const value = metadata?.[EDITOR_NODE_METADATA_KEY];
-  return isRecord(value) ? (value as EditorNodeMetadata) : {};
-};
-
-const readEditorGraphMetadata = (
-  metadata: Record<string, unknown> | undefined,
-) => {
-  const value = metadata?.[EDITOR_GRAPH_METADATA_KEY];
-  return isRecord(value) ? (value as EditorGraphMetadata) : {};
-};
-
-export const isEditorAuthoredGraph = (
-  graph: VizNodeGraphDocument,
-): boolean => isRecord(graph.metadata?.[EDITOR_GRAPH_METADATA_KEY]);
 
 const toNodeHandleType = (value: unknown): NodeHandleType =>
   typeof value === 'string' && isValidNodeHandleType(value)
@@ -104,10 +71,7 @@ export const resolveEditorOptionByPath = (
   layerId: string,
   path: string,
 ) => {
-  const config = assignDeterministicIdsToConfig(
-    layerId,
-    comp.config.clone(),
-  );
+  const config = assignDeterministicIdsToConfig(layerId, comp.config.clone());
   const segments = path.split('.');
   let current: Record<string, any> = config.options;
 
@@ -214,145 +178,9 @@ export const createProjectedLayer = ({
   };
 };
 
-const getDefinitionType = (node: GraphNode) =>
-  node.data.portableNodeType ?? node.data.definition.label;
-
-const getOutputType = (node: GraphNode) =>
-  node.data.definition.label === 'Output'
-    ? node.data.definition.inputs[0]?.type
-    : undefined;
-
-const createNodeBindings = (
-  node: GraphNode,
-  edges: Edge[],
-): Record<string, VizGraphNodeInputBinding> | undefined => {
-  const bindings: Record<string, VizGraphNodeInputBinding> = Object.fromEntries(
-    Object.entries(node.data.inputValues ?? {}).map(([inputKey, value]) => [
-      inputKey,
-      {
-        kind: 'literal',
-        value: clone(value),
-      } satisfies VizGraphNodeInputBinding,
-    ]),
-  );
-
-  edges
-    .filter((edge) => edge.target === node.id)
-    .forEach((edge) => {
-      const inputKey = edge.targetHandle ?? DEFAULT_INPUT_HANDLE;
-      bindings[inputKey] = {
-        kind: 'node-output',
-        nodeId: edge.source,
-        output: edge.sourceHandle ?? DEFAULT_OUTPUT_HANDLE,
-        edgeId: edge.id,
-      };
-    });
-
-  return Object.keys(bindings).length > 0 ? bindings : undefined;
-};
-
-export const nodeNetworkToVizGraph = (
-  graphId: string,
-  network: NodeNetwork,
-  previousGraph?: VizNodeGraphDocument,
-): VizNodeGraphDocument => {
-  const graphOutputNodes = network.nodes.filter(
-    (node) => node.data.graphOutputKey,
-  );
-  const legacyOutputNode = network.nodes.find(
-    (node) =>
-      node.data.definition.label === 'Output' &&
-      !node.data.graphOutputKey,
-  );
-  const canonicalOutputs = graphOutputNodes.flatMap((node) => {
-    const edge = network.edges.find(
-      (candidate) => candidate.target === node.id,
-    );
-
-    return edge && node.data.graphOutputKey
-      ? [
-          {
-            key: node.data.graphOutputKey,
-            nodeId: edge.source,
-            output: edge.sourceHandle ?? DEFAULT_OUTPUT_HANDLE,
-          },
-        ]
-      : [];
-  });
-  const previousEditorMetadata = readEditorGraphMetadata(
-    previousGraph?.metadata,
-  );
-  const outputPositions = Object.fromEntries(
-    graphOutputNodes.flatMap((node) =>
-      node.data.graphOutputKey
-        ? [[node.data.graphOutputKey, clone(node.position)]]
-        : [],
-    ),
-  );
-
-  return {
-    id: graphId,
-    name: network.name || graphId,
-    enabled: network.isEnabled,
-    ...(previousGraph?.inputs === undefined
-      ? {}
-      : { inputs: clone(previousGraph.inputs) }),
-    nodes: network.nodes
-      .filter((node) => !node.data.graphOutputKey)
-      .map((node) => {
-      const outputType = getOutputType(node);
-      const inputs = createNodeBindings(node, network.edges);
-      const editorMetadata: EditorNodeMetadata = {
-        position: clone(node.position),
-        nodeType: node.type,
-        ...(outputType === undefined ? {} : { outputType }),
-      };
-
-      return {
-        id: node.id,
-        type: getDefinitionType(node),
-        ...(inputs === undefined ? {} : { inputs }),
-        metadata: {
-          [EDITOR_NODE_METADATA_KEY]: editorMetadata,
-        },
-      };
-    }),
-    outputs:
-      canonicalOutputs.length > 0
-        ? canonicalOutputs
-        : legacyOutputNode
-          ? [
-          {
-            key: 'value',
-            nodeId: legacyOutputNode.id,
-            output: 'value',
-          },
-            ]
-          : clone(previousGraph?.outputs ?? []),
-    metadata: {
-      ...(previousGraph?.metadata ?? {}),
-      [EDITOR_GRAPH_METADATA_KEY]: {
-        isMinimized: network.isMinimized ?? false,
-        ...((Object.keys(outputPositions).length > 0
-          ? outputPositions
-          : previousEditorMetadata.outputPositions) === undefined
-          ? {}
-          : {
-              outputPositions:
-                Object.keys(outputPositions).length > 0
-                  ? outputPositions
-                  : previousEditorMetadata.outputPositions,
-            }),
-      } satisfies EditorGraphMetadata,
-    },
-  };
-};
-
 const resolveNodeDefinition = (node: VizNodeGraphDocument['nodes'][number]) => {
   if (node.type === 'Output') {
-    return createOutputNode(
-      toNodeHandleType(readEditorNodeMetadata(node.metadata).outputType),
-    );
+    return createOutputNode('number');
   }
 
   const definition = NodeDefinitionMap.get(node.type);
@@ -396,15 +224,13 @@ const resolveNodeDefinition = (node: VizNodeGraphDocument['nodes'][number]) => {
     } satisfies AnimNode;
   }
 
-  return (
-    {
-      label: node.type,
-      description: `Unknown node type "${node.type}".`,
-      inputs: [],
-      outputs: [],
-      computeSignal: () => ({}),
-    } satisfies AnimNode
-  );
+  return {
+    label: node.type,
+    description: `Unknown node type "${node.type}".`,
+    inputs: [],
+    outputs: [],
+    computeSignal: () => ({}),
+  } satisfies AnimNode;
 };
 
 const createProjectedGraphNode = (
@@ -412,7 +238,6 @@ const createProjectedGraphNode = (
   previousNode: GraphNode | undefined,
   fallbackPosition: { x: number; y: number },
 ): GraphNode => {
-  const editorMetadata = readEditorNodeMetadata(node.metadata);
   const inputValues = Object.fromEntries(
     Object.entries(node.inputs ?? {})
       .filter(([, binding]) => binding.kind === 'literal')
@@ -424,8 +249,8 @@ const createProjectedGraphNode = (
 
   return {
     id: node.id,
-    type: editorMetadata.nodeType ?? 'NodeRenderer',
-    position: editorMetadata.position ?? fallbackPosition,
+    type: 'NodeRenderer',
+    position: node.position ?? fallbackPosition,
     data: {
       definition: resolveNodeDefinition(node),
       inputValues,
@@ -435,9 +260,7 @@ const createProjectedGraphNode = (
   };
 };
 
-const createProjectedGraphEdges = (
-  graph: VizNodeGraphDocument,
-): Edge[] =>
+const createProjectedGraphEdges = (graph: VizNodeGraphDocument): Edge[] =>
   graph.nodes.flatMap((node) =>
     Object.entries(node.inputs ?? {}).flatMap(([inputKey, binding]) => {
       if (binding.kind !== 'node-output') {
@@ -495,8 +318,7 @@ const createFallbackNodePositions = (
         > => binding.kind === 'node-output',
       )
       .map((binding) => resolveDepth(binding.nodeId, nextAncestry));
-    const depth =
-      dependencies.length === 0 ? 0 : Math.max(...dependencies) + 1;
+    const depth = dependencies.length === 0 ? 0 : Math.max(...dependencies) + 1;
     depthCache.set(nodeId, depth);
     return depth;
   };
@@ -527,29 +349,23 @@ const resolveGraphOutputType = (
   outputKey: string,
 ): NodeHandleType => {
   const source = nodes.find((node) => node.id === nodeId);
-  return (
-    source?.data.definition.outputs.find(
-      (output) => output.id === outputKey,
-    )?.type ?? 'number'
-  ) as NodeHandleType;
+  return (source?.data.definition.outputs.find(
+    (output) => output.id === outputKey,
+  )?.type ?? 'number') as NodeHandleType;
 };
 
 const createProjectedGraphOutputNodes = (
   graph: VizNodeGraphDocument,
   projectedNodes: GraphNode[],
 ): { nodes: GraphNode[]; edges: Edge[] } => {
-  const editorMetadata = readEditorGraphMetadata(graph.metadata);
-  const runtimeNodesById = new Map(
-    graph.nodes.map((node) => [node.id, node]),
-  );
-  const canonicalOutputs = graph.outputs.filter(
-    (output) => runtimeNodesById.get(output.nodeId)?.type !== 'Output',
-  );
+  const canonicalOutputs = graph.outputs;
   const sourcePositions = new Map(
     projectedNodes.map((node) => [node.id, node.position]),
   );
   const nodes = canonicalOutputs.map((output, index): GraphNode => {
-    const sourcePosition = sourcePositions.get(output.nodeId) ?? {
+    const sourcePosition = (output.nodeId
+      ? sourcePositions.get(output.nodeId)
+      : undefined) ?? {
       x: 0,
       y: index * 180,
     };
@@ -557,18 +373,21 @@ const createProjectedGraphOutputNodes = (
     return {
       id: `${GRAPH_OUTPUT_NODE_PREFIX}${output.key}`,
       type: 'NodeRenderer',
-      position:
-        editorMetadata.outputPositions?.[output.key] ?? {
-          x: sourcePosition.x + 260,
-          y: sourcePosition.y,
-        },
+      position: output.position ?? {
+        x: sourcePosition.x + 260,
+        y: sourcePosition.y,
+      },
       data: {
         definition: createOutputNode(
-          resolveGraphOutputType(
-            projectedNodes,
-            output.nodeId,
-            output.output,
-          ),
+          output.valueType
+            ? toNodeHandleType(output.valueType)
+            : output.nodeId && output.output
+              ? resolveGraphOutputType(
+                  projectedNodes,
+                  output.nodeId,
+                  output.output,
+                )
+              : 'number',
         ),
         inputValues: {},
         state: {},
@@ -576,16 +395,22 @@ const createProjectedGraphOutputNodes = (
       },
     };
   });
-  const edges = canonicalOutputs.map((output) => ({
-    id: `${GRAPH_OUTPUT_EDGE_PREFIX}${output.key}`,
-    source: output.nodeId,
-    target: `${GRAPH_OUTPUT_NODE_PREFIX}${output.key}`,
-    sourceHandle:
-      output.output === DEFAULT_OUTPUT_HANDLE
-        ? undefined
-        : output.output,
-    targetHandle: 'output',
-  }));
+  const edges = canonicalOutputs.flatMap((output) =>
+    output.nodeId && output.output
+      ? [
+          {
+            id: `${GRAPH_OUTPUT_EDGE_PREFIX}${output.key}`,
+            source: output.nodeId,
+            target: `${GRAPH_OUTPUT_NODE_PREFIX}${output.key}`,
+            sourceHandle:
+              output.output === DEFAULT_OUTPUT_HANDLE
+                ? undefined
+                : output.output,
+            targetHandle: 'output',
+          },
+        ]
+      : [],
+  );
 
   return { nodes, edges };
 };
@@ -610,13 +435,9 @@ export const vizGraphToNodeNetwork = (
   return {
     name: graph.name,
     isEnabled: graph.enabled ?? true,
-    isMinimized:
-      readEditorGraphMetadata(graph.metadata).isMinimized ?? false,
+    isMinimized: false,
     nodes: [...projectedNodes, ...projectedOutputs.nodes],
-    edges: [
-      ...createProjectedGraphEdges(graph),
-      ...projectedOutputs.edges,
-    ],
+    edges: [...createProjectedGraphEdges(graph), ...projectedOutputs.edges],
   };
 };
 
@@ -625,11 +446,10 @@ export const projectGraphsToNodeNetworks = (
   previousNetworks: Record<string, NodeNetwork> = {},
 ): Record<string, NodeNetwork> =>
   Object.fromEntries(
-    (project.graphs ?? [])
-      .map((graph) => [
-        graph.id,
-        vizGraphToNodeNetwork(graph, previousNetworks[graph.id]),
-      ]),
+    (project.graphs ?? []).map((graph) => [
+      graph.id,
+      vizGraphToNodeNetwork(graph, previousNetworks[graph.id]),
+    ]),
   );
 
 export const attachGraphToLayerInput = (
@@ -691,14 +511,10 @@ export const applyEditorDefaultNetworks = ({
 }): VizProjectDocument => {
   let nextProject = project;
 
-  for (const [path, presetOrId] of Object.entries(
-    comp.defaultNetworks ?? {},
-  )) {
+  for (const [path, presetOrId] of Object.entries(comp.defaultNetworks ?? {})) {
     const option = resolveEditorOptionByPath(comp, layerId, path);
     const preset =
-      typeof presetOrId === 'string'
-        ? getPresetById(presetOrId)
-        : presetOrId;
+      typeof presetOrId === 'string' ? getPresetById(presetOrId) : presetOrId;
 
     if (!option || !preset) {
       continue;
@@ -706,18 +522,7 @@ export const applyEditorDefaultNetworks = ({
 
     const graphId = option.id;
     const outputType = safeVTypeToNodeHandleType(option.type);
-    const { nodes, edges } = instantiatePreset(
-      preset,
-      graphId,
-      outputType,
-    );
-    const graph = nodeNetworkToVizGraph(graphId, {
-      name: graphId,
-      isEnabled: true,
-      isMinimized: false,
-      nodes,
-      edges,
-    });
+    const graph = instantiateCanonicalPreset(preset, graphId, outputType);
 
     nextProject = {
       ...nextProject,

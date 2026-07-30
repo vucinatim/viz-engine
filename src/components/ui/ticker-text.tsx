@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils";
-import React, { useRef, useState, useEffect } from "react";
+import { cn } from '@/lib/utils';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface TickerTextProps {
   leadingIcon?: React.ReactNode;
@@ -22,8 +22,8 @@ const TickerText = ({ text, leadingIcon }: TickerTextProps) => {
     <div className="flex w-full items-center justify-center gap-x-4">
       {leadingIcon}
       <div className="ticker-wrap">
-        <p ref={textRef} className={cn(isTruncated && "ticker-text")}>
-          {text || "Load File"}
+        <p ref={textRef} className={cn(isTruncated && 'ticker-text')}>
+          {text || 'Load File'}
         </p>
       </div>
     </div>

@@ -1,13 +1,8 @@
-import type { VizAssetId } from "./ids.js";
+import type { VizAssetId } from './ids.js';
 
 export const VIZ_MODEL_MANIFEST_SCHEMA_VERSION = 1 as const;
 
-export type VizModelFormat =
-  | "fbx"
-  | "glb"
-  | "gltf"
-  | "obj"
-  | "unknown";
+export type VizModelFormat = 'fbx' | 'glb' | 'gltf' | 'obj' | 'unknown';
 
 export interface VizModelNodeDescriptor {
   id: string;
@@ -65,10 +60,7 @@ export interface VizModelManifest {
   };
 }
 
-export type VizModelAnimationLoopMode =
-  | "loop"
-  | "once"
-  | "ping-pong";
+export type VizModelAnimationLoopMode = 'loop' | 'once' | 'ping-pong';
 
 export interface VizModelAnimationPlayback {
   clipId?: string;

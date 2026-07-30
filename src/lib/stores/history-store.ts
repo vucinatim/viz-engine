@@ -42,7 +42,10 @@ const selectHistoryStore = (): HistoryStore => {
 };
 
 type HistorySelector<T> = (state: HistoryStore) => T;
-type HistoryListener = (state: HistoryStore, previousState: HistoryStore) => void;
+type HistoryListener = (
+  state: HistoryStore,
+  previousState: HistoryStore,
+) => void;
 
 export const useHistoryStore = Object.assign(
   <T>(selector: HistorySelector<T>) =>

@@ -1,9 +1,9 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // Utility function to extract default values from a Zod schema
 export function getDefaults<Schema extends z.AnyZodObject>(
-  schema: Schema
-): Object {
+  schema: Schema,
+): object {
   return Object.fromEntries(
     Object.entries(schema.shape).map(([key, value]) => {
       if (value instanceof z.ZodDefault)
@@ -11,7 +11,7 @@ export function getDefaults<Schema extends z.AnyZodObject>(
       if (value instanceof z.ZodObject)
         return [key, getDefaults(value as Schema)];
       return [key, undefined];
-    })
+    }),
   );
 }
 
@@ -23,11 +23,11 @@ export function getNumberConstraints(schema: z.ZodNumber) {
 
   // Zod stores constraints in checks array
   schema._def.checks.forEach((check) => {
-    if (check.kind === "min") {
+    if (check.kind === 'min') {
       min = check.value;
-    } else if (check.kind === "max") {
+    } else if (check.kind === 'max') {
       max = check.value;
-    } else if (check.kind === "multipleOf") {
+    } else if (check.kind === 'multipleOf') {
       step = check.value;
     }
   });

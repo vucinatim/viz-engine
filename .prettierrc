@@ -11,7 +11,7 @@
   "bracketSameLine": true,
   "arrowParens": "always",
   "endOfLine": "lf",
-  "tailwindConfig": "./tailwind.config.ts",
+  "tailwindStylesheet": "./src/styles/globals.css",
   "tailwindAttributes": ["className"],
   "tailwindFunctions": ["cn", "tw", "clsx"],
   "plugins": ["prettier-plugin-organize-imports", "prettier-plugin-tailwindcss"]

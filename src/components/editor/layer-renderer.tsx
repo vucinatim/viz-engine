@@ -1,15 +1,15 @@
-import useDebug from '@/lib/hooks/use-debug';
-import { useLayerFPSTracker } from '@/lib/hooks/use-layer-fps-tracker';
-import useOnResize from '@/lib/hooks/use-on-resize';
+import { installEditorRuntimeHostAttachments } from '@/lib/editor-runtime-host-attachments';
 import {
   createEditorRuntimePreviewAttachment,
   EditorRuntimePreviewAttachment,
 } from '@/lib/editor-runtime-preview-attachment';
-import { installEditorRuntimeHostAttachments } from '@/lib/editor-runtime-host-attachments';
-import { studioThreeProgramRegistry } from '@/lib/viz-capabilities';
-import useEditorStore from '@/lib/stores/editor-store';
-import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
+import useDebug from '@/lib/hooks/use-debug';
+import { useLayerFPSTracker } from '@/lib/hooks/use-layer-fps-tracker';
+import useOnResize from '@/lib/hooks/use-on-resize';
 import { LayerData } from '@/lib/stores/editor-layer-projection-store';
+import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
+import useEditorStore from '@/lib/stores/editor-store';
+import { studioThreeProgramRegistry } from '@/lib/viz-capabilities';
 import { forwardRef, memo, useEffect, useRef } from 'react';
 
 const EMPTY_MIRROR_CANVASES: HTMLCanvasElement[] = [];
@@ -27,9 +27,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
     (s) => s.unregisterLayerAttachment,
   );
   const mirrorCanvases = useEditorRuntimePreviewAttachmentStore(
-    (state) =>
-      state.mirrorCanvasesByLayerId[layer.id] ??
-      EMPTY_MIRROR_CANVASES,
+    (state) => state.mirrorCanvasesByLayerId[layer.id] ?? EMPTY_MIRROR_CANVASES,
   );
 
   // Profiler tracking for this layer

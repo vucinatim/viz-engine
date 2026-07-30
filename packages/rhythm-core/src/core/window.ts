@@ -1,9 +1,6 @@
 import type { WindowFunction } from '../utils/types.js';
 
-export function getWindow(
-  type: WindowFunction,
-  length: number,
-): Float32Array {
+export function getWindow(type: WindowFunction, length: number): Float32Array {
   const out = new Float32Array(length);
   if (length <= 1) {
     if (length === 1) out[0] = 1;
@@ -25,8 +22,7 @@ export function getWindow(
     case 'blackman':
       for (let i = 0; i < length; i += 1) {
         const phase = (2 * Math.PI * i) / denom;
-        out[i] =
-          0.42 - 0.5 * Math.cos(phase) + 0.08 * Math.cos(2 * phase);
+        out[i] = 0.42 - 0.5 * Math.cos(phase) + 0.08 * Math.cos(2 * phase);
       }
       break;
     case 'rect':

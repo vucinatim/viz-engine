@@ -435,10 +435,7 @@ export const fullscreenShaderComponent: VizComponentImplementation = {
   authoring: fullscreenShaderAuthoring,
   description: 'Deterministic package-runtime fullscreen GLSL shaders.',
   render: ({ viewport, frameContext, layer, settings }) => {
-    const shaderName = asString(
-      settings.shader,
-      'Radial Ripple Grid',
-    );
+    const shaderName = asString(settings.shader, 'Radial Ripple Grid');
     const fragmentShader =
       fullscreenShaderPrograms[shaderName] ?? radialRippleGrid;
     const speed = asNumber(settings.speed, 1);
@@ -467,10 +464,7 @@ export const fullscreenShaderComponent: VizComponentImplementation = {
         uIntensity: asNumber(settings.intensity, 0.8),
         uOffset: {
           type: 'vec2',
-          value: [
-            asNumber(settings.offsetX, 0),
-            asNumber(settings.offsetY, 0),
-          ],
+          value: [asNumber(settings.offsetX, 0), asNumber(settings.offsetY, 0)],
         },
         uSeed: asNumber(settings.seed, 0),
         uScanIntensity: asNumber(settings.scanIntensity, 0.7),

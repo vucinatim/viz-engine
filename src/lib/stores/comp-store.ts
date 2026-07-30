@@ -7,7 +7,7 @@ interface CompStore {
   removeComp: (id: string) => void;
 }
 
-const useCompStore = create<CompStore>((set, get) => ({
+const useCompStore = create<CompStore>((set) => ({
   comps: [],
   addComp: (comp) =>
     set((state) => ({

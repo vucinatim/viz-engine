@@ -5,9 +5,9 @@
  * Runs entirely in the browser using WebAssembly.
  */
 
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import ffmpegCoreURL from '@ffmpeg/core?url';
 import ffmpegWasmURL from '@ffmpeg/core/wasm?url';
+import ffmpegCoreURL from '@ffmpeg/core?url';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
 import useExportStore from '../stores/export-store';
 
@@ -198,8 +198,7 @@ export async function encodeVideoWithProbe(
   // Helper to check for cancellation
   const checkCancellation = () =>
     runtime.signal?.aborted === true ||
-    (runtime.shouldCancel?.() ??
-      useExportStore.getState().shouldCancel);
+    (runtime.shouldCancel?.() ?? useExportStore.getState().shouldCancel);
 
   try {
     // Write all frames to FFmpeg's virtual filesystem
@@ -220,9 +219,7 @@ export async function encodeVideoWithProbe(
       const frameData = await fetchFile(frames[i]);
       const frameFile = `frame${String(i).padStart(6, '0')}.jpg`;
       await encoder.writeFile(frameFile, frameData, {
-        ...(runtime.signal === undefined
-          ? {}
-          : { signal: runtime.signal }),
+        ...(runtime.signal === undefined ? {} : { signal: runtime.signal }),
       });
       virtualFiles.push(frameFile);
 
@@ -242,9 +239,7 @@ export async function encodeVideoWithProbe(
       const audioTimer = new PerfTimer('Load audio file');
       const audioData = await fetchFile(audioUrl);
       await encoder.writeFile('audio.mp3', audioData, {
-        ...(runtime.signal === undefined
-          ? {}
-          : { signal: runtime.signal }),
+        ...(runtime.signal === undefined ? {} : { signal: runtime.signal }),
       });
       virtualFiles.push('audio.mp3');
 
@@ -323,9 +318,7 @@ export async function encodeVideoWithProbe(
       const encodingPromise = encoder.exec(
         command,
         undefined,
-        runtime.signal === undefined
-          ? undefined
-          : { signal: runtime.signal },
+        runtime.signal === undefined ? undefined : { signal: runtime.signal },
       );
       const cancellationPromise = new Promise<void>((_, reject) => {
         checkLoop = setInterval(() => {
@@ -391,9 +384,7 @@ export async function encodeVideoWithProbe(
           outputFile,
         ],
         undefined,
-        runtime.signal === undefined
-          ? undefined
-          : { signal: runtime.signal },
+        runtime.signal === undefined ? undefined : { signal: runtime.signal },
       );
     } finally {
       encoder.off('log', probeLogHandler);
@@ -456,9 +447,7 @@ export async function encodeVideoWithProbe(
   }
 }
 
-const parseOptionalFiniteNumber = (
-  value: unknown,
-): number | undefined => {
+const parseOptionalFiniteNumber = (value: unknown): number | undefined => {
   const parsed =
     typeof value === 'number'
       ? value
@@ -494,68 +483,44 @@ export const parseEncodedVideoProbe = (
     typeof record.format === 'object' && record.format !== null
       ? (record.format as Record<string, unknown>)
       : {};
-  const rawStreams = Array.isArray(record.streams)
-    ? record.streams
-    : [];
+  const rawStreams = Array.isArray(record.streams) ? record.streams : [];
   const streams = rawStreams.flatMap((raw) => {
     if (typeof raw !== 'object' || raw === null) {
       return [];
     }
     const stream = raw as Record<string, unknown>;
-    if (
-      stream.codec_type !== 'video' &&
-      stream.codec_type !== 'audio'
-    ) {
+    if (stream.codec_type !== 'video' && stream.codec_type !== 'audio') {
       return [];
     }
-    const kind: EncodedVideoProbeStream['kind'] =
-      stream.codec_type;
-    const durationSeconds = parseOptionalFiniteNumber(
-      stream.duration,
-    );
+    const kind: EncodedVideoProbeStream['kind'] = stream.codec_type;
+    const durationSeconds = parseOptionalFiniteNumber(stream.duration);
     const width = parseOptionalFiniteNumber(stream.width);
     const height = parseOptionalFiniteNumber(stream.height);
     const frameRate = parseFrameRate(stream.r_frame_rate);
-    const sampleRate = parseOptionalFiniteNumber(
-      stream.sample_rate,
-    );
-    const channelCount = parseOptionalFiniteNumber(
-      stream.channels,
-    );
+    const sampleRate = parseOptionalFiniteNumber(stream.sample_rate);
+    const channelCount = parseOptionalFiniteNumber(stream.channels);
     return [
       {
         kind,
         codec:
-          typeof stream.codec_name === 'string'
-            ? stream.codec_name
-            : 'unknown',
-        ...(durationSeconds === undefined
-          ? {}
-          : { durationSeconds }),
+          typeof stream.codec_name === 'string' ? stream.codec_name : 'unknown',
+        ...(durationSeconds === undefined ? {} : { durationSeconds }),
         ...(width === undefined ? {} : { width }),
         ...(height === undefined ? {} : { height }),
         ...(frameRate === undefined ? {} : { frameRate }),
         ...(sampleRate === undefined ? {} : { sampleRate }),
-        ...(channelCount === undefined
-          ? {}
-          : { channelCount }),
+        ...(channelCount === undefined ? {} : { channelCount }),
       },
     ];
   });
   if (streams.length === 0) {
     throw new Error('FFprobe output has no audio or video streams.');
   }
-  const durationSeconds = parseOptionalFiniteNumber(
-    format.duration,
-  );
+  const durationSeconds = parseOptionalFiniteNumber(format.duration);
   return {
     container:
-      typeof format.format_name === 'string'
-        ? format.format_name
-        : 'unknown',
-    ...(durationSeconds === undefined
-      ? {}
-      : { durationSeconds }),
+      typeof format.format_name === 'string' ? format.format_name : 'unknown',
+    ...(durationSeconds === undefined ? {} : { durationSeconds }),
     byteLength,
     streams,
   };

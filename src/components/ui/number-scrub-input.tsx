@@ -179,7 +179,7 @@ const NumberScrubInput = React.forwardRef<
           ref={mergedRef}
           type="number"
           className={cn(
-            'h-8 w-16 rounded-md border border-input bg-background px-2 py-1 text-center text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+            'h-8 w-16 rounded-md border border-input bg-background px-2 py-1 text-center text-xs ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none',
             inputClassName,
           )}
           value={Number.isFinite(value) ? value : 0}
@@ -193,7 +193,7 @@ const NumberScrubInput = React.forwardRef<
         />
         <div
           ref={handleRef}
-          className="ml-1 flex h-8 w-6 select-none flex-col items-center justify-center rounded-md border border-input bg-background text-foreground"
+          className="ml-1 flex h-8 w-6 flex-col items-center justify-center rounded-md border border-input bg-background text-foreground select-none"
           style={{ cursor: 'ns-resize' }}
           onMouseDown={handleHandleMouseDown}
           title="Drag to adjust (Shift=10x, Alt=0.1x). Click arrows to step.">

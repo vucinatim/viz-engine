@@ -1,7 +1,7 @@
 import { createEditorCompFromDefinition } from '@/components/config/create-component-from-authoring';
 import {
-  coreComponentCapabilityPack,
   coreCatalogComponents,
+  coreComponentCapabilityPack,
   createCoreComponentRegistry,
   defineVizComponentAuthoring,
   simpleCubeComponent,

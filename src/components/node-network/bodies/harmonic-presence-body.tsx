@@ -1,8 +1,5 @@
-import {
-  getRuntimeNodeInput,
-  getRuntimeNodeOutput,
-} from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
+import { getRuntimeNodeInput, getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
 import type { GraphNodeData } from '../graph-types';
@@ -153,7 +150,7 @@ const HarmonicPresenceBody = ({ id: nodeId }: HarmonicPresenceBodyProps) => {
       const f0Str = f0 > 0 ? `${Math.round(f0)}Hz` : '—';
       infoRef.current.textContent = `pres ${presence.toFixed(2)}  f0 ${f0Str}`;
       infoRef.current.className = cn(
-        'pointer-events-none absolute right-1 top-1 rounded bg-zinc-800/70 px-1 text-[10px] text-zinc-200',
+        'pointer-events-none absolute top-1 right-1 rounded bg-zinc-800/70 px-1 text-[10px] text-zinc-200',
       );
     }
   });

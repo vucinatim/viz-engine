@@ -1,5 +1,3 @@
-'use client';
-
 import { vizSessionActions, vizSessionStore } from '@/lib/viz-session';
 import { useEffect } from 'react';
 

@@ -1,5 +1,5 @@
-import { getRuntimeNodeOutput } from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
+import { getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useCallback, useRef } from 'react';
 import { useRafLoop } from 'react-use';
 import type { GraphNodeData } from '../graph-types';
@@ -104,7 +104,7 @@ const SpectralFluxBody = ({
     if (fluxRef.current) {
       fluxRef.current.textContent = flux.toFixed(1);
       fluxRef.current.className = cn(
-        'pointer-events-none absolute right-1 top-1 rounded bg-zinc-800/70 px-1 text-[10px] text-zinc-200',
+        'pointer-events-none absolute top-1 right-1 rounded bg-zinc-800/70 px-1 text-[10px] text-zinc-200',
       );
     }
   });

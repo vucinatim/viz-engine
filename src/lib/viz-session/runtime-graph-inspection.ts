@@ -67,8 +67,9 @@ export const resolveParameterGraphBinding = (
 ): VizParameterGraphBinding | undefined => {
   const parameter = splitParameterId(parameterId);
   const source: VizValueSource | undefined = parameter
-    ? project.layers.find((layer) => layer.id === parameter.layerId)
-        ?.inputs?.[parameter.inputKey]
+    ? project.layers.find((layer) => layer.id === parameter.layerId)?.inputs?.[
+        parameter.inputKey
+      ]
     : undefined;
 
   return source?.kind === 'graph-output'
@@ -153,9 +154,7 @@ export const describeProjectGraph = (
     const parameter = splitParameterId(boundParameterIds[0]!);
     const path = parameter?.inputKey.split(':') ?? [];
     const layer = parameter
-      ? project.layers.find(
-          (candidate) => candidate.id === parameter.layerId,
-        )
+      ? project.layers.find((candidate) => candidate.id === parameter.layerId)
       : undefined;
 
     return {
@@ -163,10 +162,7 @@ export const describeProjectGraph = (
       contextLabel: layer?.name ?? 'Layer parameter',
       ...(path.length > 1
         ? {
-            detailLabel: path
-              .slice(0, -1)
-              .map(humanizeIdentifier)
-              .join(' › '),
+            detailLabel: path.slice(0, -1).map(humanizeIdentifier).join(' › '),
           }
         : {}),
       boundParameterIds,
@@ -181,9 +177,7 @@ export const describeProjectGraph = (
       boundParameterIds.length > 1 ? 'Shared graph' : 'Project graph',
     detailLabel: `${boundParameterIds.length} bound ${
       boundParameterIds.length === 1 ? 'parameter' : 'parameters'
-    } • ${outputKeys.length} ${
-      outputKeys.length === 1 ? 'output' : 'outputs'
-    }`,
+    } • ${outputKeys.length} ${outputKeys.length === 1 ? 'output' : 'outputs'}`,
     boundParameterIds,
     outputKeys,
     supportsParameterPresets: false,
@@ -195,10 +189,8 @@ export const selectRuntimeGraphValue = (
   graphId: string,
   outputKey = 'value',
 ): unknown =>
-  findGraphResult(
-    state.preview.runtimeInspection.lastGraphResults,
-    graphId,
-  )?.values[outputKey];
+  findGraphResult(state.preview.runtimeInspection.lastGraphResults, graphId)
+    ?.values[outputKey];
 
 export const selectRuntimeGraphValueForParameter = (
   state: VizSessionState,
@@ -206,10 +198,7 @@ export const selectRuntimeGraphValueForParameter = (
 ): unknown => {
   const binding =
     selectParameterGraphBindings(state)[parameterId] ??
-    resolveParameterGraphBinding(
-      state.project.workingProject,
-      parameterId,
-    );
+    resolveParameterGraphBinding(state.project.workingProject, parameterId);
 
   return selectRuntimeGraphValue(
     state,
@@ -221,12 +210,7 @@ export const selectRuntimeGraphValueForParameter = (
 export const getRuntimeGraphValue = (
   graphId: string,
   outputKey = 'value',
-): unknown =>
-  selectRuntimeGraphValue(
-    getVizSessionState(),
-    graphId,
-    outputKey,
-  );
+): unknown => selectRuntimeGraphValue(getVizSessionState(), graphId, outputKey);
 
 export const getRuntimeNodeInput = (
   nodeId: string,
@@ -245,9 +229,7 @@ export const getRuntimeNodeOutput = (
     nodeId,
   )?.outputs;
 
-export const getRuntimeNodeState = (
-  nodeId: string,
-): unknown =>
+export const getRuntimeNodeState = (nodeId: string): unknown =>
   findNodeSnapshot(
     getVizSessionState().preview.runtimeInspection.lastGraphResults,
     nodeId,

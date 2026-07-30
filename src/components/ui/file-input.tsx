@@ -1,116 +1,131 @@
-import { idbGetFile, idbPutFile } from '@/lib/idb-file-store';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
 import { Button } from './button';
 import { Input } from './input';
+
+export type FileInputSelection =
+  { kind: 'file'; file: File } | { kind: 'external-uri'; uri: string };
 
 type FileInputProps = {
   value: string;
   onChange: (value: string) => void;
-  acceptExtensions?: string[]; // e.g., ['.glb', '.gltf']
+  onAssetSelect: (selection: FileInputSelection) => Promise<string>;
+  acceptExtensions?: string[];
   placeholder?: string;
 };
 
 export default function FileInput({
   value,
   onChange,
+  onAssetSelect,
   acceptExtensions,
   placeholder,
 }: FileInputProps) {
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const [draft, setDraft] = useState(value);
+  const [isAttaching, setIsAttaching] = useState(false);
+  const [error, setError] = useState<string>();
   const accept =
     acceptExtensions && acceptExtensions.length > 0
       ? acceptExtensions.join(',')
       : undefined;
 
-  // Normalize incoming values to a stable idb: scheme so they persist across reloads
-  useEffect(() => {
-    if (!value) return;
-    // Already normalized
-    if (value.startsWith('idb:')) return;
-    // Migrate blob: url → idb: key if we previously stored the blob by that temp id
-    if (value.startsWith('blob:')) {
-      const tempKey = `blob:${value.slice(value.lastIndexOf('/') + 1)}`;
-      idbGetFile(tempKey).then(async (blob) => {
-        if (!blob) return;
-        const key = await computeBlobKey(blob);
-        await idbPutFile(key, blob);
-        onChange(`idb:${key}`);
-      });
+  useEffect(() => setDraft(value), [value]);
+
+  const selectAsset = async (selection: FileInputSelection) => {
+    setIsAttaching(true);
+    setError(undefined);
+    try {
+      const nextValue = await onAssetSelect(selection);
+      setDraft(nextValue);
+    } catch (selectionError) {
+      setDraft(value);
+      setError(
+        selectionError instanceof Error
+          ? selectionError.message
+          : 'Could not attach asset.',
+      );
+    } finally {
+      setIsAttaching(false);
+    }
+  };
+
+  const commitExternalUri = async () => {
+    const uri = draft.trim();
+    if (uri === value) {
       return;
     }
-    // Convert relative public path → idb: for persistence
-    if (value.startsWith('/')) {
-      (async () => {
-        try {
-          const r = await fetch(value);
-          if (!r.ok) return;
-          const blob = await r.blob();
-          const key = await computeBlobKey(blob);
-          await idbPutFile(key, blob);
-          onChange(`idb:${key}`);
-        } catch {}
-      })();
+    if (!uri) {
+      onChange('');
+      return;
     }
-  }, [value, onChange]);
+    if (uri.startsWith('asset:')) {
+      setDraft(value);
+      return;
+    }
+    await selectAsset({ kind: 'external-uri', uri });
+  };
 
   return (
     <div className="flex items-center gap-2">
       <Input
-        value={value}
-        placeholder={placeholder ?? '/path/to/file.ext or https://.../file.ext'}
-        onChange={(e) => onChange(e.target.value)}
+        data-testid="asset-uri-input"
+        value={draft}
+        aria-invalid={Boolean(error)}
+        title={error}
+        placeholder={placeholder ?? 'https://.../file.ext'}
+        onChange={(event) => {
+          setDraft(event.target.value);
+          setError(undefined);
+        }}
+        onBlur={() => void commitExternalUri()}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            void commitExternalUri();
+          }
+          if (event.key === 'Escape') {
+            setDraft(value);
+            setError(undefined);
+          }
+        }}
       />
       <input
         ref={fileRef}
+        data-testid="asset-file-input"
         type="file"
         accept={accept}
         className="hidden"
-        onChange={async (e) => {
-          const file = e.target.files?.[0];
-          if (!file) return;
-          const key = await computeBlobKey(file);
-          await idbPutFile(key, file);
-          onChange(`idb:${key}`);
+        onChange={async (event) => {
+          const file = event.target.files?.[0];
+          if (file) {
+            await selectAsset({ kind: 'file', file });
+          }
+          event.target.value = '';
         }}
       />
       <Button
+        data-testid="asset-browse"
         type="button"
         variant="outline"
         size="xs"
+        disabled={isAttaching}
         onClick={() => fileRef.current?.click()}>
-        Browse
+        {isAttaching ? 'Attaching…' : 'Browse'}
       </Button>
-      {value && (
+      {draft && (
         <Button
           type="button"
           variant="ghost"
           size="xs"
-          onClick={() => onChange('')}>
+          disabled={isAttaching}
+          onClick={() => {
+            setDraft('');
+            onChange('');
+          }}>
           Clear
         </Button>
       )}
     </div>
   );
-}
-
-async function computeBlobKey(blob: Blob): Promise<string> {
-  const buf = await blob.arrayBuffer();
-  const hashBuf = await crypto.subtle.digest('SHA-256', buf);
-  const hashArray = Array.from(new Uint8Array(hashBuf));
-  const hashHex = hashArray
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-  // Try to infer extension from blob type; fallback to empty
-  let ext = '';
-  switch (blob.type) {
-    case 'model/gltf-binary':
-      ext = '.glb';
-      break;
-    case 'model/gltf+json':
-      ext = '.gltf';
-      break;
-    default:
-      ext = '';
-  }
-  return `file:${hashHex}${ext}`;
 }

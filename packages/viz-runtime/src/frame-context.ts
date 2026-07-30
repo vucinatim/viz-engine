@@ -1,4 +1,8 @@
-import type { VizExecutionMode, VizFrameContext, VizTimeline } from "@viz-engine/contracts";
+import type {
+  VizExecutionMode,
+  VizFrameContext,
+  VizTimeline,
+} from '@viz-engine/contracts';
 
 export interface CreateFrameContextOptions {
   frame: number;
@@ -11,9 +15,12 @@ export const createFrameContext = ({
   frame,
   timeline,
   mode,
-  seed = "viz-default-seed",
+  seed = 'viz-default-seed',
 }: CreateFrameContextOptions): VizFrameContext => {
-  const normalizedFrame = Math.max(0, Math.min(frame, timeline.durationInFrames - 1));
+  const normalizedFrame = Math.max(
+    0,
+    Math.min(frame, timeline.durationInFrames - 1),
+  );
   const deltaTimeSeconds = 1 / timeline.fps;
 
   return {

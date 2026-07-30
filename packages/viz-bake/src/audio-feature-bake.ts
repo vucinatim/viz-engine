@@ -5,21 +5,21 @@ import {
   type VizAudioFeatureTimelineArtifact,
   type VizProjectDocument,
   type VizResolvedArtifact,
-} from "@viz-engine/contracts";
+} from '@viz-engine/contracts';
 import {
+  StandardAudioFrameAnalysisCancelledError,
   analyzeStandardAudioFrames,
   analyzeStandardAudioFramesAsync,
-  StandardAudioFrameAnalysisCancelledError,
   type AudioSignal,
-  type StandardAudioFrameAnalysisResult,
   type StandardAudioFrameAnalysisOptions,
-} from "@viz-engine/rhythm-core";
+  type StandardAudioFrameAnalysisResult,
+} from '@viz-engine/rhythm-core';
 
 export const VIZ_AUDIO_FEATURE_BAKE_VERSION =
-  "viz-bake.audio-feature-timeline.v1" as const;
+  'viz-bake.audio-feature-timeline.v1' as const;
 
 export interface VizBakeRequest {
-  kind: "audio-feature-timeline";
+  kind: 'audio-feature-timeline';
   sourceAssetId: string;
   profile: VizAudioFeatureProfile;
   fps: number;
@@ -51,11 +51,11 @@ export interface VizAudioFeatureBakeRequest extends VizBakeRequest {
 
 export interface VizBakeExecutionIssue {
   code:
-    | "invalid-request"
-    | "unsupported-profile"
-    | "invalid-pcm"
-    | "cancelled"
-    | "execution-failed";
+    | 'invalid-request'
+    | 'unsupported-profile'
+    | 'invalid-pcm'
+    | 'cancelled'
+    | 'execution-failed';
   message: string;
 }
 
@@ -68,7 +68,7 @@ export interface VizAudioFeatureBakeProgress {
 export type VizAudioFeatureBakeResult =
   | {
       ok: true;
-      status: "succeeded";
+      status: 'succeeded';
       executionIdentity: string;
       artifact: VizAudioFeatureTimelineArtifact;
       resolvedArtifact: VizResolvedArtifact;
@@ -81,7 +81,7 @@ export type VizAudioFeatureBakeResult =
     }
   | {
       ok: false;
-      status: "cancelled" | "failed";
+      status: 'cancelled' | 'failed';
       executionIdentity?: string;
       issues: VizBakeExecutionIssue[];
     };
@@ -91,8 +91,7 @@ export interface ExecuteVizAudioFeatureBakeOptions {
   onProgress?: (progress: VizAudioFeatureBakeProgress) => void;
 }
 
-export interface ExecuteVizAudioFeatureBakeAsyncOptions
-  extends ExecuteVizAudioFeatureBakeOptions {
+export interface ExecuteVizAudioFeatureBakeAsyncOptions extends ExecuteVizAudioFeatureBakeOptions {
   yieldEveryFrames?: number;
   yieldToHost?: () => Promise<void>;
 }
@@ -107,24 +106,23 @@ const validateExecutionInput = (
   const issues: VizBakeExecutionIssue[] = [];
 
   if (
-    request.kind !== "audio-feature-timeline" ||
-    typeof request.sourceAssetId !== "string" ||
+    request.kind !== 'audio-feature-timeline' ||
+    typeof request.sourceAssetId !== 'string' ||
     request.sourceAssetId.trim().length === 0 ||
-    typeof request.sourceContentIdentity !== "string" ||
+    typeof request.sourceContentIdentity !== 'string' ||
     request.sourceContentIdentity.trim().length === 0 ||
     !isPositiveFinite(request.fps)
   ) {
     issues.push({
-      code: "invalid-request",
+      code: 'invalid-request',
       message:
-        "Audio bake request requires kind, source asset/content identity, and positive FPS.",
+        'Audio bake request requires kind, source asset/content identity, and positive FPS.',
     });
   }
-  if (request.profile !== "standard") {
+  if (request.profile !== 'standard') {
     issues.push({
-      code: "unsupported-profile",
-      message:
-        `Audio feature profile "${request.profile}" is not implemented by the standard V1 bake pipeline.`,
+      code: 'unsupported-profile',
+      message: `Audio feature profile "${request.profile}" is not implemented by the standard audio bake pipeline.`,
     });
   }
   if (
@@ -137,9 +135,9 @@ const validateExecutionInput = (
     )
   ) {
     issues.push({
-      code: "invalid-pcm",
+      code: 'invalid-pcm',
       message:
-        "PCM input requires a positive sample rate and one or two equally sized Float32Array channels.",
+        'PCM input requires a positive sample rate and one or two equally sized Float32Array channels.',
     });
   }
   if (
@@ -148,8 +146,8 @@ const validateExecutionInput = (
     )
   ) {
     issues.push({
-      code: "invalid-pcm",
-      message: "PCM input channels may contain only finite samples.",
+      code: 'invalid-pcm',
+      message: 'PCM input channels may contain only finite samples.',
     });
   }
   const fftSize = request.fftSize ?? 2048;
@@ -159,9 +157,9 @@ const validateExecutionInput = (
     (fftSize & (fftSize - 1)) !== 0
   ) {
     issues.push({
-      code: "invalid-request",
+      code: 'invalid-request',
       message:
-        "Audio bake fftSize must be a power-of-two integer of at least 32.",
+        'Audio bake fftSize must be a power-of-two integer of at least 32.',
     });
   }
   const minDecibels = request.minDecibels ?? -90;
@@ -172,19 +170,19 @@ const validateExecutionInput = (
     minDecibels >= maxDecibels
   ) {
     issues.push({
-      code: "invalid-request",
+      code: 'invalid-request',
       message:
-        "Audio bake minDecibels must be finite and lower than maxDecibels.",
+        'Audio bake minDecibels must be finite and lower than maxDecibels.',
     });
   }
   for (const [label, value] of [
-    ["artifactId", request.artifactId],
-    ["artifactLabel", request.artifactLabel],
-    ["artifactUri", request.artifactUri],
+    ['artifactId', request.artifactId],
+    ['artifactLabel', request.artifactLabel],
+    ['artifactUri', request.artifactUri],
   ] as const) {
     if (value !== undefined && value.trim().length === 0) {
       issues.push({
-        code: "invalid-request",
+        code: 'invalid-request',
         message: `Audio bake ${label} must be non-empty when provided.`,
       });
     }
@@ -195,8 +193,9 @@ const validateExecutionInput = (
       request.sourceWindow.startSeconds < 0)
   ) {
     issues.push({
-      code: "invalid-request",
-      message: "Audio bake source-window startSeconds must be finite and non-negative.",
+      code: 'invalid-request',
+      message:
+        'Audio bake source-window startSeconds must be finite and non-negative.',
     });
   }
   if (
@@ -205,8 +204,9 @@ const validateExecutionInput = (
       request.sourceWindow.durationSeconds < 0)
   ) {
     issues.push({
-      code: "invalid-request",
-      message: "Audio bake source-window durationSeconds must be finite and non-negative.",
+      code: 'invalid-request',
+      message:
+        'Audio bake source-window durationSeconds must be finite and non-negative.',
     });
   }
 
@@ -219,7 +219,7 @@ const fnv1a = (value: string): string => {
     hash ^= value.charCodeAt(index);
     hash = Math.imul(hash, 0x01000193);
   }
-  return (hash >>> 0).toString(16).padStart(8, "0");
+  return (hash >>> 0).toString(16).padStart(8, '0');
 };
 
 const createExecutionDescriptor = (
@@ -261,7 +261,7 @@ const getMinMax = (values: Float32Array): { min: number; max: number } => {
 const toArtifactSeries = (
   series: ReturnType<
     typeof analyzeStandardAudioFrames
-  >["featureSeries"][number],
+  >['featureSeries'][number],
 ): VizAudioFeatureSeries => {
   const range = getMinMax(series.values);
   return {
@@ -289,16 +289,12 @@ const createAnalysisOptions = (
   const totalSamples = pcm.channels[0]!.length;
   const startSample = Math.min(
     totalSamples,
-    Math.floor(
-      (request.sourceWindow?.startSeconds ?? 0) * pcm.sampleRate,
-    ),
+    Math.floor((request.sourceWindow?.startSeconds ?? 0) * pcm.sampleRate),
   );
   const requestedSampleCount =
     request.sourceWindow?.durationSeconds === undefined
       ? totalSamples - startSample
-      : Math.floor(
-          request.sourceWindow.durationSeconds * pcm.sampleRate,
-        );
+      : Math.floor(request.sourceWindow.durationSeconds * pcm.sampleRate);
   const sampleCount = Math.min(
     totalSamples - startSample,
     requestedSampleCount,
@@ -308,9 +304,7 @@ const createAnalysisOptions = (
     fps: request.fps,
     startSample,
     sampleCount,
-    ...(request.fftSize === undefined
-      ? {}
-      : { fftSize: request.fftSize }),
+    ...(request.fftSize === undefined ? {} : { fftSize: request.fftSize }),
     ...(request.minDecibels === undefined
       ? {}
       : { minDecibels: request.minDecibels }),
@@ -324,8 +318,7 @@ const createAnalysisOptions = (
       options.onProgress?.({
         completedFrames,
         totalFrames,
-        progress:
-          totalFrames === 0 ? 1 : completedFrames / totalFrames,
+        progress: totalFrames === 0 ? 1 : completedFrames / totalFrames,
       });
     },
   };
@@ -345,12 +338,11 @@ const createSuccessfulResult = (
   analysis: StandardAudioFrameAnalysisResult,
 ): VizAudioFeatureBakeResult => {
   const artifactId =
-    request.artifactId ??
-    `artifact-audio-features-${fnv1a(executionIdentity)}`;
+    request.artifactId ?? `artifact-audio-features-${fnv1a(executionIdentity)}`;
   const artifact: VizAudioFeatureTimelineArtifact = {
     schemaVersion: 1,
     id: artifactId,
-    kind: "audio-feature-timeline",
+    kind: 'audio-feature-timeline',
     label:
       request.artifactLabel ??
       `${request.sourceAssetId} Standard Audio Features`,
@@ -365,7 +357,7 @@ const createSuccessfulResult = (
     frameAlignment: {
       fps: analysis.fps,
       frameCount: analysis.frameCount,
-      alignment: "frame-centered",
+      alignment: 'frame-centered',
     },
     analysis: {
       pipeline: `${VIZ_AUDIO_FEATURE_BAKE_VERSION}+${analysis.analysisVersion}`,
@@ -373,20 +365,20 @@ const createSuccessfulResult = (
       sampleRate: analysis.sampleRate,
       channelCount: analysis.channelCount,
       fftSize: analysis.fftSize,
-      window: "hann",
+      window: 'hann',
       minDecibels: analysis.minDecibels,
       maxDecibels: analysis.maxDecibels,
     },
     featureSeries: analysis.featureSeries.map(toArtifactSeries),
     packedFrames: {
       frequency: {
-        encoding: "uint8-base64",
+        encoding: 'uint8-base64',
         frameCount: analysis.frameCount,
         valuesPerFrame: analysis.spectrumBinCount,
         data: encodeVizUint8Base64(analysis.frequencyData),
       },
       timeDomain: {
-        encoding: "uint8-base64",
+        encoding: 'uint8-base64',
         frameCount: analysis.frameCount,
         valuesPerFrame: analysis.waveformSampleCount,
         data: encodeVizUint8Base64(analysis.timeDomainData),
@@ -400,9 +392,7 @@ const createSuccessfulResult = (
   const resolvedArtifact: VizResolvedArtifact = {
     id: artifact.id,
     kind: artifact.kind,
-    uri:
-      request.artifactUri ??
-      `memory://artifacts/${artifact.id}.json`,
+    uri: request.artifactUri ?? `memory://artifacts/${artifact.id}.json`,
     payload: artifact,
     metadata: {
       executionIdentity,
@@ -413,7 +403,7 @@ const createSuccessfulResult = (
 
   return {
     ok: true,
-    status: "succeeded",
+    status: 'succeeded',
     executionIdentity,
     artifact,
     resolvedArtifact,
@@ -422,8 +412,7 @@ const createSuccessfulResult = (
       frameCount: analysis.frameCount,
       featureCount: artifact.featureSeries.length,
       packedByteLength:
-        analysis.frequencyData.byteLength +
-        analysis.timeDomainData.byteLength,
+        analysis.frequencyData.byteLength + analysis.timeDomainData.byteLength,
     },
   };
 };
@@ -435,22 +424,20 @@ const createExecutionFailure = (
   if (error instanceof StandardAudioFrameAnalysisCancelledError) {
     return {
       ok: false,
-      status: "cancelled",
+      status: 'cancelled',
       executionIdentity,
-      issues: [{ code: "cancelled", message: error.message }],
+      issues: [{ code: 'cancelled', message: error.message }],
     };
   }
   return {
     ok: false,
-    status: "failed",
+    status: 'failed',
     executionIdentity,
     issues: [
       {
-        code: "execution-failed",
+        code: 'execution-failed',
         message:
-          error instanceof Error
-            ? error.message
-            : "Audio feature bake failed.",
+          error instanceof Error ? error.message : 'Audio feature bake failed.',
       },
     ],
   };
@@ -463,7 +450,7 @@ const validateBake = (
   const issues = validateExecutionInput(request, pcm);
   return issues.length === 0
     ? undefined
-    : { ok: false, status: "failed", issues };
+    : { ok: false, status: 'failed', issues };
 };
 
 export const executeVizAudioFeatureBake = (
@@ -481,11 +468,7 @@ export const executeVizAudioFeatureBake = (
       toAudioSignal(pcm),
       createAnalysisOptions(request, pcm, options),
     );
-    return createSuccessfulResult(
-      request,
-      executionIdentity,
-      analysis,
-    );
+    return createSuccessfulResult(request, executionIdentity, analysis);
   } catch (error) {
     return createExecutionFailure(executionIdentity, error);
   }
@@ -502,23 +485,16 @@ export const executeVizAudioFeatureBakeAsync = async (
   }
   const executionIdentity = createExecutionIdentity(request, pcm);
   try {
-    const analysis = await analyzeStandardAudioFramesAsync(
-      toAudioSignal(pcm),
-      {
-        ...createAnalysisOptions(request, pcm, options),
-        ...(options.yieldEveryFrames === undefined
-          ? {}
-          : { yieldEveryFrames: options.yieldEveryFrames }),
-        ...(options.yieldToHost === undefined
-          ? {}
-          : { yieldToHost: options.yieldToHost }),
-      },
-    );
-    return createSuccessfulResult(
-      request,
-      executionIdentity,
-      analysis,
-    );
+    const analysis = await analyzeStandardAudioFramesAsync(toAudioSignal(pcm), {
+      ...createAnalysisOptions(request, pcm, options),
+      ...(options.yieldEveryFrames === undefined
+        ? {}
+        : { yieldEveryFrames: options.yieldEveryFrames }),
+      ...(options.yieldToHost === undefined
+        ? {}
+        : { yieldToHost: options.yieldToHost }),
+    });
+    return createSuccessfulResult(request, executionIdentity, analysis);
   } catch (error) {
     return createExecutionFailure(executionIdentity, error);
   }
@@ -526,15 +502,15 @@ export const executeVizAudioFeatureBakeAsync = async (
 
 export const createBakePlan = (project: VizProjectDocument): VizBakePlan => {
   const audioAssets = (project.assetRefs ?? []).filter(
-    (asset) => asset.kind === "audio",
+    (asset) => asset.kind === 'audio',
   );
 
   return {
     projectId: project.projectId,
     requests: audioAssets.map((asset) => ({
-      kind: "audio-feature-timeline",
+      kind: 'audio-feature-timeline',
       sourceAssetId: asset.id,
-      profile: "standard",
+      profile: 'standard',
       fps: project.timeline.fps,
     })),
   };

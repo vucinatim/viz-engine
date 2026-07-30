@@ -1,14 +1,18 @@
-import { CompDefinitionMap } from '../../src/components/comps/index';
 import {
-  createEmptyVizProjectDocument,
-  createVizLayerFromComp,
-} from '../../src/lib/viz-session/project-adapters';
-import { createVizSessionRuntimePreviewPlan } from '../../src/lib/viz-session/runtime-preview-plan';
-import { createCoreComponentRegistry } from '@viz-engine/components-core';
+  coreCatalogComponents,
+  createCoreComponentRegistry,
+} from '@viz-engine/components-core';
+import {
+  VIZ_PROJECT_SCHEMA_VERSION,
+  type VizLayer,
+  type VizProjectDocument,
+} from '@viz-engine/contracts';
 import {
   createVizRenderPlan,
   createVizRuntimeSession,
 } from '@viz-engine/runtime';
+import { createEditorCompFromDefinition } from '../../src/components/config/create-component-from-authoring';
+import { createVizSessionRuntimePreviewPlan } from '../../src/lib/viz-session/runtime-preview-plan';
 
 const FRAME_COUNT = 300;
 const WARMUP_FRAME_COUNT = 30;
@@ -18,48 +22,57 @@ const VIEWPORT = {
   height: 720,
 };
 const audioFrameData = {
-  frequencyData: Uint8Array.from(
-    { length: 1024 },
-    (_, index) => Math.round((Math.sin(index / 18) * 0.5 + 0.5) * 255),
+  frequencyData: Uint8Array.from({ length: 1024 }, (_, index) =>
+    Math.round((Math.sin(index / 18) * 0.5 + 0.5) * 255),
   ),
-  timeDomainData: Uint8Array.from(
-    { length: 1024 },
-    (_, index) => Math.round((Math.sin(index / 11) * 0.5 + 0.5) * 255),
+  timeDomainData: Uint8Array.from({ length: 1024 }, (_, index) =>
+    Math.round((Math.sin(index / 11) * 0.5 + 0.5) * 255),
   ),
   sampleRate: 44100,
   fftSize: 2048,
 };
 
-const components = Array.from(CompDefinitionMap.values());
-const layers = components.map((component, index) =>
-  createVizLayerFromComp(component, `benchmark-layer-${index}`),
-);
-const project = {
-  ...createEmptyVizProjectDocument({
-    projectId: 'runtime-preview-plan-benchmark',
-    name: 'Runtime Preview Plan Benchmark',
-    timeline: {
-      fps: FPS,
-      durationInFrames: FRAME_COUNT + WARMUP_FRAME_COUNT,
-    },
-    viewport: {
-      ...VIEWPORT,
-      backgroundColor: '#000000',
-    },
-  }),
+const components = coreCatalogComponents.map(createEditorCompFromDefinition);
+const layers: VizLayer[] = components.map((component, index) => ({
+  id: `benchmark-layer-${index}`,
+  name: component.name,
+  componentId: component.componentId ?? component.id,
+  enabled: true,
+  opacity: 1,
+  blendMode: 'normal',
+  surface: {
+    backgroundColor: 'rgba(10, 10, 10, 1)',
+    freezeWhenPaused: true,
+  },
+  settings: structuredClone(component.defaultValues),
+}));
+const project: VizProjectDocument = {
+  schemaVersion: VIZ_PROJECT_SCHEMA_VERSION,
+  projectId: 'runtime-preview-plan-benchmark',
+  name: 'Runtime Preview Plan Benchmark',
+  timeline: {
+    fps: FPS,
+    durationInFrames: FRAME_COUNT + WARMUP_FRAME_COUNT,
+  },
+  viewport: {
+    ...VIEWPORT,
+    backgroundColor: '#000000',
+  },
   layerOrder: layers.map((layer) => layer.id),
   layers,
+  graphs: [],
 };
 const componentRegistry = createCoreComponentRegistry();
 
 const percentile = (values: number[], amount: number) => {
   const sorted = [...values].sort((left, right) => left - right);
-  return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * amount))]!;
+  return sorted[
+    Math.min(sorted.length - 1, Math.floor(sorted.length * amount))
+  ]!;
 };
 
 const summarize = (samples: number[]) => ({
-  meanMs:
-    samples.reduce((total, sample) => total + sample, 0) / samples.length,
+  meanMs: samples.reduce((total, sample) => total + sample, 0) / samples.length,
   medianMs: percentile(samples, 0.5),
   p95Ms: percentile(samples, 0.95),
   maxMs: Math.max(...samples),

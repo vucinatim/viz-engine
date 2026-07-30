@@ -1,5 +1,3 @@
-'use client';
-
 import { PipelineStageDefinition } from '@/lib/rhythm-lab/analysis-graph';
 import { STAGE_COLORS } from '@/lib/rhythm-lab/stage-colors';
 import useRhythmLabStore from '@/lib/stores/rhythm-lab-store';
@@ -163,13 +161,13 @@ const TempogramCard = ({ stage }: TempogramCardProps) => {
       showToggle={false}>
       <div className="mb-3">
         <div className="relative mb-2">
-          <div className="mb-1 text-[10px] uppercase text-white/40">
+          <div className="mb-1 text-[10px] text-white/40 uppercase">
             Tempogram (BPM)
           </div>
           <div className="relative h-16">
             <canvas ref={canvasRef} className="h-full w-full rounded-sm" />
             {hoverInfo ? (
-              <div className="pointer-events-none absolute right-0 top-0 rounded-sm bg-black/20 px-2 py-1 text-[10px] text-white/70">
+              <div className="pointer-events-none absolute top-0 right-0 rounded-sm bg-black/20 px-2 py-1 text-[10px] text-white/70">
                 {hoverInfo.bpm.toFixed(1)} BPM · {hoverInfo.value.toFixed(3)}
               </div>
             ) : null}

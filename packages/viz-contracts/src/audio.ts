@@ -1,24 +1,24 @@
-import type { VizArtifactRef } from "./artifacts.js";
-import type { VizAssetId } from "./ids.js";
+import type { VizArtifactRef } from './artifacts.js';
+import type { VizAssetId } from './ids.js';
 
-export type VizAudioFeatureProfile = "standard" | "extended" | "specialized";
+export type VizAudioFeatureProfile = 'standard' | 'extended' | 'specialized';
 
 export type VizStandardAudioFeatureName =
-  | "rms"
-  | "loudness"
-  | "bass-energy"
-  | "mid-energy"
-  | "treble-energy"
-  | "spectral-centroid"
-  | "spectral-flux"
-  | "onset-strength"
-  | "waveform-peak";
+  | 'rms'
+  | 'loudness'
+  | 'bass-energy'
+  | 'mid-energy'
+  | 'treble-energy'
+  | 'spectral-centroid'
+  | 'spectral-flux'
+  | 'onset-strength'
+  | 'waveform-peak';
 
 export interface VizAudioFeatureSeries {
   name: string;
   values: number[];
-  unit?: "linear-amplitude" | "unit" | "hertz" | "custom";
-  normalization?: "none" | "decibel-unit" | "artifact-peak" | "custom";
+  unit?: 'linear-amplitude' | 'unit' | 'hertz' | 'custom';
+  normalization?: 'none' | 'decibel-unit' | 'artifact-peak' | 'custom';
   min?: number;
   max?: number;
   description?: string;
@@ -34,7 +34,7 @@ export interface VizAudioSourceWindow {
 export interface VizAudioFrameAlignment {
   fps: number;
   frameCount: number;
-  alignment: "frame-centered";
+  alignment: 'frame-centered';
 }
 
 export interface VizAudioAnalysisIdentity {
@@ -43,17 +43,27 @@ export interface VizAudioAnalysisIdentity {
   sampleRate: number;
   channelCount: number;
   fftSize: number;
-  window: "hann";
+  window: 'hann';
   minDecibels: number;
   maxDecibels: number;
 }
 
-export interface VizPackedAudioFrameSeries {
-  encoding: "uint8-base64";
+interface VizPackedAudioFrameSeriesBase {
   frameCount: number;
   valuesPerFrame: number;
-  data: string;
 }
+
+export type VizPackedAudioFrameSeries = VizPackedAudioFrameSeriesBase &
+  (
+    | {
+        encoding: 'uint8-base64';
+        data: string;
+      }
+    | {
+        encoding: 'uint8-array';
+        data: Uint8Array;
+      }
+  );
 
 export interface VizPackedAudioFrames {
   frequency: VizPackedAudioFrameSeries;
@@ -62,7 +72,7 @@ export interface VizPackedAudioFrames {
 
 export interface VizAudioFeatureTimelineArtifact extends VizArtifactRef {
   schemaVersion: 1;
-  kind: "audio-feature-timeline";
+  kind: 'audio-feature-timeline';
   sourceAssetId: VizAssetId;
   profile: VizAudioFeatureProfile;
   sourceWindow: VizAudioSourceWindow;
@@ -73,24 +83,20 @@ export interface VizAudioFeatureTimelineArtifact extends VizArtifactRef {
 }
 
 const BASE64_ALPHABET =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 export const encodeVizUint8Base64 = (bytes: Uint8Array): string => {
-  let output = "";
+  let output = '';
   for (let index = 0; index < bytes.length; index += 3) {
     const first = bytes[index]!;
     const second = bytes[index + 1];
     const third = bytes[index + 2];
-    const combined =
-      (first << 16) | ((second ?? 0) << 8) | (third ?? 0);
+    const combined = (first << 16) | ((second ?? 0) << 8) | (third ?? 0);
     output += BASE64_ALPHABET[(combined >> 18) & 63];
     output += BASE64_ALPHABET[(combined >> 12) & 63];
     output +=
-      second === undefined
-        ? "="
-        : BASE64_ALPHABET[(combined >> 6) & 63];
-    output +=
-      third === undefined ? "=" : BASE64_ALPHABET[combined & 63];
+      second === undefined ? '=' : BASE64_ALPHABET[(combined >> 6) & 63];
+    output += third === undefined ? '=' : BASE64_ALPHABET[combined & 63];
   }
   return output;
 };
@@ -102,14 +108,10 @@ export const decodeVizUint8Base64 = (encoded: string): Uint8Array => {
       encoded,
     )
   ) {
-    throw new Error("Invalid canonical uint8 base64 payload.");
+    throw new Error('Invalid canonical uint8 base64 payload.');
   }
 
-  const padding = encoded.endsWith("==")
-    ? 2
-    : encoded.endsWith("=")
-      ? 1
-      : 0;
+  const padding = encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0;
   const bytes = new Uint8Array((encoded.length / 4) * 3 - padding);
   let outputIndex = 0;
 
@@ -117,15 +119,14 @@ export const decodeVizUint8Base64 = (encoded: string): Uint8Array => {
     const first = BASE64_ALPHABET.indexOf(encoded[index]!);
     const second = BASE64_ALPHABET.indexOf(encoded[index + 1]!);
     const third =
-      encoded[index + 2] === "="
+      encoded[index + 2] === '='
         ? 0
         : BASE64_ALPHABET.indexOf(encoded[index + 2]!);
     const fourth =
-      encoded[index + 3] === "="
+      encoded[index + 3] === '='
         ? 0
         : BASE64_ALPHABET.indexOf(encoded[index + 3]!);
-    const combined =
-      (first << 18) | (second << 12) | (third << 6) | fourth;
+    const combined = (first << 18) | (second << 12) | (third << 6) | fourth;
 
     bytes[outputIndex++] = (combined >> 16) & 255;
     if (outputIndex < bytes.length) {

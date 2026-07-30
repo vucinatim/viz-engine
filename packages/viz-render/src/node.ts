@@ -5,34 +5,30 @@ import type {
   VizRenderPerformanceFeedback,
   VizRenderPlan,
   VizRenderRequest,
-} from "@viz-engine/contracts";
+} from '@viz-engine/contracts';
 import {
   renderVizRenderPlanToSvgFragment,
   renderVizRenderPlanToSvgMarkup,
-} from "@viz-engine/renderer-svg";
+} from '@viz-engine/renderer-svg';
 import {
   createVizRenderPlan,
   createVizRuntimeSession,
   sampleProjectAudioFrameSnapshot,
   type VizNodeRegistry,
-} from "@viz-engine/runtime";
-import { createHash } from "node:crypto";
-import {
-  mkdirSync,
-  writeFileSync,
-} from "node:fs";
-import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+} from '@viz-engine/runtime';
+import { createHash } from 'node:crypto';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import type {
   VizRenderExecutionContext,
   VizRenderExecutor,
   VizRenderExecutorResult,
   VizRenderSource,
-} from "./index.js";
+} from './index.js';
 
-export const VIZ_NODE_SVG_RENDER_EXECUTOR_ID = "node-svg";
-export const VIZ_NODE_SVG_RENDER_EXECUTOR_VERSION =
-  "viz-render.node-svg.v1";
+export const VIZ_NODE_SVG_RENDER_EXECUTOR_ID = 'node-svg';
+export const VIZ_NODE_SVG_RENDER_EXECUTOR_VERSION = 'viz-render.node-svg.v1';
 
 export interface CreateVizNodeSvgRenderExecutorOptions {
   outputDirectory: string;
@@ -43,23 +39,23 @@ export interface CreateVizNodeSvgRenderExecutorOptions {
 
 const escapeAttribute = (value: string): string =>
   value
-    .replaceAll("&", "&amp;")
-    .replaceAll("\"", "&quot;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
 
 const slugify = (value: string): string => {
   const slug = value
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
     .slice(0, 80);
-  return slug.length > 0 ? slug : "viz-render";
+  return slug.length > 0 ? slug : 'viz-render';
 };
 
 const sha256 = (value: string): string =>
-  createHash("sha256").update(value, "utf8").digest("hex");
+  createHash('sha256').update(value, 'utf8').digest('hex');
 
 const percentile95 = (values: readonly number[]): number => {
   if (values.length === 0) {
@@ -90,9 +86,7 @@ const toPerformance = (
         : totalRenderMilliseconds / frameDurations.length,
     p95RenderMilliseconds: percentile95(frameDurations),
     maximumRenderMilliseconds:
-      frameDurations.length === 0
-        ? 0
-        : Math.max(...frameDurations),
+      frameDurations.length === 0 ? 0 : Math.max(...frameDurations),
   };
 };
 
@@ -113,15 +107,14 @@ const createRenderPlanForFrame = (
         ? source.project.viewport.backgroundColor === undefined
           ? {}
           : {
-              backgroundColor:
-                source.project.viewport.backgroundColor,
+              backgroundColor: source.project.viewport.backgroundColor,
             }
         : { backgroundColor: request.viewport.backgroundColor }),
     },
   };
   const session = createVizRuntimeSession({
     project,
-    mode: "render",
+    mode: 'render',
     resolvedAssets: source.resolvedAssets,
     resolvedArtifacts: source.resolvedArtifacts,
     seed,
@@ -142,17 +135,14 @@ const createRenderPlanForFrame = (
   });
 };
 
-const assertPlanSucceeded = (
-  frame: number,
-  plan: VizRenderPlan,
-): void => {
+const assertPlanSucceeded = (frame: number, plan: VizRenderPlan): void => {
   if (plan.issues.length === 0) {
     return;
   }
   throw new Error(
     `Frame ${frame} failed runtime planning: ${plan.issues
       .map((issue) => `${issue.code}: ${issue.message}`)
-      .join("; ")}`,
+      .join('; ')}`,
   );
 };
 
@@ -167,18 +157,17 @@ const createOutput = (
 ): VizRenderOutputArtifact => {
   const hash = sha256(markup);
   const outputPath = join(outputDirectory, fileName);
-  writeFileSync(outputPath, markup, "utf8");
+  writeFileSync(outputPath, markup, 'utf8');
   return {
     id: `render-output-${hash.slice(0, 20)}`,
-    kind: "render-output",
-    role:
-      request.kind === "still" ? "still" : "contact-sheet",
+    kind: 'render-output',
+    role: request.kind === 'still' ? 'still' : 'contact-sheet',
     label: request.outputLabel,
-    format: "svg",
-    mimeType: "image/svg+xml",
+    format: 'svg',
+    mimeType: 'image/svg+xml',
     uri: pathToFileURL(outputPath).href,
     contentIdentity: `sha256:${hash}`,
-    byteLength: Buffer.byteLength(markup, "utf8"),
+    byteLength: Buffer.byteLength(markup, 'utf8'),
     width,
     height,
     frameCount,
@@ -190,11 +179,11 @@ const renderStill = (
   options: CreateVizNodeSvgRenderExecutorOptions,
 ): VizRenderExecutorResult => {
   const { request, source, signal, onProgress } = context;
-  if (request.kind !== "still") {
-    throw new Error("Expected a still render request.");
+  if (request.kind !== 'still') {
+    throw new Error('Expected a still render request.');
   }
   if (signal.aborted) {
-    throw new Error("Render cancelled.");
+    throw new Error('Render cancelled.');
   }
   const start = performance.now();
   const plan = createRenderPlanForFrame(
@@ -203,13 +192,13 @@ const renderStill = (
     request.frame,
     options.componentRegistry,
     options.nodeRegistry,
-    options.seed ?? "node-svg-render",
+    options.seed ?? 'node-svg-render',
   );
   assertPlanSucceeded(request.frame, plan);
   const markup = renderVizRenderPlanToSvgMarkup(plan);
   const duration = performance.now() - start;
   onProgress({
-    stage: "rendering",
+    stage: 'rendering',
     completed: 1,
     total: 1,
     progress: 1,
@@ -236,8 +225,8 @@ const renderContactSheet = (
   options: CreateVizNodeSvgRenderExecutorOptions,
 ): VizRenderExecutorResult => {
   const { request, source, signal, onProgress } = context;
-  if (request.kind !== "contact-sheet") {
-    throw new Error("Expected a contact-sheet render request.");
+  if (request.kind !== 'contact-sheet') {
+    throw new Error('Expected a contact-sheet render request.');
   }
   const columns = Math.min(
     request.frames.length,
@@ -245,17 +234,15 @@ const renderContactSheet = (
   );
   const rows = Math.ceil(request.frames.length / columns);
   const gap = request.gap ?? 8;
-  const sheetWidth =
-    columns * request.viewport.width + (columns - 1) * gap;
-  const sheetHeight =
-    rows * request.viewport.height + (rows - 1) * gap;
+  const sheetWidth = columns * request.viewport.width + (columns - 1) * gap;
+  const sheetHeight = rows * request.viewport.height + (rows - 1) * gap;
   const frameDurations: number[] = [];
   const cells: string[] = [];
   const diagnostics: VizRenderDiagnostic[] = [];
 
   request.frames.forEach((frame, index) => {
     if (signal.aborted) {
-      throw new Error("Render cancelled.");
+      throw new Error('Render cancelled.');
     }
     const start = performance.now();
     const plan = createRenderPlanForFrame(
@@ -264,7 +251,7 @@ const renderContactSheet = (
       frame,
       options.componentRegistry,
       options.nodeRegistry,
-      options.seed ?? "node-svg-render",
+      options.seed ?? 'node-svg-render',
     );
     assertPlanSucceeded(frame, plan);
     frameDurations.push(performance.now() - start);
@@ -276,7 +263,7 @@ const renderContactSheet = (
       `<svg x="${x}" y="${y}" width="${request.viewport.width}" height="${request.viewport.height}" viewBox="0 0 ${request.viewport.width} ${request.viewport.height}" aria-label="Frame ${frame}">${renderVizRenderPlanToSvgFragment(plan)}</svg>`,
     );
     onProgress({
-      stage: "rendering",
+      stage: 'rendering',
       completed: index + 1,
       total: request.frames.length,
       progress: (index + 1) / request.frames.length,
@@ -284,7 +271,7 @@ const renderContactSheet = (
     });
   });
 
-  const markup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${sheetWidth} ${sheetHeight}" width="${sheetWidth}" height="${sheetHeight}" role="img" aria-label="${escapeAttribute(request.outputLabel)}">${cells.join("")}</svg>`;
+  const markup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${sheetWidth} ${sheetHeight}" width="${sheetWidth}" height="${sheetHeight}" role="img" aria-label="${escapeAttribute(request.outputLabel)}">${cells.join('')}</svg>`;
   const output = createOutput(
     request,
     markup,
@@ -308,16 +295,15 @@ export const createVizNodeSvgRenderExecutor = (
   return {
     id: VIZ_NODE_SVG_RENDER_EXECUTOR_ID,
     version: VIZ_NODE_SVG_RENDER_EXECUTOR_VERSION,
-    rendererIdentity: "viz-renderer-svg.v1",
+    rendererIdentity: 'viz-renderer-svg.v1',
     supports: (request) =>
-      (request.kind === "still" ||
-        request.kind === "contact-sheet") &&
-      request.format === "svg",
+      (request.kind === 'still' || request.kind === 'contact-sheet') &&
+      request.format === 'svg',
     execute: async (context) => {
-      if (context.request.kind === "still") {
+      if (context.request.kind === 'still') {
         return renderStill(context, options);
       }
-      if (context.request.kind === "contact-sheet") {
+      if (context.request.kind === 'contact-sheet') {
         return renderContactSheet(context, options);
       }
       throw new Error(

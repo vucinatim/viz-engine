@@ -1,20 +1,16 @@
-'use client';
-
 import { Comp } from '@/components/config/create-component';
-import {
-  createEditorComponentPreviewPlan,
-} from '@/lib/editor-component-preview-plan';
+import { createEditorComponentPreviewPlan } from '@/lib/editor-component-preview-plan';
 import {
   createSyntheticAnalyzer,
   generateSyntheticFrequency,
   generateSyntheticTimeDomain,
   preloadAudioData,
 } from '@/lib/utils/synthetic-audio';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   createVizThreePreviewController,
   type VizThreePreviewController,
 } from '@viz-engine/renderer-three';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface CompPreviewProps {
   comp: Comp;

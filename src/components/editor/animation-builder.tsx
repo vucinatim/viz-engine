@@ -1,6 +1,7 @@
 import editorControl from '@/lib/editor-control';
 import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
 import { cn } from '@/lib/utils';
+import { describeProjectGraph, useVizSessionSelector } from '@/lib/viz-session';
 import { AudioLines } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import NodeNetworkRenderer from '../node-network/node-network-renderer';
@@ -8,10 +9,6 @@ import useNodeNetworkStore, {
   useSpecificNetwork,
 } from '../node-network/node-network-store';
 import NodeEditorToolbar from './node-editor-toolbar';
-import {
-  describeProjectGraph,
-  useVizSessionSelector,
-} from '@/lib/viz-session';
 
 const AnimationBuilder = () => {
   const isPlaying = useEditorPreviewStore((state) => state.transport.isPlaying);
@@ -20,9 +17,6 @@ const AnimationBuilder = () => {
   const nodeNetwork = useSpecificNetwork(nodeNetworkId);
   const areNetworksMinimized = useNodeNetworkStore(
     (state) => state.areNetworksMinimized,
-  );
-  const setNetworksMinimized = useNodeNetworkStore(
-    (state) => state.setNetworksMinimized,
   );
   const shouldForceShowOverlay = useNodeNetworkStore(
     (state) => state.shouldForceShowOverlay,
@@ -37,10 +31,7 @@ const AnimationBuilder = () => {
 
   // Get formatted parameter info
   const graphPresentation = useMemo(
-    () =>
-      nodeNetworkId
-        ? describeProjectGraph(project, nodeNetworkId)
-        : null,
+    () => (nodeNetworkId ? describeProjectGraph(project, nodeNetworkId) : null),
     [nodeNetworkId, project],
   );
 
@@ -63,6 +54,7 @@ const AnimationBuilder = () => {
 
   return (
     <div
+      data-testid="animation-builder"
       onMouseEnter={() => {
         setIsHovering(true);
         // Mark that mouse has entered
@@ -105,6 +97,7 @@ const AnimationBuilder = () => {
             )}>
             {nodeNetwork && !areNetworksMinimized && (
               <NodeNetworkRenderer
+                key={nodeNetworkId}
                 nodeNetworkId={nodeNetworkId}
                 onReactFlowInit={(instance) => {
                   reactFlowInstance.current = instance;
@@ -119,7 +112,7 @@ const AnimationBuilder = () => {
           </div>
           <div
             className={cn(
-              'pointer-events-none absolute right-4 top-4 rounded-lg bg-zinc-600/30 px-4 py-2 transition-opacity',
+              'pointer-events-none absolute top-4 right-4 rounded-lg bg-zinc-600/30 px-4 py-2 transition-opacity',
               isHovering && 'opacity-0',
               areNetworksMinimized && 'opacity-0',
             )}>

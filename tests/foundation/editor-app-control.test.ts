@@ -2,11 +2,21 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CompDefinitionMap } from '@/components/comps';
 import { VType } from '@/components/config/types';
+import { useNodeNetworkStore } from '@/components/node-network/node-network-store';
 import {
   assignDeterministicIdsToConfig,
   getParameterIdsFromConfig,
 } from '@/lib/comp-utils/config-utils';
 import editorControl from '@/lib/editor-control';
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
+import useCompStore from '@/lib/stores/comp-store';
+import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
+import useEditorGraphStore from '@/lib/stores/editor-graph-store';
+import { getProjectedLayers } from '@/lib/stores/editor-layer-projection-store';
+import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
+import useEditorProjectStore from '@/lib/stores/editor-project-store';
+import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
+import useProfilerStore from '@/lib/stores/profiler-store';
 import {
   createVizSessionRuntimePreviewFrame,
   vizControl,
@@ -14,16 +24,6 @@ import {
   vizSessionHost,
   vizSessionStore,
 } from '@/lib/viz-session';
-import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
-import useCompStore from '@/lib/stores/comp-store';
-import useEditorGraphStore from '@/lib/stores/editor-graph-store';
-import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
-import useEditorProjectStore from '@/lib/stores/editor-project-store';
-import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
-import { getProjectedLayers } from '@/lib/stores/editor-layer-projection-store';
-import useProfilerStore from '@/lib/stores/profiler-store';
-import { useNodeNetworkStore } from '@/components/node-network/node-network-store';
 import type { VizProjectDocument } from '@viz-engine/contracts';
 import { createTestProject } from './viz-session-test-utils';
 
@@ -63,9 +63,7 @@ describe('Local editor control facade', () => {
     });
     useEditorGraphStore.getState().reset();
     useEditorPreviewStore.getState().reset();
-    useEditorProjectStore
-      .getState()
-      .importWorkingProject(createTestProject());
+    useEditorProjectStore.getState().importWorkingProject(createTestProject());
     useEditorRuntimePreviewAttachmentStore.getState().reset();
     useNodeNetworkStore.setState({
       openNetwork: null,
@@ -131,9 +129,9 @@ describe('Local editor control facade', () => {
 
     expect(useNodeNetworkStore.getState().openNetwork).toBe(parameterId);
     expect(useNodeNetworkStore.getState().shouldForceShowOverlay).toBe(true);
-    expect(useEditorGraphStore.getState().networks[parameterId]?.isEnabled).toBe(
-      true,
-    );
+    expect(
+      useEditorGraphStore.getState().networks[parameterId]?.isEnabled,
+    ).toBe(true);
 
     editorControl.nodeEditor.closeNetwork();
     expect(useNodeNetworkStore.getState().openNetwork).toBeNull();
@@ -160,8 +158,7 @@ describe('Local editor control facade', () => {
     useEditorProjectStore
       .getState()
       .importWorkingProject(createTestProject(comp, 'runtime-layer'));
-    const attachmentStore =
-      useEditorRuntimePreviewAttachmentStore.getState();
+    const attachmentStore = useEditorRuntimePreviewAttachmentStore.getState();
     attachmentStore.registerLayerAttachment('runtime-layer', {
       getViewport: () => ({ width: 640, height: 360 }),
       render: vi.fn(),

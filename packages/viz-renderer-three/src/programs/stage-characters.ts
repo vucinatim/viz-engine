@@ -1,6 +1,4 @@
-import type {
-  VizMaterializedAsset,
-} from "@viz-engine/contracts";
+import type { VizMaterializedAsset } from '@viz-engine/contracts';
 import {
   AnimationMixer,
   Color,
@@ -19,17 +17,16 @@ import {
   ShaderMaterial,
   SkinnedMesh,
   Texture,
-  Vector3,
-} from "three";
+} from 'three';
 import {
   createVizThreeDeterministicClipPlayer,
   type VizThreeDeterministicClipPlayer,
-} from "../model-animation.js";
+} from '../model-animation.js';
 import type {
   VizThreeModelResource,
   VizThreeModelResourceLease,
   VizThreeModelResourceManager,
-} from "../model-resources.js";
+} from '../model-resources.js';
 
 const MAX_CROWD_COUNT = 1_000;
 const MODEL_SCALE = 0.032;
@@ -50,31 +47,29 @@ const asModelAsset = (
 ): VizMaterializedAsset | undefined => {
   const asset = assets.get(assetId);
   if (
-    asset?.kind === "model" ||
-    (asset?.kind === "binary" &&
-      (asset.mimeType?.startsWith("model/") === true ||
-        asset.mimeType === "application/vnd.autodesk.fbx"))
+    asset?.kind === 'model' ||
+    (asset?.kind === 'binary' &&
+      (asset.mimeType?.startsWith('model/') === true ||
+        asset.mimeType === 'application/vnd.autodesk.fbx'))
   ) {
     return asset;
   }
   return undefined;
 };
 
-const getAssetKey = (
-  asset: VizMaterializedAsset | undefined,
-): string => {
+const getAssetKey = (asset: VizMaterializedAsset | undefined): string => {
   if (!asset) {
-    return "";
+    return '';
   }
   const contentIdentity = asset.metadata?.contentIdentity;
-  if (typeof contentIdentity === "string") {
+  if (typeof contentIdentity === 'string') {
     return `${asset.id}:${contentIdentity}`;
   }
-  if (asset.kind === "model") {
-    return `${asset.id}:${asset.modelSourceUri ?? ""}`;
+  if (asset.kind === 'model') {
+    return `${asset.id}:${asset.modelSourceUri ?? ''}`;
   }
-  if (asset.kind === "binary") {
-    return `${asset.id}:${asset.binarySourceUri ?? ""}`;
+  if (asset.kind === 'binary') {
+    return `${asset.id}:${asset.binarySourceUri ?? ''}`;
   }
   return asset.id;
 };
@@ -89,9 +84,7 @@ const findSkinnedMeshes = (root: Object3D): SkinnedMesh[] => {
   return meshes;
 };
 
-const getMaterialTexture = (
-  mesh: SkinnedMesh,
-): Texture | null => {
+const getMaterialTexture = (mesh: SkinnedMesh): Texture | null => {
   const material = Array.isArray(mesh.material)
     ? mesh.material[0]
     : mesh.material;
@@ -100,16 +93,12 @@ const getMaterialTexture = (
     : ((material as MeshStandardMaterial | undefined)?.map ?? null);
 };
 
-const getMaterialColor = (
-  mesh: SkinnedMesh,
-): Color => {
+const getMaterialColor = (mesh: SkinnedMesh): Color => {
   const material = Array.isArray(mesh.material)
     ? mesh.material[0]
     : mesh.material;
   const color = (material as MeshStandardMaterial | undefined)?.color;
-  return color instanceof Color
-    ? color.clone()
-    : new Color("#ffffff");
+  return color instanceof Color ? color.clone() : new Color('#ffffff');
 };
 
 interface CrowdAnimationTexture {
@@ -139,15 +128,9 @@ const bakeCrowdAnimationTexture = ({
   );
   const boneCount = mesh.skeleton.bones.length;
   const textureWidth = Math.max(4, boneCount * 4);
-  const boneData = new Float32Array(
-    textureWidth * frameCount * 4,
-  );
-  const mixer = clip
-    ? new AnimationMixer(root)
-    : null;
-  const action = clip
-    ? mixer!.clipAction(clip)
-    : null;
+  const boneData = new Float32Array(textureWidth * frameCount * 4);
+  const mixer = clip ? new AnimationMixer(root) : null;
+  const action = clip ? mixer!.clipAction(clip) : null;
 
   action?.play();
 
@@ -165,10 +148,7 @@ const bakeCrowdAnimationTexture = ({
       rootBone.updateMatrixWorld(true);
     }
     mesh.skeleton.update();
-    boneData.set(
-      mesh.skeleton.boneMatrices,
-      frame * textureWidth * 4,
-    );
+    boneData.set(mesh.skeleton.boneMatrices, frame * textureWidth * 4);
   }
 
   action?.stop();
@@ -208,9 +188,7 @@ interface StageCrowdArchetype {
   group: Group;
   batches: CrowdMeshBatch[];
   updateAnimation(time: number, speed: number): void;
-  setInstances(
-    instances: readonly StageCrowdInstance[],
-  ): void;
+  setInstances(instances: readonly StageCrowdInstance[]): void;
   dispose(): void;
 }
 
@@ -372,17 +350,13 @@ const createStageCrowdArchetype = (
       new Float32Array(MAX_CROWD_COUNT * 3),
       3,
     );
-    geometry.setAttribute("instancePhase", phaseAttribute);
-    geometry.setAttribute("instanceTint", tintAttribute);
+    geometry.setAttribute('instancePhase', phaseAttribute);
+    geometry.setAttribute('instanceTint', tintAttribute);
     const material = createCrowdShaderMaterial({
       mesh: sourceMesh,
       animation,
     });
-    const mesh = new InstancedMesh(
-      geometry,
-      material,
-      MAX_CROWD_COUNT,
-    );
+    const mesh = new InstancedMesh(geometry, material, MAX_CROWD_COUNT);
     mesh.instanceMatrix.setUsage(DynamicDrawUsage);
     mesh.frustumCulled = false;
     mesh.castShadow = false;
@@ -473,14 +447,14 @@ export const createVizStageCharacterController = ({
 }): VizStageCharacterController => {
   let disposed = false;
   let requestRevision = 0;
-  let assetSelectionKey = "";
+  let assetSelectionKey = '';
   let readyPromise: Promise<void> = Promise.resolve();
   let loadError: unknown;
   let leases: VizThreeModelResourceLease[] = [];
   let heroDj: Group | null = null;
   let heroPlayer: VizThreeDeterministicClipPlayer | null = null;
   let crowdArchetypes: StageCrowdArchetype[] = [];
-  let lastCrowdLayoutKey = "";
+  let lastCrowdLayoutKey = '';
   const crowdObject = new Object3D();
   const crowdTint = new Color();
   const crowdInstancesByArchetype: StageCrowdInstance[][] = [];
@@ -512,15 +486,14 @@ export const createVizStageCharacterController = ({
       lease.release();
     }
     leases = [];
-    lastCrowdLayoutKey = "";
+    lastCrowdLayoutKey = '';
   };
 
   const applyVisibility = () => {
     const modelDjReady = heroDj !== null;
     const modelCrowdReady = crowdArchetypes.length > 0;
     fallbackDj.visible = lastUpdate.showDj && !modelDjReady;
-    fallbackCrowd.visible =
-      lastUpdate.crowdCount > 0 && !modelCrowdReady;
+    fallbackCrowd.visible = lastUpdate.crowdCount > 0 && !modelCrowdReady;
 
     if (heroDj) {
       heroDj.visible = lastUpdate.showDj;
@@ -531,25 +504,22 @@ export const createVizStageCharacterController = ({
 
     root.userData.characterMode =
       modelDjReady && modelCrowdReady
-        ? "model"
+        ? 'model'
         : loadError
-          ? "fallback-error"
+          ? 'fallback-error'
           : assetSelectionKey
-            ? "loading"
-            : "fallback";
+            ? 'loading'
+            : 'fallback';
     root.userData.characterLoadError = loadError ?? null;
   };
 
   const updateModelAnimation = () => {
     heroPlayer?.update(lastUpdate.time, {
       speed: lastUpdate.animationSpeed,
-      loopMode: "loop",
+      loopMode: 'loop',
     });
     for (const archetype of crowdArchetypes) {
-      archetype.updateAnimation(
-        lastUpdate.time,
-        lastUpdate.animationSpeed,
-      );
+      archetype.updateAnimation(lastUpdate.time, lastUpdate.animationSpeed);
     }
   };
 
@@ -568,10 +538,7 @@ export const createVizStageCharacterController = ({
       crowdInstancesByArchetype[index] = [];
     }
 
-    const count = Math.min(
-      MAX_CROWD_COUNT,
-      Math.max(0, lastUpdate.crowdCount),
-    );
+    const count = Math.min(MAX_CROWD_COUNT, Math.max(0, lastUpdate.crowdCount));
     const crowdFactor = count / MAX_CROWD_COUNT;
     const depth = 30 + crowdFactor * 50;
     const spreadFactor = 0.8 + crowdFactor * 0.7;
@@ -580,38 +547,30 @@ export const createVizStageCharacterController = ({
       const archetypeIndex = Math.min(
         crowdArchetypes.length - 1,
         Math.floor(
-          hash01(lastUpdate.seed, index * 17 + 13) *
-            crowdArchetypes.length,
+          hash01(lastUpdate.seed, index * 17 + 13) * crowdArchetypes.length,
         ),
       );
-      const normalizedDepth = Math.sqrt(
-        (index + 0.5) / Math.max(count, 1),
-      );
+      const normalizedDepth = Math.sqrt((index + 0.5) / Math.max(count, 1));
       const z =
         14 +
         normalizedDepth * depth +
         (hash01(lastUpdate.seed, index * 7 + 1) - 0.5) * 2;
-      const maximumSpread =
-        25 + normalizedDepth * depth * spreadFactor;
+      const maximumSpread = 25 + normalizedDepth * depth * spreadFactor;
       const x =
-        (hash01(lastUpdate.seed, index * 7 + 2) * 2 - 1) *
-        maximumSpread;
+        (hash01(lastUpdate.seed, index * 7 + 2) * 2 - 1) * maximumSpread;
       const scale =
-        MODEL_SCALE *
-        (0.8 + hash01(lastUpdate.seed, index * 7 + 5) * 0.35);
+        MODEL_SCALE * (0.8 + hash01(lastUpdate.seed, index * 7 + 5) * 0.35);
       crowdObject.position.set(x, 0, z);
       crowdObject.rotation.set(
         0,
         Math.atan2(-x, -z) +
-          (hash01(lastUpdate.seed, index * 7 + 6) - 0.5) *
-            (Math.PI / 4),
+          (hash01(lastUpdate.seed, index * 7 + 6) - 0.5) * (Math.PI / 4),
         0,
       );
       crowdObject.scale.set(scale, scale, scale);
       crowdObject.updateMatrix();
       crowdTint.setHSL(
-        (hash01(lastUpdate.seed, index * 7 + 7) * 0.08 + 0.96) %
-          1,
+        (hash01(lastUpdate.seed, index * 7 + 7) * 0.08 + 0.96) % 1,
         0.12,
         0.82 + hash01(lastUpdate.seed, index * 11 + 9) * 0.18,
       );
@@ -623,9 +582,7 @@ export const createVizStageCharacterController = ({
     }
 
     for (let index = 0; index < crowdArchetypes.length; index += 1) {
-      crowdArchetypes[index]!.setInstances(
-        crowdInstancesByArchetype[index]!,
-      );
+      crowdArchetypes[index]!.setInstances(crowdInstancesByArchetype[index]!);
     }
   };
 
@@ -650,16 +607,11 @@ export const createVizStageCharacterController = ({
       return;
     }
 
-    const djLease = djAsset
-      ? modelResources.acquire(djAsset)
-      : null;
+    const djLease = djAsset ? modelResources.acquire(djAsset) : null;
     const crowdLeases = crowdAssets.map((asset) =>
       modelResources.acquire(asset),
     );
-    leases = [
-      ...(djLease ? [djLease] : []),
-      ...crowdLeases,
-    ];
+    leases = [...(djLease ? [djLease] : []), ...crowdLeases];
 
     const preparation = Promise.all([
       djLease?.ready ?? Promise.resolve(null),
@@ -681,11 +633,10 @@ export const createVizStageCharacterController = ({
               mesh.receiveShadow = true;
             }
           });
-          heroPlayer =
-            createVizThreeDeterministicClipPlayer({
-              root: heroDj,
-              clips: djResource.animations,
-            });
+          heroPlayer = createVizThreeDeterministicClipPlayer({
+            root: heroDj,
+            clips: djResource.animations,
+          });
           root.add(heroDj);
           root.userData.djModel = heroDj;
           root.userData.djModelManifest = djResource.manifest;
@@ -700,8 +651,9 @@ export const createVizStageCharacterController = ({
         root.userData.modelCrowd = crowdArchetypes.map(
           (archetype) => archetype.group,
         );
-        root.userData.crowdModelManifests =
-          crowdResources.map((resource) => resource.manifest);
+        root.userData.crowdModelManifests = crowdResources.map(
+          (resource) => resource.manifest,
+        );
 
         updateCrowdLayout();
         updateModelAnimation();
@@ -743,10 +695,7 @@ export const createVizStageCharacterController = ({
         crowdCount,
         animationSpeed,
       };
-      const djAsset = asModelAsset(
-        materializedAssets,
-        djAssetId,
-      );
+      const djAsset = asModelAsset(materializedAssets, djAssetId);
       const crowdAssets = crowdAssetIds.flatMap((assetId) => {
         const asset = asModelAsset(materializedAssets, assetId);
         return asset ? [asset] : [];
@@ -754,7 +703,7 @@ export const createVizStageCharacterController = ({
       const selectionKey = [
         getAssetKey(djAsset),
         ...crowdAssets.map(getAssetKey),
-      ].join("|");
+      ].join('|');
 
       if (selectionKey !== assetSelectionKey) {
         requestModels({
@@ -789,7 +738,7 @@ export const createVizStageCharacterController = ({
       releaseModels();
       root.userData.djModel = null;
       root.userData.modelCrowd = [];
-      root.userData.characterMode = "disposed";
+      root.userData.characterMode = 'disposed';
     },
   };
 };

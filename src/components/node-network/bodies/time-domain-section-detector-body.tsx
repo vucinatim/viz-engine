@@ -1,5 +1,5 @@
-import { getRuntimeNodeOutput } from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
+import { getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
 import type { GraphNodeData } from '../graph-types';
@@ -144,7 +144,7 @@ const TimeDomainSectionDetectorBody = ({
         </div>
       `;
       statsTextRef.current.className = cn(
-        'pointer-events-none absolute right-2 top-2 flex flex-col items-end gap-0.5 rounded bg-zinc-800/90 px-2 py-1',
+        'pointer-events-none absolute top-2 right-2 flex flex-col items-end gap-0.5 rounded bg-zinc-800/90 px-2 py-1',
       );
     }
   });

@@ -1,5 +1,3 @@
-'use client';
-
 import { PipelineStageDefinition } from '@/lib/rhythm-lab/analysis-graph';
 import StageCard from './stage-card';
 
@@ -13,8 +11,7 @@ const PlaceholderCard = ({ stage }: PlaceholderCardProps) => {
       stageId={stage.id}
       title={stage.title}
       status={stage.status}
-      showToggle={false}
-    >
+      showToggle={false}>
       <div className="text-[11px] text-white/40">Not implemented yet.</div>
     </StageCard>
   );

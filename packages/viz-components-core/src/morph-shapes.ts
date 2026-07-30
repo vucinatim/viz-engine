@@ -2,14 +2,9 @@ import type {
   VizComponentImplementation,
   VizRenderProgramValue,
   VizRenderThreeProgramNode,
-} from "@viz-engine/contracts";
-import { morphShapesAuthoring } from "./authoring/morph-shapes.js";
-import {
-  asBoolean,
-  asNumber,
-  asRecord,
-  asString,
-} from "./shared.js";
+} from '@viz-engine/contracts';
+import { morphShapesAuthoring } from './authoring/morph-shapes.js';
+import { asBoolean, asNumber, asRecord, asString } from './shared.js';
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
@@ -33,11 +28,11 @@ const readShape = (
   const shape = asRecord(value);
   return {
     shape: asString(shape.shape, fallbackShape),
-    modelUrl: asString(shape.modelUrl, ""),
-    text: asString(shape.text, ""),
+    modelUrl: asString(shape.modelUrl, ''),
+    text: asString(shape.text, ''),
     textSize: Math.max(0.1, asNumber(shape.textSize, 1)),
     textDepth: Math.max(0.01, asNumber(shape.textDepth, 0.2)),
-    textFontUrl: asString(shape.textFontUrl, ""),
+    textFontUrl: asString(shape.textFontUrl, ''),
     position: readVector(shape.position, [0, 0, 0]),
     rotationDegrees: readVector(shape.rotation, [0, 0, 0]),
   };
@@ -106,9 +101,7 @@ const resolveRotationQuaternion = ({
   frame: number;
   fps: number;
   settings: Readonly<Record<string, unknown>>;
-  sampleSettings: (
-    frame: number,
-  ) => Readonly<Record<string, unknown>>;
+  sampleSettings: (frame: number) => Readonly<Record<string, unknown>>;
 }): [number, number, number, number] => {
   const rotation = readRotation(settings);
   if (frame <= 0) {
@@ -116,10 +109,7 @@ const resolveRotationQuaternion = ({
   }
 
   if (sampleSettings(frame - 1) === settings) {
-    return axisAngleQuaternion(
-      rotation.axis,
-      rotation.speed * (frame / fps),
-    );
+    return axisAngleQuaternion(rotation.axis, rotation.speed * (frame / fps));
   }
 
   let result: [number, number, number, number] = [0, 0, 0, 1];
@@ -127,10 +117,7 @@ const resolveRotationQuaternion = ({
     const sampledRotation = readRotation(sampleSettings(sampledFrame));
     result = multiplyQuaternions(
       result,
-      axisAngleQuaternion(
-        sampledRotation.axis,
-        sampledRotation.speed / fps,
-      ),
+      axisAngleQuaternion(sampledRotation.axis, sampledRotation.speed / fps),
     );
   }
   return result;
@@ -143,9 +130,7 @@ const resolveMorphHistory = ({
 }: {
   frame: number;
   settings: Readonly<Record<string, unknown>>;
-  sampleSettings: (
-    frame: number,
-  ) => Readonly<Record<string, unknown>>;
+  sampleSettings: (frame: number) => Readonly<Record<string, unknown>>;
 }): Array<[number, number, number]> | undefined => {
   if (frame <= 0 || sampleSettings(Math.max(0, frame - 1)) === settings) {
     return undefined;
@@ -159,13 +144,13 @@ const resolveMorphHistory = ({
 };
 
 export const morphShapesComponent: VizComponentImplementation = {
-  id: "morph-shapes",
-  name: "Morph Shapes",
-  rendererFamily: "three",
-  implementationVersion: "1.0.0",
+  id: 'morph-shapes',
+  name: 'Morph Shapes',
+  rendererFamily: 'three',
+  implementationVersion: '1.0.0',
   authoring: morphShapesAuthoring,
   description:
-    "Deterministic retained point-cloud morphing between procedural, model, and text shapes.",
+    'Deterministic retained point-cloud morphing between procedural, model, and text shapes.',
   render: ({
     frameContext,
     layer,
@@ -179,21 +164,26 @@ export const morphShapesComponent: VizComponentImplementation = {
       settings,
       sampleSettings,
     });
-    const shapeA = readShape(settings.shapeASettings, "cube");
-    const shapeB = readShape(settings.shapeBSettings, "pyramid");
+    const shapeA = readShape(settings.shapeASettings, 'cube');
+    const shapeB = readShape(settings.shapeBSettings, 'pyramid');
 
     const resolveModelSource = (
       shape: Record<string, VizRenderProgramValue>,
     ): Record<string, VizRenderProgramValue> => {
-      const modelUrl = asString(shape.modelUrl, "");
-      const assetId = modelUrl.startsWith("asset:")
-        ? modelUrl.slice("asset:".length)
-        : modelUrl;
-      const asset = materializedAssets.get(assetId);
-      if (asset?.kind === "binary") {
+      const modelUrl = asString(shape.modelUrl, '');
+      if (modelUrl.startsWith('asset:')) {
         return {
           ...shape,
-          modelUrl: "",
+          modelUrl: '',
+          modelAssetId: modelUrl.slice('asset:'.length),
+        };
+      }
+      const assetId = modelUrl;
+      const asset = materializedAssets.get(assetId);
+      if (asset?.kind === 'binary' || asset?.kind === 'model') {
+        return {
+          ...shape,
+          modelUrl: '',
           modelAssetId: asset.id,
         };
       }
@@ -201,9 +191,9 @@ export const morphShapesComponent: VizComponentImplementation = {
     };
 
     return {
-      kind: "three-program",
+      kind: 'three-program',
       id: layer.id,
-      programId: "viz-core/morph-shapes/v1",
+      programId: 'viz-core/morph-shapes/v1',
       parameters: {
         frame: frameContext.frame,
         seed: frameContext.seed,
@@ -213,29 +203,15 @@ export const morphShapesComponent: VizComponentImplementation = {
         explosionShift: morphSample[1],
         animationSpeed: morphSample[2],
         ...(morphHistory ? { morphHistory } : {}),
-        color: asString(settings.color, "rgb(0, 200, 255)"),
-        gridSize: Math.round(
-          clamp(asNumber(settings.gridSize, 5), 1, 100),
-        ),
+        color: asString(settings.color, 'rgb(0, 200, 255)'),
+        gridSize: Math.round(clamp(asNumber(settings.gridSize, 5), 1, 100)),
         modelPointCount: Math.round(
           clamp(asNumber(settings.modelPointCount, 15_000), 1, 60_000),
         ),
-        modelEvenness: clamp(
-          asNumber(settings.modelEvenness, 0.7),
-          0.2,
-          1,
-        ),
-        sphereSize: clamp(
-          asNumber(settings.sphereSize, 0.15),
-          0.01,
-          1,
-        ),
+        modelEvenness: clamp(asNumber(settings.modelEvenness, 0.7), 0.2, 1),
+        sphereSize: clamp(asNumber(settings.sphereSize, 0.15), 0.01, 1),
         additiveGlow: asBoolean(settings.additiveGlow, false),
-        glowIntensity: clamp(
-          asNumber(settings.glowIntensity, 1),
-          0.2,
-          5,
-        ),
+        glowIntensity: clamp(asNumber(settings.glowIntensity, 1), 0.2, 5),
         rotationQuaternion: resolveRotationQuaternion({
           frame: frameContext.frame,
           fps: frameContext.fps,

@@ -81,9 +81,7 @@ describe('VizControl protocol', () => {
     });
     expect(response.result).not.toHaveProperty('project');
     expect(response.result).not.toHaveProperty('candidateProject');
-    expect(
-      control.getSnapshot().session.actionHistory.at(-1),
-    ).toMatchObject({
+    expect(control.getSnapshot().session.actionHistory.at(-1)).toMatchObject({
       transactionId: 'protocol-transaction',
       actor: {
         kind: 'agent',

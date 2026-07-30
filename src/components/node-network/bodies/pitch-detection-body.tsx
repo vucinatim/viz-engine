@@ -1,9 +1,6 @@
 import { Label } from '@/components/ui/label';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import {
-  getRuntimeNodeInput,
-  getRuntimeNodeOutput,
-} from '@/lib/viz-session';
+import { getRuntimeNodeInput, getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useCallback, useRef, useState } from 'react';
 import { useRafLoop } from 'react-use';
 import type { GraphNodeData } from '../graph-types';
@@ -20,11 +17,7 @@ interface PitchDetectionBodyProps {
   nodeNetworkId: string;
 }
 
-function PitchDetectionBody({
-  id: nodeId,
-  data,
-  nodeNetworkId,
-}: PitchDetectionBodyProps) {
+function PitchDetectionBody({ id: nodeId, data }: PitchDetectionBodyProps) {
   const getNodeOutput = getRuntimeNodeOutput;
   const getLiveNodeValue = getRuntimeNodeInput;
   const audioAnalyzer = useAudioEngineStore((s) => s.audioAnalyzer);
@@ -134,7 +127,6 @@ function PitchDetectionBody({
   const note = String(outputs?.note || '');
   const frequency = Number(outputs?.frequency || 0);
   const midi = Number(outputs?.midi || 0);
-  const octave = Number(outputs?.octave || 0);
   const confidence = Number(outputs?.confidence || 0);
 
   const hasSignal = frequency > 0 && note !== '';
@@ -147,24 +139,24 @@ function PitchDetectionBody({
   return (
     <div className="space-y-3 p-1">
       {/* Main Display with Spectrum */}
-      <div className="nodrag nopan border-animation-purple/20 relative h-28 w-full overflow-hidden rounded-lg border">
+      <div className="nodrag nopan relative h-28 w-full overflow-hidden rounded-lg border border-animation-purple/20">
         {/* Canvas for spectrum visualization */}
         <canvas ref={canvasRef} className="h-full w-full bg-gray-900/50" />
 
         {/* Min/Max cutoff lines */}
         <div
           ref={minLineRef}
-          className="bg-animation-purple pointer-events-none absolute top-0 h-full w-0.5"
+          className="pointer-events-none absolute top-0 h-full w-0.5 bg-animation-purple"
           style={{ boxShadow: '0 0 4px rgba(168, 85, 247, 0.8)' }}
         />
         <div
           ref={maxLineRef}
-          className="bg-animation-purple pointer-events-none absolute top-0 h-full w-0.5"
+          className="pointer-events-none absolute top-0 h-full w-0.5 bg-animation-purple"
           style={{ boxShadow: '0 0 4px rgba(168, 85, 247, 0.8)' }}
         />
 
         {/* Status Indicator Dot */}
-        <div className="pointer-events-none absolute right-2 top-2 z-10">
+        <div className="pointer-events-none absolute top-2 right-2 z-10">
           <div
             className={`h-2 w-2 rounded-full ${
               hasSignal ? 'bg-green-500' : 'bg-red-500'
@@ -258,7 +250,7 @@ function PitchDetectionBody({
                     : isActive
                       ? 'bg-animation-purple'
                       : 'bg-gray-600'
-                } ${isActive ? 'ring-animation-purple/60 ring-2' : ''}`}
+                } ${isActive ? 'ring-2 ring-animation-purple/60' : ''}`}
                 title={noteName}>
                 <div className="mt-0.5 text-center text-[8px] opacity-60">
                   {noteName}

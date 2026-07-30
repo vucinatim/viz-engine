@@ -1,11 +1,9 @@
-import type {
-  VizResolvedInputValue,
-} from "@viz-engine/contracts";
+import type { VizResolvedInputValue } from '@viz-engine/contracts';
 
-const unsafePathSegments = new Set(["__proto__", "constructor", "prototype"]);
+const unsafePathSegments = new Set(['__proto__', 'constructor', 'prototype']);
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
-  value !== null && typeof value === "object" && !Array.isArray(value);
+  value !== null && typeof value === 'object' && !Array.isArray(value);
 
 const cloneSettings = (
   settings: Record<string, unknown> | undefined,
@@ -16,7 +14,7 @@ const applyResolvedSetting = (
   path: string,
   value: unknown,
 ): void => {
-  const segments = path.split(":").filter((segment) => segment.length > 0);
+  const segments = path.split(':').filter((segment) => segment.length > 0);
 
   if (
     segments.length === 0 ||
@@ -44,7 +42,7 @@ export const resolveVizComponentSettings = (
   const result = cloneSettings(settings);
 
   for (const [path, resolvedInput] of Object.entries(resolvedInputs)) {
-    if (resolvedInput.status !== "resolved") {
+    if (resolvedInput.status !== 'resolved') {
       continue;
     }
 

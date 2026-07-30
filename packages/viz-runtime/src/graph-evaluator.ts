@@ -6,10 +6,16 @@ import type {
   VizNodeGraphNode,
   VizNodeImplementation,
   VizResolvedGraphInputValue,
-} from "@viz-engine/contracts";
-import { getAudioFeatureTimelineArtifact, sampleAudioFeatureValue } from "./audio-feature-timeline.js";
-import type { VizNodeRegistry } from "./node-registry.js";
-import type { VizGraphRuntimeCheckpoint, VizRuntimeSession } from "./runtime-session.js";
+} from '@viz-engine/contracts';
+import {
+  getAudioFeatureTimelineArtifact,
+  sampleAudioFeatureValue,
+} from './audio-feature-timeline.js';
+import type { VizNodeRegistry } from './node-registry.js';
+import type {
+  VizGraphRuntimeCheckpoint,
+  VizRuntimeSession,
+} from './runtime-session.js';
 
 export interface EvaluateVizGraphsOptions {
   session: VizRuntimeSession;
@@ -32,7 +38,7 @@ export type VizRuntimeGraphInputValues = Readonly<
 
 interface EvaluateGraphFrameResult {
   values: Record<string, unknown>;
-  nodes: VizGraphEvaluationResult["nodes"];
+  nodes: VizGraphEvaluationResult['nodes'];
   issues: VizGraphEvaluationIssue[];
   nodeStates: Map<string, unknown>;
 }
@@ -46,9 +52,9 @@ const mergeUniqueIssues = (
       JSON.stringify([
         issue.code,
         issue.graphId,
-        issue.nodeId ?? "",
-        issue.inputKey ?? "",
-        issue.outputKey ?? "",
+        issue.nodeId ?? '',
+        issue.inputKey ?? '',
+        issue.outputKey ?? '',
         issue.message,
       ]),
     ),
@@ -58,9 +64,9 @@ const mergeUniqueIssues = (
     const issueKey = JSON.stringify([
       issue.code,
       issue.graphId,
-      issue.nodeId ?? "",
-      issue.inputKey ?? "",
-      issue.outputKey ?? "",
+      issue.nodeId ?? '',
+      issue.inputKey ?? '',
+      issue.outputKey ?? '',
       issue.message,
     ]);
 
@@ -81,19 +87,19 @@ const resolveGraphInputSource = (
   frame: number,
   issues: VizGraphEvaluationIssue[],
 ): VizResolvedGraphInputValue | undefined => {
-  if (source.kind === "literal") {
+  if (source.kind === 'literal') {
     return {
       key: inputKey,
       value: source.value,
     };
   }
 
-  if (source.kind === "asset-ref") {
+  if (source.kind === 'asset-ref') {
     const asset = session.getMaterializedAssetMap().get(source.assetId);
 
     if (!asset) {
       issues.push({
-        code: "missing-graph-input",
+        code: 'missing-graph-input',
         graphId,
         inputKey,
         message: `Graph "${graphId}" could not resolve asset input "${source.assetId}" for "${inputKey}".`,
@@ -112,7 +118,7 @@ const resolveGraphInputSource = (
 
   if (!timelineArtifact) {
     issues.push({
-      code: "missing-graph-input",
+      code: 'missing-graph-input',
       graphId,
       inputKey,
       message: `Graph "${graphId}" could not resolve artifact "${source.artifactId}" for input "${inputKey}".`,
@@ -120,11 +126,15 @@ const resolveGraphInputSource = (
     return undefined;
   }
 
-  const sampledValue = sampleAudioFeatureValue(timelineArtifact, source.feature, frame);
+  const sampledValue = sampleAudioFeatureValue(
+    timelineArtifact,
+    source.feature,
+    frame,
+  );
 
   if (sampledValue === undefined) {
     issues.push({
-      code: "missing-graph-input",
+      code: 'missing-graph-input',
       graphId,
       inputKey,
       message: `Graph "${graphId}" could not resolve feature "${source.feature}" from artifact "${source.artifactId}".`,
@@ -144,7 +154,10 @@ const resolveNodeInputBinding = (
   bindingKey: string,
   resolvedGraphInputs: Map<string, VizResolvedGraphInputValue>,
   nodeOutputs: Map<string, Record<string, unknown>>,
-  evaluateNode: (nodeId: string, ancestry: string[]) => Record<string, unknown> | undefined,
+  evaluateNode: (
+    nodeId: string,
+    ancestry: string[],
+  ) => Record<string, unknown> | undefined,
   issues: VizGraphEvaluationIssue[],
   ancestry: string[],
 ): unknown => {
@@ -154,16 +167,16 @@ const resolveNodeInputBinding = (
     return undefined;
   }
 
-  if (binding.kind === "literal") {
+  if (binding.kind === 'literal') {
     return binding.value;
   }
 
-  if (binding.kind === "graph-input") {
+  if (binding.kind === 'graph-input') {
     const graphInput = resolvedGraphInputs.get(binding.inputKey);
 
     if (!graphInput) {
       issues.push({
-        code: "missing-graph-input",
+        code: 'missing-graph-input',
         graphId: graph.id,
         nodeId: node.id,
         inputKey: bindingKey,
@@ -176,11 +189,12 @@ const resolveNodeInputBinding = (
   }
 
   const upstreamOutputs =
-    nodeOutputs.get(binding.nodeId) ?? evaluateNode(binding.nodeId, [...ancestry, node.id]);
+    nodeOutputs.get(binding.nodeId) ??
+    evaluateNode(binding.nodeId, [...ancestry, node.id]);
 
   if (!upstreamOutputs) {
     issues.push({
-      code: "missing-node",
+      code: 'missing-node',
       graphId: graph.id,
       nodeId: node.id,
       inputKey: bindingKey,
@@ -191,7 +205,7 @@ const resolveNodeInputBinding = (
 
   if (!(binding.output in upstreamOutputs)) {
     issues.push({
-      code: "missing-node-output",
+      code: 'missing-node-output',
       graphId: graph.id,
       nodeId: node.id,
       inputKey: bindingKey,
@@ -209,7 +223,10 @@ const usesTemporalNode = (
 ): boolean => {
   return graph.nodes.some((node) => {
     const implementation = registry.get(node.type);
-    return implementation?.category === "temporal" || implementation?.step !== undefined;
+    return (
+      implementation?.category === 'temporal' ||
+      implementation?.step !== undefined
+    );
   });
 };
 
@@ -236,7 +253,7 @@ const createGraphRuntimeCheckpoint = ({
   graphId: string;
   frame: number;
   values: Record<string, unknown>;
-  nodes: VizGraphEvaluationResult["nodes"];
+  nodes: VizGraphEvaluationResult['nodes'];
   issues: VizGraphEvaluationIssue[];
   nodeStates: ReadonlyMap<string, unknown>;
 }): VizGraphRuntimeCheckpoint => {
@@ -266,10 +283,16 @@ const evaluateGraphAtFrame = ({
   const nodeInputs = new Map<string, Record<string, unknown>>();
   const nodeStates = new Map(previousNodeStates);
   const resolvedGraphInputs = new Map<string, VizResolvedGraphInputValue>();
-  const frameContext = session.getFrameContext(frame);
 
   for (const [inputKey, source] of Object.entries(graph.inputs ?? {})) {
-    const resolvedInput = resolveGraphInputSource(graph.id, inputKey, source, session, frame, issues);
+    const resolvedInput = resolveGraphInputSource(
+      graph.id,
+      inputKey,
+      source,
+      session,
+      frame,
+      issues,
+    );
 
     if (resolvedInput) {
       resolvedGraphInputs.set(inputKey, resolvedInput);
@@ -283,14 +306,17 @@ const evaluateGraphAtFrame = ({
     });
   }
 
-  const evaluateNode = (nodeId: string, ancestry: string[]): Record<string, unknown> | undefined => {
+  const evaluateNode = (
+    nodeId: string,
+    ancestry: string[],
+  ): Record<string, unknown> | undefined => {
     if (nodeOutputs.has(nodeId)) {
       return nodeOutputs.get(nodeId);
     }
 
     if (ancestry.includes(nodeId)) {
       issues.push({
-        code: "graph-cycle",
+        code: 'graph-cycle',
         graphId: graph.id,
         nodeId,
         message: `Graph "${graph.id}" contains a cycle involving node "${nodeId}".`,
@@ -302,7 +328,7 @@ const evaluateGraphAtFrame = ({
 
     if (!node) {
       issues.push({
-        code: "missing-node",
+        code: 'missing-node',
         graphId: graph.id,
         nodeId,
         message: `Graph "${graph.id}" references missing node "${nodeId}".`,
@@ -314,7 +340,7 @@ const evaluateGraphAtFrame = ({
 
     if (!implementation) {
       issues.push({
-        code: "missing-node",
+        code: 'missing-node',
         graphId: graph.id,
         nodeId,
         message: `Graph "${graph.id}" references unknown node type "${node.type}".`,
@@ -363,7 +389,7 @@ const evaluateGraphAtFrame = ({
       return outputs;
     } catch (error) {
       issues.push({
-        code: "node-evaluation-failed",
+        code: 'node-evaluation-failed',
         graphId: graph.id,
         nodeId: node.id,
         message:
@@ -377,11 +403,15 @@ const evaluateGraphAtFrame = ({
 
   const values = Object.fromEntries(
     (graph.outputs ?? []).map((outputBinding) => {
+      if (!outputBinding.nodeId || !outputBinding.output) {
+        return [outputBinding.key, undefined] as const;
+      }
+
       const outputs = evaluateNode(outputBinding.nodeId, []);
 
       if (!outputs || !(outputBinding.output in outputs)) {
         issues.push({
-          code: "missing-node-output",
+          code: 'missing-node-output',
           graphId: graph.id,
           nodeId: outputBinding.nodeId,
           outputKey: outputBinding.key,
@@ -426,7 +456,7 @@ const evaluateNodeImplementation = ({
   implementation: VizNodeImplementation;
   graph: VizNodeGraphDocument;
   node: VizNodeGraphNode;
-  frameContext: ReturnType<VizRuntimeSession["getFrameContext"]>;
+  frameContext: ReturnType<VizRuntimeSession['getFrameContext']>;
   resolvedInputs: Record<string, unknown>;
   resolvedGraphInputs: Map<string, VizResolvedGraphInputValue>;
   nodeStates: Map<string, unknown>;
@@ -463,7 +493,7 @@ const evaluateNodeImplementation = ({
   }
 
   issues.push({
-    code: "node-evaluation-failed",
+    code: 'node-evaluation-failed',
     graphId: graph.id,
     nodeId: node.id,
     message: `Graph "${graph.id}" node "${node.id}" has no executable evaluate or step implementation.`,
@@ -497,7 +527,10 @@ export const evaluateSingleVizGraph = ({
   }
 
   const targetFrame = session.getFrameContext(frame).frame;
-  const checkpoint = session.getGraphCheckpointBeforeOrAt(graph.id, targetFrame);
+  const checkpoint = session.getGraphCheckpointBeforeOrAt(
+    graph.id,
+    targetFrame,
+  );
 
   if (checkpoint && checkpoint.frame === targetFrame) {
     return {
@@ -512,15 +545,18 @@ export const evaluateSingleVizGraph = ({
     ? recordNodeStatesToMap(checkpoint.nodeStates)
     : new Map<string, unknown>();
   let currentValues: Record<string, unknown> = checkpoint?.values ?? {};
-  let currentNodes: VizGraphEvaluationResult["nodes"] =
-    checkpoint?.nodes ?? {};
+  let currentNodes: VizGraphEvaluationResult['nodes'] = checkpoint?.nodes ?? {};
   const issues: VizGraphEvaluationIssue[] = checkpoint?.issues
     ? structuredClone(checkpoint.issues)
     : [];
   const checkpointInterval = session.getGraphCheckpointIntervalFrames();
   const startFrame = checkpoint ? checkpoint.frame + 1 : 0;
 
-  for (let steppedFrame = startFrame; steppedFrame <= targetFrame; steppedFrame += 1) {
+  for (
+    let steppedFrame = startFrame;
+    steppedFrame <= targetFrame;
+    steppedFrame += 1
+  ) {
     const result = evaluateGraphAtFrame({
       graph,
       session,
@@ -536,7 +572,10 @@ export const evaluateSingleVizGraph = ({
     issues.length = 0;
     mergeUniqueIssues(issues, result.issues);
 
-    if (steppedFrame === targetFrame || steppedFrame % checkpointInterval === 0) {
+    if (
+      steppedFrame === targetFrame ||
+      steppedFrame % checkpointInterval === 0
+    ) {
       session.setGraphCheckpoint(
         createGraphRuntimeCheckpoint({
           graphId: graph.id,

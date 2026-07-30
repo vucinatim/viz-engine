@@ -1,4 +1,4 @@
-import type { VizRenderThreeProgramNode } from "@viz-engine/contracts";
+import type { VizRenderThreeProgramNode } from '@viz-engine/contracts';
 import {
   AdditiveBlending,
   Color,
@@ -17,10 +17,10 @@ import {
   type Blending,
   type WebGLRenderTarget,
   type WebGLRenderer,
-} from "three";
-import type { VizThreeProgramFactory } from "./types.js";
+} from 'three';
+import type { VizThreeProgramFactory } from './types.js';
 
-const PROGRAM_ID = "viz-core/particle-system/v1";
+const PROGRAM_ID = 'viz-core/particle-system/v1';
 const MAX_PARTICLES = 10_000;
 
 const vertexShader = `
@@ -43,13 +43,13 @@ const fragmentShader = `
 `;
 
 const asNumber = (value: unknown, fallback: number): number =>
-  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 
 const asString = (value: unknown, fallback: string): string =>
-  typeof value === "string" && value.length > 0 ? value : fallback;
+  typeof value === 'string' && value.length > 0 ? value : fallback;
 
 const asBoolean = (value: unknown, fallback: boolean): boolean =>
-  typeof value === "boolean" ? value : fallback;
+  typeof value === 'boolean' ? value : fallback;
 
 const hashString = (value: string): number => {
   let hash = 2166136261;
@@ -122,7 +122,7 @@ export const createParticleSystemProgram: VizThreeProgramFactory = ({
     3,
   );
   colorAttribute.setUsage(DynamicDrawUsage);
-  geometry.setAttribute("instanceColor", colorAttribute);
+  geometry.setAttribute('instanceColor', colorAttribute);
   root.add(mesh);
   scene.add(root);
 
@@ -137,43 +137,28 @@ export const createParticleSystemProgram: VizThreeProgramFactory = ({
     assertProgram(nextNode);
     const parameters = nextNode.parameters;
     const time = Math.max(0, asNumber(parameters.time, 0));
-    const emissionRate = Math.max(
-      0,
-      asNumber(parameters.emissionRate, 100),
-    );
+    const emissionRate = Math.max(0, asNumber(parameters.emissionRate, 100));
     const lifetime = Math.max(0.1, asNumber(parameters.lifetime, 2));
-    const particleSize = Math.max(
-      0.1,
-      asNumber(parameters.particleSize, 0.2),
-    );
+    const particleSize = Math.max(0.1, asNumber(parameters.particleSize, 0.2));
     const useGravity = asBoolean(parameters.useGravity, true);
     const gravityStrength = Math.max(
       0,
       asNumber(parameters.gravityStrength, 9.8),
     );
-    const initialSpeed = Math.max(
-      0,
-      asNumber(parameters.initialSpeed, 2),
-    );
-    const spread = Math.min(
-      1,
-      Math.max(0, asNumber(parameters.spread, 0.5)),
-    );
-    const emitterShape = asString(parameters.emitterShape, "point");
-    const emitterSize = Math.max(
-      0,
-      asNumber(parameters.emitterSize, 0.5),
-    );
+    const initialSpeed = Math.max(0, asNumber(parameters.initialSpeed, 2));
+    const spread = Math.min(1, Math.max(0, asNumber(parameters.spread, 0.5)));
+    const emitterShape = asString(parameters.emitterShape, 'point');
+    const emitterSize = Math.max(0, asNumber(parameters.emitterSize, 0.5));
     const nextBlending =
-      blendingModes[asString(parameters.blending, "additive")] ??
+      blendingModes[asString(parameters.blending, 'additive')] ??
       AdditiveBlending;
     if (material.blending !== nextBlending) {
       material.blending = nextBlending;
       material.needsUpdate = true;
     }
 
-    startColor.set(asString(parameters.startColor, "#ff00ff"));
-    endColor.set(asString(parameters.endColor, "#00ffff"));
+    startColor.set(asString(parameters.startColor, '#ff00ff'));
+    endColor.set(asString(parameters.endColor, '#00ffff'));
     root.rotation.set(
       asNumber(parameters.rotationX, 0),
       asNumber(parameters.rotationY, 0),
@@ -192,7 +177,7 @@ export const createParticleSystemProgram: VizThreeProgramFactory = ({
       Math.ceil(emissionRate * lifetime),
     );
     const firstParticle = Math.max(0, emittedCount - maximumAlive);
-    const seed = hashString(asString(parameters.seed, "particle-system"));
+    const seed = hashString(asString(parameters.seed, 'particle-system'));
     let slot = 0;
 
     for (
@@ -207,17 +192,15 @@ export const createParticleSystemProgram: VizThreeProgramFactory = ({
       }
 
       position.set(0, 0, 0);
-      if (emitterShape === "sphere") {
+      if (emitterShape === 'sphere') {
         const theta = random01(seed, particleIndex, 0) * Math.PI * 2;
-        const phi = Math.acos(
-          2 * random01(seed, particleIndex, 1) - 1,
-        );
+        const phi = Math.acos(2 * random01(seed, particleIndex, 1) - 1);
         position.set(
           emitterSize * Math.sin(phi) * Math.cos(theta),
           emitterSize * Math.sin(phi) * Math.sin(theta),
           emitterSize * Math.cos(phi),
         );
-      } else if (emitterShape === "box") {
+      } else if (emitterShape === 'box') {
         position.set(
           (random01(seed, particleIndex, 0) - 0.5) * emitterSize,
           (random01(seed, particleIndex, 1) - 0.5) * emitterSize,
@@ -226,9 +209,7 @@ export const createParticleSystemProgram: VizThreeProgramFactory = ({
       }
 
       const theta = random01(seed, particleIndex, 3) * Math.PI * 2;
-      const phi = Math.acos(
-        1 - spread * random01(seed, particleIndex, 4),
-      );
+      const phi = Math.acos(1 - spread * random01(seed, particleIndex, 4));
       velocity.set(
         initialSpeed * Math.sin(phi) * Math.cos(theta),
         initialSpeed * Math.cos(phi),
@@ -273,10 +254,7 @@ export const createParticleSystemProgram: VizThreeProgramFactory = ({
       camera.aspect = nextWidth / Math.max(nextHeight, 1);
       camera.updateProjectionMatrix();
     },
-    render(
-      renderer: WebGLRenderer,
-      renderTarget: WebGLRenderTarget,
-    ) {
+    render(renderer: WebGLRenderer, renderTarget: WebGLRenderTarget) {
       renderer.setRenderTarget(renderTarget);
       renderer.render(scene, camera);
     },

@@ -43,12 +43,7 @@ const ColorPickerPopover = forwardRef<
     alphaRef.current = parsed.a;
     requestAnimationFrame(() => {
       drawHueCanvas(hueCanvasRef.current);
-      drawSVCanvas(
-        svCanvasRef.current,
-        hueRef.current,
-        satRef.current,
-        valRef.current,
-      );
+      drawSVCanvas(svCanvasRef.current, hueRef.current);
       drawSVThumb(svCanvasRef.current, satRef.current, valRef.current);
       drawHueThumb(hueCanvasRef.current, hueRef.current);
       drawAlphaCanvas(
@@ -106,12 +101,7 @@ const ColorPickerPopover = forwardRef<
     draw(ctx, cssW, cssH, dpr);
   };
 
-  const drawSVCanvas = (
-    canvas: HTMLCanvasElement | null,
-    hue: number,
-    sat: number,
-    val: number,
-  ) => {
+  const drawSVCanvas = (canvas: HTMLCanvasElement | null, hue: number) => {
     withCanvas(canvas, (ctx, cssW, cssH) => {
       // Base: white -> hue color horizontally
       const hueColor = hsvToRgbaString(hue, 1, 1, 1);
@@ -263,7 +253,7 @@ const ColorPickerPopover = forwardRef<
       requestAnimationFrame(() => {
         drawHueCanvas(hueCanvasRef.current);
         drawHueThumb(hueCanvasRef.current, hueRef.current);
-        drawSVCanvas(svCanvasRef.current, parsed.h, parsed.s, parsed.v);
+        drawSVCanvas(svCanvasRef.current, parsed.h);
         drawSVThumb(svCanvasRef.current, parsed.s, parsed.v);
         drawAlphaCanvas(alphaCanvasRef.current, parsed.h, parsed.s, parsed.v);
         drawAlphaThumb(alphaCanvasRef.current, parsed.a);
@@ -285,7 +275,7 @@ const ColorPickerPopover = forwardRef<
       const y = Math.max(0, Math.min(rect.height, clientY - rect.top));
       satRef.current = x / rect.width;
       valRef.current = 1 - y / rect.height;
-      drawSVCanvas(canvas, hueRef.current, satRef.current, valRef.current);
+      drawSVCanvas(canvas, hueRef.current);
       drawSVThumb(canvas, satRef.current, valRef.current);
       drawAlphaCanvas(
         alphaCanvasRef.current,
@@ -320,12 +310,7 @@ const ColorPickerPopover = forwardRef<
       drawHueCanvas(canvas);
       drawHueThumb(canvas, hueRef.current);
       // redraw SV with new hue
-      drawSVCanvas(
-        svCanvasRef.current,
-        hueRef.current,
-        satRef.current,
-        valRef.current,
-      );
+      drawSVCanvas(svCanvasRef.current, hueRef.current);
       drawSVThumb(svCanvasRef.current, satRef.current, valRef.current);
       drawAlphaCanvas(
         alphaCanvasRef.current,

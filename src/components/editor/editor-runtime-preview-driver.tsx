@@ -1,10 +1,10 @@
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
+import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
+import useExportStore from '@/lib/stores/export-store';
 import {
   createVizSessionRuntimePreviewFrame,
   vizSessionActions,
 } from '@/lib/viz-session';
-import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
-import useExportStore from '@/lib/stores/export-store';
 import { useEffect, useRef } from 'react';
 
 const EditorRuntimePreviewDriver = () => {
@@ -28,21 +28,16 @@ const EditorRuntimePreviewDriver = () => {
       typeof performance !== 'undefined' ? performance.now() : Date.now();
 
     const renderFrame = () => {
-      const { currentFrame, fps } =
-        useEditorPreviewStore.getState().transport;
+      const { currentFrame, fps } = useEditorPreviewStore.getState().transport;
       const now =
         typeof performance !== 'undefined' ? performance.now() : Date.now();
       const elapsedMilliseconds = now - lastFrameTimeRef.current;
-      const targetIntervalMilliseconds =
-        1000 / Math.min(60, Math.max(1, fps));
+      const targetIntervalMilliseconds = 1000 / Math.min(60, Math.max(1, fps));
 
       // High-refresh displays can invoke rAF at 120 Hz or more. The authored
       // timeline is the useful ceiling; evaluating the same canonical frame
       // twice only burns CPU/GPU and can make editor interactions less smooth.
-      if (
-        elapsedMilliseconds + 1 <
-        targetIntervalMilliseconds
-      ) {
+      if (elapsedMilliseconds + 1 < targetIntervalMilliseconds) {
         rafIdRef.current = requestAnimationFrame(renderFrame);
         return;
       }

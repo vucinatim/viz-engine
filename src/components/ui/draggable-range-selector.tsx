@@ -1,5 +1,3 @@
-'use client';
-
 import { cn } from '@/lib/utils';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
@@ -313,8 +311,9 @@ const DraggableRangeSelectorComponent = ({
   return (
     <div
       ref={containerRef}
+      data-testid="range-selector"
       className={cn(
-        'relative flex h-full w-full touch-none select-none items-center',
+        'relative flex h-full w-full touch-none items-center select-none',
         className,
       )}
       onMouseDown={handleMouseDown}
@@ -367,6 +366,7 @@ const DraggableRangeSelectorComponent = ({
       {/* Right edge handle */}
       <div
         ref={rightHandleRef}
+        data-testid="range-selector-end"
         className={cn(
           'absolute z-20 h-full w-1.5 border border-gray-400 bg-white shadow-[0_0_8px_2px_rgba(255,255,255,0.3)]',
           dragMode === 'none' && 'transition-all',

@@ -1,29 +1,40 @@
-import type { VizArtifactId, VizAssetId, VizGraphId, VizLayerId, VizProjectId } from "./ids.js";
-import type { VizArtifactRef } from "./artifacts.js";
-import type { VizAssetRef } from "./assets.js";
-import type { VizNodeGraphDocument } from "./graphs.js";
-import type { VizExecutionMode, VizRendererFamily, VizTimeline, VizViewport } from "./runtime.js";
+import type { VizArtifactRef } from './artifacts.js';
+import type { VizAssetRef } from './assets.js';
+import type { VizNodeGraphDocument } from './graphs.js';
+import type {
+  VizArtifactId,
+  VizAssetId,
+  VizGraphId,
+  VizLayerId,
+  VizProjectId,
+} from './ids.js';
+import type {
+  VizExecutionMode,
+  VizRendererFamily,
+  VizTimeline,
+  VizViewport,
+} from './runtime.js';
 
-export const VIZ_PROJECT_SCHEMA_VERSION = "2.0.0-alpha.1" as const;
+export const VIZ_PROJECT_SCHEMA_VERSION = '2.0.0-alpha.1' as const;
 
 export type VizBlendMode =
-  | "normal"
-  | "multiply"
-  | "screen"
-  | "overlay"
-  | "darken"
-  | "lighten"
-  | "color-dodge"
-  | "color-burn"
-  | "hard-light"
-  | "soft-light"
-  | "difference"
-  | "exclusion"
-  | "hue"
-  | "saturation"
-  | "color"
-  | "luminosity"
-  | "add";
+  | 'normal'
+  | 'multiply'
+  | 'screen'
+  | 'overlay'
+  | 'darken'
+  | 'lighten'
+  | 'color-dodge'
+  | 'color-burn'
+  | 'hard-light'
+  | 'soft-light'
+  | 'difference'
+  | 'exclusion'
+  | 'hue'
+  | 'saturation'
+  | 'color'
+  | 'luminosity'
+  | 'add';
 
 export interface VizLayerTransform {
   x?: number;
@@ -37,20 +48,20 @@ export interface VizLayerTransform {
 
 export type VizValueSource =
   | {
-      kind: "literal";
+      kind: 'literal';
       value: unknown;
     }
   | {
-      kind: "asset-ref";
+      kind: 'asset-ref';
       assetId: VizAssetId;
     }
   | {
-      kind: "graph-output";
+      kind: 'graph-output';
       graphId: VizGraphId;
       output: string;
     }
   | {
-      kind: "artifact-feature";
+      kind: 'artifact-feature';
       artifactId: VizArtifactId;
       feature: string;
     };

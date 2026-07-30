@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 const DEFAULT_LEVELS = [512, 1024, 2048, 4096, 8192, 16384];
 

@@ -1,4 +1,4 @@
-import type { VizRenderThreeProgramNode } from "@viz-engine/contracts";
+import type { VizRenderThreeProgramNode } from '@viz-engine/contracts';
 import {
   AdditiveBlending,
   AmbientLight,
@@ -13,8 +13,8 @@ import {
   LinearToneMapping,
   Matrix4,
   NormalBlending,
-  PointLight,
   PerspectiveCamera,
+  PointLight,
   Scene,
   ShaderMaterial,
   SphereGeometry,
@@ -22,12 +22,12 @@ import {
   Vector3,
   type WebGLRenderTarget,
   type WebGLRenderer,
-} from "three";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { createVizThreePostProcessingPipeline } from "./post-processing.js";
-import type { VizThreeProgramFactory } from "./types.js";
+} from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { createVizThreePostProcessingPipeline } from './post-processing.js';
+import type { VizThreeProgramFactory } from './types.js';
 
-const PROGRAM_ID = "viz-core/neural-network/v1";
+const PROGRAM_ID = 'viz-core/neural-network/v1';
 const MAX_NEURON_COUNT = 50;
 const MAX_SIGNAL_INSTANCE_COUNT = 2_000;
 const PATH_SAMPLE_COUNT = 32;
@@ -157,18 +157,16 @@ const signalFragmentShader = `
 `;
 
 const asNumber = (value: unknown, fallback: number): number =>
-  typeof value === "number" && Number.isFinite(value)
-    ? value
-    : fallback;
+  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 
 const asBoolean = (value: unknown, fallback: boolean): boolean =>
-  typeof value === "boolean" ? value : fallback;
+  typeof value === 'boolean' ? value : fallback;
 
 const asString = (value: unknown, fallback: string): string =>
-  typeof value === "string" ? value : fallback;
+  typeof value === 'string' ? value : fallback;
 
 const asRecord = (value: unknown): Record<string, unknown> =>
-  value !== null && typeof value === "object" && !Array.isArray(value)
+  value !== null && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
 
@@ -181,7 +179,7 @@ const readTriggerEvents = (value: unknown): TriggerEvent[] =>
             age: Math.max(0, asNumber(event.age, 0)),
             speed: Math.max(1, asNumber(event.speed, 30)),
             size: Math.max(0.1, asNumber(event.size, 0.2)),
-            color: asString(event.color, "rgb(255, 138, 201)"),
+            color: asString(event.color, 'rgb(255, 138, 201)'),
           },
         ];
       })
@@ -213,10 +211,7 @@ class SeededRandom {
   }
 }
 
-const generateNeuronPositions = (
-  count: number,
-  seed: number,
-): Vector3[] => {
+const generateNeuronPositions = (count: number, seed: number): Vector3[] => {
   if (count === 1) {
     return [new Vector3()];
   }
@@ -243,12 +238,8 @@ const generateNeuronPositions = (
     }
   }
 
-  candidates.sort(
-    (left, right) => left.distance - right.distance,
-  );
-  return candidates
-    .slice(0, count)
-    .map(({ position }) => position);
+  candidates.sort((left, right) => left.distance - right.distance);
+  return candidates.slice(0, count).map(({ position }) => position);
 };
 
 const buildConnectionGraph = (
@@ -288,9 +279,7 @@ const generateOrganicCurve = (
   const distance = target.length();
   const up = new Vector3(0, 1, 0);
   const reference =
-    Math.abs(direction.dot(up)) > 0.99
-      ? new Vector3(1, 0, 0)
-      : up;
+    Math.abs(direction.dot(up)) > 0.99 ? new Vector3(1, 0, 0) : up;
   const perpendicularA = new Vector3()
     .crossVectors(direction, reference)
     .normalize();
@@ -301,29 +290,19 @@ const generateOrganicCurve = (
 
   for (let index = 1; index <= 3; index += 1) {
     const progress = index / 4;
-    const strength =
-      Math.sin(progress * Math.PI) * distance * 0.15;
+    const strength = Math.sin(progress * Math.PI) * distance * 0.15;
     controls.push(
       target
         .clone()
         .multiplyScalar(progress)
-        .addScaledVector(
-          perpendicularA,
-          random.randomRange(-1, 1) * strength,
-        )
-        .addScaledVector(
-          perpendicularB,
-          random.randomRange(-1, 1) * strength,
-        ),
+        .addScaledVector(perpendicularA, random.randomRange(-1, 1) * strength)
+        .addScaledVector(perpendicularB, random.randomRange(-1, 1) * strength),
     );
   }
   controls.push(target.clone());
-  return new CatmullRomCurve3(
-    controls,
-    false,
-    "catmullrom",
-    0.3,
-  ).getPoints(PATH_SAMPLE_COUNT);
+  return new CatmullRomCurve3(controls, false, 'catmullrom', 0.3).getPoints(
+    PATH_SAMPLE_COUNT,
+  );
 };
 
 const generateNeuronPaths = ({
@@ -347,9 +326,7 @@ const generateNeuronPaths = ({
   ];
 
   for (const connection of connections) {
-    const localTarget = connection.targetPosition
-      .clone()
-      .sub(position);
+    const localTarget = connection.targetPosition.clone().sub(position);
     const fullCurve = generateOrganicCurve(localTarget, random);
     const activeCurve = fullCurve.slice(
       0,
@@ -378,37 +355,22 @@ const createTaperedTube = (
   path: DendritePath,
   tubeRadius: number,
 ): TubeGeometry => {
-  const curve = new CatmullRomCurve3(
-    path.points,
-    false,
-    "catmullrom",
-    0.3,
-  );
-  const geometry = new TubeGeometry(
-    curve,
-    PATH_SAMPLE_COUNT,
-    1,
-    12,
-    false,
-  );
+  const curve = new CatmullRomCurve3(path.points, false, 'catmullrom', 0.3);
+  const geometry = new TubeGeometry(curve, PATH_SAMPLE_COUNT, 1, 12, false);
   const positions = geometry.attributes.position!;
   for (let segment = 0; segment <= PATH_SAMPLE_COUNT; segment += 1) {
     const progress = segment / PATH_SAMPLE_COUNT;
     const radius =
-      (path.startRadius +
-        (path.endRadius - path.startRadius) * progress) *
+      (path.startRadius + (path.endRadius - path.startRadius) * progress) *
       tubeRadius;
     const curvePoint = curve.getPoint(progress);
     for (let radial = 0; radial <= 12; radial += 1) {
       const index = segment * 13 + radial;
       positions.setXYZ(
         index,
-        curvePoint.x +
-          (positions.getX(index) - curvePoint.x) * radius,
-        curvePoint.y +
-          (positions.getY(index) - curvePoint.y) * radius,
-        curvePoint.z +
-          (positions.getZ(index) - curvePoint.z) * radius,
+        curvePoint.x + (positions.getX(index) - curvePoint.x) * radius,
+        curvePoint.y + (positions.getY(index) - curvePoint.y) * radius,
+        curvePoint.z + (positions.getZ(index) - curvePoint.z) * radius,
       );
     }
   }
@@ -431,11 +393,7 @@ const buildNetworkTopology = ({
   growth: number;
 }): NetworkTopology => {
   const neuronPositions = generateNeuronPositions(neuronCount, seed);
-  const connections = buildConnectionGraph(
-    neuronPositions,
-    4,
-    dendriteReach,
-  );
+  const connections = buildConnectionGraph(neuronPositions, 4, dendriteReach);
   const geometries: BufferGeometry[] = [];
   const signalPaths: Vector3[][] = [];
 
@@ -455,16 +413,10 @@ const buildNetworkTopology = ({
       const tube = createTaperedTube(path, tubeRadius);
       tube.translate(position.x, position.y, position.z);
       geometries.push(tube);
-      signalPaths.push(
-        path.points.map((point) => point.clone().add(position)),
-      );
+      signalPaths.push(path.points.map((point) => point.clone().add(position)));
     }
     for (const junction of junctions) {
-      const sphere = new SphereGeometry(
-        junction.radius * tubeRadius,
-        16,
-        16,
-      );
+      const sphere = new SphereGeometry(junction.radius * tubeRadius, 16, 16);
       sphere.translate(
         position.x + junction.position.x,
         position.y + junction.position.y,
@@ -482,20 +434,18 @@ const buildNetworkTopology = ({
     source.dispose();
   }
   if (!geometry) {
-    throw new Error("Neural Network geometry could not be merged.");
+    throw new Error('Neural Network geometry could not be merged.');
   }
   return { geometry, neuronPositions, signalPaths };
 };
 
-const createNeuronMaterial = (
-  glowMultiplier: number,
-): ShaderMaterial =>
+const createNeuronMaterial = (glowMultiplier: number): ShaderMaterial =>
   new ShaderMaterial({
     vertexShader: neuronVertexShader,
     fragmentShader: neuronFragmentShader,
     uniforms: {
-      baseColor: { value: new Color("#00CED1") },
-      glowColor: { value: new Color("rgb(255, 138, 201)") },
+      baseColor: { value: new Color('#00CED1') },
+      glowColor: { value: new Color('rgb(255, 138, 201)') },
       glowIntensity: { value: 2 * glowMultiplier },
       fresnelPower: { value: 3 },
       metalness: { value: 0 },
@@ -516,8 +466,7 @@ const createSignalMaterial = (intensity: number): ShaderMaterial =>
     blending: NormalBlending,
   });
 
-const easeOutCubic = (value: number): number =>
-  1 - Math.pow(1 - value, 3);
+const easeOutCubic = (value: number): number => 1 - Math.pow(1 - value, 3);
 
 export const createNeuralNetworkProgram: VizThreeProgramFactory = ({
   node,
@@ -557,7 +506,7 @@ export const createNeuralNetworkProgram: VizThreeProgramFactory = ({
     vertexShader: activationVertexShader,
     fragmentShader: activationFragmentShader,
     uniforms: {
-      glowColor: { value: new Color("rgb(255, 138, 201)") },
+      glowColor: { value: new Color('rgb(255, 138, 201)') },
       opacity: { value: 0 },
     },
     transparent: true,
@@ -575,14 +524,14 @@ export const createNeuralNetworkProgram: VizThreeProgramFactory = ({
 
   const signalGeometry = new SphereGeometry(1, 16, 16);
   signalGeometry.setAttribute(
-    "instanceOpacity",
+    'instanceOpacity',
     new InstancedBufferAttribute(
       new Float32Array(MAX_SIGNAL_INSTANCE_COUNT),
       1,
     ),
   );
   signalGeometry.setAttribute(
-    "signalColor",
+    'signalColor',
     new InstancedBufferAttribute(
       new Float32Array(MAX_SIGNAL_INSTANCE_COUNT * 3),
       3,
@@ -599,14 +548,14 @@ export const createNeuralNetworkProgram: VizThreeProgramFactory = ({
 
   const haloGeometry = new SphereGeometry(1, 16, 16);
   haloGeometry.setAttribute(
-    "instanceOpacity",
+    'instanceOpacity',
     new InstancedBufferAttribute(
       new Float32Array(MAX_SIGNAL_INSTANCE_COUNT),
       1,
     ),
   );
   haloGeometry.setAttribute(
-    "signalColor",
+    'signalColor',
     new InstancedBufferAttribute(
       new Float32Array(MAX_SIGNAL_INSTANCE_COUNT * 3),
       3,
@@ -628,15 +577,12 @@ export const createNeuralNetworkProgram: VizThreeProgramFactory = ({
     signalInstances,
     haloInstances,
   );
-  scene.add(
-    root,
-    new AmbientLight("#ffffff", 0.3),
-  );
-  const keyLight = new DirectionalLight("#ffffff", 1);
+  scene.add(root, new AmbientLight('#ffffff', 0.3));
+  const keyLight = new DirectionalLight('#ffffff', 1);
   keyLight.position.set(10, 10, 10);
-  const fillLight = new PointLight("#4169E1", 0.6);
+  const fillLight = new PointLight('#4169E1', 0.6);
   fillLight.position.set(-5, 0, -5);
-  const rimLight = new PointLight("#FF1493", 0.4);
+  const rimLight = new PointLight('#FF1493', 0.4);
   rimLight.position.set(0, -5, 5);
   scene.add(keyLight, fillLight, rimLight);
 
@@ -646,7 +592,7 @@ export const createNeuralNetworkProgram: VizThreeProgramFactory = ({
   root.userData.signalInstances = signalInstances;
   root.userData.haloInstances = haloInstances;
 
-  let structureKey = "";
+  let structureKey = '';
   let signalPaths: Vector3[][] = [];
   const matrix = new Matrix4();
   const position = new Vector3();
@@ -673,13 +619,10 @@ export const createNeuralNetworkProgram: VizThreeProgramFactory = ({
   const applyMaterialSettings = (
     parameters: Readonly<Record<string, unknown>>,
   ): void => {
-    const neuronColor = asString(
-      parameters.neuronColor,
-      "#00CED1",
-    );
+    const neuronColor = asString(parameters.neuronColor, '#00CED1');
     const somaEmission = asString(
       parameters.somaEmission,
-      "rgb(255, 138, 201)",
+      'rgb(255, 138, 201)',
     );
     const emissiveIntensity = Math.max(
       0,
@@ -691,20 +634,13 @@ export const createNeuralNetworkProgram: VizThreeProgramFactory = ({
     ] as const) {
       material.uniforms.baseColor!.value.set(neuronColor);
       material.uniforms.glowColor!.value.set(somaEmission);
-      material.uniforms.glowIntensity!.value =
-        emissiveIntensity * multiplier;
+      material.uniforms.glowIntensity!.value = emissiveIntensity * multiplier;
       material.uniforms.fresnelPower!.value = asNumber(
         parameters.fresnelPower,
         3,
       );
-      material.uniforms.metalness!.value = asNumber(
-        parameters.metalness,
-        0,
-      );
-      material.uniforms.roughness!.value = asNumber(
-        parameters.roughness,
-        0.9,
-      );
+      material.uniforms.metalness!.value = asNumber(parameters.metalness, 0);
+      material.uniforms.roughness!.value = asNumber(parameters.roughness, 0.9);
     }
     activationMaterial.uniforms.glowColor!.value.set(somaEmission);
   };
@@ -720,18 +656,9 @@ export const createNeuralNetworkProgram: VizThreeProgramFactory = ({
       ),
     );
     const seed = Math.round(asNumber(parameters.seed, 42));
-    const tubeRadius = Math.max(
-      0.05,
-      asNumber(parameters.tubeRadius, 0.25),
-    );
-    const dendriteReach = Math.max(
-      5,
-      asNumber(parameters.dendriteReach, 20),
-    );
-    const growth = Math.max(
-      0,
-      Math.min(1, asNumber(parameters.growth, 1)),
-    );
+    const tubeRadius = Math.max(0.05, asNumber(parameters.tubeRadius, 0.25));
+    const dendriteReach = Math.max(5, asNumber(parameters.dendriteReach, 20));
+    const growth = Math.max(0, Math.min(1, asNumber(parameters.growth, 1)));
     const nextKey = JSON.stringify({
       neuronCount,
       seed,
@@ -769,8 +696,8 @@ export const createNeuralNetworkProgram: VizThreeProgramFactory = ({
     structureKey = nextKey;
     root.userData.neuronCount = neuronCount;
     root.userData.pathCount = signalPaths.length;
-    root.userData.neuronPositions = topology.neuronPositions.map(
-      (point) => point.toArray(),
+    root.userData.neuronPositions = topology.neuronPositions.map((point) =>
+      point.toArray(),
     );
   };
 
@@ -779,23 +706,22 @@ export const createNeuralNetworkProgram: VizThreeProgramFactory = ({
   ): void => {
     const events = readTriggerEvents(parameters.triggerEvents);
     const signalOpacity = signalGeometry.getAttribute(
-      "instanceOpacity",
+      'instanceOpacity',
     ) as InstancedBufferAttribute;
     const haloOpacity = haloGeometry.getAttribute(
-      "instanceOpacity",
+      'instanceOpacity',
     ) as InstancedBufferAttribute;
     const signalColors = signalGeometry.getAttribute(
-      "signalColor",
+      'signalColor',
     ) as InstancedBufferAttribute;
     const haloColors = haloGeometry.getAttribute(
-      "signalColor",
+      'signalColor',
     ) as InstancedBufferAttribute;
     let signalCount = 0;
 
     for (
       let eventIndex = events.length - 1;
-      eventIndex >= 0 &&
-      signalCount < MAX_SIGNAL_INSTANCE_COUNT;
+      eventIndex >= 0 && signalCount < MAX_SIGNAL_INSTANCE_COUNT;
       eventIndex -= 1
     ) {
       const event = events[eventIndex]!;
@@ -818,36 +744,19 @@ export const createNeuralNetworkProgram: VizThreeProgramFactory = ({
           path[nextIndex]!,
           pathPosition - index,
         );
-        const opacity =
-          progress > 0.7
-            ? 1 - (progress - 0.7) / 0.3
-            : 1;
+        const opacity = progress > 0.7 ? 1 - (progress - 0.7) / 0.3 : 1;
 
         matrix.makeScale(event.size, event.size, event.size);
         matrix.setPosition(position);
         signalInstances.setMatrixAt(signalCount, matrix);
         signalOpacity.setX(signalCount, opacity);
-        signalColors.setXYZ(
-          signalCount,
-          color.r,
-          color.g,
-          color.b,
-        );
+        signalColors.setXYZ(signalCount, color.r, color.g, color.b);
 
-        matrix.makeScale(
-          event.size * 2,
-          event.size * 2,
-          event.size * 2,
-        );
+        matrix.makeScale(event.size * 2, event.size * 2, event.size * 2);
         matrix.setPosition(position);
         haloInstances.setMatrixAt(signalCount, matrix);
         haloOpacity.setX(signalCount, opacity * 0.4);
-        haloColors.setXYZ(
-          signalCount,
-          color.r,
-          color.g,
-          color.b,
-        );
+        haloColors.setXYZ(signalCount, color.r, color.g, color.b);
         signalCount += 1;
       }
     }
@@ -870,10 +779,7 @@ export const createNeuralNetworkProgram: VizThreeProgramFactory = ({
         ? 0
         : events.reduce(
             (maximum, event) =>
-              Math.max(
-                maximum,
-                1 - event.age / activationDecay,
-              ),
+              Math.max(maximum, 1 - event.age / activationDecay),
             0,
           );
     activationMaterial.uniforms.opacity!.value =
@@ -888,26 +794,13 @@ export const createNeuralNetworkProgram: VizThreeProgramFactory = ({
     updateStructure(parameters);
     applyMaterialSettings(parameters);
     updateSignals(parameters);
-    root.rotation.y =
-      Math.max(0, asNumber(parameters.time, 0)) * 0.05;
+    root.rotation.y = Math.max(0, asNumber(parameters.time, 0)) * 0.05;
     postProcessing.update({
       bloomEnabled: asBoolean(parameters.bloomEnabled, false),
-      bloomStrength: Math.max(
-        0,
-        asNumber(parameters.bloomStrength, 0.2),
-      ),
-      bloomRadius: Math.max(
-        0,
-        asNumber(parameters.bloomRadius, 0.8),
-      ),
-      bloomThreshold: Math.max(
-        0,
-        asNumber(parameters.bloomThreshold, 0.3),
-      ),
-      depthOfFieldEnabled: asBoolean(
-        parameters.depthOfFieldEnabled,
-        true,
-      ),
+      bloomStrength: Math.max(0, asNumber(parameters.bloomStrength, 0.2)),
+      bloomRadius: Math.max(0, asNumber(parameters.bloomRadius, 0.8)),
+      bloomThreshold: Math.max(0, asNumber(parameters.bloomThreshold, 0.3)),
+      depthOfFieldEnabled: asBoolean(parameters.depthOfFieldEnabled, true),
       depthOfFieldFocus: Math.max(
         1,
         asNumber(parameters.depthOfFieldFocus, 10),
@@ -935,10 +828,7 @@ export const createNeuralNetworkProgram: VizThreeProgramFactory = ({
       camera.updateProjectionMatrix();
       postProcessing.resize(nextWidth, nextHeight);
     },
-    render(
-      renderer: WebGLRenderer,
-      renderTarget: WebGLRenderTarget,
-    ) {
+    render(renderer: WebGLRenderer, renderTarget: WebGLRenderTarget) {
       postProcessing.render(renderer, renderTarget);
     },
     dispose() {

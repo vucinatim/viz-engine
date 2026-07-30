@@ -1,25 +1,34 @@
 import { Edge } from '@xyflow/react';
 import { useStore } from 'zustand';
 
-import type { VType } from '@/components/config/types';
-import type { GraphNode, NodeNetwork } from '@/components/node-network/graph-types';
 import type { NodeHandleType } from '@/components/config/node-types';
+import type { VType } from '@/components/config/types';
+import type {
+  GraphNode,
+  NodeNetwork,
+} from '@/components/node-network/graph-types';
 import {
   vizSessionActions,
   vizSessionStore,
   type VizSessionState,
 } from '@/lib/viz-session';
+import type { VizGraphFragment } from '@/lib/viz-session/graph-fragments';
 import { selectProjectedNodeNetworks } from '@/lib/viz-session/selectors';
 
 export interface EditorGraphStore {
   networks: Record<string, NodeNetwork>;
-  importNetworks: (networks: Record<string, NodeNetwork>) => void;
-  replaceNetworks: (networks: Record<string, NodeNetwork>) => void;
-  exportNetworks: () => Record<string, NodeNetwork>;
   reset: () => void;
-  setNetwork: (parameterId: string, network: NodeNetwork) => void;
-  setNetworkEnabled: (parameterId: string, isEnabled: boolean, type: VType) => void;
+  setNetworkEnabled: (
+    parameterId: string,
+    isEnabled: boolean,
+    type: VType,
+  ) => void;
   addNodeToNetwork: (parameterId: string, node: GraphNode) => void;
+  pasteFragment: (
+    parameterId: string,
+    fragment: VizGraphFragment,
+    position: { x: number; y: number },
+  ) => string[];
   setNodesInNetwork: (parameterId: string, nodes: GraphNode[]) => void;
   setEdgesInNetwork: (parameterId: string, edges: Edge[]) => void;
   createNetworkForParameter: (parameterId: string, type: VType) => void;
@@ -39,22 +48,19 @@ export interface EditorGraphStore {
   clearStaleNetworks: (validParameterIds?: Iterable<string>) => void;
 }
 
-const selectEditorGraphStore = (
-  state: VizSessionState,
-): EditorGraphStore => {
+const selectEditorGraphStore = (state: VizSessionState): EditorGraphStore => {
   return {
     networks: selectProjectedNodeNetworks(state),
-    importNetworks: vizSessionActions.graph.importNetworks,
-    replaceNetworks: vizSessionActions.graph.replaceNetworks,
-    exportNetworks: vizSessionActions.graph.exportNetworks,
     reset: vizSessionActions.graph.reset,
-    setNetwork: vizSessionActions.graph.setNetwork,
     setNetworkEnabled: vizSessionActions.graph.setNetworkEnabled,
     addNodeToNetwork: vizSessionActions.graph.addNodeToNetwork,
+    pasteFragment: vizSessionActions.graph.pasteFragment,
     setNodesInNetwork: vizSessionActions.graph.setNodesInNetwork,
     setEdgesInNetwork: vizSessionActions.graph.setEdgesInNetwork,
-    createNetworkForParameter: vizSessionActions.graph.createNetworkForParameter,
-    removeNetworkForParameter: vizSessionActions.graph.removeNetworkForParameter,
+    createNetworkForParameter:
+      vizSessionActions.graph.createNetworkForParameter,
+    removeNetworkForParameter:
+      vizSessionActions.graph.removeNetworkForParameter,
     applyPresetToNetwork: vizSessionActions.graph.applyPresetToNetwork,
     updateNodeInputValue: vizSessionActions.graph.updateNodeInputValue,
     duplicateNetwork: vizSessionActions.graph.duplicateNetwork,
@@ -74,13 +80,7 @@ const useEditorGraphStore = Object.assign(
       selector(selectEditorGraphStore(state)),
     ),
   {
-    getState: () =>
-      selectEditorGraphStore(vizSessionStore.getState()),
-    setState: (partial: Partial<EditorGraphStore>) => {
-      if (partial.networks) {
-        vizSessionActions.graph.replaceNetworks(partial.networks);
-      }
-    },
+    getState: () => selectEditorGraphStore(vizSessionStore.getState()),
     subscribe: (listener: EditorGraphListener) =>
       vizSessionStore.subscribe((state, previousState) =>
         listener(

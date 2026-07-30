@@ -1,4 +1,4 @@
-import { applyVizProjectActions } from "@viz-engine/actions";
+import { applyVizProjectActions } from '@viz-engine/actions';
 import type {
   VizActionActor,
   VizActionEnvelope,
@@ -12,16 +12,19 @@ import type {
   VizProjectRevisionConflict,
   VizProjectTransaction,
   VizProjectTransactionStatus,
-} from "@viz-engine/contracts";
-import { assertValidProjectDocument, validateProjectDocument } from "@viz-engine/runtime";
-export * from "./live-preview.js";
+} from '@viz-engine/contracts';
+import {
+  assertValidProjectDocument,
+  validateProjectDocument,
+} from '@viz-engine/runtime';
+export * from './live-preview.js';
 
 export interface VizEditorUiState {
   selectedLayerId: VizLayerId | undefined;
   selectedGraphId: VizGraphId | undefined;
   selectedNodeId: string | undefined;
   expandedLayerIds: VizLayerId[];
-  activePanel: "layers" | "graph" | "components" | "audio";
+  activePanel: 'layers' | 'graph' | 'components' | 'audio';
 }
 
 export interface VizEditorPreviewState {
@@ -31,17 +34,15 @@ export interface VizEditorPreviewState {
 }
 
 export interface VizEditorSessionIssue {
-  source: "action" | "validation" | "transaction";
-  severity: "warning" | "error";
+  source: 'action' | 'validation' | 'transaction';
+  severity: 'warning' | 'error';
   code: string;
   message: string;
 }
 
 export interface VizEditorSessionTransactionIssue {
   code:
-    | "invalid-transaction"
-    | "duplicate-transaction-id"
-    | "revision-conflict";
+    'invalid-transaction' | 'duplicate-transaction-id' | 'revision-conflict';
   message: string;
 }
 
@@ -93,7 +94,9 @@ export interface VizEditorSession {
   setUiState(
     next:
       | Partial<VizEditorUiState>
-      | ((current: VizEditorUiState) => VizEditorUiState | Partial<VizEditorUiState>),
+      | ((
+          current: VizEditorUiState,
+        ) => VizEditorUiState | Partial<VizEditorUiState>),
   ): VizEditorSessionSnapshot;
   setPreviewState(
     next:
@@ -170,7 +173,7 @@ const createEditorUiState = (
     selectedGraphId: overrides?.selectedGraphId,
     selectedNodeId: overrides?.selectedNodeId,
     expandedLayerIds: cloneUnknown(overrides?.expandedLayerIds ?? []),
-    activePanel: overrides?.activePanel ?? "layers",
+    activePanel: overrides?.activePanel ?? 'layers',
   };
 };
 
@@ -180,7 +183,7 @@ const createEditorPreviewState = (
   return {
     currentFrame: overrides?.currentFrame ?? 0,
     isPlaying: overrides?.isPlaying ?? false,
-    mode: overrides?.mode ?? "render",
+    mode: overrides?.mode ?? 'render',
   };
 };
 
@@ -188,14 +191,18 @@ const mergeUiState = (
   current: VizEditorUiState,
   next:
     | Partial<VizEditorUiState>
-    | ((current: VizEditorUiState) => VizEditorUiState | Partial<VizEditorUiState>),
+    | ((
+        current: VizEditorUiState,
+      ) => VizEditorUiState | Partial<VizEditorUiState>),
 ): VizEditorUiState => {
-  const patch = typeof next === "function" ? next(cloneUnknown(current)) : next;
+  const patch = typeof next === 'function' ? next(cloneUnknown(current)) : next;
 
   return {
     ...current,
     ...patch,
-    expandedLayerIds: cloneUnknown(patch.expandedLayerIds ?? current.expandedLayerIds),
+    expandedLayerIds: cloneUnknown(
+      patch.expandedLayerIds ?? current.expandedLayerIds,
+    ),
   };
 };
 
@@ -207,7 +214,7 @@ const mergePreviewState = (
         current: VizEditorPreviewState,
       ) => VizEditorPreviewState | Partial<VizEditorPreviewState>),
 ): VizEditorPreviewState => {
-  const patch = typeof next === "function" ? next({ ...current }) : next;
+  const patch = typeof next === 'function' ? next({ ...current }) : next;
   return {
     ...current,
     ...patch,
@@ -229,8 +236,8 @@ const createSessionIssues = ({
 
   for (const issue of transactionIssues) {
     issues.push({
-      source: "transaction",
-      severity: "error",
+      source: 'transaction',
+      severity: 'error',
       code: issue.code,
       message: issue.message,
     });
@@ -238,8 +245,8 @@ const createSessionIssues = ({
 
   for (const warning of warnings) {
     issues.push({
-      source: "action",
-      severity: "warning",
+      source: 'action',
+      severity: 'warning',
       code: warning.code,
       message: warning.message,
     });
@@ -247,8 +254,8 @@ const createSessionIssues = ({
 
   for (const error of errors) {
     issues.push({
-      source: "action",
-      severity: "error",
+      source: 'action',
+      severity: 'error',
       code: error.code,
       message: error.message,
     });
@@ -256,8 +263,8 @@ const createSessionIssues = ({
 
   for (const issue of validation.issues) {
     issues.push({
-      source: "validation",
-      severity: "error",
+      source: 'validation',
+      severity: 'error',
       code: issue.code,
       message: issue.message,
     });
@@ -289,7 +296,9 @@ const createActionEnvelope = ({
   };
 };
 
-const createSnapshot = (state: InternalSessionState): VizEditorSessionSnapshot => {
+const createSnapshot = (
+  state: InternalSessionState,
+): VizEditorSessionSnapshot => {
   return {
     sourceProject: cloneProject(state.sourceProject),
     workingProject: cloneProject(state.workingProject),
@@ -328,12 +337,14 @@ const MAX_PROJECT_HISTORY_SIZE = 100;
 export const createVizEditorSession = ({
   project,
   normalizeProject,
-  actor = { kind: "user" },
+  actor = { kind: 'user' },
   uiState,
   previewState,
 }: CreateVizEditorSessionOptions): VizEditorSession => {
   const normalize = (projectDocument: VizProjectDocument) =>
-    cloneProject(normalizeProject?.(cloneProject(projectDocument)) ?? projectDocument);
+    cloneProject(
+      normalizeProject?.(cloneProject(projectDocument)) ?? projectDocument,
+    );
   const initialProject = normalize(project);
   assertValidProjectDocument(initialProject);
 
@@ -362,11 +373,12 @@ export const createVizEditorSession = ({
     }
   };
 
-  const pushPast = (projectDocument: VizProjectDocument): ProjectHistoryEntry[] => {
-    return [
-      ...state.past,
-      { project: cloneProject(projectDocument) },
-    ].slice(-MAX_PROJECT_HISTORY_SIZE);
+  const pushPast = (
+    projectDocument: VizProjectDocument,
+  ): ProjectHistoryEntry[] => {
+    return [...state.past, { project: cloneProject(projectDocument) }].slice(
+      -MAX_PROJECT_HISTORY_SIZE,
+    );
   };
 
   const createGeneratedTransactionId = (): string => {
@@ -389,11 +401,9 @@ export const createVizEditorSession = ({
     options?: { actor?: VizActionActor },
   ): VizEditorSessionMutationResult => {
     const baseRevision = state.revision;
-    const transactionActor = cloneUnknown(
-      options?.actor ?? state.defaultActor,
-    );
+    const transactionActor = cloneUnknown(options?.actor ?? state.defaultActor);
     const transactionId =
-      typeof transaction.id === "string" && transaction.id.trim().length > 0
+      typeof transaction.id === 'string' && transaction.id.trim().length > 0
         ? transaction.id
         : createGeneratedTransactionId();
     const transactionIssues: VizEditorSessionTransactionIssue[] = [];
@@ -402,19 +412,21 @@ export const createVizEditorSession = ({
 
     if (
       transaction.id !== undefined &&
-      (typeof transaction.id !== "string" ||
-        transaction.id.trim().length === 0)
+      (typeof transaction.id !== 'string' || transaction.id.trim().length === 0)
     ) {
       transactionIssues.push({
-        code: "invalid-transaction",
-        message: "Transaction id must be a non-empty string when provided.",
+        code: 'invalid-transaction',
+        message: 'Transaction id must be a non-empty string when provided.',
       });
     }
 
-    if (!Array.isArray(transaction.actions) || transaction.actions.length === 0) {
+    if (
+      !Array.isArray(transaction.actions) ||
+      transaction.actions.length === 0
+    ) {
       transactionIssues.push({
-        code: "invalid-transaction",
-        message: "A project transaction must contain at least one action.",
+        code: 'invalid-transaction',
+        message: 'A project transaction must contain at least one action.',
       });
     }
 
@@ -424,19 +436,17 @@ export const createVizEditorSession = ({
         transaction.expectedRevision < 0)
     ) {
       transactionIssues.push({
-        code: "invalid-transaction",
+        code: 'invalid-transaction',
         message:
-          "Transaction expectedRevision must be a non-negative integer when provided.",
+          'Transaction expectedRevision must be a non-negative integer when provided.',
       });
     }
 
     if (
-      state.actionHistory.some(
-        (entry) => entry.transactionId === transactionId,
-      )
+      state.actionHistory.some((entry) => entry.transactionId === transactionId)
     ) {
       transactionIssues.push({
-        code: "duplicate-transaction-id",
+        code: 'duplicate-transaction-id',
         message: `Transaction id "${transactionId}" has already been committed.`,
       });
     }
@@ -452,14 +462,14 @@ export const createVizEditorSession = ({
       };
       const conflictIssues: VizEditorSessionTransactionIssue[] = [
         {
-          code: "revision-conflict",
+          code: 'revision-conflict',
           message: `Expected project revision ${conflict.expectedRevision}, but the current revision is ${conflict.actualRevision}.`,
         },
       ];
 
       return {
         ok: false,
-        status: "conflict",
+        status: 'conflict',
         transactionId,
         actor: transactionActor,
         baseRevision,
@@ -492,7 +502,7 @@ export const createVizEditorSession = ({
 
       return {
         ok: false,
-        status: "rejected",
+        status: 'rejected',
         transactionId,
         actor: transactionActor,
         baseRevision,
@@ -521,13 +531,12 @@ export const createVizEditorSession = ({
       errors: actionResult.errors,
       validation,
     });
-    const candidateIsValid =
-      actionResult.errors.length === 0 && validation.ok;
+    const candidateIsValid = actionResult.errors.length === 0 && validation.ok;
 
     if (transaction.dryRun === true) {
       return {
         ok: candidateIsValid,
-        status: candidateIsValid ? "dry-run" : "rejected",
+        status: candidateIsValid ? 'dry-run' : 'rejected',
         transactionId,
         actor: transactionActor,
         baseRevision,
@@ -554,7 +563,7 @@ export const createVizEditorSession = ({
 
       return {
         ok: false,
-        status: "rejected",
+        status: 'rejected',
         transactionId,
         actor: transactionActor,
         baseRevision,
@@ -604,7 +613,7 @@ export const createVizEditorSession = ({
 
     return {
       ok: true,
-      status: "applied",
+      status: 'applied',
       transactionId,
       actor: transactionActor,
       baseRevision,
@@ -646,8 +655,7 @@ export const createVizEditorSession = ({
       notify();
       return createSnapshot(state);
     },
-    applyAction: (action, options) =>
-      transact({ actions: [action] }, options),
+    applyAction: (action, options) => transact({ actions: [action] }, options),
     applyActions: (actions, options) => transact({ actions }, options),
     transact,
     undo: () => {

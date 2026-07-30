@@ -3,6 +3,7 @@ import {
   coreComponentCapabilityPack,
 } from '@viz-engine/components-core';
 import { createVizComponentRegistryFromCapabilityPacks } from '@viz-engine/contracts';
+import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
 import {
   signalCathedralCapabilityPack,
   signalCathedralComponent,
@@ -12,7 +13,6 @@ import {
   coreVizThreeRendererExtension,
   createVizThreeProgramRegistry,
 } from '@viz-engine/renderer-three';
-import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
 
 /**
  * The studio's one trusted capability-composition root.
@@ -27,10 +27,9 @@ export const studioCapabilityPacks = [
 ] as const;
 
 export const studioComponentRegistry =
-  createVizComponentRegistryFromCapabilityPacks(
-    [...studioCapabilityPacks],
-    { strict: true },
-  );
+  createVizComponentRegistryFromCapabilityPacks([...studioCapabilityPacks], {
+    strict: true,
+  });
 
 export const studioNodeRegistry = createCoreNodeRegistry();
 
@@ -44,5 +43,6 @@ export const studioThreeRendererExtensions = [
   signalCathedralThreeRendererExtension,
 ] as const;
 
-export const studioThreeProgramRegistry =
-  createVizThreeProgramRegistry([...studioThreeRendererExtensions]);
+export const studioThreeProgramRegistry = createVizThreeProgramRegistry([
+  ...studioThreeRendererExtensions,
+]);

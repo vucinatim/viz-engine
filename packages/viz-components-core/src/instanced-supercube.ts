@@ -1,12 +1,11 @@
 import type {
   VizComponentImplementation,
   VizRenderThreeProgramNode,
-} from "@viz-engine/contracts";
-import { instancedSupercubeAuthoring } from "./authoring/instanced-supercube.js";
-import { asNumber, asString } from "./shared.js";
+} from '@viz-engine/contracts';
+import { instancedSupercubeAuthoring } from './authoring/instanced-supercube.js';
+import { asNumber, asString } from './shared.js';
 
-const clamp01 = (value: number): number =>
-  Math.min(1, Math.max(0, value));
+const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
 
 const resolveSmoothedExplosionShift = ({
   frame,
@@ -15,9 +14,7 @@ const resolveSmoothedExplosionShift = ({
 }: {
   frame: number;
   settings: Readonly<Record<string, unknown>>;
-  sampleSettings: (
-    frame: number,
-  ) => Readonly<Record<string, unknown>>;
+  sampleSettings: (frame: number) => Readonly<Record<string, unknown>>;
 }): number => {
   const target = clamp01(asNumber(settings.explosionShift, 0));
   const speed = clamp01(asNumber(settings.animationSpeed, 0.08));
@@ -33,41 +30,29 @@ const resolveSmoothedExplosionShift = ({
   let shift = 0;
   for (let sampledFrame = 0; sampledFrame <= frame; sampledFrame += 1) {
     const sampled = sampleSettings(sampledFrame);
-    const sampledTarget = clamp01(
-      asNumber(sampled.explosionShift, 0),
-    );
-    const sampledSpeed = clamp01(
-      asNumber(sampled.animationSpeed, 0.08),
-    );
+    const sampledTarget = clamp01(asNumber(sampled.explosionShift, 0));
+    const sampledSpeed = clamp01(asNumber(sampled.animationSpeed, 0.08));
     shift += (sampledTarget - shift) * sampledSpeed;
   }
   return shift;
 };
 
 export const instancedSupercubeComponent: VizComponentImplementation = {
-  id: "instanced-supercube",
-  name: "Instanced Supercube",
-  rendererFamily: "three",
-  implementationVersion: "1.0.0",
+  id: 'instanced-supercube',
+  name: 'Instanced Supercube',
+  rendererFamily: 'three',
+  implementationVersion: '1.0.0',
   authoring: instancedSupercubeAuthoring,
   description:
-    "Deterministic retained instanced hollow-cube lattice with explosion response.",
-  render: ({
-    frameContext,
-    layer,
-    settings,
-    sampleSettings,
-  }) =>
+    'Deterministic retained instanced hollow-cube lattice with explosion response.',
+  render: ({ frameContext, layer, settings, sampleSettings }) =>
     ({
-      kind: "three-program",
+      kind: 'three-program',
       id: layer.id,
-      programId: "viz-core/instanced-supercube/v1",
+      programId: 'viz-core/instanced-supercube/v1',
       parameters: {
-        color: asString(settings.color, "rgb(255, 0, 0)"),
-        explosionFactor: Math.max(
-          1,
-          asNumber(settings.explosionFactor, 1.67),
-        ),
+        color: asString(settings.color, 'rgb(255, 0, 0)'),
+        explosionFactor: Math.max(1, asNumber(settings.explosionFactor, 1.67)),
         gridSize: Math.min(
           8,
           Math.max(3, Math.round(asNumber(settings.gridSize, 5))),

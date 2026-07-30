@@ -11,8 +11,10 @@ This is the entrypoint for VizEngine documentation during the V2 rewrite.
 - [visions/v2-product-architecture-and-parity-alignment.md](./visions/v2-product-architecture-and-parity-alignment.md)
 - [plans/v2/v2-foundation-and-rewrite-plan.md](./plans/v2/v2-foundation-and-rewrite-plan.md)
 - [plans/v2/autonomous-development-operating-contract.md](./plans/v2/autonomous-development-operating-contract.md)
+- [plans/v2/core-consolidation-and-minimization-program.md](./plans/v2/core-consolidation-and-minimization-program.md)
 - [parity/README.md](./parity/README.md)
 - [parity/evidence/2026-07-30-signal-cathedral-production-certification.md](./parity/evidence/2026-07-30-signal-cathedral-production-certification.md)
+- [parity/evidence/2026-07-30-core-consolidation-and-quality-hardening.md](./parity/evidence/2026-07-30-core-consolidation-and-quality-hardening.md)
 
 ## Active Direction
 
@@ -25,6 +27,7 @@ This is the entrypoint for VizEngine documentation during the V2 rewrite.
 - [visions/specialized-ai-runner-vision.md](./visions/specialized-ai-runner-vision.md)
 - [plans/v2/v2-foundation-and-rewrite-plan.md](./plans/v2/v2-foundation-and-rewrite-plan.md)
 - [plans/v2/v2-system-design.md](./plans/v2/v2-system-design.md)
+- [plans/v2/core-consolidation-and-minimization-program.md](./plans/v2/core-consolidation-and-minimization-program.md)
 
 This is the current source of truth for where VizEngine is heading:
 
@@ -113,6 +116,7 @@ This is the current source of truth for where VizEngine is heading:
 - [plans/v2/canonical-audio-bake-and-runtime-inputs.md](./plans/v2/canonical-audio-bake-and-runtime-inputs.md)
 - [plans/v2/canonical-render-and-feedback-jobs.md](./plans/v2/canonical-render-and-feedback-jobs.md)
 - [plans/v2/first-agent-authored-production-signal-cathedral.md](./plans/v2/first-agent-authored-production-signal-cathedral.md)
+- [plans/v2/core-consolidation-and-minimization-program.md](./plans/v2/core-consolidation-and-minimization-program.md)
 - [plans/v2/editor-session-foundation-implementation-plan.md](./plans/v2/editor-session-foundation-implementation-plan.md)
 - [plans/v2/live-preview-and-audio-session-foundation-plan.md](./plans/v2/live-preview-and-audio-session-foundation-plan.md)
 - [plans/v2/local-agent-control-surface-implementation-plan.md](./plans/v2/local-agent-control-surface-implementation-plan.md)

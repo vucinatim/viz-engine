@@ -313,7 +313,7 @@ const PerformanceStatsDialogComponent = ({
   const timeSeriesData = useMemo(() => {
     if (!session) return [];
     const startTime = session.snapshots[0]?.timestamp || 0;
-    const data = session.snapshots.map((snapshot, index) => ({
+    const data = session.snapshots.map((snapshot) => ({
       time: Number(((snapshot.timestamp - startTime) / 1000).toFixed(1)), // Convert to seconds as number
       timeLabel: `${((snapshot.timestamp - startTime) / 1000).toFixed(1)}s`,
       fps: Number(snapshot.editorFPS.toFixed(1)),
@@ -394,9 +394,6 @@ const PerformanceStatsDialogComponent = ({
     });
 
     return Array.from(networkMap.entries()).map(([parameterId, data]) => {
-      const network = session.snapshots[0].nodeNetworks.find(
-        (n) => n.parameterId === parameterId,
-      );
       const avgComputeTime =
         data.computeTimes.reduce((a, b) => a + b, 0) / data.computeTimes.length;
       const maxComputeTime = Math.max(...data.computeTimes);

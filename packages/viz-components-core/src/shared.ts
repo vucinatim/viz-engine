@@ -1,32 +1,34 @@
 import type {
   VizMaterializedAsset,
   VizMaterializedImageAsset,
-} from "@viz-engine/contracts";
+} from '@viz-engine/contracts';
 
 export const asNumber = (value: unknown, fallback: number): number => {
-  return typeof value === "number" ? value : fallback;
+  return typeof value === 'number' ? value : fallback;
 };
 
 export const asString = (value: unknown, fallback: string): string => {
-  return typeof value === "string" && value.length > 0 ? value : fallback;
+  return typeof value === 'string' && value.length > 0 ? value : fallback;
 };
 
 export const asBoolean = (value: unknown, fallback: boolean): boolean => {
-  return typeof value === "boolean" ? value : fallback;
+  return typeof value === 'boolean' ? value : fallback;
 };
 
 export const asRecord = (value: unknown): Record<string, unknown> => {
-  return value && typeof value === "object" && !Array.isArray(value)
+  return value && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
 };
 
-export const asMaterializedAsset = (value: unknown): VizMaterializedAsset | undefined => {
-  if (!value || typeof value !== "object") {
+export const asMaterializedAsset = (
+  value: unknown,
+): VizMaterializedAsset | undefined => {
+  if (!value || typeof value !== 'object') {
     return undefined;
   }
 
-  if (!("kind" in value) || typeof value.kind !== "string") {
+  if (!('kind' in value) || typeof value.kind !== 'string') {
     return undefined;
   }
 
@@ -38,7 +40,11 @@ export const asMaterializedImageAsset = (
 ): VizMaterializedImageAsset | undefined => {
   const asset = asMaterializedAsset(value);
 
-  if (!asset || asset.kind !== "image" || typeof asset.imageSourceUri !== "string") {
+  if (
+    !asset ||
+    asset.kind !== 'image' ||
+    typeof asset.imageSourceUri !== 'string'
+  ) {
     return undefined;
   }
 

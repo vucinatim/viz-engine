@@ -1,6 +1,5 @@
-import { createCoreComponentRegistry } from "@viz-engine/components-core";
-import type { VizAudioFeatureBakeJobService } from "@viz-engine/bake";
-import type { VizRenderJobService } from "@viz-engine/render";
+import type { VizAudioFeatureBakeJobService } from '@viz-engine/bake';
+import { createCoreComponentRegistry } from '@viz-engine/components-core';
 import type {
   VizActionActor,
   VizComponentRegistry,
@@ -9,32 +8,31 @@ import type {
   VizProjectTransaction,
   VizResolvedArtifact,
   VizResolvedAsset,
-} from "@viz-engine/contracts";
+} from '@viz-engine/contracts';
 import {
   createVizEditorAudioSessionController,
   createVizEditorSession,
   createVizEditorTransportController,
   type VizEditorAudioAnalyzerState,
-  type VizEditorAudioSessionController,
   type VizEditorAudioSessionState,
   type VizEditorAudioSource,
   type VizEditorLiveInputDiagnostics,
   type VizEditorSession,
   type VizEditorSessionMutationResult,
   type VizEditorSessionSnapshot,
-  type VizEditorTransportController,
   type VizEditorTransportState,
   type VizEditorUiState,
-} from "@viz-engine/editor-session";
-import { createCoreNodeRegistry } from "@viz-engine/nodes-core";
+} from '@viz-engine/editor-session';
+import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
+import type { VizRenderJobService } from '@viz-engine/render';
 import {
   resolveVizProjectAudioAsset,
-  type VizNodeRegistry,
   validateProjectDocument,
-} from "@viz-engine/runtime";
+  type VizNodeRegistry,
+} from '@viz-engine/runtime';
 
 export interface VizSessionSource {
-  kind: "example" | "bundle" | "memory";
+  kind: 'example' | 'bundle' | 'memory';
   label: string;
   bundleDirectory?: string;
 }
@@ -122,7 +120,7 @@ export interface VizSessionHost {
   advanceBySeconds(seconds: number): VizSessionHostSnapshot;
   setLoop(loop: boolean): VizSessionHostSnapshot;
   setTransportDurationFrames(durationFrames: number): VizSessionHostSnapshot;
-  setPreviewMode(mode: VizEditorTransportState["mode"]): VizSessionHostSnapshot;
+  setPreviewMode(mode: VizEditorTransportState['mode']): VizSessionHostSnapshot;
   attachAudioSource(source: VizEditorAudioSource): VizSessionHostSnapshot;
   clearAudioSource(): VizSessionHostSnapshot;
   setAudioAnalyzerState(
@@ -135,16 +133,14 @@ export interface VizSessionHost {
 
 const clone = <T>(value: T): T => structuredClone(value);
 
-const assertValidResources = (
-  resources: VizSessionProjectResources,
-): void => {
+const assertValidResources = (resources: VizSessionProjectResources): void => {
   const validation = validateProjectDocument(resources.project);
 
   if (!validation.ok) {
     throw new Error(
       `Cannot load invalid Viz project: ${validation.issues
         .map((issue) => issue.message)
-        .join("; ")}`,
+        .join('; ')}`,
     );
   }
 };
@@ -162,12 +158,12 @@ const createProjectAudioSource = (
   }
 
   const durationSeconds =
-    typeof audio.ref.metadata?.durationSeconds === "number"
+    typeof audio.ref.metadata?.durationSeconds === 'number'
       ? audio.ref.metadata.durationSeconds
       : undefined;
 
   return {
-    kind: "media-element",
+    kind: 'media-element',
     id: audio.ref.id,
     label: audio.ref.label,
     uri: audio.resolved.uri,
@@ -176,7 +172,7 @@ const createProjectAudioSource = (
 };
 
 export const createVizSessionHost = ({
-  actor = { kind: "user" },
+  actor = { kind: 'user' },
   initialProject,
   componentRegistry = createCoreComponentRegistry(),
   nodeRegistry = createCoreNodeRegistry(),
@@ -195,39 +191,17 @@ export const createVizSessionHost = ({
     actor,
     ...(normalizeProject === undefined ? {} : { normalizeProject }),
     previewState: {
-      mode: "live",
+      mode: 'live',
     },
   });
-  let transportController: VizEditorTransportController;
-  let audioSessionController: VizEditorAudioSessionController;
-
-  const getSnapshot = (): VizSessionHostSnapshot => ({
-    source: clone(currentResources.source),
-    resourceRevision,
-    session: session.getSnapshot(),
-    transport: transportController.getState(),
-    audioSession: audioSessionController.getState(),
-    audioDiagnostics: audioSessionController.getDiagnostics(),
-    resourceCounts: {
-      assets: currentResources.resolvedAssets.length,
-      artifacts: currentResources.resolvedArtifacts.length,
-    },
-  });
-
-  const emit = () => {
-    if (
-      transportController === undefined ||
-      audioSessionController === undefined
-    ) {
-      return;
-    }
+  function emit() {
     const snapshot = getSnapshot();
     for (const listener of listeners) {
       listener(snapshot);
     }
-  };
+  }
 
-  transportController = createVizEditorTransportController({
+  const transportController = createVizEditorTransportController({
     fps: currentResources.project.timeline.fps,
     durationFrames: currentResources.project.timeline.durationInFrames,
     currentFrame: session.getPreviewState().currentFrame,
@@ -244,10 +218,8 @@ export const createVizSessionHost = ({
   });
 
   const initialAudioSource = createProjectAudioSource(currentResources);
-  audioSessionController = createVizEditorAudioSessionController({
-    ...(initialAudioSource === undefined
-      ? {}
-      : { source: initialAudioSource }),
+  const audioSessionController = createVizEditorAudioSessionController({
+    ...(initialAudioSource === undefined ? {} : { source: initialAudioSource }),
     ...(currentResources.project.artifactRefs?.[0]?.id === undefined
       ? {}
       : {
@@ -264,12 +236,27 @@ export const createVizSessionHost = ({
     },
   });
 
+  function getSnapshot(): VizSessionHostSnapshot {
+    return {
+      source: clone(currentResources.source),
+      resourceRevision,
+      session: session.getSnapshot(),
+      transport: transportController.getState(),
+      audioSession: audioSessionController.getState(),
+      audioDiagnostics: audioSessionController.getDiagnostics(),
+      resourceCounts: {
+        assets: currentResources.resolvedAssets.length,
+        artifacts: currentResources.resolvedArtifacts.length,
+      },
+    };
+  }
+
   session.subscribe(() => {
     emit();
   });
 
   services.audioFeatureBakeJobs?.subscribe(({ job }) => {
-    if (job.status !== "succeeded" || !job.result) {
+    if (job.status !== 'succeeded' || !job.result) {
       return;
     }
     const artifact = clone(job.result.resolvedArtifact);
@@ -315,7 +302,7 @@ export const createVizSessionHost = ({
     result: VizEditorSessionMutationResult,
   ): VizEditorSessionMutationResult => {
     if (
-      result.status === "applied" &&
+      result.status === 'applied' &&
       transportController.getState().durationFrames !==
         result.project.timeline.durationInFrames
     ) {

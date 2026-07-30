@@ -1,21 +1,21 @@
-import { jsFftBackend, isPowerOfTwo } from "../core/fft.js";
-import { toMono } from "../core/signal.js";
-import { getWindow } from "../core/window.js";
-import type { AudioSignal } from "../utils/types.js";
+import { isPowerOfTwo, jsFftBackend } from '../core/fft.js';
+import { toMono } from '../core/signal.js';
+import { getWindow } from '../core/window.js';
+import type { AudioSignal } from '../utils/types.js';
 
 export const STANDARD_AUDIO_FRAME_ANALYSIS_VERSION =
-  "rhythm-core.standard-audio-frame-analysis.v1" as const;
+  'rhythm-core.standard-audio-frame-analysis.v1' as const;
 
 export type StandardAudioFeatureName =
-  | "rms"
-  | "loudness"
-  | "bass-energy"
-  | "mid-energy"
-  | "treble-energy"
-  | "spectral-centroid"
-  | "spectral-flux"
-  | "onset-strength"
-  | "waveform-peak";
+  | 'rms'
+  | 'loudness'
+  | 'bass-energy'
+  | 'mid-energy'
+  | 'treble-energy'
+  | 'spectral-centroid'
+  | 'spectral-flux'
+  | 'onset-strength'
+  | 'waveform-peak';
 
 export interface StandardAudioFrameAnalysisOptions {
   sampleRate: number;
@@ -31,16 +31,15 @@ export interface StandardAudioFrameAnalysisOptions {
   onProgress?: (completedFrames: number, totalFrames: number) => void;
 }
 
-export interface StandardAudioFrameAnalysisAsyncOptions
-  extends StandardAudioFrameAnalysisOptions {
+export interface StandardAudioFrameAnalysisAsyncOptions extends StandardAudioFrameAnalysisOptions {
   yieldEveryFrames?: number;
   yieldToHost?: () => Promise<void>;
 }
 
 export interface StandardAudioFeatureSeries {
   name: StandardAudioFeatureName;
-  unit: "linear-amplitude" | "unit" | "hertz";
-  normalization: "none" | "decibel-unit" | "artifact-peak";
+  unit: 'linear-amplitude' | 'unit' | 'hertz';
+  normalization: 'none' | 'decibel-unit' | 'artifact-peak';
   values: Float32Array;
 }
 
@@ -64,8 +63,8 @@ export interface StandardAudioFrameAnalysisResult {
 
 export class StandardAudioFrameAnalysisCancelledError extends Error {
   constructor() {
-    super("Standard audio frame analysis was cancelled.");
-    this.name = "StandardAudioFrameAnalysisCancelledError";
+    super('Standard audio frame analysis was cancelled.');
+    this.name = 'StandardAudioFrameAnalysisCancelledError';
   }
 }
 
@@ -83,13 +82,8 @@ const amplitudeToDecibelUnit = (
   minDecibels: number,
   maxDecibels: number,
 ): number => {
-  const decibels =
-    amplitude > 0 ? 20 * Math.log10(amplitude) : minDecibels;
-  return clamp(
-    (decibels - minDecibels) / (maxDecibels - minDecibels),
-    0,
-    1,
-  );
+  const decibels = amplitude > 0 ? 20 * Math.log10(amplitude) : minDecibels;
+  return clamp((decibels - minDecibels) / (maxDecibels - minDecibels), 0, 1);
 };
 
 const normalizeByPeak = (values: Float32Array): void => {
@@ -118,8 +112,8 @@ const createStandardAudioFrameAnalysisExecution = (
   signal: AudioSignal,
   options: StandardAudioFrameAnalysisOptions,
 ): StandardAudioFrameAnalysisExecution => {
-  assertPositiveFinite(options.sampleRate, "sampleRate");
-  assertPositiveFinite(options.fps, "fps");
+  assertPositiveFinite(options.sampleRate, 'sampleRate');
+  assertPositiveFinite(options.fps, 'fps');
 
   const mono = toMono(signal);
   const channelCount = getChannelCount(signal);
@@ -132,14 +126,11 @@ const createStandardAudioFrameAnalysisExecution = (
   const availableSamples = Math.max(0, mono.length - startSample);
   const sampleCount = Math.min(
     availableSamples,
-    Math.max(
-      0,
-      Math.floor(options.sampleCount ?? availableSamples),
-    ),
+    Math.max(0, Math.floor(options.sampleCount ?? availableSamples)),
   );
 
   if (!Number.isInteger(fftSize) || fftSize < 32 || !isPowerOfTwo(fftSize)) {
-    throw new Error("fftSize must be a power-of-two integer of at least 32.");
+    throw new Error('fftSize must be a power-of-two integer of at least 32.');
   }
   if (
     !Number.isInteger(spectrumBinCount) ||
@@ -147,7 +138,7 @@ const createStandardAudioFrameAnalysisExecution = (
     spectrumBinCount > fftSize / 2
   ) {
     throw new Error(
-      "spectrumBinCount must be a positive integer no larger than fftSize / 2.",
+      'spectrumBinCount must be a positive integer no larger than fftSize / 2.',
     );
   }
   if (
@@ -156,7 +147,7 @@ const createStandardAudioFrameAnalysisExecution = (
     waveformSampleCount > fftSize
   ) {
     throw new Error(
-      "waveformSampleCount must be a positive integer no larger than fftSize.",
+      'waveformSampleCount must be a positive integer no larger than fftSize.',
     );
   }
   if (
@@ -164,7 +155,7 @@ const createStandardAudioFrameAnalysisExecution = (
     !Number.isFinite(maxDecibels) ||
     minDecibels >= maxDecibels
   ) {
-    throw new Error("minDecibels must be finite and lower than maxDecibels.");
+    throw new Error('minDecibels must be finite and lower than maxDecibels.');
   }
 
   const frameCount = Math.ceil(
@@ -172,21 +163,18 @@ const createStandardAudioFrameAnalysisExecution = (
   );
   const frequencyData = new Uint8Array(frameCount * spectrumBinCount);
   const timeDomainData = new Uint8Array(frameCount * waveformSampleCount);
-  const seriesValues = new Map<
-    StandardAudioFeatureName,
-    Float32Array
-  >([
-    ["rms", new Float32Array(frameCount)],
-    ["loudness", new Float32Array(frameCount)],
-    ["bass-energy", new Float32Array(frameCount)],
-    ["mid-energy", new Float32Array(frameCount)],
-    ["treble-energy", new Float32Array(frameCount)],
-    ["spectral-centroid", new Float32Array(frameCount)],
-    ["spectral-flux", new Float32Array(frameCount)],
-    ["onset-strength", new Float32Array(frameCount)],
-    ["waveform-peak", new Float32Array(frameCount)],
+  const seriesValues = new Map<StandardAudioFeatureName, Float32Array>([
+    ['rms', new Float32Array(frameCount)],
+    ['loudness', new Float32Array(frameCount)],
+    ['bass-energy', new Float32Array(frameCount)],
+    ['mid-energy', new Float32Array(frameCount)],
+    ['treble-energy', new Float32Array(frameCount)],
+    ['spectral-centroid', new Float32Array(frameCount)],
+    ['spectral-flux', new Float32Array(frameCount)],
+    ['onset-strength', new Float32Array(frameCount)],
+    ['waveform-peak', new Float32Array(frameCount)],
   ]);
-  const analysisWindow = getWindow("hann", fftSize);
+  const analysisWindow = getWindow('hann', fftSize);
   const windowSum = analysisWindow.reduce((sum, value) => sum + value, 0);
   const rawFrame = new Float32Array(fftSize);
   const fftReal = new Float32Array(fftSize);
@@ -255,9 +243,7 @@ const createStandardAudioFrameAnalysisExecution = (
     ) {
       const sampleIndex = Math.min(
         fftSize - 1,
-        Math.floor(
-          ((waveformIndex + 0.5) * fftSize) / waveformSampleCount,
-        ),
+        Math.floor(((waveformIndex + 0.5) * fftSize) / waveformSampleCount),
       );
       timeDomainData[waveformOffset + waveformIndex] = Math.round(
         clamp((rawFrame[sampleIndex]! + 1) * 127.5, 0, 255),
@@ -277,10 +263,7 @@ const createStandardAudioFrameAnalysisExecution = (
       magnitudes[bin] = magnitude;
       magnitudeSum += magnitude;
       weightedMagnitudeSum += magnitude * bin * binHz;
-      positiveFluxSum += Math.max(
-        0,
-        magnitude - previousMagnitudes[bin]!,
-      );
+      positiveFluxSum += Math.max(0, magnitude - previousMagnitudes[bin]!);
     }
 
     const spectrumOffset = frameIndex * spectrumBinCount;
@@ -294,116 +277,108 @@ const createStandardAudioFrameAnalysisExecution = (
       );
       const lastBin = Math.max(
         firstBin + 1,
-        Math.floor(
-          ((spectrumIndex + 1) * positiveBinCount) /
-            spectrumBinCount,
-        ),
+        Math.floor(((spectrumIndex + 1) * positiveBinCount) / spectrumBinCount),
       );
       let peakMagnitude = 0;
       for (let bin = firstBin; bin < lastBin; bin += 1) {
         peakMagnitude = Math.max(peakMagnitude, magnitudes[bin]!);
       }
       frequencyData[spectrumOffset + spectrumIndex] = Math.round(
-        amplitudeToDecibelUnit(
-          peakMagnitude,
-          minDecibels,
-          maxDecibels,
-        ) * 255,
+        amplitudeToDecibelUnit(peakMagnitude, minDecibels, maxDecibels) * 255,
       );
     }
 
     const rms = Math.sqrt(sumSquares / fftSize);
-    seriesValues.get("rms")![frameIndex] = rms;
-    seriesValues.get("loudness")![frameIndex] =
-      amplitudeToDecibelUnit(rms, minDecibels, 0);
-    seriesValues.get("bass-energy")![frameIndex] =
-      amplitudeToDecibelUnit(
-        getBandEnergy(20, 250),
-        minDecibels,
-        0,
-      );
-    seriesValues.get("mid-energy")![frameIndex] =
-      amplitudeToDecibelUnit(
-        getBandEnergy(250, 4000),
-        minDecibels,
-        0,
-      );
-    seriesValues.get("treble-energy")![frameIndex] =
-      amplitudeToDecibelUnit(
-        getBandEnergy(4000, options.sampleRate / 2),
-        minDecibels,
-        0,
-      );
-    seriesValues.get("spectral-centroid")![frameIndex] =
+    seriesValues.get('rms')![frameIndex] = rms;
+    seriesValues.get('loudness')![frameIndex] = amplitudeToDecibelUnit(
+      rms,
+      minDecibels,
+      0,
+    );
+    seriesValues.get('bass-energy')![frameIndex] = amplitudeToDecibelUnit(
+      getBandEnergy(20, 250),
+      minDecibels,
+      0,
+    );
+    seriesValues.get('mid-energy')![frameIndex] = amplitudeToDecibelUnit(
+      getBandEnergy(250, 4000),
+      minDecibels,
+      0,
+    );
+    seriesValues.get('treble-energy')![frameIndex] = amplitudeToDecibelUnit(
+      getBandEnergy(4000, options.sampleRate / 2),
+      minDecibels,
+      0,
+    );
+    seriesValues.get('spectral-centroid')![frameIndex] =
       magnitudeSum > 0 ? weightedMagnitudeSum / magnitudeSum : 0;
     const spectralFlux = positiveFluxSum / positiveBinCount;
-    seriesValues.get("spectral-flux")![frameIndex] = spectralFlux;
-    seriesValues.get("onset-strength")![frameIndex] =
-      Math.log1p(spectralFlux);
-    seriesValues.get("waveform-peak")![frameIndex] = waveformPeak;
+    seriesValues.get('spectral-flux')![frameIndex] = spectralFlux;
+    seriesValues.get('onset-strength')![frameIndex] = Math.log1p(spectralFlux);
+    seriesValues.get('waveform-peak')![frameIndex] = waveformPeak;
 
     previousMagnitudes.set(magnitudes);
     options.onProgress?.(frameIndex + 1, frameCount);
   };
 
   const finalize = (): StandardAudioFrameAnalysisResult => {
-    normalizeByPeak(seriesValues.get("spectral-flux")!);
-    normalizeByPeak(seriesValues.get("onset-strength")!);
+    normalizeByPeak(seriesValues.get('spectral-flux')!);
+    normalizeByPeak(seriesValues.get('onset-strength')!);
 
     const featureSeries: StandardAudioFeatureSeries[] = [
       {
-        name: "rms",
-        unit: "linear-amplitude",
-        normalization: "none",
-        values: seriesValues.get("rms")!,
+        name: 'rms',
+        unit: 'linear-amplitude',
+        normalization: 'none',
+        values: seriesValues.get('rms')!,
       },
       {
-        name: "loudness",
-        unit: "unit",
-        normalization: "decibel-unit",
-        values: seriesValues.get("loudness")!,
+        name: 'loudness',
+        unit: 'unit',
+        normalization: 'decibel-unit',
+        values: seriesValues.get('loudness')!,
       },
       {
-        name: "bass-energy",
-        unit: "unit",
-        normalization: "decibel-unit",
-        values: seriesValues.get("bass-energy")!,
+        name: 'bass-energy',
+        unit: 'unit',
+        normalization: 'decibel-unit',
+        values: seriesValues.get('bass-energy')!,
       },
       {
-        name: "mid-energy",
-        unit: "unit",
-        normalization: "decibel-unit",
-        values: seriesValues.get("mid-energy")!,
+        name: 'mid-energy',
+        unit: 'unit',
+        normalization: 'decibel-unit',
+        values: seriesValues.get('mid-energy')!,
       },
       {
-        name: "treble-energy",
-        unit: "unit",
-        normalization: "decibel-unit",
-        values: seriesValues.get("treble-energy")!,
+        name: 'treble-energy',
+        unit: 'unit',
+        normalization: 'decibel-unit',
+        values: seriesValues.get('treble-energy')!,
       },
       {
-        name: "spectral-centroid",
-        unit: "hertz",
-        normalization: "none",
-        values: seriesValues.get("spectral-centroid")!,
+        name: 'spectral-centroid',
+        unit: 'hertz',
+        normalization: 'none',
+        values: seriesValues.get('spectral-centroid')!,
       },
       {
-        name: "spectral-flux",
-        unit: "unit",
-        normalization: "artifact-peak",
-        values: seriesValues.get("spectral-flux")!,
+        name: 'spectral-flux',
+        unit: 'unit',
+        normalization: 'artifact-peak',
+        values: seriesValues.get('spectral-flux')!,
       },
       {
-        name: "onset-strength",
-        unit: "unit",
-        normalization: "artifact-peak",
-        values: seriesValues.get("onset-strength")!,
+        name: 'onset-strength',
+        unit: 'unit',
+        normalization: 'artifact-peak',
+        values: seriesValues.get('onset-strength')!,
       },
       {
-        name: "waveform-peak",
-        unit: "linear-amplitude",
-        normalization: "none",
-        values: seriesValues.get("waveform-peak")!,
+        name: 'waveform-peak',
+        unit: 'linear-amplitude',
+        normalization: 'none',
+        values: seriesValues.get('waveform-peak')!,
       },
     ];
 
@@ -437,15 +412,8 @@ export const analyzeStandardAudioFrames = (
   signal: AudioSignal,
   options: StandardAudioFrameAnalysisOptions,
 ): StandardAudioFrameAnalysisResult => {
-  const execution = createStandardAudioFrameAnalysisExecution(
-    signal,
-    options,
-  );
-  for (
-    let frameIndex = 0;
-    frameIndex < execution.frameCount;
-    frameIndex += 1
-  ) {
+  const execution = createStandardAudioFrameAnalysisExecution(signal, options);
+  for (let frameIndex = 0; frameIndex < execution.frameCount; frameIndex += 1) {
     execution.processFrame(frameIndex);
   }
   return execution.finalize();
@@ -462,19 +430,12 @@ export const analyzeStandardAudioFramesAsync = async (
 ): Promise<StandardAudioFrameAnalysisResult> => {
   const yieldEveryFrames = options.yieldEveryFrames ?? 8;
   if (!Number.isInteger(yieldEveryFrames) || yieldEveryFrames <= 0) {
-    throw new Error("yieldEveryFrames must be a positive integer.");
+    throw new Error('yieldEveryFrames must be a positive integer.');
   }
-  const execution = createStandardAudioFrameAnalysisExecution(
-    signal,
-    options,
-  );
+  const execution = createStandardAudioFrameAnalysisExecution(signal, options);
   const yieldToHost = options.yieldToHost ?? yieldToEventLoop;
 
-  for (
-    let frameIndex = 0;
-    frameIndex < execution.frameCount;
-    frameIndex += 1
-  ) {
+  for (let frameIndex = 0; frameIndex < execution.frameCount; frameIndex += 1) {
     execution.processFrame(frameIndex);
     if (
       frameIndex + 1 < execution.frameCount &&

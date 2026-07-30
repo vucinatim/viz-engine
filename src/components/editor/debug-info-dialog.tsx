@@ -125,7 +125,7 @@ export function DebugInfoDialog() {
         </DialogHeader>
         <div className="space-y-4">
           <div className="rounded-md bg-zinc-900 p-4">
-            <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words text-xs">
+            <pre className="max-h-64 overflow-auto text-xs break-words whitespace-pre-wrap">
               <code>{getDebugInfo()}</code>
             </pre>
           </div>

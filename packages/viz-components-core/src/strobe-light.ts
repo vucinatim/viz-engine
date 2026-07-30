@@ -1,9 +1,9 @@
 import type {
   VizComponentImplementation,
   VizRenderShaderNode,
-} from "@viz-engine/contracts";
-import { strobeLightAuthoring } from "./authoring/strobe-light.js";
-import { asNumber, asString } from "./shared.js";
+} from '@viz-engine/contracts';
+import { strobeLightAuthoring } from './authoring/strobe-light.js';
+import { asNumber, asString } from './shared.js';
 
 const vertexShader = `
   varying vec2 vUv;
@@ -56,11 +56,11 @@ const getStrobeStrength = ({
   frame: number;
   seed: string;
 }): number => {
-  if (mode === "Manual") {
+  if (mode === 'Manual') {
     return strength;
   }
 
-  if (mode === "Random Flashes") {
+  if (mode === 'Random Flashes') {
     return hashFrame(seed, frame) > 1 - flashRate ? strength : 0;
   }
 
@@ -69,30 +69,22 @@ const getStrobeStrength = ({
   }
 
   const flashPeriod = 1 / intensity;
-  const cyclePosition =
-    (timeInSeconds % flashPeriod) / flashPeriod;
+  const cyclePosition = (timeInSeconds % flashPeriod) / flashPeriod;
   return cyclePosition < dutyCycle ? strength : 0;
 };
 
 export const strobeLightComponent: VizComponentImplementation = {
-  id: "strobe-light",
-  name: "Strobe Light",
-  rendererFamily: "three",
-  implementationVersion: "1.0.0",
+  id: 'strobe-light',
+  name: 'Strobe Light',
+  rendererFamily: 'three',
+  implementationVersion: '1.0.0',
   authoring: strobeLightAuthoring,
-  description:
-    "Deterministic package-runtime fullscreen strobe shader.",
+  description: 'Deterministic package-runtime fullscreen strobe shader.',
   render: ({ viewport, frameContext, layer, settings }) => {
-    const mode = asString(settings.mode, "Intensity");
-    const color = asString(settings.color, "#ffffff");
-    const intensity = Math.max(
-      0,
-      asNumber(settings.intensity, 1),
-    );
-    const strength = Math.max(
-      0,
-      Math.min(1, asNumber(settings.strength, 1)),
-    );
+    const mode = asString(settings.mode, 'Intensity');
+    const color = asString(settings.color, '#ffffff');
+    const intensity = Math.max(0, asNumber(settings.intensity, 1));
+    const strength = Math.max(0, Math.min(1, asNumber(settings.strength, 1)));
     const dutyCycle = Math.max(
       0,
       Math.min(1, asNumber(settings.dutyCycle, 0.5)),
@@ -113,9 +105,9 @@ export const strobeLightComponent: VizComponentImplementation = {
     });
 
     return {
-      kind: "shader",
+      kind: 'shader',
       id: layer.id,
-      programId: "viz-core/strobe-light/v1",
+      programId: 'viz-core/strobe-light/v1',
       x: 0,
       y: 0,
       width: viewport.width,
@@ -124,13 +116,13 @@ export const strobeLightComponent: VizComponentImplementation = {
       fragmentShader,
       uniforms: {
         uColor: {
-          type: "color",
+          type: 'color',
           value: color,
         },
         uStrength: finalStrength,
       },
       transparent: true,
-      blendMode: "add",
+      blendMode: 'add',
     } satisfies VizRenderShaderNode;
   },
 };

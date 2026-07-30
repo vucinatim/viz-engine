@@ -1,7 +1,7 @@
 import type {
   VizMaterializedAsset,
   VizRenderThreeProgramNode,
-} from "@viz-engine/contracts";
+} from '@viz-engine/contracts';
 import {
   AdditiveBlending,
   AmbientLight,
@@ -36,12 +36,12 @@ import {
   type Material,
   type WebGLRenderTarget,
   type WebGLRenderer,
-} from "three";
-import { createVizThreePostProcessingPipeline } from "./post-processing.js";
-import { createVizStageCharacterController } from "./stage-characters.js";
-import type { VizThreeProgramFactory } from "./types.js";
+} from 'three';
+import { createVizThreePostProcessingPipeline } from './post-processing.js';
+import { createVizStageCharacterController } from './stage-characters.js';
+import type { VizThreeProgramFactory } from './types.js';
 
-const PROGRAM_ID = "viz-core/stage-scene/v1";
+const PROGRAM_ID = 'viz-core/stage-scene/v1';
 const MAX_CROWD_COUNT = 1_000;
 const LASER_COUNT = 12;
 const BEAM_COUNT = 6;
@@ -51,7 +51,7 @@ const STROBE_COUNT = 10;
 const CAMERA_PATH_POINTS: Readonly<
   Record<string, readonly (readonly [number, number, number])[]>
 > = {
-  "Panoramic Sweep": [
+  'Panoramic Sweep': [
     [0, 65, 45],
     [-80, 40, 100],
     [0, 30, 130],
@@ -61,7 +61,7 @@ const CAMERA_PATH_POINTS: Readonly<
     [-20, 20, 80],
     [0, 65, 45],
   ],
-  "Stage Circle": [
+  'Stage Circle': [
     [0, 10, 30],
     [25, 10, 15],
     [35, 10, -10],
@@ -72,7 +72,7 @@ const CAMERA_PATH_POINTS: Readonly<
     [-25, 10, 15],
     [0, 10, 30],
   ],
-  "Crowd Flyover": [
+  'Crowd Flyover': [
     [0, 5, 20],
     [-15, 8, 40],
     [-10, 12, 60],
@@ -81,7 +81,7 @@ const CAMERA_PATH_POINTS: Readonly<
     [15, 8, 40],
     [0, 5, 20],
   ],
-  "High Orbit": [
+  'High Orbit': [
     [0, 80, 80],
     [60, 80, 40],
     [80, 80, -20],
@@ -94,21 +94,19 @@ const CAMERA_PATH_POINTS: Readonly<
 };
 
 const asNumber = (value: unknown, fallback: number): number =>
-  typeof value === "number" && Number.isFinite(value)
-    ? value
-    : fallback;
+  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 
 const asBoolean = (value: unknown, fallback: boolean): boolean =>
-  typeof value === "boolean" ? value : fallback;
+  typeof value === 'boolean' ? value : fallback;
 
 const asString = (value: unknown, fallback: string): string =>
-  typeof value === "string" ? value : fallback;
+  typeof value === 'string' ? value : fallback;
 
 const asStringArray = (value: unknown): string[] =>
   Array.isArray(value)
     ? value.filter(
         (entry): entry is string =>
-          typeof entry === "string" && entry.length > 0,
+          typeof entry === 'string' && entry.length > 0,
       )
     : [];
 
@@ -134,19 +132,13 @@ const assertProgram = (node: VizRenderThreeProgramNode): void => {
   }
 };
 
-const resolveMode = (
-  value: unknown,
-  time: number,
-  count: number,
-): number => {
-  const mode = asString(value, "auto");
-  if (mode === "auto") {
+const resolveMode = (value: unknown, time: number, count: number): number => {
+  const mode = asString(value, 'auto');
+  if (mode === 'auto') {
     return Math.floor(time / 8) % count;
   }
   const parsed = Number.parseInt(mode, 10);
-  return Number.isFinite(parsed)
-    ? Math.min(count - 1, Math.max(0, parsed))
-    : 0;
+  return Number.isFinite(parsed) ? Math.min(count - 1, Math.max(0, parsed)) : 0;
 };
 
 const hashString = (value: string): number => {
@@ -173,7 +165,7 @@ const setColor = (
   saturation = 1,
   lightness = 0.5,
 ): void => {
-  if (colorMode === "single") {
+  if (colorMode === 'single') {
     target.set(singleColor);
   } else {
     target.setHSL(((hue % 1) + 1) % 1, saturation, lightness);
@@ -284,7 +276,7 @@ const createShaderWallMaterial = (): ShaderMaterial =>
 const createBeamMaterial = (): ShaderMaterial =>
   new ShaderMaterial({
     uniforms: {
-      color: { value: new Color("#88aaff") },
+      color: { value: new Color('#88aaff') },
       time: { value: 0 },
       intensity: { value: 1 },
     },
@@ -322,7 +314,7 @@ const createBeamMaterial = (): ShaderMaterial =>
 
 const createLaserBeamMaterial = (): ShaderMaterial =>
   new ShaderMaterial({
-    uniforms: { color: { value: new Color("#ff0000") } },
+    uniforms: { color: { value: new Color('#ff0000') } },
     vertexShader: `
       varying vec3 vPosition;
       void main() {
@@ -347,7 +339,7 @@ const createLaserBeamMaterial = (): ShaderMaterial =>
 const createLaserSheetMaterial = (): ShaderMaterial =>
   new ShaderMaterial({
     uniforms: {
-      color: { value: new Color("#ff0000") },
+      color: { value: new Color('#ff0000') },
       spread: { value: 1 },
     },
     vertexShader: `
@@ -387,8 +379,7 @@ const createLaserSheetMaterial = (): ShaderMaterial =>
 
 const createCameraCurve = (name: string): CatmullRomCurve3 => {
   const points =
-    CAMERA_PATH_POINTS[name] ??
-    CAMERA_PATH_POINTS["Panoramic Sweep"]!;
+    CAMERA_PATH_POINTS[name] ?? CAMERA_PATH_POINTS['Panoramic Sweep']!;
   return new CatmullRomCurve3(
     points.map(([x, y, z]) => new Vector3(x, y, z)),
     true,
@@ -420,17 +411,13 @@ const updateCinematicCamera = ({
     frame + 1,
     Math.max(
       1,
-      Math.min(
-        900,
-        Math.ceil(Math.log(0.0001) / Math.log(1 - smoothing)),
-      ),
+      Math.min(900, Math.ceil(Math.log(0.0001) / Math.log(1 - smoothing))),
     ),
   );
   const firstFrame = Math.max(0, frame - maximumHistory + 1);
 
   if (firstFrame > 0) {
-    const firstProgress =
-      ((firstFrame / fps) % duration) / duration;
+    const firstProgress = ((firstFrame / fps) % duration) / duration;
     curve.getPointAt(firstProgress, position);
   }
 
@@ -439,8 +426,7 @@ const updateCinematicCamera = ({
     sampledFrame <= frame;
     sampledFrame += 1
   ) {
-    const progress =
-      ((sampledFrame / fps) % duration) / duration;
+    const progress = ((sampledFrame / fps) % duration) / duration;
     curve.getPointAt(progress, sample);
     position.lerp(sample, smoothing);
   }
@@ -460,7 +446,7 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   assertProgram(node);
 
   const scene = new Scene();
-  scene.fog = new FogExp2("#000000", 0.008);
+  scene.fog = new FogExp2('#000000', 0.008);
   const root = new Group();
   const camera = new PerspectiveCamera(
     75,
@@ -468,7 +454,7 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
     0.1,
     2_000,
   );
-  camera.rotation.order = "YXZ";
+  camera.rotation.order = 'YXZ';
   scene.add(root);
 
   const geometries = new Set<BufferGeometry>();
@@ -484,7 +470,7 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
 
   const groundMaterial = trackMaterial(
     new MeshStandardMaterial({
-      color: "#2a2a2a",
+      color: '#2a2a2a',
       roughness: 0.9,
       metalness: 0.1,
       side: DoubleSide,
@@ -498,7 +484,7 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
 
   const stageMaterial = trackMaterial(
     new MeshStandardMaterial({
-      color: "#333333",
+      color: '#333333',
       metalness: 0.2,
       roughness: 0.8,
     }),
@@ -511,7 +497,7 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
 
   const boothMaterial = trackMaterial(
     new MeshStandardMaterial({
-      color: "#2b2b2b",
+      color: '#2b2b2b',
       roughness: 0.5,
     }),
   );
@@ -525,16 +511,11 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   const speakerGeometry = trackGeometry(new BoxGeometry(5, 3, 3));
   const speakerMaterial = trackMaterial(
     new MeshStandardMaterial({
-      color: "#1a1a1a",
+      color: '#1a1a1a',
       roughness: 0.8,
     }),
   );
-  const speakers = new InstancedMesh(
-    speakerGeometry,
-    speakerMaterial,
-    14,
-  );
-  const instanceMatrix = new Matrix4();
+  const speakers = new InstancedMesh(speakerGeometry, speakerMaterial, 14);
   const speakerObject = new Object3D();
   let speakerIndex = 0;
   for (const side of [-1, 1]) {
@@ -545,11 +526,13 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
       if (row >= 3 && row > 0) {
         angle += Math.PI / 45;
       }
-      const centerY =
-        -1.5 * Math.cos(angle) - 1.5 * Math.sin(angle);
-      const centerZ =
-        -1.5 * Math.sin(angle) + 1.5 * Math.cos(angle);
-      speakerObject.position.set(side * 28.75, pivotY + centerY, pivotZ + centerZ);
+      const centerY = -1.5 * Math.cos(angle) - 1.5 * Math.sin(angle);
+      const centerZ = -1.5 * Math.sin(angle) + 1.5 * Math.cos(angle);
+      speakerObject.position.set(
+        side * 28.75,
+        pivotY + centerY,
+        pivotZ + centerZ,
+      );
       speakerObject.rotation.set(angle, 0, 0);
       speakerObject.updateMatrix();
       speakers.setMatrixAt(speakerIndex, speakerObject.matrix);
@@ -569,18 +552,14 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
 
   const stageOutlineMaterial = trackMaterial(
     new MeshStandardMaterial({
-      color: "#8888ff",
-      emissive: "#444480",
+      color: '#8888ff',
+      emissive: '#444480',
       emissiveIntensity: 4,
     }),
   );
   const stageOutlineGeometry = trackGeometry(new BoxGeometry(1, 1, 1));
   const stageOutline = new Group();
-  for (const {
-    position,
-    scale,
-    rotationY,
-  } of [
+  for (const { position, scale, rotationY } of [
     {
       position: [0, 3.1, 12.5],
       scale: [125, 0.2, 0.2],
@@ -605,18 +584,14 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   }
   root.add(stageOutline);
 
-  const shaderWallMaterial = trackMaterial(
-    createShaderWallMaterial(),
-  );
+  const shaderWallMaterial = trackMaterial(createShaderWallMaterial());
   const shaderWall = new Group();
   const mainWall = new Mesh(
     trackGeometry(new PlaneGeometry(49.5, 24.5)),
     shaderWallMaterial,
   );
   mainWall.position.set(0, 15, -10);
-  const sidePanelGeometry = trackGeometry(
-    new PlaneGeometry(15, 24.5),
-  );
+  const sidePanelGeometry = trackGeometry(new PlaneGeometry(15, 24.5));
   const leftPanel = new Mesh(sidePanelGeometry, shaderWallMaterial);
   leftPanel.position.set(-43.75, 15, -5);
   leftPanel.rotation.y = Math.PI / 6;
@@ -659,18 +634,15 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
 
   const laserSheetGeometry = trackGeometry(new BufferGeometry());
   laserSheetGeometry.setAttribute(
-    "position",
+    'position',
     new BufferAttribute(
       new Float32Array([-7.5, 150, 0, 7.5, 150, 0, 0, 0, 0]),
       3,
     ),
   );
   laserSheetGeometry.setAttribute(
-    "uv",
-    new BufferAttribute(
-      new Float32Array([0, 1, 1, 1, 0.5, 0]),
-      2,
-    ),
+    'uv',
+    new BufferAttribute(new Float32Array([0, 1, 1, 1, 0.5, 0]), 2),
   );
   laserSheetGeometry.computeVertexNormals();
   const laserSheets: Mesh<BufferGeometry, ShaderMaterial>[] = [];
@@ -697,14 +669,7 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   const movingLights: SpotLight[] = [];
   const movingLightTargets: Object3D[] = [];
   for (let index = 0; index < MOVING_LIGHT_COUNT; index += 1) {
-    const light = new SpotLight(
-      "#ffffff",
-      5,
-      150,
-      Math.PI / 12,
-      0.3,
-      0,
-    );
+    const light = new SpotLight('#ffffff', 5, 150, Math.PI / 12, 0.3, 0);
     light.position.set((index / 7 - 0.5) * 80, 35, -15);
     const target = new Object3D();
     light.target = target;
@@ -714,12 +679,10 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   }
   root.add(movingLightsGroup);
 
-  const strobeBodyGeometry = trackGeometry(
-    new BoxGeometry(2, 1, 1.5),
-  );
+  const strobeBodyGeometry = trackGeometry(new BoxGeometry(2, 1, 1.5));
   const strobeBodyMaterial = trackMaterial(
     new MeshStandardMaterial({
-      color: "#1a1a1a",
+      color: '#1a1a1a',
       roughness: 0.4,
     }),
   );
@@ -728,12 +691,10 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
     strobeBodyMaterial,
     STROBE_COUNT,
   );
-  const strobeFaceGeometry = trackGeometry(
-    new BoxGeometry(1.7, 0.8, 0.3),
-  );
+  const strobeFaceGeometry = trackGeometry(new BoxGeometry(1.7, 0.8, 0.3));
   const strobeFaceMaterial = trackMaterial(
     new MeshBasicMaterial({
-      color: "#ffffff",
+      color: '#ffffff',
       toneMapped: false,
       vertexColors: true,
     }),
@@ -757,12 +718,10 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   strobeFaces.instanceMatrix.needsUpdate = true;
   root.add(strobeBodies, strobeFaces);
 
-  const crowdGeometry = trackGeometry(
-    new CapsuleGeometry(0.35, 1.2, 3, 6),
-  );
+  const crowdGeometry = trackGeometry(new CapsuleGeometry(0.35, 1.2, 3, 6));
   const crowdMaterial = trackMaterial(
     new MeshStandardMaterial({
-      color: "#9999bb",
+      color: '#9999bb',
       roughness: 0.8,
       vertexColors: true,
     }),
@@ -780,8 +739,8 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   dj.position.set(0, 5.5, -7);
   const actorMaterial = trackMaterial(
     new MeshStandardMaterial({
-      color: "#ddddff",
-      emissive: "#441166",
+      color: '#ddddff',
+      emissive: '#441166',
       emissiveIntensity: 0.5,
       roughness: 0.65,
     }),
@@ -809,14 +768,14 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   dj.add(torso, head, leftArmPivot, rightArmPivot);
   root.add(dj);
 
-  const hemisphere = new HemisphereLight("#8888ff", "#ff8844", 2);
-  const ambient = new AmbientLight("#ffffff", 1);
+  const hemisphere = new HemisphereLight('#8888ff', '#ff8844', 2);
+  const ambient = new AmbientLight('#ffffff', 1);
   scene.add(hemisphere, ambient);
 
   const washGroup = new Group();
   const washLights = [
-    new RectAreaLight("#5566ff", 5, 50, 20),
-    new RectAreaLight("#5566ff", 5, 50, 20),
+    new RectAreaLight('#5566ff', 5, 50, 20),
+    new RectAreaLight('#5566ff', 5, 50, 20),
   ];
   washLights[0]!.position.set(-30, 25, 10);
   washLights[1]!.position.set(30, 25, 10);
@@ -827,8 +786,8 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   root.add(washGroup);
 
   const stageUplights = [
-    new SpotLight("#7d40ff", 3, 50, Math.PI / 9, 0.5, 1),
-    new SpotLight("#7d40ff", 3, 50, Math.PI / 9, 0.5, 1),
+    new SpotLight('#7d40ff', 3, 50, Math.PI / 9, 0.5, 1),
+    new SpotLight('#7d40ff', 3, 50, Math.PI / 9, 0.5, 1),
   ];
   stageUplights[0]!.position.set(-15, 4, 8);
   stageUplights[1]!.position.set(15, 4, 8);
@@ -842,8 +801,8 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   blinderTargets[0]!.position.set(-30, 0, 12);
   blinderTargets[1]!.position.set(30, 0, 12);
   const blinders = [
-    new SpotLight("#fff0dd", 0, 600, Math.PI / 4, 0.3, 2),
-    new SpotLight("#fff0dd", 0, 600, Math.PI / 4, 0.3, 2),
+    new SpotLight('#fff0dd', 0, 600, Math.PI / 4, 0.3, 2),
+    new SpotLight('#fff0dd', 0, 600, Math.PI / 4, 0.3, 2),
   ];
   blinders[0]!.position.set(-45, 25, 20);
   blinders[1]!.position.set(45, 25, 20);
@@ -853,23 +812,16 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   }
   root.add(blindersGroup);
 
-  const overheadBlinder = new RectAreaLight("#ffffff", 0, 80, 40);
+  const overheadBlinder = new RectAreaLight('#ffffff', 0, 80, 40);
   overheadBlinder.position.set(0, 60, -5);
   overheadBlinder.lookAt(0, 0, -5);
   root.add(overheadBlinder);
 
-  const accentLight1 = new PointLight("#ff00ff", 1.5, 100, 2);
-  const accentLight2 = new PointLight("#00ffff", 1.5, 100, 2);
+  const accentLight1 = new PointLight('#ff00ff', 1.5, 100, 2);
+  const accentLight2 = new PointLight('#00ffff', 1.5, 100, 2);
   accentLight1.position.set(-15, 10, 5);
   accentLight2.position.set(15, 10, 5);
-  const djSpotlight = new SpotLight(
-    "#ffffff",
-    0.8,
-    200,
-    Math.PI / 8,
-    0.5,
-    2,
-  );
+  const djSpotlight = new SpotLight('#ffffff', 0.8, 200, Math.PI / 8, 0.5, 2);
   djSpotlight.position.set(0, 40, 0);
   djSpotlight.target = booth;
   root.add(accentLight1, accentLight2, djSpotlight);
@@ -877,7 +829,7 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   const helperGeometry = trackGeometry(new SphereGeometry(0.4, 8, 6));
   const helperMaterial = trackMaterial(
     new MeshBasicMaterial({
-      color: "#ffff00",
+      color: '#ffff00',
       toneMapped: false,
     }),
   );
@@ -926,8 +878,8 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
     invalidate,
   });
 
-  let cameraPathName = "";
-  let cameraCurve = createCameraCurve("Panoramic Sweep");
+  let cameraPathName = '';
+  let cameraCurve = createCameraCurve('Panoramic Sweep');
   const crowdObject = new Object3D();
   const crowdColor = new Color();
   const beamColor = new Color();
@@ -936,18 +888,9 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   const updateCamera = (
     parameters: Readonly<Record<string, unknown>>,
   ): void => {
-    const initialPosition = asVector3(
-      parameters.cameraPosition,
-      [0, 8, 40],
-    );
-    const rotation = asVector3(
-      parameters.cameraRotation,
-      [0, 0, 0],
-    );
-    const cinematicMode = asBoolean(
-      parameters.cinematicMode,
-      true,
-    );
+    const initialPosition = asVector3(parameters.cameraPosition, [0, 8, 40]);
+    const rotation = asVector3(parameters.cameraRotation, [0, 0, 0]);
+    const cinematicMode = asBoolean(parameters.cinematicMode, true);
 
     if (!cinematicMode) {
       camera.position.set(...initialPosition);
@@ -955,10 +898,7 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
       return;
     }
 
-    const nextPathName = asString(
-      parameters.cinematicPath,
-      "Panoramic Sweep",
-    );
+    const nextPathName = asString(parameters.cinematicPath, 'Panoramic Sweep');
     if (nextPathName !== cameraPathName) {
       cameraPathName = nextPathName;
       cameraCurve = createCameraCurve(cameraPathName);
@@ -968,22 +908,13 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
       curve: cameraCurve,
       frame: Math.max(0, Math.round(asNumber(parameters.frame, 0))),
       fps: Math.max(1, asNumber(parameters.fps, 60)),
-      duration: Math.max(
-        0.001,
-        asNumber(parameters.cinematicDuration, 60),
-      ),
+      duration: Math.max(0.001, asNumber(parameters.cinematicDuration, 60)),
       smoothing: Math.min(
         1,
-        Math.max(
-          0.01,
-          asNumber(parameters.cinematicLerpSpeed, 0.05),
-        ),
+        Math.max(0.01, asNumber(parameters.cinematicLerpSpeed, 0.05)),
       ),
       initialPosition,
-      lookAt: asVector3(
-        parameters.cinematicLookAt,
-        [0, 5, 0],
-      ),
+      lookAt: asVector3(parameters.cinematicLookAt, [0, 5, 0]),
     });
   };
 
@@ -1002,17 +933,11 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
     const spreadFactor = 0.8 + crowdFactor * 0.7;
 
     for (let index = 0; index < count; index += 1) {
-      const normalizedDepth =
-        Math.sqrt((index + 0.5) / Math.max(count, 1));
+      const normalizedDepth = Math.sqrt((index + 0.5) / Math.max(count, 1));
       const z =
-        14 +
-        normalizedDepth * depth +
-        (hash01(seed, index * 7 + 1) - 0.5) * 2;
-      const maximumSpread =
-        25 + normalizedDepth * depth * spreadFactor;
-      const x =
-        (hash01(seed, index * 7 + 2) * 2 - 1) *
-        maximumSpread;
+        14 + normalizedDepth * depth + (hash01(seed, index * 7 + 1) - 0.5) * 2;
+      const maximumSpread = 25 + normalizedDepth * depth * spreadFactor;
+      const x = (hash01(seed, index * 7 + 2) * 2 - 1) * maximumSpread;
       const phase = hash01(seed, index * 7 + 3) * Math.PI * 2;
       const speed = 2 + hash01(seed, index * 7 + 4) * 2;
       const bounce = Math.max(0, Math.sin(time * speed + phase)) * 0.22;
@@ -1021,8 +946,7 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
       crowdObject.rotation.set(
         Math.sin(time * speed * 0.5 + phase) * 0.06,
         Math.atan2(-x, -z) +
-          (hash01(seed, index * 7 + 6) - 0.5) *
-            (Math.PI / 4),
+          (hash01(seed, index * 7 + 6) - 0.5) * (Math.PI / 4),
         Math.sin(time * speed + phase) * 0.08,
       );
       crowdObject.scale.set(scale, scale, scale);
@@ -1059,17 +983,12 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
 
       if (mode === 0) {
         const side = index <= center ? 1 : -1;
-        rotationY =
-          Math.sin(time * 4 + distanceFromCenter * 0.5) *
-          0.6 *
-          side;
+        rotationY = Math.sin(time * 4 + distanceFromCenter * 0.5) * 0.6 * side;
         rotationX =
-          -Math.PI / 3 +
-          Math.cos(time * 4 + distanceFromCenter * 0.5) * 0.4;
+          -Math.PI / 3 + Math.cos(time * 4 + distanceFromCenter * 0.5) * 0.4;
       } else if (mode === 1) {
         rotationY = (Math.sin(time * 2 + index) * Math.PI) / 4;
-        rotationX =
-          -Math.PI / 3 + Math.sin(time * 5 + index) * 0.2;
+        rotationX = -Math.PI / 3 + Math.sin(time * 5 + index) * 0.2;
       } else if (mode === 2) {
         const side = index <= center ? -1 : 1;
         const cross = (Math.sin(time * 4) + 1) / 2;
@@ -1083,20 +1002,16 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
         rotationX = -Math.PI / 3 + fan * 0.6;
       } else if (mode === 4) {
         rotationX =
-          -Math.PI / 2.5 +
-          ((Math.sin(time * 1.5) + 1) / 2) * (Math.PI / 3);
+          -Math.PI / 2.5 + ((Math.sin(time * 1.5) + 1) / 2) * (Math.PI / 3);
         rotationY = normalizedFromCenter * (Math.PI / 8);
       } else if (mode === 5) {
         if (index <= 1 || index >= 4) {
           const pairIndex = index <= 1 ? index : index - 4;
-          rotationY =
-            index <= 1 ? -Math.PI / 2.5 : Math.PI / 2.5;
+          rotationY = index <= 1 ? -Math.PI / 2.5 : Math.PI / 2.5;
           rotationX =
-            -Math.PI / 4 +
-            Math.sin(time * 2 + pairIndex * Math.PI) * 0.6;
+            -Math.PI / 4 + Math.sin(time * 2 + pairIndex * Math.PI) * 0.6;
         } else {
-          rotationX =
-            -Math.PI / 3 + Math.sin(time * 1.2) * 0.4;
+          rotationX = -Math.PI / 3 + Math.sin(time * 1.2) * 0.4;
         }
       } else {
         const pulse = (Math.sin(time * 2) + 1) / 2;
@@ -1106,18 +1021,11 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
           const pairIndex = index <= 1 ? index : index - 4;
           const direction = index <= 1 ? -1 : 1;
           rotationY =
-            direction *
-            (Math.PI / 3 + pulse * (Math.PI / 5) + pairIndex * 0.4);
+            direction * (Math.PI / 3 + pulse * (Math.PI / 5) + pairIndex * 0.4);
           rotationX = -Math.PI / 3 + breath * 0.6;
         } else {
-          rotationY =
-            (index === 2 ? 1 : -1) *
-            cross *
-            (Math.PI / 4);
-          rotationX =
-            -Math.PI / 4 +
-            breath * 0.5 +
-            Math.abs(cross) * 0.2;
+          rotationY = (index === 2 ? 1 : -1) * cross * (Math.PI / 4);
+          rotationX = -Math.PI / 4 + breath * 0.5 + Math.abs(cross) * 0.2;
         }
       }
 
@@ -1141,8 +1049,8 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
       }
       setColor(
         beamColor,
-        asString(parameters.beamColorMode, "multi"),
-        asString(parameters.beamColor, "#88aaff"),
+        asString(parameters.beamColorMode, 'multi'),
+        asString(parameters.beamColor, '#88aaff'),
         hue,
         1,
         0.6,
@@ -1157,25 +1065,13 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   ): void => {
     const enabled = asBoolean(parameters.lasersEnabled, true);
     const mode = resolveMode(parameters.laserMode, time, 5);
-    const speed = Math.max(
-      0,
-      asNumber(parameters.laserRotationSpeed, 1),
-    );
+    const speed = Math.max(0, asNumber(parameters.laserRotationSpeed, 1));
     const maximum = Math.min(
       LASER_COUNT,
-      Math.max(
-        1,
-        Math.round(asNumber(parameters.maximumLaserCount, 12)),
-      ),
+      Math.max(1, Math.round(asNumber(parameters.maximumLaserCount, 12))),
     );
-    const colorMode = asString(
-      parameters.laserColorMode,
-      "multi",
-    );
-    const singleColor = asString(
-      parameters.laserColor,
-      "#ff0000",
-    );
+    const colorMode = asString(parameters.laserColorMode, 'multi');
+    const singleColor = asString(parameters.laserColor, '#ff0000');
     lasersGroup.visible = enabled;
 
     for (const laser of laserBeams) {
@@ -1220,10 +1116,8 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
         const laser = laserBeams[index]!;
         laser.visible = true;
         laser.rotation.z =
-          (Math.sin(time * 2 * speed + index * 0.8) * Math.PI) /
-          6;
-        laser.rotation.y =
-          (Math.cos(time * 0.2 * speed) * Math.PI) / 12;
+          (Math.sin(time * 2 * speed + index * 0.8) * Math.PI) / 6;
+        laser.rotation.y = (Math.cos(time * 0.2 * speed) * Math.PI) / 12;
         applyBeamColor(laser, time * 0.1 + index * 0.05);
       }
     } else if (mode === 1) {
@@ -1231,8 +1125,7 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
         const laser = laserBeams[index]!;
         laser.visible = true;
         laser.rotation.y =
-          (Math.sin(time * 40 * speed + index * 0.2) * Math.PI) /
-          4;
+          (Math.sin(time * 40 * speed + index * 0.2) * Math.PI) / 4;
         laser.rotation.z = Math.PI / 16;
         applyBeamColor(laser, Math.floor(time * 2) * 0.3);
       }
@@ -1244,19 +1137,15 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
         sheet.visible = true;
         const steppedTime = Math.floor(time * 5 * speed);
         const randomSeed = index * 1.23;
-        sheet.rotation.z =
-          (Math.sin(steppedTime + randomSeed) * Math.PI) / 8;
+        sheet.rotation.z = (Math.sin(steppedTime + randomSeed) * Math.PI) / 8;
         sheet.rotation.y =
-          (Math.cos(steppedTime * 1.5 + randomSeed) * Math.PI) /
-          16;
-        const scale =
-          0.8 + Math.abs(Math.sin(time * 15 * speed)) * 0.4;
+          (Math.cos(steppedTime * 1.5 + randomSeed) * Math.PI) / 16;
+        const scale = 0.8 + Math.abs(Math.sin(time * 15 * speed)) * 0.4;
         sheet.scale.setScalar(scale);
         applySheet(
           sheet,
           Math.floor(time) * 0.1,
-          0.3 +
-            ((Math.sin(time * 1.5 * speed) + 1) / 2) * 2.2,
+          0.3 + ((Math.sin(time * 1.5 * speed) + 1) / 2) * 2.2,
         );
       }
     } else {
@@ -1267,43 +1156,30 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
         const randomSeed = (LASER_COUNT + offset) * 1.23;
         const rotationSpeed = mode === 3 ? 0.3 : 0.4;
         sheet.rotation.z =
-          (Math.sin(time * rotationSpeed * speed + randomSeed) *
-            Math.PI) /
+          (Math.sin(time * rotationSpeed * speed + randomSeed) * Math.PI) /
           (mode === 3 ? 10 : 8);
         sheet.rotation.y =
           (Math.cos(
-            time * rotationSpeed * (mode === 3 ? 0.8 : 0.6) *
-              speed +
+            time * rotationSpeed * (mode === 3 ? 0.8 : 0.6) * speed +
               randomSeed,
           ) *
             Math.PI) /
           (mode === 3 ? 20 : 18);
         const spreadProgress =
-          (Math.sin(
-            time * (mode === 3 ? 0.8 : 1) * speed + offset,
-          ) +
-            1) /
-          2;
+          (Math.sin(time * (mode === 3 ? 0.8 : 1) * speed + offset) + 1) / 2;
         applySheet(
           sheet,
-          time * (mode === 3 ? 0.05 : 0.08) +
-            offset * 0.15,
-          (mode === 3 ? 0.7 : 0.8) +
-            spreadProgress * (mode === 3 ? 1.8 : 2.2),
+          time * (mode === 3 ? 0.05 : 0.08) + offset * 0.15,
+          (mode === 3 ? 0.7 : 0.8) + spreadProgress * (mode === 3 ? 1.8 : 2.2),
         );
       }
 
       const remaining = Math.max(0, maximum - maximumSheets);
       const beamCount = Math.min(2, remaining);
-      const available = Math.min(
-        LASER_COUNT,
-        Math.ceil(remaining / 2),
-      );
+      const available = Math.min(LASER_COUNT, Math.ceil(remaining / 2));
       const index =
         available > 0
-          ? Math.floor(
-              time * (mode === 3 ? 8 : 2) * speed,
-            ) % available
+          ? Math.floor(time * (mode === 3 ? 8 : 2) * speed) % available
           : 0;
       const indices = [index, LASER_COUNT - 1 - index];
       for (let slot = 0; slot < beamCount; slot += 1) {
@@ -1318,14 +1194,9 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
           const phase =
             time * 1.5 * speed +
             Math.abs(indices[slot]! - LASER_COUNT / 2) * 0.3;
-          laser.rotation.z =
-            (Math.sin(phase) * Math.PI) / 5;
-          laser.rotation.y =
-            (Math.cos(phase * 0.7) * Math.PI) / 10;
-          applyBeamColor(
-            laser,
-            phase * 0.1 + indices[slot]! * 0.08,
-          );
+          laser.rotation.z = (Math.sin(phase) * Math.PI) / 5;
+          laser.rotation.y = (Math.cos(phase * 0.7) * Math.PI) / 10;
+          applyBeamColor(laser, phase * 0.1 + indices[slot]! * 0.08);
         }
       }
     }
@@ -1335,19 +1206,9 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
     parameters: Readonly<Record<string, unknown>>,
     time: number,
   ): void => {
-    const enabled = asBoolean(
-      parameters.movingLightsEnabled,
-      true,
-    );
-    const mode = resolveMode(
-      parameters.movingLightMode,
-      time,
-      5,
-    );
-    const speed = Math.max(
-      0,
-      asNumber(parameters.movingLightSpeed, 1),
-    );
+    const enabled = asBoolean(parameters.movingLightsEnabled, true);
+    const mode = resolveMode(parameters.movingLightMode, time, 5);
+    const speed = Math.max(0, asNumber(parameters.movingLightSpeed, 1));
     const scaledTime = time * 0.5 * speed;
     movingLightsGroup.visible = enabled;
 
@@ -1397,8 +1258,8 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
       );
       setColor(
         light.color,
-        asString(parameters.movingLightColorMode, "multi"),
-        asString(parameters.movingLightColor, "#ffffff"),
+        asString(parameters.movingLightColorMode, 'multi'),
+        asString(parameters.movingLightColor, '#ffffff'),
         scaledTime * 0.1 + index * 0.1,
       );
       helperMatrix.makeTranslation(
@@ -1414,14 +1275,8 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   const updateStageLights = (
     parameters: Readonly<Record<string, unknown>>,
   ): void => {
-    const enabled = asBoolean(
-      parameters.stageLightsEnabled,
-      true,
-    );
-    const color = asString(
-      parameters.stageLightColor,
-      "#8888ff",
-    );
+    const enabled = asBoolean(parameters.stageLightsEnabled, true);
+    const color = asString(parameters.stageLightColor, '#8888ff');
     stageOutline.visible = enabled;
     stageOutlineMaterial.color.set(color);
     stageOutlineMaterial.emissive.set(color).multiplyScalar(0.5);
@@ -1440,22 +1295,16 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
       1,
       Math.max(0, asNumber(parameters.strobeFlashRate, 0.3)),
     );
-    const intensity = Math.max(
-      0,
-      asNumber(parameters.strobeIntensity, 500),
-    );
+    const intensity = Math.max(0, asNumber(parameters.strobeIntensity, 500));
     const tick = Math.floor(time * 20);
     const active =
       rate > 0 && hash01(seed, tick * 31 + 17) > 1 - rate
-        ? Math.floor(
-            hash01(seed, tick * 31 + 19) * STROBE_COUNT,
-          )
+        ? Math.floor(hash01(seed, tick * 31 + 19) * STROBE_COUNT)
         : -1;
     strobeBodies.visible = enabled;
     strobeFaces.visible = enabled;
     for (let index = 0; index < STROBE_COUNT; index += 1) {
-      const brightness =
-        index === active ? 1 + intensity / 50 : 0.3;
+      const brightness = index === active ? 1 + intensity / 50 : 0.3;
       crowdColor.setRGB(brightness, brightness, brightness);
       strobeFaces.setColorAt(index, crowdColor);
     }
@@ -1467,10 +1316,7 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
 
   const update = (
     nextNode: VizRenderThreeProgramNode,
-    nextMaterializedAssets?: ReadonlyMap<
-      string,
-      VizMaterializedAsset
-    >,
+    nextMaterializedAssets?: ReadonlyMap<string, VizMaterializedAsset>,
   ): void => {
     assertProgram(nextNode);
     if (nextMaterializedAssets) {
@@ -1478,14 +1324,11 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
     }
     const parameters = nextNode.parameters;
     const time = Math.max(0, asNumber(parameters.time, 0));
-    const seed = hashString(asString(parameters.seed, "stage-scene"));
+    const seed = hashString(asString(parameters.seed, 'stage-scene'));
 
     updateCamera(parameters);
 
-    shaderWall.visible = asBoolean(
-      parameters.shaderWallEnabled,
-      true,
-    );
+    shaderWall.visible = asBoolean(parameters.shaderWallEnabled, true);
     shaderWallMaterial.uniforms.u_time!.value = time;
     shaderWallMaterial.uniforms.u_scale!.value = Math.max(
       0.5,
@@ -1512,10 +1355,7 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
       0,
       asNumber(parameters.hemisphereIntensity, 2),
     );
-    ambient.intensity = Math.max(
-      0,
-      asNumber(parameters.ambientIntensity, 1),
-    );
+    ambient.intensity = Math.max(0, asNumber(parameters.ambientIntensity, 1));
 
     updateBeams(parameters, time);
     updateLasers(parameters, time);
@@ -1523,34 +1363,18 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
     updateStageLights(parameters);
     updateStrobes(parameters, time, seed);
 
-    washGroup.visible = asBoolean(
-      parameters.stageWashEnabled,
-      true,
-    );
+    washGroup.visible = asBoolean(parameters.stageWashEnabled, true);
     for (const light of washLights) {
-      light.intensity = Math.max(
-        0,
-        asNumber(parameters.stageWashIntensity, 5),
-      );
+      light.intensity = Math.max(0, asNumber(parameters.stageWashIntensity, 5));
     }
 
-    blindersGroup.visible = asBoolean(
-      parameters.blindersEnabled,
-      true,
-    );
-    const blinderMode = asString(
-      parameters.blinderMode,
-      "controlled",
-    );
+    blindersGroup.visible = asBoolean(parameters.blindersEnabled, true);
+    const blinderMode = asString(parameters.blinderMode, 'controlled');
     const blinderTick = Math.floor(time * 20);
-    const randomBlinderOn =
-      hash01(seed, blinderTick * 43 + 5) > 0.95;
-    const controlledBlinderOn =
-      asNumber(parameters.blinderIntensity, 0) > 0.3;
+    const randomBlinderOn = hash01(seed, blinderTick * 43 + 5) > 0.95;
+    const controlledBlinderOn = asNumber(parameters.blinderIntensity, 0) > 0.3;
     const blinderOn =
-      blinderMode === "random"
-        ? randomBlinderOn
-        : controlledBlinderOn;
+      blinderMode === 'random' ? randomBlinderOn : controlledBlinderOn;
     for (const light of blinders) {
       light.intensity = blinderOn ? 15_000 : 0;
     }
@@ -1564,18 +1388,11 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
       asNumber(parameters.overheadBlinderIntensity, 0),
     );
 
-    const accentEnabled = asBoolean(
-      parameters.accentLightsEnabled,
-      true,
-    );
+    const accentEnabled = asBoolean(parameters.accentLightsEnabled, true);
     accentLight1.visible = accentEnabled;
     accentLight2.visible = accentEnabled;
-    accentLight1.color.set(
-      asString(parameters.accentLight1Color, "#ff00ff"),
-    );
-    accentLight2.color.set(
-      asString(parameters.accentLight2Color, "#00ffff"),
-    );
+    accentLight1.color.set(asString(parameters.accentLight1Color, '#ff00ff'));
+    accentLight2.color.set(asString(parameters.accentLight2Color, '#00ffff'));
     accentLight1.position.x = Math.sin(time * 0.7) * 20;
     accentLight1.position.z = Math.cos(time * 0.7) * 10 - 5;
     accentLight2.position.x = Math.sin(time * 0.5) * -20;
@@ -1589,17 +1406,12 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
     dj.visible = showDj;
     dj.position.y = 5.5 + Math.max(0, Math.sin(time * 3.2)) * 0.12;
     dj.rotation.y = Math.sin(time * 0.8) * 0.12;
-    leftArmPivot.rotation.z =
-      -0.35 - Math.sin(time * 2.4) * 0.75;
-    rightArmPivot.rotation.z =
-      0.35 + Math.sin(time * 2.1 + 1.2) * 0.75;
+    leftArmPivot.rotation.z = -0.35 - Math.sin(time * 2.4) * 0.75;
+    rightArmPivot.rotation.z = 0.35 + Math.sin(time * 2.1 + 1.2) * 0.75;
 
     const crowdCount = Math.min(
       MAX_CROWD_COUNT,
-      Math.max(
-        0,
-        Math.round(asNumber(parameters.crowdCount, 500)),
-      ),
+      Math.max(0, Math.round(asNumber(parameters.crowdCount, 500))),
     );
     updateCrowd({ time, seed, count: crowdCount });
     characterController.update({
@@ -1611,28 +1423,17 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
         0,
         asNumber(parameters.characterAnimationSpeed, 1),
       ),
-      djAssetId: asString(parameters.djModelAssetId, ""),
-      crowdAssetIds: asStringArray(
-        parameters.crowdModelAssetIds,
-      ),
+      djAssetId: asString(parameters.djModelAssetId, ''),
+      crowdAssetIds: asStringArray(parameters.crowdModelAssetIds),
       materializedAssets,
     });
 
     helpers.visible = asBoolean(parameters.showHelpers, false);
     postProcessing.update({
       bloomEnabled: asBoolean(parameters.bloomEnabled, true),
-      bloomStrength: Math.max(
-        0,
-        asNumber(parameters.bloomStrength, 0.5),
-      ),
-      bloomRadius: Math.max(
-        0,
-        asNumber(parameters.bloomRadius, 0.8),
-      ),
-      bloomThreshold: Math.max(
-        0,
-        asNumber(parameters.bloomThreshold, 0.6),
-      ),
+      bloomStrength: Math.max(0, asNumber(parameters.bloomStrength, 0.5)),
+      bloomRadius: Math.max(0, asNumber(parameters.bloomRadius, 0.8)),
+      bloomThreshold: Math.max(0, asNumber(parameters.bloomThreshold, 0.6)),
       depthOfFieldEnabled: false,
       depthOfFieldFocus: 10,
       depthOfFieldAperture: 0.0005,
@@ -1642,16 +1443,8 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
     root.userData.time = time;
     root.userData.cameraPath = cameraPathName;
     root.userData.crowdCount = crowdCount;
-    root.userData.beamMode = resolveMode(
-      parameters.beamMode,
-      time,
-      7,
-    );
-    root.userData.laserMode = resolveMode(
-      parameters.laserMode,
-      time,
-      5,
-    );
+    root.userData.beamMode = resolveMode(parameters.beamMode, time, 7);
+    root.userData.laserMode = resolveMode(parameters.laserMode, time, 5);
     root.userData.blinderOn = blinderOn;
   };
 
@@ -1672,10 +1465,7 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
       );
       postProcessing.resize(nextWidth, nextHeight);
     },
-    render(
-      renderer: WebGLRenderer,
-      renderTarget: WebGLRenderTarget,
-    ) {
+    render(renderer: WebGLRenderer, renderTarget: WebGLRenderTarget) {
       postProcessing.render(renderer, renderTarget);
     },
     whenReady() {

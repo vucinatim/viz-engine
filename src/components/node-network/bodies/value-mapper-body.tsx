@@ -32,7 +32,6 @@ const ValueMapperBody = ({
   const mapping = data.inputValues.mapping || {};
   const mode = (data.inputValues.mode || 'number') as string;
   const inputKeyRef = useRef<HTMLInputElement>(null);
-  const inputValueRef = useRef<HTMLInputElement>(null);
 
   const handleAdd = () => {
     const key = inputKeyRef.current?.value?.trim();

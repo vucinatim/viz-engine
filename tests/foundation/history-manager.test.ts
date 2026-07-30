@@ -33,9 +33,9 @@ describe('canonical editor-session history', () => {
       session.getWorkingProject().layers[0]?.settings?.appearance,
     ).toBeUndefined();
     session.redo();
-    expect(
-      session.getWorkingProject().layers[0]?.settings?.appearance,
-    ).toEqual({ scale: 2 });
+    expect(session.getWorkingProject().layers[0]?.settings?.appearance).toEqual(
+      { scale: 2 },
+    );
   });
 
   it('coalesces continuous editor gestures into one history entry', () => {

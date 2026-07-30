@@ -8,16 +8,16 @@ import {
   setNodeNetworkEnabled,
   useNodeNetworkStore,
 } from '@/components/node-network/node-network-store';
+import editorControl from '@/lib/editor-control';
 import useEditorGraphStore from '@/lib/stores/editor-graph-store';
 import useEditorProjectStore from '@/lib/stores/editor-project-store';
 import { vizSessionStore } from '@/lib/viz-session';
-import { createTestProject } from './viz-session-test-utils';
-import { validateProjectDocument } from '@viz-engine/runtime';
 import {
-  createSignalCathedralProject,
   SIGNAL_CATHEDRAL_GRAPH_ID,
+  createSignalCathedralProject,
 } from '@viz-engine/production-signal-cathedral';
-import editorControl from '@/lib/editor-control';
+import { validateProjectDocument } from '@viz-engine/runtime';
+import { createTestProject } from './viz-session-test-utils';
 
 describe('Editor graph store', () => {
   beforeEach(() => {
@@ -46,7 +46,20 @@ describe('Editor graph store', () => {
         .project.workingProject.graphs?.find(
           (graph) => graph.id === parameterId,
         )?.nodes.length,
-    ).toBe(2);
+    ).toBe(1);
+    expect(
+      vizSessionStore
+        .getState()
+        .project.workingProject.graphs?.find(
+          (graph) => graph.id === parameterId,
+        )?.outputs,
+    ).toEqual([
+      {
+        key: 'value',
+        valueType: 'number',
+        position: { x: 300, y: 0 },
+      },
+    ]);
     expect(getNodeNetwork(parameterId)).toBeDefined();
 
     useNodeNetworkStore.getState().setOpenNetwork(parameterId);
@@ -76,7 +89,9 @@ describe('Editor graph store', () => {
     useNodeNetworkStore.getState().setNetworksMinimized(true);
     useNodeNetworkStore.getState().setShouldForceShowOverlay(true);
 
-    const persisted = nodeNetworkStorePartialize(useNodeNetworkStore.getState());
+    const persisted = nodeNetworkStorePartialize(
+      useNodeNetworkStore.getState(),
+    );
     useEditorGraphStore.getState().reset();
     useNodeNetworkStore.setState({
       openNetwork: null,
@@ -97,19 +112,15 @@ describe('Editor graph store', () => {
 
   it('opens shared portable graphs without mutation and detaches one parameter safely', () => {
     const project = createSignalCathedralProject();
-    const parameterId =
-      'layer-signal-cathedral:reactivity:structurePulse';
+    const parameterId = 'layer-signal-cathedral:reactivity:structurePulse';
 
     useEditorProjectStore.getState().importWorkingProject(project);
-    const revisionBeforeOpen =
-      vizSessionStore.getState().project.revision;
+    const revisionBeforeOpen = vizSessionStore.getState().project.revision;
 
     editorControl.nodeEditor.openNetwork(parameterId);
 
     const network =
-      useEditorGraphStore.getState().networks[
-        SIGNAL_CATHEDRAL_GRAPH_ID
-      ];
+      useEditorGraphStore.getState().networks[SIGNAL_CATHEDRAL_GRAPH_ID];
     expect(useNodeNetworkStore.getState().openNetwork).toBe(
       SIGNAL_CATHEDRAL_GRAPH_ID,
     );
@@ -118,8 +129,7 @@ describe('Editor graph store', () => {
     );
     expect(network?.nodes).toHaveLength(23);
     expect(
-      network?.nodes.find((node) => node.id === 'scale-bass')?.data
-        .definition,
+      network?.nodes.find((node) => node.id === 'scale-bass')?.data.definition,
     ).toMatchObject({
       label: 'Multiply',
       inputs: [
@@ -138,12 +148,11 @@ describe('Editor graph store', () => {
       VType.Number,
     );
 
-    const detachedProject =
-      useEditorProjectStore.getState().exportWorkingProject();
+    const detachedProject = useEditorProjectStore
+      .getState()
+      .exportWorkingProject();
     expect(
-      detachedProject.layers[0]?.inputs?.[
-        'reactivity:structurePulse'
-      ],
+      detachedProject.layers[0]?.inputs?.['reactivity:structurePulse'],
     ).toBeUndefined();
     expect(
       detachedProject.layers[0]?.inputs?.['reactivity:coreEnergy'],
@@ -176,40 +185,40 @@ describe('Editor graph store', () => {
     const project = createSignalCathedralProject();
     useEditorProjectStore.getState().importWorkingProject(project);
 
-    useEditorGraphStore.getState().updateNodeInputValue(
-      SIGNAL_CATHEDRAL_GRAPH_ID,
-      'scale-bass',
-      'factor',
-      1.5,
-    );
+    useEditorGraphStore
+      .getState()
+      .updateNodeInputValue(
+        SIGNAL_CATHEDRAL_GRAPH_ID,
+        'scale-bass',
+        'factor',
+        1.5,
+      );
 
     const graph = useEditorProjectStore
       .getState()
       .exportWorkingProject()
-      .graphs?.find(
-        (candidate) => candidate.id === SIGNAL_CATHEDRAL_GRAPH_ID,
-      );
+      .graphs?.find((candidate) => candidate.id === SIGNAL_CATHEDRAL_GRAPH_ID);
 
     expect(graph?.inputs).toEqual(project.graphs?.[0]?.inputs);
     expect(graph?.outputs).toEqual(project.graphs?.[0]?.outputs);
     expect(graph?.nodes).toHaveLength(18);
-    expect(
-      graph?.nodes.find((node) => node.id === 'scale-bass'),
-    ).toMatchObject({
-      type: 'multiply',
-      inputs: {
-        factor: {
-          kind: 'literal',
-          value: 1.5,
+    expect(graph?.nodes.find((node) => node.id === 'scale-bass')).toMatchObject(
+      {
+        type: 'multiply',
+        inputs: {
+          factor: {
+            kind: 'literal',
+            value: 1.5,
+          },
         },
       },
-    });
-    expect(JSON.stringify(graph)).not.toContain(
-      '__viz_graph_output__',
     );
-    expect(validateProjectDocument(
-      useEditorProjectStore.getState().exportWorkingProject(),
-    )).toMatchObject({
+    expect(JSON.stringify(graph)).not.toContain('__viz_graph_output__');
+    expect(
+      validateProjectDocument(
+        useEditorProjectStore.getState().exportWorkingProject(),
+      ),
+    ).toMatchObject({
       ok: true,
       issues: [],
     });
@@ -222,16 +231,19 @@ describe('Editor graph store', () => {
       .getState()
       .createNetworkForParameter(parameterId, VType.Number);
 
-    const persistedProject =
-      useEditorProjectStore.getState().exportWorkingProject();
+    const persistedProject = useEditorProjectStore
+      .getState()
+      .exportWorkingProject();
     useEditorGraphStore.getState().reset();
     useEditorProjectStore.getState().importWorkingProject(persistedProject);
 
     expect(useEditorGraphStore.getState().networks[parameterId]).toBeDefined();
     expect(
-      useEditorGraphStore.getState().networks[parameterId].nodes.find(
-        (node) => node.data.definition.label === 'Output',
-      )?.data.definition.inputs[0]?.type,
+      useEditorGraphStore
+        .getState()
+        .networks[parameterId].nodes.find(
+          (node) => node.data.definition.label === 'Output',
+        )?.data.definition.inputs[0]?.type,
     ).toBe('number');
   });
 
@@ -262,8 +274,9 @@ describe('Editor graph store', () => {
       .getState()
       .createNetworkForParameter('editor-graph', VType.Number);
 
-    const canonicalProject =
-      useEditorProjectStore.getState().exportWorkingProject();
+    const canonicalProject = useEditorProjectStore
+      .getState()
+      .exportWorkingProject();
 
     expect(canonicalProject.graphs?.map((graph) => graph.id)).toEqual([
       'runtime-native-graph',
@@ -276,7 +289,7 @@ describe('Editor graph store', () => {
     expect(JSON.stringify(canonicalProject)).not.toContain('computeSignal');
   });
 
-  it('preserves package-native graphs during bulk editor-network replacement', () => {
+  it('removes one editor-authored graph without touching package-native graphs', () => {
     const nativeGraph = {
       id: 'runtime-native-graph',
       name: 'Runtime Native Graph',
@@ -307,7 +320,7 @@ describe('Editor graph store', () => {
       .getState()
       .createNetworkForParameter('editor-graph', VType.Number);
 
-    useEditorGraphStore.getState().replaceNetworks({});
+    useEditorGraphStore.getState().removeNetworkForParameter('editor-graph');
 
     expect(
       useEditorProjectStore.getState().exportWorkingProject().graphs,

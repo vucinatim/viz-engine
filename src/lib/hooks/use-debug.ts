@@ -24,7 +24,7 @@ function useDebug(
   // Enhances the given draw function with debugging
   const withDebug = useCallback(
     (
-      drawFunction: Function,
+      drawFunction: () => void,
       {
         dataArray,
         config,
@@ -76,7 +76,7 @@ function useDebug(
         }
       }
     },
-    [debugCanvasRef, resolutionMultiplier],
+    [audioElementRef, debugCanvasRef, resolutionMultiplier],
   );
 
   return withDebug;

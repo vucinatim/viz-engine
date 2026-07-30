@@ -1,9 +1,7 @@
-import { create } from 'zustand';
 import { getNodeNetworks } from '@/components/node-network/node-network-store';
-import {
-  registerNodeNetworkMetricSink,
-} from '@/lib/profiling/node-network-metrics';
+import { registerNodeNetworkMetricSink } from '@/lib/profiling/node-network-metrics';
 import useEditorLayerProjectionStore from '@/lib/stores/editor-layer-projection-store';
+import { create } from 'zustand';
 
 // Performance metrics interfaces
 export interface FPSMetrics {

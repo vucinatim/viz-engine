@@ -4,7 +4,7 @@ import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store'
 import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import { Player, PlayerRef } from '@remotion/player';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import CustomPlayerControls from './custom-player-controls';
 import Renderer from './renderer';
 
@@ -22,11 +22,12 @@ const RemotionPlayer = () => {
   const syncCurrentFrame = useEditorPreviewStore(
     (state) => state.syncCurrentFrame,
   );
-  const isPlaying = useEditorPreviewStore(
-    (state) => state.transport.isPlaying,
-  );
+  const isPlaying = useEditorPreviewStore((state) => state.transport.isPlaying);
   const currentFrame = useEditorPreviewStore(
     (state) => state.transport.currentFrame,
+  );
+  const durationInFrames = useEditorPreviewStore(
+    (state) => state.transport.durationFrames,
   );
 
   const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);
@@ -39,7 +40,6 @@ const RemotionPlayer = () => {
 
   const { width: containerWidth, height: containerHeight } =
     useDimensions(containerRef);
-  const [durationInFrames, setDurationInFrames] = useState(1);
   const src = audioElementRef.current?.src || '';
 
   // Register the player ref
@@ -59,7 +59,6 @@ const RemotionPlayer = () => {
       const dur = audioElement.duration;
       if (Number.isFinite(dur) && dur > 0) {
         const nextDurationFrames = Math.max(1, Math.ceil(dur * FPS));
-        setDurationInFrames(nextDurationFrames);
         setDurationFrames(nextDurationFrames);
       } else if (isCapturingTab) {
         // MediaStreams often report Infinity
@@ -68,7 +67,6 @@ const RemotionPlayer = () => {
           1,
           Math.ceil(fallbackSeconds * FPS),
         );
-        setDurationInFrames(nextDurationFrames);
         setDurationFrames(nextDurationFrames);
       } // else keep previous duration
     };
@@ -93,7 +91,6 @@ const RemotionPlayer = () => {
     if (isCapturingTab) {
       const fallbackSeconds = 60 * 30; // 30 minutes
       const nextDurationFrames = Math.max(1, Math.ceil(fallbackSeconds * FPS));
-      setDurationInFrames(nextDurationFrames);
       setDurationFrames(nextDurationFrames);
     }
   }, [isCapturingTab, setDurationFrames]);
@@ -172,6 +169,7 @@ const RemotionPlayer = () => {
   return (
     <div
       ref={containerRef}
+      data-testid="preview-player"
       className="remotion-player absolute inset-0 flex items-center justify-center">
       <Player
         ref={playerRef}

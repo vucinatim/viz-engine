@@ -1,18 +1,9 @@
-import type { VizArtifactId, VizAssetId } from "./ids.js";
+import type { VizArtifactId, VizAssetId } from './ids.js';
 
-export type VizAssetKind =
-  | "audio"
-  | "image"
-  | "video"
-  | "model"
-  | "binary";
+export type VizAssetKind = 'audio' | 'image' | 'video' | 'model' | 'binary';
 
 export type VizAssetSource =
-  | "local"
-  | "bundle"
-  | "cloud"
-  | "external"
-  | "generated";
+  'local' | 'bundle' | 'cloud' | 'external' | 'generated';
 
 export interface VizAssetRef {
   id: VizAssetId;
@@ -21,11 +12,12 @@ export interface VizAssetRef {
   label: string;
   mimeType?: string;
   originalFileName?: string;
+  externalUri?: string;
   metadata?: Record<string, unknown>;
 }
 
 export interface VizDerivedAssetRef extends VizAssetRef {
-  source: "generated";
+  source: 'generated';
   sourceAssetId: VizAssetId;
   derivationArtifactId?: VizArtifactId;
 }
@@ -50,32 +42,32 @@ interface VizMaterializedAssetBase {
 }
 
 export interface VizMaterializedAudioAsset extends VizMaterializedAssetBase {
-  kind: "audio";
+  kind: 'audio';
   audioSourceUri: string;
 }
 
 export interface VizMaterializedImageAsset extends VizMaterializedAssetBase {
-  kind: "image";
+  kind: 'image';
   imageSourceUri: string;
   width?: number;
   height?: number;
 }
 
 export interface VizMaterializedVideoAsset extends VizMaterializedAssetBase {
-  kind: "video";
+  kind: 'video';
   videoSourceUri: string;
   width?: number;
   height?: number;
 }
 
 export interface VizMaterializedModelAsset extends VizMaterializedAssetBase {
-  kind: "model";
+  kind: 'model';
   bytes?: ArrayBuffer;
   modelSourceUri?: string;
 }
 
 export interface VizMaterializedBinaryAsset extends VizMaterializedAssetBase {
-  kind: "binary";
+  kind: 'binary';
   bytes?: ArrayBuffer;
   binarySourceUri?: string;
 }

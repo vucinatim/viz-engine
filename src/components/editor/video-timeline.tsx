@@ -1,5 +1,3 @@
-'use client';
-
 import { Button } from '@/components/ui/button';
 import { DraggableRangeSelector } from '@/components/ui/draggable-range-selector';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
@@ -143,7 +141,7 @@ const VideoTimelineComponent = ({
     ctx.fillRect(0, 0, cssW, cssH);
 
     const centerY = cssH / 2;
-    const { peaks, leftChannel, rightChannel } = waveformData;
+    const { leftChannel, rightChannel } = waveformData;
 
     // Create gradients for left and right channels
     const leftGradient = ctx.createLinearGradient(0, 0, 0, centerY);
@@ -230,10 +228,6 @@ const VideoTimelineComponent = ({
 
   const handleRangeChange = (value: [number, number]) => {
     onChange(value[0], value[1]);
-  };
-
-  const handleTimeChange = (time: number) => {
-    onTimeChange?.(time);
   };
 
   // Playback control functions
@@ -358,7 +352,7 @@ const VideoTimelineComponent = ({
             }}>
             {/* Triangle pointing down */}
             <div
-              className="h-0 w-0 border-l-[8px] border-r-[8px] border-t-[12px] border-l-transparent border-r-transparent border-t-white shadow-lg"
+              className="h-0 w-0 border-t-[12px] border-r-[8px] border-l-[8px] border-t-white border-r-transparent border-l-transparent shadow-lg"
               style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}
             />
           </div>
@@ -431,7 +425,7 @@ const VideoTimelineComponent = ({
           </div>
 
           {/* Time markers */}
-          <div className="pointer-events-none absolute bottom-1 left-0 right-0 flex justify-between px-2">
+          <div className="pointer-events-none absolute right-0 bottom-1 left-0 flex justify-between px-2">
             {Array.from({ length: 5 }).map((_, i) => {
               const time = (i / 4) * duration;
               return (

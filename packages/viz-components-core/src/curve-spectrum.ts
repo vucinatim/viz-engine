@@ -3,15 +3,15 @@ import type {
   VizRenderCircleNode,
   VizRenderGroupNode,
   VizRenderRectNode,
-} from "@viz-engine/contracts";
-import { curveSpectrumAuthoring } from "./authoring/curve-spectrum.js";
-import { asNumber, asString } from "./shared.js";
+} from '@viz-engine/contracts';
+import { curveSpectrumAuthoring } from './authoring/curve-spectrum.js';
+import { asNumber, asString } from './shared.js';
 
 type Point = { x: number; y: number };
 
 const asNumberArray = (value: unknown): number[] => {
   if (Array.isArray(value)) {
-    return value.filter((entry): entry is number => typeof entry === "number");
+    return value.filter((entry): entry is number => typeof entry === 'number');
   }
 
   if (value instanceof Uint8Array) {
@@ -35,7 +35,7 @@ const toRectSegment = (
   const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
 
   return {
-    kind: "group",
+    kind: 'group',
     id: `${layerId}-segment-${index}`,
     transform: {
       translateX: start.x,
@@ -44,7 +44,7 @@ const toRectSegment = (
     },
     children: [
       {
-        kind: "rect",
+        kind: 'rect',
         id: `${layerId}-segment-rect-${index}`,
         x: 0,
         y: -thickness / 2,
@@ -110,32 +110,32 @@ const computeFrequencyPoints = ({
 };
 
 export const curveSpectrumComponent: VizComponentImplementation = {
-  id: "curve-spectrum",
-  name: "Curve Spectrum",
-  rendererFamily: "three",
-  implementationVersion: "1.0.0",
+  id: 'curve-spectrum',
+  name: 'Curve Spectrum',
+  rendererFamily: 'three',
+  implementationVersion: '1.0.0',
   authoring: curveSpectrumAuthoring,
-  description: "Runtime-rendered port of the V1 curve spectrum visual.",
+  description: 'Runtime-rendered port of the V1 curve spectrum visual.',
   inputs: [
     {
-      key: "spectrum",
-      label: "Spectrum Data",
-      supportedSources: ["literal"],
-      runtimeBinding: "audio.frequency-data",
+      key: 'spectrum',
+      label: 'Spectrum Data',
+      supportedSources: ['literal'],
+      runtimeBinding: 'audio.frequency-data',
       required: true,
     },
     {
-      key: "sampleRate",
-      label: "Sample Rate",
-      supportedSources: ["literal"],
-      runtimeBinding: "audio.sample-rate",
+      key: 'sampleRate',
+      label: 'Sample Rate',
+      supportedSources: ['literal'],
+      runtimeBinding: 'audio.sample-rate',
       required: true,
     },
     {
-      key: "fftSize",
-      label: "FFT Size",
-      supportedSources: ["literal"],
-      runtimeBinding: "audio.fft-size",
+      key: 'fftSize',
+      label: 'FFT Size',
+      supportedSources: ['literal'],
+      runtimeBinding: 'audio.fft-size',
       required: true,
     },
   ],
@@ -146,27 +146,33 @@ export const curveSpectrumComponent: VizComponentImplementation = {
     const points = (settings.points ?? {}) as Record<string, unknown>;
 
     const spectrum = asNumberArray(resolvedInputs.spectrum?.value);
-    const sampleRate = Math.max(1, asNumber(resolvedInputs.sampleRate?.value, 44100));
+    const sampleRate = Math.max(
+      1,
+      asNumber(resolvedInputs.sampleRate?.value, 44100),
+    );
     asNumber(resolvedInputs.fftSize?.value, 2048);
 
     const scaleY = Math.max(0, asNumber(appearance.scaleY, 0.8));
     const minFrequency = Math.max(20, asNumber(appearance.minFrequency, 20));
-    const maxFrequency = Math.max(minFrequency + 1, asNumber(appearance.maxFrequency, 22050));
+    const maxFrequency = Math.max(
+      minFrequency + 1,
+      asNumber(appearance.maxFrequency, 22050),
+    );
     const smoothing = Boolean(line.smoothing ?? true);
-    const lineColor = asString(line.color, "#ffffff");
+    const lineColor = asString(line.color, '#ffffff');
     const lineThickness = Math.max(0, asNumber(line.thickness, 1));
-    const pointColor = asString(points.pointColor, "#ffffff");
+    const pointColor = asString(points.pointColor, '#ffffff');
     const pointSize = Math.max(0, asNumber(points.pointSize, 3));
-    const gridColor = asString(grid.color, "rgba(204, 204, 204, 0.5)");
+    const gridColor = asString(grid.color, 'rgba(204, 204, 204, 0.5)');
     const freqLines = Math.max(0, Math.floor(asNumber(grid.freqLines, 10)));
     const ampLines = Math.max(0, Math.floor(asNumber(grid.ampLines, 5)));
 
-    const children: VizRenderGroupNode["children"] = [];
+    const children: VizRenderGroupNode['children'] = [];
 
     for (let i = 0; i <= freqLines; i += 1) {
       const x = (viewport.width * i) / Math.max(freqLines, 1);
       children.push({
-        kind: "rect",
+        kind: 'rect',
         id: `${layer.id}-freq-line-${i}`,
         x,
         y: 0,
@@ -182,7 +188,7 @@ export const curveSpectrumComponent: VizComponentImplementation = {
     for (let i = 0; i <= ampLines; i += 1) {
       const y = viewport.height - (i * viewport.height) / Math.max(ampLines, 1);
       children.push({
-        kind: "rect",
+        kind: 'rect',
         id: `${layer.id}-amp-line-${i}`,
         x: 0,
         y,
@@ -221,7 +227,7 @@ export const curveSpectrumComponent: VizComponentImplementation = {
         ...spectrumPoints.map(
           (point, index) =>
             ({
-              kind: "circle",
+              kind: 'circle',
               id: `${layer.id}-point-${index}`,
               cx: point.x,
               cy: point.y,
@@ -235,7 +241,7 @@ export const curveSpectrumComponent: VizComponentImplementation = {
     }
 
     return {
-      kind: "group",
+      kind: 'group',
       id: layer.id,
       children,
     } satisfies VizRenderGroupNode;

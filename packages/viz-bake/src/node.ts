@@ -1,32 +1,32 @@
-import { spawn } from "node:child_process";
-import { createHash } from "node:crypto";
-import { createReadStream } from "node:fs";
-import { resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import type { VizAudioPcmSource } from "./audio-feature-bake.js";
+import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { createReadStream } from 'node:fs';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import type { VizAudioPcmSource } from './audio-feature-bake.js';
 import type {
   VizAudioBakeSourceResolver,
   VizAudioFeatureBakeJobRequest,
-} from "./job-service.js";
+} from './job-service.js';
 
 const DEFAULT_MAX_DECODED_BYTES = 1024 * 1024 * 1024;
 const MAX_DIAGNOSTIC_BYTES = 64 * 1024;
 
 export type VizAudioDecodeErrorCode =
-  | "cancelled"
-  | "file-read-failed"
-  | "probe-failed"
-  | "invalid-probe"
-  | "decoded-audio-too-large"
-  | "decode-failed"
-  | "invalid-decoded-pcm";
+  | 'cancelled'
+  | 'file-read-failed'
+  | 'probe-failed'
+  | 'invalid-probe'
+  | 'decoded-audio-too-large'
+  | 'decode-failed'
+  | 'invalid-decoded-pcm';
 
 export class VizAudioDecodeError extends Error {
   readonly code: VizAudioDecodeErrorCode;
 
   constructor(code: VizAudioDecodeErrorCode, message: string) {
     super(message);
-    this.name = "VizAudioDecodeError";
+    this.name = 'VizAudioDecodeError';
     this.code = code;
   }
 }
@@ -70,13 +70,13 @@ const runProcess = (
   new Promise((resolveProcess, rejectProcess) => {
     if (options.signal?.aborted) {
       rejectProcess(
-        new VizAudioDecodeError("cancelled", "Audio decode was cancelled."),
+        new VizAudioDecodeError('cancelled', 'Audio decode was cancelled.'),
       );
       return;
     }
 
     const child = spawn(executable, args, {
-      stdio: ["ignore", "pipe", "pipe"],
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
     const stdoutChunks: Buffer[] = [];
     const stderrChunks: Buffer[] = [];
@@ -87,27 +87,27 @@ const runProcess = (
 
     const onAbort = (): void => {
       wasCancelled = true;
-      child.kill("SIGTERM");
+      child.kill('SIGTERM');
     };
-    options.signal?.addEventListener("abort", onAbort, { once: true });
+    options.signal?.addEventListener('abort', onAbort, { once: true });
 
-    child.stdout.on("data", (chunk: Buffer) => {
+    child.stdout.on('data', (chunk: Buffer) => {
       if (terminalError) {
         return;
       }
       stdoutByteLength += chunk.length;
       if (stdoutByteLength > options.maxStdoutBytes) {
         terminalError = new VizAudioDecodeError(
-          "decoded-audio-too-large",
+          'decoded-audio-too-large',
           `Process output exceeded the ${options.maxStdoutBytes}-byte safety limit.`,
         );
-        child.kill("SIGTERM");
+        child.kill('SIGTERM');
         return;
       }
       stdoutChunks.push(chunk);
     });
 
-    child.stderr.on("data", (chunk: Buffer) => {
+    child.stderr.on('data', (chunk: Buffer) => {
       if (stderrByteLength >= MAX_DIAGNOSTIC_BYTES) {
         return;
       }
@@ -118,18 +118,15 @@ const runProcess = (
       stderrByteLength += accepted.length;
     });
 
-    child.once("error", (error) => {
+    child.once('error', (error) => {
       terminalError = error;
     });
 
-    child.once("close", (exitCode, signal) => {
-      options.signal?.removeEventListener("abort", onAbort);
+    child.once('close', (exitCode, signal) => {
+      options.signal?.removeEventListener('abort', onAbort);
       if (wasCancelled) {
         rejectProcess(
-          new VizAudioDecodeError(
-            "cancelled",
-            "Audio decode was cancelled.",
-          ),
+          new VizAudioDecodeError('cancelled', 'Audio decode was cancelled.'),
         );
         return;
       }
@@ -138,16 +135,15 @@ const runProcess = (
         return;
       }
 
-      const stderr = Buffer.concat(
-        stderrChunks,
-        stderrByteLength,
-      ).toString("utf8");
+      const stderr = Buffer.concat(stderrChunks, stderrByteLength).toString(
+        'utf8',
+      );
       if (exitCode !== 0) {
         rejectProcess(
           new Error(
             `${executable} exited with code ${String(exitCode)}${
-              signal ? ` (${signal})` : ""
-            }: ${stderr.trim() || "no diagnostic output"}`,
+              signal ? ` (${signal})` : ''
+            }: ${stderr.trim() || 'no diagnostic output'}`,
           ),
         );
         return;
@@ -166,35 +162,35 @@ const hashFile = async (
   new Promise((resolveHash, rejectHash) => {
     if (signal?.aborted) {
       rejectHash(
-        new VizAudioDecodeError("cancelled", "Audio decode was cancelled."),
+        new VizAudioDecodeError('cancelled', 'Audio decode was cancelled.'),
       );
       return;
     }
-    const hash = createHash("sha256");
+    const hash = createHash('sha256');
     const stream = createReadStream(filePath);
     const onAbort = (): void => {
       stream.destroy(
-        new VizAudioDecodeError("cancelled", "Audio decode was cancelled."),
+        new VizAudioDecodeError('cancelled', 'Audio decode was cancelled.'),
       );
     };
-    signal?.addEventListener("abort", onAbort, { once: true });
-    stream.on("data", (chunk) => {
+    signal?.addEventListener('abort', onAbort, { once: true });
+    stream.on('data', (chunk) => {
       hash.update(chunk);
     });
-    stream.once("error", (error) => {
-      signal?.removeEventListener("abort", onAbort);
+    stream.once('error', (error) => {
+      signal?.removeEventListener('abort', onAbort);
       rejectHash(
         error instanceof VizAudioDecodeError
           ? error
           : new VizAudioDecodeError(
-              "file-read-failed",
+              'file-read-failed',
               `Could not read audio file "${filePath}": ${error.message}`,
             ),
       );
     });
-    stream.once("end", () => {
-      signal?.removeEventListener("abort", onAbort);
-      resolveHash(`sha256:${hash.digest("hex")}`);
+    stream.once('end', () => {
+      signal?.removeEventListener('abort', onAbort);
+      resolveHash(`sha256:${hash.digest('hex')}`);
     });
   });
 
@@ -206,9 +202,9 @@ interface AudioProbe {
 
 const parsePositiveNumber = (value: unknown): number | undefined => {
   const parsed =
-    typeof value === "number"
+    typeof value === 'number'
       ? value
-      : typeof value === "string"
+      : typeof value === 'string'
         ? Number(value)
         : Number.NaN;
   return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
@@ -224,14 +220,14 @@ const probeAudioFile = async (
     result = await runProcess(
       ffprobePath,
       [
-        "-v",
-        "error",
-        "-select_streams",
-        "a:0",
-        "-show_entries",
-        "stream=sample_rate,channels:format=duration",
-        "-of",
-        "json",
+        '-v',
+        'error',
+        '-select_streams',
+        'a:0',
+        '-show_entries',
+        'stream=sample_rate,channels:format=duration',
+        '-of',
+        'json',
         filePath,
       ],
       {
@@ -244,7 +240,7 @@ const probeAudioFile = async (
       throw error;
     }
     throw new VizAudioDecodeError(
-      "probe-failed",
+      'probe-failed',
       error instanceof Error
         ? error.message
         : `Could not probe audio file "${filePath}".`,
@@ -252,7 +248,7 @@ const probeAudioFile = async (
   }
 
   try {
-    const parsed = JSON.parse(result.stdout.toString("utf8")) as {
+    const parsed = JSON.parse(result.stdout.toString('utf8')) as {
       streams?: Array<{ sample_rate?: unknown; channels?: unknown }>;
       format?: { duration?: unknown };
     };
@@ -265,7 +261,9 @@ const probeAudioFile = async (
       channelCount === undefined ||
       !Number.isInteger(channelCount)
     ) {
-      throw new Error("probe omitted a valid audio sample rate or channel count");
+      throw new Error(
+        'probe omitted a valid audio sample rate or channel count',
+      );
     }
     const durationSeconds = parsePositiveNumber(parsed.format?.duration);
     return {
@@ -275,9 +273,9 @@ const probeAudioFile = async (
     };
   } catch (error) {
     throw new VizAudioDecodeError(
-      "invalid-probe",
+      'invalid-probe',
       `Invalid FFprobe result for "${filePath}": ${
-        error instanceof Error ? error.message : "unknown parse failure"
+        error instanceof Error ? error.message : 'unknown parse failure'
       }.`,
     );
   }
@@ -290,7 +288,7 @@ const deinterleaveFloat32 = (
   const bytesPerSampleFrame = channelCount * Float32Array.BYTES_PER_ELEMENT;
   if (bytes.length % bytesPerSampleFrame !== 0) {
     throw new VizAudioDecodeError(
-      "invalid-decoded-pcm",
+      'invalid-decoded-pcm',
       `Decoded PCM byte length ${bytes.length} is not aligned to ${channelCount} channel(s).`,
     );
   }
@@ -302,8 +300,7 @@ const deinterleaveFloat32 = (
   for (let sample = 0; sample < sampleCount; sample += 1) {
     for (let channel = 0; channel < channelCount; channel += 1) {
       channels[channel]![sample] = bytes.readFloatLE(
-        (sample * channelCount + channel) *
-          Float32Array.BYTES_PER_ELEMENT,
+        (sample * channelCount + channel) * Float32Array.BYTES_PER_ELEMENT,
       );
     }
   }
@@ -314,28 +311,22 @@ export const decodeVizAudioFileToPcm = async (
   inputFilePath: string,
   options: DecodeVizAudioFileOptions = {},
 ): Promise<DecodedVizAudioFile> => {
-  const filePath = inputFilePath.startsWith("file:")
+  const filePath = inputFilePath.startsWith('file:')
     ? fileURLToPath(inputFilePath)
     : resolve(inputFilePath);
-  const maxDecodedBytes =
-    options.maxDecodedBytes ?? DEFAULT_MAX_DECODED_BYTES;
+  const maxDecodedBytes = options.maxDecodedBytes ?? DEFAULT_MAX_DECODED_BYTES;
   if (!Number.isSafeInteger(maxDecodedBytes) || maxDecodedBytes <= 0) {
     throw new VizAudioDecodeError(
-      "decoded-audio-too-large",
-      "maxDecodedBytes must be a positive safe integer.",
+      'decoded-audio-too-large',
+      'maxDecodedBytes must be a positive safe integer.',
     );
   }
 
   const [probe, sourceContentIdentity] = await Promise.all([
-    probeAudioFile(
-      filePath,
-      options.ffprobePath ?? "ffprobe",
-      options.signal,
-    ),
+    probeAudioFile(filePath, options.ffprobePath ?? 'ffprobe', options.signal),
     hashFile(filePath, options.signal),
   ]);
-  const decodedChannelCount: 1 | 2 =
-    probe.channelCount === 1 ? 1 : 2;
+  const decodedChannelCount: 1 | 2 = probe.channelCount === 1 ? 1 : 2;
   const estimatedDecodedBytes =
     probe.durationSeconds === undefined
       ? undefined
@@ -350,7 +341,7 @@ export const decodeVizAudioFileToPcm = async (
     estimatedDecodedBytes > maxDecodedBytes
   ) {
     throw new VizAudioDecodeError(
-      "decoded-audio-too-large",
+      'decoded-audio-too-large',
       `Estimated decoded PCM size ${estimatedDecodedBytes} exceeds the ${maxDecodedBytes}-byte safety limit.`,
     );
   }
@@ -358,32 +349,30 @@ export const decodeVizAudioFileToPcm = async (
   let decoded: ProcessResult;
   try {
     decoded = await runProcess(
-      options.ffmpegPath ?? "ffmpeg",
+      options.ffmpegPath ?? 'ffmpeg',
       [
-        "-v",
-        "error",
-        "-i",
+        '-v',
+        'error',
+        '-i',
         filePath,
-        "-map",
-        "0:a:0",
-        "-vn",
-        "-sn",
-        "-dn",
-        "-ac",
+        '-map',
+        '0:a:0',
+        '-vn',
+        '-sn',
+        '-dn',
+        '-ac',
         String(decodedChannelCount),
-        "-ar",
+        '-ar',
         String(probe.sampleRate),
-        "-f",
-        "f32le",
-        "-acodec",
-        "pcm_f32le",
-        "pipe:1",
+        '-f',
+        'f32le',
+        '-acodec',
+        'pcm_f32le',
+        'pipe:1',
       ],
       {
         maxStdoutBytes: maxDecodedBytes,
-        ...(options.signal === undefined
-          ? {}
-          : { signal: options.signal }),
+        ...(options.signal === undefined ? {} : { signal: options.signal }),
       },
     );
   } catch (error) {
@@ -391,17 +380,14 @@ export const decodeVizAudioFileToPcm = async (
       throw error;
     }
     throw new VizAudioDecodeError(
-      "decode-failed",
+      'decode-failed',
       error instanceof Error
         ? error.message
         : `Could not decode audio file "${filePath}".`,
     );
   }
 
-  const channels = deinterleaveFloat32(
-    decoded.stdout,
-    decodedChannelCount,
-  );
+  const channels = deinterleaveFloat32(decoded.stdout, decodedChannelCount);
   return {
     filePath,
     sourceContentIdentity,
@@ -426,14 +412,14 @@ export interface CreateVizNodeAudioBakeSourceResolverOptions {
   resolveFilePath(
     request: VizAudioFeatureBakeJobRequest,
   ): string | Promise<string>;
-  decodeOptions?: Omit<DecodeVizAudioFileOptions, "signal">;
+  decodeOptions?: Omit<DecodeVizAudioFileOptions, 'signal'>;
   decoderIdentity?: string;
 }
 
 export const createVizNodeAudioBakeSourceResolver = ({
   resolveFilePath,
   decodeOptions = {},
-  decoderIdentity = "ffmpeg-f32le",
+  decoderIdentity = 'ffmpeg-f32le',
 }: CreateVizNodeAudioBakeSourceResolverOptions): VizAudioBakeSourceResolver => ({
   async resolve(request, signal) {
     const filePath = await resolveFilePath(request);

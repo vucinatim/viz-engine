@@ -1,7 +1,7 @@
 import {
   loadLocalVizProjectBundle,
   writeLocalVizProjectBundle,
-} from '@viz-engine/dev-cli';
+} from '@viz-engine/project-bundle/node';
 
 import {
   createVizControl,

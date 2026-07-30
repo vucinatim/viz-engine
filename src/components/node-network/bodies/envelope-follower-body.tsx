@@ -1,8 +1,5 @@
-import {
-  getRuntimeNodeInput,
-  getRuntimeNodeOutput,
-} from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
+import { getRuntimeNodeInput, getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
 import type { GraphNodeData } from '../graph-types';
@@ -103,7 +100,7 @@ const EnvelopeFollowerBody = ({ id: nodeId }: EnvelopeFollowerBodyProps) => {
     if (infoRef.current) {
       infoRef.current.textContent = envVal.toFixed(2);
       infoRef.current.className = cn(
-        'pointer-events-none absolute right-1 top-1 rounded bg-zinc-800/70 px-1 text-[10px] text-zinc-200',
+        'pointer-events-none absolute top-1 right-1 rounded bg-zinc-800/70 px-1 text-[10px] text-zinc-200',
       );
     }
   });

@@ -1,14 +1,14 @@
-import { applyVizProjectActions } from "@viz-engine/actions";
+import { applyVizProjectActions } from '@viz-engine/actions';
 import {
   createVizAudioFeatureBakeJobService,
   type VizAudioFeatureBakeJobRequest,
-} from "@viz-engine/bake";
-import { createVizNodeAudioBakeSourceResolver } from "@viz-engine/bake/node";
-import type { VizResolvedAsset } from "@viz-engine/contracts";
+} from '@viz-engine/bake';
+import { createVizNodeAudioBakeSourceResolver } from '@viz-engine/bake/node';
+import type { VizResolvedAsset } from '@viz-engine/contracts';
 import {
   loadLocalVizProjectBundle,
   writeLocalVizProjectBundle,
-} from "./local-project-bundle.js";
+} from '@viz-engine/project-bundle/node';
 
 export interface BakeLocalBundleAudioOptions {
   sourceBundleDirectory: string;
@@ -26,9 +26,8 @@ const selectAudioAsset = (
 ): VizResolvedAsset | undefined =>
   assets.find(
     (asset) =>
-      asset.kind === "audio" &&
-      (requestedAssetId === undefined ||
-        asset.id === requestedAssetId),
+      asset.kind === 'audio' &&
+      (requestedAssetId === undefined || asset.id === requestedAssetId),
   );
 
 export const bakeLocalBundleAudio = async ({
@@ -50,10 +49,7 @@ export const bakeLocalBundleAudio = async ({
       },
     };
   }
-  const sourceAsset = selectAudioAsset(
-    loaded.resolvedAssets,
-    sourceAssetId,
-  );
+  const sourceAsset = selectAudioAsset(loaded.resolvedAssets, sourceAssetId);
   if (!sourceAsset) {
     return {
       ok: false,
@@ -61,10 +57,10 @@ export const bakeLocalBundleAudio = async ({
         sourceBundleDirectory: loaded.bundleDirectory,
         issues: [
           {
-            code: "missing-audio-asset",
+            code: 'missing-audio-asset',
             message:
               sourceAssetId === undefined
-                ? "The bundle has no resolved audio asset."
+                ? 'The bundle has no resolved audio asset.'
                 : `The bundle has no resolved audio asset "${sourceAssetId}".`,
           },
         ],
@@ -78,30 +74,26 @@ export const bakeLocalBundleAudio = async ({
     }),
   });
   const request: VizAudioFeatureBakeJobRequest = {
-    kind: "audio-feature-timeline",
+    kind: 'audio-feature-timeline',
     sourceAssetId: sourceAsset.id,
-    profile: "standard",
+    profile: 'standard',
     fps: fps ?? loaded.project.timeline.fps,
     ...(fftSize === undefined ? {} : { fftSize }),
     ...(startSeconds === undefined && durationSeconds === undefined
       ? {}
       : {
           sourceWindow: {
-            ...(startSeconds === undefined
-              ? {}
-              : { startSeconds }),
-            ...(durationSeconds === undefined
-              ? {}
-              : { durationSeconds }),
+            ...(startSeconds === undefined ? {} : { startSeconds }),
+            ...(durationSeconds === undefined ? {} : { durationSeconds }),
           },
         }),
   };
   const started = service.start(request, {
-    kind: "agent",
-    id: "viz-dev",
+    kind: 'agent',
+    id: 'viz-dev',
   });
   const completed = await service.wait(started.id);
-  if (completed.status !== "succeeded" || !completed.result) {
+  if (completed.status !== 'succeeded' || !completed.result) {
     return {
       ok: false,
       payload: {
@@ -114,7 +106,7 @@ export const bakeLocalBundleAudio = async ({
   const artifact = completed.result.artifact;
   const actionResult = applyVizProjectActions(loaded.project, [
     {
-      type: "artifact.attach",
+      type: 'artifact.attach',
       payload: {
         artifact: {
           id: artifact.id,

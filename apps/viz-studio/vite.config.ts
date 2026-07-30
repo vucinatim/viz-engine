@@ -1,9 +1,9 @@
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
 import fs from 'node:fs';
 import path from 'node:path';
-import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
 import type { Alias } from 'vite';
+import { defineConfig } from 'vite';
 import { createVizControlBridgePlugin } from './viz-control-bridge-plugin';
 
 const repoRoot = path.resolve(__dirname, '../..');
@@ -138,10 +138,7 @@ export default defineConfig({
             return 'vendor-three-extras';
           }
 
-          if (
-            id.includes('/three/') ||
-            id.includes('/three/src/')
-          ) {
+          if (id.includes('/three/') || id.includes('/three/src/')) {
             return 'vendor-three';
           }
 

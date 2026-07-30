@@ -1,8 +1,5 @@
-import {
-  getRuntimeNodeInput,
-  getRuntimeNodeState,
-} from '@/lib/viz-session';
 import { cn } from '@/lib/utils';
+import { getRuntimeNodeInput, getRuntimeNodeState } from '@/lib/viz-session';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
 import type { GraphNodeData } from '../graph-types';
@@ -101,7 +98,7 @@ const RateLimiterBody = ({ id: nodeId }: RateLimiterBodyProps) => {
       <div ref={statusDisplayRef} className="mb-1" />
       <div ref={countdownDisplayRef} />
       <div ref={valueDisplayRef} className="mt-1" />
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-800">
+      <div className="absolute right-0 bottom-0 left-0 h-1 bg-zinc-800">
         <div ref={progressBarRef} />
       </div>
     </div>
