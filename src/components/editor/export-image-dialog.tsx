@@ -16,18 +16,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
-import {
-  fastCaptureFrame,
-  isTransparentBackground,
-} from '@/lib/utils/fast-frame-capture';
-import {
-  createVizSessionRuntimePreviewFrame,
-  useVizSessionSelector,
-  vizSessionActions,
-} from '@/lib/viz-session';
+import { useVizSessionSelector, vizControl } from '@/lib/viz-session';
 import { Download, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 interface ExportImageDialogProps {
@@ -55,172 +46,46 @@ const ExportImageDialog = ({ open, onOpenChange }: ExportImageDialogProps) => {
   const currentFrame = useVizSessionSelector(
     (state) => state.preview.transport.currentFrame,
   );
-  const playerFPS = useVizSessionSelector(
-    (state) => state.preview.transport.fps,
-  );
-  // Clean up the image URL when dialog closes
-  useEffect(() => {
-    if (!open && imageUrl) {
-      URL.revokeObjectURL(imageUrl);
-      setImageUrl(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
   const captureCurrentFrame = async () => {
     setIsCapturing(true);
     try {
-      // Find the renderer container
-      const rendererContainer = document.querySelector(
-        '[data-renderer-container]',
-      ) as HTMLElement;
-
-      if (!rendererContainer) {
-        toast.error('Renderer not found');
-        return;
+      const project = vizControl.getWorkingProject();
+      const snapshot = vizControl.getSnapshot();
+      const renderJobs = vizControl.getHost().getServices().renderJobs;
+      if (!renderJobs) throw new Error('Image export service is unavailable.');
+      const job = renderJobs.start(
+        {
+          schemaVersion: 1,
+          kind: 'still',
+          source: {
+            projectId: project.projectId,
+            expectedRevision: snapshot.session.revision,
+          },
+          intent: 'final',
+          executorId: 'browser-webgl',
+          outputLabel: `${project.name} frame ${currentFrame}`,
+          viewport: {
+            width,
+            height,
+            backgroundColor: format === 'png' ? 'transparent' : '#000000',
+          },
+          quality: 'high',
+          imageQuality: quality,
+          frame: currentFrame,
+          format,
+        },
+        { kind: 'user', id: 'viz-studio' },
+      );
+      const completed = await renderJobs.wait(job.id);
+      const output = completed.result?.outputs[0];
+      if (completed.status !== 'succeeded' || !output) {
+        throw new Error(completed.failure?.message ?? 'Image export failed.');
       }
-
-      // Find all canvas elements that are layers
-      // Skip any canvases that haven't been sized yet (0x0 will render black)
-      const canvases = Array.from(
-        rendererContainer.querySelectorAll('canvas'),
-      ).filter(
-        (c) =>
-          (c as HTMLCanvasElement).width > 0 &&
-          (c as HTMLCanvasElement).height > 0,
-      ) as HTMLCanvasElement[];
-
-      // Get current player time (in SECONDS) and dt based on the player's FPS
-      const fps = playerFPS > 0 ? playerFPS : 60;
-      const currentTime = currentFrame / fps;
-      const deltaTime = 1 / fps;
-
-      // CRITICAL: Manually render all layers with current time
-      // This ensures we have fresh rendering before capture
-      const previewFrame = createVizSessionRuntimePreviewFrame({
-        currentFrame,
-        time: currentTime,
-        dt: deltaTime,
-        fps,
-        mode: 'export',
-      });
-
-      vizSessionActions.preview.renderRuntimePreviewFrame(previewFrame);
-      await useEditorRuntimePreviewAttachmentStore
-        .getState()
-        .whenRuntimeResourcesReady();
-      vizSessionActions.preview.renderRuntimePreviewFrame(previewFrame);
-
-      // CRITICAL: Force WebGL to finish rendering before capture
-      // WebGL commands are asynchronous - we need to ensure GPU completes work
-      for (const canvas of canvases) {
-        // Get existing WebGL context (returns existing context if one exists)
-        const gl = (canvas.getContext('webgl2') ||
-          canvas.getContext('webgl')) as
-          WebGL2RenderingContext | WebGLRenderingContext | null;
-        if (gl) {
-          // Ensure commands are flushed to the GPU, then block until done
-          if ('flush' in gl && typeof (gl as any).flush === 'function') {
-            (gl as any).flush();
-          }
-          if ('finish' in gl && typeof (gl as any).finish === 'function') {
-            (gl as any).finish();
-          }
-        }
-      }
-
-      let blob: Blob;
-
-      if (format === 'jpeg') {
-        // Use the same fast path as video export for consistency
-        blob = await fastCaptureFrame(rendererContainer, {
-          width,
-          height,
-          backgroundColor: '#000000',
-          quality,
-        });
-      } else {
-        // PNG needs alpha – do manual compositing with alpha context
-        const composite = document.createElement('canvas');
-        composite.width = width;
-        composite.height = height;
-        const ctx = composite.getContext('2d', { alpha: true });
-        if (!ctx) {
-          toast.error('Failed to create canvas context');
-          return;
-        }
-
-        for (const canvas of canvases) {
-          const style = window.getComputedStyle(canvas);
-          const opacity = parseFloat(style.opacity || '1');
-          const cssBlendMode = style.mixBlendMode || 'normal';
-
-          // Map CSS blend mode to Canvas globalCompositeOperation
-          // CSS "normal" = Canvas "source-over"
-          // Most other blend modes have the same name in both APIs
-          const blendMode: GlobalCompositeOperation =
-            cssBlendMode === 'normal'
-              ? 'source-over'
-              : (cssBlendMode as GlobalCompositeOperation);
-
-          const display = style.display;
-          // Use backgroundColor directly - background shorthand includes non-color values
-          const background = style.backgroundColor;
-          if (display === 'none' || opacity === 0) continue;
-
-          // CRITICAL FIX for multiply/blend modes:
-          // We need to composite the layer's background + canvas content together FIRST,
-          // then blend that combined result with the layers below.
-          // Otherwise, if we apply multiply to the background, it turns everything black.
-
-          // Create a temporary canvas for this layer
-          const tempCanvas = document.createElement('canvas');
-          tempCanvas.width = width;
-          tempCanvas.height = height;
-          const tempCtx = tempCanvas.getContext('2d', { alpha: true });
-
-          if (!tempCtx) continue;
-
-          // Draw background on temp canvas (without blend mode)
-          // Skip if background is transparent (including rgba with alpha=0)
-          if (!isTransparentBackground(background)) {
-            tempCtx.fillStyle = background;
-            tempCtx.fillRect(0, 0, width, height);
-          }
-
-          // Draw canvas content on top of background (without blend mode)
-          const scale = Math.min(width / canvas.width, height / canvas.height);
-          const scaledWidth = canvas.width * scale;
-          const scaledHeight = canvas.height * scale;
-          const x = (width - scaledWidth) / 2;
-          const y = (height - scaledHeight) / 2;
-          tempCtx.drawImage(canvas, x, y, scaledWidth, scaledHeight);
-
-          // Now composite the complete layer onto the main canvas with blend mode
-          ctx.save();
-          ctx.globalAlpha = opacity;
-          ctx.globalCompositeOperation = blendMode;
-          ctx.drawImage(tempCanvas, 0, 0);
-          ctx.restore();
-        }
-
-        blob = await new Promise<Blob>((resolve, reject) => {
-          composite.toBlob(
-            (b) =>
-              b
-                ? resolve(b)
-                : reject(new Error('Failed to convert canvas to blob')),
-            'image/png',
-          );
-        });
-      }
-
-      // Create an object URL for the blob and use it directly in an <img> for preview
-      const url = URL.createObjectURL(blob);
-      setImageUrl(url);
+      setImageUrl(output.uri);
     } catch (error) {
-      console.error('Failed to capture frame:', error);
-      toast.error('Failed to capture frame');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to capture frame',
+      );
     } finally {
       setIsCapturing(false);
     }
@@ -247,11 +112,7 @@ const ExportImageDialog = ({ open, onOpenChange }: ExportImageDialogProps) => {
     if (preset) {
       setWidth(preset.width);
       setHeight(preset.height);
-      // Clear current image when resolution changes
-      if (imageUrl) {
-        URL.revokeObjectURL(imageUrl);
-        setImageUrl(null);
-      }
+      setImageUrl(null);
     }
   };
 
@@ -296,11 +157,7 @@ const ExportImageDialog = ({ open, onOpenChange }: ExportImageDialogProps) => {
                 value={format}
                 onValueChange={(v) => {
                   setFormat(v as ImageFormat);
-                  // Clear current image when format changes
-                  if (imageUrl) {
-                    URL.revokeObjectURL(imageUrl);
-                    setImageUrl(null);
-                  }
+                  setImageUrl(null);
                 }}
                 disabled={isCapturing}>
                 <SelectTrigger>
@@ -333,11 +190,7 @@ const ExportImageDialog = ({ open, onOpenChange }: ExportImageDialogProps) => {
                 value={quality}
                 onChange={(value: number) => {
                   setQuality(value);
-                  // Clear current image when quality changes
-                  if (imageUrl) {
-                    URL.revokeObjectURL(imageUrl);
-                    setImageUrl(null);
-                  }
+                  setImageUrl(null);
                 }}
                 min={0.5}
                 max={1}

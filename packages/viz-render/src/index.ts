@@ -137,6 +137,10 @@ export const validateVizRenderRequest = (
   if (request.kind === 'still') {
     if (
       !isNonNegativeInteger(request.frame) ||
+      (request.imageQuality !== undefined &&
+        (!Number.isFinite(request.imageQuality) ||
+          request.imageQuality < 0 ||
+          request.imageQuality > 1)) ||
       !['svg', 'png', 'jpeg', 'webp'].includes(request.format)
     ) {
       issues.push({
@@ -153,6 +157,10 @@ export const validateVizRenderRequest = (
       (request.columns !== undefined && !isPositiveInteger(request.columns)) ||
       (request.gap !== undefined &&
         (!isNonNegativeInteger(request.gap) || request.gap > 256)) ||
+      (request.imageQuality !== undefined &&
+        (!Number.isFinite(request.imageQuality) ||
+          request.imageQuality < 0 ||
+          request.imageQuality > 1)) ||
       !['svg', 'png', 'jpeg', 'webp'].includes(request.format)
     ) {
       issues.push({

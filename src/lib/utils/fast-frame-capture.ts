@@ -148,16 +148,3 @@ export function captureCanvasToBlob(
     );
   });
 }
-
-/**
- * Compatibility helper for callers that need an encoded frame immediately.
- */
-export async function fastCaptureFrame(
-  containerElement: HTMLElement,
-  options: FastCaptureOptions,
-): Promise<Blob> {
-  return captureCanvasToBlob(
-    fastCaptureCanvas(containerElement, options),
-    options,
-  );
-}

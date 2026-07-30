@@ -301,7 +301,7 @@ const executeImageRender = async (
   const frames = request.kind === 'still' ? [request.frame] : request.frames;
   const captured = await captureFrames(frames, context, options);
   const format = request.format;
-  const quality = qualityFor(request.quality);
+  const quality = request.imageQuality ?? qualityFor(request.quality);
   let outputCanvas: HTMLCanvasElement;
 
   if (request.kind === 'still') {

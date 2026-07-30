@@ -1865,3 +1865,15 @@
   - passed the complete foundation gate with 42 valid parity capabilities, 55
     foundation files / 231 tests, all 7 real-browser journeys in 4.1 minutes,
     all package and studio builds, and both built-consumer smoke scenarios
+- converged visible still-image export on the canonical browser render-job
+  service:
+  - deleted the dialog-owned runtime stepping, GPU synchronization, layer
+    compositing, blend-mode handling, and image encoding pipeline
+  - retained the established resolution, JPEG/PNG, transparency, exact JPEG
+    quality, preview, recapture, and download behavior
+  - added bounded numeric image quality to the portable render request and
+    strict control-transport validation
+  - passed strict lint and all package/app/tool type checks, focused render and
+    protocol tests, and the visible nonblank 1280×720 PNG journey
+  - moved production source to 67,720 lines, a reduction of 7,804 lines from
+    the immutable Goal Two baseline

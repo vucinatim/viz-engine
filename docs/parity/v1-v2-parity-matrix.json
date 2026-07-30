@@ -429,7 +429,7 @@
       "importance": "high",
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/export-image-dialog.tsx", "src/components/editor/renderer.tsx"],
-      "v2Evidence": ["src/components/editor/export-image-dialog.tsx", "src/components/editor/editor-runtime-preview-driver.tsx"],
+      "v2Evidence": ["src/components/editor/export-image-dialog.tsx", "src/lib/viz-session/browser-job-services.ts", "src/lib/utils/browser-render-executor.ts", "packages/viz-render/src/index.ts"],
       "status": "partial",
       "acceptance": ["The exported image matches the chosen runtime frame and project state.", "Size and transparency options are honored.", "Export does not mutate playback or the active project."],
       "validationMethods": ["browser", "visual", "integration"],

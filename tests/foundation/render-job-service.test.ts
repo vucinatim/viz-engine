@@ -4,6 +4,7 @@ import type {
 } from '@viz-engine/contracts';
 import {
   createVizRenderJobService,
+  validateVizRenderRequest,
   type VizRenderExecutor,
   type VizRenderSource,
 } from '@viz-engine/render';
@@ -68,6 +69,15 @@ const output: VizRenderOutputArtifact = {
 };
 
 describe('Viz render job service', () => {
+  it('validates exact image encoding quality', () => {
+    expect(
+      validateVizRenderRequest({ ...request, imageQuality: 0.95 }),
+    ).toEqual([]);
+    expect(
+      validateVizRenderRequest({ ...request, imageQuality: 1.01 }),
+    ).toEqual([expect.objectContaining({ code: 'invalid-request' })]);
+  });
+
   it('resolves exact source identity and produces an observable result', async () => {
     const executor: VizRenderExecutor = {
       id: 'test-executor',

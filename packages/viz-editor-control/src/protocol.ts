@@ -402,6 +402,7 @@ const renderRequestSchema = z.discriminatedUnion('kind', [
       kind: z.literal('still'),
       frame: z.number().int().nonnegative(),
       format: z.enum(['svg', 'png', 'jpeg', 'webp']),
+      imageQuality: z.number().finite().min(0).max(1).optional(),
     })
     .strict(),
   z
@@ -418,6 +419,7 @@ const renderRequestSchema = z.discriminatedUnion('kind', [
       columns: z.number().int().positive().optional(),
       gap: z.number().int().min(0).max(256).optional(),
       format: z.enum(['svg', 'png', 'jpeg', 'webp']),
+      imageQuality: z.number().finite().min(0).max(1).optional(),
     })
     .strict(),
   z

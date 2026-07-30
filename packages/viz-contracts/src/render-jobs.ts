@@ -35,6 +35,7 @@ export interface VizStillRenderRequest extends VizRenderRequestBase {
   kind: 'still';
   frame: number;
   format: 'svg' | 'png' | 'jpeg' | 'webp';
+  imageQuality?: number;
 }
 
 export interface VizContactSheetRenderRequest extends VizRenderRequestBase {
@@ -43,6 +44,7 @@ export interface VizContactSheetRenderRequest extends VizRenderRequestBase {
   columns?: number;
   gap?: number;
   format: 'svg' | 'png' | 'jpeg' | 'webp';
+  imageQuality?: number;
 }
 
 export interface VizClipRenderRequest extends VizRenderRequestBase {
