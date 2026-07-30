@@ -1752,3 +1752,21 @@
     deletions, net -4,299
   - passed focused editor configuration, portable component authoring, and
     renderer tests plus strict lint and package/app type checking
+- completed the Goal Two orchestration and node-visualization checkpoint:
+  - centralized editor-session mutation-result construction so conflicts,
+    rejections, dry runs, and commits can no longer drift in cloning or issue
+    projection semantics
+  - consolidated control-side inspection setup, job listing, history
+    navigation, and host mutation projection while preserving the public
+    control contract
+  - reduced the authoritative control protocol schemas through two typed
+    strict-schema constructors, retaining every nested validation rule and
+    transport operation
+  - gave all 17 node visualizers one body-prop contract and all 11 high-DPI
+    canvas visualizers one pixel-ratio lifecycle without abstracting their
+    domain-specific drawing
+  - moved production source to 70,711 lines and the maintained diff against
+    the immutable Goal Two baseline to 2,397 additions and 7,017 deletions,
+    net -4,620
+  - passed strict lint and type checks plus focused session, control, protocol,
+    and node-editor regression coverage

@@ -3,21 +3,14 @@ import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import { getRuntimeNodeInput, getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useCallback, useRef, useState } from 'react';
 import { useRafLoop } from 'react-use';
-import type { GraphNodeData } from '../graph-types';
+import type { NodeBodyProps } from './node-body';
 
 const MIN_FREQ = 20;
 const MAX_FREQ = 20000;
 const MIN_LOG_FREQ = Math.log(MIN_FREQ);
 const MAX_LOG_FREQ = Math.log(MAX_FREQ);
 
-interface PitchDetectionBodyProps {
-  id: string;
-  data: GraphNodeData;
-  selected: boolean;
-  nodeNetworkId: string;
-}
-
-function PitchDetectionBody({ id: nodeId, data }: PitchDetectionBodyProps) {
+function PitchDetectionBody({ id: nodeId, data }: NodeBodyProps) {
   const getNodeOutput = getRuntimeNodeOutput;
   const getLiveNodeValue = getRuntimeNodeInput;
   const audioAnalyzer = useAudioEngineStore((s) => s.audioAnalyzer);

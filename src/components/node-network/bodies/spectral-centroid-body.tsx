@@ -2,16 +2,9 @@ import { cn } from '@/lib/utils';
 import { getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
-import type { GraphNodeData } from '../graph-types';
+import { prepareNodeCanvas, type NodeBodyProps } from './node-body';
 
-interface SpectralCentroidBodyProps {
-  id: string;
-  data: GraphNodeData;
-  selected: boolean;
-  nodeNetworkId: string;
-}
-
-const SpectralCentroidBody = ({ id: nodeId }: SpectralCentroidBodyProps) => {
+const SpectralCentroidBody = ({ id: nodeId }: NodeBodyProps) => {
   const getNodeOutput = getRuntimeNodeOutput;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -23,21 +16,9 @@ const SpectralCentroidBody = ({ id: nodeId }: SpectralCentroidBodyProps) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const dpr =
-      typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
-    const cssW = Math.max(1, Math.floor(rect.width));
-    const cssH = Math.max(1, Math.floor(rect.height));
-    const pixelW = cssW * dpr;
-    const pixelH = cssH * dpr;
-    if (canvas.width !== pixelW || canvas.height !== pixelH) {
-      canvas.width = pixelW;
-      canvas.height = pixelH;
-    }
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const prepared = prepareNodeCanvas(canvas);
+    if (!prepared) return;
+    const { context: ctx, width: cssW, height: cssH } = prepared;
 
     // Read outputs
     const output = getNodeOutput(nodeId);

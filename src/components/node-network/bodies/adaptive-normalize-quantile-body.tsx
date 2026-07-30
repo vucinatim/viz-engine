@@ -2,20 +2,11 @@ import { cn } from '@/lib/utils';
 import { getRuntimeNodeInput, getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
-import type { GraphNodeData } from '../graph-types';
-
-interface AdaptiveNormalizeQuantileBodyProps {
-  id: string;
-  data: GraphNodeData;
-  selected: boolean;
-  nodeNetworkId: string;
-}
+import { prepareNodeCanvas, type NodeBodyProps } from './node-body';
 
 // Visual body for Adaptive Normalize (Quantile)
 // Shows: raw input sparkline, shaded quantile band (mapped to local view), and normalized output sparkline.
-const AdaptiveNormalizeQuantileBody = ({
-  id: nodeId,
-}: AdaptiveNormalizeQuantileBodyProps) => {
+const AdaptiveNormalizeQuantileBody = ({ id: nodeId }: NodeBodyProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const infoRef = useRef<HTMLDivElement>(null);
   const rawRing = useRef<number[]>([]);
@@ -28,21 +19,9 @@ const AdaptiveNormalizeQuantileBody = ({
   useRafLoop(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const dpr =
-      typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
-    const cssW = Math.max(1, Math.floor(rect.width));
-    const cssH = Math.max(1, Math.floor(rect.height));
-    const pixelW = cssW * dpr;
-    const pixelH = cssH * dpr;
-    if (canvas.width !== pixelW || canvas.height !== pixelH) {
-      canvas.width = pixelW;
-      canvas.height = pixelH;
-    }
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const prepared = prepareNodeCanvas(canvas);
+    if (!prepared) return;
+    const { context: ctx, width: cssW, height: cssH } = prepared;
 
     // Live values
     const raw = Number(getNodeInputValue(nodeId, 'value')) || 0;

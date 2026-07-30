@@ -369,16 +369,17 @@ export const createVizControl = (
     return {
       ...hostSnapshot,
       graphSummaries: createGraphSummaries(hostSnapshot.session.workingProject),
-      jobSummaries: [
-        ...(host.getServices().audioFeatureBakeJobs?.list() ?? []),
-        ...(host.getServices().renderJobs?.list() ?? []),
-      ]
-        .map(createJobSummary)
-        .sort((left, right) =>
-          left.requestedAt.localeCompare(right.requestedAt),
-        ),
+      jobSummaries: listJobs(),
     };
   };
+
+  const listJobs = (): VizControlJobSummary[] =>
+    [
+      ...(host.getServices().audioFeatureBakeJobs?.list() ?? []),
+      ...(host.getServices().renderJobs?.list() ?? []),
+    ]
+      .map(createJobSummary)
+      .sort((left, right) => left.requestedAt.localeCompare(right.requestedAt));
 
   const notifyProjectChange = (reason: VizControlProjectChangeReason) => {
     const snapshot = getSnapshot();
@@ -397,16 +398,26 @@ export const createVizControl = (
     return frame ?? host.getSnapshot().transport.currentFrame;
   };
 
-  const createFrameInspection = (frame?: number): VizControlFrameInspection => {
+  const createInspectionContext = (frame: number | undefined) => {
     const resources = host.getProjectResources();
-    const hostSnapshot = host.getSnapshot();
+    const snapshot = host.getSnapshot();
     const selectedFrame = getSelectedFrame(frame);
-    const runtimeSession = createRuntimeSessionForInspection({
-      project: resources.project,
-      resolvedAssets: resources.resolvedAssets,
-      resolvedArtifacts: resources.resolvedArtifacts,
-      frameMode: hostSnapshot.transport.mode,
-    });
+    return {
+      resources,
+      snapshot,
+      selectedFrame,
+      runtimeSession: createRuntimeSessionForInspection({
+        project: resources.project,
+        resolvedAssets: resources.resolvedAssets,
+        resolvedArtifacts: resources.resolvedArtifacts,
+        frameMode: snapshot.transport.mode,
+      }),
+    };
+  };
+
+  const createFrameInspection = (frame?: number): VizControlFrameInspection => {
+    const { resources, snapshot, selectedFrame, runtimeSession } =
+      createInspectionContext(frame);
     const framePlan = createVizFramePlan({
       session: runtimeSession,
       frame: selectedFrame,
@@ -417,7 +428,7 @@ export const createVizControl = (
 
     return {
       source: clone(resources.source),
-      revision: hostSnapshot.session.revision,
+      revision: snapshot.session.revision,
       frame: selectedFrame,
       framePlan,
     };
@@ -426,15 +437,8 @@ export const createVizControl = (
   const createRenderInspection = (
     frame?: number,
   ): VizControlRenderInspection => {
-    const resources = host.getProjectResources();
-    const hostSnapshot = host.getSnapshot();
-    const selectedFrame = getSelectedFrame(frame);
-    const runtimeSession = createRuntimeSessionForInspection({
-      project: resources.project,
-      resolvedAssets: resources.resolvedAssets,
-      resolvedArtifacts: resources.resolvedArtifacts,
-      frameMode: hostSnapshot.transport.mode,
-    });
+    const { resources, snapshot, selectedFrame, runtimeSession } =
+      createInspectionContext(frame);
     const renderPlan = createVizRenderPlan({
       session: runtimeSession,
       frame: selectedFrame,
@@ -446,7 +450,7 @@ export const createVizControl = (
 
     return {
       source: clone(resources.source),
-      revision: hostSnapshot.session.revision,
+      revision: snapshot.session.revision,
       frame: selectedFrame,
       renderPlan,
     };
@@ -455,15 +459,8 @@ export const createVizControl = (
   const createGraphRuntimeInspection = (
     frame?: number,
   ): VizGraphRuntimeInspection => {
-    const resources = host.getProjectResources();
-    const hostSnapshot = host.getSnapshot();
-    const selectedFrame = getSelectedFrame(frame);
-    const runtimeSession = createRuntimeSessionForInspection({
-      project: resources.project,
-      resolvedAssets: resources.resolvedAssets,
-      resolvedArtifacts: resources.resolvedArtifacts,
-      frameMode: hostSnapshot.transport.mode,
-    });
+    const { resources, snapshot, selectedFrame, runtimeSession } =
+      createInspectionContext(frame);
     const graphResults = evaluateVizGraphs({
       session: runtimeSession,
       frame: selectedFrame,
@@ -481,7 +478,7 @@ export const createVizControl = (
 
     return {
       source: clone(resources.source),
-      revision: hostSnapshot.session.revision,
+      revision: snapshot.session.revision,
       frame: selectedFrame,
       graphs: (resources.project.graphs ?? []).map((graph) => ({
         graphId: graph.id,
@@ -549,6 +546,23 @@ export const createVizControl = (
     }
     return undefined;
   };
+
+  const navigateHistory = (
+    reason: Extract<VizControlProjectChangeReason, 'undo' | 'redo'>,
+  ): VizControlSnapshot => {
+    const previousRevision = host.getSnapshot().session.revision;
+    host[reason]();
+    return host.getSnapshot().session.revision === previousRevision
+      ? getSnapshot()
+      : notifyProjectChange(reason);
+  };
+
+  const mutateHost =
+    <TArgs extends unknown[]>(operation: (...args: TArgs) => void) =>
+    (...args: TArgs): VizControlSnapshot => {
+      operation(...args);
+      return getSnapshot();
+    };
 
   const attachAudioFeatureBakeOutput = (
     jobId: VizJobId,
@@ -627,15 +641,7 @@ export const createVizControl = (
       );
     },
     inspectGraphRuntime: createGraphRuntimeInspection,
-    listJobs: () =>
-      [
-        ...(host.getServices().audioFeatureBakeJobs?.list() ?? []),
-        ...(host.getServices().renderJobs?.list() ?? []),
-      ]
-        .map(createJobSummary)
-        .sort((left, right) =>
-          left.requestedAt.localeCompare(right.requestedAt),
-        ),
+    listJobs,
     inspectJob: findJob,
     startAudioFeatureBake: (request) =>
       getAudioFeatureBakeJobs().start(request, actor),
@@ -660,20 +666,8 @@ export const createVizControl = (
           actor: transactionOptions?.actor ?? actor,
         }),
       ),
-    undo: () => {
-      const previousRevision = host.getSnapshot().session.revision;
-      host.undo();
-      return host.getSnapshot().session.revision === previousRevision
-        ? getSnapshot()
-        : notifyProjectChange('undo');
-    },
-    redo: () => {
-      const previousRevision = host.getSnapshot().session.revision;
-      host.redo();
-      return host.getSnapshot().session.revision === previousRevision
-        ? getSnapshot()
-        : notifyProjectChange('redo');
-    },
+    undo: () => navigateHistory('undo'),
+    redo: () => navigateHistory('redo'),
     inspectFrame: createFrameInspection,
     inspectRender: createRenderInspection,
     createDebugSnapshot: (frame) => {
@@ -689,54 +683,26 @@ export const createVizControl = (
         svg: renderVizRenderPlanToSvgMarkup(renderInspection.renderPlan),
       };
     },
-    play: () => {
-      host.play();
-      return getSnapshot();
-    },
-    pause: () => {
-      host.pause();
-      return getSnapshot();
-    },
-    seekToFrame: (frame) => {
-      host.seekToFrame(frame);
-      return getSnapshot();
-    },
-    advanceBySeconds: (seconds) => {
-      host.advanceBySeconds(seconds);
-      return getSnapshot();
-    },
-    setLoop: (loop) => {
-      host.setLoop(loop);
-      return getSnapshot();
-    },
-    setTransportDurationFrames: (durationFrames) => {
-      host.setTransportDurationFrames(durationFrames);
-      return getSnapshot();
-    },
-    setPreviewMode: (mode) => {
-      host.setPreviewMode(mode);
-      return getSnapshot();
-    },
-    attachAudioSource: (source) => {
-      host.attachAudioSource(source);
-      return getSnapshot();
-    },
-    clearAudioSource: () => {
-      host.clearAudioSource();
-      return getSnapshot();
-    },
-    setAudioAnalyzerState: (state) => {
-      host.setAudioAnalyzerState(state);
-      return getSnapshot();
-    },
-    setLiveInputAvailable: (available) => {
-      host.setLiveInputAvailable(available);
-      return getSnapshot();
-    },
-    setBakedArtifactAvailable: (available) => {
-      host.setBakedArtifactAvailable(available);
-      return getSnapshot();
-    },
+    play: mutateHost(() => host.play()),
+    pause: mutateHost(() => host.pause()),
+    seekToFrame: mutateHost((frame) => host.seekToFrame(frame)),
+    advanceBySeconds: mutateHost((seconds) => host.advanceBySeconds(seconds)),
+    setLoop: mutateHost((loop) => host.setLoop(loop)),
+    setTransportDurationFrames: mutateHost((frames) =>
+      host.setTransportDurationFrames(frames),
+    ),
+    setPreviewMode: mutateHost((mode) => host.setPreviewMode(mode)),
+    attachAudioSource: mutateHost((source) => host.attachAudioSource(source)),
+    clearAudioSource: mutateHost(() => host.clearAudioSource()),
+    setAudioAnalyzerState: mutateHost((state) =>
+      host.setAudioAnalyzerState(state),
+    ),
+    setLiveInputAvailable: mutateHost((available) =>
+      host.setLiveInputAvailable(available),
+    ),
+    setBakedArtifactAvailable: mutateHost((available) =>
+      host.setBakedArtifactAvailable(available),
+    ),
     subscribe: (listener) => {
       const unsubscribeHost = host.subscribe(() => {
         listener(getSnapshot());

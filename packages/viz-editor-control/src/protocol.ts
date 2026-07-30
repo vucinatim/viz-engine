@@ -9,6 +9,9 @@ export const VIZ_CONTROL_PROTOCOL_VERSION = 1 as const;
 
 const nonEmptyString = z.string().trim().min(1);
 const unknownRecord = z.record(z.unknown());
+const strictObject = <TShape extends z.ZodRawShape>(shape: TShape) =>
+  z.object(shape).strict();
+const positionSchema = strictObject({ x: z.number(), y: z.number() });
 
 const assetRefSchema = z
   .object({
@@ -218,251 +221,107 @@ const layerSchema = z
   })
   .strict();
 
+const actionSchema = <TType extends string, TPayload extends z.ZodRawShape>(
+  type: TType,
+  payload: TPayload,
+) =>
+  strictObject({
+    type: z.literal(type),
+    payload: strictObject(payload),
+  });
+
 const projectActionSchema = z.discriminatedUnion('type', [
-  z
-    .object({
-      type: z.literal('asset.attach'),
-      payload: z.object({ asset: assetRefSchema }).strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('asset.replace'),
-      payload: z
-        .object({
-          assetId: nonEmptyString,
-          asset: assetRefSchema,
-        })
-        .strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('artifact.attach'),
-      payload: z.object({ artifact: artifactRefSchema }).strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('layer.create'),
-      payload: z
-        .object({
-          layerId: nonEmptyString.optional(),
-          index: z.number().int().optional(),
-          layer: layerSchema.partial({ id: true }),
-        })
-        .strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('layer.remove'),
-      payload: z.object({ layerId: nonEmptyString }).strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('layer.move'),
-      payload: z
-        .object({
-          layerId: nonEmptyString,
-          index: z.number().int(),
-        })
-        .strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('layer.replace'),
-      payload: z
-        .object({
-          layerId: nonEmptyString,
-          layer: layerSchema,
-        })
-        .strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('layer.settings.set'),
-      payload: z
-        .object({
-          layerId: nonEmptyString,
-          path: nonEmptyString,
-          value: z.unknown(),
-        })
-        .strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('layer.input.set'),
-      payload: z
-        .object({
-          layerId: nonEmptyString,
-          inputKey: nonEmptyString,
-          valueSource: valueSourceSchema.nullable(),
-        })
-        .strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('timeline.set'),
-      payload: z
-        .object({
-          timeline: z
-            .object({
-              fps: z.number().finite().positive(),
-              durationInFrames: z.number().int().positive(),
-              sampleRate: z.number().finite().positive().optional(),
-            })
-            .strict(),
-        })
-        .strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('graph.create'),
-      payload: z
-        .object({
-          graphId: nonEmptyString.optional(),
-          name: nonEmptyString,
-        })
-        .strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('graph.replace'),
-      payload: z
-        .object({
-          graphId: nonEmptyString,
-          graph: graphSchema,
-        })
-        .strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('graph.remove'),
-      payload: z.object({ graphId: nonEmptyString }).strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('graph.input.set'),
-      payload: z
-        .object({
-          graphId: nonEmptyString,
-          inputKey: nonEmptyString,
-          source: graphInputSourceSchema.nullable(),
-        })
-        .strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('graph.node.add'),
-      payload: z
-        .object({
-          graphId: nonEmptyString,
-          nodeId: nonEmptyString.optional(),
-          nodeType: nonEmptyString,
-          position: z
-            .object({
-              x: z.number(),
-              y: z.number(),
-            })
-            .optional(),
-          initialInputs: z.record(graphNodeInputBindingSchema).optional(),
-          metadata: unknownRecord.optional(),
-        })
-        .strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('graph.node.position.set'),
-      payload: z
-        .object({
-          graphId: nonEmptyString,
-          nodeId: nonEmptyString,
-          position: z.object({ x: z.number(), y: z.number() }).strict(),
-        })
-        .strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('graph.node.remove'),
-      payload: z
-        .object({
-          graphId: nonEmptyString,
-          nodeId: nonEmptyString,
-        })
-        .strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('graph.node.input.set'),
-      payload: z
-        .object({
-          graphId: nonEmptyString,
-          nodeId: nonEmptyString,
-          inputKey: nonEmptyString,
-          binding: graphNodeInputBindingSchema.nullable(),
-        })
-        .strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('graph.output.set'),
-      payload: z
-        .object({
-          graphId: nonEmptyString,
-          output: graphOutputSchema,
-        })
-        .strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('graph.output.remove'),
-      payload: z
-        .object({
-          graphId: nonEmptyString,
-          outputKey: nonEmptyString,
-        })
-        .strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('graph.output.position.set'),
-      payload: z
-        .object({
-          graphId: nonEmptyString,
-          outputKey: nonEmptyString,
-          position: z.object({ x: z.number(), y: z.number() }).strict(),
-        })
-        .strict(),
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal('graph.enabled.set'),
-      payload: z
-        .object({
-          graphId: nonEmptyString,
-          enabled: z.boolean(),
-        })
-        .strict(),
-    })
-    .strict(),
+  actionSchema('asset.attach', { asset: assetRefSchema }),
+  actionSchema('asset.replace', {
+    assetId: nonEmptyString,
+    asset: assetRefSchema,
+  }),
+  actionSchema('artifact.attach', { artifact: artifactRefSchema }),
+  actionSchema('layer.create', {
+    layerId: nonEmptyString.optional(),
+    index: z.number().int().optional(),
+    layer: layerSchema.partial({ id: true }),
+  }),
+  actionSchema('layer.remove', { layerId: nonEmptyString }),
+  actionSchema('layer.move', {
+    layerId: nonEmptyString,
+    index: z.number().int(),
+  }),
+  actionSchema('layer.replace', {
+    layerId: nonEmptyString,
+    layer: layerSchema,
+  }),
+  actionSchema('layer.settings.set', {
+    layerId: nonEmptyString,
+    path: nonEmptyString,
+    value: z.unknown(),
+  }),
+  actionSchema('layer.input.set', {
+    layerId: nonEmptyString,
+    inputKey: nonEmptyString,
+    valueSource: valueSourceSchema.nullable(),
+  }),
+  actionSchema('timeline.set', {
+    timeline: strictObject({
+      fps: z.number().finite().positive(),
+      durationInFrames: z.number().int().positive(),
+      sampleRate: z.number().finite().positive().optional(),
+    }),
+  }),
+  actionSchema('graph.create', {
+    graphId: nonEmptyString.optional(),
+    name: nonEmptyString,
+  }),
+  actionSchema('graph.replace', {
+    graphId: nonEmptyString,
+    graph: graphSchema,
+  }),
+  actionSchema('graph.remove', { graphId: nonEmptyString }),
+  actionSchema('graph.input.set', {
+    graphId: nonEmptyString,
+    inputKey: nonEmptyString,
+    source: graphInputSourceSchema.nullable(),
+  }),
+  actionSchema('graph.node.add', {
+    graphId: nonEmptyString,
+    nodeId: nonEmptyString.optional(),
+    nodeType: nonEmptyString,
+    position: positionSchema.optional(),
+    initialInputs: z.record(graphNodeInputBindingSchema).optional(),
+    metadata: unknownRecord.optional(),
+  }),
+  actionSchema('graph.node.position.set', {
+    graphId: nonEmptyString,
+    nodeId: nonEmptyString,
+    position: positionSchema,
+  }),
+  actionSchema('graph.node.remove', {
+    graphId: nonEmptyString,
+    nodeId: nonEmptyString,
+  }),
+  actionSchema('graph.node.input.set', {
+    graphId: nonEmptyString,
+    nodeId: nonEmptyString,
+    inputKey: nonEmptyString,
+    binding: graphNodeInputBindingSchema.nullable(),
+  }),
+  actionSchema('graph.output.set', {
+    graphId: nonEmptyString,
+    output: graphOutputSchema,
+  }),
+  actionSchema('graph.output.remove', {
+    graphId: nonEmptyString,
+    outputKey: nonEmptyString,
+  }),
+  actionSchema('graph.output.position.set', {
+    graphId: nonEmptyString,
+    outputKey: nonEmptyString,
+    position: positionSchema,
+  }),
+  actionSchema('graph.enabled.set', {
+    graphId: nonEmptyString,
+    enabled: z.boolean(),
+  }),
 ]);
 
 const projectTransactionSchema = z
@@ -585,135 +444,45 @@ const renderRequestSchema = z.discriminatedUnion('kind', [
     .strict(),
 ]);
 
+const requestSchema = <
+  TOperation extends string,
+  TFields extends z.ZodRawShape,
+>(
+  operation: TOperation,
+  fields: TFields,
+) =>
+  strictObject({
+    protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
+    id: nonEmptyString,
+    operation: z.literal(operation),
+    ...fields,
+  });
+
 const controlRequestSchema = z.discriminatedUnion('operation', [
-  z
-    .object({
-      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
-      id: nonEmptyString,
-      operation: z.literal('control.discover'),
-    })
-    .strict(),
-  z
-    .object({
-      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
-      id: nonEmptyString,
-      operation: z.literal('control.snapshot'),
-    })
-    .strict(),
-  z
-    .object({
-      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
-      id: nonEmptyString,
-      operation: z.literal('project.inspect'),
-    })
-    .strict(),
-  z
-    .object({
-      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
-      id: nonEmptyString,
-      operation: z.literal('component.inspect'),
-    })
-    .strict(),
-  z
-    .object({
-      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
-      id: nonEmptyString,
-      operation: z.literal('graph.inspect'),
-      graphId: nonEmptyString.optional(),
-    })
-    .strict(),
-  z
-    .object({
-      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
-      id: nonEmptyString,
-      operation: z.literal('transaction.apply'),
-      transaction: projectTransactionSchema,
-    })
-    .strict(),
-  z
-    .object({
-      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
-      id: nonEmptyString,
-      operation: z.literal('history.undo'),
-    })
-    .strict(),
-  z
-    .object({
-      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
-      id: nonEmptyString,
-      operation: z.literal('history.redo'),
-    })
-    .strict(),
-  z
-    .object({
-      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
-      id: nonEmptyString,
-      operation: z.literal('preview.play'),
-    })
-    .strict(),
-  z
-    .object({
-      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
-      id: nonEmptyString,
-      operation: z.literal('preview.pause'),
-    })
-    .strict(),
-  z
-    .object({
-      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
-      id: nonEmptyString,
-      operation: z.literal('preview.seek'),
-      frame: z.number().int().nonnegative(),
-    })
-    .strict(),
-  z
-    .object({
-      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
-      id: nonEmptyString,
-      operation: z.literal('job.list'),
-    })
-    .strict(),
-  z
-    .object({
-      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
-      id: nonEmptyString,
-      operation: z.literal('job.inspect'),
-      jobId: nonEmptyString,
-    })
-    .strict(),
-  z
-    .object({
-      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
-      id: nonEmptyString,
-      operation: z.literal('audio-bake.start'),
-      request: audioFeatureBakeJobRequestSchema,
-    })
-    .strict(),
-  z
-    .object({
-      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
-      id: nonEmptyString,
-      operation: z.literal('render.start'),
-      request: renderRequestSchema,
-    })
-    .strict(),
-  z
-    .object({
-      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
-      id: nonEmptyString,
-      operation: z.literal('job.cancel'),
-      jobId: nonEmptyString,
-    })
-    .strict(),
-  z
-    .object({
-      protocolVersion: z.literal(VIZ_CONTROL_PROTOCOL_VERSION),
-      id: nonEmptyString,
-      operation: z.literal('audio-bake.attach'),
-      jobId: nonEmptyString,
-      expectedRevision: z.number().int().nonnegative().optional(),
-    })
-    .strict(),
+  requestSchema('control.discover', {}),
+  requestSchema('control.snapshot', {}),
+  requestSchema('project.inspect', {}),
+  requestSchema('component.inspect', {}),
+  requestSchema('graph.inspect', { graphId: nonEmptyString.optional() }),
+  requestSchema('transaction.apply', {
+    transaction: projectTransactionSchema,
+  }),
+  requestSchema('history.undo', {}),
+  requestSchema('history.redo', {}),
+  requestSchema('preview.play', {}),
+  requestSchema('preview.pause', {}),
+  requestSchema('preview.seek', { frame: z.number().int().nonnegative() }),
+  requestSchema('job.list', {}),
+  requestSchema('job.inspect', { jobId: nonEmptyString }),
+  requestSchema('audio-bake.start', {
+    request: audioFeatureBakeJobRequestSchema,
+  }),
+  requestSchema('render.start', { request: renderRequestSchema }),
+  requestSchema('job.cancel', { jobId: nonEmptyString }),
+  requestSchema('audio-bake.attach', {
+    jobId: nonEmptyString,
+    expectedRevision: z.number().int().nonnegative().optional(),
+  }),
 ]);
 
 interface VizControlRequestBase {

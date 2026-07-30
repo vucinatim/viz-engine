@@ -2,16 +2,9 @@ import { cn } from '@/lib/utils';
 import { getRuntimeNodeInput, getRuntimeNodeState } from '@/lib/viz-session';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
-import type { GraphNodeData } from '../graph-types';
+import type { NodeBodyProps } from './node-body';
 
-interface RateLimiterBodyProps {
-  id: string;
-  data: GraphNodeData;
-  selected: boolean;
-  nodeNetworkId: string;
-}
-
-const RateLimiterBody = ({ id: nodeId }: RateLimiterBodyProps) => {
+const RateLimiterBody = ({ id: nodeId }: NodeBodyProps) => {
   const getNodeInputValue = getRuntimeNodeInput;
 
   const countdownDisplayRef = useRef<HTMLDivElement>(null);

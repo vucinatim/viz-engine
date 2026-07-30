@@ -10,15 +10,8 @@ import {
 } from '@/components/ui/select';
 import { X } from 'lucide-react';
 import { useRef } from 'react';
-import type { GraphNodeData } from '../graph-types';
 import { useNodeNetwork } from '../node-network-store';
-
-interface ValueMapperBodyProps {
-  id: string;
-  data: GraphNodeData;
-  selected: boolean;
-  nodeNetworkId: string;
-}
+import type { NodeBodyProps } from './node-body';
 
 const defaultColor = '#ffffff';
 
@@ -26,7 +19,7 @@ const ValueMapperBody = ({
   id: nodeId,
   data,
   nodeNetworkId,
-}: ValueMapperBodyProps) => {
+}: NodeBodyProps) => {
   const { updateInputValue } = useNodeNetwork(nodeNetworkId);
 
   const mapping = data.inputValues.mapping || {};

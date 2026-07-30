@@ -2,16 +2,9 @@ import { cn } from '@/lib/utils';
 import { getRuntimeNodeInput, getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useRef } from 'react';
 import { useRafLoop } from 'react-use';
-import type { GraphNodeData } from '../graph-types';
+import type { NodeBodyProps } from './node-body';
 
-interface ThresholdCounterBodyProps {
-  id: string;
-  data: GraphNodeData;
-  selected: boolean;
-  nodeNetworkId: string;
-}
-
-const ThresholdCounterBody = ({ id: nodeId }: ThresholdCounterBodyProps) => {
+const ThresholdCounterBody = ({ id: nodeId }: NodeBodyProps) => {
   const getNodeOutput = getRuntimeNodeOutput;
   const getNodeInputValue = getRuntimeNodeInput;
 

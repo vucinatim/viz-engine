@@ -4,17 +4,10 @@ import { D3DragEvent, drag } from 'd3-drag';
 import { select } from 'd3-selection';
 import { memo, useEffect, useRef } from 'react';
 import { useRafLoop } from 'react-use';
-import type { GraphNodeData } from '../graph-types';
 import { useNodeNetwork } from '../node-network-store';
+import type { NodeBodyProps } from './node-body';
 
 type DragEvt = D3DragEvent<HTMLDivElement, unknown, unknown>;
-
-interface HysteresisGateBodyProps {
-  id: string;
-  data: GraphNodeData;
-  selected: boolean;
-  nodeNetworkId: string;
-}
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
@@ -22,7 +15,7 @@ const HysteresisGateBody = ({
   id: nodeId,
   data,
   nodeNetworkId,
-}: HysteresisGateBodyProps) => {
+}: NodeBodyProps) => {
   const getNodeOutput = getRuntimeNodeOutput;
   const getNodeInputValue = getRuntimeNodeInput;
 
