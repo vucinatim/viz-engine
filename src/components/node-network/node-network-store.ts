@@ -1,17 +1,11 @@
 import { Edge } from '@xyflow/react';
 import { create } from 'zustand';
-import { useShallow } from 'zustand/react/shallow';
 
 import useEditorGraphStore from '@/lib/stores/editor-graph-store';
 import type { VizGraphFragment } from '@/lib/viz-session/graph-fragments';
-import {
-  NodeHandleType,
-  canConnectTypes,
-  getTypeColor,
-  getTypeLabel,
-} from '../config/node-types';
+import { NodeHandleType, canConnectTypes } from '../config/node-types';
 import { VType } from '../config/types';
-import { GraphNode, GraphNodeData, NodeNetwork } from './graph-types';
+import { GraphNode, GraphNodeData } from './graph-types';
 
 interface NodeNetworkStore {
   openNetwork: string | null;
@@ -98,7 +92,7 @@ export const setNodeNetworkEnabled = (
   }
 };
 
-export const addNodeToNetwork = (parameterId: string, node: GraphNode) => {
+const addNodeToNetwork = (parameterId: string, node: GraphNode) => {
   useEditorGraphStore.getState().addNodeToNetwork(parameterId, node);
 };
 
@@ -117,24 +111,6 @@ export const setEdgesInNetwork = (parameterId: string, edges: Edge[]) => {
   useEditorGraphStore.getState().setEdgesInNetwork(parameterId, edges);
 };
 
-export const createNodeNetworkForParameter = (
-  parameterId: string,
-  type: VType,
-) => {
-  useEditorGraphStore.getState().createNetworkForParameter(parameterId, type);
-  const nodeUiStore = useNodeNetworkStore.getState();
-  nodeUiStore.setOpenNetwork(parameterId);
-  nodeUiStore.setShouldForceShowOverlay(true);
-};
-
-export const removeNodeNetworkForParameter = (parameterId: string) => {
-  useEditorGraphStore.getState().removeNetworkForParameter(parameterId);
-  const nodeUiStore = useNodeNetworkStore.getState();
-  if (nodeUiStore.openNetwork === parameterId) {
-    nodeUiStore.setOpenNetwork(null);
-  }
-};
-
 export const applyPresetToNodeNetwork = (
   parameterId: string,
   presetId: string,
@@ -148,7 +124,7 @@ export const applyPresetToNodeNetwork = (
   nodeUiStore.setShouldForceShowOverlay(true);
 };
 
-export const updateNodeNetworkInputValue = (
+const updateNodeNetworkInputValue = (
   parameterId: string,
   nodeId: string,
   inputId: string,
@@ -157,15 +133,6 @@ export const updateNodeNetworkInputValue = (
   useEditorGraphStore
     .getState()
     .updateNodeInputValue(parameterId, nodeId, inputId, value);
-};
-
-export const duplicateNodeNetwork = (
-  fromParameterId: string,
-  toParameterId: string,
-) => {
-  useEditorGraphStore
-    .getState()
-    .duplicateNetwork(fromParameterId, toParameterId);
 };
 
 export const clearStaleNodeNetworks = () => {
@@ -226,36 +193,9 @@ export const validateConnection = (
   return canConnectTypes(sourceType, targetType);
 };
 
-export const useConnectionValidation = () => ({
-  validateConnection,
-  canConnectTypes,
-  getTypeColor,
-  getTypeLabel,
-});
-
 export const useIsNetworkEnabled = (parameterId: string) =>
   useEditorGraphStore(
     (state) => state.networks[parameterId]?.isEnabled ?? false,
-  );
-
-export const useEnabledNetworkIds = () =>
-  useEditorGraphStore(
-    useShallow((state) =>
-      Object.entries(state.networks)
-        .filter(([, network]) => network.isEnabled)
-        .map(([parameterId]) => parameterId),
-    ),
-  );
-
-export const useNetworkEnabledMap = () =>
-  useEditorGraphStore(
-    useShallow((state) => {
-      const map: Record<string, boolean> = {};
-      Object.entries(state.networks).forEach(([parameterId, network]) => {
-        map[parameterId] = network.isEnabled;
-      });
-      return map;
-    }),
   );
 
 export const useSpecificNetwork = (parameterId: string | null) =>
@@ -263,15 +203,4 @@ export const useSpecificNetwork = (parameterId: string | null) =>
     parameterId ? state.networks[parameterId] : null,
   );
 
-export const useEnabledNetworks = () =>
-  useEditorGraphStore((state) => {
-    const enabledNetworks: Record<string, NodeNetwork> = {};
-    Object.entries(state.networks).forEach(([parameterId, network]) => {
-      if (network.isEnabled) {
-        enabledNetworks[parameterId] = network;
-      }
-    });
-    return enabledNetworks;
-  });
-
-export type { GraphNode, GraphNodeData, NodeNetwork };
+export type { GraphNode, GraphNodeData };

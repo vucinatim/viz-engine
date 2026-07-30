@@ -14,10 +14,10 @@ import { autoLayoutNodes } from './auto-layout';
 import { GraphNode } from './graph-types';
 
 // Aliases used inside presets to reference the network I/O nodes
-export const INPUT_ALIAS = 'INPUT';
-export const OUTPUT_ALIAS = 'OUTPUT';
+const INPUT_ALIAS = 'INPUT';
+const OUTPUT_ALIAS = 'OUTPUT';
 
-export type PresetNodeSpec = {
+type PresetNodeSpec = {
   id: string;
   label: string; // AnimNode label
   position?: { x: number; y: number };
@@ -25,7 +25,7 @@ export type PresetNodeSpec = {
   state?: { [key: string]: any };
 };
 
-export type PresetEdgeSpec = {
+type PresetEdgeSpec = {
   source: string; // node id or INPUT_ALIAS
   sourceHandle?: string; // optional for object outputs
   target: string; // node id or OUTPUT_ALIAS
@@ -42,6 +42,24 @@ export type NodeNetworkPreset = {
   edges: PresetEdgeSpec[];
 };
 
+type PresetNodeTuple = readonly [
+  id: string,
+  label: string,
+  inputValues?: Record<string, any>,
+];
+
+type PresetEdgeTuple = readonly [
+  source: string,
+  sourceHandle: string,
+  target: string,
+  targetHandle: string,
+];
+
+type CompactPreset = Omit<NodeNetworkPreset, 'nodes' | 'edges'> & {
+  nodes: PresetNodeTuple[];
+  edges: PresetEdgeTuple[];
+};
+
 // Registry for presets, grouped by output type
 const presetRegistry: Record<NodeHandleType, NodeNetworkPreset[]> = {
   number: [],
@@ -56,9 +74,25 @@ const presetRegistry: Record<NodeHandleType, NodeNetworkPreset[]> = {
   'math-op': [],
 };
 
-export const registerPreset = (preset: NodeNetworkPreset) => {
+const registerPreset = (preset: NodeNetworkPreset) => {
   (presetRegistry[preset.outputType] ||= []).push(preset);
 };
+
+const definePreset = ({ nodes, edges, ...preset }: CompactPreset) =>
+  registerPreset({
+    ...preset,
+    nodes: nodes.map(([id, label, inputValues]) => ({
+      id,
+      label,
+      ...(inputValues === undefined ? {} : { inputValues }),
+    })),
+    edges: edges.map(([source, sourceHandle, target, targetHandle]) => ({
+      source,
+      sourceHandle,
+      target,
+      targetHandle,
+    })),
+  });
 
 export const getPresetsForType = (
   type: NodeHandleType,
@@ -75,7 +109,7 @@ export const getPresetById = (id: string): NodeNetworkPreset | null => {
 };
 
 // Instantiate a preset into concrete nodes/edges for a given parameter/network
-export const instantiatePreset = (
+const instantiatePreset = (
   preset: NodeNetworkPreset,
   parameterId: string,
   outputType?: NodeHandleType,
@@ -208,36 +242,20 @@ export const instantiateCanonicalPreset = (
 
 // ===== SIMPLE STARTER PRESETS =====
 
-registerPreset({
+definePreset({
   id: 'number-sine-osc',
   name: 'Sine Oscillator (time)',
   description: 'Maps Input.time -> Sine -> Output',
   outputType: 'number',
   autoPlace: true,
-  nodes: [
-    {
-      id: 'sine',
-      label: 'Sine',
-      inputValues: { frequency: 1, phase: 0, amplitude: 1 },
-    },
-  ],
+  nodes: [['sine', 'Sine', { frequency: 1, phase: 0, amplitude: 1 }]],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'time',
-      target: 'sine',
-      targetHandle: 'time',
-    },
-    {
-      source: 'sine',
-      sourceHandle: 'value',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'time', 'sine', 'time'],
+    ['sine', 'value', OUTPUT_ALIAS, 'output'],
   ],
 });
 
-registerPreset({
+definePreset({
   id: 'number-average-volume',
   name: 'Average Volume -> Normalize',
   description:
@@ -245,32 +263,17 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    { id: 'avg', label: 'Average Volume' },
-    {
-      id: 'norm',
-      label: 'Normalize',
-      inputValues: { inputMin: 0, inputMax: 255, outputMin: 0, outputMax: 1 },
-    },
+    ['avg', 'Average Volume'],
+    [
+      'norm',
+      'Normalize',
+      { inputMin: 0, inputMax: 255, outputMin: 0, outputMax: 1 },
+    ],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'audioSignal',
-      target: 'avg',
-      targetHandle: 'data',
-    },
-    {
-      source: 'avg',
-      sourceHandle: 'average',
-      target: 'norm',
-      targetHandle: 'value',
-    },
-    {
-      source: 'norm',
-      sourceHandle: 'result',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'audioSignal', 'avg', 'data'],
+    ['avg', 'average', 'norm', 'value'],
+    ['norm', 'result', OUTPUT_ALIAS, 'output'],
   ],
 });
 
@@ -278,7 +281,7 @@ registerPreset({
 // High-quality, tuned networks for extracting musical features
 
 // Kick Drum Detection
-registerPreset({
+definePreset({
   id: 'kick-adaptive',
   name: '🥁 Kick Drum (Adaptive)',
   description:
@@ -286,78 +289,33 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    {
-      id: 'band',
-      label: 'Frequency Band',
-      inputValues: { startFrequency: 80, endFrequency: 150 },
-    },
-    {
-      id: 'info',
-      label: 'Band Info',
-    },
-    {
-      id: 'env',
-      label: 'Envelope Follower',
-      inputValues: { attackMs: 6, releaseMs: 120 },
-    },
-    {
-      id: 'adapt',
-      label: 'Adaptive Normalize (Quantile)',
-      inputValues: {
+    ['band', 'Frequency Band', { startFrequency: 80, endFrequency: 150 }],
+    ['info', 'Band Info'],
+    ['env', 'Envelope Follower', { attackMs: 6, releaseMs: 120 }],
+    [
+      'adapt',
+      'Adaptive Normalize (Quantile)',
+      {
         windowMs: 4000,
         qLow: 0.5,
         qHigh: 0.98,
         freezeBelow: 140,
       },
-    },
-    {
-      id: 'gate',
-      label: 'Hysteresis Gate',
-      inputValues: { low: 0.33, high: 0.45 },
-    },
+    ],
+    ['gate', 'Hysteresis Gate', { low: 0.33, high: 0.45 }],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'band',
-      sourceHandle: 'bandData',
-      target: 'info',
-      targetHandle: 'data',
-    },
-    {
-      source: 'info',
-      sourceHandle: 'average',
-      target: 'env',
-      targetHandle: 'value',
-    },
-    {
-      source: 'env',
-      sourceHandle: 'env',
-      target: 'adapt',
-      targetHandle: 'value',
-    },
-    {
-      source: 'adapt',
-      sourceHandle: 'result',
-      target: 'gate',
-      targetHandle: 'value',
-    },
-    {
-      source: 'gate',
-      sourceHandle: 'gated',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'band', 'frequencyAnalysis'],
+    ['band', 'bandData', 'info', 'data'],
+    ['info', 'average', 'env', 'value'],
+    ['env', 'env', 'adapt', 'value'],
+    ['adapt', 'result', 'gate', 'value'],
+    ['gate', 'gated', OUTPUT_ALIAS, 'output'],
   ],
 });
 
 // Snare/Clap Detection
-registerPreset({
+definePreset({
   id: 'snare-adaptive',
   name: '🥁 Snare/Clap (Adaptive)',
   description:
@@ -365,78 +323,33 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    {
-      id: 'band',
-      label: 'Frequency Band',
-      inputValues: { startFrequency: 180, endFrequency: 4000 },
-    },
-    {
-      id: 'info',
-      label: 'Band Info',
-    },
-    {
-      id: 'env',
-      label: 'Envelope Follower',
-      inputValues: { attackMs: 4, releaseMs: 140 },
-    },
-    {
-      id: 'adapt',
-      label: 'Adaptive Normalize (Quantile)',
-      inputValues: {
+    ['band', 'Frequency Band', { startFrequency: 180, endFrequency: 4000 }],
+    ['info', 'Band Info'],
+    ['env', 'Envelope Follower', { attackMs: 4, releaseMs: 140 }],
+    [
+      'adapt',
+      'Adaptive Normalize (Quantile)',
+      {
         windowMs: 4000,
         qLow: 0.5,
         qHigh: 0.95,
         freezeBelow: 90,
       },
-    },
-    {
-      id: 'gate',
-      label: 'Hysteresis Gate',
-      inputValues: { low: 0.06, high: 0.14 },
-    },
+    ],
+    ['gate', 'Hysteresis Gate', { low: 0.06, high: 0.14 }],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'band',
-      sourceHandle: 'bandData',
-      target: 'info',
-      targetHandle: 'data',
-    },
-    {
-      source: 'info',
-      sourceHandle: 'average',
-      target: 'env',
-      targetHandle: 'value',
-    },
-    {
-      source: 'env',
-      sourceHandle: 'env',
-      target: 'adapt',
-      targetHandle: 'value',
-    },
-    {
-      source: 'adapt',
-      sourceHandle: 'result',
-      target: 'gate',
-      targetHandle: 'value',
-    },
-    {
-      source: 'gate',
-      sourceHandle: 'gated',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'band', 'frequencyAnalysis'],
+    ['band', 'bandData', 'info', 'data'],
+    ['info', 'average', 'env', 'value'],
+    ['env', 'env', 'adapt', 'value'],
+    ['adapt', 'result', 'gate', 'value'],
+    ['gate', 'gated', OUTPUT_ALIAS, 'output'],
   ],
 });
 
 // Bass Presence
-registerPreset({
+definePreset({
   id: 'bass-adaptive',
   name: '🎸 Bass Presence',
   description:
@@ -444,70 +357,38 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    {
-      id: 'band',
-      label: 'Frequency Band',
-      inputValues: {
+    [
+      'band',
+      'Frequency Band',
+      {
         startFrequency: 20,
         endFrequency: 163,
       },
-    },
-    {
-      id: 'info',
-      label: 'Band Info',
-    },
-    {
-      id: 'adapt',
-      label: 'Adaptive Normalize (Quantile)',
-      inputValues: {
+    ],
+    ['info', 'Band Info'],
+    [
+      'adapt',
+      'Adaptive Normalize (Quantile)',
+      {
         windowMs: 4000,
         qLow: 0.3,
         qHigh: 0.9,
         freezeBelow: 130,
       },
-    },
-    {
-      id: 'env_follow',
-      label: 'Envelope Follower',
-      inputValues: { attackMs: 100, releaseMs: 400 },
-    },
+    ],
+    ['env_follow', 'Envelope Follower', { attackMs: 100, releaseMs: 400 }],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'band',
-      sourceHandle: 'bandData',
-      target: 'info',
-      targetHandle: 'data',
-    },
-    {
-      source: 'info',
-      sourceHandle: 'average',
-      target: 'adapt',
-      targetHandle: 'value',
-    },
-    {
-      source: 'adapt',
-      sourceHandle: 'result',
-      target: 'env_follow',
-      targetHandle: 'value',
-    },
-    {
-      source: 'env_follow',
-      sourceHandle: 'env',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'band', 'frequencyAnalysis'],
+    ['band', 'bandData', 'info', 'data'],
+    ['info', 'average', 'adapt', 'value'],
+    ['adapt', 'result', 'env_follow', 'value'],
+    ['env_follow', 'env', OUTPUT_ALIAS, 'output'],
   ],
 });
 
 // Melody/Vocal Detection
-registerPreset({
+definePreset({
   id: 'melody-harmonic',
   name: '🎵 Melody/Vocal (Harmonic)',
   description:
@@ -515,88 +396,49 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    {
-      id: 'band',
-      label: 'Frequency Band',
-      inputValues: {
+    [
+      'band',
+      'Frequency Band',
+      {
         startFrequency: 212,
         endFrequency: 3762,
       },
-    },
-    {
-      id: 'harm',
-      label: 'Harmonic Presence',
-      inputValues: {
+    ],
+    [
+      'harm',
+      'Harmonic Presence',
+      {
         maxHarmonics: 3,
         toleranceCents: 50,
         smoothMs: 100,
         minSNR: 0.6,
       },
-    },
-    {
-      id: 'env',
-      label: 'Envelope Follower',
-      inputValues: { attackMs: 6, releaseMs: 300 },
-    },
-    {
-      id: 'norm',
-      label: 'Normalize',
-      inputValues: {
+    ],
+    ['env', 'Envelope Follower', { attackMs: 6, releaseMs: 300 }],
+    [
+      'norm',
+      'Normalize',
+      {
         inputMin: 0.2,
         inputMax: 0.4,
         outputMin: 0,
         outputMax: 1,
       },
-    },
+    ],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'band',
-      sourceHandle: 'bandData',
-      target: 'harm',
-      targetHandle: 'data',
-    },
-    {
-      source: 'band',
-      sourceHandle: 'bandStartBin',
-      target: 'harm',
-      targetHandle: 'bandStartBin',
-    },
-    {
-      source: 'band',
-      sourceHandle: 'frequencyPerBin',
-      target: 'harm',
-      targetHandle: 'frequencyPerBin',
-    },
-    {
-      source: 'harm',
-      sourceHandle: 'presence',
-      target: 'env',
-      targetHandle: 'value',
-    },
-    {
-      source: 'env',
-      sourceHandle: 'env',
-      target: 'norm',
-      targetHandle: 'value',
-    },
-    {
-      source: 'norm',
-      sourceHandle: 'result',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'band', 'frequencyAnalysis'],
+    ['band', 'bandData', 'harm', 'data'],
+    ['band', 'bandStartBin', 'harm', 'bandStartBin'],
+    ['band', 'frequencyPerBin', 'harm', 'frequencyPerBin'],
+    ['harm', 'presence', 'env', 'value'],
+    ['env', 'env', 'norm', 'value'],
+    ['norm', 'result', OUTPUT_ALIAS, 'output'],
   ],
 });
 
 // Percussion Detection
-registerPreset({
+definePreset({
   id: 'percussion-adaptive',
   name: '🥁 Percussion (Hi-Freq)',
   description:
@@ -604,70 +446,38 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    {
-      id: 'band',
-      label: 'Frequency Band',
-      inputValues: {
+    [
+      'band',
+      'Frequency Band',
+      {
         startFrequency: 4000,
         endFrequency: 10000,
       },
-    },
-    {
-      id: 'info',
-      label: 'Band Info',
-    },
-    {
-      id: 'adapt',
-      label: 'Adaptive Normalize (Quantile)',
-      inputValues: {
+    ],
+    ['info', 'Band Info'],
+    [
+      'adapt',
+      'Adaptive Normalize (Quantile)',
+      {
         windowMs: 4000,
         qLow: 0.5,
         qHigh: 0.9,
         freezeBelow: 40,
       },
-    },
-    {
-      id: 'gate',
-      label: 'Hysteresis Gate',
-      inputValues: { low: 0.4, high: 0.5 },
-    },
+    ],
+    ['gate', 'Hysteresis Gate', { low: 0.4, high: 0.5 }],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'band',
-      sourceHandle: 'bandData',
-      target: 'info',
-      targetHandle: 'data',
-    },
-    {
-      source: 'info',
-      sourceHandle: 'average',
-      target: 'adapt',
-      targetHandle: 'value',
-    },
-    {
-      source: 'adapt',
-      sourceHandle: 'result',
-      target: 'gate',
-      targetHandle: 'value',
-    },
-    {
-      source: 'gate',
-      sourceHandle: 'gated',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'band', 'frequencyAnalysis'],
+    ['band', 'bandData', 'info', 'data'],
+    ['info', 'average', 'adapt', 'value'],
+    ['adapt', 'result', 'gate', 'value'],
+    ['gate', 'gated', OUTPUT_ALIAS, 'output'],
   ],
 });
 
 // Hi-Hat Detection (higher frequency, tighter response)
-registerPreset({
+definePreset({
   id: 'hihat-adaptive',
   name: '🎩 Hi-Hat Detection',
   description:
@@ -675,73 +485,45 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    {
-      id: 'band',
-      label: 'Frequency Band',
-      inputValues: {
+    [
+      'band',
+      'Frequency Band',
+      {
         startFrequency: 6000,
         endFrequency: 14000,
       },
-    },
-    {
-      id: 'info',
-      label: 'Band Info',
-    },
-    {
-      id: 'adapt',
-      label: 'Adaptive Normalize (Quantile)',
-      inputValues: {
+    ],
+    ['info', 'Band Info'],
+    [
+      'adapt',
+      'Adaptive Normalize (Quantile)',
+      {
         windowMs: 3000, // Shorter window for faster response
         qLow: 0.6, // Higher threshold to catch transients
         qHigh: 0.92,
         freezeBelow: 35,
       },
-    },
-    {
-      id: 'gate',
-      label: 'Hysteresis Gate',
-      inputValues: {
+    ],
+    [
+      'gate',
+      'Hysteresis Gate',
+      {
         low: 0.45, // Tighter gate for crisp hits
         high: 0.55,
       },
-    },
+    ],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'band',
-      sourceHandle: 'bandData',
-      target: 'info',
-      targetHandle: 'data',
-    },
-    {
-      source: 'info',
-      sourceHandle: 'average',
-      target: 'adapt',
-      targetHandle: 'value',
-    },
-    {
-      source: 'adapt',
-      sourceHandle: 'result',
-      target: 'gate',
-      targetHandle: 'value',
-    },
-    {
-      source: 'gate',
-      sourceHandle: 'gated',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'band', 'frequencyAnalysis'],
+    ['band', 'bandData', 'info', 'data'],
+    ['info', 'average', 'adapt', 'value'],
+    ['adapt', 'result', 'gate', 'value'],
+    ['gate', 'gated', OUTPUT_ALIAS, 'output'],
   ],
 });
 
 // Kick + Bass Combined Intensity with Smooth Decay
-registerPreset({
+definePreset({
   id: 'kick-bass-smooth-intensity',
   name: '💥 Kick + Bass (Smooth Decay)',
   description:
@@ -749,137 +531,51 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    {
-      id: 'kick_band',
-      label: 'Frequency Band',
-      inputValues: { startFrequency: 80, endFrequency: 150 },
-    },
-    {
-      id: 'kick_info',
-      label: 'Band Info',
-    },
-    {
-      id: 'kick_adapt',
-      label: 'Adaptive Normalize (Quantile)',
-      inputValues: {
+    ['kick_band', 'Frequency Band', { startFrequency: 80, endFrequency: 150 }],
+    ['kick_info', 'Band Info'],
+    [
+      'kick_adapt',
+      'Adaptive Normalize (Quantile)',
+      {
         windowMs: 4000,
         qLow: 0.5,
         qHigh: 0.98,
         freezeBelow: 140,
       },
-    },
-    {
-      id: 'bass_band',
-      label: 'Frequency Band',
-      inputValues: { startFrequency: 20, endFrequency: 163 },
-    },
-    {
-      id: 'bass_info',
-      label: 'Band Info',
-    },
-    {
-      id: 'bass_adapt',
-      label: 'Adaptive Normalize (Quantile)',
-      inputValues: {
+    ],
+    ['bass_band', 'Frequency Band', { startFrequency: 20, endFrequency: 163 }],
+    ['bass_info', 'Band Info'],
+    [
+      'bass_adapt',
+      'Adaptive Normalize (Quantile)',
+      {
         windowMs: 4000,
         qLow: 0.3,
         qHigh: 0.9,
         freezeBelow: 130,
       },
-    },
-    {
-      id: 'combine',
-      label: 'Math',
-      inputValues: { operation: 'max' },
-    },
-    {
-      id: 'envelope',
-      label: 'Envelope Follower',
-      inputValues: { attackMs: 5, releaseMs: 150 },
-    },
-    {
-      id: 'scale',
-      label: 'Math',
-      inputValues: { a: 1, b: 2.5, operation: 'multiply' },
-    },
+    ],
+    ['combine', 'Math', { operation: 'max' }],
+    ['envelope', 'Envelope Follower', { attackMs: 5, releaseMs: 150 }],
+    ['scale', 'Math', { a: 1, b: 2.5, operation: 'multiply' }],
   ],
   edges: [
-    // Kick chain
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'kick_band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'kick_band',
-      sourceHandle: 'bandData',
-      target: 'kick_info',
-      targetHandle: 'data',
-    },
-    {
-      source: 'kick_info',
-      sourceHandle: 'average',
-      target: 'kick_adapt',
-      targetHandle: 'value',
-    },
-    // Bass chain
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'bass_band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'bass_band',
-      sourceHandle: 'bandData',
-      target: 'bass_info',
-      targetHandle: 'data',
-    },
-    {
-      source: 'bass_info',
-      sourceHandle: 'average',
-      target: 'bass_adapt',
-      targetHandle: 'value',
-    },
-    // Combine (take max of kick and bass)
-    {
-      source: 'kick_adapt',
-      sourceHandle: 'result',
-      target: 'combine',
-      targetHandle: 'a',
-    },
-    {
-      source: 'bass_adapt',
-      sourceHandle: 'result',
-      target: 'combine',
-      targetHandle: 'b',
-    },
-    // Smooth decay
-    {
-      source: 'combine',
-      sourceHandle: 'result',
-      target: 'envelope',
-      targetHandle: 'value',
-    },
-    // Scale to desired range (multiply by 2.5 for 0-2.5 output)
-    {
-      source: 'envelope',
-      sourceHandle: 'env',
-      target: 'scale',
-      targetHandle: 'a',
-    },
-    {
-      source: 'scale',
-      sourceHandle: 'result',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'kick_band', 'frequencyAnalysis'],
+    ['kick_band', 'bandData', 'kick_info', 'data'],
+    ['kick_info', 'average', 'kick_adapt', 'value'],
+    [INPUT_ALIAS, 'frequencyAnalysis', 'bass_band', 'frequencyAnalysis'],
+    ['bass_band', 'bandData', 'bass_info', 'data'],
+    ['bass_info', 'average', 'bass_adapt', 'value'],
+    ['kick_adapt', 'result', 'combine', 'a'],
+    ['bass_adapt', 'result', 'combine', 'b'],
+    ['combine', 'result', 'envelope', 'value'],
+    ['envelope', 'env', 'scale', 'a'],
+    ['scale', 'result', OUTPUT_ALIAS, 'output'],
   ],
 });
 
 // Strobe Flash Rate based on Spectral Flux (Energy Changes)
-registerPreset({
+definePreset({
   id: 'strobe-buildup-detector',
   name: '⚡ Strobe Buildup Detector',
   description:
@@ -887,57 +583,29 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    {
-      id: 'flux',
-      label: 'Spectral Flux',
-      inputValues: { smoothMs: 30 },
-    },
-    {
-      id: 'env',
-      label: 'Envelope Follower',
-      inputValues: { attackMs: 50, releaseMs: 800 },
-    },
-    {
-      id: 'norm',
-      label: 'Normalize',
-      inputValues: {
+    ['flux', 'Spectral Flux', { smoothMs: 30 }],
+    ['env', 'Envelope Follower', { attackMs: 50, releaseMs: 800 }],
+    [
+      'norm',
+      'Normalize',
+      {
         inputMin: 30,
         inputMax: 50,
         outputMin: 0.01,
         outputMax: 0.9,
       },
-    },
+    ],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'flux',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'flux',
-      sourceHandle: 'flux',
-      target: 'env',
-      targetHandle: 'value',
-    },
-    {
-      source: 'env',
-      sourceHandle: 'env',
-      target: 'norm',
-      targetHandle: 'value',
-    },
-    {
-      source: 'norm',
-      sourceHandle: 'result',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'flux', 'frequencyAnalysis'],
+    ['flux', 'flux', 'env', 'value'],
+    ['env', 'env', 'norm', 'value'],
+    ['norm', 'result', OUTPUT_ALIAS, 'output'],
   ],
 });
 
 // Laser Mode Cycling based on Sub-Bass Presence (0-120 Hz)
-registerPreset({
+definePreset({
   id: 'laser-mode-section-cycle',
   name: '🎨 Laser Mode (Sub-Bass)',
   description:
@@ -945,40 +613,36 @@ registerPreset({
   outputType: 'string',
   autoPlace: true,
   nodes: [
-    {
-      id: 'bass_band',
-      label: 'Frequency Band',
-      inputValues: {
+    [
+      'bass_band',
+      'Frequency Band',
+      {
         startFrequency: 0,
         endFrequency: 120,
       },
-    },
-    {
-      id: 'bass_info',
-      label: 'Band Info',
-      inputValues: {},
-    },
-    {
-      id: 'detector',
-      label: 'Section Change Detector',
-      inputValues: {
+    ],
+    ['bass_info', 'Band Info', {}],
+    [
+      'detector',
+      'Section Change Detector',
+      {
         threshold: 30,
         cooldownMs: 100,
         holdMs: 150,
       },
-    },
-    {
-      id: 'counter',
-      label: 'Threshold Counter',
-      inputValues: {
+    ],
+    [
+      'counter',
+      'Threshold Counter',
+      {
         threshold: 0.5,
         maxValue: 5,
       },
-    },
-    {
-      id: 'mapper',
-      label: 'Value Mapper',
-      inputValues: {
+    ],
+    [
+      'mapper',
+      'Value Mapper',
+      {
         mode: 'string',
         mapping: {
           '0': '0',
@@ -989,54 +653,20 @@ registerPreset({
         },
         default: 'auto',
       },
-    },
+    ],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'bass_band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    // Extract sub-bass band data
-    {
-      source: 'bass_band',
-      sourceHandle: 'bandData',
-      target: 'bass_info',
-      targetHandle: 'data',
-    },
-    // Feed average sub-bass to section detector
-    {
-      source: 'bass_info',
-      sourceHandle: 'average',
-      target: 'detector',
-      targetHandle: 'flux',
-    },
-    // Count triggers
-    {
-      source: 'detector',
-      sourceHandle: 'trigger',
-      target: 'counter',
-      targetHandle: 'value',
-    },
-    // Map to mode strings
-    {
-      source: 'counter',
-      sourceHandle: 'count',
-      target: 'mapper',
-      targetHandle: 'input',
-    },
-    {
-      source: 'mapper',
-      sourceHandle: 'output',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'bass_band', 'frequencyAnalysis'],
+    ['bass_band', 'bandData', 'bass_info', 'data'],
+    ['bass_info', 'average', 'detector', 'flux'],
+    ['detector', 'trigger', 'counter', 'value'],
+    ['counter', 'count', 'mapper', 'input'],
+    ['mapper', 'output', OUTPUT_ALIAS, 'output'],
   ],
 });
 
 // Overhead Blinder - Big Impact Flash
-registerPreset({
+definePreset({
   id: 'overhead-blinder-big-impact',
   name: '💥 Overhead Blinder (Big Impact Flash)',
   description:
@@ -1044,108 +674,64 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    // Bass-focused analysis for big impacts
-    {
-      id: 'full_band',
-      label: 'Frequency Band',
-      inputValues: {
+    [
+      'full_band',
+      'Frequency Band',
+      {
         startFrequency: 20,
         endFrequency: 200, // Bass frequencies only
       },
-    },
-    {
-      id: 'band_info',
-      label: 'Band Info',
-      inputValues: {},
-    },
-    // Aggressive normalization - only the top 2% of energy triggers
-    {
-      id: 'normalize',
-      label: 'Adaptive Normalize (Quantile)',
-      inputValues: {
+    ],
+    ['band_info', 'Band Info', {}],
+    [
+      'normalize',
+      'Adaptive Normalize (Quantile)',
+      {
         windowMs: 4000, // Medium window for quicker adaptation
         qLow: 0.6,
         qHigh: 0.98, // Very high threshold
         freezeBelow: 100, // Lower freeze threshold
       },
-    },
-    // Fast attack, medium decay for flash effect
-    {
-      id: 'envelope',
-      label: 'Envelope Follower',
-      inputValues: {
+    ],
+    [
+      'envelope',
+      'Envelope Follower',
+      {
         attackMs: 1, // Instant flash
         releaseMs: 400, // Medium decay
       },
-    },
-    // Gate to only trigger on very strong signals
-    {
-      id: 'gate',
-      label: 'Hysteresis Gate',
-      inputValues: {
+    ],
+    [
+      'gate',
+      'Hysteresis Gate',
+      {
         low: 0.8725, // Extremely high threshold for rare triggers
         high: 0.9625,
       },
-    },
-    // Scale to intensity range (subtle flash)
-    {
-      id: 'scale',
-      label: 'Math',
-      inputValues: {
+    ],
+    [
+      'scale',
+      'Math',
+      {
         a: 0, // Will receive gated signal (0 or 1)
         b: 10, // Subtle max intensity
         operation: 'multiply',
       },
-    },
+    ],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'full_band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'full_band',
-      sourceHandle: 'bandData',
-      target: 'band_info',
-      targetHandle: 'data',
-    },
-    {
-      source: 'band_info',
-      sourceHandle: 'average',
-      target: 'normalize',
-      targetHandle: 'value',
-    },
-    {
-      source: 'normalize',
-      sourceHandle: 'result',
-      target: 'envelope',
-      targetHandle: 'value',
-    },
-    {
-      source: 'envelope',
-      sourceHandle: 'env',
-      target: 'gate',
-      targetHandle: 'value',
-    },
-    {
-      source: 'gate',
-      sourceHandle: 'gated',
-      target: 'scale',
-      targetHandle: 'a',
-    },
-    {
-      source: 'scale',
-      sourceHandle: 'result',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'full_band', 'frequencyAnalysis'],
+    ['full_band', 'bandData', 'band_info', 'data'],
+    ['band_info', 'average', 'normalize', 'value'],
+    ['normalize', 'result', 'envelope', 'value'],
+    ['envelope', 'env', 'gate', 'value'],
+    ['gate', 'gated', 'scale', 'a'],
+    ['scale', 'result', OUTPUT_ALIAS, 'output'],
   ],
 });
 
 // Mode Cycling based on Bassline Melody
-registerPreset({
+definePreset({
   id: 'beam-mode-melody-cycle',
   name: '🔄 Beam Mode Cycling (Bassline Melody)',
   description:
@@ -1153,66 +739,53 @@ registerPreset({
   outputType: 'string',
   autoPlace: true,
   nodes: [
-    // Bassline melody frequency range
-    {
-      id: 'band',
-      label: 'Frequency Band',
-      inputValues: {
+    [
+      'band',
+      'Frequency Band',
+      {
         startFrequency: 80,
         endFrequency: 400,
       },
-    },
-    {
-      id: 'band_info',
-      label: 'Band Info',
-      inputValues: {},
-    },
-    // Detect changes in bassline
-    {
-      id: 'env',
-      label: 'Envelope Follower',
-      inputValues: { attackMs: 10, releaseMs: 200 },
-    },
-    {
-      id: 'adapt',
-      label: 'Adaptive Normalize (Quantile)',
-      inputValues: {
+    ],
+    ['band_info', 'Band Info', {}],
+    ['env', 'Envelope Follower', { attackMs: 10, releaseMs: 200 }],
+    [
+      'adapt',
+      'Adaptive Normalize (Quantile)',
+      {
         windowMs: 3000,
         qLow: 0.3,
         qHigh: 0.99,
         freezeBelow: 50,
       },
-    },
-    {
-      id: 'gate',
-      label: 'Hysteresis Gate',
-      inputValues: {
+    ],
+    [
+      'gate',
+      'Hysteresis Gate',
+      {
         low: 0.8,
         high: 0.9,
       },
-    },
-    // Count the changes
-    {
-      id: 'counter',
-      label: 'Threshold Counter',
-      inputValues: {
+    ],
+    [
+      'counter',
+      'Threshold Counter',
+      {
         threshold: 0.5,
         maxValue: 7,
       },
-    },
-    // Rate limit to prevent rapid switching
-    {
-      id: 'limiter',
-      label: 'Rate Limiter',
-      inputValues: {
+    ],
+    [
+      'limiter',
+      'Rate Limiter',
+      {
         minIntervalMs: 500, // Minimum 500ms between mode changes
       },
-    },
-    // Map to mode strings
-    {
-      id: 'mapper',
-      label: 'Value Mapper',
-      inputValues: {
+    ],
+    [
+      'mapper',
+      'Value Mapper',
+      {
         mode: 'string',
         mapping: {
           '0': '0',
@@ -1225,63 +798,18 @@ registerPreset({
         },
         default: '0',
       },
-    },
+    ],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'band',
-      sourceHandle: 'bandData',
-      target: 'band_info',
-      targetHandle: 'data',
-    },
-    {
-      source: 'band_info',
-      sourceHandle: 'average',
-      target: 'env',
-      targetHandle: 'value',
-    },
-    {
-      source: 'env',
-      sourceHandle: 'env',
-      target: 'adapt',
-      targetHandle: 'value',
-    },
-    {
-      source: 'adapt',
-      sourceHandle: 'result',
-      target: 'gate',
-      targetHandle: 'value',
-    },
-    {
-      source: 'gate',
-      sourceHandle: 'gated',
-      target: 'counter',
-      targetHandle: 'value',
-    },
-    {
-      source: 'counter',
-      sourceHandle: 'count',
-      target: 'limiter',
-      targetHandle: 'value',
-    },
-    {
-      source: 'limiter',
-      sourceHandle: 'limited',
-      target: 'mapper',
-      targetHandle: 'input',
-    },
-    {
-      source: 'mapper',
-      sourceHandle: 'output',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'band', 'frequencyAnalysis'],
+    ['band', 'bandData', 'band_info', 'data'],
+    ['band_info', 'average', 'env', 'value'],
+    ['env', 'env', 'adapt', 'value'],
+    ['adapt', 'result', 'gate', 'value'],
+    ['gate', 'gated', 'counter', 'value'],
+    ['counter', 'count', 'limiter', 'value'],
+    ['limiter', 'limited', 'mapper', 'input'],
+    ['mapper', 'output', OUTPUT_ALIAS, 'output'],
   ],
 });
 
@@ -1289,7 +817,7 @@ registerPreset({
 // 🎯 HIGH ENERGY GATE
 // ========================================
 
-registerPreset({
+definePreset({
   id: 'laser-high-energy-gate',
   name: '⚡ High Energy Gate',
   description:
@@ -1297,69 +825,40 @@ registerPreset({
   outputType: 'boolean',
   autoPlace: true,
   nodes: [
-    {
-      id: 'full_band',
-      label: 'Frequency Band',
-      inputValues: {
+    [
+      'full_band',
+      'Frequency Band',
+      {
         startFrequency: 20,
         endFrequency: 20000,
       },
-    },
-    {
-      id: 'energy',
-      label: 'Band Info',
-      inputValues: {},
-    },
-    {
-      id: 'normalize',
-      label: 'Adaptive Normalize (Quantile)',
-      inputValues: {
+    ],
+    ['energy', 'Band Info', {}],
+    [
+      'normalize',
+      'Adaptive Normalize (Quantile)',
+      {
         windowMs: 2000,
         qLow: 0.05,
         qHigh: 0.95,
         freezeBelow: 50,
       },
-    },
-    {
-      id: 'gate',
-      label: 'Hysteresis Gate',
-      inputValues: {
+    ],
+    [
+      'gate',
+      'Hysteresis Gate',
+      {
         low: 0.2, // Turn off below 50% normalized energy
         high: 0.65, // Turn on above 65% normalized energy
       },
-    },
+    ],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'full_band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'full_band',
-      sourceHandle: 'bandData',
-      target: 'energy',
-      targetHandle: 'data',
-    },
-    {
-      source: 'energy',
-      sourceHandle: 'average',
-      target: 'normalize',
-      targetHandle: 'value',
-    },
-    {
-      source: 'normalize',
-      sourceHandle: 'result',
-      target: 'gate',
-      targetHandle: 'value',
-    },
-    {
-      source: 'gate',
-      sourceHandle: 'state',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'full_band', 'frequencyAnalysis'],
+    ['full_band', 'bandData', 'energy', 'data'],
+    ['energy', 'average', 'normalize', 'value'],
+    ['normalize', 'result', 'gate', 'value'],
+    ['gate', 'state', OUTPUT_ALIAS, 'output'],
   ],
 });
 
@@ -1367,7 +866,7 @@ registerPreset({
 // 🎤 MOVING LIGHTS MODE CYCLE
 // ========================================
 
-registerPreset({
+definePreset({
   id: 'moving-lights-kick-cycle',
   name: '🎤 Moving Lights (Kick Cycle)',
   description:
@@ -1375,40 +874,36 @@ registerPreset({
   outputType: 'string',
   autoPlace: true,
   nodes: [
-    {
-      id: 'kick_band',
-      label: 'Frequency Band',
-      inputValues: {
+    [
+      'kick_band',
+      'Frequency Band',
+      {
         startFrequency: 20,
         endFrequency: 150,
       },
-    },
-    {
-      id: 'kick_info',
-      label: 'Band Info',
-      inputValues: {},
-    },
-    {
-      id: 'spike',
-      label: 'Spike',
-      inputValues: {
+    ],
+    ['kick_info', 'Band Info', {}],
+    [
+      'spike',
+      'Spike',
+      {
         threshold: 50,
         attack: 10,
         release: 150,
       },
-    },
-    {
-      id: 'counter',
-      label: 'Threshold Counter',
-      inputValues: {
+    ],
+    [
+      'counter',
+      'Threshold Counter',
+      {
         threshold: 130,
         maxValue: 5,
       },
-    },
-    {
-      id: 'mapper',
-      label: 'Value Mapper',
-      inputValues: {
+    ],
+    [
+      'mapper',
+      'Value Mapper',
+      {
         mode: 'string',
         mapping: {
           '0': '0',
@@ -1419,45 +914,15 @@ registerPreset({
         },
         default: '0',
       },
-    },
+    ],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'kick_band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'kick_band',
-      sourceHandle: 'bandData',
-      target: 'kick_info',
-      targetHandle: 'data',
-    },
-    {
-      source: 'kick_info',
-      sourceHandle: 'average',
-      target: 'spike',
-      targetHandle: 'value',
-    },
-    {
-      source: 'spike',
-      sourceHandle: 'result',
-      target: 'counter',
-      targetHandle: 'value',
-    },
-    {
-      source: 'counter',
-      sourceHandle: 'count',
-      target: 'mapper',
-      targetHandle: 'input',
-    },
-    {
-      source: 'mapper',
-      sourceHandle: 'output',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'kick_band', 'frequencyAnalysis'],
+    ['kick_band', 'bandData', 'kick_info', 'data'],
+    ['kick_info', 'average', 'spike', 'value'],
+    ['spike', 'result', 'counter', 'value'],
+    ['counter', 'count', 'mapper', 'input'],
+    ['mapper', 'output', OUTPUT_ALIAS, 'output'],
   ],
 });
 
@@ -1465,7 +930,7 @@ registerPreset({
 // 🌀 SHADER WALL ANIMATIONS
 // ========================================
 
-registerPreset({
+definePreset({
   id: 'shader-wall-bass-pulse',
   name: '🌀 Shader Wall (Bass Pulse + Slow Wave)',
   description:
@@ -1473,145 +938,85 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    // Slow sine wave (1 cycle per minute)
-    {
-      id: 'slow_sine',
-      label: 'Sine',
-      inputValues: {
+    [
+      'slow_sine',
+      'Sine',
+      {
         frequency: 0.01667, // 1/60 Hz = 1 cycle per minute
         phase: 0,
         amplitude: 2, // Range will be -2 to +2
       },
-    },
-    {
-      id: 'sine_offset',
-      label: 'Math',
-      inputValues: {
+    ],
+    [
+      'sine_offset',
+      'Math',
+      {
         a: 3, // Offset to 1
         b: 0, // Will receive sine output
         operation: 'add',
       },
-    },
-    // Bass shake chain
-    {
-      id: 'bass_band',
-      label: 'Frequency Band',
-      inputValues: {
+    ],
+    [
+      'bass_band',
+      'Frequency Band',
+      {
         startFrequency: 20,
         endFrequency: 200,
       },
-    },
-    {
-      id: 'bass_info',
-      label: 'Band Info',
-      inputValues: {},
-    },
-    {
-      id: 'normalize',
-      label: 'Adaptive Normalize (Quantile)',
-      inputValues: {
+    ],
+    ['bass_info', 'Band Info', {}],
+    [
+      'normalize',
+      'Adaptive Normalize (Quantile)',
+      {
         windowMs: 1000,
         qLow: 0.1,
         qHigh: 0.95,
         freezeBelow: 30,
       },
-    },
-    {
-      id: 'envelope',
-      label: 'Envelope Follower',
-      inputValues: {
+    ],
+    [
+      'envelope',
+      'Envelope Follower',
+      {
         attackMs: 10,
         releaseMs: 300,
       },
-    },
-    {
-      id: 'bass_scale',
-      label: 'Math',
-      inputValues: {
+    ],
+    [
+      'bass_scale',
+      'Math',
+      {
         a: 0, // Will receive bass pulse
         b: 0.3, // Scale factor for small shake
         operation: 'multiply',
       },
-    },
-    // Combine both signals
-    {
-      id: 'combine',
-      label: 'Math',
-      inputValues: {
+    ],
+    [
+      'combine',
+      'Math',
+      {
         a: 0, // Will receive slow sine
         b: 0, // Will receive bass shake
         operation: 'add',
       },
-    },
+    ],
   ],
   edges: [
-    // Slow sine wave chain
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'time',
-      target: 'slow_sine',
-      targetHandle: 'time',
-    },
-    {
-      source: 'slow_sine',
-      sourceHandle: 'value',
-      target: 'sine_offset',
-      targetHandle: 'b',
-    },
-    // Bass shake chain
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'bass_band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'bass_band',
-      sourceHandle: 'bandData',
-      target: 'bass_info',
-      targetHandle: 'data',
-    },
-    {
-      source: 'bass_info',
-      sourceHandle: 'average',
-      target: 'normalize',
-      targetHandle: 'value',
-    },
-    {
-      source: 'normalize',
-      sourceHandle: 'result',
-      target: 'envelope',
-      targetHandle: 'value',
-    },
-    {
-      source: 'envelope',
-      sourceHandle: 'env',
-      target: 'bass_scale',
-      targetHandle: 'a',
-    },
-    // Combine both
-    {
-      source: 'sine_offset',
-      sourceHandle: 'result',
-      target: 'combine',
-      targetHandle: 'a',
-    },
-    {
-      source: 'bass_scale',
-      sourceHandle: 'result',
-      target: 'combine',
-      targetHandle: 'b',
-    },
-    {
-      source: 'combine',
-      sourceHandle: 'result',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'time', 'slow_sine', 'time'],
+    ['slow_sine', 'value', 'sine_offset', 'b'],
+    [INPUT_ALIAS, 'frequencyAnalysis', 'bass_band', 'frequencyAnalysis'],
+    ['bass_band', 'bandData', 'bass_info', 'data'],
+    ['bass_info', 'average', 'normalize', 'value'],
+    ['normalize', 'result', 'envelope', 'value'],
+    ['envelope', 'env', 'bass_scale', 'a'],
+    ['sine_offset', 'result', 'combine', 'a'],
+    ['bass_scale', 'result', 'combine', 'b'],
+    ['combine', 'result', OUTPUT_ALIAS, 'output'],
   ],
 });
 
-registerPreset({
+definePreset({
   id: 'shader-wall-kick-flash',
   name: '🌀 Shader Wall (Energy Brightness)',
   description:
@@ -1619,103 +1024,64 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    {
-      id: 'full_band',
-      label: 'Frequency Band',
-      inputValues: {
+    [
+      'full_band',
+      'Frequency Band',
+      {
         startFrequency: 20,
         endFrequency: 20000,
       },
-    },
-    {
-      id: 'band_info',
-      label: 'Band Info',
-      inputValues: {},
-    },
-    {
-      id: 'normalize',
-      label: 'Adaptive Normalize (Quantile)',
-      inputValues: {
+    ],
+    ['band_info', 'Band Info', {}],
+    [
+      'normalize',
+      'Adaptive Normalize (Quantile)',
+      {
         windowMs: 2500, // Medium window for quick adaptation
         qLow: 0.1,
         qHigh: 0.95,
         freezeBelow: 50,
       },
-    },
-    {
-      id: 'envelope',
-      label: 'Envelope Follower',
-      inputValues: {
+    ],
+    [
+      'envelope',
+      'Envelope Follower',
+      {
         attackMs: 50,
         releaseMs: 200,
       },
-    },
-    {
-      id: 'scale',
-      label: 'Math',
-      inputValues: {
+    ],
+    [
+      'scale',
+      'Math',
+      {
         a: 0, // Will receive normalized energy (0-1)
         b: 2, // Multiply by 2 to get 0-2 range
         operation: 'multiply',
       },
-    },
-    {
-      id: 'offset',
-      label: 'Math',
-      inputValues: {
+    ],
+    [
+      'offset',
+      'Math',
+      {
         a: 1, // Base brightness of 1
         b: 0, // Will receive scaled energy
         operation: 'add',
       },
-    },
+    ],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'full_band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'full_band',
-      sourceHandle: 'bandData',
-      target: 'band_info',
-      targetHandle: 'data',
-    },
-    {
-      source: 'band_info',
-      sourceHandle: 'average',
-      target: 'normalize',
-      targetHandle: 'value',
-    },
-    {
-      source: 'normalize',
-      sourceHandle: 'result',
-      target: 'envelope',
-      targetHandle: 'value',
-    },
-    {
-      source: 'envelope',
-      sourceHandle: 'env',
-      target: 'scale',
-      targetHandle: 'a',
-    },
-    {
-      source: 'scale',
-      sourceHandle: 'result',
-      target: 'offset',
-      targetHandle: 'b',
-    },
-    {
-      source: 'offset',
-      sourceHandle: 'result',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'full_band', 'frequencyAnalysis'],
+    ['full_band', 'bandData', 'band_info', 'data'],
+    ['band_info', 'average', 'normalize', 'value'],
+    ['normalize', 'result', 'envelope', 'value'],
+    ['envelope', 'env', 'scale', 'a'],
+    ['scale', 'result', 'offset', 'b'],
+    ['offset', 'result', OUTPUT_ALIAS, 'output'],
   ],
 });
 
-registerPreset({
+definePreset({
   id: 'shader-wall-rotation-kick-vocal',
   name: '🌀 Shader Wall (Rotation - Kick Cycle)',
   description:
@@ -1723,116 +1089,58 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    // Kick detection chain
-    {
-      id: 'kick_band',
-      label: 'Frequency Band',
-      inputValues: {
+    [
+      'kick_band',
+      'Frequency Band',
+      {
         startFrequency: 80,
         endFrequency: 150,
       },
-    },
-    {
-      id: 'kick_info',
-      label: 'Band Info',
-      inputValues: {},
-    },
-    {
-      id: 'kick_env',
-      label: 'Envelope Follower',
-      inputValues: { attackMs: 6, releaseMs: 120 },
-    },
-    {
-      id: 'kick_adapt',
-      label: 'Adaptive Normalize (Quantile)',
-      inputValues: {
+    ],
+    ['kick_info', 'Band Info', {}],
+    ['kick_env', 'Envelope Follower', { attackMs: 6, releaseMs: 120 }],
+    [
+      'kick_adapt',
+      'Adaptive Normalize (Quantile)',
+      {
         windowMs: 4000,
         qLow: 0.5,
         qHigh: 0.98,
         freezeBelow: 140,
       },
-    },
-    {
-      id: 'gate',
-      label: 'Hysteresis Gate',
-      inputValues: { low: 0.33, high: 0.45 },
-    },
-    // Counter to cycle through values
-    {
-      id: 'counter',
-      label: 'Threshold Counter',
-      inputValues: {
+    ],
+    ['gate', 'Hysteresis Gate', { low: 0.33, high: 0.45 }],
+    [
+      'counter',
+      'Threshold Counter',
+      {
         threshold: 0.5,
         maxValue: 6, // Counts 0-6 (7 values)
       },
-    },
-    // Scale to get 0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0
-    {
-      id: 'scale',
-      label: 'Math',
-      inputValues: {
+    ],
+    [
+      'scale',
+      'Math',
+      {
         a: 0, // Will receive count 0-6
         b: 0.5, // Multiply by 0.5
         operation: 'multiply',
       },
-    },
+    ],
   ],
   edges: [
-    // Kick detection chain
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'kick_band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'kick_band',
-      sourceHandle: 'bandData',
-      target: 'kick_info',
-      targetHandle: 'data',
-    },
-    {
-      source: 'kick_info',
-      sourceHandle: 'average',
-      target: 'kick_env',
-      targetHandle: 'value',
-    },
-    {
-      source: 'kick_env',
-      sourceHandle: 'env',
-      target: 'kick_adapt',
-      targetHandle: 'value',
-    },
-    {
-      source: 'kick_adapt',
-      sourceHandle: 'result',
-      target: 'gate',
-      targetHandle: 'value',
-    },
-    // Count the kicks
-    {
-      source: 'gate',
-      sourceHandle: 'gated',
-      target: 'counter',
-      targetHandle: 'value',
-    },
-    // Scale to get discrete steps
-    {
-      source: 'counter',
-      sourceHandle: 'count',
-      target: 'scale',
-      targetHandle: 'a',
-    },
-    {
-      source: 'scale',
-      sourceHandle: 'result',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'kick_band', 'frequencyAnalysis'],
+    ['kick_band', 'bandData', 'kick_info', 'data'],
+    ['kick_info', 'average', 'kick_env', 'value'],
+    ['kick_env', 'env', 'kick_adapt', 'value'],
+    ['kick_adapt', 'result', 'gate', 'value'],
+    ['gate', 'gated', 'counter', 'value'],
+    ['counter', 'count', 'scale', 'a'],
+    ['scale', 'result', OUTPUT_ALIAS, 'output'],
   ],
 });
 
-registerPreset({
+definePreset({
   id: 'shader-wall-travel-snare-cycle',
   name: '🌀 Shader Wall (Travel - Snare Cycle)',
   description:
@@ -1840,108 +1148,51 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    // Snare detection chain
-    {
-      id: 'snare_band',
-      label: 'Frequency Band',
-      inputValues: { startFrequency: 180, endFrequency: 4000 },
-    },
-    {
-      id: 'snare_info',
-      label: 'Band Info',
-    },
-    {
-      id: 'env',
-      label: 'Envelope Follower',
-      inputValues: { attackMs: 4, releaseMs: 140 },
-    },
-    {
-      id: 'adapt',
-      label: 'Adaptive Normalize (Quantile)',
-      inputValues: {
+    [
+      'snare_band',
+      'Frequency Band',
+      { startFrequency: 180, endFrequency: 4000 },
+    ],
+    ['snare_info', 'Band Info'],
+    ['env', 'Envelope Follower', { attackMs: 4, releaseMs: 140 }],
+    [
+      'adapt',
+      'Adaptive Normalize (Quantile)',
+      {
         windowMs: 4000,
         qLow: 0.5,
         qHigh: 0.95,
         freezeBelow: 90,
       },
-    },
-    {
-      id: 'gate',
-      label: 'Hysteresis Gate',
-      inputValues: { low: 0.06, high: 0.14 },
-    },
-    // Counter to cycle through values
-    {
-      id: 'counter',
-      label: 'Threshold Counter',
-      inputValues: {
+    ],
+    ['gate', 'Hysteresis Gate', { low: 0.06, high: 0.14 }],
+    [
+      'counter',
+      'Threshold Counter',
+      {
         threshold: 0.5,
         maxValue: 6, // Counts 0-6 (7 values)
       },
-    },
-    // Scale to get 0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0
-    {
-      id: 'scale',
-      label: 'Math',
-      inputValues: {
+    ],
+    [
+      'scale',
+      'Math',
+      {
         a: 0, // Will receive count 0-6
         b: 0.5, // Multiply by 0.5
         operation: 'multiply',
       },
-    },
+    ],
   ],
   edges: [
-    // Snare detection chain
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'snare_band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'snare_band',
-      sourceHandle: 'bandData',
-      target: 'snare_info',
-      targetHandle: 'data',
-    },
-    {
-      source: 'snare_info',
-      sourceHandle: 'average',
-      target: 'env',
-      targetHandle: 'value',
-    },
-    {
-      source: 'env',
-      sourceHandle: 'env',
-      target: 'adapt',
-      targetHandle: 'value',
-    },
-    {
-      source: 'adapt',
-      sourceHandle: 'result',
-      target: 'gate',
-      targetHandle: 'value',
-    },
-    // Count the snares
-    {
-      source: 'gate',
-      sourceHandle: 'gated',
-      target: 'counter',
-      targetHandle: 'value',
-    },
-    // Scale to get discrete steps
-    {
-      source: 'counter',
-      sourceHandle: 'count',
-      target: 'scale',
-      targetHandle: 'a',
-    },
-    {
-      source: 'scale',
-      sourceHandle: 'result',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'snare_band', 'frequencyAnalysis'],
+    ['snare_band', 'bandData', 'snare_info', 'data'],
+    ['snare_info', 'average', 'env', 'value'],
+    ['env', 'env', 'adapt', 'value'],
+    ['adapt', 'result', 'gate', 'value'],
+    ['gate', 'gated', 'counter', 'value'],
+    ['counter', 'count', 'scale', 'a'],
+    ['scale', 'result', OUTPUT_ALIAS, 'output'],
   ],
 });
 
@@ -1949,7 +1200,7 @@ registerPreset({
 // 💡 STAGE LIGHTS COLOR CYCLING
 // ========================================
 
-registerPreset({
+definePreset({
   id: 'stage-lights-snare-color-cycle',
   name: '💡 Stage Lights (Snare Color Cycle)',
   description:
@@ -1957,47 +1208,36 @@ registerPreset({
   outputType: 'color',
   autoPlace: true,
   nodes: [
-    {
-      id: 'snare_band',
-      label: 'Frequency Band',
-      inputValues: { startFrequency: 180, endFrequency: 4000 },
-    },
-    {
-      id: 'snare_info',
-      label: 'Band Info',
-    },
-    {
-      id: 'env',
-      label: 'Envelope Follower',
-      inputValues: { attackMs: 4, releaseMs: 140 },
-    },
-    {
-      id: 'adapt',
-      label: 'Adaptive Normalize (Quantile)',
-      inputValues: {
+    [
+      'snare_band',
+      'Frequency Band',
+      { startFrequency: 180, endFrequency: 4000 },
+    ],
+    ['snare_info', 'Band Info'],
+    ['env', 'Envelope Follower', { attackMs: 4, releaseMs: 140 }],
+    [
+      'adapt',
+      'Adaptive Normalize (Quantile)',
+      {
         windowMs: 4000,
         qLow: 0.5,
         qHigh: 0.95,
         freezeBelow: 90,
       },
-    },
-    {
-      id: 'gate',
-      label: 'Hysteresis Gate',
-      inputValues: { low: 0.06, high: 0.14 },
-    },
-    {
-      id: 'counter',
-      label: 'Threshold Counter',
-      inputValues: {
+    ],
+    ['gate', 'Hysteresis Gate', { low: 0.06, high: 0.14 }],
+    [
+      'counter',
+      'Threshold Counter',
+      {
         threshold: 0.5,
         maxValue: 5,
       },
-    },
-    {
-      id: 'mapper',
-      label: 'Value Mapper',
-      inputValues: {
+    ],
+    [
+      'mapper',
+      'Value Mapper',
+      {
         mode: 'color',
         mapping: {
           '0': '#ff0000', // Red
@@ -2008,60 +1248,17 @@ registerPreset({
         },
         default: '#ffffff',
       },
-    },
+    ],
   ],
   edges: [
-    // Snare detection chain
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'snare_band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'snare_band',
-      sourceHandle: 'bandData',
-      target: 'snare_info',
-      targetHandle: 'data',
-    },
-    {
-      source: 'snare_info',
-      sourceHandle: 'average',
-      target: 'env',
-      targetHandle: 'value',
-    },
-    {
-      source: 'env',
-      sourceHandle: 'env',
-      target: 'adapt',
-      targetHandle: 'value',
-    },
-    {
-      source: 'adapt',
-      sourceHandle: 'result',
-      target: 'gate',
-      targetHandle: 'value',
-    },
-    // Count the hits
-    {
-      source: 'gate',
-      sourceHandle: 'gated',
-      target: 'counter',
-      targetHandle: 'value',
-    },
-    // Map to colors
-    {
-      source: 'counter',
-      sourceHandle: 'count',
-      target: 'mapper',
-      targetHandle: 'input',
-    },
-    {
-      source: 'mapper',
-      sourceHandle: 'output',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'snare_band', 'frequencyAnalysis'],
+    ['snare_band', 'bandData', 'snare_info', 'data'],
+    ['snare_info', 'average', 'env', 'value'],
+    ['env', 'env', 'adapt', 'value'],
+    ['adapt', 'result', 'gate', 'value'],
+    ['gate', 'gated', 'counter', 'value'],
+    ['counter', 'count', 'mapper', 'input'],
+    ['mapper', 'output', OUTPUT_ALIAS, 'output'],
   ],
 });
 
@@ -2069,7 +1266,7 @@ registerPreset({
 // 🌈 SPECTRAL CENTROID HUE
 // ========================================
 
-registerPreset({
+definePreset({
   id: 'spectral-centroid-hue',
   name: '🌈 Spectral Centroid Hue',
   description:
@@ -2077,56 +1274,32 @@ registerPreset({
   outputType: 'color',
   autoPlace: true,
   nodes: [
-    {
-      id: 'centroid',
-      label: 'Spectral Centroid',
-      inputValues: { smoothMs: 200 },
-    },
-    {
-      id: 'norm',
-      label: 'Normalize',
-      inputValues: {
+    ['centroid', 'Spectral Centroid', { smoothMs: 200 }],
+    [
+      'norm',
+      'Normalize',
+      {
         inputMin: 0,
         inputMax: 1,
         outputMin: 0,
         outputMax: 360,
       },
-    },
-    {
-      id: 'hsl',
-      label: 'HSL Color',
-      inputValues: {
+    ],
+    [
+      'hsl',
+      'HSL Color',
+      {
         h: 0,
         s: 70,
         l: 40,
       },
-    },
+    ],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'centroid',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'centroid',
-      sourceHandle: 'normalized',
-      target: 'norm',
-      targetHandle: 'value',
-    },
-    {
-      source: 'norm',
-      sourceHandle: 'result',
-      target: 'hsl',
-      targetHandle: 'h',
-    },
-    {
-      source: 'hsl',
-      sourceHandle: 'color',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'centroid', 'frequencyAnalysis'],
+    ['centroid', 'normalized', 'norm', 'value'],
+    ['norm', 'result', 'hsl', 'h'],
+    ['hsl', 'color', OUTPUT_ALIAS, 'output'],
   ],
 });
 
@@ -2134,7 +1307,7 @@ registerPreset({
 // 🎹 HARMONIC PITCH TO COLOR
 // ========================================
 
-registerPreset({
+definePreset({
   id: 'harmonic-pitch-color',
   name: '🎹 Harmonic Pitch → 12 Colors',
   description:
@@ -2142,105 +1315,65 @@ registerPreset({
   outputType: 'color',
   autoPlace: true,
   nodes: [
-    {
-      id: 'band',
-      label: 'Frequency Band',
-      inputValues: {
+    [
+      'band',
+      'Frequency Band',
+      {
         startFrequency: 550,
         endFrequency: 1850,
       },
-    },
-    {
-      id: 'harmonic',
-      label: 'Harmonic Presence',
-      inputValues: {
+    ],
+    [
+      'harmonic',
+      'Harmonic Presence',
+      {
         toleranceCents: 40,
         smoothMs: 0.1,
       },
-    },
-    {
-      id: 'mod12',
-      label: 'Math',
-      inputValues: {
+    ],
+    [
+      'mod12',
+      'Math',
+      {
         a: 0,
         b: 12,
         operation: 'modulo',
       },
-    },
-    {
-      id: 'norm',
-      label: 'Normalize',
-      inputValues: {
+    ],
+    [
+      'norm',
+      'Normalize',
+      {
         inputMin: 0,
         inputMax: 12,
         outputMin: 0,
         outputMax: 360,
       },
-    },
-    {
-      id: 'hsl',
-      label: 'HSL Color',
-      inputValues: {
+    ],
+    [
+      'hsl',
+      'HSL Color',
+      {
         h: 0,
         s: 100,
         l: 50,
       },
-    },
+    ],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'band',
-      sourceHandle: 'bandData',
-      target: 'harmonic',
-      targetHandle: 'data',
-    },
-    {
-      source: 'band',
-      sourceHandle: 'bandStartBin',
-      target: 'harmonic',
-      targetHandle: 'bandStartBin',
-    },
-    {
-      source: 'band',
-      sourceHandle: 'frequencyPerBin',
-      target: 'harmonic',
-      targetHandle: 'frequencyPerBin',
-    },
-    {
-      source: 'harmonic',
-      sourceHandle: 'midi',
-      target: 'mod12',
-      targetHandle: 'a',
-    },
-    {
-      source: 'mod12',
-      sourceHandle: 'result',
-      target: 'norm',
-      targetHandle: 'value',
-    },
-    {
-      source: 'norm',
-      sourceHandle: 'result',
-      target: 'hsl',
-      targetHandle: 'h',
-    },
-    {
-      source: 'hsl',
-      sourceHandle: 'color',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'band', 'frequencyAnalysis'],
+    ['band', 'bandData', 'harmonic', 'data'],
+    ['band', 'bandStartBin', 'harmonic', 'bandStartBin'],
+    ['band', 'frequencyPerBin', 'harmonic', 'frequencyPerBin'],
+    ['harmonic', 'midi', 'mod12', 'a'],
+    ['mod12', 'result', 'norm', 'value'],
+    ['norm', 'result', 'hsl', 'h'],
+    ['hsl', 'color', OUTPUT_ALIAS, 'output'],
   ],
 });
 
 // Pitch Detection → MIDI Modulo
-registerPreset({
+definePreset({
   id: 'pitch-detection-midi-mod',
   name: '🎵 Pitch Detection → MIDI (Mod 12)',
   description:
@@ -2248,10 +1381,10 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    {
-      id: 'pitch',
-      label: 'Pitch Detection',
-      inputValues: {
+    [
+      'pitch',
+      'Pitch Detection',
+      {
         sampleRate: 44100,
         minHz: 80,
         maxHz: 1200,
@@ -2259,36 +1392,21 @@ registerPreset({
         smoothMs: 50,
         stabilityCents: 80,
       },
-    },
-    {
-      id: 'modulo',
-      label: 'Math',
-      inputValues: {
+    ],
+    [
+      'modulo',
+      'Math',
+      {
         a: 0,
         b: 12,
         operation: 'modulo', // MathOperation.Modulo
       },
-    },
+    ],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'audioSignal',
-      target: 'pitch',
-      targetHandle: 'audioSignal',
-    },
-    {
-      source: 'pitch',
-      sourceHandle: 'midi',
-      target: 'modulo',
-      targetHandle: 'a',
-    },
-    {
-      source: 'modulo',
-      sourceHandle: 'result',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'audioSignal', 'pitch', 'audioSignal'],
+    ['pitch', 'midi', 'modulo', 'a'],
+    ['modulo', 'result', OUTPUT_ALIAS, 'output'],
   ],
 });
 
@@ -2296,7 +1414,7 @@ registerPreset({
 // 🎥 DEPTH OF FIELD FOCUS
 // ========================================
 
-registerPreset({
+definePreset({
   id: 'dof-focus-slow-sine',
   name: '🎥 DOF Focus (Slow Sine Wave)',
   description:
@@ -2304,74 +1422,49 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    {
-      id: 'sine',
-      label: 'Sine',
-      inputValues: {
+    [
+      'sine',
+      'Sine',
+      {
         frequency: 0.2, // 1/20 Hz = 5 second period
         phase: 0,
         amplitude: 1, // -1 to 1 range
       },
-    },
-    {
-      id: 'normalize',
-      label: 'Math',
-      inputValues: {
+    ],
+    [
+      'normalize',
+      'Math',
+      {
         a: 1, // Add 1
         b: 0, // Will receive sine output (-1 to 1)
         operation: 'add',
       },
-    },
-    {
-      id: 'scale',
-      label: 'Math',
-      inputValues: {
+    ],
+    [
+      'scale',
+      'Math',
+      {
         a: 0, // Will receive normalized value (0 to 2)
         b: 19.5, // Multiply by 19.5 to get 0 to 39
         operation: 'multiply',
       },
-    },
-    {
-      id: 'offset',
-      label: 'Math',
-      inputValues: {
+    ],
+    [
+      'offset',
+      'Math',
+      {
         a: 1, // Base offset
         b: 0, // Will receive scaled value (0 to 39)
         operation: 'add',
       },
-    },
+    ],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'time',
-      target: 'sine',
-      targetHandle: 'time',
-    },
-    {
-      source: 'sine',
-      sourceHandle: 'value',
-      target: 'normalize',
-      targetHandle: 'b',
-    },
-    {
-      source: 'normalize',
-      sourceHandle: 'result',
-      target: 'scale',
-      targetHandle: 'a',
-    },
-    {
-      source: 'scale',
-      sourceHandle: 'result',
-      target: 'offset',
-      targetHandle: 'b',
-    },
-    {
-      source: 'offset',
-      sourceHandle: 'result',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'time', 'sine', 'time'],
+    ['sine', 'value', 'normalize', 'b'],
+    ['normalize', 'result', 'scale', 'a'],
+    ['scale', 'result', 'offset', 'b'],
+    ['offset', 'result', OUTPUT_ALIAS, 'output'],
   ],
 });
 
@@ -2379,7 +1472,7 @@ registerPreset({
 // 🧠 NEURAL NETWORK TRIGGERS
 // ========================================
 
-registerPreset({
+definePreset({
   id: 'neural-seed-snare-cycle',
   name: '🧠 Neuron Seed (Snare Cycle)',
   description:
@@ -2387,104 +1480,49 @@ registerPreset({
   outputType: 'number',
   autoPlace: true,
   nodes: [
-    {
-      id: 'snare_band',
-      label: 'Frequency Band',
-      inputValues: { startFrequency: 50, endFrequency: 150 },
-    },
-    {
-      id: 'snare_info',
-      label: 'Band Info',
-    },
-    {
-      id: 'env',
-      label: 'Envelope Follower',
-      inputValues: { attackMs: 4, releaseMs: 140 },
-    },
-    {
-      id: 'adapt',
-      label: 'Adaptive Normalize (Quantile)',
-      inputValues: {
+    ['snare_band', 'Frequency Band', { startFrequency: 50, endFrequency: 150 }],
+    ['snare_info', 'Band Info'],
+    ['env', 'Envelope Follower', { attackMs: 4, releaseMs: 140 }],
+    [
+      'adapt',
+      'Adaptive Normalize (Quantile)',
+      {
         windowMs: 4000,
         qLow: 0.5,
         qHigh: 0.95,
         freezeBelow: 90,
       },
-    },
-    {
-      id: 'gate',
-      label: 'Hysteresis Gate',
-      inputValues: { low: 0.06, high: 0.14 },
-    },
-    {
-      id: 'counter',
-      label: 'Threshold Counter',
-      inputValues: {
+    ],
+    ['gate', 'Hysteresis Gate', { low: 0.06, high: 0.14 }],
+    [
+      'counter',
+      'Threshold Counter',
+      {
         threshold: 0.5,
         maxValue: 1000,
       },
-    },
-    {
-      id: 'limiter',
-      label: 'Rate Limiter',
-      inputValues: {
+    ],
+    [
+      'limiter',
+      'Rate Limiter',
+      {
         minIntervalMs: 4000, // Minimum 2 seconds between changes
       },
-    },
+    ],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'snare_band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'snare_band',
-      sourceHandle: 'bandData',
-      target: 'snare_info',
-      targetHandle: 'data',
-    },
-    {
-      source: 'snare_info',
-      sourceHandle: 'average',
-      target: 'env',
-      targetHandle: 'value',
-    },
-    {
-      source: 'env',
-      sourceHandle: 'env',
-      target: 'adapt',
-      targetHandle: 'value',
-    },
-    {
-      source: 'adapt',
-      sourceHandle: 'result',
-      target: 'gate',
-      targetHandle: 'value',
-    },
-    {
-      source: 'gate',
-      sourceHandle: 'gated',
-      target: 'counter',
-      targetHandle: 'value',
-    },
-    {
-      source: 'counter',
-      sourceHandle: 'count',
-      target: 'limiter',
-      targetHandle: 'value',
-    },
-    {
-      source: 'limiter',
-      sourceHandle: 'limited',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'snare_band', 'frequencyAnalysis'],
+    ['snare_band', 'bandData', 'snare_info', 'data'],
+    ['snare_info', 'average', 'env', 'value'],
+    ['env', 'env', 'adapt', 'value'],
+    ['adapt', 'result', 'gate', 'value'],
+    ['gate', 'gated', 'counter', 'value'],
+    ['counter', 'count', 'limiter', 'value'],
+    ['limiter', 'limited', OUTPUT_ALIAS, 'output'],
   ],
 });
 
-registerPreset({
+definePreset({
   id: 'neural-fire-on-kick',
   name: '🧠 Fire Neurons (Kick Trigger)',
   description:
@@ -2492,75 +1530,34 @@ registerPreset({
   outputType: 'boolean',
   autoPlace: true,
   nodes: [
-    {
-      id: 'kick_band',
-      label: 'Frequency Band',
-      inputValues: {
+    [
+      'kick_band',
+      'Frequency Band',
+      {
         startFrequency: 80,
         endFrequency: 150,
       },
-    },
-    {
-      id: 'kick_info',
-      label: 'Band Info',
-    },
-    {
-      id: 'env',
-      label: 'Envelope Follower',
-      inputValues: { attackMs: 6, releaseMs: 120 },
-    },
-    {
-      id: 'adapt',
-      label: 'Adaptive Normalize (Quantile)',
-      inputValues: {
+    ],
+    ['kick_info', 'Band Info'],
+    ['env', 'Envelope Follower', { attackMs: 6, releaseMs: 120 }],
+    [
+      'adapt',
+      'Adaptive Normalize (Quantile)',
+      {
         windowMs: 4000,
         qLow: 0.5,
         qHigh: 0.98,
         freezeBelow: 140,
       },
-    },
-    {
-      id: 'gate',
-      label: 'Hysteresis Gate',
-      inputValues: { low: 0.33, high: 0.45 },
-    },
+    ],
+    ['gate', 'Hysteresis Gate', { low: 0.33, high: 0.45 }],
   ],
   edges: [
-    {
-      source: INPUT_ALIAS,
-      sourceHandle: 'frequencyAnalysis',
-      target: 'kick_band',
-      targetHandle: 'frequencyAnalysis',
-    },
-    {
-      source: 'kick_band',
-      sourceHandle: 'bandData',
-      target: 'kick_info',
-      targetHandle: 'data',
-    },
-    {
-      source: 'kick_info',
-      sourceHandle: 'average',
-      target: 'env',
-      targetHandle: 'value',
-    },
-    {
-      source: 'env',
-      sourceHandle: 'env',
-      target: 'adapt',
-      targetHandle: 'value',
-    },
-    {
-      source: 'adapt',
-      sourceHandle: 'result',
-      target: 'gate',
-      targetHandle: 'value',
-    },
-    {
-      source: 'gate',
-      sourceHandle: 'state',
-      target: OUTPUT_ALIAS,
-      targetHandle: 'output',
-    },
+    [INPUT_ALIAS, 'frequencyAnalysis', 'kick_band', 'frequencyAnalysis'],
+    ['kick_band', 'bandData', 'kick_info', 'data'],
+    ['kick_info', 'average', 'env', 'value'],
+    ['env', 'env', 'adapt', 'value'],
+    ['adapt', 'result', 'gate', 'value'],
+    ['gate', 'state', OUTPUT_ALIAS, 'output'],
   ],
 });

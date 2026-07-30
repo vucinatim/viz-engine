@@ -8,5 +8,3 @@ export const getVisualTime = (
     (audioContext?.baseLatency || 0) + (audioContext?.outputLatency || 0);
   return Math.max(0, rawTime - latency - VISUAL_TIME_OFFSET);
 };
-
-export { VISUAL_TIME_OFFSET };

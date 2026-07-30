@@ -699,10 +699,3 @@ export function cancelExport(): void {
 
   // Don't auto-reset - let user review logs and click "Back to Settings"
 }
-
-/**
- * Get export progress
- */
-export function getExportProgress() {
-  return useExportStore.getState().progress;
-}

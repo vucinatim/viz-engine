@@ -34,7 +34,7 @@ export type AnimInputData = {
 };
 
 // Type metadata (colors, validation rules, etc.)
-export const TYPE_METADATA: Record<
+const TYPE_METADATA: Record<
   NodeHandleType,
   {
     color: string;
@@ -95,7 +95,7 @@ export const TYPE_METADATA: Record<
 };
 
 // Runtime type mapping for node handle value types
-export type HandleTypeMap = {
+type HandleTypeMap = {
   number: number;
   string: string;
   boolean: boolean;
@@ -111,7 +111,7 @@ export type HandleTypeMap = {
 export type TypeFromHandle<T extends NodeHandleType> = HandleTypeMap[T];
 
 // Safe mapping between VType and NodeHandleType
-export const VTypeToNodeHandleType: Record<VType, NodeHandleType> = {
+const VTypeToNodeHandleType: Record<VType, NodeHandleType> = {
   [VType.Number]: 'number',
   [VType.String]: 'string',
   [VType.Color]: 'color',
@@ -124,28 +124,9 @@ export const VTypeToNodeHandleType: Record<VType, NodeHandleType> = {
   [VType.List]: 'object', // Lists become objects/arrays
 };
 
-export const NodeHandleTypeToVType: Record<NodeHandleType, VType> = {
-  number: VType.Number,
-  string: VType.String,
-  boolean: VType.Boolean,
-  color: VType.Color,
-  file: VType.File,
-  vector3: VType.Vector3,
-  Uint8Array: VType.Number, // Data becomes number
-  FrequencyAnalysis: VType.Number, // Complex types become number
-  object: VType.Group,
-  'math-op': VType.String,
-};
-
 // Safe conversion functions
 export const safeVTypeToNodeHandleType = (vType: VType): NodeHandleType => {
   return VTypeToNodeHandleType[vType];
-};
-
-export const safeNodeHandleTypeToVType = (
-  nodeHandleType: NodeHandleType,
-): VType => {
-  return NodeHandleTypeToVType[nodeHandleType];
 };
 
 // Validation functions

@@ -17,45 +17,6 @@ export const resolveEditorComp = (
   layer: Pick<VizLayer, 'componentId' | 'name'>,
 ): Comp | null => findEditorCompForLayer(layer, useCompStore.getState().comps);
 
-export const resolveEditorOptionByPath = (
-  comp: Comp,
-  layerId: string,
-  path: string,
-) => {
-  const config = assignDeterministicIdsToConfig(layerId, comp.config.clone());
-  const segments = path.split('.');
-  let current: Record<string, any> = config.options;
-
-  for (let index = 0; index < segments.length; index += 1) {
-    const key = segments[index];
-    const option = current[key];
-    if (!option) {
-      return null;
-    }
-
-    if (
-      'options' in option &&
-      option.options &&
-      typeof option.options === 'object'
-    ) {
-      current = option.options;
-      continue;
-    }
-
-    if (
-      'type' in option &&
-      'getDefaultValue' in option &&
-      index === segments.length - 1
-    ) {
-      return option;
-    }
-
-    return null;
-  }
-
-  return null;
-};
-
 export const getEditorParameterIds = (layer: VizLayer): string[] => {
   const comp = resolveEditorComp(layer);
   if (!comp) {

@@ -1,6 +1,5 @@
 import {
   createEditorOutputNodeDefinition,
-  editorNodeAuthoringDefinitionMap,
   editorNodeAuthoringDefinitions,
   inputNodeAuthoringDefinition,
   type VizNodeAuthoringDefinition,
@@ -28,7 +27,6 @@ import TonalPresenceBody from './bodies/tonal-presence-body';
 import ValueMapperBody from './bodies/value-mapper-body';
 
 export type { AnimNode } from '../config/create-node';
-export type { AnimInputData } from '../config/node-types';
 
 const customBodies: Readonly<Record<string, ComponentType<any>>> = {
   'Adaptive Normalize (Quantile)': AdaptiveNormalizeQuantileBody,
@@ -71,8 +69,3 @@ export const NodeDefinitionMap = new Map<string, AnimNode>(
 );
 
 NodeDefinitionMap.set(InputNode.label, InputNode);
-
-export const SpikeNode = NodeDefinitionMap.get('Spike')!;
-
-export const getPortableNodeDefinition = (type: string) =>
-  editorNodeAuthoringDefinitionMap.get(type);

@@ -71,26 +71,6 @@ export async function loadAllRecordingSessions(): Promise<RecordingSession[]> {
 }
 
 /**
- * Loads a specific recording session by ID
- */
-export async function loadRecordingSession(
-  sessionId: string,
-): Promise<RecordingSession | null> {
-  const db = await openDB();
-
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], 'readonly');
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.get(sessionId);
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result || null);
-
-    transaction.oncomplete = () => db.close();
-  });
-}
-
-/**
  * Deletes a recording session from IndexedDB
  */
 export async function deleteRecordingSession(sessionId: string): Promise<void> {
@@ -108,27 +88,6 @@ export async function deleteRecordingSession(sessionId: string): Promise<void> {
   });
 }
 
-/**
- * Deletes all recording sessions from IndexedDB
- */
-export async function deleteAllRecordingSessions(): Promise<void> {
-  const db = await openDB();
-
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.clear();
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
-
-    transaction.oncomplete = () => db.close();
-  });
-}
-
-/**
- * Updates a recording session (partial update)
- */
 export async function updateRecordingSession(
   sessionId: string,
   updates: Partial<RecordingSession>,
@@ -138,95 +97,21 @@ export async function updateRecordingSession(
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([STORE_NAME], 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
-    const getRequest = store.get(sessionId);
+    const request = store.get(sessionId);
 
-    getRequest.onerror = () => reject(getRequest.error);
-    getRequest.onsuccess = () => {
-      const session = getRequest.result;
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const session = request.result;
       if (!session) {
         reject(new Error(`Session ${sessionId} not found`));
         return;
       }
 
-      // Merge updates
-      const updatedSession = { ...session, ...updates };
-      const putRequest = store.put(updatedSession);
-
-      putRequest.onerror = () => reject(putRequest.error);
-      putRequest.onsuccess = () => resolve();
+      const updateRequest = store.put({ ...session, ...updates });
+      updateRequest.onerror = () => reject(updateRequest.error);
+      updateRequest.onsuccess = () => resolve();
     };
 
     transaction.oncomplete = () => db.close();
   });
-}
-
-/**
- * Gets sessions filtered by tags
- */
-export async function getSessionsByTags(
-  tags: string[],
-): Promise<RecordingSession[]> {
-  const allSessions = await loadAllRecordingSessions();
-
-  // Filter sessions that have at least one matching tag
-  return allSessions.filter((session) =>
-    session.tags.some((tag) => tags.includes(tag)),
-  );
-}
-
-/**
- * Gets sessions within a time range
- */
-export async function getSessionsByTimeRange(
-  startTime: number,
-  endTime: number,
-): Promise<RecordingSession[]> {
-  const allSessions = await loadAllRecordingSessions();
-
-  return allSessions.filter(
-    (session) => session.startTime >= startTime && session.startTime <= endTime,
-  );
-}
-
-/**
- * Gets the total size of all recording sessions in bytes (approximate)
- */
-export async function getStorageSize(): Promise<number> {
-  const sessions = await loadAllRecordingSessions();
-  const jsonString = JSON.stringify(sessions);
-  return new Blob([jsonString]).size;
-}
-
-/**
- * Gets storage statistics
- */
-export async function getStorageStats(): Promise<{
-  sessionCount: number;
-  totalSizeBytes: number;
-  totalSizeMB: number;
-  oldestSession: RecordingSession | null;
-  newestSession: RecordingSession | null;
-}> {
-  const sessions = await loadAllRecordingSessions();
-
-  if (sessions.length === 0) {
-    return {
-      sessionCount: 0,
-      totalSizeBytes: 0,
-      totalSizeMB: 0,
-      oldestSession: null,
-      newestSession: null,
-    };
-  }
-
-  const totalSizeBytes = await getStorageSize();
-  const sorted = [...sessions].sort((a, b) => a.startTime - b.startTime);
-
-  return {
-    sessionCount: sessions.length,
-    totalSizeBytes,
-    totalSizeMB: totalSizeBytes / (1024 * 1024),
-    oldestSession: sorted[0],
-    newestSession: sorted[sorted.length - 1],
-  };
 }

@@ -13,7 +13,7 @@ import TickerText from '../ui/ticker-text';
 // const DEFAULT_AUDIO_FILE = 'Outsiders (feat. Charlotte Haining).mp3';
 const DEFAULT_AUDIO_FILE = '[HipHop] 808 Rap.mp3';
 
-export const DROPZONE_ACCEPTED_TYPES = {
+const DROPZONE_ACCEPTED_TYPES = {
   'audio/*': ['.mp3', '.wav', '.ogg'],
 };
 

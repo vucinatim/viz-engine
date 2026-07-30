@@ -12,7 +12,7 @@ import {
   exportNodeNetworkPerformanceChart,
 } from '@/lib/utils/chart-export';
 import { Download, Image as ImageIcon } from 'lucide-react';
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo, useState, type ReactNode } from 'react';
 import {
   Area,
   AreaChart,
@@ -486,34 +486,13 @@ const PerformanceStatsDialogComponent = ({
     }
   };
 
-  // Chart export handlers
-  const handleExportFPSChart = () => {
-    if (!session) return;
-    handleExportChart('fps', () => exportFPSChart(session));
-  };
-
-  const handleExportMemoryChart = () => {
-    if (!session) return;
-    handleExportChart('memory', () => exportMemoryChart(session));
-  };
-
-  const handleExportFrameBudgetChart = () => {
-    if (!session) return;
-    handleExportChart('frame_budget', () => exportFrameBudgetChart(session));
-  };
-
-  const handleExportLayerPerformanceChart = () => {
-    if (!session) return;
-    handleExportChart('layer_performance', () =>
-      exportLayerPerformanceChart(session),
-    );
-  };
-
-  const handleExportNodeNetworkPerformanceChart = () => {
-    if (!session) return;
-    handleExportChart('node_network_performance', () =>
-      exportNodeNetworkPerformanceChart(session),
-    );
+  const exportChart = (
+    chartType: string,
+    exporter: (session: RecordingSession) => Promise<Blob>,
+  ) => {
+    if (session) {
+      handleExportChart(chartType, () => exporter(session));
+    }
   };
 
   // Download all charts as ZIP
@@ -640,24 +619,11 @@ const PerformanceStatsDialogComponent = ({
 
           {/* FPS Over Time Chart */}
           <div>
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">
-                FPS Performance Over Time
-              </h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportFPSChart}
-                disabled={exportingCharts.has('fps')}
-                className="h-8 gap-1.5 px-2 text-xs">
-                {exportingCharts.has('fps') ? (
-                  <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-                ) : (
-                  <ImageIcon className="h-3 w-3" />
-                )}
-                {exportingCharts.has('fps') ? 'Exporting...' : 'Export PNG'}
-              </Button>
-            </div>
+            <ChartHeading
+              title="FPS Performance Over Time"
+              exporting={exportingCharts.has('fps')}
+              onExport={() => exportChart('fps', exportFPSChart)}
+            />
             <div className="rounded-lg border border-white/10 bg-black/40 p-4">
               {timeSeriesData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
@@ -736,26 +702,11 @@ const PerformanceStatsDialogComponent = ({
           {/* Memory & CPU Over Time */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">
-                  Memory Usage
-                </h3>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleExportMemoryChart}
-                  disabled={exportingCharts.has('memory')}
-                  className="h-8 gap-1.5 px-2 text-xs">
-                  {exportingCharts.has('memory') ? (
-                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-                  ) : (
-                    <ImageIcon className="h-3 w-3" />
-                  )}
-                  {exportingCharts.has('memory')
-                    ? 'Exporting...'
-                    : 'Export PNG'}
-                </Button>
-              </div>
+              <ChartHeading
+                title="Memory Usage"
+                exporting={exportingCharts.has('memory')}
+                onExport={() => exportChart('memory', exportMemoryChart)}
+              />
               <div className="rounded-lg border border-white/10 bg-black/40 p-4">
                 <ResponsiveContainer width="100%" height={200}>
                   <LineChart
@@ -797,26 +748,13 @@ const PerformanceStatsDialogComponent = ({
             </div>
 
             <div>
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">
-                  Main Thread / Frame Budget Usage
-                </h3>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleExportFrameBudgetChart}
-                  disabled={exportingCharts.has('frame_budget')}
-                  className="h-8 gap-1.5 px-2 text-xs">
-                  {exportingCharts.has('frame_budget') ? (
-                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-                  ) : (
-                    <ImageIcon className="h-3 w-3" />
-                  )}
-                  {exportingCharts.has('frame_budget')
-                    ? 'Exporting...'
-                    : 'Export PNG'}
-                </Button>
-              </div>
+              <ChartHeading
+                title="Main Thread / Frame Budget Usage"
+                exporting={exportingCharts.has('frame_budget')}
+                onExport={() =>
+                  exportChart('frame_budget', exportFrameBudgetChart)
+                }
+              />
               <div className="rounded-lg border border-white/10 bg-black/40 p-4">
                 <ResponsiveContainer width="100%" height={200}>
                   <LineChart
@@ -861,26 +799,13 @@ const PerformanceStatsDialogComponent = ({
           {/* Layer Performance */}
           {layerPerformanceData.length > 0 && (
             <div>
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">
-                  Layer Performance Breakdown
-                </h3>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleExportLayerPerformanceChart}
-                  disabled={exportingCharts.has('layer_performance')}
-                  className="h-8 gap-1.5 px-2 text-xs">
-                  {exportingCharts.has('layer_performance') ? (
-                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-                  ) : (
-                    <ImageIcon className="h-3 w-3" />
-                  )}
-                  {exportingCharts.has('layer_performance')
-                    ? 'Exporting...'
-                    : 'Export PNG'}
-                </Button>
-              </div>
+              <ChartHeading
+                title="Layer Performance Breakdown"
+                exporting={exportingCharts.has('layer_performance')}
+                onExport={() =>
+                  exportChart('layer_performance', exportLayerPerformanceChart)
+                }
+              />
               <div className="rounded-lg border border-white/10 bg-black/40 p-4">
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart
@@ -921,26 +846,16 @@ const PerformanceStatsDialogComponent = ({
           {/* Node Network Performance */}
           {nodeNetworkPerformanceData.length > 0 && (
             <div>
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">
-                  Node Network Computation Time
-                </h3>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleExportNodeNetworkPerformanceChart}
-                  disabled={exportingCharts.has('node_network_performance')}
-                  className="h-8 gap-1.5 px-2 text-xs">
-                  {exportingCharts.has('node_network_performance') ? (
-                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-                  ) : (
-                    <ImageIcon className="h-3 w-3" />
-                  )}
-                  {exportingCharts.has('node_network_performance')
-                    ? 'Exporting...'
-                    : 'Export PNG'}
-                </Button>
-              </div>
+              <ChartHeading
+                title="Node Network Computation Time"
+                exporting={exportingCharts.has('node_network_performance')}
+                onExport={() =>
+                  exportChart(
+                    'node_network_performance',
+                    exportNodeNetworkPerformanceChart,
+                  )
+                }
+              />
               <div className="rounded-lg border border-white/10 bg-black/40 p-4">
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart
@@ -990,325 +905,86 @@ const PerformanceStatsDialogComponent = ({
               Detailed Statistics for Thesis
             </h3>
 
-            {/* 2x2 Grid for larger screens, single column for smaller screens */}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              {/* FPS Statistics */}
-              <div className="mb-4">
-                <h4 className="mb-2 text-sm font-semibold text-blue-400">
-                  Frame Rate (FPS) Statistics
-                </h4>
-                <div className="overflow-hidden rounded-lg border border-white/10">
-                  <table className="w-full text-sm">
-                    <thead className="bg-white/5">
-                      <tr>
-                        <th className="border-b border-white/10 px-4 py-2 text-left text-white">
-                          Metric
-                        </th>
-                        <th className="border-b border-white/10 px-4 py-2 text-right text-white">
-                          Value
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-black/40">
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          Mean FPS
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.editorFPS.mean.toFixed(3)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          Median FPS
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.editorFPS.median.toFixed(3)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          Standard Deviation
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.editorFPS.stdDev.toFixed(3)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          Min / Max FPS
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.editorFPS.min.toFixed(3)} /{' '}
-                          {stats.editorFPS.max.toFixed(3)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          P50 (Median)
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.editorFPS.p50.toFixed(3)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          P75 (75th percentile)
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.editorFPS.p75.toFixed(3)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          P90 (90th percentile)
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.editorFPS.p90.toFixed(3)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          P95 (95th percentile)
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.editorFPS.p95.toFixed(3)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-2 text-muted-foreground">
-                          P99 (99th percentile)
-                        </td>
-                        <td className="px-4 py-2 text-right font-mono text-white">
-                          {stats.editorFPS.p99.toFixed(3)}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Memory Statistics */}
-              <div className="mb-4 flex flex-col">
-                <h4 className="mb-2 text-sm font-semibold text-purple-400">
-                  Memory Statistics
-                </h4>
-                <div className="flex-1 overflow-hidden rounded-lg border border-white/10">
-                  <table className="w-full text-sm">
-                    <thead className="bg-white/5">
-                      <tr>
-                        <th className="border-b border-white/10 px-4 py-2 text-left text-white">
-                          Metric
-                        </th>
-                        <th className="border-b border-white/10 px-4 py-2 text-right text-white">
-                          Value (MB)
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-black/40">
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          Mean Memory Usage
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.memory.mean.toFixed(3)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          Median Memory Usage
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.memory.median.toFixed(3)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          Standard Deviation
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.memory.stdDev.toFixed(3)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          Min / Max Memory
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.memory.min.toFixed(3)} /{' '}
-                          {stats.memory.max.toFixed(3)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-2 text-muted-foreground">
-                          P95 (95th percentile)
-                        </td>
-                        <td className="px-4 py-2 text-right font-mono text-white">
-                          {stats.memory.p95.toFixed(3)}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Main Thread / Frame Budget Statistics */}
-              <div className="mb-4">
-                <h4 className="mb-2 text-sm font-semibold text-orange-400">
-                  Main Thread Statistics
-                </h4>
-                <div className="overflow-hidden rounded-lg border border-white/10">
-                  <table className="w-full text-sm">
-                    <thead className="bg-white/5">
-                      <tr>
-                        <th className="border-b border-white/10 px-4 py-2 text-left text-white">
-                          Metric
-                        </th>
-                        <th className="border-b border-white/10 px-4 py-2 text-right text-white">
-                          Value
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-black/40">
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          Mean Frame Budget Usage
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.cpu.meanUsage.toFixed(3)}%
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          Max Frame Budget Usage
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.cpu.maxUsage.toFixed(3)}%
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          Mean Frame Time
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.frameTimes.mean.toFixed(3)} ms
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-2 text-muted-foreground">
-                          Max Frame Time
-                        </td>
-                        <td className="px-4 py-2 text-right font-mono text-white">
-                          {stats.frameTimes.max.toFixed(3)} ms
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Frame Statistics */}
-              <div className="mb-4">
-                <h4 className="mb-2 text-sm font-semibold text-green-400">
-                  Frame Statistics
-                </h4>
-                <div className="overflow-hidden rounded-lg border border-white/10">
-                  <table className="w-full text-sm">
-                    <thead className="bg-white/5">
-                      <tr>
-                        <th className="border-b border-white/10 px-4 py-2 text-left text-white">
-                          Metric
-                        </th>
-                        <th className="border-b border-white/10 px-4 py-2 text-right text-white">
-                          Value
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-black/40">
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          Total Frames Sampled
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.frames.totalFrames}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          Dropped Frames (&lt;30 FPS)
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.frames.droppedFrames}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                          Dropped Frame Percentage
-                        </td>
-                        <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                          {stats.frames.droppedFramePercentage.toFixed(3)}%
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-2 text-muted-foreground">
-                          Performance Stability Score
-                        </td>
-                        <td className="px-4 py-2 text-right font-mono text-white">
-                          {(stats.frames.stability * 100).toFixed(3)}%
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <StatisticsTable
+                title="Frame Rate (FPS) Statistics"
+                titleColor="text-blue-400"
+                rows={[
+                  ['Mean FPS', stats.editorFPS.mean.toFixed(3)],
+                  ['Median FPS', stats.editorFPS.median.toFixed(3)],
+                  ['Standard Deviation', stats.editorFPS.stdDev.toFixed(3)],
+                  [
+                    'Min / Max FPS',
+                    `${stats.editorFPS.min.toFixed(3)} / ${stats.editorFPS.max.toFixed(3)}`,
+                  ],
+                  ['P50 (Median)', stats.editorFPS.p50.toFixed(3)],
+                  ['P75 (75th percentile)', stats.editorFPS.p75.toFixed(3)],
+                  ['P90 (90th percentile)', stats.editorFPS.p90.toFixed(3)],
+                  ['P95 (95th percentile)', stats.editorFPS.p95.toFixed(3)],
+                  ['P99 (99th percentile)', stats.editorFPS.p99.toFixed(3)],
+                ]}
+              />
+              <StatisticsTable
+                title="Memory Statistics"
+                titleColor="text-purple-400"
+                valueHeading="Value (MB)"
+                rows={[
+                  ['Mean Memory Usage', stats.memory.mean.toFixed(3)],
+                  ['Median Memory Usage', stats.memory.median.toFixed(3)],
+                  ['Standard Deviation', stats.memory.stdDev.toFixed(3)],
+                  [
+                    'Min / Max Memory',
+                    `${stats.memory.min.toFixed(3)} / ${stats.memory.max.toFixed(3)}`,
+                  ],
+                  ['P95 (95th percentile)', stats.memory.p95.toFixed(3)],
+                ]}
+              />
+              <StatisticsTable
+                title="Main Thread Statistics"
+                titleColor="text-orange-400"
+                rows={[
+                  [
+                    'Mean Frame Budget Usage',
+                    `${stats.cpu.meanUsage.toFixed(3)}%`,
+                  ],
+                  [
+                    'Max Frame Budget Usage',
+                    `${stats.cpu.maxUsage.toFixed(3)}%`,
+                  ],
+                  ['Mean Frame Time', `${stats.frameTimes.mean.toFixed(3)} ms`],
+                  ['Max Frame Time', `${stats.frameTimes.max.toFixed(3)} ms`],
+                ]}
+              />
+              <StatisticsTable
+                title="Frame Statistics"
+                titleColor="text-green-400"
+                rows={[
+                  ['Total Frames Sampled', stats.frames.totalFrames],
+                  ['Dropped Frames (<30 FPS)', stats.frames.droppedFrames],
+                  [
+                    'Dropped Frame Percentage',
+                    `${stats.frames.droppedFramePercentage.toFixed(3)}%`,
+                  ],
+                  [
+                    'Performance Stability Score',
+                    `${(stats.frames.stability * 100).toFixed(3)}%`,
+                  ],
+                ]}
+              />
             </div>
 
-            {/* Layer Statistics */}
-            <div className="mb-4">
-              <h4 className="mb-2 text-sm font-semibold text-cyan-400">
-                Layer Statistics
-              </h4>
-              <div className="overflow-hidden rounded-lg border border-white/10">
-                <table className="w-full text-sm">
-                  <thead className="bg-white/5">
-                    <tr>
-                      <th className="border-b border-white/10 px-4 py-2 text-left text-white">
-                        Metric
-                      </th>
-                      <th className="border-b border-white/10 px-4 py-2 text-right text-white">
-                        Value
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-black/40">
-                    <tr>
-                      <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                        Average Layer Count
-                      </td>
-                      <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                        {stats.layers.avgLayerCount.toFixed(3)}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="border-b border-white/5 px-4 py-2 text-muted-foreground">
-                        Average Render Time
-                      </td>
-                      <td className="border-b border-white/5 px-4 py-2 text-right font-mono text-white">
-                        {stats.layers.avgRenderTime.toFixed(3)} ms
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-2 text-muted-foreground">
-                        Average Draw Calls
-                      </td>
-                      <td className="px-4 py-2 text-right font-mono text-white">
-                        {stats.layers.avgDrawCalls.toFixed(3)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <StatisticsTable
+              title="Layer Statistics"
+              titleColor="text-cyan-400"
+              rows={[
+                ['Average Layer Count', stats.layers.avgLayerCount.toFixed(3)],
+                [
+                  'Average Render Time',
+                  `${stats.layers.avgRenderTime.toFixed(3)} ms`,
+                ],
+                ['Average Draw Calls', stats.layers.avgDrawCalls.toFixed(3)],
+              ]}
+            />
 
             {/* Per-Layer Detailed Breakdown */}
             {layerPerformanceData.length > 0 && (
@@ -1534,6 +1210,84 @@ function StatCard({ label, value, subValue, color }: StatCardProps) {
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className={`mt-1 text-2xl font-bold`}>{value}</div>
       <div className="mt-1 text-xs text-muted-foreground">{subValue}</div>
+    </div>
+  );
+}
+
+function ChartHeading({
+  title,
+  exporting,
+  onExport,
+}: {
+  title: string;
+  exporting: boolean;
+  onExport: () => void;
+}) {
+  return (
+    <div className="mb-3 flex items-center justify-between">
+      <h3 className="text-lg font-semibold text-white">{title}</h3>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onExport}
+        disabled={exporting}
+        className="h-8 gap-1.5 px-2 text-xs">
+        {exporting ? (
+          <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+        ) : (
+          <ImageIcon className="h-3 w-3" />
+        )}
+        {exporting ? 'Exporting...' : 'Export PNG'}
+      </Button>
+    </div>
+  );
+}
+
+function StatisticsTable({
+  title,
+  titleColor,
+  rows,
+  valueHeading = 'Value',
+}: {
+  title: string;
+  titleColor: string;
+  rows: Array<readonly [label: string, value: ReactNode]>;
+  valueHeading?: string;
+}) {
+  return (
+    <div className="mb-4 flex flex-col">
+      <h4 className={`mb-2 text-sm font-semibold ${titleColor}`}>{title}</h4>
+      <div className="flex-1 overflow-hidden rounded-lg border border-white/10">
+        <table className="w-full text-sm">
+          <thead className="bg-white/5">
+            <tr>
+              <th className="border-b border-white/10 px-4 py-2 text-left text-white">
+                Metric
+              </th>
+              <th className="border-b border-white/10 px-4 py-2 text-right text-white">
+                {valueHeading}
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-black/40">
+            {rows.map(([label, value], index) => {
+              const border =
+                index < rows.length - 1 ? 'border-b border-white/5' : '';
+              return (
+                <tr key={label}>
+                  <td className={`${border} px-4 py-2 text-muted-foreground`}>
+                    {label}
+                  </td>
+                  <td
+                    className={`${border} px-4 py-2 text-right font-mono text-white`}>
+                    {value}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

@@ -122,10 +122,9 @@ export const createVizLayerFromComp = (
   settings: clone(comp.defaultValues),
 });
 
-export const getEditorLayerValues = (layer: VizLayer) =>
-  clone(layer.settings ?? {});
+const getEditorLayerValues = (layer: VizLayer) => clone(layer.settings ?? {});
 
-export const getEditorLayerSettings = (layer: VizLayer): LayerSettings => {
+const getEditorLayerSettings = (layer: VizLayer): LayerSettings => {
   const defaults = layerSettingsSchema.parse({});
 
   return {
@@ -415,7 +414,7 @@ const createProjectedGraphOutputNodes = (
   return { nodes, edges };
 };
 
-export const vizGraphToNodeNetwork = (
+const vizGraphToNodeNetwork = (
   graph: VizNodeGraphDocument,
   previousNetwork?: NodeNetwork,
 ): NodeNetwork => {
@@ -452,7 +451,7 @@ export const projectGraphsToNodeNetworks = (
     ]),
   );
 
-export const attachGraphToLayerInput = (
+const attachGraphToLayerInput = (
   project: VizProjectDocument,
   graphId: string,
 ): VizProjectDocument => {
@@ -483,22 +482,6 @@ export const attachGraphToLayerInput = (
     ),
   };
 };
-
-export const detachGraphFromLayerInput = (
-  project: VizProjectDocument,
-  graphId: string,
-): VizProjectDocument => ({
-  ...project,
-  layers: project.layers.map((layer) => ({
-    ...layer,
-    inputs: Object.fromEntries(
-      Object.entries(layer.inputs ?? {}).filter(
-        ([, source]) =>
-          source.kind !== 'graph-output' || source.graphId !== graphId,
-      ),
-    ),
-  })),
-});
 
 export const applyEditorDefaultNetworks = ({
   project,

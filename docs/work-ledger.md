@@ -1704,3 +1704,35 @@
   - recorded the contract, measurement, validation, and compatibility policy
     in
     `docs/parity/evidence/2026-07-30-artifact-container-and-execution-identity.md`
+- activated Goal Two from immutable pushed baseline `6f4529b` and recorded its
+  complete contract plus machine-readable source, architecture, behavior,
+  identity, and performance baseline in
+  `docs/plans/v2/behavior-preserving-minimization-and-final-polish.md` and
+  `docs/parity/evidence/artifacts/2026-07-30-goal-two-baseline.json`
+- completed the first Goal Two deletion and declaration-consolidation
+  checkpoint:
+  - removed 12 zero-caller production files and 11 unused direct dependencies,
+    including the obsolete root Remotion entrypoint while retaining the
+    deliberate player and adapter boundaries
+  - removed dead storage, waveform, projection, graph-store, configuration,
+    export, and inspection surfaces after caller and compiler proof
+  - reduced all 26 node-graph presets to one transparent tuple vocabulary,
+    preserving 130 nodes, 162 edges, and exact normalized registry identity
+  - reduced 144 built-in node port declarations to one typed constructor while
+    preserving every node definition and executable kernel
+  - reduced the 14 Noise Shader presets to one typed domain tuple without
+    changing the resulting ordinary authoring data
+  - replaced five independent chart-export pipelines with explicit shared
+    time-series and grouped-chart contracts
+  - replaced repeated performance-stat tables and export controls with typed
+    presentation components
+  - physically deleted unused Card, Command, Context Menu, Form, Menubar,
+    Select, and Dialog primitive branches while preserving every used editor
+    control
+  - moved production source from 75,524 to 71,579 lines and combined maintained
+    code from 90,627 to 86,726 lines; the maintained diff is 1,418 additions
+    and 5,351 deletions, net -3,933
+  - passed architecture validation, strict lint and type checks, all 17 package
+    builds, the production studio build, 53 foundation files / 223 tests, and
+    all 7 real-browser journeys including model restore, graph authoring,
+    persistence, nonblank still/video export, and bounded resource stability

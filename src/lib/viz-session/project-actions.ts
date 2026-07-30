@@ -29,12 +29,12 @@ import type { StudioGraphAuthoringActions } from './graph-authoring-actions';
 import {
   applyEditorLayerSettings,
   createVizLayerFromComp,
+  resolveEditorOptionByPath,
 } from './project-adapters';
 import { createEmptyVizProjectDocument } from './project-document';
 import {
   getEditorParameterIds,
   resolveEditorComp,
-  resolveEditorOptionByPath,
   syncEditorProjection,
 } from './project-projection';
 import { resetVizSessionSelectorCaches } from './selectors';

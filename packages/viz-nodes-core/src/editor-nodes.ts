@@ -18,6 +18,18 @@ const EMPTY_FREQUENCY_ANALYSIS: FrequencyAnalysis = {
   ...EMPTY_NODE_FREQUENCY_ANALYSIS,
 };
 
+const port = (
+  type: NodeHandleType,
+  id: string,
+  label: string,
+  defaultValue?: unknown,
+) => ({
+  id,
+  label,
+  type,
+  ...(defaultValue === undefined ? {} : { defaultValue }),
+});
+
 const toHexChannel = (value: number): string =>
   Math.round(Math.max(0, Math.min(255, value)))
     .toString(16)
@@ -65,13 +77,9 @@ export const InputNode = createNode({
     'Graph inputs: audioSignal (Uint8Array waveform), frequencyAnalysis (spectrum + metadata), and time (seconds). Start connections here.',
   inputs: [],
   outputs: [
-    { id: 'audioSignal', label: 'Audio Signal', type: 'Uint8Array' },
-    {
-      id: 'frequencyAnalysis',
-      label: 'Frequency Analysis',
-      type: 'FrequencyAnalysis',
-    },
-    { id: 'time', label: 'Time', type: 'number' },
+    port('Uint8Array', 'audioSignal', 'Audio Signal'),
+    port('FrequencyAnalysis', 'frequencyAnalysis', 'Frequency Analysis'),
+    port('number', 'time', 'Time'),
   ],
   computeSignal: (_, context) => ({
     audioSignal: context.audioSignal,
@@ -96,16 +104,11 @@ const MathNode = createNode({
   description:
     'Performs a math operation on A and B. Change operation via its input.',
   inputs: [
-    { id: 'a', label: 'A', type: 'number', defaultValue: 1 },
-    { id: 'b', label: 'B', type: 'number', defaultValue: 1 },
-    {
-      id: 'operation',
-      label: 'Operation',
-      type: 'math-op',
-      defaultValue: MathOperation.Multiply,
-    },
+    port('number', 'a', 'A', 1),
+    port('number', 'b', 'B', 1),
+    port('math-op', 'operation', 'Operation', MathOperation.Multiply),
   ],
-  outputs: [{ id: 'result', label: 'Result', type: 'number' }],
+  outputs: [port('number', 'result', 'Result')],
   computeSignal: ({ a, b, operation }) => {
     let result: number;
     switch (operation) {
@@ -145,12 +148,12 @@ export const SpikeNode = createNode({
   description:
     'Detect transient spikes over a threshold with attack/release shaping. Good for percussive triggers.',
   inputs: [
-    { id: 'value', type: 'number', label: 'Value', defaultValue: 0 },
-    { id: 'threshold', type: 'number', label: 'Threshold', defaultValue: 50 },
-    { id: 'attack', type: 'number', label: 'Attack (ms)', defaultValue: 10 },
-    { id: 'release', type: 'number', label: 'Release (ms)', defaultValue: 250 },
+    port('number', 'value', 'Value', 0),
+    port('number', 'threshold', 'Threshold', 50),
+    port('number', 'attack', 'Attack (ms)', 10),
+    port('number', 'release', 'Release (ms)', 250),
   ],
-  outputs: [{ id: 'result', type: 'number', label: 'Result' }],
+  outputs: [port('number', 'result', 'Result')],
   computeSignal: ({ value, threshold, attack, release }, _context, node) => {
     if (!node) return { result: 0 };
     const state = node.data.state;
@@ -184,36 +187,16 @@ const AdaptiveNormalizeQuantileNode = createNode({
   description:
     'Continuously normalizes a signal using rolling quantiles over a time window. Add freeze-below to stop adapting during breaks.',
   inputs: [
-    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
-    {
-      id: 'windowMs',
-      label: 'Window (ms)',
-      type: 'number',
-      defaultValue: 4000,
-    },
-    {
-      id: 'qLow',
-      label: 'Low Quantile (0..1)',
-      type: 'number',
-      defaultValue: 0.5,
-    },
-    {
-      id: 'qHigh',
-      label: 'High Quantile (0..1)',
-      type: 'number',
-      defaultValue: 0.95,
-    },
-    {
-      id: 'freezeBelow',
-      label: 'Freeze Below',
-      type: 'number',
-      defaultValue: 0,
-    },
+    port('number', 'value', 'Value', 0),
+    port('number', 'windowMs', 'Window (ms)', 4000),
+    port('number', 'qLow', 'Low Quantile (0..1)', 0.5),
+    port('number', 'qHigh', 'High Quantile (0..1)', 0.95),
+    port('number', 'freezeBelow', 'Freeze Below', 0),
   ],
   outputs: [
-    { id: 'result', label: 'Result', type: 'number' },
-    { id: 'low', label: 'Low', type: 'number' },
-    { id: 'high', label: 'High', type: 'number' },
+    port('number', 'result', 'Result'),
+    port('number', 'low', 'Low'),
+    port('number', 'high', 'High'),
   ],
   computeSignal: (
     { value, windowMs, qLow, qHigh, freezeBelow },
@@ -282,17 +265,12 @@ const SineNode = createNode({
   description:
     'Sine oscillator controlled by time with frequency, phase, amplitude. Outputs raw -A..+A.',
   inputs: [
-    { id: 'time', label: 'Time (s)', type: 'number', defaultValue: 0 },
-    {
-      id: 'frequency',
-      label: 'Frequency (Hz)',
-      type: 'number',
-      defaultValue: 1,
-    },
-    { id: 'phase', label: 'Phase (rad)', type: 'number', defaultValue: 0 },
-    { id: 'amplitude', label: 'Amplitude', type: 'number', defaultValue: 1 },
+    port('number', 'time', 'Time (s)', 0),
+    port('number', 'frequency', 'Frequency (Hz)', 1),
+    port('number', 'phase', 'Phase (rad)', 0),
+    port('number', 'amplitude', 'Amplitude', 1),
   ],
-  outputs: [{ id: 'value', label: 'Value', type: 'number' }],
+  outputs: [port('number', 'value', 'Value')],
   computeSignal: ({ time, frequency, phase, amplitude }) => {
     const value = Math.sin(2 * Math.PI * frequency * time + phase) * amplitude;
     return { value };
@@ -304,13 +282,13 @@ const NormalizeNode = createNode({
   description:
     'Maps value from [inputMin..inputMax] to [outputMin..outputMax] with clamping.',
   inputs: [
-    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
-    { id: 'inputMin', label: 'Input Min', type: 'number', defaultValue: 0 },
-    { id: 'inputMax', label: 'Input Max', type: 'number', defaultValue: 255 },
-    { id: 'outputMin', label: 'Output Min', type: 'number', defaultValue: 0 },
-    { id: 'outputMax', label: 'Output Max', type: 'number', defaultValue: 1 },
+    port('number', 'value', 'Value', 0),
+    port('number', 'inputMin', 'Input Min', 0),
+    port('number', 'inputMax', 'Input Max', 255),
+    port('number', 'outputMin', 'Output Min', 0),
+    port('number', 'outputMax', 'Output Max', 1),
   ],
-  outputs: [{ id: 'result', label: 'Result', type: 'number' }],
+  outputs: [port('number', 'result', 'Result')],
   computeSignal: ({ value, inputMin, inputMax, outputMin, outputMax }) => {
     if (inputMax - inputMin === 0) {
       return { result: outputMin }; // Avoid division by zero
@@ -330,28 +308,14 @@ const FrequencyBandNode = createNode({
   description:
     "Select a frequency range from FrequencyAnalysis and output just that band's Uint8Array.",
   inputs: [
-    {
-      id: 'frequencyAnalysis',
-      label: 'Frequency Analysis',
-      type: 'FrequencyAnalysis',
-    },
-    {
-      id: 'startFrequency',
-      label: 'Start Frequency (Hz)',
-      type: 'number',
-      defaultValue: 0,
-    },
-    {
-      id: 'endFrequency',
-      label: 'End Frequency (Hz)',
-      type: 'number',
-      defaultValue: 200,
-    },
+    port('FrequencyAnalysis', 'frequencyAnalysis', 'Frequency Analysis'),
+    port('number', 'startFrequency', 'Start Frequency (Hz)', 0),
+    port('number', 'endFrequency', 'End Frequency (Hz)', 200),
   ],
   outputs: [
-    { id: 'bandData', label: 'Band Data', type: 'Uint8Array' },
-    { id: 'bandStartBin', label: 'Band Start Bin', type: 'number' },
-    { id: 'frequencyPerBin', label: 'Frequency/Bin (Hz)', type: 'number' },
+    port('Uint8Array', 'bandData', 'Band Data'),
+    port('number', 'bandStartBin', 'Band Start Bin'),
+    port('number', 'frequencyPerBin', 'Frequency/Bin (Hz)'),
   ],
   computeSignal: (
     { frequencyAnalysis, startFrequency, endFrequency },
@@ -395,35 +359,20 @@ const PitchDetectionNode = createNode({
   description:
     'Time-domain pitch detection using YIN/CMNDF. Very stable for monophonic sources (piano, voice). Low latency!',
   inputs: [
-    { id: 'audioSignal', label: 'Audio Signal', type: 'Uint8Array' },
-    {
-      id: 'sampleRate',
-      label: 'Sample Rate (Hz)',
-      type: 'number',
-      defaultValue: 44100,
-    },
-    { id: 'minHz', label: 'Min Hz', type: 'number', defaultValue: 60 },
-    { id: 'maxHz', label: 'Max Hz', type: 'number', defaultValue: 1500 },
-    {
-      id: 'threshold',
-      label: 'CMNDF Threshold',
-      type: 'number',
-      defaultValue: 0.1,
-    },
-    { id: 'smoothMs', label: 'Smooth (ms)', type: 'number', defaultValue: 30 },
-    {
-      id: 'stabilityCents',
-      label: 'Stability (cents)',
-      type: 'number',
-      defaultValue: 50,
-    },
+    port('Uint8Array', 'audioSignal', 'Audio Signal'),
+    port('number', 'sampleRate', 'Sample Rate (Hz)', 44100),
+    port('number', 'minHz', 'Min Hz', 60),
+    port('number', 'maxHz', 'Max Hz', 1500),
+    port('number', 'threshold', 'CMNDF Threshold', 0.1),
+    port('number', 'smoothMs', 'Smooth (ms)', 30),
+    port('number', 'stabilityCents', 'Stability (cents)', 50),
   ],
   outputs: [
-    { id: 'note', label: 'Note', type: 'string' },
-    { id: 'frequency', label: 'Frequency (Hz)', type: 'number' },
-    { id: 'midi', label: 'MIDI', type: 'number' },
-    { id: 'octave', label: 'Octave', type: 'number' },
-    { id: 'confidence', label: 'Confidence', type: 'number' },
+    port('string', 'note', 'Note'),
+    port('number', 'frequency', 'Frequency (Hz)'),
+    port('number', 'midi', 'MIDI'),
+    port('number', 'octave', 'Octave'),
+    port('number', 'confidence', 'Confidence'),
   ],
   computeSignal: (
     {
@@ -602,27 +551,12 @@ const ValueMapperNode = createNode({
   description:
     'Map number inputs to different output types (colors, strings, numbers). Useful for mapping beat counts to mode names or indices.',
   inputs: [
-    { id: 'input', label: 'Input', type: 'number', defaultValue: 0 },
-    {
-      id: 'mode',
-      label: 'Mode',
-      type: 'string',
-      defaultValue: 'number',
-    },
-    {
-      id: 'mapping',
-      label: 'Mapping',
-      type: 'object',
-      defaultValue: {},
-    },
-    {
-      id: 'default',
-      label: 'Default',
-      type: 'string',
-      defaultValue: '0',
-    },
+    port('number', 'input', 'Input', 0),
+    port('string', 'mode', 'Mode', 'number'),
+    port('object', 'mapping', 'Mapping', {}),
+    port('string', 'default', 'Default', '0'),
   ],
-  outputs: [{ id: 'output', label: 'Output', type: 'string' }],
+  outputs: [port('string', 'output', 'Output')],
   computeSignal: ({ input, mapping, default: def }) => {
     const mapObj = mapping as Record<string, any>;
     // Convert number input to string key for lookup
@@ -639,12 +573,12 @@ const BandInfoNode = createNode({
   label: 'Band Info',
   description:
     'Takes a Uint8Array (e.g. from FrequencyBand) and outputs useful statistics: average, peak, flatness, and flux.',
-  inputs: [{ id: 'data', label: 'Data', type: 'Uint8Array' }],
+  inputs: [port('Uint8Array', 'data', 'Data')],
   outputs: [
-    { id: 'average', label: 'Average', type: 'number' },
-    { id: 'peak', label: 'Peak', type: 'number' },
-    { id: 'flatness', label: 'Flatness', type: 'number' },
-    { id: 'flux', label: 'Flux', type: 'number' },
+    port('number', 'average', 'Average'),
+    port('number', 'peak', 'Peak'),
+    port('number', 'flatness', 'Flatness'),
+    port('number', 'flux', 'Flux'),
   ],
   computeSignal: ({ data }, context, node) => {
     if (!data || !(data instanceof Uint8Array) || data.length === 0) {
@@ -696,8 +630,8 @@ const AverageVolumeNode = createNode({
   label: 'Average Volume',
   description:
     'Calculates the average value of a Uint8Array (e.g. audio signal or frequency band). Simple volume measurement.',
-  inputs: [{ id: 'data', label: 'Data', type: 'Uint8Array' }],
-  outputs: [{ id: 'average', label: 'Average', type: 'number' }],
+  inputs: [port('Uint8Array', 'data', 'Data')],
+  outputs: [port('number', 'average', 'Average')],
   computeSignal: ({ data }) => {
     if (!data || !(data instanceof Uint8Array) || data.length === 0) {
       return { average: 0 };
@@ -717,8 +651,8 @@ const RMSNode = createNode({
   label: 'RMS Level',
   description:
     'Calculates the Root Mean Square (true energy) of a signal. Handles polarity correctly by squaring values. Essential for raw audio waveforms.',
-  inputs: [{ id: 'data', label: 'Data', type: 'Uint8Array' }],
-  outputs: [{ id: 'rms', label: 'RMS', type: 'number' }],
+  inputs: [port('Uint8Array', 'data', 'Data')],
+  outputs: [port('number', 'rms', 'RMS')],
   computeSignal: ({ data }) => {
     if (!data || !(data instanceof Uint8Array) || data.length === 0) {
       return { rms: 0 };
@@ -749,14 +683,10 @@ const SpectralFluxNode = createNode({
   description:
     'Frame-to-frame positive spectral change across the full spectrum. Good onset/transient detector.',
   inputs: [
-    {
-      id: 'frequencyAnalysis',
-      label: 'Frequency Analysis',
-      type: 'FrequencyAnalysis',
-    },
-    { id: 'smoothMs', label: 'Smooth (ms)', type: 'number', defaultValue: 50 },
+    port('FrequencyAnalysis', 'frequencyAnalysis', 'Frequency Analysis'),
+    port('number', 'smoothMs', 'Smooth (ms)', 50),
   ],
-  outputs: [{ id: 'flux', label: 'Flux', type: 'number' }],
+  outputs: [port('number', 'flux', 'Flux')],
   computeSignal: ({ frequencyAnalysis, smoothMs }, context, node) => {
     if (!node || !frequencyAnalysis || !frequencyAnalysis.frequencyData) {
       return { flux: 0 };
@@ -803,28 +733,13 @@ const DuckerNode = createNode({
   description:
     'Attenuates a value briefly after a trigger (e.g., spectral flux) using exponential decay.',
   inputs: [
-    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
-    {
-      id: 'duckTrigger',
-      label: 'Duck Trigger',
-      type: 'number',
-      defaultValue: 0,
-    },
-    {
-      id: 'threshold',
-      label: 'Trigger Threshold',
-      type: 'number',
-      defaultValue: 0.6,
-    },
-    { id: 'depth', label: 'Depth (0..1)', type: 'number', defaultValue: 0.5 },
-    {
-      id: 'duckMs',
-      label: 'Duck Time (ms)',
-      type: 'number',
-      defaultValue: 120,
-    },
+    port('number', 'value', 'Value', 0),
+    port('number', 'duckTrigger', 'Duck Trigger', 0),
+    port('number', 'threshold', 'Trigger Threshold', 0.6),
+    port('number', 'depth', 'Depth (0..1)', 0.5),
+    port('number', 'duckMs', 'Duck Time (ms)', 120),
   ],
-  outputs: [{ id: 'out', label: 'Out', type: 'number' }],
+  outputs: [port('number', 'out', 'Out')],
   computeSignal: (
     { value, duckTrigger, threshold, depth, duckMs },
     context,
@@ -862,44 +777,19 @@ const HarmonicPresenceNode = createNode({
   description:
     'Detects melodic/voiced content by scoring harmonic series in a band-limited spectrum (Uint8Array).',
   inputs: [
-    { id: 'data', label: 'Data', type: 'Uint8Array' },
-    {
-      id: 'bandStartBin',
-      label: 'Band Start Bin',
-      type: 'number',
-      defaultValue: 0,
-    },
-    {
-      id: 'frequencyPerBin',
-      label: 'Frequency/Bin (Hz)',
-      type: 'number',
-      defaultValue: 0,
-    },
-    {
-      id: 'maxHarmonics',
-      label: 'Max Harmonics',
-      type: 'number',
-      defaultValue: 8,
-    },
-    {
-      id: 'toleranceCents',
-      label: 'Tolerance (cents)',
-      type: 'number',
-      defaultValue: 35,
-    },
-    { id: 'smoothMs', label: 'Smooth (ms)', type: 'number', defaultValue: 120 },
-    {
-      id: 'minSNR',
-      label: 'Min Peak Rel. (0..1)',
-      type: 'number',
-      defaultValue: 0.05,
-    },
+    port('Uint8Array', 'data', 'Data'),
+    port('number', 'bandStartBin', 'Band Start Bin', 0),
+    port('number', 'frequencyPerBin', 'Frequency/Bin (Hz)', 0),
+    port('number', 'maxHarmonics', 'Max Harmonics', 8),
+    port('number', 'toleranceCents', 'Tolerance (cents)', 35),
+    port('number', 'smoothMs', 'Smooth (ms)', 120),
+    port('number', 'minSNR', 'Min Peak Rel. (0..1)', 0.05),
   ],
   outputs: [
-    { id: 'presence', label: 'Presence', type: 'number' },
-    { id: 'fundamentalHz', label: 'Fundamental (Hz)', type: 'number' },
-    { id: 'midi', label: 'MIDI', type: 'number' },
-    { id: 'confidence', label: 'Confidence', type: 'number' },
+    port('number', 'presence', 'Presence'),
+    port('number', 'fundamentalHz', 'Fundamental (Hz)'),
+    port('number', 'midi', 'MIDI'),
+    port('number', 'confidence', 'Confidence'),
   ],
   computeSignal: (
     {
@@ -1052,24 +942,14 @@ const TonalPresenceNode = createNode({
   description:
     'Heuristic for voiced/synth presence in a band using peak level and spectral flatness.',
   inputs: [
-    { id: 'data', label: 'Data', type: 'Uint8Array' },
-    {
-      id: 'flatnessCutoff',
-      label: 'Flatness Cutoff',
-      type: 'number',
-      defaultValue: 0.6,
-    },
-    {
-      id: 'peakScale',
-      label: 'Peak Scale',
-      type: 'number',
-      defaultValue: 255,
-    },
+    port('Uint8Array', 'data', 'Data'),
+    port('number', 'flatnessCutoff', 'Flatness Cutoff', 0.6),
+    port('number', 'peakScale', 'Peak Scale', 255),
   ],
   outputs: [
-    { id: 'presence', label: 'Presence', type: 'number' },
-    { id: 'peak', label: 'Peak', type: 'number' },
-    { id: 'flatness', label: 'Flatness', type: 'number' },
+    port('number', 'presence', 'Presence'),
+    port('number', 'peak', 'Peak'),
+    port('number', 'flatness', 'Flatness'),
   ],
   computeSignal: ({ data, flatnessCutoff, peakScale }) => {
     if (!data || !(data instanceof Uint8Array) || data.length === 0) {
@@ -1113,13 +993,13 @@ const HysteresisGateNode = createNode({
   description:
     'Binary gate with separate open/close thresholds (high/low) to avoid chatter.',
   inputs: [
-    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
-    { id: 'low', label: 'Low', type: 'number', defaultValue: 0.02 },
-    { id: 'high', label: 'High', type: 'number', defaultValue: 0.08 },
+    port('number', 'value', 'Value', 0),
+    port('number', 'low', 'Low', 0.02),
+    port('number', 'high', 'High', 0.08),
   ],
   outputs: [
-    { id: 'gated', label: 'Gated', type: 'number' },
-    { id: 'state', label: 'State (0/1)', type: 'number' },
+    port('number', 'gated', 'Gated'),
+    port('number', 'state', 'State (0/1)'),
   ],
   computeSignal: ({ value, low, high }, context, node) => {
     if (!node) return { gated: 0, state: 0 };
@@ -1145,15 +1025,10 @@ const RefractoryGateNode = createNode({
   description:
     'Allows a pulse only if a minimum interval since last pulse has passed. Feed time (s).',
   inputs: [
-    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
-    {
-      id: 'minIntervalMs',
-      label: 'Min Interval (ms)',
-      type: 'number',
-      defaultValue: 120,
-    },
+    port('number', 'value', 'Value', 0),
+    port('number', 'minIntervalMs', 'Min Interval (ms)', 120),
   ],
-  outputs: [{ id: 'gated', label: 'Gated', type: 'number' }],
+  outputs: [port('number', 'gated', 'Gated')],
   computeSignal: ({ value, minIntervalMs }, context, node) => {
     if (!node) return { gated: 0 };
     const time = context.time;
@@ -1176,16 +1051,11 @@ const EnvelopeFollowerNode = createNode({
   description:
     'Rectifies and smooths a signal with separate attack/release using time-aware coefficients.',
   inputs: [
-    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
-    { id: 'attackMs', label: 'Attack (ms)', type: 'number', defaultValue: 10 },
-    {
-      id: 'releaseMs',
-      label: 'Release (ms)',
-      type: 'number',
-      defaultValue: 150,
-    },
+    port('number', 'value', 'Value', 0),
+    port('number', 'attackMs', 'Attack (ms)', 10),
+    port('number', 'releaseMs', 'Release (ms)', 150),
   ],
-  outputs: [{ id: 'env', label: 'Envelope', type: 'number' }],
+  outputs: [port('number', 'env', 'Envelope')],
   computeSignal: ({ value, attackMs, releaseMs }, context, node) => {
     if (!node) return { env: Math.abs(typeof value === 'number' ? value : 0) };
     const v = Math.abs(typeof value === 'number' ? value : 0);
@@ -1220,21 +1090,11 @@ const ThresholdCounterNode = createNode({
   description:
     'Increments a counter each time the input value crosses above the threshold. The counter wraps around using modulo (counter % maxValue). Perfect for cycling through modes based on audio triggers.',
   inputs: [
-    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
-    {
-      id: 'threshold',
-      label: 'Threshold',
-      type: 'number',
-      defaultValue: 0.5,
-    },
-    {
-      id: 'maxValue',
-      label: 'Max Value',
-      type: 'number',
-      defaultValue: 5,
-    },
+    port('number', 'value', 'Value', 0),
+    port('number', 'threshold', 'Threshold', 0.5),
+    port('number', 'maxValue', 'Max Value', 5),
   ],
-  outputs: [{ id: 'count', label: 'Count', type: 'number' }],
+  outputs: [port('number', 'count', 'Count')],
   computeSignal: ({ value, threshold, maxValue }, context, node) => {
     if (!node) return { count: 0 };
 
@@ -1273,30 +1133,15 @@ const SectionChangeDetectorNode = createNode({
   description:
     'Detects significant changes in any input signal. Monitors value changes and triggers ONCE per transition with cooldown. Perfect for section changes, laser modes, or triggering effects on big shifts!',
   inputs: [
-    { id: 'flux', label: 'Value', type: 'number', defaultValue: 0 },
-    {
-      id: 'threshold',
-      label: 'Threshold',
-      type: 'number',
-      defaultValue: 0.5,
-    },
-    {
-      id: 'cooldownMs',
-      label: 'Cooldown (ms)',
-      type: 'number',
-      defaultValue: 2000,
-    },
-    {
-      id: 'holdMs',
-      label: 'Hold Time (ms)',
-      type: 'number',
-      defaultValue: 100,
-    },
+    port('number', 'flux', 'Value', 0),
+    port('number', 'threshold', 'Threshold', 0.5),
+    port('number', 'cooldownMs', 'Cooldown (ms)', 2000),
+    port('number', 'holdMs', 'Hold Time (ms)', 100),
   ],
   outputs: [
-    { id: 'trigger', label: 'Trigger', type: 'number' },
-    { id: 'cooldownActive', label: 'Cooldown Active', type: 'number' },
-    { id: 'change', label: 'Change', type: 'number' },
+    port('number', 'trigger', 'Trigger'),
+    port('number', 'cooldownActive', 'Cooldown Active'),
+    port('number', 'change', 'Change'),
   ],
   computeSignal: ({ flux, threshold, cooldownMs, holdMs }, context, node) => {
     if (!node) return { trigger: 0, cooldownActive: 0, change: 0 };
@@ -1370,31 +1215,17 @@ const MultiBandAnalysisNode = createNode({
   description:
     'Splits spectrum into Bass/Mids/Highs with PERCEPTUAL WEIGHTING (mimics human hearing). Outputs both raw energy AND percentage. Balanced D&B drop = ~33% each band!',
   inputs: [
-    {
-      id: 'frequencyAnalysis',
-      label: 'Frequency Analysis',
-      type: 'FrequencyAnalysis',
-    },
-    {
-      id: 'bassMax',
-      label: 'Bass Max (Hz)',
-      type: 'number',
-      defaultValue: 250,
-    },
-    {
-      id: 'midMax',
-      label: 'Mid Max (Hz)',
-      type: 'number',
-      defaultValue: 4000,
-    },
+    port('FrequencyAnalysis', 'frequencyAnalysis', 'Frequency Analysis'),
+    port('number', 'bassMax', 'Bass Max (Hz)', 250),
+    port('number', 'midMax', 'Mid Max (Hz)', 4000),
   ],
   outputs: [
-    { id: 'bassEnergy', label: 'Bass Energy', type: 'number' },
-    { id: 'midEnergy', label: 'Mid Energy', type: 'number' },
-    { id: 'highEnergy', label: 'High Energy', type: 'number' },
-    { id: 'bassPercent', label: 'Bass %', type: 'number' },
-    { id: 'midPercent', label: 'Mid %', type: 'number' },
-    { id: 'highPercent', label: 'High %', type: 'number' },
+    port('number', 'bassEnergy', 'Bass Energy'),
+    port('number', 'midEnergy', 'Mid Energy'),
+    port('number', 'highEnergy', 'High Energy'),
+    port('number', 'bassPercent', 'Bass %'),
+    port('number', 'midPercent', 'Mid %'),
+    port('number', 'highPercent', 'High %'),
   ],
   computeSignal: ({ frequencyAnalysis, bassMax, midMax }, context, node) => {
     if (!node || !frequencyAnalysis || !frequencyAnalysis.frequencyData) {
@@ -1500,21 +1331,12 @@ const SpectralCentroidNode = createNode({
   description:
     'Calculates the "center of mass" of the frequency spectrum (in Hz). Low centroid = bass-heavy (drops), high centroid = treble-heavy (vocals/buildups). Perfect for detecting timbral/textural changes.',
   inputs: [
-    {
-      id: 'frequencyAnalysis',
-      label: 'Frequency Analysis',
-      type: 'FrequencyAnalysis',
-    },
-    {
-      id: 'smoothMs',
-      label: 'Smooth (ms)',
-      type: 'number',
-      defaultValue: 50,
-    },
+    port('FrequencyAnalysis', 'frequencyAnalysis', 'Frequency Analysis'),
+    port('number', 'smoothMs', 'Smooth (ms)', 50),
   ],
   outputs: [
-    { id: 'centroid', label: 'Centroid (Hz)', type: 'number' },
-    { id: 'normalized', label: 'Normalized', type: 'number' },
+    port('number', 'centroid', 'Centroid (Hz)'),
+    port('number', 'normalized', 'Normalized'),
   ],
   computeSignal: ({ frequencyAnalysis, smoothMs }, context, node) => {
     if (!node || !frequencyAnalysis || !frequencyAnalysis.frequencyData) {
@@ -1593,40 +1415,16 @@ const TimeDomainSectionDetectorNode = createNode({
   description:
     'Ultra-low latency adaptive section detector using statistical analysis. Tracks energy difference percentiles to detect significant changes. Auto-calibrates to each song!',
   inputs: [
-    {
-      id: 'audioSignal',
-      label: 'Audio Signal',
-      type: 'Uint8Array',
-    },
-    {
-      id: 'percentile',
-      label: 'Percentile',
-      type: 'number',
-      defaultValue: 0.95,
-    },
-    {
-      id: 'windowMs',
-      label: 'Window (ms)',
-      type: 'number',
-      defaultValue: 4000,
-    },
-    {
-      id: 'cooldownMs',
-      label: 'Cooldown (ms)',
-      type: 'number',
-      defaultValue: 2000,
-    },
-    {
-      id: 'holdMs',
-      label: 'Hold Time (ms)',
-      type: 'number',
-      defaultValue: 100,
-    },
+    port('Uint8Array', 'audioSignal', 'Audio Signal'),
+    port('number', 'percentile', 'Percentile', 0.95),
+    port('number', 'windowMs', 'Window (ms)', 4000),
+    port('number', 'cooldownMs', 'Cooldown (ms)', 2000),
+    port('number', 'holdMs', 'Hold Time (ms)', 100),
   ],
   outputs: [
-    { id: 'trigger', label: 'Trigger', type: 'number' },
-    { id: 'difference', label: 'Difference', type: 'number' },
-    { id: 'threshold', label: 'Threshold', type: 'number' },
+    port('number', 'trigger', 'Trigger'),
+    port('number', 'difference', 'Difference'),
+    port('number', 'threshold', 'Threshold'),
   ],
   computeSignal: (
     { audioSignal, percentile, windowMs, cooldownMs, holdMs },
@@ -1770,15 +1568,10 @@ const RateLimiterNode = createNode({
   description:
     'Limits how often the output value can change. Prevents rapid value switching by enforcing a minimum time interval between changes. Perfect for preventing twitchy mode switches!',
   inputs: [
-    { id: 'value', label: 'Value', type: 'number', defaultValue: 0 },
-    {
-      id: 'minIntervalMs',
-      label: 'Min Interval (ms)',
-      type: 'number',
-      defaultValue: 250,
-    },
+    port('number', 'value', 'Value', 0),
+    port('number', 'minIntervalMs', 'Min Interval (ms)', 250),
   ],
-  outputs: [{ id: 'limited', label: 'Limited', type: 'number' }],
+  outputs: [port('number', 'limited', 'Limited')],
   computeSignal: ({ value, minIntervalMs }, context, node) => {
     if (!node) return { limited: 0 };
 
@@ -1830,11 +1623,11 @@ const RGBColorNode = createNode({
   description:
     'Construct a color from Red, Green, and Blue components (0-255). Drive individual channels with audio!',
   inputs: [
-    { id: 'r', label: 'Red (0-255)', type: 'number', defaultValue: 255 },
-    { id: 'g', label: 'Green (0-255)', type: 'number', defaultValue: 0 },
-    { id: 'b', label: 'Blue (0-255)', type: 'number', defaultValue: 255 },
+    port('number', 'r', 'Red (0-255)', 255),
+    port('number', 'g', 'Green (0-255)', 0),
+    port('number', 'b', 'Blue (0-255)', 255),
   ],
-  outputs: [{ id: 'color', label: 'Color', type: 'color' }],
+  outputs: [port('color', 'color', 'Color')],
   computeSignal: ({ r, g, b }) => {
     // Clamp values to 0-255 range
     const red = Math.max(0, Math.min(255, Math.round(r)));
@@ -1853,11 +1646,11 @@ const HSLColorNode = createNode({
   description:
     'Construct a color from Hue (0-360), Saturation (0-100), and Lightness (0-100). Perfect for animating hue shifts!',
   inputs: [
-    { id: 'h', label: 'Hue (0-360)', type: 'number', defaultValue: 300 },
-    { id: 's', label: 'Saturation (0-100)', type: 'number', defaultValue: 100 },
-    { id: 'l', label: 'Lightness (0-100)', type: 'number', defaultValue: 50 },
+    port('number', 'h', 'Hue (0-360)', 300),
+    port('number', 's', 'Saturation (0-100)', 100),
+    port('number', 'l', 'Lightness (0-100)', 50),
   ],
-  outputs: [{ id: 'color', label: 'Color', type: 'color' }],
+  outputs: [port('color', 'color', 'Color')],
   computeSignal: ({ h, s, l }) => {
     // Normalize hue to 0-360 range (wrap around)
     const hue = ((h % 360) + 360) % 360;

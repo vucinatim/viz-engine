@@ -1,5 +1,4 @@
 import js from '@eslint/js';
-import remotion from '@remotion/eslint-plugin';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -49,12 +48,5 @@ export default tseslint.config(
       ],
       'no-undef': 'off',
     },
-  },
-  {
-    files: ['src/remotion/**/*.{ts,tsx}'],
-    plugins: {
-      '@remotion': remotion,
-    },
-    rules: remotion.configs.recommended.rules,
   },
 );

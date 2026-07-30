@@ -184,7 +184,7 @@ export const describeProjectGraph = (
   };
 };
 
-export const selectRuntimeGraphValue = (
+const selectRuntimeGraphValue = (
   state: VizSessionState,
   graphId: string,
   outputKey = 'value',

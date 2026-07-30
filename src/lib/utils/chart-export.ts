@@ -636,54 +636,57 @@ function drawGroupedBarChart(
   });
 }
 
-// Export FPS chart as PNG
-export async function exportFPSChart(
+type ChartPoint = { x: number; y: number };
+type GroupedChartItem = { name: string; avgValue: number; maxValue: number };
+
+const exportTimeSeriesChart = async (
   session: RecordingSession,
-  options: ChartExportOptions = {},
-): Promise<Blob> {
+  options: ChartExportOptions,
+  definition: {
+    title: string;
+    yLabel: string;
+    value: (snapshot: RecordingSession['snapshots'][number]) => number;
+    stroke: string;
+    fill: string;
+    secondary?: {
+      value: (snapshot: RecordingSession['snapshots'][number]) => number;
+      stroke: string;
+      legends: [string, string];
+    };
+  },
+): Promise<Blob> => {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const canvas = createOffscreenCanvas(opts.width, opts.height);
   const ctx = getCanvasContext(canvas);
-
-  // Prepare data
   const startTime = session.snapshots[0]?.timestamp || 0;
-  const timeSeriesData = session.snapshots.map((snapshot) => ({
-    x: (snapshot.timestamp - startTime) / 1000, // Convert to seconds
-    y: snapshot.editorFPS,
-  }));
+  const points = (value: typeof definition.value): ChartPoint[] =>
+    session.snapshots.map((snapshot) => ({
+      x: (snapshot.timestamp - startTime) / 1000,
+      y: value(snapshot),
+    }));
+  const primary = points(definition.value);
+  const secondary = definition.secondary
+    ? points(definition.secondary.value)
+    : undefined;
+  const allPoints = secondary ? [...primary, ...secondary] : primary;
+  const xMin = Math.min(...primary.map(({ x }) => x));
+  const xMax = Math.max(...primary.map(({ x }) => x));
+  const yMin = Math.min(...allPoints.map(({ y }) => y));
+  const yMax = Math.max(...allPoints.map(({ y }) => y));
 
-  const avgFPSData = session.snapshots.map((snapshot) => ({
-    x: (snapshot.timestamp - startTime) / 1000, // Convert to seconds
-    y: snapshot.editorAvgFPS,
-  }));
-
-  // Find data bounds for proper scaling
-  const allFPSValues = [
-    ...timeSeriesData.map((d) => d.y),
-    ...avgFPSData.map((d) => d.y),
-  ];
-  const allTimeValues = timeSeriesData.map((d) => d.x);
-  const yMin = Math.min(...allFPSValues);
-  const yMax = Math.max(...allFPSValues);
-  const xMin = Math.min(...allTimeValues);
-  const xMax = Math.max(...allTimeValues);
-
-  // Draw chart
   drawBackground(ctx, opts.width, opts.height, opts.backgroundColor);
   drawTitle(
     ctx,
-    opts.title || 'FPS Performance Over Time',
+    opts.title || definition.title,
     `Session: ${session.name}`,
     opts.width,
     opts.padding,
     opts.titleFontSize,
     opts.fontSize,
   );
-
   if (opts.showGrid) {
     drawGrid(ctx, opts.width, opts.height, opts.padding, yMin, yMax, true);
   }
-
   if (opts.showAxes) {
     drawAxes(
       ctx,
@@ -691,7 +694,7 @@ export async function exportFPSChart(
       opts.height,
       opts.padding,
       'Time (seconds)',
-      'FPS',
+      definition.yLabel,
       opts.fontSize,
       xMin,
       xMax,
@@ -699,433 +702,226 @@ export async function exportFPSChart(
       yMax,
     );
   }
-
-  if (timeSeriesData.length > 0) {
-    // Draw area chart for current FPS
+  if (primary.length > 0) {
     drawAreaChart(
       ctx,
-      timeSeriesData,
+      primary,
       opts.width,
       opts.height,
       opts.padding,
-      '#059669', // Darker green for light mode
-      '#10b98140', // Semi-transparent green
+      definition.stroke,
+      definition.fill,
       xMin,
       xMax,
       yMin,
       yMax,
     );
-
-    // Draw line chart for average FPS
-    drawLineChart(
-      ctx,
-      avgFPSData,
-      opts.width,
-      opts.height,
-      opts.padding,
-      '#2563eb', // Darker blue for light mode
-      2,
-      xMin,
-      xMax,
-      yMin,
-      yMax,
-    );
-
-    // Draw legend
-    if (opts.showLegend) {
-      drawLegend(
+    if (secondary && definition.secondary) {
+      drawLineChart(
         ctx,
+        secondary,
         opts.width,
         opts.height,
         opts.padding,
-        [
-          { label: 'Current FPS', color: '#059669', lineWidth: 2 },
-          { label: 'Rolling Average', color: '#2563eb', lineWidth: 2 },
-        ],
-        opts.fontSize,
+        definition.secondary.stroke,
+        2,
+        xMin,
+        xMax,
+        yMin,
+        yMax,
       );
+      if (opts.showLegend) {
+        drawLegend(
+          ctx,
+          opts.width,
+          opts.height,
+          opts.padding,
+          [
+            {
+              label: definition.secondary.legends[0],
+              color: definition.stroke,
+            },
+            {
+              label: definition.secondary.legends[1],
+              color: definition.secondary.stroke,
+            },
+          ],
+          opts.fontSize,
+        );
+      }
     }
   }
-
   return canvas.convertToBlob({ type: 'image/png' });
-}
+};
 
-// Export Memory chart as PNG
-export async function exportMemoryChart(
+const exportGroupedChart = async (
   session: RecordingSession,
-  options: ChartExportOptions = {},
-): Promise<Blob> {
+  options: ChartExportOptions,
+  data: GroupedChartItem[],
+  definition: {
+    title: string;
+    xLabel: string;
+    yLabel: string;
+    colors: [string, string];
+    legends: [string, string];
+  },
+): Promise<Blob> => {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const canvas = createOffscreenCanvas(opts.width, opts.height);
   const ctx = getCanvasContext(canvas);
+  const values = data.flatMap(({ avgValue, maxValue }) => [avgValue, maxValue]);
 
-  // Prepare data
-  const startTime = session.snapshots[0]?.timestamp || 0;
-  const timeSeriesData = session.snapshots.map((snapshot) => ({
-    x: (snapshot.timestamp - startTime) / 1000, // Convert to seconds
-    y: snapshot.memoryUsedMB,
-  }));
-
-  // Find data bounds for proper scaling
-  const yValues = timeSeriesData.map((d) => d.y);
-  const xValues = timeSeriesData.map((d) => d.x);
-  const yMin = Math.min(...yValues);
-  const yMax = Math.max(...yValues);
-  const xMin = Math.min(...xValues);
-  const xMax = Math.max(...xValues);
-
-  // Draw chart
   drawBackground(ctx, opts.width, opts.height, opts.backgroundColor);
   drawTitle(
     ctx,
-    opts.title || 'Memory Usage Over Time',
+    opts.title || definition.title,
     `Session: ${session.name}`,
     opts.width,
     opts.padding,
     opts.titleFontSize,
     opts.fontSize,
   );
-
-  if (opts.showGrid) {
-    drawGrid(ctx, opts.width, opts.height, opts.padding, yMin, yMax, true);
-  }
-
-  if (opts.showAxes) {
-    drawAxes(
-      ctx,
-      opts.width,
-      opts.height,
-      opts.padding,
-      'Time (seconds)',
-      'Memory (MB)',
-      opts.fontSize,
-      xMin,
-      xMax,
-      yMin,
-      yMax,
-    );
-  }
-
-  if (timeSeriesData.length > 0) {
-    drawAreaChart(
-      ctx,
-      timeSeriesData,
-      opts.width,
-      opts.height,
-      opts.padding,
-      '#7c3aed', // Darker purple for light mode
-      '#8b5cf640', // Semi-transparent purple
-      xMin,
-      xMax,
-      yMin,
-      yMax,
-    );
-  }
-
-  return canvas.convertToBlob({ type: 'image/png' });
-}
-
-// Export Frame Budget chart as PNG
-export async function exportFrameBudgetChart(
-  session: RecordingSession,
-  options: ChartExportOptions = {},
-): Promise<Blob> {
-  const opts = { ...DEFAULT_OPTIONS, ...options };
-  const canvas = createOffscreenCanvas(opts.width, opts.height);
-  const ctx = getCanvasContext(canvas);
-
-  // Prepare data
-  const startTime = session.snapshots[0]?.timestamp || 0;
-  const timeSeriesData = session.snapshots.map((snapshot) => ({
-    x: (snapshot.timestamp - startTime) / 1000, // Convert to seconds
-    y: snapshot.cpuUsage,
-  }));
-
-  // Find data bounds for proper scaling
-  const yValues = timeSeriesData.map((d) => d.y);
-  const xValues = timeSeriesData.map((d) => d.x);
-  const yMin = Math.min(...yValues);
-  const yMax = Math.max(...yValues);
-  const xMin = Math.min(...xValues);
-  const xMax = Math.max(...xValues);
-
-  // Draw chart
-  drawBackground(ctx, opts.width, opts.height, opts.backgroundColor);
-  drawTitle(
-    ctx,
-    opts.title || 'Frame Budget Usage Over Time',
-    `Session: ${session.name}`,
-    opts.width,
-    opts.padding,
-    opts.titleFontSize,
-    opts.fontSize,
-  );
-
-  if (opts.showGrid) {
-    drawGrid(ctx, opts.width, opts.height, opts.padding, yMin, yMax, true);
-  }
-
-  if (opts.showAxes) {
-    drawAxes(
-      ctx,
-      opts.width,
-      opts.height,
-      opts.padding,
-      'Time (seconds)',
-      'Frame Budget (%)',
-      opts.fontSize,
-      xMin,
-      xMax,
-      yMin,
-      yMax,
-    );
-  }
-
-  if (timeSeriesData.length > 0) {
-    drawAreaChart(
-      ctx,
-      timeSeriesData,
-      opts.width,
-      opts.height,
-      opts.padding,
-      '#ea580c', // Darker orange for light mode
-      '#f9731640', // Semi-transparent orange
-      xMin,
-      xMax,
-      yMin,
-      yMax,
-    );
-  }
-
-  return canvas.convertToBlob({ type: 'image/png' });
-}
-
-// Export Layer Performance chart as PNG
-export async function exportLayerPerformanceChart(
-  session: RecordingSession,
-  options: ChartExportOptions = {},
-): Promise<Blob> {
-  const opts = { ...DEFAULT_OPTIONS, ...options };
-  const canvas = createOffscreenCanvas(opts.width, opts.height);
-  const ctx = getCanvasContext(canvas);
-
-  // Prepare layer performance data
-  const layerMap = new Map<
-    string,
-    { renderTimes: number[]; drawCalls: number[] }
-  >();
-
-  session.snapshots.forEach((snapshot) => {
-    snapshot.layers.forEach((layer) => {
-      if (!layerMap.has(layer.layerId)) {
-        layerMap.set(layer.layerId, { renderTimes: [], drawCalls: [] });
-      }
-      const data = layerMap.get(layer.layerId)!;
-      data.renderTimes.push(layer.renderTime);
-      data.drawCalls.push(layer.drawCalls);
-    });
-  });
-
-  const layerPerformanceData = Array.from(layerMap.entries()).map(
-    ([layerId, data]) => {
-      const layer = session.snapshots[0].layers.find(
-        (l) => l.layerId === layerId,
-      );
-      const avgRenderTime =
-        data.renderTimes.reduce((a, b) => a + b, 0) / data.renderTimes.length;
-      const maxRenderTime = Math.max(...data.renderTimes);
-
-      return {
-        name: layer?.layerName || layerId,
-        avgValue: avgRenderTime,
-        maxValue: maxRenderTime,
-      };
-    },
-  );
-
-  // Draw chart
-  drawBackground(ctx, opts.width, opts.height, opts.backgroundColor);
-  drawTitle(
-    ctx,
-    opts.title || 'Layer Performance Breakdown',
-    `Session: ${session.name}`,
-    opts.width,
-    opts.padding,
-    opts.titleFontSize,
-    opts.fontSize,
-  );
-
   if (opts.showGrid) {
     drawGrid(ctx, opts.width, opts.height, opts.padding, 0, 1, true);
   }
-
   if (opts.showAxes) {
-    const allValues = [
-      ...layerPerformanceData.map((d) => d.avgValue),
-      ...layerPerformanceData.map((d) => d.maxValue),
-    ];
-    const yMin = Math.min(...allValues);
-    const yMax = Math.max(...allValues);
-
     drawAxes(
       ctx,
       opts.width,
       opts.height,
       opts.padding,
-      'Layer',
-      'Render Time (ms)',
+      definition.xLabel,
+      definition.yLabel,
       opts.fontSize,
       undefined,
       undefined,
-      yMin,
-      yMax,
+      Math.min(...values),
+      Math.max(...values),
     );
   }
-
-  if (layerPerformanceData.length > 0) {
+  if (data.length > 0) {
     drawGroupedBarChart(
       ctx,
-      layerPerformanceData,
+      data,
       opts.width,
       opts.height,
       opts.padding,
-      '#2563eb', // Darker blue for average
-      '#dc2626', // Red for maximum
+      ...definition.colors,
     );
-
-    // Draw legend
     if (opts.showLegend) {
       drawLegend(
         ctx,
         opts.width,
         opts.height,
         opts.padding,
-        [
-          { label: 'Average Render Time', color: '#2563eb' },
-          { label: 'Maximum Render Time', color: '#dc2626' },
-        ],
+        definition.legends.map((label, index) => ({
+          label,
+          color: definition.colors[index]!,
+        })),
         opts.fontSize,
       );
     }
   }
-
   return canvas.convertToBlob({ type: 'image/png' });
-}
+};
 
-// Export Node Network Performance chart as PNG
-export async function exportNodeNetworkPerformanceChart(
+export const exportFPSChart = (
   session: RecordingSession,
   options: ChartExportOptions = {},
-): Promise<Blob> {
-  const opts = { ...DEFAULT_OPTIONS, ...options };
-  const canvas = createOffscreenCanvas(opts.width, opts.height);
-  const ctx = getCanvasContext(canvas);
-
-  // Prepare node network performance data
-  const networkMap = new Map<
-    string,
-    { computeTimes: number[]; nodeCounts: number[] }
-  >();
-
-  session.snapshots.forEach((snapshot) => {
-    snapshot.nodeNetworks.forEach((network) => {
-      if (!networkMap.has(network.parameterId)) {
-        networkMap.set(network.parameterId, {
-          computeTimes: [],
-          nodeCounts: [],
-        });
-      }
-      const data = networkMap.get(network.parameterId)!;
-      data.computeTimes.push(network.computeTime);
-      data.nodeCounts.push(network.nodeCount);
-    });
+): Promise<Blob> =>
+  exportTimeSeriesChart(session, options, {
+    title: 'FPS Performance Over Time',
+    yLabel: 'FPS',
+    value: (snapshot) => snapshot.editorFPS,
+    stroke: '#059669',
+    fill: '#10b98140',
+    secondary: {
+      value: (snapshot) => snapshot.editorAvgFPS,
+      stroke: '#2563eb',
+      legends: ['Current FPS', 'Rolling Average'],
+    },
   });
 
-  const nodeNetworkPerformanceData = Array.from(networkMap.entries()).map(
-    ([parameterId, data]) => {
-      const avgComputeTime =
-        data.computeTimes.reduce((a, b) => a + b, 0) / data.computeTimes.length;
-      const maxComputeTime = Math.max(...data.computeTimes);
+export const exportMemoryChart = (
+  session: RecordingSession,
+  options: ChartExportOptions = {},
+): Promise<Blob> =>
+  exportTimeSeriesChart(session, options, {
+    title: 'Memory Usage Over Time',
+    yLabel: 'Memory (MB)',
+    value: (snapshot) => snapshot.memoryUsedMB,
+    stroke: '#7c3aed',
+    fill: '#8b5cf640',
+  });
 
-      // Use destructureParameterId to get proper display names
-      const paramInfo = destructureParameterId(parameterId);
+export const exportFrameBudgetChart = (
+  session: RecordingSession,
+  options: ChartExportOptions = {},
+): Promise<Blob> =>
+  exportTimeSeriesChart(session, options, {
+    title: 'Frame Budget Usage Over Time',
+    yLabel: 'Frame Budget (%)',
+    value: (snapshot) => snapshot.cpuUsage,
+    stroke: '#ea580c',
+    fill: '#f9731640',
+  });
 
-      return {
-        name: `${paramInfo.displayName} (${paramInfo.componentName})`,
-        avgValue: avgComputeTime,
-        maxValue: maxComputeTime,
-      };
-    },
-  );
-
-  // Draw chart
-  drawBackground(ctx, opts.width, opts.height, opts.backgroundColor);
-  drawTitle(
-    ctx,
-    opts.title || 'Node Network Computation Time',
-    `Session: ${session.name}`,
-    opts.width,
-    opts.padding,
-    opts.titleFontSize,
-    opts.fontSize,
-  );
-
-  if (opts.showGrid) {
-    drawGrid(ctx, opts.width, opts.height, opts.padding, 0, 1, true);
-  }
-
-  if (opts.showAxes) {
-    const allValues = [
-      ...nodeNetworkPerformanceData.map((d) => d.avgValue),
-      ...nodeNetworkPerformanceData.map((d) => d.maxValue),
-    ];
-    const yMin = Math.min(...allValues);
-    const yMax = Math.max(...allValues);
-
-    drawAxes(
-      ctx,
-      opts.width,
-      opts.height,
-      opts.padding,
-      'Parameter',
-      'Compute Time (ms)',
-      opts.fontSize,
-      undefined,
-      undefined,
-      yMin,
-      yMax,
-    );
-  }
-
-  if (nodeNetworkPerformanceData.length > 0) {
-    drawGroupedBarChart(
-      ctx,
-      nodeNetworkPerformanceData,
-      opts.width,
-      opts.height,
-      opts.padding,
-      '#059669', // Darker green for average
-      '#dc2626', // Red for maximum
-    );
-
-    // Draw legend
-    if (opts.showLegend) {
-      drawLegend(
-        ctx,
-        opts.width,
-        opts.height,
-        opts.padding,
-        [
-          { label: 'Average Compute Time', color: '#059669' },
-          { label: 'Maximum Compute Time', color: '#dc2626' },
-        ],
-        opts.fontSize,
-      );
+export const exportLayerPerformanceChart = (
+  session: RecordingSession,
+  options: ChartExportOptions = {},
+): Promise<Blob> => {
+  const layers = new Map<string, number[]>();
+  for (const snapshot of session.snapshots) {
+    for (const layer of snapshot.layers) {
+      const times = layers.get(layer.layerId) ?? [];
+      times.push(layer.renderTime);
+      layers.set(layer.layerId, times);
     }
   }
+  const data = Array.from(layers, ([layerId, times]) => ({
+    name:
+      session.snapshots[0]?.layers.find((layer) => layer.layerId === layerId)
+        ?.layerName ?? layerId,
+    avgValue: times.reduce((sum, value) => sum + value, 0) / times.length,
+    maxValue: Math.max(...times),
+  }));
+  return exportGroupedChart(session, options, data, {
+    title: 'Layer Performance Breakdown',
+    xLabel: 'Layer',
+    yLabel: 'Render Time (ms)',
+    colors: ['#2563eb', '#dc2626'],
+    legends: ['Average Render Time', 'Maximum Render Time'],
+  });
+};
 
-  return canvas.convertToBlob({ type: 'image/png' });
-}
+export const exportNodeNetworkPerformanceChart = (
+  session: RecordingSession,
+  options: ChartExportOptions = {},
+): Promise<Blob> => {
+  const networks = new Map<string, number[]>();
+  for (const snapshot of session.snapshots) {
+    for (const network of snapshot.nodeNetworks) {
+      const times = networks.get(network.parameterId) ?? [];
+      times.push(network.computeTime);
+      networks.set(network.parameterId, times);
+    }
+  }
+  const data = Array.from(networks, ([parameterId, times]) => {
+    const { displayName, componentName } = destructureParameterId(parameterId);
+    return {
+      name: `${displayName} (${componentName})`,
+      avgValue: times.reduce((sum, value) => sum + value, 0) / times.length,
+      maxValue: Math.max(...times),
+    };
+  });
+  return exportGroupedChart(session, options, data, {
+    title: 'Node Network Computation Time',
+    xLabel: 'Parameter',
+    yLabel: 'Compute Time (ms)',
+    colors: ['#059669', '#dc2626'],
+    legends: ['Average Compute Time', 'Maximum Compute Time'],
+  });
+};
 
 // Download blob as file
 export function downloadChartAsPNG(blob: Blob, filename: string) {

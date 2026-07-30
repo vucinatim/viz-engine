@@ -4,7 +4,7 @@ import { FileJson } from 'lucide-react';
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
-export const DROPZONE_ACCEPTED_PROJECT_TYPES = {
+const DROPZONE_ACCEPTED_PROJECT_TYPES = {
   'application/json': ['.vizengine'],
 };
 

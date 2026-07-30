@@ -183,18 +183,13 @@ export default defineConfig({
             return 'vendor-editor';
           }
 
-          if (
-            id.includes('/@ffmpeg/') ||
-            id.includes('/html2canvas/') ||
-            id.includes('/jszip/')
-          ) {
+          if (id.includes('/@ffmpeg/') || id.includes('/jszip/')) {
             return 'vendor-export';
           }
 
           if (
             id.includes('/recharts/') ||
             id.includes('/color/') ||
-            id.includes('/lodash/') ||
             id.includes('/lucide-react/') ||
             id.includes('/clsx/') ||
             id.includes('/class-variance-authority/') ||

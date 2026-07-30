@@ -27,7 +27,7 @@ const getValueAtPath = (
   return current;
 };
 
-export const evaluateVizSettingCondition = (
+const evaluateVizSettingCondition = (
   condition: VizComponentSettingCondition,
   values: Record<string, unknown>,
 ): boolean => {

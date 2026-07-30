@@ -51,9 +51,6 @@ export const getProjectedLayers = () =>
     useEditorStore.getState().layerUi,
   );
 
-export const getProjectedLayer = (layerId: string) =>
-  getProjectedLayers().find((layer) => layer.id === layerId);
-
 const useEditorLayerProjectionStore = Object.assign(
   <T>(selector: (state: EditorLayerProjection) => T) => {
     const project = useStore(
