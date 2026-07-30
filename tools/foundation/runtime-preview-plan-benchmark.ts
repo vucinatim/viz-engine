@@ -124,22 +124,13 @@ const runFormerPerLayerShapeBenchmark = () => {
 
     for (const [index, layer] of layers.entries()) {
       const component = components[index]!;
-      const configValues = component.config.getValues({
-        audioSignal: audioFrameData.timeDomainData,
-        frequencyAnalysis: {
-          frequencyData: audioFrameData.frequencyData,
-          sampleRate: audioFrameData.sampleRate,
-          fftSize: audioFrameData.fftSize,
-        },
-        time: currentFrame / FPS,
-      });
       const layerProject = {
         ...project,
         layerOrder: [layer.id],
         layers: [
           {
             ...layer,
-            settings: structuredClone(configValues),
+            settings: structuredClone(component.defaultValues),
           },
         ],
       };
