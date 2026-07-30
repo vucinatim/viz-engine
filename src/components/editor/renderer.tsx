@@ -1,10 +1,10 @@
-import useEditorLayerProjectionStore from '@/lib/stores/editor-layer-projection-store';
+import { useProjectedLayers } from '@/lib/projected-layers';
 import { memo } from 'react';
 import EditorRuntimePreviewDriver from './editor-runtime-preview-driver';
 import LayerRenderer from './layer-renderer';
 
 const Renderer = memo(() => {
-  const layers = useEditorLayerProjectionStore((state) => state.layers);
+  const layers = useProjectedLayers();
 
   return (
     <div className="h-full w-full" data-renderer-container>

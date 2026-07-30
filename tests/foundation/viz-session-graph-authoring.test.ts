@@ -8,9 +8,12 @@ import {
   useNodeNetworkStore,
 } from '@/components/node-network/node-network-store';
 import editorControl from '@/lib/editor-control';
-import useEditorGraphStore from '@/lib/stores/editor-graph-store';
-import useEditorProjectStore from '@/lib/stores/editor-project-store';
-import { vizSessionStore } from '@/lib/viz-session';
+import {
+  getVizSessionState,
+  selectProjectedNodeNetworks,
+  vizSessionActions,
+  vizSessionStore,
+} from '@/lib/viz-session';
 import {
   SIGNAL_CATHEDRAL_GRAPH_ID,
   createSignalCathedralProject,
@@ -18,10 +21,10 @@ import {
 import { validateProjectDocument } from '@viz-engine/runtime';
 import { createTestProject } from './viz-session-test-utils';
 
-describe('Editor graph store', () => {
+describe('VizSession graph authoring', () => {
   beforeEach(() => {
-    useEditorProjectStore.getState().importWorkingProject(createTestProject());
-    useEditorGraphStore.getState().reset();
+    vizSessionActions.project.importWorkingProject(createTestProject());
+    vizSessionActions.graph.reset();
     useNodeNetworkStore.setState({
       openNetwork: null,
       areNetworksMinimized: false,
@@ -32,12 +35,11 @@ describe('Editor graph store', () => {
   it('owns canonical graph truth while the node editor store mirrors it', () => {
     const parameterId = 'layer-1:settings.amount';
 
-    useEditorGraphStore
-      .getState()
-      .createNetworkForParameter(parameterId, 'number');
+    vizSessionActions.graph.createNetworkForParameter(parameterId, 'number');
 
     expect(
-      useEditorGraphStore.getState().networks[parameterId]?.nodes.length,
+      selectProjectedNodeNetworks(getVizSessionState())[parameterId]?.nodes
+        .length,
     ).toBe(2);
     expect(
       vizSessionStore
@@ -62,7 +64,7 @@ describe('Editor graph store', () => {
     expect(getNodeNetwork(parameterId)).toBeDefined();
 
     useNodeNetworkStore.getState().setOpenNetwork(parameterId);
-    useEditorGraphStore.getState().removeNetworkForParameter(parameterId);
+    vizSessionActions.graph.removeNetworkForParameter(parameterId);
 
     expect(getNodeNetwork(parameterId)).toBeUndefined();
     expect(useNodeNetworkStore.getState().openNetwork).toBeNull();
@@ -73,7 +75,9 @@ describe('Editor graph store', () => {
 
     setNodeNetworkEnabled(parameterId, true, 'number');
 
-    expect(useEditorGraphStore.getState().networks[parameterId]).toBeDefined();
+    expect(
+      selectProjectedNodeNetworks(getVizSessionState())[parameterId],
+    ).toBeDefined();
     expect(useNodeNetworkStore.getState().openNetwork).toBe(parameterId);
     expect(useNodeNetworkStore.getState().shouldForceShowOverlay).toBe(true);
   });
@@ -81,9 +85,7 @@ describe('Editor graph store', () => {
   it('persists node-editor UI state separately from canonical graph truth', () => {
     const parameterId = 'layer-2:settings.scale';
 
-    useEditorGraphStore
-      .getState()
-      .createNetworkForParameter(parameterId, 'number');
+    vizSessionActions.graph.createNetworkForParameter(parameterId, 'number');
     useNodeNetworkStore.getState().setOpenNetwork(parameterId);
     useNodeNetworkStore.getState().setNetworksMinimized(true);
     useNodeNetworkStore.getState().setShouldForceShowOverlay(true);
@@ -91,7 +93,7 @@ describe('Editor graph store', () => {
     const persisted = nodeNetworkStorePartialize(
       useNodeNetworkStore.getState(),
     );
-    useEditorGraphStore.getState().reset();
+    vizSessionActions.graph.reset();
     useNodeNetworkStore.setState({
       openNetwork: null,
       areNetworksMinimized: false,
@@ -113,13 +115,15 @@ describe('Editor graph store', () => {
     const project = createSignalCathedralProject();
     const parameterId = 'layer-signal-cathedral:reactivity:structurePulse';
 
-    useEditorProjectStore.getState().importWorkingProject(project);
+    vizSessionActions.project.importWorkingProject(project);
     const revisionBeforeOpen = vizSessionStore.getState().project.revision;
 
     editorControl.nodeEditor.openNetwork(parameterId);
 
     const network =
-      useEditorGraphStore.getState().networks[SIGNAL_CATHEDRAL_GRAPH_ID];
+      selectProjectedNodeNetworks(getVizSessionState())[
+        SIGNAL_CATHEDRAL_GRAPH_ID
+      ];
     expect(useNodeNetworkStore.getState().openNetwork).toBe(
       SIGNAL_CATHEDRAL_GRAPH_ID,
     );
@@ -143,9 +147,7 @@ describe('Editor graph store', () => {
 
     editorControl.nodeEditor.setAnimationEnabled(parameterId, false, 'number');
 
-    const detachedProject = useEditorProjectStore
-      .getState()
-      .exportWorkingProject();
+    const detachedProject = vizSessionActions.project.exportWorkingProject();
     expect(
       detachedProject.layers[0]?.inputs?.['reactivity:structurePulse'],
     ).toBeUndefined();
@@ -167,8 +169,9 @@ describe('Editor graph store', () => {
 
     editorControl.history.undo();
     expect(
-      useEditorProjectStore.getState().exportWorkingProject().layers[0]
-        ?.inputs?.['reactivity:structurePulse'],
+      vizSessionActions.project.exportWorkingProject().layers[0]?.inputs?.[
+        'reactivity:structurePulse'
+      ],
     ).toMatchObject({
       kind: 'graph-output',
       graphId: SIGNAL_CATHEDRAL_GRAPH_ID,
@@ -178,19 +181,16 @@ describe('Editor graph store', () => {
 
   it('roundtrips shared portable graph edits without losing canonical inputs or outputs', () => {
     const project = createSignalCathedralProject();
-    useEditorProjectStore.getState().importWorkingProject(project);
+    vizSessionActions.project.importWorkingProject(project);
 
-    useEditorGraphStore
-      .getState()
-      .updateNodeInputValue(
-        SIGNAL_CATHEDRAL_GRAPH_ID,
-        'scale-bass',
-        'factor',
-        1.5,
-      );
+    vizSessionActions.graph.updateNodeInputValue(
+      SIGNAL_CATHEDRAL_GRAPH_ID,
+      'scale-bass',
+      'factor',
+      1.5,
+    );
 
-    const graph = useEditorProjectStore
-      .getState()
+    const graph = vizSessionActions.project
       .exportWorkingProject()
       .graphs?.find((candidate) => candidate.id === SIGNAL_CATHEDRAL_GRAPH_ID);
 
@@ -210,9 +210,7 @@ describe('Editor graph store', () => {
     );
     expect(JSON.stringify(graph)).not.toContain('__viz_graph_output__');
     expect(
-      validateProjectDocument(
-        useEditorProjectStore.getState().exportWorkingProject(),
-      ),
+      validateProjectDocument(vizSessionActions.project.exportWorkingProject()),
     ).toMatchObject({
       ok: true,
       issues: [],
@@ -222,23 +220,19 @@ describe('Editor graph store', () => {
   it('roundtrips persisted graph definitions back into executable node definitions', () => {
     const parameterId = 'layer-3:settings.opacity';
 
-    useEditorGraphStore
-      .getState()
-      .createNetworkForParameter(parameterId, 'number');
+    vizSessionActions.graph.createNetworkForParameter(parameterId, 'number');
 
-    const persistedProject = useEditorProjectStore
-      .getState()
-      .exportWorkingProject();
-    useEditorGraphStore.getState().reset();
-    useEditorProjectStore.getState().importWorkingProject(persistedProject);
+    const persistedProject = vizSessionActions.project.exportWorkingProject();
+    vizSessionActions.graph.reset();
+    vizSessionActions.project.importWorkingProject(persistedProject);
 
-    expect(useEditorGraphStore.getState().networks[parameterId]).toBeDefined();
     expect(
-      useEditorGraphStore
-        .getState()
-        .networks[parameterId].nodes.find(
-          (node) => node.data.definition.label === 'Output',
-        )?.data.definition.inputs[0]?.type,
+      selectProjectedNodeNetworks(getVizSessionState())[parameterId],
+    ).toBeDefined();
+    expect(
+      selectProjectedNodeNetworks(getVizSessionState())[parameterId].nodes.find(
+        (node) => node.data.definition.label === 'Output',
+      )?.data.definition.inputs[0]?.type,
     ).toBe('number');
   });
 
@@ -263,15 +257,11 @@ describe('Editor graph store', () => {
         ],
       },
     ];
-    useEditorProjectStore.getState().importWorkingProject(project);
+    vizSessionActions.project.importWorkingProject(project);
 
-    useEditorGraphStore
-      .getState()
-      .createNetworkForParameter('editor-graph', 'number');
+    vizSessionActions.graph.createNetworkForParameter('editor-graph', 'number');
 
-    const canonicalProject = useEditorProjectStore
-      .getState()
-      .exportWorkingProject();
+    const canonicalProject = vizSessionActions.project.exportWorkingProject();
 
     expect(canonicalProject.graphs?.map((graph) => graph.id)).toEqual([
       'runtime-native-graph',
@@ -310,15 +300,13 @@ describe('Editor graph store', () => {
     };
     const project = createTestProject();
     project.graphs = [nativeGraph];
-    useEditorProjectStore.getState().importWorkingProject(project);
-    useEditorGraphStore
-      .getState()
-      .createNetworkForParameter('editor-graph', 'number');
+    vizSessionActions.project.importWorkingProject(project);
+    vizSessionActions.graph.createNetworkForParameter('editor-graph', 'number');
 
-    useEditorGraphStore.getState().removeNetworkForParameter('editor-graph');
+    vizSessionActions.graph.removeNetworkForParameter('editor-graph');
 
-    expect(
-      useEditorProjectStore.getState().exportWorkingProject().graphs,
-    ).toEqual([nativeGraph]);
+    expect(vizSessionActions.project.exportWorkingProject().graphs).toEqual([
+      nativeGraph,
+    ]);
   });
 });

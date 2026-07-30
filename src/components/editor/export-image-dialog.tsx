@@ -16,7 +16,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import {
   fastCaptureFrame,
@@ -24,6 +23,7 @@ import {
 } from '@/lib/utils/fast-frame-capture';
 import {
   createVizSessionRuntimePreviewFrame,
+  useVizSessionSelector,
   vizSessionActions,
 } from '@/lib/viz-session';
 import { Download, Loader2 } from 'lucide-react';
@@ -52,10 +52,12 @@ const ExportImageDialog = ({ open, onOpenChange }: ExportImageDialogProps) => {
   const [format, setFormat] = useState<ImageFormat>('jpeg');
   const [quality, setQuality] = useState(0.95);
 
-  const currentFrame = useEditorPreviewStore(
-    (state) => state.transport.currentFrame,
+  const currentFrame = useVizSessionSelector(
+    (state) => state.preview.transport.currentFrame,
   );
-  const playerFPS = useEditorPreviewStore((state) => state.transport.fps);
+  const playerFPS = useVizSessionSelector(
+    (state) => state.preview.transport.fps,
+  );
   // Clean up the image URL when dialog closes
   useEffect(() => {
     if (!open && imageUrl) {

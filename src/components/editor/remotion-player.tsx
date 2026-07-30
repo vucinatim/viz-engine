@@ -1,8 +1,7 @@
 import useDimensions from '@/lib/hooks/use-dimensions';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
-import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
+import { useVizSessionSelector, vizSessionActions } from '@/lib/viz-session';
 import { Player, PlayerRef } from '@remotion/player';
 import { useEffect, useMemo, useRef } from 'react';
 import CustomPlayerControls from './custom-player-controls';
@@ -16,23 +15,19 @@ const RemotionPlayer = () => {
   const setPlayerRef = useEditorRuntimePreviewAttachmentStore(
     (state) => state.setPlayerRef,
   );
-  const setDurationFrames = useEditorPreviewStore(
-    (state) => state.setDurationFrames,
+  const isPlaying = useVizSessionSelector(
+    (state) => state.preview.transport.isPlaying,
   );
-  const syncCurrentFrame = useEditorPreviewStore(
-    (state) => state.syncCurrentFrame,
+  const currentFrame = useVizSessionSelector(
+    (state) => state.preview.transport.currentFrame,
   );
-  const isPlaying = useEditorPreviewStore((state) => state.transport.isPlaying);
-  const currentFrame = useEditorPreviewStore(
-    (state) => state.transport.currentFrame,
-  );
-  const durationInFrames = useEditorPreviewStore(
-    (state) => state.transport.durationFrames,
+  const durationInFrames = useVizSessionSelector(
+    (state) => state.preview.transport.durationFrames,
   );
 
   const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);
-  const isCapturingTab = useEditorAudioSessionStore(
-    (s) => s.session.source?.kind === 'stream',
+  const isCapturingTab = useVizSessionSelector(
+    (state) => state.audio.session.source?.kind === 'stream',
   );
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -59,7 +54,7 @@ const RemotionPlayer = () => {
       const dur = audioElement.duration;
       if (Number.isFinite(dur) && dur > 0) {
         const nextDurationFrames = Math.max(1, Math.ceil(dur * FPS));
-        setDurationFrames(nextDurationFrames);
+        vizSessionActions.preview.setDurationFrames(nextDurationFrames);
       } else if (isCapturingTab) {
         // MediaStreams often report Infinity
         const fallbackSeconds = 60 * 30; // 30 min
@@ -67,7 +62,7 @@ const RemotionPlayer = () => {
           1,
           Math.ceil(fallbackSeconds * FPS),
         );
-        setDurationFrames(nextDurationFrames);
+        vizSessionActions.preview.setDurationFrames(nextDurationFrames);
       } // else keep previous duration
     };
 
@@ -83,7 +78,7 @@ const RemotionPlayer = () => {
       audioElement.removeEventListener('loadedmetadata', updateDuration);
       audioElement.removeEventListener('durationchange', updateDuration);
     };
-  }, [audioElementRef, src, isCapturingTab, setDurationFrames]);
+  }, [audioElementRef, src, isCapturingTab]);
 
   // While capturing tab audio, MediaStream duration is Infinity.
   // Provide a large finite duration so <Player/> remains happy.
@@ -91,9 +86,9 @@ const RemotionPlayer = () => {
     if (isCapturingTab) {
       const fallbackSeconds = 60 * 30; // 30 minutes
       const nextDurationFrames = Math.max(1, Math.ceil(fallbackSeconds * FPS));
-      setDurationFrames(nextDurationFrames);
+      vizSessionActions.preview.setDurationFrames(nextDurationFrames);
     }
-  }, [isCapturingTab, setDurationFrames]);
+  }, [isCapturingTab]);
 
   const isFullscreen = playerRef.current?.isFullscreen();
 
@@ -158,13 +153,13 @@ const RemotionPlayer = () => {
       const p = playerRef.current;
       if (p) {
         const frame = p.getCurrentFrame?.() ?? 0;
-        syncCurrentFrame(frame);
+        vizSessionActions.preview.syncCurrentFrame(frame);
       }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [syncCurrentFrame]);
+  }, []);
 
   return (
     <div

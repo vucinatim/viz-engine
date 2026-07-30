@@ -1,14 +1,17 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { CompDefinitionMap } from '@/components/comps';
+import { getProjectedLayers } from '@/lib/projected-layers';
 import useCompStore from '@/lib/stores/comp-store';
-import { getProjectedLayers } from '@/lib/stores/editor-layer-projection-store';
-import useEditorProjectStore from '@/lib/stores/editor-project-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
-import { vizSessionStore } from '@/lib/viz-session';
+import {
+  getVizSessionState,
+  vizSessionActions,
+  vizSessionStore,
+} from '@/lib/viz-session';
 import { createTestProject } from './viz-session-test-utils';
 
-describe('Editor project store', () => {
+describe('VizSession project state', () => {
   beforeEach(() => {
     if (!(globalThis as any).window) {
       (globalThis as any).window = globalThis;
@@ -17,7 +20,7 @@ describe('Editor project store', () => {
     useCompStore.setState({
       comps: Array.from(CompDefinitionMap.values()),
     });
-    useEditorProjectStore.getState().importWorkingProject(createTestProject());
+    vizSessionActions.project.importWorkingProject(createTestProject());
     useEditorRuntimePreviewAttachmentStore.getState().reset();
   });
 
@@ -32,16 +35,18 @@ describe('Editor project store', () => {
       ...project.layers[0],
       settings: { appearance: { opacity: 0.5 }, color: '#ff00ff' },
     };
-    useEditorProjectStore.getState().importWorkingProject(project);
+    vizSessionActions.project.importWorkingProject(project);
 
     expect(getProjectedLayers()).toHaveLength(1);
 
-    useEditorProjectStore
-      .getState()
-      .updateLayerValue('layer-test', ['appearance', 'opacity'], 0.8);
+    vizSessionActions.project.updateLayerValue(
+      'layer-test',
+      ['appearance', 'opacity'],
+      0.8,
+    );
 
     expect(
-      useEditorProjectStore.getState().workingProject.layers[0].settings,
+      getVizSessionState().project.workingProject.layers[0].settings,
     ).toMatchObject({
       appearance: { opacity: 0.8 },
       color: '#ff00ff',
@@ -65,13 +70,13 @@ describe('Editor project store', () => {
       ...project.layers[0],
       settings: { value: 1 },
     };
-    useEditorProjectStore.getState().importWorkingProject(project);
+    vizSessionActions.project.importWorkingProject(project);
 
-    useEditorProjectStore.getState().initializeProjectState();
+    vizSessionActions.project.initializeProjectState();
 
     expect(getProjectedLayers()).toHaveLength(1);
     expect(
-      useEditorProjectStore.getState().workingProject.layers[0].settings,
+      getVizSessionState().project.workingProject.layers[0].settings,
     ).toMatchObject({ value: 1 });
   });
 });

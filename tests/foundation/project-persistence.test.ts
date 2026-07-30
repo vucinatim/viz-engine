@@ -8,10 +8,13 @@ import {
   hydrateProjectData,
 } from '@/lib/project-persistence';
 import useCompStore from '@/lib/stores/comp-store';
-import useEditorGraphStore from '@/lib/stores/editor-graph-store';
-import useEditorProjectStore from '@/lib/stores/editor-project-store';
 import useEditorStore from '@/lib/stores/editor-store';
-import { vizSessionActions, vizSessionHost } from '@/lib/viz-session';
+import {
+  getVizSessionState,
+  selectProjectedNodeNetworks,
+  vizSessionActions,
+  vizSessionHost,
+} from '@/lib/viz-session';
 import { VIZ_PROJECT_SCHEMA_VERSION } from '@viz-engine/contracts';
 import { createTestProject } from './viz-session-test-utils';
 
@@ -24,13 +27,13 @@ describe('Project persistence', () => {
     useCompStore.setState({
       comps: Array.from(CompDefinitionMap.values()),
     });
-    useEditorGraphStore.getState().reset();
+    vizSessionActions.graph.reset();
     useNodeNetworkStore.setState({
       openNetwork: null,
       areNetworksMinimized: false,
       shouldForceShowOverlay: false,
     });
-    useEditorProjectStore.getState().importWorkingProject(createTestProject());
+    vizSessionActions.project.importWorkingProject(createTestProject());
     useEditorStore.setState({
       ambientMode: false,
       dominantColor: '#fff',
@@ -56,12 +59,10 @@ describe('Project persistence', () => {
       throw new Error('Could not resolve parameter id');
     }
 
-    useEditorProjectStore
-      .getState()
-      .importWorkingProject(createTestProject(comp, layerId));
-    useEditorGraphStore
-      .getState()
-      .createNetworkForParameter(parameterId, 'number');
+    vizSessionActions.project.importWorkingProject(
+      createTestProject(comp, layerId),
+    );
+    vizSessionActions.graph.createNetworkForParameter(parameterId, 'number');
     useNodeNetworkStore.setState({
       openNetwork: parameterId,
       areNetworksMinimized: true,
@@ -121,13 +122,13 @@ describe('Project persistence', () => {
     expect((projectFile as any).layerStore).toBeUndefined();
     expect((projectFile as any).nodeNetworkStore).toBeUndefined();
 
-    useEditorGraphStore.getState().reset();
+    vizSessionActions.graph.reset();
     useNodeNetworkStore.setState({
       openNetwork: null,
       areNetworksMinimized: false,
       shouldForceShowOverlay: false,
     });
-    useEditorProjectStore.getState().importWorkingProject(createTestProject());
+    vizSessionActions.project.importWorkingProject(createTestProject());
     useEditorStore.setState({
       ambientMode: false,
       dominantColor: '#fff',
@@ -139,10 +140,12 @@ describe('Project persistence', () => {
 
     await hydrateProjectData(projectFile);
 
+    expect(vizSessionActions.project.exportWorkingProject().layers[0]?.id).toBe(
+      layerId,
+    );
     expect(
-      useEditorProjectStore.getState().exportWorkingProject().layers[0]?.id,
-    ).toBe(layerId);
-    expect(useEditorGraphStore.getState().networks[parameterId]).toBeDefined();
+      selectProjectedNodeNetworks(getVizSessionState())[parameterId],
+    ).toBeDefined();
     expect(useNodeNetworkStore.getState()).toMatchObject({
       openNetwork: parameterId,
       areNetworksMinimized: true,

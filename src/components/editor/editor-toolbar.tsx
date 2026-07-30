@@ -21,13 +21,13 @@ import {
 import editorControl from '@/lib/editor-control';
 import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts';
 import { getBundledSampleProjects } from '@/lib/public-manifests';
-import { useHistoryStore } from '@/lib/stores/history-store';
 import useProfilerStore from '@/lib/stores/profiler-store';
 import {
   SHORTCUTS,
   formatShortcut,
   toShortcutDefinition,
 } from '@/lib/utils/keyboard-shortcuts';
+import { useCanRedo, useCanUndo } from '@/lib/viz-session';
 import { memo, useEffect, useRef, useState } from 'react';
 import EnabledAnimationsDropdown from './enabled-animations-dropdown';
 import ExportImageDialog from './export-image-dialog';
@@ -50,8 +50,8 @@ const EditorToolbar = () => {
   const [projectName, setProjectName] = useState('my-viz-project');
 
   // Use unified history for context-aware undo/redo
-  const canUndo = useHistoryStore((state) => state.canUndo());
-  const canRedo = useHistoryStore((state) => state.canRedo());
+  const canUndo = useCanUndo();
+  const canRedo = useCanRedo();
   const profilerVisible = useProfilerStore((s) => s.visible);
 
   // Track fullscreen state changes

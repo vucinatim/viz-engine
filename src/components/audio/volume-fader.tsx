@@ -1,6 +1,6 @@
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 import { AUDIO_THEME } from '@/lib/theme/audio-theme';
+import { useVizSessionSelector } from '@/lib/viz-session';
 import * as SliderPrimitive from '@radix-ui/react-slider';
 import { useEffect, useRef } from 'react';
 
@@ -9,8 +9,8 @@ const VolumeFader = () => {
   const audioAnalyzer = useAudioEngineStore((s) => s.audioAnalyzer);
   const audioContext = useAudioEngineStore((s) => s.audioContext);
   const audioSource = useAudioEngineStore((s) => s.audioSource);
-  const isCapturingTab = useEditorAudioSessionStore(
-    (s) => s.session.source?.kind === 'stream',
+  const isCapturingTab = useVizSessionSelector(
+    (state) => state.audio.session.source?.kind === 'stream',
   );
 
   const canvasRef = useRef<HTMLCanvasElement>(null);

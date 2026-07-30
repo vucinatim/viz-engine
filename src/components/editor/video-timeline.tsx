@@ -1,12 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { DraggableRangeSelector } from '@/components/ui/draggable-range-selector';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 import { cn } from '@/lib/utils';
 import {
   extractWaveform,
   type WaveformData,
 } from '@/lib/utils/waveform-extractor';
+import { useVizSessionSelector } from '@/lib/viz-session';
 import { Pause, Play } from 'lucide-react';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
@@ -34,7 +34,9 @@ const VideoTimelineComponent = ({
   className,
 }: VideoTimelineProps) => {
   const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);
-  const currentTrackUrl = useEditorAudioSessionStore((s) => s.currentTrackUrl);
+  const currentTrackUrl = useVizSessionSelector(
+    (state) => state.audio.currentTrackUrl,
+  );
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [waveformData, setWaveformData] = useState<WaveformData | null>(null);
   const [isLoadingWaveform, setIsLoadingWaveform] = useState(false);

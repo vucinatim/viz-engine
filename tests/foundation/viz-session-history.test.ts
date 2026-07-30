@@ -4,10 +4,12 @@ import { CompDefinitionMap } from '@/components/comps';
 import { listComponentParameterIds } from '@/components/config/config';
 import { useNodeNetworkStore } from '@/components/node-network/node-network-store';
 import useCompStore from '@/lib/stores/comp-store';
-import useEditorGraphStore from '@/lib/stores/editor-graph-store';
-import useEditorProjectStore from '@/lib/stores/editor-project-store';
-import { useHistoryStore } from '@/lib/stores/history-store';
-import { vizSessionStore } from '@/lib/viz-session';
+import {
+  getVizSessionState,
+  selectProjectedNodeNetworks,
+  vizSessionActions,
+  vizSessionStore,
+} from '@/lib/viz-session';
 import type { VizProjectDocument } from '@viz-engine/contracts';
 import { createTestProject } from './viz-session-test-utils';
 
@@ -42,77 +44,67 @@ const buildProject = (): {
   };
 };
 
-describe('History store', () => {
+describe('VizSession history', () => {
   beforeEach(() => {
     useCompStore.setState({
       comps: Array.from(CompDefinitionMap.values()),
     });
-    useEditorGraphStore.getState().reset();
-    useEditorProjectStore.getState().importWorkingProject(createTestProject());
+    vizSessionActions.graph.reset();
+    vizSessionActions.project.importWorkingProject(createTestProject());
     useNodeNetworkStore.setState({
       openNetwork: null,
       areNetworksMinimized: false,
       shouldForceShowOverlay: false,
     });
-    useHistoryStore.getState().reset();
+    vizSessionActions.history.reset();
   });
 
   it('snapshots canonical working-project truth for layer history', () => {
     const { project, layerId } = buildProject();
 
-    useEditorProjectStore.getState().importWorkingProject(project);
-    useEditorProjectStore
-      .getState()
-      .updateLayerValue(layerId, ['testMarker'], 42);
-    useHistoryStore.getState().undoLayerEditor();
+    vizSessionActions.project.importWorkingProject(project);
+    vizSessionActions.project.updateLayerValue(layerId, ['testMarker'], 42);
+    vizSessionActions.history.undo();
 
-    const restored = useEditorProjectStore.getState().exportWorkingProject();
+    const restored = vizSessionActions.project.exportWorkingProject();
     expect(restored.layers[0].id).toBe(layerId);
     expect(restored.layers[0].settings?.testMarker).toBeUndefined();
     expect(
       vizSessionStore.getState().project.workingProject.layers[0].settings
         ?.testMarker,
     ).toBeUndefined();
-    expect(useHistoryStore.getState().canRedo()).toBe(true);
+    expect(vizSessionActions.history.canRedo()).toBe(true);
   });
 
   it('restores graph enabled-state changes through canonical graph truth', () => {
     const { project, parameterId } = buildProject();
 
-    useEditorProjectStore.getState().importWorkingProject(project);
-    useEditorGraphStore
-      .getState()
-      .createNetworkForParameter(parameterId, 'number');
-    useEditorGraphStore
-      .getState()
-      .setNetworkEnabled(parameterId, false, 'number');
+    vizSessionActions.project.importWorkingProject(project);
+    vizSessionActions.graph.createNetworkForParameter(parameterId, 'number');
+    vizSessionActions.graph.setNetworkEnabled(parameterId, false, 'number');
 
-    useEditorGraphStore
-      .getState()
-      .setNetworkEnabled(parameterId, true, 'number');
-    useHistoryStore.getState().undoLayerEditor();
+    vizSessionActions.graph.setNetworkEnabled(parameterId, true, 'number');
+    vizSessionActions.history.undo();
 
     expect(
-      useEditorGraphStore.getState().networks[parameterId]?.isEnabled,
+      selectProjectedNodeNetworks(getVizSessionState())[parameterId]?.isEnabled,
     ).toBe(false);
   });
 
-  it('uses node UI context instead of duplicated history-store node selection', () => {
+  it('uses node UI context without duplicated history selection', () => {
     const { project, parameterId } = buildProject();
 
-    useEditorProjectStore.getState().importWorkingProject(project);
-    useEditorGraphStore
-      .getState()
-      .createNetworkForParameter(parameterId, 'number');
+    vizSessionActions.project.importWorkingProject(project);
+    vizSessionActions.graph.createNetworkForParameter(parameterId, 'number');
 
-    const graphStore = useEditorGraphStore.getState();
-    const initialNetwork = graphStore.networks[parameterId];
+    const initialNetwork =
+      selectProjectedNodeNetworks(getVizSessionState())[parameterId];
     if (!initialNetwork) {
       throw new Error('Expected node network to exist');
     }
 
     useNodeNetworkStore.setState({ openNetwork: parameterId });
-    useHistoryStore.getState().setNodeEditorFocused(true);
+    vizSessionActions.history.setNodeEditorFocused(true);
 
     const updatedNodes = [
       ...initialNetwork.nodes,
@@ -124,13 +116,13 @@ describe('History store', () => {
       } as any,
     ];
 
-    graphStore.setNodesInNetwork(parameterId, updatedNodes);
-    useHistoryStore.getState().undo();
+    vizSessionActions.graph.setNodesInNetwork(parameterId, updatedNodes);
+    vizSessionActions.history.undo();
 
     expect(
-      useEditorGraphStore
-        .getState()
-        .networks[parameterId]?.nodes.some((node) => node.id === 'custom-node'),
+      selectProjectedNodeNetworks(getVizSessionState())[
+        parameterId
+      ]?.nodes.some((node) => node.id === 'custom-node'),
     ).toBe(false);
   });
 });

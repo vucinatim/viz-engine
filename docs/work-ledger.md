@@ -1789,3 +1789,23 @@
     Two baseline
   - passed strict lint and studio type checking, 32 focused foundation tests,
     and all 7 real-browser editor journeys
+- completed the Goal Two direct `VizSession` editor-binding cutover:
+  - deleted the project, graph, history, preview, and audio compatibility
+    stores after proving they only reconstructed canonical session state and
+    actions
+  - made editor React consumers select project, graph, history, transport, and
+    audio state directly from `VizSession`
+  - made imperative UI, persistence, export, playback, waveform, and Rhythm
+    Lab paths call the canonical session actions directly
+  - retained the runtime-preview attachment store because it genuinely owns
+    browser canvases, player refs, renderer callbacks, and resource readiness
+  - replaced the layer-projection pseudo-store with one computed
+    `useProjectedLayers` hook and imperative projection function
+  - renamed the affected regression suites around `VizSession` rather than
+    preserving names for deleted architectural concepts
+  - moved production source to 69,716 lines and combined maintained code to
+    84,889 lines, reductions of 5,808 and 5,738 lines from the immutable Goal
+    Two baseline
+  - passed strict lint and studio type checking plus 29 focused session,
+    projection, persistence, audio, transport, history, graph, and
+    editor-control tests

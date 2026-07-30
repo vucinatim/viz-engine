@@ -1,6 +1,6 @@
 import editorControl from '@/lib/editor-control';
 import { destructureParameterId } from '@/lib/id-utils';
-import useEditorLayerProjectionStore from '@/lib/stores/editor-layer-projection-store';
+import { useProjectedLayers } from '@/lib/projected-layers';
 import {
   selectParameterGraphBindings,
   useVizSessionSelector,
@@ -24,7 +24,7 @@ const EnabledAnimationsDropdown = () => {
   );
   const enabledParameterIds = Object.keys(parameterGraphBindings);
   const openNetwork = useNodeNetworkStore((state) => state.openNetwork);
-  const layers = useEditorLayerProjectionStore((state) => state.layers);
+  const layers = useProjectedLayers();
 
   // Memoize the click handler
   const handleSelect = useCallback((animation: any) => {

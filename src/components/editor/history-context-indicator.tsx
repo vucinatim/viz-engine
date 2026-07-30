@@ -5,7 +5,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useHistoryStore } from '@/lib/stores/history-store';
+import { useVizSessionSelector } from '@/lib/viz-session';
 import { Layers, Network } from 'lucide-react';
 import { memo } from 'react';
 
@@ -15,8 +15,8 @@ import { memo } from 'react';
  */
 const HistoryContextIndicator = () => {
   const openNodeNetwork = useNodeNetworkStore((state) => state.openNetwork);
-  const isNodeEditorFocused = useHistoryStore(
-    (state) => state.isNodeEditorFocused,
+  const isNodeEditorFocused = useVizSessionSelector(
+    (state) => state.history.isNodeEditorFocused,
   );
 
   // Only show when node editor is open

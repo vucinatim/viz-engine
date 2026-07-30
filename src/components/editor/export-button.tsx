@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
-import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 import useExportStore from '@/lib/stores/export-store';
 import { cancelExport, exportVideo } from '@/lib/utils/export-orchestrator';
+import { useVizSessionSelector } from '@/lib/viz-session';
 import { Check, Download, Loader2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -9,7 +9,9 @@ import ExportDialog from './export-dialog';
 
 const ExportButton = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const audioUrl = useEditorAudioSessionStore((s) => s.currentTrackUrl);
+  const audioUrl = useVizSessionSelector(
+    (state) => state.audio.currentTrackUrl,
+  );
   const isExporting = useExportStore((s) => s.isExporting);
   const progress = useExportStore((s) => s.progress);
 

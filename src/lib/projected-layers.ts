@@ -9,10 +9,6 @@ import { vizSessionStore } from '@/lib/viz-session/store';
 import { useMemo } from 'react';
 import { useStore } from 'zustand';
 
-interface EditorLayerProjection {
-  layers: LayerData[];
-}
-
 const projectLayers = (
   project: ReturnType<
     typeof vizSessionStore.getState
@@ -51,27 +47,17 @@ export const getProjectedLayers = () =>
     useEditorStore.getState().layerUi,
   );
 
-const useEditorLayerProjectionStore = Object.assign(
-  <T>(selector: (state: EditorLayerProjection) => T) => {
-    const project = useStore(
-      vizSessionStore,
-      (state) => state.project.workingProject,
-    );
-    const comps = useCompStore((state) => state.comps);
-    const layerUi = useEditorStore((state) => state.layerUi);
-    const layers = useMemo(
-      () => projectLayers(project, comps, layerUi),
-      [project, comps, layerUi],
-    );
-    return selector({ layers });
-  },
-  {
-    getState: (): EditorLayerProjection => ({
-      layers: getProjectedLayers(),
-    }),
-  },
-);
+export const useProjectedLayers = () => {
+  const project = useStore(
+    vizSessionStore,
+    (state) => state.project.workingProject,
+  );
+  const comps = useCompStore((state) => state.comps);
+  const layerUi = useEditorStore((state) => state.layerUi);
+  return useMemo(
+    () => projectLayers(project, comps, layerUi),
+    [project, comps, layerUi],
+  );
+};
 
 export type { LayerData } from '@/lib/editor-layer-types';
-
-export default useEditorLayerProjectionStore;

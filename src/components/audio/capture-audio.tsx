@@ -1,7 +1,7 @@
 import editorControl from '@/lib/editor-control';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
+import { useVizSessionSelector } from '@/lib/viz-session';
 
 const CaptureAudio = () => {
   const audioContext = useAudioEngineStore((s) => s.audioContext);
@@ -12,8 +12,8 @@ const CaptureAudio = () => {
   const attachStreamToElement = useAudioEngineStore(
     (s) => s.attachStreamToElement,
   );
-  const isCapturingTab = useEditorAudioSessionStore(
-    (s) => s.session.source?.kind === 'stream',
+  const isCapturingTab = useVizSessionSelector(
+    (state) => state.audio.session.source?.kind === 'stream',
   );
   const playerRef = useEditorRuntimePreviewAttachmentStore(
     (state) => state.playerRef,

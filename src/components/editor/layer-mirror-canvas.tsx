@@ -1,4 +1,4 @@
-import { LayerData } from '@/lib/stores/editor-layer-projection-store';
+import { LayerData } from '@/lib/editor-layer-types';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import { useEffect, useRef } from 'react';
 import { LayerCanvas } from './layer-renderer';

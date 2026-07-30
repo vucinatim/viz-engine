@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import useEditorProjectStore from '@/lib/stores/editor-project-store';
 import { createVizGraphFragment, vizSessionActions } from '@/lib/viz-session';
 import { createTestProject } from './viz-session-test-utils';
 
@@ -54,12 +53,11 @@ describe('Canonical graph fragments', () => {
         ],
       },
     ];
-    useEditorProjectStore.getState().importWorkingProject(project);
+    vizSessionActions.project.importWorkingProject(project);
   });
 
   it('copies and pastes a canonical fragment with remapped internal and boundary connections', () => {
-    const graph = useEditorProjectStore.getState().exportWorkingProject()
-      .graphs?.[0];
+    const graph = vizSessionActions.project.exportWorkingProject().graphs?.[0];
     if (!graph) {
       throw new Error('Expected graph fixture');
     }
@@ -93,8 +91,8 @@ describe('Canonical graph fragments', () => {
       'fragment-graph-node-copy-2',
     ]);
 
-    const pastedGraph = useEditorProjectStore.getState().exportWorkingProject()
-      .graphs?.[0];
+    const pastedGraph =
+      vizSessionActions.project.exportWorkingProject().graphs?.[0];
     expect(
       pastedGraph?.nodes.find(
         (node) => node.id === 'fragment-graph-node-copy-1',

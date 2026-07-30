@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
-import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
-import { vizSessionStore } from '@/lib/viz-session';
+import {
+  getVizSessionState,
+  vizSessionActions,
+  vizSessionStore,
+} from '@/lib/viz-session';
 
 const createFakeAudioElement = () =>
   ({
@@ -17,10 +19,10 @@ const createFakeAudioElement = () =>
     removeAttribute: vi.fn(),
   }) as unknown as HTMLAudioElement;
 
-describe('Editor audio session store', () => {
+describe('VizSession audio', () => {
   beforeEach(() => {
-    useEditorPreviewStore.getState().reset();
-    useEditorAudioSessionStore.getState().reset();
+    vizSessionActions.preview.reset();
+    vizSessionActions.audio.reset();
     useAudioEngineStore.getState().reset();
     useAudioEngineStore
       .getState()
@@ -28,16 +30,13 @@ describe('Editor audio session store', () => {
   });
 
   it('owns canonical bundled-track selection and resets preview timing', () => {
-    const sessionStore = useEditorAudioSessionStore.getState();
-    const previewStore = useEditorPreviewStore.getState();
+    vizSessionActions.audio.setTrackList(['alpha.mp3', 'beta.mp3']);
+    vizSessionActions.preview.setDurationFrames(600);
+    vizSessionActions.preview.seekToFrame(240);
 
-    sessionStore.setTrackList(['alpha.mp3', 'beta.mp3']);
-    previewStore.setDurationFrames(600);
-    previewStore.seekToFrame(240);
+    vizSessionActions.audio.attachBundledTrack('beta.mp3', 1);
 
-    sessionStore.attachBundledTrack('beta.mp3', 1);
-
-    const snapshot = useEditorAudioSessionStore.getState();
+    const snapshot = getVizSessionState().audio;
     const audioElement = useAudioEngineStore.getState().audioElementRef
       .current as any;
 
@@ -49,22 +48,20 @@ describe('Editor audio session store', () => {
     });
     expect(snapshot.currentTrackUrl).toBe('/music/beta.mp3');
     expect(snapshot.currentTrackIndex).toBe(1);
-    expect(useEditorPreviewStore.getState().transport.currentFrame).toBe(0);
+    expect(getVizSessionState().preview.transport.currentFrame).toBe(0);
     expect(vizSessionStore.getState().audio.currentTrackIndex).toBe(1);
     expect(audioElement.src).toBe('/music/beta.mp3');
     expect(audioElement.load).toHaveBeenCalled();
   });
 
   it('supports local file sources without mutating track navigation state', () => {
-    const sessionStore = useEditorAudioSessionStore.getState();
-    const previewStore = useEditorPreviewStore.getState();
     const localFile = { name: 'local.mp3', lastModified: 42 } as File;
 
-    previewStore.setDurationFrames(300);
-    previewStore.seekToFrame(99);
-    sessionStore.attachLocalFile(localFile, 'blob:local.mp3');
+    vizSessionActions.preview.setDurationFrames(300);
+    vizSessionActions.preview.seekToFrame(99);
+    vizSessionActions.audio.attachLocalFile(localFile, 'blob:local.mp3');
 
-    const snapshot = useEditorAudioSessionStore.getState();
+    const snapshot = getVizSessionState().audio;
 
     expect(snapshot.audioFile).toBe(localFile);
     expect(snapshot.currentTrackIndex).toBe(-1);
@@ -75,25 +72,24 @@ describe('Editor audio session store', () => {
       label: 'local.mp3',
       uri: 'blob:local.mp3',
     });
-    expect(useEditorPreviewStore.getState().transport.currentFrame).toBe(0);
+    expect(getVizSessionState().preview.transport.currentFrame).toBe(0);
   });
 
   it('restores the previous media source when capture ends', () => {
-    const sessionStore = useEditorAudioSessionStore.getState();
     const audioElement = useAudioEngineStore.getState().audioElementRef
       .current as any;
 
-    sessionStore.attachBundledTrack('alpha.mp3', 0);
-    sessionStore.attachCapturedStream('Captured Tab');
+    vizSessionActions.audio.attachBundledTrack('alpha.mp3', 0);
+    vizSessionActions.audio.attachCapturedStream('Captured Tab');
 
-    expect(useEditorAudioSessionStore.getState().session.source).toMatchObject({
+    expect(getVizSessionState().audio.session.source).toMatchObject({
       kind: 'stream',
       label: 'Captured Tab',
     });
 
-    sessionStore.detachCapturedStream();
+    vizSessionActions.audio.detachCapturedStream();
 
-    const snapshot = useEditorAudioSessionStore.getState();
+    const snapshot = getVizSessionState().audio;
 
     expect(snapshot.session.source).toMatchObject({
       kind: 'media-element',

@@ -1,17 +1,20 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
-import { vizSessionStore } from '@/lib/viz-session';
+import {
+  getVizSessionState,
+  vizSessionActions,
+  vizSessionStore,
+} from '@/lib/viz-session';
 
-describe('Editor preview transport store', () => {
+describe('VizSession preview transport', () => {
   beforeEach(() => {
-    useEditorPreviewStore.getState().reset();
+    vizSessionActions.preview.reset();
     useEditorRuntimePreviewAttachmentStore.getState().reset();
   });
 
   it('owns explicit preview transport truth', () => {
-    const snapshot = useEditorPreviewStore.getState();
+    const snapshot = getVizSessionState().preview;
 
     expect(snapshot.transport).toMatchObject({
       fps: 60,
@@ -24,40 +27,36 @@ describe('Editor preview transport store', () => {
   });
 
   it('supports deterministic playback and seeking operations', () => {
-    const store = useEditorPreviewStore.getState();
+    vizSessionActions.preview.setDurationFrames(600);
+    vizSessionActions.preview.play();
+    vizSessionActions.preview.seekToSeconds(2.5);
 
-    store.setDurationFrames(600);
-    store.play();
-    store.seekToSeconds(2.5);
-
-    expect(useEditorPreviewStore.getState().transport).toMatchObject({
+    expect(getVizSessionState().preview.transport).toMatchObject({
       durationFrames: 600,
       currentFrame: 150,
       isPlaying: true,
     });
 
-    store.syncCurrentFrame(180);
-    expect(useEditorPreviewStore.getState().transport.currentFrame).toBe(180);
+    vizSessionActions.preview.syncCurrentFrame(180);
+    expect(getVizSessionState().preview.transport.currentFrame).toBe(180);
     expect(vizSessionStore.getState().preview.transport.currentFrame).toBe(180);
 
-    store.pause();
-    expect(useEditorPreviewStore.getState().transport.isPlaying).toBe(false);
+    vizSessionActions.preview.pause();
+    expect(getVizSessionState().preview.transport.isPlaying).toBe(false);
     expect(vizSessionStore.getState().preview.transport.isPlaying).toBe(false);
   });
 
   it('keeps the browser player attachment outside VizSession transport state', () => {
     const dummyPlayerRef = { current: { seekTo: () => undefined } } as any;
-    const store = useEditorPreviewStore.getState();
-
     useEditorRuntimePreviewAttachmentStore
       .getState()
       .setPlayerRef(dummyPlayerRef);
-    store.setDurationFrames(240);
-    store.seekToFrame(120);
-    store.play();
-    store.reset();
+    vizSessionActions.preview.setDurationFrames(240);
+    vizSessionActions.preview.seekToFrame(120);
+    vizSessionActions.preview.play();
+    vizSessionActions.preview.reset();
 
-    const snapshot = useEditorPreviewStore.getState();
+    const snapshot = getVizSessionState().preview;
     expect(snapshot.transport).toMatchObject({
       durationFrames: 1,
       currentFrame: 0,

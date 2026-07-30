@@ -1,6 +1,6 @@
 import { getNodeNetworks } from '@/components/node-network/node-network-store';
 import { registerNodeNetworkMetricSink } from '@/lib/profiling/node-network-metrics';
-import useEditorLayerProjectionStore from '@/lib/stores/editor-layer-projection-store';
+import { getProjectedLayers } from '@/lib/projected-layers';
 import { create } from 'zustand';
 
 // Performance metrics interfaces
@@ -318,7 +318,7 @@ const useProfilerStore = create<ProfilerState>((set, get) => ({
 
     try {
       // Initialize existing layers
-      const { layers } = useEditorLayerProjectionStore.getState();
+      const layers = getProjectedLayers();
 
       // Create a fresh map and only add existing layers
       const layerIds = new Set(layers.map((layer: any) => layer.id));

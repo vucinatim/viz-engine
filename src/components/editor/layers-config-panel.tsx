@@ -1,7 +1,5 @@
 import editorControl from '@/lib/editor-control';
-import useEditorLayerProjectionStore, {
-  LayerData,
-} from '@/lib/stores/editor-layer-projection-store';
+import { LayerData, useProjectedLayers } from '@/lib/projected-layers';
 import {
   DndContext,
   DragEndEvent,
@@ -27,7 +25,7 @@ import LayerConfigCard from './layer-config-card';
 const LayersConfigPanel = () => {
   // Parent rerenders when any layer changes (unavoidable with Zustand immutable updates)
   // But LayerConfigCard is memoized, so only the changed layer card actually rerenders
-  const layers = useEditorLayerProjectionStore((s) => s.layers);
+  const layers = useProjectedLayers();
 
   const areSomeLayersExpanded = useMemo(
     () => layers.some((layer) => layer.isExpanded),

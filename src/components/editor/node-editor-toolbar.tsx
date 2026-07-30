@@ -2,6 +2,8 @@ import editorControl from '@/lib/editor-control';
 import {
   describeProjectGraph,
   getRuntimeGraphValue,
+  useCanRedo,
+  useCanUndo,
   useVizSessionSelector,
 } from '@/lib/viz-session';
 import {
@@ -18,8 +20,6 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useRafLoop } from 'react-use';
 import { toast } from 'sonner';
 import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
-import useEditorGraphStore from '../../lib/stores/editor-graph-store';
-import { useHistoryStore } from '../../lib/stores/history-store';
 import { cn } from '../../lib/utils';
 import { NodeHandleType } from '../config/node-types';
 import { isProtectedGraphNode } from '../node-network/graph-types';
@@ -29,6 +29,7 @@ import {
   setEdgesInNetwork,
   setNodesInNetwork,
   useIsNetworkEnabled,
+  useSpecificNetwork,
 } from '../node-network/node-network-store';
 import NodesSearch from '../node-network/nodes-search';
 import { getPresetsForType } from '../node-network/presets';
@@ -57,8 +58,8 @@ const NodeEditorToolbar = ({
     editorControl.history.redoNodeEditor(nodeNetworkId);
   }, [nodeNetworkId]);
 
-  const canUndo = useHistoryStore((state) => state.canUndo());
-  const canRedo = useHistoryStore((state) => state.canRedo());
+  const canUndo = useCanUndo();
+  const canRedo = useCanRedo();
 
   const project = useVizSessionSelector(
     (state) => state.project.workingProject,
@@ -378,7 +379,7 @@ const PresetsSelect = ({
   nodeNetworkId,
   onPresetSelect,
 }: PresetsSelectProps) => {
-  const network = useEditorGraphStore((state) => state.networks[nodeNetworkId]);
+  const network = useSpecificNetwork(nodeNetworkId);
   const outType = (
     network?.nodes.find((n) => n.id.includes('-output-node'))?.data as any
   )?.definition?.inputs?.[0]?.type as NodeHandleType | undefined;

@@ -1,7 +1,6 @@
 import editorControl from '@/lib/editor-control';
-import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
-import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
 import { cn } from '@/lib/utils';
+import { useVizSessionSelector } from '@/lib/viz-session';
 import { Maximize2, Minimize2, Pause, Play } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '../ui/button';
@@ -16,13 +15,15 @@ const CustomPlayerControls = ({
   className,
   durationInFrames,
 }: CustomPlayerControlsProps) => {
-  const isPlaying = useEditorPreviewStore((state) => state.transport.isPlaying);
-  const currentFrame = useEditorPreviewStore(
-    (state) => state.transport.currentFrame,
+  const isPlaying = useVizSessionSelector(
+    (state) => state.preview.transport.isPlaying,
   );
-  const fps = useEditorPreviewStore((state) => state.transport.fps);
-  const isCapturingTab = useEditorAudioSessionStore(
-    (s) => s.session.source?.kind === 'stream',
+  const currentFrame = useVizSessionSelector(
+    (state) => state.preview.transport.currentFrame,
+  );
+  const fps = useVizSessionSelector((state) => state.preview.transport.fps);
+  const isCapturingTab = useVizSessionSelector(
+    (state) => state.audio.session.source?.kind === 'stream',
   );
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);

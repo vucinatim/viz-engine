@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { destructureParameterId } from '@/lib/id-utils';
-import useEditorLayerProjectionStore from '@/lib/stores/editor-layer-projection-store';
+import { getProjectedLayers } from '@/lib/projected-layers';
 import { Bug, Check, Copy, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 
@@ -29,7 +29,7 @@ export function DebugInfoDialog() {
     }
 
     // Read store state directly instead of subscribing (only when function is called)
-    const layers = useEditorLayerProjectionStore.getState().layers;
+    const layers = getProjectedLayers();
     const networks = getNodeNetworks();
 
     const info = {

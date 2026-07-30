@@ -5,9 +5,7 @@
  * Orchestrates the entire pipeline from audio extraction to video encoding.
  */
 
-import useEditorAudioSessionStore from '../stores/editor-audio-session-store';
-import { getProjectedLayers } from '../stores/editor-layer-projection-store';
-import useEditorPreviewStore from '../stores/editor-preview-store';
+import { getProjectedLayers } from '../projected-layers';
 import useEditorRuntimePreviewAttachmentStore from '../stores/editor-runtime-preview-attachment-store';
 import useExportStore, {
   ExportLog,
@@ -15,6 +13,7 @@ import useExportStore, {
 } from '../stores/export-store';
 import {
   createVizSessionRuntimePreviewFrame,
+  getVizSessionState,
   vizSessionActions,
 } from '../viz-session';
 import {
@@ -91,8 +90,7 @@ export async function exportVideo(
   });
 
   const exportStore = useExportStore.getState();
-  const audioSessionStore = useEditorAudioSessionStore.getState();
-  const previewStore = useEditorPreviewStore.getState();
+  const audioSession = getVizSessionState().audio;
 
   // Merge settings with defaults
   const finalSettings: ExportSettings = {
@@ -175,7 +173,7 @@ export async function exportVideo(
     });
 
     // Get audio URL
-    const audioUrl = audioSessionStore.currentTrackUrl;
+    const audioUrl = audioSession.currentTrackUrl;
     if (!audioUrl) {
       log('error', 'No audio file loaded');
       throw new Error('No audio file loaded');
@@ -286,9 +284,9 @@ export async function exportVideo(
     });
 
     // Pause playback during export
-    wasPlaying = previewStore.transport.isPlaying;
+    wasPlaying = getVizSessionState().preview.transport.isPlaying;
     if (wasPlaying) {
-      previewStore.pause();
+      vizSessionActions.preview.pause();
       log('info', 'Paused playback for export');
     }
 
@@ -412,7 +410,7 @@ export async function exportVideo(
 
     // Restore playback state
     if (wasPlaying) {
-      previewStore.play();
+      vizSessionActions.preview.play();
       log('info', 'Restored playback state');
     }
 
@@ -458,7 +456,7 @@ export async function exportVideo(
 
     // Restore playback state
     if (wasPlaying) {
-      previewStore.play();
+      vizSessionActions.preview.play();
       log('info', 'Restored playback state');
     }
   }

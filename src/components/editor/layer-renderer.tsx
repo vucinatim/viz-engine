@@ -1,3 +1,4 @@
+import { LayerData } from '@/lib/editor-layer-types';
 import {
   createEditorRuntimePreviewAttachment,
   EditorRuntimePreviewAttachment,
@@ -5,7 +6,6 @@ import {
 import useDebug from '@/lib/hooks/use-debug';
 import { useLayerFPSTracker } from '@/lib/hooks/use-layer-fps-tracker';
 import useOnResize from '@/lib/hooks/use-on-resize';
-import { LayerData } from '@/lib/stores/editor-layer-projection-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { studioThreeProgramRegistry } from '@/lib/viz-capabilities';

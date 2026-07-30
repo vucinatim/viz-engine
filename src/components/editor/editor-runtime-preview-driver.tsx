@@ -1,8 +1,8 @@
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
 import useExportStore from '@/lib/stores/export-store';
 import {
   createVizSessionRuntimePreviewFrame,
+  getVizSessionState,
   vizSessionActions,
 } from '@/lib/viz-session';
 import { useEffect, useRef } from 'react';
@@ -28,7 +28,7 @@ const EditorRuntimePreviewDriver = () => {
       typeof performance !== 'undefined' ? performance.now() : Date.now();
 
     const renderFrame = () => {
-      const { currentFrame, fps } = useEditorPreviewStore.getState().transport;
+      const { currentFrame, fps } = getVizSessionState().preview.transport;
       const now =
         typeof performance !== 'undefined' ? performance.now() : Date.now();
       const elapsedMilliseconds = now - lastFrameTimeRef.current;

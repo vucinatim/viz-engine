@@ -4,17 +4,15 @@ import { CompDefinitionMap } from '@/components/comps';
 import { listComponentParameterIds } from '@/components/config/config';
 import { useNodeNetworkStore } from '@/components/node-network/node-network-store';
 import editorControl from '@/lib/editor-control';
+import { getProjectedLayers } from '@/lib/projected-layers';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useCompStore from '@/lib/stores/comp-store';
-import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
-import useEditorGraphStore from '@/lib/stores/editor-graph-store';
-import { getProjectedLayers } from '@/lib/stores/editor-layer-projection-store';
-import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
-import useEditorProjectStore from '@/lib/stores/editor-project-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import useProfilerStore from '@/lib/stores/profiler-store';
 import {
   createVizSessionRuntimePreviewFrame,
+  getVizSessionState,
+  selectProjectedNodeNetworks,
   vizControl,
   vizSessionActions,
   vizSessionHost,
@@ -59,9 +57,9 @@ describe('Local editor control facade', () => {
     useCompStore.setState({
       comps: Array.from(CompDefinitionMap.values()),
     });
-    useEditorGraphStore.getState().reset();
-    useEditorPreviewStore.getState().reset();
-    useEditorProjectStore.getState().importWorkingProject(createTestProject());
+    vizSessionActions.graph.reset();
+    vizSessionActions.preview.reset();
+    vizSessionActions.project.importWorkingProject(createTestProject());
     useEditorRuntimePreviewAttachmentStore.getState().reset();
     useNodeNetworkStore.setState({
       openNetwork: null,
@@ -71,7 +69,7 @@ describe('Local editor control facade', () => {
     useAudioEngineStore.setState({
       audioElementRef: { current: null },
     });
-    useEditorAudioSessionStore.getState().reset();
+    vizSessionActions.audio.reset();
     useProfilerStore.getState().reset();
   });
 
@@ -83,7 +81,7 @@ describe('Local editor control facade', () => {
 
     editorControl.project.addLayer(comp);
 
-    const workingProject = useEditorProjectStore.getState().workingProject;
+    const workingProject = getVizSessionState().project.workingProject;
     expect(workingProject.layers).toHaveLength(1);
     expect(getProjectedLayers()).toHaveLength(1);
 
@@ -95,7 +93,7 @@ describe('Local editor control facade', () => {
     editorControl.project.updateLayerValue(layerId, ['testValue'], 123);
 
     expect(
-      useEditorProjectStore.getState().workingProject.layers[0]?.settings
+      getVizSessionState().project.workingProject.layers[0]?.settings
         ?.testValue,
     ).toBe(123);
     expect(
@@ -105,26 +103,24 @@ describe('Local editor control facade', () => {
 
     editorControl.history.undo();
     expect(
-      useEditorProjectStore.getState().workingProject.layers[0]?.settings
+      getVizSessionState().project.workingProject.layers[0]?.settings
         ?.testValue,
     ).toBeUndefined();
     editorControl.history.undo();
-    expect(useEditorProjectStore.getState().workingProject.layers).toHaveLength(
-      0,
-    );
+    expect(getVizSessionState().project.workingProject.layers).toHaveLength(0);
   });
 
   it('routes node-editor selection and animation enablement through one facade', () => {
     const { project, parameterId } = buildProject();
 
-    useEditorProjectStore.getState().importWorkingProject(project);
+    vizSessionActions.project.importWorkingProject(project);
 
     editorControl.nodeEditor.setAnimationEnabled(parameterId, true, 'number');
 
     expect(useNodeNetworkStore.getState().openNetwork).toBe(parameterId);
     expect(useNodeNetworkStore.getState().shouldForceShowOverlay).toBe(true);
     expect(
-      useEditorGraphStore.getState().networks[parameterId]?.isEnabled,
+      selectProjectedNodeNetworks(getVizSessionState())[parameterId]?.isEnabled,
     ).toBe(true);
 
     editorControl.nodeEditor.closeNetwork();
@@ -136,11 +132,11 @@ describe('Local editor control facade', () => {
     useAudioEngineStore.setState({
       audioElementRef: { current: audioElement },
     });
-    useEditorPreviewStore.getState().setDurationFrames(300);
+    vizSessionActions.preview.setDurationFrames(300);
 
     editorControl.preview.seekToSeconds(2.5);
 
-    expect(useEditorPreviewStore.getState().transport.currentFrame).toBe(150);
+    expect(getVizSessionState().preview.transport.currentFrame).toBe(150);
     expect(audioElement.currentTime).toBe(2.5);
   });
 
@@ -149,9 +145,9 @@ describe('Local editor control facade', () => {
     if (!comp) {
       throw new Error('Expected at least one component definition');
     }
-    useEditorProjectStore
-      .getState()
-      .importWorkingProject(createTestProject(comp, 'runtime-layer'));
+    vizSessionActions.project.importWorkingProject(
+      createTestProject(comp, 'runtime-layer'),
+    );
     const attachmentStore = useEditorRuntimePreviewAttachmentStore.getState();
     attachmentStore.registerLayerAttachment('runtime-layer', {
       getViewport: () => ({ width: 640, height: 360 }),
@@ -206,15 +202,12 @@ describe('Local editor control facade', () => {
     expect(useProfilerStore.getState().visible).toBe(false);
 
     editorControl.audio.setTrackList(['a.mp3', 'b.mp3']);
-    expect(useEditorAudioSessionStore.getState().trackList).toEqual([
-      'a.mp3',
-      'b.mp3',
-    ]);
+    expect(getVizSessionState().audio.trackList).toEqual(['a.mp3', 'b.mp3']);
   });
 
   it('reflects agent transactions through the exact session used by the editor', () => {
     const { project, layerId } = buildProject();
-    useEditorProjectStore.getState().importWorkingProject(project);
+    vizSessionActions.project.importWorkingProject(project);
     const baseRevision = vizSessionHost.getSnapshot().session.revision;
 
     const agentMutation = vizControl.applyTransaction({
@@ -234,7 +227,7 @@ describe('Local editor control facade', () => {
 
     expect(agentMutation.transactionResult.status).toBe('applied');
     expect(
-      useEditorProjectStore.getState().workingProject.layers[0]?.settings?.size,
+      getVizSessionState().project.workingProject.layers[0]?.settings?.size,
     ).toBe(2.25);
     expect(
       vizSessionStore.getState().project.workingProject.layers[0]?.settings
@@ -257,11 +250,11 @@ describe('Local editor control facade', () => {
 
     editorControl.history.undo();
     expect(
-      useEditorProjectStore.getState().workingProject.layers[0]?.settings?.size,
+      getVizSessionState().project.workingProject.layers[0]?.settings?.size,
     ).toBe(2.25);
     editorControl.history.undo();
     expect(
-      useEditorProjectStore.getState().workingProject.layers[0]?.settings?.size,
+      getVizSessionState().project.workingProject.layers[0]?.settings?.size,
     ).not.toBe(2.25);
     expect(vizControl.getHost()).toBe(vizSessionHost);
   });

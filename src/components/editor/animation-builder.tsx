@@ -1,5 +1,4 @@
 import editorControl from '@/lib/editor-control';
-import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
 import { cn } from '@/lib/utils';
 import { describeProjectGraph, useVizSessionSelector } from '@/lib/viz-session';
 import { AudioLines } from 'lucide-react';
@@ -11,7 +10,9 @@ import useNodeNetworkStore, {
 import NodeEditorToolbar from './node-editor-toolbar';
 
 const AnimationBuilder = () => {
-  const isPlaying = useEditorPreviewStore((state) => state.transport.isPlaying);
+  const isPlaying = useVizSessionSelector(
+    (state) => state.preview.transport.isPlaying,
+  );
   const nodeNetworkId = useNodeNetworkStore((state) => state.openNetwork);
   // Use optimized selector to only subscribe to the specific network we need
   const nodeNetwork = useSpecificNetwork(nodeNetworkId);

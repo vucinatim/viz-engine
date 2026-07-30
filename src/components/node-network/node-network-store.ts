@@ -1,8 +1,13 @@
 import { Edge } from '@xyflow/react';
 import { create } from 'zustand';
 
-import useEditorGraphStore from '@/lib/stores/editor-graph-store';
-import type { VizGraphFragment } from '@/lib/viz-session/graph-fragments';
+import {
+  getVizSessionState,
+  selectProjectedNodeNetworks,
+  useVizSessionSelector,
+  vizSessionActions,
+  type VizGraphFragment,
+} from '@/lib/viz-session';
 import { NodeHandleType, canConnectTypes } from '../config/node-types';
 import { GraphNode, GraphNodeData } from './graph-types';
 
@@ -65,20 +70,20 @@ export const useNodeNetworkStore = create<NodeNetworkStore>((set) => ({
 
 export default useNodeNetworkStore;
 
-export const getNodeNetworks = () => useEditorGraphStore.getState().networks;
+export const getNodeNetworks = () =>
+  selectProjectedNodeNetworks(getVizSessionState());
 
 export const getNodeNetwork = (parameterId: string) =>
-  useEditorGraphStore.getState().networks[parameterId];
+  getNodeNetworks()[parameterId];
 
 export const setNodeNetworkEnabled = (
   parameterId: string,
   isEnabled: boolean,
   type: NodeHandleType,
 ) => {
-  const graphStore = useEditorGraphStore.getState();
   const nodeUiStore = useNodeNetworkStore.getState();
 
-  graphStore.setNetworkEnabled(parameterId, isEnabled, type);
+  vizSessionActions.graph.setNetworkEnabled(parameterId, isEnabled, type);
 
   if (!isEnabled && nodeUiStore.openNetwork === parameterId) {
     nodeUiStore.setOpenNetwork(null);
@@ -92,22 +97,21 @@ export const setNodeNetworkEnabled = (
 };
 
 const addNodeToNetwork = (parameterId: string, node: GraphNode) => {
-  useEditorGraphStore.getState().addNodeToNetwork(parameterId, node);
+  vizSessionActions.graph.addNodeToNetwork(parameterId, node);
 };
 
 export const pasteGraphFragment = (
   parameterId: string,
   fragment: VizGraphFragment,
   position: { x: number; y: number },
-) =>
-  useEditorGraphStore.getState().pasteFragment(parameterId, fragment, position);
+) => vizSessionActions.graph.pasteFragment(parameterId, fragment, position);
 
 export const setNodesInNetwork = (parameterId: string, nodes: GraphNode[]) => {
-  useEditorGraphStore.getState().setNodesInNetwork(parameterId, nodes);
+  vizSessionActions.graph.setNodesInNetwork(parameterId, nodes);
 };
 
 export const setEdgesInNetwork = (parameterId: string, edges: Edge[]) => {
-  useEditorGraphStore.getState().setEdgesInNetwork(parameterId, edges);
+  vizSessionActions.graph.setEdgesInNetwork(parameterId, edges);
 };
 
 export const applyPresetToNodeNetwork = (
@@ -115,9 +119,11 @@ export const applyPresetToNodeNetwork = (
   presetId: string,
   outputType: NodeHandleType,
 ) => {
-  useEditorGraphStore
-    .getState()
-    .applyPresetToNetwork(parameterId, presetId, outputType);
+  vizSessionActions.graph.applyPresetToNetwork(
+    parameterId,
+    presetId,
+    outputType,
+  );
   const nodeUiStore = useNodeNetworkStore.getState();
   nodeUiStore.setOpenNetwork(parameterId);
   nodeUiStore.setShouldForceShowOverlay(true);
@@ -129,22 +135,27 @@ const updateNodeNetworkInputValue = (
   inputId: string,
   value: any,
 ) => {
-  useEditorGraphStore
-    .getState()
-    .updateNodeInputValue(parameterId, nodeId, inputId, value);
+  vizSessionActions.graph.updateNodeInputValue(
+    parameterId,
+    nodeId,
+    inputId,
+    value,
+  );
 };
 
 export const clearStaleNodeNetworks = () => {
   const openNetwork = useNodeNetworkStore.getState().openNetwork;
-  useEditorGraphStore.getState().clearStaleNetworks();
-  const networks = useEditorGraphStore.getState().networks;
+  vizSessionActions.graph.clearStaleNetworks();
+  const networks = getNodeNetworks();
   if (openNetwork && !networks[openNetwork]) {
     useNodeNetworkStore.getState().setOpenNetwork(null);
   }
 };
 
 export const useNodeNetwork = (parameterId: string) => {
-  const network = useEditorGraphStore((state) => state.networks[parameterId]);
+  const network = useVizSessionSelector(
+    (state) => selectProjectedNodeNetworks(state)[parameterId],
+  );
 
   return {
     ...network,
@@ -193,13 +204,14 @@ export const validateConnection = (
 };
 
 export const useIsNetworkEnabled = (parameterId: string) =>
-  useEditorGraphStore(
-    (state) => state.networks[parameterId]?.isEnabled ?? false,
+  useVizSessionSelector(
+    (state) =>
+      selectProjectedNodeNetworks(state)[parameterId]?.isEnabled ?? false,
   );
 
 export const useSpecificNetwork = (parameterId: string | null) =>
-  useEditorGraphStore((state) =>
-    parameterId ? state.networks[parameterId] : null,
+  useVizSessionSelector((state) =>
+    parameterId ? selectProjectedNodeNetworks(state)[parameterId] : null,
   );
 
 export type { GraphNode, GraphNodeData };

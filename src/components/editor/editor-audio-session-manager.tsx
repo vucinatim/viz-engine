@@ -1,16 +1,12 @@
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
+import { vizSessionActions } from '@/lib/viz-session';
 import { useEffect } from 'react';
 
 export default function EditorAudioSessionManager() {
   const audioAnalyzer = useAudioEngineStore((state) => state.audioAnalyzer);
   const audioSource = useAudioEngineStore((state) => state.audioSource);
-  const setAnalyzerState = useEditorAudioSessionStore(
-    (state) => state.setAnalyzerState,
-  );
-  const setLiveInputAvailable = useEditorAudioSessionStore(
-    (state) => state.setLiveInputAvailable,
-  );
+  const setAnalyzerState = vizSessionActions.audio.setAnalyzerState;
+  const setLiveInputAvailable = vizSessionActions.audio.setLiveInputAvailable;
 
   useEffect(() => {
     if (!audioAnalyzer) {

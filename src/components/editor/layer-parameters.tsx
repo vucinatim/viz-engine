@@ -6,11 +6,11 @@ import {
   isSettingVisible,
 } from '@/components/config/config';
 import editorControl from '@/lib/editor-control';
-import useEditorGraphStore from '@/lib/stores/editor-graph-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import { cn } from '@/lib/utils';
 import {
   selectParameterGraphBindings,
+  selectProjectedNodeNetworks,
   selectRuntimeGraphValueForParameter,
   useVizSessionSelector,
 } from '@/lib/viz-session';
@@ -187,11 +187,12 @@ const ParameterField = memo(
       (state) => selectParameterGraphBindings(state)[id],
     );
     const resolvedNetworkId = graphBinding?.graphId ?? id;
-    const animated = useEditorGraphStore(
-      (state) =>
-        !!graphBinding &&
-        (state.networks[resolvedNetworkId]?.isEnabled ?? false),
-    );
+    const animated = useVizSessionSelector((state) => {
+      const networks = selectProjectedNodeNetworks(state);
+      return (
+        !!graphBinding && (networks[resolvedNetworkId]?.isEnabled ?? false)
+      );
+    });
     const openNetwork = useNodeNetworkStore((state) => state.openNetwork);
     const highlighted = openNetwork === resolvedNetworkId;
     const type = getSettingNodeHandleType(setting);

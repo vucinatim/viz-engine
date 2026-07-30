@@ -3,9 +3,8 @@ import useAudioEngine from '@/lib/hooks/use-audio-engine';
 import useAudioPlaybackSync from '@/lib/hooks/use-audio-playback-sync';
 import useKeypress from '@/lib/hooks/use-keypress';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
-import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
 import { getVisualTime } from '@/lib/utils/audio-time';
+import { useVizSessionSelector, vizSessionActions } from '@/lib/viz-session';
 import { Music, Pause, Play, SkipBack, SkipForward } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { Button } from '../ui/button';
@@ -18,12 +17,14 @@ import VolumeFader from './volume-fader';
 import WaveformDisplay from './waveform-display';
 
 const AudioPanel = () => {
-  const isPlaying = useEditorPreviewStore((state) => state.transport.isPlaying);
-  const isCapturingTab = useEditorAudioSessionStore(
-    (s) => s.session.source?.kind === 'stream',
+  const isPlaying = useVizSessionSelector(
+    (state) => state.preview.transport.isPlaying,
   );
-  const setCurrentTime = useEditorAudioSessionStore((s) => s.setCurrentTime);
-  const setVisualTime = useEditorAudioSessionStore((s) => s.setVisualTime);
+  const isCapturingTab = useVizSessionSelector(
+    (state) => state.audio.session.source?.kind === 'stream',
+  );
+  const setCurrentTime = vizSessionActions.audio.setCurrentTime;
+  const setVisualTime = vizSessionActions.audio.setVisualTime;
   const setAudioElementRef = useAudioEngineStore((s) => s.setAudioElementRef);
   const audioContext = useAudioEngineStore((s) => s.audioContext);
 
@@ -157,7 +158,7 @@ const AudioPanel = () => {
 export default AudioPanel;
 
 const TimecodeText = () => {
-  const currentTime = useEditorAudioSessionStore((s) => s.currentTime);
+  const currentTime = useVizSessionSelector((state) => state.audio.currentTime);
   const t = currentTime || 0;
   const mm = Math.floor(t / 60)
     .toString()

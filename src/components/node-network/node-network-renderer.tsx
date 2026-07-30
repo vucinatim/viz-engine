@@ -22,7 +22,7 @@ import {
 import '../../lib/css/xyflow.css';
 import editorControl from '../../lib/editor-control';
 import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
-import { useHistoryStore } from '../../lib/stores/history-store';
+import { useCanRedo, useCanUndo } from '../../lib/viz-session';
 import {
   setEdgesInNetwork,
   setNodesInNetwork,
@@ -114,8 +114,8 @@ const NodeNetworkRenderer = ({
     editorControl.history.redoNodeEditor(nodeNetworkId);
   }, [nodeNetworkId]);
 
-  const canUndo = useHistoryStore((state) => state.canUndo());
-  const canRedo = useHistoryStore((state) => state.canRedo());
+  const canUndo = useCanUndo();
+  const canRedo = useCanRedo();
 
   const startDrag = useCallback(() => {
     editorControl.history.startNodeDrag(nodeNetworkId);

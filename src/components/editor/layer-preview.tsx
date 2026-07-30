@@ -1,5 +1,5 @@
 import editorControl from '@/lib/editor-control';
-import { LayerData } from '@/lib/stores/editor-layer-projection-store';
+import { LayerData } from '@/lib/editor-layer-types';
 import { cn } from '@/lib/utils';
 import { Eye, EyeOff } from 'lucide-react';
 import LayerMirrorCanvas from './layer-mirror-canvas';

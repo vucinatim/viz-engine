@@ -1,5 +1,5 @@
 import editorControl from '@/lib/editor-control';
-import { LayerData } from '@/lib/stores/editor-layer-projection-store';
+import { LayerData } from '@/lib/editor-layer-types';
 import { cn } from '@/lib/utils';
 import { getVizSessionState } from '@/lib/viz-session';
 import { useSortable } from '@dnd-kit/sortable';

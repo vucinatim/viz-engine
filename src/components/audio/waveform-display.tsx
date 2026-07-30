@@ -1,9 +1,12 @@
 import editorControl from '@/lib/editor-control';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
-import useEditorPreviewStore from '@/lib/stores/editor-preview-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { AUDIO_THEME } from '@/lib/theme/audio-theme';
+import {
+  getVizSessionState,
+  useVizSessionSelector,
+  vizSessionStore,
+} from '@/lib/viz-session';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 const MINIMAP_HEIGHT = 28;
@@ -169,9 +172,7 @@ const WaveformCanvas = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const width = useCanvasWidth(canvasRef);
   const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);
-  const visualTimeRef = useRef(
-    useEditorAudioSessionStore.getState().visualTime,
-  );
+  const visualTimeRef = useRef(getVizSessionState().audio.visualTime);
   const rafRef = useRef<number | null>(null);
   const hoverXRef = useRef<number | null>(null);
   const renderRef = useRef<() => void>(() => {});
@@ -228,8 +229,8 @@ const WaveformCanvas = ({
   ]);
 
   useEffect(() => {
-    const unsub = useEditorAudioSessionStore.subscribe((state) => {
-      visualTimeRef.current = state.visualTime;
+    const unsub = vizSessionStore.subscribe((state) => {
+      visualTimeRef.current = state.audio.visualTime;
     });
     return () => unsub();
   }, []);
@@ -492,10 +493,10 @@ const WaveformDisplay = ({
   isLoading: boolean;
 }) => {
   const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);
-  const visualTimeRef = useRef(
-    useEditorAudioSessionStore.getState().visualTime,
+  const visualTimeRef = useRef(getVizSessionState().audio.visualTime);
+  const isPlaying = useVizSessionSelector(
+    (state) => state.preview.transport.isPlaying,
   );
-  const isPlaying = useEditorPreviewStore((state) => state.transport.isPlaying);
   const rhythmSelection = useEditorStore((s) => s.rhythmSelection);
   const [viewMode, setViewMode] = useState<'static' | 'follow'>('static');
   const selectionOverlayRef = useRef<HTMLDivElement>(null);
@@ -542,8 +543,8 @@ const WaveformDisplay = ({
   }, [duration, viewEnd, viewMode, viewStart]);
 
   useEffect(() => {
-    const unsub = useEditorAudioSessionStore.subscribe((state) => {
-      visualTimeRef.current = state.visualTime;
+    const unsub = vizSessionStore.subscribe((state) => {
+      visualTimeRef.current = state.audio.visualTime;
     });
     return () => unsub();
   }, []);

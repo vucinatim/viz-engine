@@ -1,7 +1,6 @@
 import useNodeNetworkStore from '@/components/node-network/node-network-store';
 import { idbClearFiles } from '@/lib/idb-file-store';
 import useEditorStore from '@/lib/stores/editor-store';
-import { useHistoryStore } from '@/lib/stores/history-store';
 import {
   vizSessionActions,
   vizSessionHost,
@@ -191,7 +190,7 @@ export async function hydrateProjectData(projectFile: ProjectFile) {
   );
   vizSessionActions.preview.reset();
 
-  useHistoryStore.getState().reset();
+  vizSessionActions.history.reset();
 }
 
 export function loadProject(file: File) {
@@ -339,7 +338,7 @@ export async function resetProject() {
     vizSessionActions.preview.reset();
 
     console.log('[resetProject] Resetting editor history...');
-    useHistoryStore.getState().reset();
+    vizSessionActions.history.reset();
 
     console.log('[resetProject] Project reset complete!');
   } catch (error) {

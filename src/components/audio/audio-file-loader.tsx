@@ -1,8 +1,8 @@
 import editorControl from '@/lib/editor-control';
 import useSetBodyProps from '@/lib/hooks/use-set-body-props';
 import { getBundledAudioFiles } from '@/lib/public-manifests';
-import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
 import { cn } from '@/lib/utils';
+import { getVizSessionState, useVizSessionSelector } from '@/lib/viz-session';
 import { AlertCircle, Folder, Music } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
@@ -18,11 +18,13 @@ const DROPZONE_ACCEPTED_TYPES = {
 };
 
 const AudioFileLoader = () => {
-  const currentTrackIndex = useEditorAudioSessionStore(
-    (s) => s.currentTrackIndex,
+  const currentTrackIndex = useVizSessionSelector(
+    (state) => state.audio.currentTrackIndex,
   );
-  const trackList = useEditorAudioSessionStore((s) => s.trackList);
-  const sessionSource = useEditorAudioSessionStore((s) => s.session.source);
+  const trackList = useVizSessionSelector((state) => state.audio.trackList);
+  const sessionSource = useVizSessionSelector(
+    (state) => state.audio.session.source,
+  );
 
   const [audioFiles, setAudioFiles] = useState<string[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -51,7 +53,7 @@ const AudioFileLoader = () => {
     const files = getBundledAudioFiles();
     setAudioFiles(files);
     editorControl.audio.setTrackList(files);
-    const activeSource = useEditorAudioSessionStore.getState().session.source;
+    const activeSource = getVizSessionState().audio.session.source;
     if (activeSource) {
       setSelectedFile(activeSource.label ?? activeSource.id);
       return;

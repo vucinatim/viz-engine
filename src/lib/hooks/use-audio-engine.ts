@@ -1,5 +1,5 @@
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import useEditorAudioSessionStore from '@/lib/stores/editor-audio-session-store';
+import { useVizSessionSelector, vizSessionActions } from '@/lib/viz-session';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 const DEFAULT_LEVELS = [512, 1024, 2048, 4096, 8192, 16384];
@@ -37,15 +37,11 @@ const useAudioEngine = () => {
   const setAnalyzer = useAudioEngineStore((s) => s.setAnalyzer);
   const setGainNode = useAudioEngineStore((s) => s.setGainNode);
   const setAudioBuffer = useAudioEngineStore((s) => s.setAudioBuffer);
-  const isCapturingTab = useEditorAudioSessionStore(
-    (s) => s.session.source?.kind === 'stream',
+  const isCapturingTab = useVizSessionSelector(
+    (state) => state.audio.session.source?.kind === 'stream',
   );
-  const setAnalyzerState = useEditorAudioSessionStore(
-    (s) => s.setAnalyzerState,
-  );
-  const setLiveInputAvailable = useEditorAudioSessionStore(
-    (s) => s.setLiveInputAvailable,
-  );
+  const setAnalyzerState = vizSessionActions.audio.setAnalyzerState;
+  const setLiveInputAvailable = vizSessionActions.audio.setLiveInputAvailable;
 
   const [peaksLevels, setPeaksLevels] = useState<Float32Array[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
