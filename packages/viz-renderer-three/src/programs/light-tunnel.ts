@@ -26,6 +26,13 @@ import {
   createVizThreePostProcessingPipeline,
   type VizThreePostProcessingSettings,
 } from './post-processing.js';
+import {
+  asBoolean,
+  asNumber,
+  asNonEmptyString as asString,
+  assertProgram,
+  hashString,
+} from './program-input.js';
 import type { VizThreeProgramFactory } from './types.js';
 
 const PROGRAM_ID = 'viz-core/light-tunnel/v1';
@@ -80,15 +87,6 @@ const CUBE_EDGES = [
   [3, 7],
 ] as const;
 
-const asNumber = (value: unknown, fallback: number): number =>
-  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
-
-const asBoolean = (value: unknown, fallback: boolean): boolean =>
-  typeof value === 'boolean' ? value : fallback;
-
-const asString = (value: unknown, fallback: string): string =>
-  typeof value === 'string' && value.length > 0 ? value : fallback;
-
 const asStringArray = (
   value: unknown,
   fallback: readonly string[],
@@ -111,25 +109,8 @@ const asNumberArray = (value: unknown): number[] =>
       )
     : [];
 
-const assertProgram = (node: VizRenderThreeProgramNode): void => {
-  if (node.programId !== PROGRAM_ID) {
-    throw new Error(
-      `Light Tunnel program cannot update incompatible program "${node.programId}".`,
-    );
-  }
-};
-
 const easeInOutCubic = (value: number): number =>
   value < 0.5 ? 4 * value * value * value : 1 - Math.pow(-2 * value + 2, 3) / 2;
-
-const hashString = (value: string): number => {
-  let hash = 2166136261;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
-};
 
 const resolveCubeColor = ({
   colorMode,
@@ -217,7 +198,7 @@ export const createLightTunnelProgram: VizThreeProgramFactory = ({
   width,
   height,
 }) => {
-  assertProgram(node);
+  assertProgram(node, PROGRAM_ID, 'Light Tunnel');
 
   const scene = new Scene();
   scene.fog = new FogExp2('#000000', 0.095);
@@ -294,7 +275,7 @@ export const createLightTunnelProgram: VizThreeProgramFactory = ({
   const emissiveColor = new Color();
 
   const update = (nextNode: VizRenderThreeProgramNode): void => {
-    assertProgram(nextNode);
+    assertProgram(nextNode, PROGRAM_ID, 'Light Tunnel');
     const parameters = nextNode.parameters;
     const time = Math.max(0, asNumber(parameters.time, 0));
     const seed = asString(parameters.seed, 'light-tunnel');

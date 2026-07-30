@@ -38,6 +38,14 @@ import {
   type WebGLRenderer,
 } from 'three';
 import { createVizThreePostProcessingPipeline } from './post-processing.js';
+import {
+  asBoolean,
+  asNumber,
+  asString,
+  asStringArray,
+  assertProgram,
+  hashString,
+} from './program-input.js';
 import { createVizStageCharacterController } from './stage-characters.js';
 import type { VizThreeProgramFactory } from './types.js';
 
@@ -93,23 +101,6 @@ const CAMERA_PATH_POINTS: Readonly<
   ],
 };
 
-const asNumber = (value: unknown, fallback: number): number =>
-  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
-
-const asBoolean = (value: unknown, fallback: boolean): boolean =>
-  typeof value === 'boolean' ? value : fallback;
-
-const asString = (value: unknown, fallback: string): string =>
-  typeof value === 'string' ? value : fallback;
-
-const asStringArray = (value: unknown): string[] =>
-  Array.isArray(value)
-    ? value.filter(
-        (entry): entry is string =>
-          typeof entry === 'string' && entry.length > 0,
-      )
-    : [];
-
 const asVector3 = (
   value: unknown,
   fallback: readonly [number, number, number],
@@ -124,14 +115,6 @@ const asVector3 = (
   ];
 };
 
-const assertProgram = (node: VizRenderThreeProgramNode): void => {
-  if (node.programId !== PROGRAM_ID) {
-    throw new Error(
-      `Stage Scene program cannot update incompatible program "${node.programId}".`,
-    );
-  }
-};
-
 const resolveMode = (value: unknown, time: number, count: number): number => {
   const mode = asString(value, 'auto');
   if (mode === 'auto') {
@@ -139,15 +122,6 @@ const resolveMode = (value: unknown, time: number, count: number): number => {
   }
   const parsed = Number.parseInt(mode, 10);
   return Number.isFinite(parsed) ? Math.min(count - 1, Math.max(0, parsed)) : 0;
-};
-
-const hashString = (value: string): number => {
-  let hash = 2166136261;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
 };
 
 const hash01 = (seed: number, index: number): number => {
@@ -443,7 +417,7 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   modelResources,
   invalidate,
 }) => {
-  assertProgram(node);
+  assertProgram(node, PROGRAM_ID, 'Stage Scene');
 
   const scene = new Scene();
   scene.fog = new FogExp2('#000000', 0.008);
@@ -1318,7 +1292,7 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
     nextNode: VizRenderThreeProgramNode,
     nextMaterializedAssets?: ReadonlyMap<string, VizMaterializedAsset>,
   ): void => {
-    assertProgram(nextNode);
+    assertProgram(nextNode, PROGRAM_ID, 'Stage Scene');
     if (nextMaterializedAssets) {
       materializedAssets = nextMaterializedAssets;
     }

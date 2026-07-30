@@ -19,26 +19,17 @@ import {
   type WebGLRenderTarget,
   type WebGLRenderer,
 } from 'three';
+import {
+  asNumber,
+  asNonEmptyString as asString,
+  assertProgram,
+} from './program-input.js';
 import type { VizThreeProgramFactory } from './types.js';
 
 const PROGRAM_ID = 'viz-core/instanced-supercube/v1';
 const MAX_GRID_SIZE = 8;
 const MAX_CAPACITY = 8 * (12 * MAX_GRID_SIZE - 16);
 const SUB_CUBE_SIZE = 3 / 5;
-
-const asNumber = (value: unknown, fallback: number): number =>
-  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
-
-const asString = (value: unknown, fallback: string): string =>
-  typeof value === 'string' && value.length > 0 ? value : fallback;
-
-const assertProgram = (node: VizRenderThreeProgramNode): void => {
-  if (node.programId !== PROGRAM_ID) {
-    throw new Error(
-      `Instanced Supercube program cannot update incompatible program "${node.programId}".`,
-    );
-  }
-};
 
 const updateInstanceLayout = ({
   mesh,
@@ -105,7 +96,7 @@ export const createInstancedSupercubeProgram: VizThreeProgramFactory = ({
   width,
   height,
 }) => {
-  assertProgram(node);
+  assertProgram(node, PROGRAM_ID, 'Instanced Supercube');
 
   const scene = new Scene();
   scene.background = new Color(0x111111);
@@ -143,7 +134,7 @@ export const createInstancedSupercubeProgram: VizThreeProgramFactory = ({
 
   const dummy = new Object3D();
   const update = (nextNode: VizRenderThreeProgramNode): void => {
-    assertProgram(nextNode);
+    assertProgram(nextNode, PROGRAM_ID, 'Instanced Supercube');
     const parameters = nextNode.parameters;
     const gridSize = Math.min(
       MAX_GRID_SIZE,

@@ -13,6 +13,11 @@ import {
   type WebGLRenderTarget,
   type WebGLRenderer,
 } from 'three';
+import {
+  asNumber,
+  asNonEmptyString as asString,
+  assertProgram,
+} from './program-input.js';
 import type { VizThreeProgramFactory } from './types.js';
 
 const PROGRAM_ID = 'viz-core/orbiting-cubes/v1';
@@ -335,26 +340,12 @@ function generateSparseNeuron(
   }
 }
 
-const asNumber = (value: unknown, fallback: number): number =>
-  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
-
-const asString = (value: unknown, fallback: string): string =>
-  typeof value === 'string' && value.length > 0 ? value : fallback;
-
-const assertProgram = (node: VizRenderThreeProgramNode) => {
-  if (node.programId !== PROGRAM_ID) {
-    throw new Error(
-      `Orbiting Cubes program cannot update incompatible program "${node.programId}".`,
-    );
-  }
-};
-
 export const createOrbitingCubesProgram: VizThreeProgramFactory = ({
   node,
   width,
   height,
 }) => {
-  assertProgram(node);
+  assertProgram(node, PROGRAM_ID, 'Orbiting Cubes');
 
   const scene = new Scene();
   const root = new Group();
@@ -402,7 +393,7 @@ export const createOrbitingCubesProgram: VizThreeProgramFactory = ({
   let cubeData: CubeData[] = [];
 
   const update = (nextNode: VizRenderThreeProgramNode) => {
-    assertProgram(nextNode);
+    assertProgram(nextNode, PROGRAM_ID, 'Orbiting Cubes');
     const parameters = nextNode.parameters;
     const seed = Math.round(asNumber(parameters.seed, 3499));
     const maxCubes = Math.min(

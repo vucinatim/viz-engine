@@ -1736,3 +1736,19 @@
     builds, the production studio build, 53 foundation files / 223 tests, and
     all 7 real-browser journeys including model restore, graph authoring,
     persistence, nonblank still/video export, and bounded resource stability
+- completed the Goal Two editor-configuration and renderer-input checkpoint:
+  - replaced nine editor-only configuration subclasses with one typed
+    `ConfigParam` value abstraction while retaining distinct action and group
+    semantics
+  - centralized clone, validation, value projection, and form-control dispatch
+    without changing the component-authoring factories or editor-facing
+    behavior
+  - added a direct regression contract for every setting kind, animation
+    eligibility, validation, nested clone isolation, and null-valued actions
+  - moved repeated renderer program parameter coercion, deterministic string
+    hashing, and program-identity assertions into one private renderer helper
+  - moved production source from 71,579 to 71,218 lines and the maintained diff
+    against the immutable Goal Two baseline to 1,793 additions and 6,092
+    deletions, net -4,299
+  - passed focused editor configuration, portable component authoring, and
+    renderer tests plus strict lint and package/app type checking

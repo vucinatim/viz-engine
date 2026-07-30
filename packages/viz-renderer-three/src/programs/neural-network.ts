@@ -25,6 +25,13 @@ import {
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { createVizThreePostProcessingPipeline } from './post-processing.js';
+import {
+  asBoolean,
+  asNumber,
+  asRecord,
+  asString,
+  assertProgram,
+} from './program-input.js';
 import type { VizThreeProgramFactory } from './types.js';
 
 const PROGRAM_ID = 'viz-core/neural-network/v1';
@@ -156,20 +163,6 @@ const signalFragmentShader = `
   }
 `;
 
-const asNumber = (value: unknown, fallback: number): number =>
-  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
-
-const asBoolean = (value: unknown, fallback: boolean): boolean =>
-  typeof value === 'boolean' ? value : fallback;
-
-const asString = (value: unknown, fallback: string): string =>
-  typeof value === 'string' ? value : fallback;
-
-const asRecord = (value: unknown): Record<string, unknown> =>
-  value !== null && typeof value === 'object' && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-
 const readTriggerEvents = (value: unknown): TriggerEvent[] =>
   Array.isArray(value)
     ? value.flatMap((entry) => {
@@ -184,14 +177,6 @@ const readTriggerEvents = (value: unknown): TriggerEvent[] =>
         ];
       })
     : [];
-
-const assertProgram = (node: VizRenderThreeProgramNode): void => {
-  if (node.programId !== PROGRAM_ID) {
-    throw new Error(
-      `Neural Network program cannot update incompatible program "${node.programId}".`,
-    );
-  }
-};
 
 class SeededRandom {
   private seed: number;
@@ -473,7 +458,7 @@ export const createNeuralNetworkProgram: VizThreeProgramFactory = ({
   width,
   height,
 }) => {
-  assertProgram(node);
+  assertProgram(node, PROGRAM_ID, 'Neural Network');
 
   const scene = new Scene();
   const root = new Group();
@@ -789,7 +774,7 @@ export const createNeuralNetworkProgram: VizThreeProgramFactory = ({
   };
 
   const update = (nextNode: VizRenderThreeProgramNode): void => {
-    assertProgram(nextNode);
+    assertProgram(nextNode, PROGRAM_ID, 'Neural Network');
     const parameters = nextNode.parameters;
     updateStructure(parameters);
     applyMaterialSettings(parameters);

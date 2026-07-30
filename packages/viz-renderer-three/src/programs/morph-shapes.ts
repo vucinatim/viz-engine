@@ -39,6 +39,14 @@ import {
 } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { TTFLoader } from 'three/examples/jsm/loaders/TTFLoader.js';
 import { MeshSurfaceSampler } from 'three/examples/jsm/math/MeshSurfaceSampler.js';
+import {
+  asBoolean,
+  asNumber,
+  asRecord,
+  asString,
+  assertProgram,
+  hashString,
+} from './program-input.js';
 import type { VizThreeProgramFactory } from './types.js';
 
 const PROGRAM_ID = 'viz-core/morph-shapes/v1';
@@ -61,20 +69,6 @@ interface ShapeDescriptor {
 interface DeterministicMeshSurfaceSampler extends MeshSurfaceSampler {
   setRandomGenerator(random: () => number): this;
 }
-
-const asNumber = (value: unknown, fallback: number): number =>
-  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
-
-const asBoolean = (value: unknown, fallback: boolean): boolean =>
-  typeof value === 'boolean' ? value : fallback;
-
-const asString = (value: unknown, fallback: string): string =>
-  typeof value === 'string' ? value : fallback;
-
-const asRecord = (value: unknown): Record<string, unknown> =>
-  value !== null && typeof value === 'object' && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
 
 const asVectorTuple = (
   value: unknown,
@@ -139,23 +133,6 @@ const readShapeDescriptor = (
     position: asVectorTuple(shape.position, [0, 0, 0]),
     rotationDegrees: asVectorTuple(shape.rotationDegrees, [0, 0, 0]),
   };
-};
-
-const assertProgram = (node: VizRenderThreeProgramNode): void => {
-  if (node.programId !== PROGRAM_ID) {
-    throw new Error(
-      `Morph Shapes program cannot update incompatible program "${node.programId}".`,
-    );
-  }
-};
-
-const hashString = (value: string): number => {
-  let hash = 2166136261;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
 };
 
 const createSeededRandom = (seed: string): (() => number) => {
@@ -515,7 +492,7 @@ export const createMorphShapesProgram: VizThreeProgramFactory = ({
   materializedAssets: initialMaterializedAssets,
   invalidate,
 }) => {
-  assertProgram(node);
+  assertProgram(node, PROGRAM_ID, 'Morph Shapes');
 
   const scene = new Scene();
   scene.background = new Color(0x111111);
@@ -805,7 +782,7 @@ export const createMorphShapesProgram: VizThreeProgramFactory = ({
     nextNode: VizRenderThreeProgramNode,
     nextMaterializedAssets?: ReadonlyMap<string, VizMaterializedAsset>,
   ): void => {
-    assertProgram(nextNode);
+    assertProgram(nextNode, PROGRAM_ID, 'Morph Shapes');
     lastNode = nextNode;
     if (nextMaterializedAssets) {
       materializedAssets = nextMaterializedAssets;

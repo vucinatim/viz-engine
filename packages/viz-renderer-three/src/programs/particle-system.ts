@@ -18,6 +18,13 @@ import {
   type WebGLRenderTarget,
   type WebGLRenderer,
 } from 'three';
+import {
+  asBoolean,
+  asNumber,
+  asNonEmptyString as asString,
+  assertProgram,
+  hashString,
+} from './program-input.js';
 import type { VizThreeProgramFactory } from './types.js';
 
 const PROGRAM_ID = 'viz-core/particle-system/v1';
@@ -42,24 +49,6 @@ const fragmentShader = `
   }
 `;
 
-const asNumber = (value: unknown, fallback: number): number =>
-  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
-
-const asString = (value: unknown, fallback: string): string =>
-  typeof value === 'string' && value.length > 0 ? value : fallback;
-
-const asBoolean = (value: unknown, fallback: boolean): boolean =>
-  typeof value === 'boolean' ? value : fallback;
-
-const hashString = (value: string): number => {
-  let hash = 2166136261;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
-};
-
 const random01 = (seed: number, particleIndex: number, channel: number) => {
   let value =
     seed ^
@@ -79,20 +68,12 @@ const blendingModes: Record<string, Blending> = {
   multiply: MultiplyBlending,
 };
 
-const assertProgram = (node: VizRenderThreeProgramNode) => {
-  if (node.programId !== PROGRAM_ID) {
-    throw new Error(
-      `Particle System program cannot update incompatible program "${node.programId}".`,
-    );
-  }
-};
-
 export const createParticleSystemProgram: VizThreeProgramFactory = ({
   node,
   width,
   height,
 }) => {
-  assertProgram(node);
+  assertProgram(node, PROGRAM_ID, 'Particle System');
 
   const scene = new Scene();
   scene.background = new Color(0x0a0a0a);
@@ -134,7 +115,7 @@ export const createParticleSystemProgram: VizThreeProgramFactory = ({
   const particleColor = new Color();
 
   const update = (nextNode: VizRenderThreeProgramNode) => {
-    assertProgram(nextNode);
+    assertProgram(nextNode, PROGRAM_ID, 'Particle System');
     const parameters = nextNode.parameters;
     const time = Math.max(0, asNumber(parameters.time, 0));
     const emissionRate = Math.max(0, asNumber(parameters.emissionRate, 100));

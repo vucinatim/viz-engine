@@ -11,30 +11,21 @@ import {
   type WebGLRenderTarget,
   type WebGLRenderer,
 } from 'three';
+import {
+  asNumber,
+  asNonEmptyString as asString,
+  assertProgram,
+} from './program-input.js';
 import type { VizThreeProgramFactory } from './types.js';
 
 const PROGRAM_ID = 'viz-core/simple-cube/v1';
-
-const asNumber = (value: unknown, fallback: number): number =>
-  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
-
-const asString = (value: unknown, fallback: string): string =>
-  typeof value === 'string' && value.length > 0 ? value : fallback;
-
-const assertProgram = (node: VizRenderThreeProgramNode) => {
-  if (node.programId !== PROGRAM_ID) {
-    throw new Error(
-      `Simple Cube program cannot update incompatible program "${node.programId}".`,
-    );
-  }
-};
 
 export const createSimpleCubeProgram: VizThreeProgramFactory = ({
   node,
   width,
   height,
 }) => {
-  assertProgram(node);
+  assertProgram(node, PROGRAM_ID, 'Simple Cube');
 
   const scene = new Scene();
   const root = new Group();
@@ -58,7 +49,7 @@ export const createSimpleCubeProgram: VizThreeProgramFactory = ({
   scene.add(root);
 
   const update = (nextNode: VizRenderThreeProgramNode) => {
-    assertProgram(nextNode);
+    assertProgram(nextNode, PROGRAM_ID, 'Simple Cube');
     const parameters = nextNode.parameters;
     const size = Math.max(0.1, asNumber(parameters.size, 1.5));
     cube.scale.setScalar(size);

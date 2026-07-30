@@ -1,33 +1,59 @@
 import Color from 'color';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Button } from '../ui/button';
 import { ColorPickerPopover } from '../ui/color-picker';
 import FileInput, { type FileInputSelection } from '../ui/file-input';
 import { Input } from '../ui/input';
 import { ListEditor } from '../ui/list-editor';
-import { SimpleSelect } from '../ui/select'; // Assuming you have a Select component
-import { Slider } from '../ui/slider'; // Assuming this is your custom slider component
+import { SimpleSelect } from '../ui/select';
+import { Slider } from '../ui/slider';
 import { Switch } from '../ui/switch';
 import Vector3Input from '../ui/vector3-input';
 import type { AnimInputData } from './node-types';
 import { VType } from './types';
 
-// Base interface for config metadata
 interface ConfigMeta {
   label: string;
   description?: string;
-  visibleIf?: (allValues: any) => boolean;
+  visibleIf?: (allValues: Record<string, unknown>) => boolean;
 }
 
-// Base class for all config options
+type Vector3 = { x: number; y: number; z: number };
+type ValueOptions<T> = ConfigMeta & { defaultValue: T };
+type NumberOptions = ValueOptions<number> & {
+  min: number;
+  max: number;
+  step?: number;
+};
+type Vector3Options = ValueOptions<Vector3> & {
+  min?: number;
+  max?: number;
+  step?: number;
+};
+type SelectOptions = ValueOptions<string> & { options: string[] };
+type FileOptions = ValueOptions<string> & { allowedExtensions?: string[] };
+type ListOptions<T> = ValueOptions<T[]> & {
+  itemConfig: ConfigParam<T>;
+  itemLabel?: string;
+};
+type ConfigParamOptions<T> =
+  | ValueOptions<T>
+  | NumberOptions
+  | Vector3Options
+  | SelectOptions
+  | FileOptions
+  | ListOptions<unknown>;
+
+const cloneValue = <T,>(value: T): T =>
+  typeof value === 'object' && value !== null ? structuredClone(value) : value;
+
 export abstract class BaseConfigOption<T> {
-  id: string;
+  id = '';
   label: string;
   description?: string;
-  visibleIf?: (allValues: any) => boolean;
+  visibleIf?: ConfigMeta['visibleIf'];
 
   constructor({ label, description, visibleIf }: ConfigMeta) {
-    this.id = ''; // This will be set deterministically
     this.label = label;
     this.description = description;
     this.visibleIf = visibleIf;
@@ -46,24 +72,19 @@ export abstract class BaseConfigOption<T> {
   ): ReactNode;
 }
 
-export abstract class ConfigParam<T> extends BaseConfigOption<T> {
-  isAnimatable: boolean;
-  value: T; // All config params have a value
-  type: VType;
+export class ConfigParam<T> extends BaseConfigOption<T> {
+  value: T;
 
   constructor(
-    options: ConfigMeta & { defaultValue: T },
-    type: VType,
-    isAnimatable: boolean = true,
+    readonly options: ConfigParamOptions<T>,
+    readonly type: VType,
+    public isAnimatable = true,
   ) {
     super(options);
-    this.isAnimatable = isAnimatable;
-    this.value = options.defaultValue;
-    this.type = type;
+    this.value = cloneValue(options.defaultValue) as T;
   }
 
-  getValue(inputData: AnimInputData): T {
-    void inputData;
+  getValue(_inputData: AnimInputData): T {
     return this.value;
   }
 
@@ -72,589 +93,289 @@ export abstract class ConfigParam<T> extends BaseConfigOption<T> {
   }
 
   getDefaultValue(): T {
-    return this.value;
-  }
-}
-
-// Vector3 Config Option
-type Vector3 = { x: number; y: number; z: number };
-type Vector3ConfigOptions = ConfigMeta & {
-  defaultValue: Vector3;
-  min?: number;
-  max?: number;
-  step?: number;
-};
-
-export class Vector3ConfigOption extends ConfigParam<Vector3> {
-  options: Vector3ConfigOptions;
-
-  constructor(options: Vector3ConfigOptions) {
-    super(options, VType.Vector3);
-    this.options = options;
+    return cloneValue(this.value);
   }
 
-  clone() {
-    return new Vector3ConfigOption({
+  clone(): ConfigParam<T> {
+    const options = {
       ...this.options,
-      defaultValue: { ...this.options.defaultValue },
-    });
+      defaultValue: cloneValue(this.value),
+      ...('itemConfig' in this.options
+        ? { itemConfig: this.options.itemConfig.clone() }
+        : {}),
+    } as ConfigParamOptions<T>;
+    return new ConfigParam(options, this.type, this.isAnimatable);
   }
 
-  toFormElement(value: Vector3, onChange: (value: Vector3) => void) {
-    return (
-      <Vector3Input
-        value={value}
-        onChange={(v) => {
-          this.value = v;
-          onChange(v);
-        }}
-        min={this.options.min}
-        max={this.options.max}
-        step={this.options.step}
-        labelSuffix={
-          this.label?.toLowerCase().includes('rotation') ? '°' : undefined
-        }
-      />
-    );
-  }
-}
-
-// Number Config Option
-type NumberConfigOptions = ConfigMeta & {
-  defaultValue: number;
-  min: number;
-  max: number;
-  step?: number;
-};
-
-export class NumberConfigOption extends ConfigParam<number> {
-  options: NumberConfigOptions;
-
-  constructor(options: NumberConfigOptions) {
-    super(options, VType.Number);
-    this.options = options;
-  }
-
-  clone() {
-    return new NumberConfigOption(this.options);
-  }
-
-  validate(value: number): boolean {
-    return value >= this.options.min && value <= this.options.max;
+  validate(value: T): boolean {
+    if (this.type === VType.Number) {
+      const options = this.options as NumberOptions;
+      const number = value as number;
+      return number >= options.min && number <= options.max;
+    }
+    if (this.type === VType.Color) {
+      try {
+        Color(value as string);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    if (this.type === VType.File) {
+      const file = value as string;
+      const allowed = (this.options as FileOptions).allowedExtensions ?? [];
+      if (!file || file.startsWith('asset:') || allowed.length === 0) {
+        return true;
+      }
+      try {
+        const pathname = new URL(file, 'http://local').pathname || file;
+        return allowed.some((extension) =>
+          pathname.toLowerCase().endsWith(extension),
+        );
+      } catch {
+        return allowed.some((extension) =>
+          file.toLowerCase().endsWith(extension),
+        );
+      }
+    }
+    if (this.type === VType.Select) {
+      return (this.options as SelectOptions).options.includes(value as string);
+    }
+    if (this.type === VType.List) {
+      const list = value as unknown[];
+      const item = (this.options as ListOptions<unknown>).itemConfig;
+      return (
+        Array.isArray(list) &&
+        list.every((entry) => !item.validate || item.validate(entry))
+      );
+    }
+    return true;
   }
 
   toFormElement(
-    value: number,
-    onChange: (value: number) => void,
+    value: T | null,
+    onChange: (value: T) => void,
     onDragStart?: () => void,
     onDragEnd?: () => void,
-  ) {
-    return (
-      <Slider
-        value={value}
-        className="w-full"
-        onChange={(val) => {
-          this.value = val;
-          onChange(val);
-        }}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-        min={this.options.min}
-        max={this.options.max}
-        step={this.options.step}
-      />
-    );
-  }
-}
+    onAssetSelect?: (selection: FileInputSelection) => Promise<T>,
+  ): ReactNode {
+    const commit = (next: unknown) => {
+      this.value = next as T;
+      onChange(next as T);
+    };
 
-// Color Config Option
-type ColorConfigOptions = ConfigMeta & {
-  defaultValue: string;
-};
-
-export class ColorConfigOption extends ConfigParam<string> {
-  options: ColorConfigOptions;
-
-  constructor(options: ColorConfigOptions) {
-    super(options, VType.Color);
-    this.options = options;
-  }
-
-  clone() {
-    return new ColorConfigOption(this.options);
-  }
-
-  validate(value: string): boolean {
-    // Accept any CSS color string supported by `color` lib (hex, hexa, rgb(a), hsl(a), named)
-    try {
-      // Will throw if invalid
-      Color(value);
-      return true;
-    } catch {
-      return false;
+    switch (this.type) {
+      case VType.Number: {
+        const options = this.options as NumberOptions;
+        return (
+          <Slider
+            value={value as number}
+            className="w-full"
+            onChange={commit}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            min={options.min}
+            max={options.max}
+            step={options.step}
+          />
+        );
+      }
+      case VType.Color:
+        return <ColorPickerPopover value={value as string} onChange={commit} />;
+      case VType.String:
+        return (
+          <Input
+            value={value as string}
+            onChange={(event) => commit(event.target.value)}
+          />
+        );
+      case VType.File: {
+        const options = this.options as FileOptions;
+        return (
+          <FileInput
+            value={value as string}
+            acceptExtensions={options.allowedExtensions}
+            onAssetSelect={async (selection) => {
+              if (!onAssetSelect) {
+                throw new Error(
+                  'File attachment is not available in this host.',
+                );
+              }
+              const next = await onAssetSelect(selection);
+              this.value = next;
+              return next as string;
+            }}
+            onChange={commit}
+          />
+        );
+      }
+      case VType.Boolean:
+        return (
+          <Switch checked={value as boolean} onClick={() => commit(!value)} />
+        );
+      case VType.Select:
+        return (
+          <SimpleSelect
+            value={value as string}
+            onChange={commit}
+            options={(this.options as SelectOptions).options}
+          />
+        );
+      case VType.Vector3: {
+        const options = this.options as Vector3Options;
+        return (
+          <Vector3Input
+            value={value as Vector3}
+            onChange={commit}
+            min={options.min}
+            max={options.max}
+            step={options.step}
+            labelSuffix={
+              this.label.toLowerCase().includes('rotation') ? '°' : undefined
+            }
+          />
+        );
+      }
+      case VType.List: {
+        const options = this.options as ListOptions<unknown>;
+        return (
+          <ListEditor<unknown>
+            value={(value as unknown[]) ?? options.defaultValue}
+            onChange={commit}
+            renderItem={(item, _index, onItemChange) =>
+              options.itemConfig.toFormElement(item, onItemChange)
+            }
+            createDefaultItem={() => options.itemConfig.getDefaultValue()}
+            itemLabel={options.itemLabel ?? options.itemConfig.label}
+          />
+        );
+      }
+      default:
+        return null;
     }
   }
-
-  toFormElement(value: string, onChange: (value: string) => void) {
-    return (
-      <ColorPickerPopover
-        value={value}
-        onChange={(val) => {
-          this.value = val;
-          onChange(val);
-        }}
-      />
-    );
-  }
 }
 
-// String Config Option
-type StringConfigOptions = ConfigMeta & {
-  defaultValue: string;
-};
-
-export class StringConfigOption extends ConfigParam<string> {
-  options: StringConfigOptions;
-
-  constructor(options: StringConfigOptions) {
-    super(options, VType.String);
-    this.options = options;
-  }
-
-  clone() {
-    return new StringConfigOption(this.options);
-  }
-
-  validate(_value: string): boolean {
-    return true; // No validation for string
-  }
-
-  toFormElement(value: string, onChange: (value: string) => void) {
-    return (
-      <Input
-        value={value}
-        onChange={(e) => {
-          this.value = e.target.value;
-          onChange(e.target.value);
-        }}
-      />
-    );
-  }
-}
-
-// Generic File (path/URL) Config Option with extension validation
-type FileConfigOptions = ConfigMeta & {
-  defaultValue: string; // file path or URL
-  allowedExtensions?: string[]; // e.g., ['.glb', '.gltf']
-};
-
-export class FileConfigOption extends ConfigParam<string> {
-  options: FileConfigOptions;
-
-  constructor(options: FileConfigOptions) {
-    super(options, VType.File, false);
-    this.options = options;
-  }
-
-  clone() {
-    return new FileConfigOption(this.options);
-  }
-
-  validate(value: string): boolean {
-    if (!value) return true; // empty allowed
-    if (value.startsWith('asset:')) return true;
-    const allowed = this.options.allowedExtensions || [];
-    if (allowed.length === 0) return true;
-    try {
-      const url = new URL(value, 'http://local');
-      const pathname = url.pathname || value;
-      const lower = pathname.toLowerCase();
-      return allowed.some((ext) => lower.endsWith(ext));
-    } catch {
-      const lower = value.toLowerCase();
-      return allowed.some((ext) => lower.endsWith(ext));
-    }
-  }
-
-  toFormElement(
-    value: string,
-    onChange: (value: string) => void,
-    _onDragStart?: () => void,
-    _onDragEnd?: () => void,
-    onAssetSelect?: (selection: FileInputSelection) => Promise<string>,
-  ) {
-    return (
-      <FileInput
-        value={value}
-        acceptExtensions={this.options.allowedExtensions}
-        onAssetSelect={async (selection) => {
-          if (!onAssetSelect) {
-            throw new Error('File attachment is not available in this host.');
-          }
-          const nextValue = await onAssetSelect(selection);
-          this.value = nextValue;
-          return nextValue;
-        }}
-        onChange={(val) => {
-          this.value = val;
-          onChange(val);
-        }}
-      />
-    );
-  }
-}
-
-// Boolean Config Option (Toggle)
-type BooleanConfigOptions = ConfigMeta & {
-  defaultValue: boolean;
-};
-
-export class BooleanConfigOption extends ConfigParam<boolean> {
-  options: BooleanConfigOptions;
-
-  constructor(options: BooleanConfigOptions) {
-    super(options, VType.Boolean);
-    this.options = options;
-  }
-
-  getValue(inputData: AnimInputData): boolean {
-    void inputData;
-    return this.value;
-  }
-
-  clone() {
-    return new BooleanConfigOption(this.options);
-  }
-
-  toFormElement(value: boolean, onChange: (value: boolean) => void) {
-    return (
-      <Switch
-        checked={value}
-        onClick={() => {
-          this.value = !value;
-          onChange(!value);
-        }}
-      />
-    );
-  }
-}
-
-// Select Config Option
-type SelectConfigOptions = ConfigMeta & {
-  defaultValue: string;
-  options: string[];
-};
-
-export class SelectConfigOption extends ConfigParam<string> {
-  options: SelectConfigOptions;
-
-  constructor(options: SelectConfigOptions) {
-    super(options, VType.Select);
-    this.options = options;
-  }
-
-  clone() {
-    return new SelectConfigOption(this.options);
-  }
-
-  validate(value: string): boolean {
-    return this.options.options.some((option) => option === value);
-  }
-
-  toFormElement(value: string, onChange: (value: string) => void) {
-    return (
-      <SimpleSelect
-        value={value}
-        onChange={(val) => {
-          this.value = val;
-          onChange(val);
-        }}
-        options={this.options.options}
-      />
-    );
-  }
-}
-
-// Button Config Option (Action/Trigger)
 type ButtonConfigOptions = ConfigMeta & {
   buttonLabel?: string;
   onPress: () => void;
 };
 
 export class ButtonConfigOption extends BaseConfigOption<null> {
-  options: ButtonConfigOptions;
   onPress: () => void;
 
-  constructor(options: ButtonConfigOptions) {
+  constructor(readonly options: ButtonConfigOptions) {
     super(options);
-    this.options = options;
     this.onPress = options.onPress;
   }
 
-  getValue(_inputData: AnimInputData): null {
-    return null; // Buttons don't have a value
+  getValue(): null {
+    return null;
   }
 
-  setValue(_value: null): void {
-    // Buttons don't have a value to set
-  }
+  setValue(): void {}
 
   getDefaultValue(): null {
     return null;
   }
 
-  clone() {
+  clone(): ButtonConfigOption {
     return new ButtonConfigOption(this.options);
   }
 
-  toFormElement(_value: null, _onChange: (value: null) => void) {
+  toFormElement(_value?: null, _onChange?: (value: null) => void): ReactNode {
     return (
-      <Button
-        onClick={() => {
-          this.onPress();
-        }}
-        variant="outline"
-        className="w-full">
-        {this.options.buttonLabel || this.label}
+      <Button onClick={this.onPress} variant="outline" className="w-full">
+        {this.options.buttonLabel ?? this.label}
       </Button>
     );
   }
 }
 
-// List Config Option - Generic wrapper for any config type
-type ListConfigOptions<T> = ConfigMeta & {
-  defaultValue: T[];
-  itemConfig: ConfigParam<T>;
-  itemLabel?: string;
+type ConfigOptions = Record<string, BaseConfigOption<unknown>>;
+
+const cloneOptions = <T extends ConfigOptions>(options: T): T =>
+  Object.fromEntries(
+    Object.entries(options).map(([key, option]) => [key, option.clone()]),
+  ) as T;
+
+const getOptionValues = (
+  options: ConfigOptions,
+  inputData: AnimInputData,
+): Record<string, unknown> =>
+  Object.fromEntries(
+    Object.entries(options).map(([key, option]) => [
+      key,
+      option.getValue(inputData),
+    ]),
+  );
+
+const setOptionValues = (
+  options: ConfigOptions,
+  values: Record<string, unknown>,
+): void => {
+  for (const [key, value] of Object.entries(values)) {
+    options[key]?.setValue(value);
+  }
 };
 
-export class ListConfigOption<T> extends ConfigParam<T[]> {
-  options: ListConfigOptions<T>;
-  itemConfig: ConfigParam<T>;
-
-  constructor(options: ListConfigOptions<T>) {
-    super(options, VType.List, false); // Lists are not animatable by default
-    this.options = options;
-    this.itemConfig = options.itemConfig;
-  }
-
-  clone() {
-    return new ListConfigOption({
-      ...this.options,
-      defaultValue: [...this.options.defaultValue],
-      itemConfig: this.itemConfig.clone() as ConfigParam<T>,
-    });
-  }
-
-  validate(value: T[]): boolean {
-    if (!Array.isArray(value)) return false;
-    // Validate each item using the item config's validation if available
-    return value.every((item) => {
-      if (
-        'validate' in this.itemConfig &&
-        typeof this.itemConfig.validate === 'function'
-      ) {
-        return this.itemConfig.validate(item);
-      }
-      return true;
-    });
-  }
-
-  toFormElement(value: T[], onChange: (value: T[]) => void) {
-    // Ensure value is always an array
-    const safeValue = value ?? this.options.defaultValue ?? [];
-
-    return (
-      <ListEditor<T>
-        value={safeValue}
-        onChange={(newValue) => {
-          this.value = newValue;
-          onChange(newValue);
-        }}
-        renderItem={(item, index, onItemChange) =>
-          this.itemConfig.toFormElement(item, onItemChange)
-        }
-        createDefaultItem={() => this.itemConfig.getDefaultValue()}
-        itemLabel={this.options.itemLabel || this.itemConfig.label}
-      />
-    );
-  }
-}
-
-// Group Config Option
 export class GroupConfigOption<
-  T extends Record<string, BaseConfigOption<any>>,
+  T extends Record<string, BaseConfigOption<unknown>>,
 > extends BaseConfigOption<T> {
-  options: T;
-
-  constructor(meta: ConfigMeta, options: T) {
+  constructor(
+    meta: ConfigMeta,
+    readonly options: T,
+  ) {
     super(meta);
-    this.options = options;
   }
 
-  getOptions() {
+  getOptions(): T {
     return this.options;
   }
 
-  getValue(inputData: AnimInputData) {
-    const values: Partial<{ [K in keyof T]: any }> = {};
-    for (const key in this.options) {
-      if (Object.hasOwn(this.options, key)) {
-        const option = this.options[key];
-        // Buttons are editor actions, not runtime or persisted values.
-        if (option instanceof ButtonConfigOption) {
-          values[key] = null;
-        } else {
-          values[key] = option.getValue(inputData);
-        }
-      }
-    }
-    return values as T;
+  getValue(inputData: AnimInputData): T {
+    return getOptionValues(this.options, inputData) as T;
   }
 
-  setValue(value: T) {
-    for (const key in value) {
-      if (Object.hasOwn(value, key) && Object.hasOwn(this.options, key)) {
-        this.options[key].setValue(value[key]);
-      }
-    }
+  setValue(value: T): void {
+    setOptionValues(this.options, value);
   }
 
-  getDefaultValue() {
-    const defaults: Partial<{ [K in keyof T]: any }> = {};
-    for (const key in this.options) {
-      if (Object.hasOwn(this.options, key)) {
-        const option = this.options[key];
-        // Buttons are editor actions, not runtime or persisted values.
-        if (option instanceof ButtonConfigOption) {
-          defaults[key] = null;
-        } else {
-          defaults[key] = option.getDefaultValue();
-        }
-      }
-    }
-    return defaults as T;
+  getDefaultValue(): T {
+    return getOptionValues(this.options, {} as AnimInputData) as T;
   }
 
   clone(): GroupConfigOption<T> {
-    const clonedOptions: Partial<T> = {};
-    for (const key in this.options) {
-      if (Object.hasOwn(this.options, key)) {
-        clonedOptions[key as keyof T] = this.options[
-          key
-        ].clone() as T[typeof key];
-      }
-    }
-    return new GroupConfigOption(this, clonedOptions as T);
+    return new GroupConfigOption(this, cloneOptions(this.options));
   }
 
-  rehydrate(persistedConfig: GroupConfigOption<T>): GroupConfigOption<T> {
-    for (const key in this.options) {
-      const option = this.options[key];
-      const persistedOption = persistedConfig.options[key];
-
-      if (
-        option instanceof GroupConfigOption &&
-        persistedOption instanceof GroupConfigOption
-      ) {
-        option.rehydrate(persistedOption);
-      } else if (
-        option instanceof ConfigParam &&
-        persistedOption instanceof ConfigParam
-      ) {
-        option.setValue((persistedOption as ConfigParam<any>).value);
-      }
-    }
-    return this;
-  }
-
-  toFormElement() {
+  toFormElement(): null {
     return null;
   }
 }
 
-// VConfig class that holds the options
-export class VConfig<T extends Record<string, BaseConfigOption<any>>> {
-  options: T;
-
-  constructor(options: T) {
-    this.options = options;
-  }
+export class VConfig<T extends ConfigOptions> {
+  constructor(readonly options: T) {}
 
   clone(): VConfig<T> {
-    const clonedOptions: Partial<T> = {};
-    for (const key in this.options) {
-      if (Object.hasOwn(this.options, key)) {
-        clonedOptions[key as keyof T] = this.options[
-          key as keyof T
-        ].clone() as T[typeof key];
-      }
-    }
-    return new VConfig(clonedOptions as T);
-  }
-
-  rehydrate(persistedConfig: VConfig<T>): VConfig<T> {
-    for (const key in this.options) {
-      const option = this.options[key];
-      const persistedOption = persistedConfig.options[key];
-
-      if (
-        option instanceof GroupConfigOption &&
-        persistedOption instanceof GroupConfigOption
-      ) {
-        option.rehydrate(persistedOption);
-      } else if (
-        option instanceof ConfigParam &&
-        persistedOption instanceof ConfigParam
-      ) {
-        option.setValue((persistedOption as ConfigParam<any>).value);
-      }
-    }
-    return this;
+    return new VConfig(cloneOptions(this.options));
   }
 
   getValues(inputData: AnimInputData): InferValues<VConfig<T>> {
-    const values: Partial<InferValues<VConfig<T>>> = {};
-    for (const key in this.options) {
-      if (Object.hasOwn(this.options, key)) {
-        const option = this.options[key];
-        // Buttons are editor actions, not runtime or persisted values.
-        if (option instanceof ButtonConfigOption) {
-          values[key] = null as any;
-        } else {
-          values[key] = option.getValue(inputData);
-        }
-      }
-    }
-    return values as InferValues<VConfig<T>>;
+    return getOptionValues(this.options, inputData) as InferValues<VConfig<T>>;
   }
 
-  setValues(values: InferValues<VConfig<T>>) {
-    for (const key in values) {
-      if (Object.hasOwn(values, key) && Object.hasOwn(this.options, key)) {
-        this.options[key].setValue(values[key]);
-      }
-    }
+  setValues(values: InferValues<VConfig<T>>): void {
+    setOptionValues(this.options, values);
   }
 
   getDefaultValues(): InferValues<VConfig<T>> {
-    const defaults: Partial<InferValues<VConfig<T>>> = {};
-    for (const key in this.options) {
-      if (Object.hasOwn(this.options, key)) {
-        const option = this.options[key];
-        // Buttons are editor actions, not runtime or persisted values.
-        if (option instanceof ButtonConfigOption) {
-          defaults[key] = null as any;
-        } else {
-          defaults[key] = option.getDefaultValue();
-        }
-      }
-    }
-    return defaults as InferValues<VConfig<T>>;
+    return getOptionValues(this.options, {} as AnimInputData) as InferValues<
+      VConfig<T>
+    >;
   }
 }
 
-// Recursive type inference that flattens groups and returns the final types
 export type InferValues<T> =
   T extends VConfig<infer U>
     ? {
@@ -668,28 +389,27 @@ export type InferValues<T> =
       }
     : never;
 
-export type VConfigType = VConfig<Record<string, BaseConfigOption<any>>>;
+export type VConfigType = VConfig<ConfigOptions>;
 
-// Factory for creating config options
 export const v = {
-  number: (options: NumberConfigOptions) => new NumberConfigOption(options),
-  color: (options: ColorConfigOptions) => new ColorConfigOption(options),
-  text: (options: StringConfigOptions) => new StringConfigOption(options),
-  toggle: (options: BooleanConfigOptions) => new BooleanConfigOption(options),
-  select: (options: SelectConfigOptions) => new SelectConfigOption(options),
-  file: (options: FileConfigOptions) => new FileConfigOption(options),
-  vector3: (options: Vector3ConfigOptions) => new Vector3ConfigOption(options),
+  number: (options: NumberOptions) => new ConfigParam(options, VType.Number),
+  color: (options: ValueOptions<string>) =>
+    new ConfigParam(options, VType.Color),
+  text: (options: ValueOptions<string>) =>
+    new ConfigParam(options, VType.String),
+  toggle: (options: ValueOptions<boolean>) =>
+    new ConfigParam(options, VType.Boolean),
+  select: (options: SelectOptions) => new ConfigParam(options, VType.Select),
+  file: (options: FileOptions) => new ConfigParam(options, VType.File, false),
+  vector3: (options: Vector3Options) => new ConfigParam(options, VType.Vector3),
   button: (options: ButtonConfigOptions) => new ButtonConfigOption(options),
-  list<T = any>(options: ListConfigOptions<T>) {
-    return new ListConfigOption<T>(options);
+  list<T>(options: ListOptions<T>) {
+    return new ConfigParam<T[]>(options, VType.List, false);
   },
-  group<T extends Record<string, BaseConfigOption<any>>>(
-    meta: ConfigMeta,
-    options: T,
-  ) {
+  group<T extends ConfigOptions>(meta: ConfigMeta, options: T) {
     return new GroupConfigOption(meta, options);
   },
-  config<T extends Record<string, BaseConfigOption<any>>>(options: T) {
+  config<T extends ConfigOptions>(options: T) {
     return new VConfig(options);
   },
 };
