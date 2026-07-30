@@ -9,19 +9,13 @@ import ffmpegWasmURL from '@ffmpeg/core/wasm?url';
 import ffmpegCoreURL from '@ffmpeg/core?url';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
-import useExportStore from '../stores/export-store';
 
-// Helper to add logs to the export store
 const log = (
   type: 'info' | 'success' | 'warning' | 'error' | 'perf',
   message: string,
   details?: string,
   duration?: number,
 ) => {
-  const exportStore = useExportStore.getState();
-  exportStore.addLog({ type, message, details, duration });
-
-  // Also log to console for debugging
   const prefix = `[Encoder]`;
   const fullMessage = details ? `${message} - ${details}` : message;
   const durationStr = duration ? ` (${duration}ms)` : '';
@@ -197,8 +191,7 @@ export async function encodeVideoWithProbe(
 
   // Helper to check for cancellation
   const checkCancellation = () =>
-    runtime.signal?.aborted === true ||
-    (runtime.shouldCancel?.() ?? useExportStore.getState().shouldCancel);
+    runtime.signal?.aborted === true || runtime.shouldCancel?.() === true;
 
   try {
     // Write all frames to FFmpeg's virtual filesystem
@@ -526,23 +519,6 @@ export const parseEncodedVideoProbe = (
   };
 };
 
-export async function encodeVideo(
-  frames: Blob[],
-  audioUrl: string | null,
-  options: VideoEncodingOptions,
-  onProgress?: (progress: number) => void,
-  runtime?: VideoEncodingRuntimeOptions,
-): Promise<Blob> {
-  const result = await encodeVideoWithProbe(
-    frames,
-    audioUrl,
-    options,
-    onProgress,
-    runtime,
-  );
-  return result.blob;
-}
-
 /**
  * Get quality settings for FFmpeg based on quality preset
  */
@@ -577,21 +553,6 @@ function getQualitySettings(
         return ['-b:v', '500k', '-quality', 'realtime', '-cpu-used', '5'];
     }
   }
-}
-
-/**
- * Download encoded video
- */
-export function downloadVideo(
-  blob: Blob,
-  filename: string = 'export.mp4',
-): void {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
 }
 
 /**

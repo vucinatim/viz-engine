@@ -1,122 +1,81 @@
-import { defineVizComponentAuthoring, v } from './schema.js';
+import { defineVizComponentAuthoring, field, v } from './schema.js';
 
-const commonSettingsConfig = v.group(
+const commonSettingsConfig = field.group(
+  'Scaling Settings',
+  'Settings related to scaling and frequency display',
   {
-    label: 'Scaling Settings',
-    description: 'Settings related to scaling and frequency display',
-  },
-  {
-    scaleY: v.number({
-      label: 'Y Scale',
-      description: 'Scale factor for amplitude visualization',
-      defaultValue: 0.8,
-      step: 0.1,
-      min: 0,
-      max: 1,
-    }),
-    minFrequency: v.number({
-      label: 'Min Frequency',
-      description: 'Minimum frequency displayed',
-      defaultValue: 20,
-      step: 1,
-      min: 20,
-      max: 22050,
-    }),
-    maxFrequency: v.number({
-      label: 'Max Frequency',
-      description: 'Maximum frequency displayed',
-      defaultValue: 22050,
-      step: 1,
-      min: 20,
-      max: 22050,
-    }),
+    scaleY: field.number(
+      'Y Scale',
+      0.8,
+      [0, 1, 0.1],
+      'Scale factor for amplitude visualization',
+    ),
+    minFrequency: field.number(
+      'Min Frequency',
+      20,
+      [20, 22050, 1],
+      'Minimum frequency displayed',
+    ),
+    maxFrequency: field.number(
+      'Max Frequency',
+      22050,
+      [20, 22050, 1],
+      'Maximum frequency displayed',
+    ),
   },
 );
 
-const gridSettingsConfig = v.group(
+const gridSettingsConfig = field.group(
+  'Grid Settings',
+  'Settings for the grid lines',
   {
-    label: 'Grid Settings',
-    description: 'Settings for the grid lines',
-  },
-  {
-    color: v.color({
-      label: 'Color',
-      description: 'Color of the grid lines',
-      defaultValue: '#ccc',
-    }),
-    freqLines: v.number({
-      label: 'Frequency Lines',
-      description: 'Number of frequency lines',
-      defaultValue: 10,
-      step: 1,
-      min: 0,
-      max: 50,
-    }),
-    ampLines: v.number({
-      label: 'Amplitude Lines',
-      description: 'Number of amplitude lines',
-      defaultValue: 5,
-      step: 1,
-      min: 0,
-      max: 10,
-    }),
+    color: field.color('Color', '#ccc', 'Color of the grid lines'),
+    freqLines: field.number(
+      'Frequency Lines',
+      10,
+      [0, 50, 1],
+      'Number of frequency lines',
+    ),
+    ampLines: field.number(
+      'Amplitude Lines',
+      5,
+      [0, 10, 1],
+      'Number of amplitude lines',
+    ),
   },
 );
 
-const lineSettingsConfig = v.group(
+const lineSettingsConfig = field.group(
+  'Line Settings',
+  'Settings for the curve',
   {
-    label: 'Line Settings',
-    description: 'Settings for the curve',
-  },
-  {
-    smoothing: v.toggle({
-      label: 'Smoothing',
-      description: 'Apply smoothing to the audio data',
-      defaultValue: true,
-    }),
-    color: v.color({
-      label: 'Line Color',
-      description: 'Color of the curve',
-      defaultValue: 'white',
-    }),
-    thickness: v.number({
-      label: 'Line Thickness',
-      description: 'Thickness of the curve',
-      defaultValue: 1,
-      step: 1,
-      min: 0,
-      max: 10,
-    }),
-    gradientHeight: v.number({
-      label: 'Gradient Height',
-      description: 'Height of the gradient',
-      defaultValue: 0.8,
-      step: 0.1,
-      min: 0,
-      max: 1,
-    }),
+    smoothing: field.toggle(
+      'Smoothing',
+      true,
+      'Apply smoothing to the audio data',
+    ),
+    color: field.color('Line Color', 'white', 'Color of the curve'),
+    thickness: field.number(
+      'Line Thickness',
+      1,
+      [0, 10, 1],
+      'Thickness of the curve',
+    ),
+    gradientHeight: field.number(
+      'Gradient Height',
+      0.8,
+      [0, 1, 0.1],
+      'Height of the gradient',
+    ),
   },
 );
 
-const pointSettingsConfig = v.group(
+const pointSettingsConfig = field.group(
+  'Point Settings',
+  'Settings for the points',
   {
-    label: 'Point Settings',
-    description: 'Settings for the points',
-  },
-  {
-    pointColor: v.color({
-      label: 'Point Color',
-      description: 'Color of the points',
-      defaultValue: 'white',
-    }),
-    pointSize: v.number({
-      label: 'Point Size',
-      description: 'Size of the points',
-      defaultValue: 3,
-      step: 1,
-      min: 0,
-      max: 10,
-    }),
+    pointColor: field.color('Point Color', 'white', 'Color of the points'),
+    pointSize: field.number('Point Size', 3, [0, 10, 1], 'Size of the points'),
   },
 );
 

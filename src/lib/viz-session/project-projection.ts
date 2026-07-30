@@ -5,10 +5,7 @@ import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-
 import useEditorStore from '@/lib/stores/editor-store';
 import type { VizLayer, VizProjectDocument } from '@viz-engine/contracts';
 
-import {
-  createProjectedLayer,
-  findEditorCompForLayer,
-} from './project-adapters';
+import { findEditorCompForLayer } from './project-adapters';
 
 export const resolveEditorComp = (
   layer: Pick<VizLayer, 'componentId' | 'name'>,
@@ -24,26 +21,9 @@ export const getEditorParameterIds = (layer: VizLayer): string[] => {
 
 export const syncEditorProjection = (project: VizProjectDocument): void => {
   const editorStore = useEditorStore.getState();
-  const layersById = new Map(project.layers.map((layer) => [layer.id, layer]));
-  const orderedLayers = [
-    ...project.layerOrder
-      .map((layerId) => layersById.get(layerId))
-      .filter((layer): layer is VizLayer => layer !== undefined),
-    ...project.layers.filter((layer) => !project.layerOrder.includes(layer.id)),
-  ];
-
-  const projectedLayerIds = orderedLayers.flatMap((layer) => {
-    const comp = resolveEditorComp(layer);
-    if (!comp) {
-      return [];
-    }
-    createProjectedLayer({
-      layer,
-      comp,
-      uiState: editorStore.layerUi[layer.id],
-    });
-    return [layer.id];
-  });
+  const projectedLayerIds = project.layers
+    .filter((layer) => resolveEditorComp(layer) !== null)
+    .map((layer) => layer.id);
 
   useEditorRuntimePreviewAttachmentStore
     .getState()

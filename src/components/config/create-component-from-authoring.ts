@@ -1,5 +1,5 @@
+import { createVizSettingDefaults } from '@viz-engine/components-core';
 import type { VizComponentDefinition } from '@viz-engine/contracts';
-import { createSettingDefaults } from './config';
 import type { Comp } from './create-component';
 
 export const createEditorCompFromDefinition = (
@@ -18,7 +18,7 @@ export const createEditorCompFromDefinition = (
     name: definition.name,
     description: definition.description ?? '',
     authoring,
-    defaultValues: createSettingDefaults(authoring.settings),
+    defaultValues: createVizSettingDefaults(authoring.settings),
     ...(authoring.presets === undefined
       ? {}
       : { presets: structuredClone(authoring.presets) }),

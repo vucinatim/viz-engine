@@ -1,273 +1,158 @@
-import { defineVizComponentAuthoring, settingCondition, v } from './schema.js';
+import {
+  defineVizComponentAuthoring,
+  field,
+  settingCondition,
+  v,
+} from './schema.js';
+
+const shapeSettings = ({
+  label,
+  path,
+  defaultShape,
+  description,
+  rotationRange,
+}: {
+  label: string;
+  path: string;
+  defaultShape: string;
+  description: string;
+  rotationRange: readonly [number, number, number];
+}) => {
+  const whenShapeIs = (shape: string) =>
+    settingCondition(`${path}.shape`, 'equals', shape);
+
+  return field.group(label, undefined, {
+    shape: field.select(
+      'Shape',
+      defaultShape,
+      ['cube', 'pyramid', 'model', 'custom-text'],
+      description,
+    ),
+    textFontUrl: field.text(
+      'Font URL (.ttf)',
+      '',
+      'Optional TTF font URL (CORS-enabled, e.g., Google Fonts TTF) for custom text',
+      { visibleWhen: whenShapeIs('custom-text') },
+    ),
+    modelUrl: field.file(
+      'Model (.glb/.gltf)',
+      '',
+      ['.glb', '.gltf'],
+      'Path or URL when shape is set to model',
+      whenShapeIs('model'),
+    ),
+    text: field.text('Custom Text', '', 'Shown when shape is custom-text', {
+      visibleWhen: whenShapeIs('custom-text'),
+    }),
+    textSize: field.number(
+      'Text Size',
+      1,
+      [0.1, 10, 0.1],
+      'Font size of 3D text',
+      { visibleWhen: whenShapeIs('custom-text') },
+    ),
+    textDepth: field.number(
+      'Text Depth',
+      0.2,
+      [0.01, 2, 0.01],
+      'Extrusion depth of 3D text',
+      { visibleWhen: whenShapeIs('custom-text') },
+    ),
+    position: field.vector3(
+      'Position',
+      { x: 0, y: 0, z: 0 },
+      [-10, 10, 0.01],
+      'Offset in world units',
+    ),
+    rotation: field.vector3(
+      'Rotation (deg)',
+      { x: 0, y: 0, z: 0 },
+      rotationRange,
+      'Euler rotation in degrees',
+    ),
+  });
+};
 
 export const morphShapesAuthoring = defineVizComponentAuthoring({
   componentId: 'morph-shapes',
   compatibility: 'render-safe',
   config: v.config({
-    morphT: v.number({
-      label: 'Morph',
-      description: 'Morph between shapes',
-      defaultValue: 0,
-      min: 0,
-      max: 1,
-      step: 0.01,
-    }),
-    explosionShift: v.number({
-      label: 'Explosion Shift',
-      description: 'Explode outward along normals',
-      defaultValue: 0,
-      min: 0,
-      max: 100,
-      step: 0.1,
-    }),
-    animationSpeed: v.number({
-      label: 'Animation Speed',
-      description: 'Follow speed toward target',
-      defaultValue: 0.08,
-      min: 0.01,
-      max: 0.2,
-      step: 0.01,
-    }),
-    color: v.color({
-      label: 'Color',
-      defaultValue: 'rgb(0, 200, 255)',
-      description: 'Instance color',
-    }),
-    gridSize: v.number({
-      label: 'Grid Size',
-      description: 'Instance resolution of cube frame',
-      defaultValue: 5,
-      min: 1,
-      max: 100,
-      step: 1,
-    }),
-    modelPointCount: v.number({
-      label: 'Model Points',
-      description: 'Number of points for model shapes',
-      defaultValue: 15000,
-      min: 1,
-      max: 60000,
-      step: 10,
-    }),
-    modelEvenness: v.number({
-      label: 'Evenness',
-      description: 'Higher values push points apart more (blue-noise sampling)',
-      defaultValue: 0.7,
-      min: 0.2,
-      max: 1.0,
-      step: 0.05,
-    }),
-    sphereSize: v.number({
-      label: 'Sphere Size',
-      description: 'Radius of each sphere instance',
-      defaultValue: 0.15,
-      min: 0.01,
-      max: 1.0,
-      step: 0.01,
-    }),
-    additiveGlow: v.toggle({
-      label: 'Additive Glow',
-      description: 'Use additive blending and disable depth for glowy look',
-      defaultValue: false,
-    }),
-    glowIntensity: v.number({
-      label: 'Glow Intensity',
-      description: 'Boost factor for glow (emissive simulation)',
-      defaultValue: 1.0,
-      min: 0.2,
-      max: 5.0,
-      step: 0.1,
-    }),
-    rotation: v.group(
-      { label: 'Rotation', description: 'Rotate the whole shape' },
-      {
-        axis: v.vector3({
-          label: 'Axis',
-          description: 'Rotation axis as a vector',
-          defaultValue: { x: 0, y: 1, z: 0 },
-          min: -1,
-          max: 1,
-          step: 0.01,
-        }),
-        speed: v.number({
-          label: 'Speed',
-          description: 'Angular speed (radians/sec)',
-          defaultValue: 0.5,
-          min: -5,
-          max: 5,
-          step: 0.01,
-        }),
-      },
+    morphT: field.number('Morph', 0, [0, 1, 0.01], 'Morph between shapes'),
+    explosionShift: field.number(
+      'Explosion Shift',
+      0,
+      [0, 100, 0.1],
+      'Explode outward along normals',
     ),
-    shapeASettings: v.group(
-      { label: 'Shape A Settings' },
-      {
-        shape: v.select({
-          label: 'Shape',
-          description: 'Starting shape',
-          defaultValue: 'cube',
-          options: ['cube', 'pyramid', 'model', 'custom-text'],
-        }),
-        textFontUrl: v.text({
-          label: 'Font URL (.ttf)',
-          description:
-            'Optional TTF font URL (CORS-enabled, e.g., Google Fonts TTF) for custom text',
-          defaultValue: '',
-          visibleWhen: settingCondition(
-            'shapeASettings.shape',
-            'equals',
-            'custom-text',
-          ),
-        }),
-        modelUrl: v.file({
-          label: 'Model (.glb/.gltf)',
-          description: 'Path or URL when shape is set to model',
-          defaultValue: '',
-          allowedExtensions: ['.glb', '.gltf'],
-          visibleWhen: settingCondition(
-            'shapeASettings.shape',
-            'equals',
-            'model',
-          ),
-        }),
-        text: v.text({
-          label: 'Custom Text',
-          description: 'Shown when shape is custom-text',
-          defaultValue: '',
-          visibleWhen: settingCondition(
-            'shapeASettings.shape',
-            'equals',
-            'custom-text',
-          ),
-        }),
-        textSize: v.number({
-          label: 'Text Size',
-          description: 'Font size of 3D text',
-          defaultValue: 1,
-          min: 0.1,
-          max: 10,
-          step: 0.1,
-          visibleWhen: settingCondition(
-            'shapeASettings.shape',
-            'equals',
-            'custom-text',
-          ),
-        }),
-        textDepth: v.number({
-          label: 'Text Depth',
-          description: 'Extrusion depth of 3D text',
-          defaultValue: 0.2,
-          min: 0.01,
-          max: 2,
-          step: 0.01,
-          visibleWhen: settingCondition(
-            'shapeASettings.shape',
-            'equals',
-            'custom-text',
-          ),
-        }),
-        position: v.vector3({
-          label: 'Position',
-          description: 'Offset in world units',
-          defaultValue: { x: 0, y: 0, z: 0 },
-          min: -10,
-          max: 10,
-          step: 0.01,
-        }),
-        rotation: v.vector3({
-          label: 'Rotation (deg)',
-          description: 'Euler rotation in degrees',
-          defaultValue: { x: 0, y: 0, z: 0 },
-          min: -360,
-          max: 360,
-          step: 0.1,
-        }),
-      },
+    animationSpeed: field.number(
+      'Animation Speed',
+      0.08,
+      [0.01, 0.2, 0.01],
+      'Follow speed toward target',
     ),
-    shapeBSettings: v.group(
-      { label: 'Shape B Settings' },
-      {
-        shape: v.select({
-          label: 'Shape',
-          description: 'Target shape',
-          defaultValue: 'pyramid',
-          options: ['cube', 'pyramid', 'model', 'custom-text'],
-        }),
-        textFontUrl: v.text({
-          label: 'Font URL (.ttf)',
-          description:
-            'Optional TTF font URL (CORS-enabled, e.g., Google Fonts TTF) for custom text',
-          defaultValue: '',
-          visibleWhen: settingCondition(
-            'shapeBSettings.shape',
-            'equals',
-            'custom-text',
-          ),
-        }),
-        modelUrl: v.file({
-          label: 'Model (.glb/.gltf)',
-          description: 'Path or URL when shape is set to model',
-          defaultValue: '',
-          allowedExtensions: ['.glb', '.gltf'],
-          visibleWhen: settingCondition(
-            'shapeBSettings.shape',
-            'equals',
-            'model',
-          ),
-        }),
-        text: v.text({
-          label: 'Custom Text',
-          description: 'Shown when shape is custom-text',
-          defaultValue: '',
-          visibleWhen: settingCondition(
-            'shapeBSettings.shape',
-            'equals',
-            'custom-text',
-          ),
-        }),
-        textSize: v.number({
-          label: 'Text Size',
-          description: 'Font size of 3D text',
-          defaultValue: 1,
-          min: 0.1,
-          max: 10,
-          step: 0.1,
-          visibleWhen: settingCondition(
-            'shapeBSettings.shape',
-            'equals',
-            'custom-text',
-          ),
-        }),
-        textDepth: v.number({
-          label: 'Text Depth',
-          description: 'Extrusion depth of 3D text',
-          defaultValue: 0.2,
-          min: 0.01,
-          max: 2,
-          step: 0.01,
-          visibleWhen: settingCondition(
-            'shapeBSettings.shape',
-            'equals',
-            'custom-text',
-          ),
-        }),
-        position: v.vector3({
-          label: 'Position',
-          description: 'Offset in world units',
-          defaultValue: { x: 0, y: 0, z: 0 },
-          min: -10,
-          max: 10,
-          step: 0.01,
-        }),
-        rotation: v.vector3({
-          label: 'Rotation (deg)',
-          description: 'Euler rotation in degrees',
-          defaultValue: { x: 0, y: 0, z: 0 },
-          min: -180,
-          max: 180,
-          step: 0.1,
-        }),
-      },
+    color: field.color('Color', 'rgb(0, 200, 255)', 'Instance color'),
+    gridSize: field.number(
+      'Grid Size',
+      5,
+      [1, 100, 1],
+      'Instance resolution of cube frame',
     ),
+    modelPointCount: field.number(
+      'Model Points',
+      15000,
+      [1, 60000, 10],
+      'Number of points for model shapes',
+    ),
+    modelEvenness: field.number(
+      'Evenness',
+      0.7,
+      [0.2, 1.0, 0.05],
+      'Higher values push points apart more (blue-noise sampling)',
+    ),
+    sphereSize: field.number(
+      'Sphere Size',
+      0.15,
+      [0.01, 1.0, 0.01],
+      'Radius of each sphere instance',
+    ),
+    additiveGlow: field.toggle(
+      'Additive Glow',
+      false,
+      'Use additive blending and disable depth for glowy look',
+    ),
+    glowIntensity: field.number(
+      'Glow Intensity',
+      1.0,
+      [0.2, 5.0, 0.1],
+      'Boost factor for glow (emissive simulation)',
+    ),
+    rotation: field.group('Rotation', 'Rotate the whole shape', {
+      axis: field.vector3(
+        'Axis',
+        { x: 0, y: 1, z: 0 },
+        [-1, 1, 0.01],
+        'Rotation axis as a vector',
+      ),
+      speed: field.number(
+        'Speed',
+        0.5,
+        [-5, 5, 0.01],
+        'Angular speed (radians/sec)',
+      ),
+    }),
+    shapeASettings: shapeSettings({
+      label: 'Shape A Settings',
+      path: 'shapeASettings',
+      defaultShape: 'cube',
+      description: 'Starting shape',
+      rotationRange: [-360, 360, 0.1],
+    }),
+    shapeBSettings: shapeSettings({
+      label: 'Shape B Settings',
+      path: 'shapeBSettings',
+      defaultShape: 'pyramid',
+      description: 'Target shape',
+      rotationRange: [-180, 180, 0.1],
+    }),
   }),
 });

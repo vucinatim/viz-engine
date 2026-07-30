@@ -1,12 +1,11 @@
-// Zustand store for video export state
 import { create } from 'zustand';
 
 export interface ExportSettings {
   fps: number;
   width: number;
   height: number;
-  startTime: number; // in seconds
-  duration: number; // in seconds
+  startTime: number;
+  duration: number;
   format: 'mp4' | 'webm';
   quality: 'high' | 'medium' | 'low';
 }
@@ -17,7 +16,7 @@ export interface ExportProgress {
   phase: 'idle' | 'preparing' | 'rendering' | 'encoding' | 'complete' | 'error';
   message: string;
   percentage: number;
-  elapsedTime: number; // in seconds
+  elapsedTime: number;
 }
 
 export interface ExportLog {
@@ -26,35 +25,19 @@ export interface ExportLog {
   type: 'info' | 'success' | 'warning' | 'error' | 'perf';
   message: string;
   details?: string;
-  duration?: number; // milliseconds for performance logs
+  duration?: number;
 }
 
 interface ExportStore {
-  // Export state
   isExporting: boolean;
   progress: ExportProgress;
   settings: ExportSettings;
-
-  // Captured frames storage
-  capturedFrames: Blob[];
-
-  // Error handling
   error: string | null;
-
-  // Cancellation flag
-  shouldCancel: boolean;
-
-  // Logging
   logs: ExportLog[];
-
-  // Actions
   setIsExporting: (isExporting: boolean) => void;
   setProgress: (progress: Partial<ExportProgress>) => void;
   setSettings: (settings: Partial<ExportSettings>) => void;
-  addCapturedFrame: (frame: Blob) => void;
-  clearCapturedFrames: () => void;
   setError: (error: string | null) => void;
-  setShouldCancel: (shouldCancel: boolean) => void;
   resetExport: () => void;
   addLog: (log: Omit<ExportLog, 'id' | 'timestamp'>) => void;
   clearLogs: () => void;
@@ -64,8 +47,8 @@ const defaultSettings: ExportSettings = {
   fps: 60,
   width: 1920,
   height: 1080,
-  startTime: 0, // Start from beginning
-  duration: 30, // 30 seconds default
+  startTime: 0,
+  duration: 30,
   format: 'mp4',
   quality: 'high',
 };
@@ -83,9 +66,7 @@ const useExportStore = create<ExportStore>((set, get) => ({
   isExporting: false,
   progress: defaultProgress,
   settings: defaultSettings,
-  capturedFrames: [],
   error: null,
-  shouldCancel: false,
   logs: [],
 
   setIsExporting: (isExporting) => set({ isExporting }),
@@ -94,15 +75,11 @@ const useExportStore = create<ExportStore>((set, get) => ({
     const currentProgress = get().progress;
     const newProgress = { ...currentProgress, ...progressUpdate };
 
-    // Calculate percentage based on phase and frame count
-    // BUT: if percentage is explicitly provided in progressUpdate, use it
     let percentage = 0;
 
     if (progressUpdate.percentage !== undefined) {
-      // Explicit percentage provided (e.g., from FFmpeg encoding progress)
       percentage = progressUpdate.percentage;
     } else if (newProgress.totalFrames > 0) {
-      // Calculate based on phase
       switch (newProgress.phase) {
         case 'preparing':
           percentage = 5;
@@ -112,7 +89,6 @@ const useExportStore = create<ExportStore>((set, get) => ({
             5 + (newProgress.currentFrame / newProgress.totalFrames) * 80;
           break;
         case 'encoding':
-          // Default to 90% if no explicit progress provided during encoding
           percentage = 90;
           break;
         case 'complete':
@@ -123,10 +99,8 @@ const useExportStore = create<ExportStore>((set, get) => ({
       }
     }
 
-    // Clamp and ensure monotonically increasing progress
     percentage = Math.min(100, Math.max(0, percentage));
 
-    // CRITICAL: Never allow progress to go backwards (prevents jumpy progress bar)
     if (percentage < currentProgress.percentage) {
       percentage = currentProgress.percentage;
     }
@@ -140,17 +114,7 @@ const useExportStore = create<ExportStore>((set, get) => ({
     set({ settings: { ...currentSettings, ...settingsUpdate } });
   },
 
-  addCapturedFrame: (frame) => {
-    set((state) => ({
-      capturedFrames: [...state.capturedFrames, frame],
-    }));
-  },
-
-  clearCapturedFrames: () => set({ capturedFrames: [] }),
-
   setError: (error) => set({ error }),
-
-  setShouldCancel: (shouldCancel) => set({ shouldCancel }),
 
   addLog: (log) => {
     const newLog: ExportLog = {
@@ -169,9 +133,7 @@ const useExportStore = create<ExportStore>((set, get) => ({
     set({
       isExporting: false,
       progress: defaultProgress,
-      capturedFrames: [],
       error: null,
-      shouldCancel: false,
       logs: [],
     }),
 }));

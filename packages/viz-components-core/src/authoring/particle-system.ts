@@ -1,136 +1,107 @@
-import { defineVizComponentAuthoring, settingCondition, v } from './schema.js';
+import {
+  defineVizComponentAuthoring,
+  field,
+  settingCondition,
+  v,
+} from './schema.js';
 
 export const particleSystemAuthoring = defineVizComponentAuthoring({
   componentId: 'particle-system',
   compatibility: 'render-safe',
   config: v.config({
-    appearance: v.group(
-      { label: 'Appearance' },
-      {
-        startColor: v.color({
-          label: 'Start Color',
-          description: 'Particle color at birth',
-          defaultValue: '#ff00ff',
-        }),
-        endColor: v.color({
-          label: 'End Color',
-          description: 'Particle color at death',
-          defaultValue: '#00ffff',
-        }),
-        particleSize: v.number({
-          label: 'Particle Size',
-          description: 'Size of individual particles',
-          defaultValue: 0.2,
-          min: 0.1,
-          max: 5,
-          step: 0.1,
-        }),
-        blending: v.select({
-          label: 'Blending Mode',
-          description: 'How particles blend together',
-          defaultValue: 'additive',
-          options: ['additive', 'normal', 'multiply'],
-        }),
-      },
-    ),
-    physics: v.group(
-      { label: 'Physics' },
-      {
-        emissionRate: v.number({
-          label: 'Emission Rate',
-          description: 'Particles emitted per second',
-          defaultValue: 100,
-          min: 0,
-          max: 1000,
-          step: 10,
-        }),
-        lifetime: v.number({
-          label: 'Lifetime (s)',
-          description: 'How long each particle lives',
-          defaultValue: 2,
-          min: 0.1,
-          max: 10,
-          step: 0.1,
-        }),
-        useGravity: v.toggle({
-          label: 'Use Gravity',
-          description: 'Apply gravitational force to particles',
-          defaultValue: true,
-        }),
-        gravityStrength: v.number({
-          label: 'Gravity Strength',
-          description: 'Strength of gravitational pull',
-          defaultValue: 9.8,
-          min: 0,
-          max: 50,
-          step: 0.1,
+    appearance: field.group('Appearance', undefined, {
+      startColor: field.color(
+        'Start Color',
+        '#ff00ff',
+        'Particle color at birth',
+      ),
+      endColor: field.color('End Color', '#00ffff', 'Particle color at death'),
+      particleSize: field.number(
+        'Particle Size',
+        0.2,
+        [0.1, 5, 0.1],
+        'Size of individual particles',
+      ),
+      blending: field.select(
+        'Blending Mode',
+        'additive',
+        ['additive', 'normal', 'multiply'],
+        'How particles blend together',
+      ),
+    }),
+    physics: field.group('Physics', undefined, {
+      emissionRate: field.number(
+        'Emission Rate',
+        100,
+        [0, 1000, 10],
+        'Particles emitted per second',
+      ),
+      lifetime: field.number(
+        'Lifetime (s)',
+        2,
+        [0.1, 10, 0.1],
+        'How long each particle lives',
+      ),
+      useGravity: field.toggle(
+        'Use Gravity',
+        true,
+        'Apply gravitational force to particles',
+      ),
+      gravityStrength: field.number(
+        'Gravity Strength',
+        9.8,
+        [0, 50, 0.1],
+        'Strength of gravitational pull',
+        {
           visibleWhen: settingCondition('physics.useGravity', 'equals', true),
-        }),
-        initialSpeed: v.number({
-          label: 'Initial Speed',
-          description: 'Initial velocity magnitude',
-          defaultValue: 2,
-          min: 0,
-          max: 10,
-          step: 0.1,
-        }),
-        spread: v.number({
-          label: 'Spread',
-          description: 'Angular spread of particle emission (0-1)',
-          defaultValue: 0.5,
-          min: 0,
-          max: 1,
-          step: 0.01,
-        }),
-      },
-    ),
-    emission: v.group(
-      { label: 'Emission' },
-      {
-        emitterShape: v.select({
-          label: 'Emitter Shape',
-          description: 'Shape of the particle emitter',
-          defaultValue: 'point',
-          options: ['point', 'sphere', 'box'],
-        }),
-        emitterSize: v.number({
-          label: 'Emitter Size',
-          description: 'Size of the emitter volume',
-          defaultValue: 0.5,
-          min: 0,
-          max: 5,
-          step: 0.1,
-        }),
-      },
-    ),
-    rotation: v.group(
-      { label: 'Rotation' },
-      {
-        rotationSpeedX: v.number({
-          label: 'Rotation Speed X',
-          description: 'Rotation speed around X axis',
-          defaultValue: 0,
-          min: -5,
-          max: 5,
-          step: 0.1,
-        }),
-        rotationSpeedY: v.number({
-          label: 'Rotation Speed Y',
-          description: 'Rotation speed around Y axis',
-          defaultValue: 1,
-          min: -5,
-          max: 5,
-          step: 0.1,
-        }),
-        rotationSpeedZ: v.number({
-          label: 'Rotation Speed Z',
-          description: 'Rotation speed around Z axis',
-          defaultValue: 0,
-          min: -5,
-          max: 5,
-          step: 0.1,
-        }),
-      },
-    ),
+        },
+      ),
+      initialSpeed: field.number(
+        'Initial Speed',
+        2,
+        [0, 10, 0.1],
+        'Initial velocity magnitude',
+      ),
+      spread: field.number(
+        'Spread',
+        0.5,
+        [0, 1, 0.01],
+        'Angular spread of particle emission (0-1)',
+      ),
+    }),
+    emission: field.group('Emission', undefined, {
+      emitterShape: field.select(
+        'Emitter Shape',
+        'point',
+        ['point', 'sphere', 'box'],
+        'Shape of the particle emitter',
+      ),
+      emitterSize: field.number(
+        'Emitter Size',
+        0.5,
+        [0, 5, 0.1],
+        'Size of the emitter volume',
+      ),
+    }),
+    rotation: field.group('Rotation', undefined, {
+      rotationSpeedX: field.number(
+        'Rotation Speed X',
+        0,
+        [-5, 5, 0.1],
+        'Rotation speed around X axis',
+      ),
+      rotationSpeedY: field.number(
+        'Rotation Speed Y',
+        1,
+        [-5, 5, 0.1],
+        'Rotation speed around Y axis',
+      ),
+      rotationSpeedZ: field.number(
+        'Rotation Speed Z',
+        0,
+        [-5, 5, 0.1],
+        'Rotation speed around Z axis',
+      ),
+    }),
   }),
 });

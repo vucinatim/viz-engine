@@ -1,62 +1,45 @@
-import { defineVizComponentAuthoring, v } from './schema.js';
+import { defineVizComponentAuthoring, field, v } from './schema.js';
 
 export const instancedSupercubeAuthoring = defineVizComponentAuthoring({
   componentId: 'instanced-supercube',
   compatibility: 'render-safe',
   config: v.config({
-    color: v.color({
-      label: 'Color',
-      description: 'Cube color (CSS)',
-      defaultValue: 'rgb(255, 0, 0)',
-    }),
-    explosionFactor: v.number({
-      label: 'Explosion Factor',
-      description: 'How far the cubes explode from the center',
-      defaultValue: 1.67,
-      min: 1,
-      max: 3,
-      step: 0.1,
-    }),
-    rotationSpeed: v.number({
-      label: 'Rotation Speed',
-      description: 'Speed of the overall rotation',
-      defaultValue: 0.2,
-      min: 0,
-      max: 1,
-      step: 0.1,
-    }),
-    animationSpeed: v.number({
-      label: 'Animation Speed',
-      description: 'Speed of the explosion/implosion animation',
-      defaultValue: 0.08,
-      min: 0.01,
-      max: 0.2,
-      step: 0.01,
-    }),
-    gridSize: v.number({
-      label: 'Grid Size',
-      description: 'Number of cubes per side of each sub-cube',
-      defaultValue: 5,
-      min: 3,
-      max: 8,
-      step: 1,
-    }),
-    spacing: v.number({
-      label: 'Spacing',
-      description: 'Distance between the hollow cubes',
-      defaultValue: 4,
-      min: 2,
-      max: 8,
-      step: 0.5,
-    }),
-    explosionShift: v.number({
-      label: 'Explosion Shift',
-      description:
-        'Continuous control of explosion state (0 = imploded, 1 = exploded)',
-      defaultValue: 0,
-      min: 0,
-      max: 1,
-      step: 0.01,
-    }),
+    color: field.color('Color', 'rgb(255, 0, 0)', 'Cube color (CSS)'),
+    explosionFactor: field.number(
+      'Explosion Factor',
+      1.67,
+      [1, 3, 0.1],
+      'How far the cubes explode from the center',
+    ),
+    rotationSpeed: field.number(
+      'Rotation Speed',
+      0.2,
+      [0, 1, 0.1],
+      'Speed of the overall rotation',
+    ),
+    animationSpeed: field.number(
+      'Animation Speed',
+      0.08,
+      [0.01, 0.2, 0.01],
+      'Speed of the explosion/implosion animation',
+    ),
+    gridSize: field.number(
+      'Grid Size',
+      5,
+      [3, 8, 1],
+      'Number of cubes per side of each sub-cube',
+    ),
+    spacing: field.number(
+      'Spacing',
+      4,
+      [2, 8, 0.5],
+      'Distance between the hollow cubes',
+    ),
+    explosionShift: field.number(
+      'Explosion Shift',
+      0,
+      [0, 1, 0.01],
+      'Continuous control of explosion state (0 = imploded, 1 = exploded)',
+    ),
   }),
 });

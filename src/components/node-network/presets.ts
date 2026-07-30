@@ -46,6 +46,7 @@ type PresetNodeTuple = readonly [
   id: string,
   label: string,
   inputValues?: Record<string, any>,
+  ports?: { input?: string; output?: string },
 ];
 
 type PresetEdgeTuple = readonly [
@@ -58,6 +59,11 @@ type PresetEdgeTuple = readonly [
 type CompactPreset = Omit<NodeNetworkPreset, 'nodes' | 'edges'> & {
   nodes: PresetNodeTuple[];
   edges: PresetEdgeTuple[];
+};
+
+type PipelinePreset = Omit<CompactPreset, 'edges'> & {
+  source: string;
+  finalOutput?: string;
 };
 
 // Registry for presets, grouped by output type
@@ -93,6 +99,122 @@ const definePreset = ({ nodes, edges, ...preset }: CompactPreset) =>
       targetHandle,
     })),
   });
+
+const pipelinePorts: Record<string, readonly [input: string, output: string]> =
+  {
+    'Adaptive Normalize (Quantile)': ['value', 'result'],
+    'Average Volume': ['data', 'average'],
+    'Band Info': ['data', 'average'],
+    'Envelope Follower': ['value', 'env'],
+    'Frequency Band': ['frequencyAnalysis', 'bandData'],
+    'HSL Color': ['h', 'color'],
+    'Hysteresis Gate': ['value', 'gated'],
+    Math: ['a', 'result'],
+    Normalize: ['value', 'result'],
+    'Pitch Detection': ['audioSignal', 'midi'],
+    'Rate Limiter': ['value', 'limited'],
+    'Section Change Detector': ['flux', 'trigger'],
+    Sine: ['time', 'value'],
+    'Spectral Centroid': ['frequencyAnalysis', 'normalized'],
+    'Spectral Flux': ['frequencyAnalysis', 'flux'],
+    Spike: ['value', 'result'],
+    'Threshold Counter': ['value', 'count'],
+    'Value Mapper': ['input', 'output'],
+  };
+
+const definePipelinePreset = ({
+  nodes,
+  source,
+  finalOutput = 'output',
+  ...preset
+}: PipelinePreset) => {
+  const port = (node: PresetNodeTuple) => {
+    const defaults = pipelinePorts[node[1]];
+    if (!defaults) {
+      throw new Error(`No pipeline ports declared for "${node[1]}".`);
+    }
+    return {
+      input: node[3]?.input ?? defaults[0],
+      output: node[3]?.output ?? defaults[1],
+    };
+  };
+  const edges: PresetEdgeTuple[] = nodes.map((node, index) => {
+    const previous = nodes[index - 1];
+    return [
+      previous?.[0] ?? INPUT_ALIAS,
+      previous ? port(previous).output : source,
+      node[0],
+      port(node).input,
+    ];
+  });
+  const last = nodes.at(-1);
+  if (!last) {
+    throw new Error(`Pipeline preset "${preset.id}" must contain a node.`);
+  }
+  edges.push([last[0], port(last).output, OUTPUT_ALIAS, finalOutput]);
+  definePreset({ ...preset, nodes, edges });
+};
+
+type DetectorNodeIds = readonly [
+  band: string,
+  info: string,
+  envelope: string,
+  normalize: string,
+  gate: string,
+];
+
+const detectorNodes = (
+  ids: DetectorNodeIds,
+  band: { startFrequency: number; endFrequency: number },
+  envelope: { attackMs: number; releaseMs: number },
+  normalize: {
+    windowMs: number;
+    qLow: number;
+    qHigh: number;
+    freezeBelow: number;
+  },
+  gate: { low: number; high: number },
+  gateOutput: 'gated' | 'state' = 'gated',
+  infoValues?: Record<string, any>,
+): PresetNodeTuple[] => [
+  [ids[0], 'Frequency Band', band],
+  [ids[1], 'Band Info', infoValues],
+  [ids[2], 'Envelope Follower', envelope],
+  [ids[3], 'Adaptive Normalize (Quantile)', normalize],
+  [
+    ids[4],
+    'Hysteresis Gate',
+    gate,
+    gateOutput === 'state' ? { output: 'state' } : undefined,
+  ],
+];
+
+const kickDetectorNodes = (
+  ids: DetectorNodeIds = ['band', 'info', 'env', 'adapt', 'gate'],
+  gateOutput: 'gated' | 'state' = 'gated',
+  infoValues?: Record<string, any>,
+) =>
+  detectorNodes(
+    ids,
+    { startFrequency: 80, endFrequency: 150 },
+    { attackMs: 6, releaseMs: 120 },
+    { windowMs: 4000, qLow: 0.5, qHigh: 0.98, freezeBelow: 140 },
+    { low: 0.33, high: 0.45 },
+    gateOutput,
+    infoValues,
+  );
+
+const snareDetectorNodes = (
+  ids: DetectorNodeIds = ['band', 'info', 'env', 'adapt', 'gate'],
+  band = { startFrequency: 180, endFrequency: 4000 },
+) =>
+  detectorNodes(
+    ids,
+    band,
+    { attackMs: 4, releaseMs: 140 },
+    { windowMs: 4000, qLow: 0.5, qHigh: 0.95, freezeBelow: 90 },
+    { low: 0.06, high: 0.14 },
+  );
 
 export const getPresetsForType = (
   type: NodeHandleType,
@@ -242,26 +364,24 @@ export const instantiateCanonicalPreset = (
 
 // ===== SIMPLE STARTER PRESETS =====
 
-definePreset({
+definePipelinePreset({
   id: 'number-sine-osc',
   name: 'Sine Oscillator (time)',
   description: 'Maps Input.time -> Sine -> Output',
   outputType: 'number',
   autoPlace: true,
+  source: 'time',
   nodes: [['sine', 'Sine', { frequency: 1, phase: 0, amplitude: 1 }]],
-  edges: [
-    [INPUT_ALIAS, 'time', 'sine', 'time'],
-    ['sine', 'value', OUTPUT_ALIAS, 'output'],
-  ],
 });
 
-definePreset({
+definePipelinePreset({
   id: 'number-average-volume',
   name: 'Average Volume -> Normalize',
   description:
     'Input.audioSignal -> Average Volume -> Normalize(0..1) -> Output',
   outputType: 'number',
   autoPlace: true,
+  source: 'audioSignal',
   nodes: [
     ['avg', 'Average Volume'],
     [
@@ -270,92 +390,44 @@ definePreset({
       { inputMin: 0, inputMax: 255, outputMin: 0, outputMax: 1 },
     ],
   ],
-  edges: [
-    [INPUT_ALIAS, 'audioSignal', 'avg', 'data'],
-    ['avg', 'average', 'norm', 'value'],
-    ['norm', 'result', OUTPUT_ALIAS, 'output'],
-  ],
 });
 
 // ===== FEATURE EXTRACTION PRESETS =====
 // High-quality, tuned networks for extracting musical features
 
 // Kick Drum Detection
-definePreset({
+definePipelinePreset({
   id: 'kick-adaptive',
   name: '🥁 Kick Drum (Adaptive)',
   description:
     'Kick energy: Frequency Band(80-150Hz) → Band Info → Smoothing → Adaptive Normalize (Quantile) → Hysteresis Gate → Output',
   outputType: 'number',
   autoPlace: true,
-  nodes: [
-    ['band', 'Frequency Band', { startFrequency: 80, endFrequency: 150 }],
-    ['info', 'Band Info'],
-    ['env', 'Envelope Follower', { attackMs: 6, releaseMs: 120 }],
-    [
-      'adapt',
-      'Adaptive Normalize (Quantile)',
-      {
-        windowMs: 4000,
-        qLow: 0.5,
-        qHigh: 0.98,
-        freezeBelow: 140,
-      },
-    ],
-    ['gate', 'Hysteresis Gate', { low: 0.33, high: 0.45 }],
-  ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'band', 'frequencyAnalysis'],
-    ['band', 'bandData', 'info', 'data'],
-    ['info', 'average', 'env', 'value'],
-    ['env', 'env', 'adapt', 'value'],
-    ['adapt', 'result', 'gate', 'value'],
-    ['gate', 'gated', OUTPUT_ALIAS, 'output'],
-  ],
+  source: 'frequencyAnalysis',
+  nodes: kickDetectorNodes(),
 });
 
 // Snare/Clap Detection
-definePreset({
+definePipelinePreset({
   id: 'snare-adaptive',
   name: '🥁 Snare/Clap (Adaptive)',
   description:
     'Snare/Clap energy: Frequency Band(180-4000Hz) → Band Info → Smoothing → Adaptive Normalize (Quantile) → Hysteresis Gate → Output',
   outputType: 'number',
   autoPlace: true,
-  nodes: [
-    ['band', 'Frequency Band', { startFrequency: 180, endFrequency: 4000 }],
-    ['info', 'Band Info'],
-    ['env', 'Envelope Follower', { attackMs: 4, releaseMs: 140 }],
-    [
-      'adapt',
-      'Adaptive Normalize (Quantile)',
-      {
-        windowMs: 4000,
-        qLow: 0.5,
-        qHigh: 0.95,
-        freezeBelow: 90,
-      },
-    ],
-    ['gate', 'Hysteresis Gate', { low: 0.06, high: 0.14 }],
-  ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'band', 'frequencyAnalysis'],
-    ['band', 'bandData', 'info', 'data'],
-    ['info', 'average', 'env', 'value'],
-    ['env', 'env', 'adapt', 'value'],
-    ['adapt', 'result', 'gate', 'value'],
-    ['gate', 'gated', OUTPUT_ALIAS, 'output'],
-  ],
+  source: 'frequencyAnalysis',
+  nodes: snareDetectorNodes(),
 });
 
 // Bass Presence
-definePreset({
+definePipelinePreset({
   id: 'bass-adaptive',
   name: '🎸 Bass Presence',
   description:
     'Bass presence: Frequency Band(20–163Hz) → Band Info (average) → Adaptive Normalize (Quantile) → Envelope Follower → Output',
   outputType: 'number',
   autoPlace: true,
+  source: 'frequencyAnalysis',
   nodes: [
     [
       'band',
@@ -377,13 +449,6 @@ definePreset({
       },
     ],
     ['env_follow', 'Envelope Follower', { attackMs: 100, releaseMs: 400 }],
-  ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'band', 'frequencyAnalysis'],
-    ['band', 'bandData', 'info', 'data'],
-    ['info', 'average', 'adapt', 'value'],
-    ['adapt', 'result', 'env_follow', 'value'],
-    ['env_follow', 'env', OUTPUT_ALIAS, 'output'],
   ],
 });
 
@@ -438,13 +503,14 @@ definePreset({
 });
 
 // Percussion Detection
-definePreset({
+definePipelinePreset({
   id: 'percussion-adaptive',
   name: '🥁 Percussion (Hi-Freq)',
   description:
     'Percussive energy: Frequency Band (4–10kHz) → Band Info → Adaptive Normalize (Quantile) → Hysteresis Gate → Output',
   outputType: 'number',
   autoPlace: true,
+  source: 'frequencyAnalysis',
   nodes: [
     [
       'band',
@@ -467,23 +533,17 @@ definePreset({
     ],
     ['gate', 'Hysteresis Gate', { low: 0.4, high: 0.5 }],
   ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'band', 'frequencyAnalysis'],
-    ['band', 'bandData', 'info', 'data'],
-    ['info', 'average', 'adapt', 'value'],
-    ['adapt', 'result', 'gate', 'value'],
-    ['gate', 'gated', OUTPUT_ALIAS, 'output'],
-  ],
 });
 
 // Hi-Hat Detection (higher frequency, tighter response)
-definePreset({
+definePipelinePreset({
   id: 'hihat-adaptive',
   name: '🎩 Hi-Hat Detection',
   description:
     'Hi-hat hits: Frequency Band (6–14kHz) → Band Info → Adaptive Normalize → Hysteresis Gate → Output. Tuned for crisp, transient hi-hat hits.',
   outputType: 'number',
   autoPlace: true,
+  source: 'frequencyAnalysis',
   nodes: [
     [
       'band',
@@ -512,13 +572,6 @@ definePreset({
         high: 0.55,
       },
     ],
-  ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'band', 'frequencyAnalysis'],
-    ['band', 'bandData', 'info', 'data'],
-    ['info', 'average', 'adapt', 'value'],
-    ['adapt', 'result', 'gate', 'value'],
-    ['gate', 'gated', OUTPUT_ALIAS, 'output'],
   ],
 });
 
@@ -575,13 +628,14 @@ definePreset({
 });
 
 // Strobe Flash Rate based on Spectral Flux (Energy Changes)
-definePreset({
+definePipelinePreset({
   id: 'strobe-buildup-detector',
   name: '⚡ Strobe Buildup Detector',
   description:
     'Controls strobe flash rate based on energy changes. Spectral Flux (detects buildups/drops) → Envelope Follower (smooth transitions) → Normalize → Output. Fast flashing during buildups and drops, slower during steady sections.',
   outputType: 'number',
   autoPlace: true,
+  source: 'frequencyAnalysis',
   nodes: [
     ['flux', 'Spectral Flux', { smoothMs: 30 }],
     ['env', 'Envelope Follower', { attackMs: 50, releaseMs: 800 }],
@@ -596,22 +650,17 @@ definePreset({
       },
     ],
   ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'flux', 'frequencyAnalysis'],
-    ['flux', 'flux', 'env', 'value'],
-    ['env', 'env', 'norm', 'value'],
-    ['norm', 'result', OUTPUT_ALIAS, 'output'],
-  ],
 });
 
 // Laser Mode Cycling based on Sub-Bass Presence (0-120 Hz)
-definePreset({
+definePipelinePreset({
   id: 'laser-mode-section-cycle',
   name: '🎨 Laser Mode (Sub-Bass)',
   description:
     'Laser mode switching based on sub-bass (0-120 Hz) presence. Monitors kick drum fundamentals with static threshold - simple, focused, and reliable!',
   outputType: 'string',
   autoPlace: true,
+  source: 'frequencyAnalysis',
   nodes: [
     [
       'bass_band',
@@ -655,24 +704,17 @@ definePreset({
       },
     ],
   ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'bass_band', 'frequencyAnalysis'],
-    ['bass_band', 'bandData', 'bass_info', 'data'],
-    ['bass_info', 'average', 'detector', 'flux'],
-    ['detector', 'trigger', 'counter', 'value'],
-    ['counter', 'count', 'mapper', 'input'],
-    ['mapper', 'output', OUTPUT_ALIAS, 'output'],
-  ],
 });
 
 // Overhead Blinder - Big Impact Flash
-definePreset({
+definePipelinePreset({
   id: 'overhead-blinder-big-impact',
   name: '💥 Overhead Blinder (Big Impact Flash)',
   description:
     'Flashes overhead blinder only on very big bass impacts/drops. Bass-focused analysis with aggressive normalization to trigger only on the biggest moments!',
   outputType: 'number',
   autoPlace: true,
+  source: 'frequencyAnalysis',
   nodes: [
     [
       'full_band',
@@ -719,25 +761,17 @@ definePreset({
       },
     ],
   ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'full_band', 'frequencyAnalysis'],
-    ['full_band', 'bandData', 'band_info', 'data'],
-    ['band_info', 'average', 'normalize', 'value'],
-    ['normalize', 'result', 'envelope', 'value'],
-    ['envelope', 'env', 'gate', 'value'],
-    ['gate', 'gated', 'scale', 'a'],
-    ['scale', 'result', OUTPUT_ALIAS, 'output'],
-  ],
 });
 
 // Mode Cycling based on Bassline Melody
-definePreset({
+definePipelinePreset({
   id: 'beam-mode-melody-cycle',
   name: '🔄 Beam Mode Cycling (Bassline Melody)',
   description:
     'Cycles through beam modes (0-6) based on bassline melody changes. Detects bass melody shifts with rate limiting to prevent twitchy switching. Smooth and impactful!',
   outputType: 'string',
   autoPlace: true,
+  source: 'frequencyAnalysis',
   nodes: [
     [
       'band',
@@ -800,30 +834,20 @@ definePreset({
       },
     ],
   ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'band', 'frequencyAnalysis'],
-    ['band', 'bandData', 'band_info', 'data'],
-    ['band_info', 'average', 'env', 'value'],
-    ['env', 'env', 'adapt', 'value'],
-    ['adapt', 'result', 'gate', 'value'],
-    ['gate', 'gated', 'counter', 'value'],
-    ['counter', 'count', 'limiter', 'value'],
-    ['limiter', 'limited', 'mapper', 'input'],
-    ['mapper', 'output', OUTPUT_ALIAS, 'output'],
-  ],
 });
 
 // ========================================
 // 🎯 HIGH ENERGY GATE
 // ========================================
 
-definePreset({
+definePipelinePreset({
   id: 'laser-high-energy-gate',
   name: '⚡ High Energy Gate',
   description:
     'Enables lasers only during high energy sections. Uses adaptive normalization to handle varying energy levels with hysteresis to prevent flickering!',
   outputType: 'boolean',
   autoPlace: true,
+  source: 'frequencyAnalysis',
   nodes: [
     [
       'full_band',
@@ -851,14 +875,8 @@ definePreset({
         low: 0.2, // Turn off below 50% normalized energy
         high: 0.65, // Turn on above 65% normalized energy
       },
+      { output: 'state' },
     ],
-  ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'full_band', 'frequencyAnalysis'],
-    ['full_band', 'bandData', 'energy', 'data'],
-    ['energy', 'average', 'normalize', 'value'],
-    ['normalize', 'result', 'gate', 'value'],
-    ['gate', 'state', OUTPUT_ALIAS, 'output'],
   ],
 });
 
@@ -866,13 +884,14 @@ definePreset({
 // 🎤 MOVING LIGHTS MODE CYCLE
 // ========================================
 
-definePreset({
+definePipelinePreset({
   id: 'moving-lights-kick-cycle',
   name: '🎤 Moving Lights (Kick Cycle)',
   description:
     'Cycles through moving light modes on each kick hit. Creates dynamic variation in movement patterns!',
   outputType: 'string',
   autoPlace: true,
+  source: 'frequencyAnalysis',
   nodes: [
     [
       'kick_band',
@@ -915,14 +934,6 @@ definePreset({
         default: '0',
       },
     ],
-  ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'kick_band', 'frequencyAnalysis'],
-    ['kick_band', 'bandData', 'kick_info', 'data'],
-    ['kick_info', 'average', 'spike', 'value'],
-    ['spike', 'result', 'counter', 'value'],
-    ['counter', 'count', 'mapper', 'input'],
-    ['mapper', 'output', OUTPUT_ALIAS, 'output'],
   ],
 });
 
@@ -1016,13 +1027,14 @@ definePreset({
   ],
 });
 
-definePreset({
+definePipelinePreset({
   id: 'shader-wall-kick-flash',
   name: '🌀 Shader Wall (Energy Brightness)',
   description:
     'Brightness adapts to overall song energy (1-3 range). Uses medium averaging window for quick response to energy changes!',
   outputType: 'number',
   autoPlace: true,
+  source: 'frequencyAnalysis',
   nodes: [
     [
       'full_band',
@@ -1068,48 +1080,25 @@ definePreset({
         b: 0, // Will receive scaled energy
         operation: 'add',
       },
+      { input: 'b' },
     ],
-  ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'full_band', 'frequencyAnalysis'],
-    ['full_band', 'bandData', 'band_info', 'data'],
-    ['band_info', 'average', 'normalize', 'value'],
-    ['normalize', 'result', 'envelope', 'value'],
-    ['envelope', 'env', 'scale', 'a'],
-    ['scale', 'result', 'offset', 'b'],
-    ['offset', 'result', OUTPUT_ALIAS, 'output'],
   ],
 });
 
-definePreset({
+definePipelinePreset({
   id: 'shader-wall-rotation-kick-vocal',
   name: '🌀 Shader Wall (Rotation - Kick Cycle)',
   description:
     'Cycles through discrete rotation speeds (0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0) on each kick hit. Creates varying rotation patterns!',
   outputType: 'number',
   autoPlace: true,
+  source: 'frequencyAnalysis',
   nodes: [
-    [
-      'kick_band',
-      'Frequency Band',
-      {
-        startFrequency: 80,
-        endFrequency: 150,
-      },
-    ],
-    ['kick_info', 'Band Info', {}],
-    ['kick_env', 'Envelope Follower', { attackMs: 6, releaseMs: 120 }],
-    [
-      'kick_adapt',
-      'Adaptive Normalize (Quantile)',
-      {
-        windowMs: 4000,
-        qLow: 0.5,
-        qHigh: 0.98,
-        freezeBelow: 140,
-      },
-    ],
-    ['gate', 'Hysteresis Gate', { low: 0.33, high: 0.45 }],
+    ...kickDetectorNodes(
+      ['kick_band', 'kick_info', 'kick_env', 'kick_adapt', 'gate'],
+      'gated',
+      {},
+    ),
     [
       'counter',
       'Threshold Counter',
@@ -1128,44 +1117,18 @@ definePreset({
       },
     ],
   ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'kick_band', 'frequencyAnalysis'],
-    ['kick_band', 'bandData', 'kick_info', 'data'],
-    ['kick_info', 'average', 'kick_env', 'value'],
-    ['kick_env', 'env', 'kick_adapt', 'value'],
-    ['kick_adapt', 'result', 'gate', 'value'],
-    ['gate', 'gated', 'counter', 'value'],
-    ['counter', 'count', 'scale', 'a'],
-    ['scale', 'result', OUTPUT_ALIAS, 'output'],
-  ],
 });
 
-definePreset({
+definePipelinePreset({
   id: 'shader-wall-travel-snare-cycle',
   name: '🌀 Shader Wall (Travel - Snare Cycle)',
   description:
     'Cycles through discrete travel speeds (0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0) on each snare hit. Creates varying forward motion patterns!',
   outputType: 'number',
   autoPlace: true,
+  source: 'frequencyAnalysis',
   nodes: [
-    [
-      'snare_band',
-      'Frequency Band',
-      { startFrequency: 180, endFrequency: 4000 },
-    ],
-    ['snare_info', 'Band Info'],
-    ['env', 'Envelope Follower', { attackMs: 4, releaseMs: 140 }],
-    [
-      'adapt',
-      'Adaptive Normalize (Quantile)',
-      {
-        windowMs: 4000,
-        qLow: 0.5,
-        qHigh: 0.95,
-        freezeBelow: 90,
-      },
-    ],
-    ['gate', 'Hysteresis Gate', { low: 0.06, high: 0.14 }],
+    ...snareDetectorNodes(['snare_band', 'snare_info', 'env', 'adapt', 'gate']),
     [
       'counter',
       'Threshold Counter',
@@ -1183,16 +1146,6 @@ definePreset({
         operation: 'multiply',
       },
     ],
-  ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'snare_band', 'frequencyAnalysis'],
-    ['snare_band', 'bandData', 'snare_info', 'data'],
-    ['snare_info', 'average', 'env', 'value'],
-    ['env', 'env', 'adapt', 'value'],
-    ['adapt', 'result', 'gate', 'value'],
-    ['gate', 'gated', 'counter', 'value'],
-    ['counter', 'count', 'scale', 'a'],
-    ['scale', 'result', OUTPUT_ALIAS, 'output'],
   ],
 });
 
@@ -1200,32 +1153,16 @@ definePreset({
 // 💡 STAGE LIGHTS COLOR CYCLING
 // ========================================
 
-definePreset({
+definePipelinePreset({
   id: 'stage-lights-snare-color-cycle',
   name: '💡 Stage Lights (Snare Color Cycle)',
   description:
     'Cycles through colors on each snare hit. Snare Detection → Threshold Counter → Value Mapper (Color Mode) → Output. Perfect for creating dynamic color changes with the beat!',
   outputType: 'color',
   autoPlace: true,
+  source: 'frequencyAnalysis',
   nodes: [
-    [
-      'snare_band',
-      'Frequency Band',
-      { startFrequency: 180, endFrequency: 4000 },
-    ],
-    ['snare_info', 'Band Info'],
-    ['env', 'Envelope Follower', { attackMs: 4, releaseMs: 140 }],
-    [
-      'adapt',
-      'Adaptive Normalize (Quantile)',
-      {
-        windowMs: 4000,
-        qLow: 0.5,
-        qHigh: 0.95,
-        freezeBelow: 90,
-      },
-    ],
-    ['gate', 'Hysteresis Gate', { low: 0.06, high: 0.14 }],
+    ...snareDetectorNodes(['snare_band', 'snare_info', 'env', 'adapt', 'gate']),
     [
       'counter',
       'Threshold Counter',
@@ -1250,29 +1187,20 @@ definePreset({
       },
     ],
   ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'snare_band', 'frequencyAnalysis'],
-    ['snare_band', 'bandData', 'snare_info', 'data'],
-    ['snare_info', 'average', 'env', 'value'],
-    ['env', 'env', 'adapt', 'value'],
-    ['adapt', 'result', 'gate', 'value'],
-    ['gate', 'gated', 'counter', 'value'],
-    ['counter', 'count', 'mapper', 'input'],
-    ['mapper', 'output', OUTPUT_ALIAS, 'output'],
-  ],
 });
 
 // ========================================
 // 🌈 SPECTRAL CENTROID HUE
 // ========================================
 
-definePreset({
+definePipelinePreset({
   id: 'spectral-centroid-hue',
   name: '🌈 Spectral Centroid Hue',
   description:
     'Maps spectral centroid (timbral brightness) to hue. Bass-heavy = blue/purple, treble-heavy = red/orange. Creates smooth color shifts that follow the tonal character of the music.',
   outputType: 'color',
   autoPlace: true,
+  source: 'frequencyAnalysis',
   nodes: [
     ['centroid', 'Spectral Centroid', { smoothMs: 200 }],
     [
@@ -1294,12 +1222,6 @@ definePreset({
         l: 40,
       },
     ],
-  ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'centroid', 'frequencyAnalysis'],
-    ['centroid', 'normalized', 'norm', 'value'],
-    ['norm', 'result', 'hsl', 'h'],
-    ['hsl', 'color', OUTPUT_ALIAS, 'output'],
   ],
 });
 
@@ -1373,13 +1295,14 @@ definePreset({
 });
 
 // Pitch Detection → MIDI Modulo
-definePreset({
+definePipelinePreset({
   id: 'pitch-detection-midi-mod',
   name: '🎵 Pitch Detection → MIDI (Mod 12)',
   description:
     'Detects pitch from melodic content using YIN algorithm, outputs MIDI note modulo 12 (chromatic scale index 0-11). Perfect for mapping melodies to 12 modes/colors! Low latency.',
   outputType: 'number',
   autoPlace: true,
+  source: 'audioSignal',
   nodes: [
     [
       'pitch',
@@ -1403,24 +1326,20 @@ definePreset({
       },
     ],
   ],
-  edges: [
-    [INPUT_ALIAS, 'audioSignal', 'pitch', 'audioSignal'],
-    ['pitch', 'midi', 'modulo', 'a'],
-    ['modulo', 'result', OUTPUT_ALIAS, 'output'],
-  ],
 });
 
 // ========================================
 // 🎥 DEPTH OF FIELD FOCUS
 // ========================================
 
-definePreset({
+definePipelinePreset({
   id: 'dof-focus-slow-sine',
   name: '🎥 DOF Focus (Slow Sine Wave)',
   description:
     'Slow sine wave oscillating between 1-40 over 5 seconds. Creates a breathing focus effect for depth of field, smoothly sweeping from near to far focus.',
   outputType: 'number',
   autoPlace: true,
+  source: 'time',
   nodes: [
     [
       'sine',
@@ -1439,6 +1358,7 @@ definePreset({
         b: 0, // Will receive sine output (-1 to 1)
         operation: 'add',
       },
+      { input: 'b' },
     ],
     [
       'scale',
@@ -1457,14 +1377,8 @@ definePreset({
         b: 0, // Will receive scaled value (0 to 39)
         operation: 'add',
       },
+      { input: 'b' },
     ],
-  ],
-  edges: [
-    [INPUT_ALIAS, 'time', 'sine', 'time'],
-    ['sine', 'value', 'normalize', 'b'],
-    ['normalize', 'result', 'scale', 'a'],
-    ['scale', 'result', 'offset', 'b'],
-    ['offset', 'result', OUTPUT_ALIAS, 'output'],
   ],
 });
 
@@ -1472,28 +1386,19 @@ definePreset({
 // 🧠 NEURAL NETWORK TRIGGERS
 // ========================================
 
-definePreset({
+definePipelinePreset({
   id: 'neural-seed-snare-cycle',
   name: '🧠 Neuron Seed (Snare Cycle)',
   description:
     'Cycles neuron seed 0-1000 on snare hits, rate-limited to once per 2 seconds for smooth transitions.',
   outputType: 'number',
   autoPlace: true,
+  source: 'frequencyAnalysis',
   nodes: [
-    ['snare_band', 'Frequency Band', { startFrequency: 50, endFrequency: 150 }],
-    ['snare_info', 'Band Info'],
-    ['env', 'Envelope Follower', { attackMs: 4, releaseMs: 140 }],
-    [
-      'adapt',
-      'Adaptive Normalize (Quantile)',
-      {
-        windowMs: 4000,
-        qLow: 0.5,
-        qHigh: 0.95,
-        freezeBelow: 90,
-      },
-    ],
-    ['gate', 'Hysteresis Gate', { low: 0.06, high: 0.14 }],
+    ...snareDetectorNodes(
+      ['snare_band', 'snare_info', 'env', 'adapt', 'gate'],
+      { startFrequency: 50, endFrequency: 150 },
+    ),
     [
       'counter',
       'Threshold Counter',
@@ -1510,54 +1415,18 @@ definePreset({
       },
     ],
   ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'snare_band', 'frequencyAnalysis'],
-    ['snare_band', 'bandData', 'snare_info', 'data'],
-    ['snare_info', 'average', 'env', 'value'],
-    ['env', 'env', 'adapt', 'value'],
-    ['adapt', 'result', 'gate', 'value'],
-    ['gate', 'gated', 'counter', 'value'],
-    ['counter', 'count', 'limiter', 'value'],
-    ['limiter', 'limited', OUTPUT_ALIAS, 'output'],
-  ],
 });
 
-definePreset({
+definePipelinePreset({
   id: 'neural-fire-on-kick',
   name: '🧠 Fire Neurons (Kick Trigger)',
   description:
     'Triggers neural network firing on every kick drum hit. Kick detection with hysteresis gate for clean boolean pulses.',
   outputType: 'boolean',
   autoPlace: true,
-  nodes: [
-    [
-      'kick_band',
-      'Frequency Band',
-      {
-        startFrequency: 80,
-        endFrequency: 150,
-      },
-    ],
-    ['kick_info', 'Band Info'],
-    ['env', 'Envelope Follower', { attackMs: 6, releaseMs: 120 }],
-    [
-      'adapt',
-      'Adaptive Normalize (Quantile)',
-      {
-        windowMs: 4000,
-        qLow: 0.5,
-        qHigh: 0.98,
-        freezeBelow: 140,
-      },
-    ],
-    ['gate', 'Hysteresis Gate', { low: 0.33, high: 0.45 }],
-  ],
-  edges: [
-    [INPUT_ALIAS, 'frequencyAnalysis', 'kick_band', 'frequencyAnalysis'],
-    ['kick_band', 'bandData', 'kick_info', 'data'],
-    ['kick_info', 'average', 'env', 'value'],
-    ['env', 'env', 'adapt', 'value'],
-    ['adapt', 'result', 'gate', 'value'],
-    ['gate', 'state', OUTPUT_ALIAS, 'output'],
-  ],
+  source: 'frequencyAnalysis',
+  nodes: kickDetectorNodes(
+    ['kick_band', 'kick_info', 'env', 'adapt', 'gate'],
+    'state',
+  ),
 });

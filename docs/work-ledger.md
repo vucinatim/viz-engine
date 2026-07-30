@@ -1832,3 +1832,36 @@
     strict formatting, lint and type checks, 54 files / 228 foundation tests,
     all 7 real-browser journeys, all package and studio builds, and both
     built-consumer smoke scenarios
+- completed the Goal Two declarative authoring and canonical browser-export
+  checkpoint:
+  - introduced a compact typed field and inline-network vocabulary for
+    ordinary component declarations while retaining the explicit authoring
+    form for exceptional controls
+  - projected editor defaults from the package-owned authoring contract and
+    removed the duplicate editor implementation
+  - collapsed the duplicated Morph Shapes A/B schema and the repeated Signal
+    Cathedral project settings into canonical declarations
+  - preserved the normalized core catalog authoring identity
+    `5365694304900adeef392f1916080d740ec56cf2bca2efdfe87ed25daad5df4c`
+    and Signal Cathedral authoring identity
+    `7670009a037d0276ab42b5bda03ef83092c1ddd45d3ad4017da38b29b11419a9`
+  - replaced repeated graph-preset assembly with composable pipeline
+    fragments while preserving all 26 presets under raw registry identity
+    `3beb8d3838d9c6b11e96ce390dcbfd3ba073e1800c228a9a10486d3a73686866`
+  - removed the editor's 699-line legacy export orchestrator and IndexedDB
+    frame-storage pipeline
+  - routed the established export dialog through the same browser render-job
+    service used by live agent and headless control
+  - retained cancellation, progress, wake lock, console feedback, playback
+    isolation, automatic download, audio mux, and on-demand audio-feature
+    baking
+  - added explicit 30/60/120 FPS sampling of canonical project timelines and
+    focused scheduling coverage
+  - passed the visible 720p/30 FPS video-export journey in 51.1 seconds with
+    H.264 and audio probe, nonblank output, and distinct sampled frame hashes
+  - moved production source to 67,868 lines and combined maintained code to
+    83,217 lines, reductions of 7,656 and 7,410 lines from the immutable Goal
+    Two baseline
+  - passed the complete foundation gate with 42 valid parity capabilities, 55
+    foundation files / 231 tests, all 7 real-browser journeys in 4.1 minutes,
+    all package and studio builds, and both built-consumer smoke scenarios

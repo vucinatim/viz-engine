@@ -1,4 +1,9 @@
-import { defineVizComponentAuthoring, settingCondition, v } from './schema.js';
+import {
+  defineVizComponentAuthoring,
+  field,
+  settingCondition,
+  v,
+} from './schema.js';
 
 export const strobeLightAuthoring = defineVizComponentAuthoring({
   componentId: 'strobe-light',
@@ -46,57 +51,40 @@ export const strobeLightAuthoring = defineVizComponentAuthoring({
     },
   ],
   config: v.config({
-    mode: v.select({
-      label: 'Mode',
-      description:
-        'Strobe mode: Intensity (automatic), Manual (triggered), or Random Flashes',
-      defaultValue: 'Intensity',
-      options: ['Intensity', 'Manual', 'Random Flashes'],
-    }),
-    color: v.color({
-      label: 'Strobe Color',
-      description: 'Color of the strobe flash',
-      defaultValue: '#ffffff',
-    }),
-    intensity: v.number({
-      label: 'Intensity',
-      description:
-        'Flash frequency (higher = faster flashing). Only used in Intensity mode.',
-      defaultValue: 1.0,
-      min: 0.0,
-      max: 20.0,
-      step: 0.1,
-      visibleWhen: settingCondition('mode', 'equals', 'Intensity'),
-    }),
-    strength: v.number({
-      label: 'Strength',
-      description:
-        'Flash brightness. In Manual mode, automate 0-1 for flashing.',
-      defaultValue: 1.0,
-      min: 0.0,
-      max: 1.0,
-      step: 0.01,
-    }),
-    dutyCycle: v.number({
-      label: 'Duty Cycle',
-      description:
-        'Percentage of time flash is ON (0-1). Only used in Intensity mode.',
-      defaultValue: 0.5,
-      min: 0.1,
-      max: 0.9,
-      step: 0.05,
-      visibleWhen: settingCondition('mode', 'equals', 'Intensity'),
-    }),
-    flashRate: v.number({
-      label: 'Flash Rate',
-      description:
-        'How often strobes flash (0 = never, 1 = constant). Only used in Random Flashes mode.',
-      defaultValue: 0.3,
-      min: 0,
-      max: 1,
-      step: 0.01,
-      visibleWhen: settingCondition('mode', 'equals', 'Random Flashes'),
-    }),
+    mode: field.select(
+      'Mode',
+      'Intensity',
+      ['Intensity', 'Manual', 'Random Flashes'],
+      'Strobe mode: Intensity (automatic), Manual (triggered), or Random Flashes',
+    ),
+    color: field.color('Strobe Color', '#ffffff', 'Color of the strobe flash'),
+    intensity: field.number(
+      'Intensity',
+      1,
+      [0, 20, 0.1],
+      'Flash frequency (higher = faster flashing). Only used in Intensity mode.',
+      { visibleWhen: settingCondition('mode', 'equals', 'Intensity') },
+    ),
+    strength: field.number(
+      'Strength',
+      1.0,
+      [0.0, 1.0, 0.01],
+      'Flash brightness. In Manual mode, automate 0-1 for flashing.',
+    ),
+    dutyCycle: field.number(
+      'Duty Cycle',
+      0.5,
+      [0.1, 0.9, 0.05],
+      'Percentage of time flash is ON (0-1). Only used in Intensity mode.',
+      { visibleWhen: settingCondition('mode', 'equals', 'Intensity') },
+    ),
+    flashRate: field.number(
+      'Flash Rate',
+      0.3,
+      [0, 1, 0.01],
+      'How often strobes flash (0 = never, 1 = constant). Only used in Random Flashes mode.',
+      { visibleWhen: settingCondition('mode', 'equals', 'Random Flashes') },
+    ),
   }),
   defaultNetworks: {
     strength: 'overhead-blinder-big-impact',

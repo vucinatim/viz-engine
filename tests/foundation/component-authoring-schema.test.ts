@@ -1,5 +1,4 @@
 import {
-  createSettingDefaults,
   findComponentSetting,
   isSettingVisible,
   listComponentParameterIds,
@@ -9,6 +8,7 @@ import {
   coreCatalogComponents,
   coreComponentCapabilityPack,
   createCoreComponentRegistry,
+  createVizSettingDefaults,
   defineVizComponentAuthoring,
   simpleCubeComponent,
   v,
@@ -54,7 +54,7 @@ describe('portable component authoring schema', () => {
   it('projects defaults and deterministic parameter identities directly from portable settings', () => {
     const editorComp = createEditorCompFromDefinition(simpleCubeComponent);
 
-    expect(createSettingDefaults(editorComp.authoring.settings)).toEqual(
+    expect(createVizSettingDefaults(editorComp.authoring.settings)).toEqual(
       editorComp.defaultValues,
     );
     expect(

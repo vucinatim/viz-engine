@@ -22,6 +22,7 @@ export interface VizBrowserFrameCaptureInput {
   request: VizRenderRequest;
   source: VizRenderSource;
   frame: number;
+  sequenceIndex: number;
   firstFrame: boolean;
   signal: AbortSignal;
 }
@@ -32,6 +33,7 @@ export interface CreateVizBrowserRenderExecutorOptions {
     frames: Blob[];
     audioUrl: string | null;
     request: Extract<VizRenderRequest, { kind: 'clip' | 'video' }>;
+    source: VizRenderSource;
     signal: AbortSignal;
     onProgress(progress: number): void;
   }) => Promise<{
@@ -255,6 +257,7 @@ const captureFrames = async (
       request: context.request,
       source: context.source,
       frame,
+      sequenceIndex: index,
       firstFrame: index === 0,
       signal: context.signal,
     });
@@ -375,14 +378,11 @@ const executeVideoRender = async (
   if (!options.encodeVideo) {
     throw new Error('Browser video encoding is not available in this host.');
   }
-  if (request.fps !== source.project.timeline.fps) {
-    throw new Error(
-      `Video request FPS ${request.fps} must match project FPS ${source.project.timeline.fps} until explicit frame resampling is implemented.`,
-    );
-  }
-  const frames = Array.from(
-    { length: request.frameCount },
-    (_, index) => request.startFrame + index,
+  const frames = createVizBrowserVideoFrameSchedule(
+    request.startFrame,
+    request.frameCount,
+    source.project.timeline.fps,
+    request.fps,
   );
   const captured: CapturedFrameFeedback[] = [];
   const frameBlobs: Blob[] = [];
@@ -397,6 +397,7 @@ const executeVideoRender = async (
       request,
       source,
       frame,
+      sequenceIndex: index,
       firstFrame: index === 0,
       signal,
     });
@@ -440,6 +441,7 @@ const executeVideoRender = async (
     frames: frameBlobs,
     audioUrl,
     request,
+    source,
     signal,
     onProgress: (progress) => {
       onProgress({
@@ -476,6 +478,17 @@ const executeVideoRender = async (
     visualFeedback: createVisualFeedback(captured),
   };
 };
+
+export const createVizBrowserVideoFrameSchedule = (
+  startFrame: number,
+  outputFrameCount: number,
+  sourceFps: number,
+  outputFps: number,
+): number[] =>
+  Array.from(
+    { length: outputFrameCount },
+    (_, index) => startFrame + Math.round((index * sourceFps) / outputFps),
+  );
 
 export const createVizBrowserRenderExecutor = (
   options: CreateVizBrowserRenderExecutorOptions,

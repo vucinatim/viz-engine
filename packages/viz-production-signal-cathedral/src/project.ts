@@ -5,6 +5,7 @@ import type {
   VizProjectDocument,
 } from '@viz-engine/contracts';
 import { VIZ_PROJECT_SCHEMA_VERSION } from '@viz-engine/contracts';
+import { signalCathedralDefaultSettings } from './authoring.js';
 
 export const SIGNAL_CATHEDRAL_AUDIO_ASSET_ID =
   'asset-signal-cathedral-progressive-house';
@@ -215,56 +216,7 @@ export const createSignalCathedralProject = ({
       opacity: 1,
       blendMode: 'normal',
       rendererFamily: 'three',
-      settings: {
-        palette: {
-          background: '#02030d',
-          primary: '#5cf5ff',
-          secondary: '#8b5cff',
-          accent: '#ff3fcf',
-          fog: '#07051c',
-        },
-        structure: {
-          archCount: 24,
-          archSpacing: 4.2,
-          naveWidth: 11,
-          naveHeight: 7,
-          segmentThickness: 0.16,
-          floorExtent: 120,
-          coreSize: 1.05,
-          particleCount: 900,
-        },
-        motion: {
-          travelSpeed: 4.8,
-          cameraSway: 0.32,
-          cameraLift: 0.16,
-          structuralTwist: 0.055,
-          particleDrift: 0.7,
-          coreRotation: 0.65,
-        },
-        reactivity: {
-          masterResponse: 1,
-          bassResponse: 1,
-          midResponse: 1,
-          trebleResponse: 1,
-          onsetResponse: 1,
-          fluxResponse: 1,
-          smoothing: 0.35,
-          structurePulse: 0,
-          coreEnergy: 0,
-          spectralShimmer: 0,
-          shockwaveTrigger: 0,
-          bloomAccent: 0,
-        },
-        lighting: {
-          ambientLevel: 0.12,
-          keyLightIntensity: 18,
-          bloomStrength: 0.72,
-          bloomRadius: 0.62,
-          bloomThreshold: 0.18,
-          exposure: 1.05,
-          fogDensity: 0.014,
-        },
-      },
+      settings: structuredClone(signalCathedralDefaultSettings),
       inputs: {
         'reactivity:structurePulse': {
           kind: 'graph-output',

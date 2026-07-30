@@ -169,6 +169,12 @@ export const createStudioProjectActions = ({
     }
   };
 
+  const ensureInitialized = () => {
+    if (!getState().initialized) {
+      actions.initializeProjectState();
+    }
+  };
+
   const actions = {
     initializeProjectState(force = false) {
       const state = getState();
@@ -233,9 +239,7 @@ export const createStudioProjectActions = ({
       }
     },
     addLayer(comp: Comp) {
-      if (!getState().initialized) {
-        actions.initializeProjectState();
-      }
+      ensureInitialized();
       const layer = createVizLayerFromComp(comp, generateLayerId(comp.name));
       useEditorStore.getState().setLayerExpanded(layer.id, true);
       runHistoryGroup(() => {
@@ -249,9 +253,7 @@ export const createStudioProjectActions = ({
       });
     },
     removeLayer(layerId: string) {
-      if (!getState().initialized) {
-        actions.initializeProjectState();
-      }
+      ensureInitialized();
       const layer = getState().workingProject.layers.find(
         (candidate) => candidate.id === layerId,
       );
@@ -272,9 +274,7 @@ export const createStudioProjectActions = ({
       });
     },
     duplicateLayer(layerId: string) {
-      if (!getState().initialized) {
-        actions.initializeProjectState();
-      }
+      ensureInitialized();
       const source = getState().workingProject.layers.find(
         (layer) => layer.id === layerId,
       );
@@ -303,9 +303,7 @@ export const createStudioProjectActions = ({
       });
     },
     reorderLayers(activeId: string, overId: string) {
-      if (!getState().initialized) {
-        actions.initializeProjectState();
-      }
+      ensureInitialized();
       if (activeId === overId) {
         return;
       }
@@ -321,32 +319,24 @@ export const createStudioProjectActions = ({
       }
     },
     setLayerExpanded(layerId: string, expanded: boolean) {
-      if (!getState().initialized) {
-        actions.initializeProjectState();
-      }
+      ensureInitialized();
       useEditorStore.getState().setLayerExpanded(layerId, expanded);
       syncEditorProjection(getState().workingProject);
     },
     setAllLayersExpanded(expanded: boolean) {
-      if (!getState().initialized) {
-        actions.initializeProjectState();
-      }
+      ensureInitialized();
       useEditorStore
         .getState()
         .setAllLayersExpanded(getState().workingProject.layerOrder, expanded);
       syncEditorProjection(getState().workingProject);
     },
     setLayerDebugEnabled(layerId: string, enabled: boolean) {
-      if (!getState().initialized) {
-        actions.initializeProjectState();
-      }
+      ensureInitialized();
       useEditorStore.getState().setLayerDebugEnabled(layerId, enabled);
       syncEditorProjection(getState().workingProject);
     },
     updateLayerSettings(layerId: string, settings: LayerSettings) {
-      if (!getState().initialized) {
-        actions.initializeProjectState();
-      }
+      ensureInitialized();
       const layer = getState().workingProject.layers.find(
         (candidate) => candidate.id === layerId,
       );
@@ -367,9 +357,7 @@ export const createStudioProjectActions = ({
       path: (string | number)[],
       value: unknown,
     ) {
-      if (!getState().initialized) {
-        actions.initializeProjectState();
-      }
+      ensureInitialized();
       applyActions([
         {
           type: 'layer.settings.set',
@@ -382,9 +370,7 @@ export const createStudioProjectActions = ({
       path: (string | number)[],
       selection: BrowserAssetSelection,
     ) {
-      if (!getState().initialized) {
-        actions.initializeProjectState();
-      }
+      ensureInitialized();
       const attachment = await assetAttachment.attach(selection);
       host.registerResolvedAsset(attachment.resolved);
       const exists = (getState().workingProject.assetRefs ?? []).some(
@@ -432,9 +418,7 @@ export const createStudioProjectActions = ({
       });
     },
     applyLayerPreset(layerId: string, preset: StudioLayerPreset) {
-      if (!getState().initialized) {
-        actions.initializeProjectState();
-      }
+      ensureInitialized();
       const layer = getState().workingProject.layers.find(
         (candidate) => candidate.id === layerId,
       );

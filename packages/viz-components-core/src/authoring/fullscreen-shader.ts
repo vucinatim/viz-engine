@@ -1,89 +1,66 @@
 import { fullscreenShaderNames } from '../fullscreen-shader-catalog.js';
-import { defineVizComponentAuthoring, settingCondition, v } from './schema.js';
+import {
+  defineVizComponentAuthoring,
+  field,
+  settingCondition,
+  v,
+} from './schema.js';
 
 export const fullscreenShaderAuthoring = defineVizComponentAuthoring({
   componentId: 'fullscreen-shader',
   compatibility: 'render-safe',
   config: v.config({
-    shader: v.select({
-      label: 'Shader',
-      description: 'Choose shader effect',
-      defaultValue: 'Radial Ripple Grid',
-      options: [...fullscreenShaderNames],
-    }),
-    color: v.color({
-      label: 'Primary Color',
-      description: 'Main color for the shader',
-      defaultValue: '#00ffff',
-    }),
-    speed: v.number({
-      label: 'Animation Speed',
-      description: 'Speed multiplier for animations',
-      defaultValue: 1,
-      min: 0.1,
-      max: 5,
-      step: 0.1,
-    }),
-    scale: v.number({
-      label: 'Pattern Scale',
-      description: 'Scale of the pattern',
-      defaultValue: 0.5,
-      min: 0.1,
-      max: 5,
-      step: 0.1,
-    }),
-    intensity: v.number({
-      label: 'Intensity',
-      description: 'Pattern intensity multiplier',
-      defaultValue: 0.8,
-      min: 0,
-      max: 3,
-      step: 0.1,
-    }),
-    offsetX: v.number({
-      label: 'Offset X',
-      description: 'Horizontal offset',
-      defaultValue: 0,
-      min: -2,
-      max: 2,
-      step: 0.01,
+    shader: field.select(
+      'Shader',
+      'Radial Ripple Grid',
+      [...fullscreenShaderNames],
+      'Choose shader effect',
+    ),
+    color: field.color('Primary Color', '#00ffff', 'Main color for the shader'),
+    speed: field.number(
+      'Animation Speed',
+      1,
+      [0.1, 5, 0.1],
+      'Speed multiplier for animations',
+    ),
+    scale: field.number(
+      'Pattern Scale',
+      0.5,
+      [0.1, 5, 0.1],
+      'Scale of the pattern',
+    ),
+    intensity: field.number(
+      'Intensity',
+      0.8,
+      [0, 3, 0.1],
+      'Pattern intensity multiplier',
+    ),
+    offsetX: field.number('Offset X', 0, [-2, 2, 0.01], 'Horizontal offset', {
       visibleWhen: settingCondition('shader', 'not-equals', 'Neon Grid'),
     }),
-    offsetY: v.number({
-      label: 'Offset Y',
-      description: 'Vertical offset',
-      defaultValue: 0,
-      min: -2,
-      max: 2,
-      step: 0.01,
+    offsetY: field.number('Offset Y', 0, [-2, 2, 0.01], 'Vertical offset', {
       visibleWhen: settingCondition('shader', 'not-equals', 'Neon Grid'),
     }),
-    seed: v.number({
-      label: 'Seed',
-      description: 'Random seed for pattern variation',
-      defaultValue: 0,
-      min: 0,
-      max: 1000,
-      step: 1,
-      visibleWhen: settingCondition('shader', 'equals', 'Neon Grid'),
-    }),
-    scanIntensity: v.number({
-      label: 'Scan Intensity',
-      description: 'Intensity of horizontal scan line',
-      defaultValue: 0.7,
-      min: 0,
-      max: 2,
-      step: 0.1,
-      visibleWhen: settingCondition('shader', 'equals', 'Neon Grid'),
-    }),
-    waveIntensity: v.number({
-      label: 'Wave Intensity',
-      description: 'Intensity of energy wave brightness boost',
-      defaultValue: 0.6,
-      min: 0,
-      max: 2,
-      step: 0.1,
-      visibleWhen: settingCondition('shader', 'equals', 'Neon Grid'),
-    }),
+    seed: field.number(
+      'Seed',
+      0,
+      [0, 1000, 1],
+      'Random seed for pattern variation',
+      { visibleWhen: settingCondition('shader', 'equals', 'Neon Grid') },
+    ),
+    scanIntensity: field.number(
+      'Scan Intensity',
+      0.7,
+      [0, 2, 0.1],
+      'Intensity of horizontal scan line',
+      { visibleWhen: settingCondition('shader', 'equals', 'Neon Grid') },
+    ),
+    waveIntensity: field.number(
+      'Wave Intensity',
+      0.6,
+      [0, 2, 0.1],
+      'Intensity of energy wave brightness boost',
+      { visibleWhen: settingCondition('shader', 'equals', 'Neon Grid') },
+    ),
   }),
 });

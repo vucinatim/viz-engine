@@ -1,522 +1,311 @@
-import { defineVizComponentAuthoring, v } from './schema.js';
+import { defineVizComponentAuthoring, field, v } from './schema.js';
 
 export const stageSceneAuthoring = defineVizComponentAuthoring({
   componentId: 'stage-scene',
   compatibility: 'render-safe',
   config: v.config({
-    camera: v.group(
+    camera: field.group('Camera', 'Camera position and controls', {
+      position: field.vector3(
+        'Position',
+        { x: 0, y: 8, z: 40 },
+        undefined,
+        'Camera position (X, Y, Z)',
+      ),
+      rotation: field.vector3(
+        'Rotation',
+        { x: 0, y: 0, z: 0 },
+        undefined,
+        'Camera rotation in radians (Pitch, Yaw, Roll)',
+      ),
+      enterWasdMode: v.action({
+        label: 'Fly Mode',
+        buttonLabel: 'Enter Fly Mode (WASD)',
+        description:
+          'Click to enter interactive camera control. Use WASD to move, mouse to look around, Space/Shift for up/down. Press ESC to exit.',
+        actionId: 'stage.enter-fly-mode',
+      }),
+      moveSpeed: field.number(
+        'Move Speed',
+        20,
+        [1, 100, 1],
+        'Movement speed in WASD mode',
+      ),
+      lookSpeed: field.number(
+        'Look Sensitivity',
+        0.002,
+        [0.0001, 0.01, 0.0001],
+        'Mouse look sensitivity in WASD mode',
+      ),
+      cinematicMode: field.toggle(
+        'Cinematic Mode',
+        true,
+        'Enable automated camera animation along a predefined path',
+      ),
+      cinematicPath: field.select(
+        'Cinematic Path',
+        'Panoramic Sweep',
+        ['Panoramic Sweep', 'Stage Circle', 'Crowd Flyover', 'High Orbit'],
+        'Choose the camera animation path',
+      ),
+      cinematicDuration: field.number(
+        'Loop Duration',
+        60,
+        [10, 300, 5],
+        'Duration of one complete camera loop (seconds)',
+      ),
+      cinematicLookAt: field.vector3(
+        'Look At Target',
+        { x: 0, y: 5, z: 0 },
+        undefined,
+        'Point where camera should look (usually stage center)',
+      ),
+      cinematicLerpSpeed: field.number(
+        'Camera Smoothness',
+        0.05,
+        [0.01, 1, 0.01],
+        'How smoothly the camera follows the path (0.01 = very smooth, 1 = instant)',
+      ),
+    }),
+    shaderWall: field.group('Shader Wall', 'Fractal visualizer wall', {
+      enabled: field.toggle('Enabled', true, 'Enable shader wall'),
+      scale: field.number(
+        'Scale',
+        2.0,
+        [0.5, 4.0, 0.1],
+        'Fractal zoom/size (great for bass pulsing)',
+      ),
+      rotationSpeed: field.number(
+        'Rotation Speed',
+        1.0,
+        [0, 3, 0.1],
+        'How fast it spins (great for hi-hats)',
+      ),
+      colorSpeed: field.number(
+        'Color Speed',
+        3.0,
+        [0, 3, 0.1],
+        'How fast colors cycle',
+      ),
+      travelSpeed: field.number(
+        'Travel Speed',
+        1.0,
+        [0, 3, 0.1],
+        'Tunnel movement speed',
+      ),
+      brightness: field.number(
+        'Brightness',
+        2.0,
+        [0, 5, 0.1],
+        'Overall intensity (great for kick flashes)',
+      ),
+    }),
+    lighting: field.group('Lighting', 'Global scene lighting', {
+      hemisphereIntensity: field.number(
+        'Hemisphere Light',
+        2,
+        [0, 5, 0.1],
+        'Hemisphere light intensity',
+      ),
+      ambientIntensity: field.number(
+        'Ambient Light',
+        1,
+        [0, 5, 0.1],
+        'Ambient light intensity',
+      ),
+    }),
+    postProcessing: field.group(
+      'Post Processing',
+      'Bloom and post-processing effects',
       {
-        label: 'Camera',
-        description: 'Camera position and controls',
-      },
-      {
-        position: v.vector3({
-          label: 'Position',
-          description: 'Camera position (X, Y, Z)',
-          defaultValue: { x: 0, y: 8, z: 40 },
-        }),
-        rotation: v.vector3({
-          label: 'Rotation',
-          description: 'Camera rotation in radians (Pitch, Yaw, Roll)',
-          defaultValue: { x: 0, y: 0, z: 0 },
-        }),
-        enterWasdMode: v.action({
-          label: 'Fly Mode',
-          buttonLabel: 'Enter Fly Mode (WASD)',
-          description:
-            'Click to enter interactive camera control. Use WASD to move, mouse to look around, Space/Shift for up/down. Press ESC to exit.',
-          actionId: 'stage.enter-fly-mode',
-        }),
-        moveSpeed: v.number({
-          label: 'Move Speed',
-          description: 'Movement speed in WASD mode',
-          defaultValue: 20,
-          min: 1,
-          max: 100,
-          step: 1,
-        }),
-        lookSpeed: v.number({
-          label: 'Look Sensitivity',
-          description: 'Mouse look sensitivity in WASD mode',
-          defaultValue: 0.002,
-          min: 0.0001,
-          max: 0.01,
-          step: 0.0001,
-        }),
-        cinematicMode: v.toggle({
-          label: 'Cinematic Mode',
-          description:
-            'Enable automated camera animation along a predefined path',
-          defaultValue: true,
-        }),
-        cinematicPath: v.select({
-          label: 'Cinematic Path',
-          description: 'Choose the camera animation path',
-          defaultValue: 'Panoramic Sweep',
-          options: [
-            'Panoramic Sweep',
-            'Stage Circle',
-            'Crowd Flyover',
-            'High Orbit',
-          ],
-        }),
-        cinematicDuration: v.number({
-          label: 'Loop Duration',
-          description: 'Duration of one complete camera loop (seconds)',
-          defaultValue: 60,
-          min: 10,
-          max: 300,
-          step: 5,
-        }),
-        cinematicLookAt: v.vector3({
-          label: 'Look At Target',
-          description: 'Point where camera should look (usually stage center)',
-          defaultValue: { x: 0, y: 5, z: 0 },
-        }),
-        cinematicLerpSpeed: v.number({
-          label: 'Camera Smoothness',
-          description:
-            'How smoothly the camera follows the path (0.01 = very smooth, 1 = instant)',
-          defaultValue: 0.05,
-          min: 0.01,
-          max: 1,
-          step: 0.01,
-        }),
-      },
-    ),
-    shaderWall: v.group(
-      {
-        label: 'Shader Wall',
-        description: 'Fractal visualizer wall',
-      },
-      {
-        enabled: v.toggle({
-          label: 'Enabled',
-          description: 'Enable shader wall',
-          defaultValue: true,
-        }),
-        scale: v.number({
-          label: 'Scale',
-          description: 'Fractal zoom/size (great for bass pulsing)',
-          defaultValue: 2.0,
-          min: 0.5,
-          max: 4.0,
-          step: 0.1,
-        }),
-        rotationSpeed: v.number({
-          label: 'Rotation Speed',
-          description: 'How fast it spins (great for hi-hats)',
-          defaultValue: 1.0,
-          min: 0,
-          max: 3,
-          step: 0.1,
-        }),
-        colorSpeed: v.number({
-          label: 'Color Speed',
-          description: 'How fast colors cycle',
-          defaultValue: 3.0,
-          min: 0,
-          max: 3,
-          step: 0.1,
-        }),
-        travelSpeed: v.number({
-          label: 'Travel Speed',
-          description: 'Tunnel movement speed',
-          defaultValue: 1.0,
-          min: 0,
-          max: 3,
-          step: 0.1,
-        }),
-        brightness: v.number({
-          label: 'Brightness',
-          description: 'Overall intensity (great for kick flashes)',
-          defaultValue: 2.0,
-          min: 0,
-          max: 5,
-          step: 0.1,
-        }),
-      },
-    ),
-    lighting: v.group(
-      {
-        label: 'Lighting',
-        description: 'Global scene lighting',
-      },
-      {
-        hemisphereIntensity: v.number({
-          label: 'Hemisphere Light',
-          description: 'Hemisphere light intensity',
-          defaultValue: 2,
-          min: 0,
-          max: 5,
-          step: 0.1,
-        }),
-        ambientIntensity: v.number({
-          label: 'Ambient Light',
-          description: 'Ambient light intensity',
-          defaultValue: 1,
-          min: 0,
-          max: 5,
-          step: 0.1,
-        }),
+        bloom: field.toggle('Bloom Enabled', true, 'Enable bloom effect'),
+        bloomStrength: field.number(
+          'Bloom Strength',
+          0.5,
+          [0, 3, 0.01],
+          'Bloom effect strength',
+        ),
+        bloomRadius: field.number(
+          'Bloom Radius',
+          0.8,
+          [0, 1, 0.01],
+          'Bloom effect radius',
+        ),
+        bloomThreshold: field.number(
+          'Bloom Threshold',
+          0.6,
+          [0, 1, 0.01],
+          'Bloom effect threshold',
+        ),
       },
     ),
-    postProcessing: v.group(
+    lasers: field.group('Lasers', 'Laser effects', {
+      enabled: field.toggle('Enabled', true, 'Enable lasers'),
+      mode: field.select(
+        'Mode',
+        'auto',
+        ['auto', '0', '1', '2', '3', '4'],
+        'Laser pattern mode',
+      ),
+      colorMode: field.select(
+        'Color Mode',
+        'multi',
+        ['multi', 'single'],
+        'Single or multi-color mode',
+      ),
+      singleColor: field.color(
+        'Color',
+        '#ff0000',
+        'Laser color (when in single mode)',
+      ),
+      rotationSpeed: field.number('Speed', 1.0, [0, 3, 0.1], 'Rotation speed'),
+      maxConcurrentLasers: field.number(
+        'Max Active Lasers',
+        12,
+        [1, 12, 1],
+        'Maximum number of lasers active at once',
+      ),
+    }),
+    movingLights: field.group('Moving Lights', 'Moving head lights', {
+      enabled: field.toggle('Enabled', true, 'Enable moving lights'),
+      mode: field.select(
+        'Mode',
+        'auto',
+        ['auto', '0', '1', '2', '3', '4'],
+        'Movement pattern mode',
+      ),
+      colorMode: field.select(
+        'Color Mode',
+        'multi',
+        ['multi', 'single'],
+        'Single or multi-color mode',
+      ),
+      singleColor: field.color(
+        'Color',
+        '#ffffff',
+        'Light color (when in single mode)',
+      ),
+      intensity: field.number(
+        'Intensity',
+        5.0,
+        [0, 20, 0.1],
+        'Light intensity',
+      ),
+      speed: field.number('Speed', 1.0, [0, 3, 0.1], 'Movement speed'),
+    }),
+    beams: field.group('Beams', 'Beam effects', {
+      enabled: field.toggle('Enabled', true, 'Enable beams'),
+      mode: field.select(
+        'Mode',
+        'auto',
+        ['auto', '0', '1', '2', '3', '4', '5', '6'],
+        'Beam pattern mode',
+      ),
+      colorMode: field.select(
+        'Color Mode',
+        'multi',
+        ['multi', 'single'],
+        'Single or multi-color mode',
+      ),
+      singleColor: field.color(
+        'Color',
+        '#88aaff',
+        'Beam color (when in single mode)',
+      ),
+      intensity: field.number('Intensity', 1.0, [0, 3, 0.1], 'Beam intensity'),
+    }),
+    stageLights: field.group('Stage Lights', 'Static stage lights', {
+      enabled: field.toggle('Enabled', true, 'Enable stage lights'),
+      color: field.color('Color', '#8888ff', 'Stage light color'),
+    }),
+    stageWash: field.group('Stage Wash', 'Wash lights', {
+      enabled: field.toggle('Enabled', true, 'Enable wash lights'),
+      intensity: field.number(
+        'Intensity',
+        5.0,
+        [0, 50, 0.5],
+        'Wash light intensity',
+      ),
+    }),
+    strobes: field.group('Strobes', 'Strobe lights', {
+      enabled: field.toggle('Enabled', true, 'Enable strobes'),
+      intensity: field.number(
+        'Intensity',
+        500,
+        [0, 1000, 10],
+        'Strobe intensity (brightness)',
+      ),
+      flashRate: field.number(
+        'Flash Rate',
+        0.3,
+        [0, 1, 0.01],
+        'How often strobes flash (0 = never, 1 = constant)',
+      ),
+    }),
+    blinders: field.group('Blinders', 'Blinder lights', {
+      enabled: field.toggle('Enabled', true, 'Enable blinders'),
+      mode: field.select(
+        'Mode',
+        'controlled',
+        ['controlled', 'random'],
+        'Random flicker or controlled by intensity',
+      ),
+      intensity: field.number(
+        'Intensity',
+        0,
+        [0, 1, 0.01],
+        'Blinder intensity (0-1), triggers above 0.3',
+      ),
+    }),
+    overheadBlinder: field.group(
+      'Overhead Blinder',
+      'White flood light from above for drops',
       {
-        label: 'Post Processing',
-        description: 'Bloom and post-processing effects',
-      },
-      {
-        bloom: v.toggle({
-          label: 'Bloom Enabled',
-          description: 'Enable bloom effect',
-          defaultValue: true,
-        }),
-        bloomStrength: v.number({
-          label: 'Bloom Strength',
-          description: 'Bloom effect strength',
-          defaultValue: 0.5,
-          min: 0,
-          max: 3,
-          step: 0.01,
-        }),
-        bloomRadius: v.number({
-          label: 'Bloom Radius',
-          description: 'Bloom effect radius',
-          defaultValue: 0.8,
-          min: 0,
-          max: 1,
-          step: 0.01,
-        }),
-        bloomThreshold: v.number({
-          label: 'Bloom Threshold',
-          description: 'Bloom effect threshold',
-          defaultValue: 0.6,
-          min: 0,
-          max: 1,
-          step: 0.01,
-        }),
-      },
-    ),
-    lasers: v.group(
-      {
-        label: 'Lasers',
-        description: 'Laser effects',
-      },
-      {
-        enabled: v.toggle({
-          label: 'Enabled',
-          description: 'Enable lasers',
-          defaultValue: true,
-        }),
-        mode: v.select({
-          label: 'Mode',
-          description: 'Laser pattern mode',
-          defaultValue: 'auto',
-          options: ['auto', '0', '1', '2', '3', '4'],
-        }),
-        colorMode: v.select({
-          label: 'Color Mode',
-          description: 'Single or multi-color mode',
-          defaultValue: 'multi',
-          options: ['multi', 'single'],
-        }),
-        singleColor: v.color({
-          label: 'Color',
-          description: 'Laser color (when in single mode)',
-          defaultValue: '#ff0000',
-        }),
-        rotationSpeed: v.number({
-          label: 'Speed',
-          description: 'Rotation speed',
-          defaultValue: 1.0,
-          min: 0,
-          max: 3,
-          step: 0.1,
-        }),
-        maxConcurrentLasers: v.number({
-          label: 'Max Active Lasers',
-          description: 'Maximum number of lasers active at once',
-          defaultValue: 12,
-          min: 1,
-          max: 12,
-          step: 1,
-        }),
-      },
-    ),
-    movingLights: v.group(
-      {
-        label: 'Moving Lights',
-        description: 'Moving head lights',
-      },
-      {
-        enabled: v.toggle({
-          label: 'Enabled',
-          description: 'Enable moving lights',
-          defaultValue: true,
-        }),
-        mode: v.select({
-          label: 'Mode',
-          description: 'Movement pattern mode',
-          defaultValue: 'auto',
-          options: ['auto', '0', '1', '2', '3', '4'],
-        }),
-        colorMode: v.select({
-          label: 'Color Mode',
-          description: 'Single or multi-color mode',
-          defaultValue: 'multi',
-          options: ['multi', 'single'],
-        }),
-        singleColor: v.color({
-          label: 'Color',
-          description: 'Light color (when in single mode)',
-          defaultValue: '#ffffff',
-        }),
-        intensity: v.number({
-          label: 'Intensity',
-          description: 'Light intensity',
-          defaultValue: 5.0,
-          min: 0,
-          max: 20,
-          step: 0.1,
-        }),
-        speed: v.number({
-          label: 'Speed',
-          description: 'Movement speed',
-          defaultValue: 1.0,
-          min: 0,
-          max: 3,
-          step: 0.1,
-        }),
-      },
-    ),
-    beams: v.group(
-      {
-        label: 'Beams',
-        description: 'Beam effects',
-      },
-      {
-        enabled: v.toggle({
-          label: 'Enabled',
-          description: 'Enable beams',
-          defaultValue: true,
-        }),
-        mode: v.select({
-          label: 'Mode',
-          description: 'Beam pattern mode',
-          defaultValue: 'auto',
-          options: ['auto', '0', '1', '2', '3', '4', '5', '6'],
-        }),
-        colorMode: v.select({
-          label: 'Color Mode',
-          description: 'Single or multi-color mode',
-          defaultValue: 'multi',
-          options: ['multi', 'single'],
-        }),
-        singleColor: v.color({
-          label: 'Color',
-          description: 'Beam color (when in single mode)',
-          defaultValue: '#88aaff',
-        }),
-        intensity: v.number({
-          label: 'Intensity',
-          description: 'Beam intensity',
-          defaultValue: 1.0,
-          min: 0,
-          max: 3,
-          step: 0.1,
-        }),
+        enabled: field.toggle('Enabled', true, 'Enable overhead blinder'),
+        intensity: field.number(
+          'Intensity',
+          0,
+          [0, 200, 1],
+          'Overhead blinder intensity (0 = off)',
+        ),
       },
     ),
-    stageLights: v.group(
-      {
-        label: 'Stage Lights',
-        description: 'Static stage lights',
-      },
-      {
-        enabled: v.toggle({
-          label: 'Enabled',
-          description: 'Enable stage lights',
-          defaultValue: true,
-        }),
-        color: v.color({
-          label: 'Color',
-          description: 'Stage light color',
-          defaultValue: '#8888ff',
-        }),
-      },
-    ),
-    stageWash: v.group(
-      {
-        label: 'Stage Wash',
-        description: 'Wash lights',
-      },
-      {
-        enabled: v.toggle({
-          label: 'Enabled',
-          description: 'Enable wash lights',
-          defaultValue: true,
-        }),
-        intensity: v.number({
-          label: 'Intensity',
-          description: 'Wash light intensity',
-          defaultValue: 5.0,
-          min: 0,
-          max: 50,
-          step: 0.5,
-        }),
-      },
-    ),
-    strobes: v.group(
-      {
-        label: 'Strobes',
-        description: 'Strobe lights',
-      },
-      {
-        enabled: v.toggle({
-          label: 'Enabled',
-          description: 'Enable strobes',
-          defaultValue: true,
-        }),
-        intensity: v.number({
-          label: 'Intensity',
-          description: 'Strobe intensity (brightness)',
-          defaultValue: 500,
-          min: 0,
-          max: 1000,
-          step: 10,
-        }),
-        flashRate: v.number({
-          label: 'Flash Rate',
-          description: 'How often strobes flash (0 = never, 1 = constant)',
-          defaultValue: 0.3,
-          min: 0,
-          max: 1,
-          step: 0.01,
-        }),
-      },
-    ),
-    blinders: v.group(
-      {
-        label: 'Blinders',
-        description: 'Blinder lights',
-      },
-      {
-        enabled: v.toggle({
-          label: 'Enabled',
-          description: 'Enable blinders',
-          defaultValue: true,
-        }),
-        mode: v.select({
-          label: 'Mode',
-          description: 'Random flicker or controlled by intensity',
-          defaultValue: 'controlled',
-          options: ['controlled', 'random'],
-        }),
-        intensity: v.number({
-          label: 'Intensity',
-          description: 'Blinder intensity (0-1), triggers above 0.3',
-          defaultValue: 0,
-          min: 0,
-          max: 1,
-          step: 0.01,
-        }),
-      },
-    ),
-    overheadBlinder: v.group(
-      {
-        label: 'Overhead Blinder',
-        description: 'White flood light from above for drops',
-      },
-      {
-        enabled: v.toggle({
-          label: 'Enabled',
-          description: 'Enable overhead blinder',
-          defaultValue: true,
-        }),
-        intensity: v.number({
-          label: 'Intensity',
-          description: 'Overhead blinder intensity (0 = off)',
-          defaultValue: 0,
-          min: 0,
-          max: 200,
-          step: 1,
-        }),
-      },
-    ),
-    accentLights: v.group(
-      {
-        label: 'Accent Lights',
-        description: 'Decorative accent lights',
-      },
-      {
-        enabled: v.toggle({
-          label: 'Enabled',
-          description: 'Enable accent lights',
-          defaultValue: true,
-        }),
-        light1Color: v.color({
-          label: 'Light 1 Color',
-          description: 'Color of first accent light',
-          defaultValue: '#ff00ff',
-        }),
-        light2Color: v.color({
-          label: 'Light 2 Color',
-          description: 'Color of second accent light',
-          defaultValue: '#00ffff',
-        }),
-        djSpotIntensity: v.number({
-          label: 'DJ Spotlight',
-          description: 'DJ spotlight intensity',
-          defaultValue: 0.8,
-          min: 0,
-          max: 5,
-          step: 0.1,
-        }),
-      },
-    ),
-    characters: v.group(
-      {
-        label: 'Characters',
-        description: 'DJ and crowd settings',
-      },
-      {
-        showDj: v.toggle({
-          label: 'Show DJ',
-          description: 'Show the DJ on stage',
-          defaultValue: true,
-        }),
-        animationSpeed: v.number({
-          label: 'Animation Speed',
-          description: 'Playback speed for the authored DJ and crowd animation',
-          defaultValue: 1,
-          min: 0,
-          max: 4,
-          step: 0.05,
-        }),
-        crowdCount: v.number({
-          label: 'Crowd Count',
-          description: 'Number of people in the crowd',
-          defaultValue: 500,
-          min: 0,
-          max: 1000,
-          step: 50,
-        }),
-      },
-    ),
-    debug: v.group(
-      {
-        label: 'Debug',
-        description: 'Debug options',
-      },
-      {
-        showHelpers: v.toggle({
-          label: 'Show Helpers',
-          description: 'Show debug helpers',
-          defaultValue: false,
-        }),
-      },
-    ),
+    accentLights: field.group('Accent Lights', 'Decorative accent lights', {
+      enabled: field.toggle('Enabled', true, 'Enable accent lights'),
+      light1Color: field.color(
+        'Light 1 Color',
+        '#ff00ff',
+        'Color of first accent light',
+      ),
+      light2Color: field.color(
+        'Light 2 Color',
+        '#00ffff',
+        'Color of second accent light',
+      ),
+      djSpotIntensity: field.number(
+        'DJ Spotlight',
+        0.8,
+        [0, 5, 0.1],
+        'DJ spotlight intensity',
+      ),
+    }),
+    characters: field.group('Characters', 'DJ and crowd settings', {
+      showDj: field.toggle('Show DJ', true, 'Show the DJ on stage'),
+      animationSpeed: field.number(
+        'Animation Speed',
+        1,
+        [0, 4, 0.05],
+        'Playback speed for the authored DJ and crowd animation',
+      ),
+      crowdCount: field.number(
+        'Crowd Count',
+        500,
+        [0, 1000, 50],
+        'Number of people in the crowd',
+      ),
+    }),
+    debug: field.group('Debug', 'Debug options', {
+      showHelpers: field.toggle('Show Helpers', false, 'Show debug helpers'),
+    }),
   }),
   defaultNetworks: {
     'blinders.intensity': 'hihat-adaptive',

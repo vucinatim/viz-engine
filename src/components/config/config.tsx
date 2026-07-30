@@ -61,20 +61,6 @@ export const isSettingVisible = (
   }
 };
 
-export const createSettingDefaults = (
-  group: VizComponentGroupSetting,
-): ComponentSettingValues =>
-  Object.fromEntries(
-    Object.entries(group.fields).map(([key, setting]) => [
-      key,
-      setting.kind === 'group'
-        ? createSettingDefaults(setting)
-        : setting.kind === 'action'
-          ? null
-          : structuredClone(setting.defaultValue),
-    ]),
-  );
-
 export const findComponentSetting = (
   group: VizComponentGroupSetting,
   path: string,

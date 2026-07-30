@@ -184,18 +184,6 @@ export function ProfilerPanel() {
     return () => clearInterval(interval);
   }, [isRecording, currentSession]);
 
-  // Force re-render every 500ms when profiler is visible
-  useEffect(() => {
-    if (!visible || !enabled) return;
-
-    const intervalId = setInterval(() => {
-      // Force component to re-render by triggering a state read
-      // Zustand will handle the re-render when store updates
-    }, 500);
-
-    return () => clearInterval(intervalId);
-  }, [visible, enabled]);
-
   // Handler functions
   const handleStartRecording = () => {
     const name =

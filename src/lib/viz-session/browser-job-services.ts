@@ -1,7 +1,14 @@
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorRuntimePreviewAttachmentStore, {
   waitForEditorRuntimePreviewAttachments,
 } from '@/lib/stores/editor-runtime-preview-attachment-store';
-import { createVizBrowserAudioBakeSourceResolver } from '@/lib/utils/browser-audio-bake';
+import {
+  bakeBrowserAudioFeatures,
+  createVizBrowserAudioBakeSourceResolver,
+  loadAndDecodeBrowserAudio,
+  sampleBrowserAudioBakeFrame,
+  type BrowserAudioBake,
+} from '@/lib/utils/browser-audio-bake';
 import { createVizBrowserRenderExecutor } from '@/lib/utils/browser-render-executor';
 import { fastCaptureCanvas } from '@/lib/utils/fast-frame-capture';
 import { encodeVideoWithProbe } from '@/lib/utils/video-encoder';
@@ -10,6 +17,7 @@ import type { VizSessionHost } from '@viz-engine/editor-control';
 import {
   createVizRenderJobService,
   createVizRenderSourceContentIdentity,
+  type VizRenderSource,
 } from '@viz-engine/render';
 import {
   resolveVizProjectAudioAsset,
@@ -37,6 +45,16 @@ export const createStudioBrowserJobServices = ({
   getProjectState,
   renderRuntimePreviewFrame,
 }: CreateStudioBrowserJobServicesOptions) => {
+  const renderAudioBakes = new WeakMap<
+    object,
+    Promise<BrowserAudioBake | undefined>
+  >();
+  const resolveRenderAudioUrl = (source: VizRenderSource) =>
+    resolveVizProjectAudioAsset(source.project, source.resolvedAssets)?.resolved
+      .uri ??
+    getHost().getSnapshot().audioSession.source?.uri ??
+    useAudioEngineStore.getState().audioElementRef.current?.currentSrc;
+
   const audioFeatureBakeJobs = createVizAudioFeatureBakeJobService({
     sourceResolver: createVizBrowserAudioBakeSourceResolver((request) => {
       const asset = getHost()
@@ -81,6 +99,7 @@ export const createStudioBrowserJobServices = ({
           frames,
           audioUrl,
           request,
+          source,
           signal,
           onProgress,
         }) =>
@@ -98,19 +117,18 @@ export const createStudioBrowserJobServices = ({
                   : request.quality === 'standard'
                     ? 'medium'
                     : 'low',
-              audioStartTime: request.startFrame / request.fps,
+              audioStartTime: request.startFrame / source.project.timeline.fps,
               audioDuration: request.frameCount / request.fps,
             },
             (percentage) => onProgress(percentage / 100),
             { signal },
           ),
-        resolveAudioUrl: (source) =>
-          resolveVizProjectAudioAsset(source.project, source.resolvedAssets)
-            ?.resolved.uri ?? null,
+        resolveAudioUrl: (source) => resolveRenderAudioUrl(source) ?? null,
         captureFrame: async ({
           request,
           source,
           frame,
+          sequenceIndex,
           firstFrame,
           signal,
         }) => {
@@ -133,11 +151,43 @@ export const createStudioBrowserJobServices = ({
           }
 
           const fps = source.project.timeline.fps;
-          const audio = sampleProjectAudioFrameSnapshot(
-            source.project,
-            source.resolvedArtifacts,
-            frame,
-          ) ?? {
+          let audio: VizSessionRuntimePreviewAudioFrameData | undefined =
+            sampleProjectAudioFrameSnapshot(
+              source.project,
+              source.resolvedArtifacts,
+              frame,
+            );
+          if (!audio && (request.kind === 'clip' || request.kind === 'video')) {
+            let bake = renderAudioBakes.get(source);
+            if (!bake) {
+              bake = (async () => {
+                const audioUrl = resolveRenderAudioUrl(source);
+                if (!audioUrl) {
+                  return undefined;
+                }
+                const loaded = await loadAndDecodeBrowserAudio(
+                  audioUrl,
+                  signal,
+                );
+                return bakeBrowserAudioFeatures(
+                  loaded.audioBuffer,
+                  loaded.sourceContentIdentity,
+                  {
+                    fps: request.fps,
+                    startTime: request.startFrame / fps,
+                    duration: request.frameCount / request.fps,
+                    shouldCancel: () => signal.aborted,
+                  },
+                );
+              })();
+              renderAudioBakes.set(source, bake);
+            }
+            const browserBake = await bake;
+            audio = browserBake
+              ? sampleBrowserAudioBakeFrame(browserBake, sequenceIndex)
+              : undefined;
+          }
+          audio ??= {
             frequencyData: new Uint8Array(0),
             timeDomainData: new Uint8Array(0),
             sampleRate: source.project.timeline.sampleRate ?? 44_100,

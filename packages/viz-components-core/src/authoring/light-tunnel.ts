@@ -1,6 +1,7 @@
 import {
   allSettingConditions,
   defineVizComponentAuthoring,
+  field,
   settingCondition,
   v,
 } from './schema.js';
@@ -9,75 +10,63 @@ export const lightTunnelAuthoring = defineVizComponentAuthoring({
   componentId: 'light-tunnel',
   compatibility: 'render-safe',
   config: v.config({
-    structure: v.group(
+    structure: field.group(
+      'Tunnel Structure',
+      'Physical dimensions and depth of the tunnel',
       {
-        label: 'Tunnel Structure',
-        description: 'Physical dimensions and depth of the tunnel',
-      },
-      {
-        cubeSize: v.number({
-          label: 'Cube Size',
-          description: 'Size of each cube',
-          defaultValue: 2.5,
-          min: 0.5,
-          max: 3,
-          step: 0.1,
-        }),
-        spacing: v.number({
-          label: 'Spacing',
-          description: 'Space between cubes',
-          defaultValue: 1.3,
-          min: 1,
-          max: 5,
-          step: 0.1,
-        }),
-        tunnelDepth: v.number({
-          label: 'Tunnel Depth',
-          description: 'Number of cube rings visible in the tunnel',
-          defaultValue: 13,
-          min: 10,
-          max: 40,
-          step: 1,
-        }),
+        cubeSize: field.number(
+          'Cube Size',
+          2.5,
+          [0.5, 3, 0.1],
+          'Size of each cube',
+        ),
+        spacing: field.number(
+          'Spacing',
+          1.3,
+          [1, 5, 0.1],
+          'Space between cubes',
+        ),
+        tunnelDepth: field.number(
+          'Tunnel Depth',
+          13,
+          [10, 40, 1],
+          'Number of cube rings visible in the tunnel',
+        ),
       },
     ),
-    appearance: v.group(
+    appearance: field.group(
+      'Visual Style',
+      'Rendering mode and color configuration',
       {
-        label: 'Visual Style',
-        description: 'Rendering mode and color configuration',
-      },
-      {
-        renderMode: v.select({
-          label: 'Render Mode',
-          description: 'Hollow (edges only) or Solid (edges + material)',
-          defaultValue: 'Solid',
-          options: ['Hollow', 'Solid'],
-        }),
-        colorMode: v.select({
-          label: 'Color Mode',
-          description: 'How to color the cube edges',
-          defaultValue: 'Alternating',
-          options: ['Single', 'Random', 'Alternating', 'Spiral', 'Depth'],
-        }),
-        edgeColor: v.color({
-          label: 'Edge Color',
-          description: 'Color of the glowing edges',
-          defaultValue: '#00FFFF',
-          visibleWhen: settingCondition(
-            'appearance.colorMode',
-            'equals',
-            'Single',
-          ),
-        }),
+        renderMode: field.select(
+          'Render Mode',
+          'Solid',
+          ['Hollow', 'Solid'],
+          'Hollow (edges only) or Solid (edges + material)',
+        ),
+        colorMode: field.select(
+          'Color Mode',
+          'Alternating',
+          ['Single', 'Random', 'Alternating', 'Spiral', 'Depth'],
+          'How to color the cube edges',
+        ),
+        edgeColor: field.color(
+          'Edge Color',
+          '#00FFFF',
+          'Color of the glowing edges',
+          {
+            visibleWhen: settingCondition(
+              'appearance.colorMode',
+              'equals',
+              'Single',
+            ),
+          },
+        ),
         colorPalette: v.list({
           label: 'Color Palette',
           description: 'List of colors to use for multi-color modes',
           defaultValue: ['#FF00FF', '#00FFFF'],
-          itemConfig: v.color({
-            label: 'Color',
-            description: 'A color in the palette',
-            defaultValue: '#FFFFFF',
-          }),
+          itemConfig: field.color('Color', '#FFFFFF', 'A color in the palette'),
           visibleWhen: settingCondition(
             'appearance.colorMode',
             'not-equals',
@@ -86,334 +75,287 @@ export const lightTunnelAuthoring = defineVizComponentAuthoring({
         }),
       },
     ),
-    edges: v.group(
+    edges: field.group(
+      'Edge Appearance',
+      'Glowing edge styling and thickness',
       {
-        label: 'Edge Appearance',
-        description: 'Glowing edge styling and thickness',
-      },
-      {
-        edgeThickness: v.number({
-          label: 'Edge Thickness',
-          description: 'Thickness of the glowing edges',
-          defaultValue: 5.5,
-          min: 1,
-          max: 10,
-          step: 0.5,
-        }),
-        glowIntensity: v.number({
-          label: 'Glow Intensity',
-          description: 'Intensity of the edge glow',
-          defaultValue: 1.8,
-          min: 0.5,
-          max: 5,
-          step: 0.1,
-        }),
+        edgeThickness: field.number(
+          'Edge Thickness',
+          5.5,
+          [1, 10, 0.5],
+          'Thickness of the glowing edges',
+        ),
+        glowIntensity: field.number(
+          'Glow Intensity',
+          1.8,
+          [0.5, 5, 0.1],
+          'Intensity of the edge glow',
+        ),
       },
     ),
-    material: v.group(
+    material: field.group(
+      'Solid Material',
+      'PBR material properties for solid cubes',
       {
-        label: 'Solid Material',
-        description: 'PBR material properties for solid cubes',
-      },
-      {
-        solidCubeColor: v.color({
-          label: 'Base Color',
-          description: 'Base color of the solid cube material',
-          defaultValue: '#0a0a0a',
-          visibleWhen: settingCondition(
-            'appearance.renderMode',
-            'equals',
-            'Solid',
-          ),
-        }),
-        solidEmissiveColor: v.color({
-          label: 'Emissive Color',
-          description: 'Glow color of the solid cube material',
-          defaultValue: 'rgb(0, 0, 0)',
-          visibleWhen: settingCondition(
-            'appearance.renderMode',
-            'equals',
-            'Solid',
-          ),
-        }),
-        solidEmissiveIntensity: v.number({
-          label: 'Emissive Intensity',
-          description: 'How much the solid material glows',
-          defaultValue: 0,
-          min: 0,
-          max: 1,
-          step: 0.05,
-          visibleWhen: settingCondition(
-            'appearance.renderMode',
-            'equals',
-            'Solid',
-          ),
-        }),
-        metalness: v.number({
-          label: 'Metalness',
-          description: 'How metallic the material appears',
-          defaultValue: 0.7,
-          min: 0,
-          max: 1,
-          step: 0.05,
-          visibleWhen: settingCondition(
-            'appearance.renderMode',
-            'equals',
-            'Solid',
-          ),
-        }),
-        roughness: v.number({
-          label: 'Roughness',
-          description: 'How rough/smooth the material surface is',
-          defaultValue: 0.77,
-          min: 0,
-          max: 1,
-          step: 0.01,
-          visibleWhen: settingCondition(
-            'appearance.renderMode',
-            'equals',
-            'Solid',
-          ),
-        }),
-        envMapIntensity: v.number({
-          label: 'Environment Reflection',
-          description: 'Intensity of environment reflections',
-          defaultValue: 0,
-          min: 0,
-          max: 5,
-          step: 0.1,
-          visibleWhen: settingCondition(
-            'appearance.renderMode',
-            'equals',
-            'Solid',
-          ),
-        }),
-      },
-    ),
-    lighting: v.group(
-      {
-        label: 'Scene Lighting',
-        description: 'Rotating light circle in front of camera',
-      },
-      {
-        enableLights: v.toggle({
-          label: 'Enable Lights',
-          description:
-            'Add a rotating circle of colored lights in front of camera',
-          defaultValue: true,
-          visibleWhen: settingCondition(
-            'appearance.renderMode',
-            'equals',
-            'Solid',
-          ),
-        }),
-        lightCount: v.number({
-          label: 'Light Count',
-          description: 'Number of lights in the circle',
-          defaultValue: 6,
-          min: 3,
-          max: 16,
-          step: 1,
-          visibleWhen: allSettingConditions(
-            settingCondition('appearance.renderMode', 'equals', 'Solid'),
-            settingCondition('lighting.enableLights', 'equals', true),
-          ),
-        }),
-        lightCircleRadius: v.number({
-          label: 'Circle Radius',
-          description: 'Radius of the light circle',
-          defaultValue: 7,
-          min: 0.2,
-          max: 7,
-          step: 0.1,
-          visibleWhen: allSettingConditions(
-            settingCondition('appearance.renderMode', 'equals', 'Solid'),
-            settingCondition('lighting.enableLights', 'equals', true),
-          ),
-        }),
-        lightCircleDistance: v.number({
-          label: 'Circle Distance',
-          description: 'Distance of light circle from camera (into tunnel)',
-          defaultValue: 7,
-          min: 0.5,
-          max: 10,
-          step: 0.5,
-          visibleWhen: allSettingConditions(
-            settingCondition('appearance.renderMode', 'equals', 'Solid'),
-            settingCondition('lighting.enableLights', 'equals', true),
-          ),
-        }),
-        lightIntensity: v.number({
-          label: 'Light Intensity',
-          description: 'Intensity of the point lights',
-          defaultValue: 100,
-          min: 0,
-          max: 100,
-          step: 1,
-          visibleWhen: allSettingConditions(
-            settingCondition('appearance.renderMode', 'equals', 'Solid'),
-            settingCondition('lighting.enableLights', 'equals', true),
-          ),
-        }),
-        lightDistance: v.number({
-          label: 'Light Distance',
-          description: 'Maximum distance of light effect',
-          defaultValue: 100,
-          min: 1,
-          max: 100,
-          step: 5,
-          visibleWhen: allSettingConditions(
-            settingCondition('appearance.renderMode', 'equals', 'Solid'),
-            settingCondition('lighting.enableLights', 'equals', true),
-          ),
-        }),
-        lightRotationSpeed: v.number({
-          label: 'Rotation Speed',
-          description: 'Speed of light circle rotation (clockwise)',
-          defaultValue: 0.15,
-          min: 0,
-          max: 2,
-          step: 0.05,
-          visibleWhen: allSettingConditions(
-            settingCondition('appearance.renderMode', 'equals', 'Solid'),
-            settingCondition('lighting.enableLights', 'equals', true),
-          ),
-        }),
+        solidCubeColor: field.color(
+          'Base Color',
+          '#0a0a0a',
+          'Base color of the solid cube material',
+          {
+            visibleWhen: settingCondition(
+              'appearance.renderMode',
+              'equals',
+              'Solid',
+            ),
+          },
+        ),
+        solidEmissiveColor: field.color(
+          'Emissive Color',
+          'rgb(0, 0, 0)',
+          'Glow color of the solid cube material',
+          {
+            visibleWhen: settingCondition(
+              'appearance.renderMode',
+              'equals',
+              'Solid',
+            ),
+          },
+        ),
+        solidEmissiveIntensity: field.number(
+          'Emissive Intensity',
+          0,
+          [0, 1, 0.05],
+          'How much the solid material glows',
+          {
+            visibleWhen: settingCondition(
+              'appearance.renderMode',
+              'equals',
+              'Solid',
+            ),
+          },
+        ),
+        metalness: field.number(
+          'Metalness',
+          0.7,
+          [0, 1, 0.05],
+          'How metallic the material appears',
+          {
+            visibleWhen: settingCondition(
+              'appearance.renderMode',
+              'equals',
+              'Solid',
+            ),
+          },
+        ),
+        roughness: field.number(
+          'Roughness',
+          0.77,
+          [0, 1, 0.01],
+          'How rough/smooth the material surface is',
+          {
+            visibleWhen: settingCondition(
+              'appearance.renderMode',
+              'equals',
+              'Solid',
+            ),
+          },
+        ),
+        envMapIntensity: field.number(
+          'Environment Reflection',
+          0,
+          [0, 5, 0.1],
+          'Intensity of environment reflections',
+          {
+            visibleWhen: settingCondition(
+              'appearance.renderMode',
+              'equals',
+              'Solid',
+            ),
+          },
+        ),
       },
     ),
-    animation: v.group(
+    lighting: field.group(
+      'Scene Lighting',
+      'Rotating light circle in front of camera',
       {
-        label: 'Animation',
-        description: 'Movement and rotation speeds',
-      },
-      {
-        tunnelSpeed: v.number({
-          label: 'Tunnel Speed',
-          description: 'Speed of movement through the tunnel',
-          defaultValue: 0.5,
-          min: 0,
-          max: 3,
-          step: 0.1,
-        }),
-        rotationSpeed: v.number({
-          label: 'Rotation Speed',
-          description: 'Speed of tunnel rotation around its axis',
-          defaultValue: 0.05,
-          min: 0,
-          max: 2,
-          step: 0.05,
-        }),
+        enableLights: field.toggle(
+          'Enable Lights',
+          true,
+          'Add a rotating circle of colored lights in front of camera',
+          {
+            visibleWhen: settingCondition(
+              'appearance.renderMode',
+              'equals',
+              'Solid',
+            ),
+          },
+        ),
+        lightCount: field.number(
+          'Light Count',
+          6,
+          [3, 16, 1],
+          'Number of lights in the circle',
+          {
+            visibleWhen: allSettingConditions(
+              settingCondition('appearance.renderMode', 'equals', 'Solid'),
+              settingCondition('lighting.enableLights', 'equals', true),
+            ),
+          },
+        ),
+        lightCircleRadius: field.number(
+          'Circle Radius',
+          7,
+          [0.2, 7, 0.1],
+          'Radius of the light circle',
+          {
+            visibleWhen: allSettingConditions(
+              settingCondition('appearance.renderMode', 'equals', 'Solid'),
+              settingCondition('lighting.enableLights', 'equals', true),
+            ),
+          },
+        ),
+        lightCircleDistance: field.number(
+          'Circle Distance',
+          7,
+          [0.5, 10, 0.5],
+          'Distance of light circle from camera (into tunnel)',
+          {
+            visibleWhen: allSettingConditions(
+              settingCondition('appearance.renderMode', 'equals', 'Solid'),
+              settingCondition('lighting.enableLights', 'equals', true),
+            ),
+          },
+        ),
+        lightIntensity: field.number(
+          'Light Intensity',
+          100,
+          [0, 100, 1],
+          'Intensity of the point lights',
+          {
+            visibleWhen: allSettingConditions(
+              settingCondition('appearance.renderMode', 'equals', 'Solid'),
+              settingCondition('lighting.enableLights', 'equals', true),
+            ),
+          },
+        ),
+        lightDistance: field.number(
+          'Light Distance',
+          100,
+          [1, 100, 5],
+          'Maximum distance of light effect',
+          {
+            visibleWhen: allSettingConditions(
+              settingCondition('appearance.renderMode', 'equals', 'Solid'),
+              settingCondition('lighting.enableLights', 'equals', true),
+            ),
+          },
+        ),
+        lightRotationSpeed: field.number(
+          'Rotation Speed',
+          0.15,
+          [0, 2, 0.05],
+          'Speed of light circle rotation (clockwise)',
+          {
+            visibleWhen: allSettingConditions(
+              settingCondition('appearance.renderMode', 'equals', 'Solid'),
+              settingCondition('lighting.enableLights', 'equals', true),
+            ),
+          },
+        ),
       },
     ),
-    wave: v.group(
+    animation: field.group('Animation', 'Movement and rotation speeds', {
+      tunnelSpeed: field.number(
+        'Tunnel Speed',
+        0.5,
+        [0, 3, 0.1],
+        'Speed of movement through the tunnel',
+      ),
+      rotationSpeed: field.number(
+        'Rotation Speed',
+        0.05,
+        [0, 2, 0.05],
+        'Speed of tunnel rotation around its axis',
+      ),
+    }),
+    wave: field.group(
+      'Mexican Wave',
+      'Outward wave animation for center cubes',
       {
-        label: 'Mexican Wave',
-        description: 'Outward wave animation for center cubes',
-      },
-      {
-        triggerWave: v.toggle({
-          label: 'Trigger Wave',
-          description: 'Fire a wave animation through the tunnel',
-          defaultValue: false,
-        }),
-        waveSpeed: v.number({
-          label: 'Wave Speed',
-          description: 'Speed at which the wave travels down the tunnel',
-          defaultValue: 8.5,
-          min: 0.5,
-          max: 10,
-          step: 0.5,
-        }),
-        waveAmplitude: v.number({
-          label: 'Wave Amplitude',
-          description: 'How far cubes move outward from center',
-          defaultValue: 1,
-          min: 0.5,
-          max: 5,
-          step: 0.1,
-        }),
-        waveDuration: v.number({
-          label: 'Wave Duration',
-          description: 'Duration of the wave animation per cube',
-          defaultValue: 0.4,
-          min: 0.2,
-          max: 2,
-          step: 0.1,
-        }),
-      },
-    ),
-    atmosphere: v.group(
-      {
-        label: 'Atmosphere',
-        description: 'Environmental fog effects',
-      },
-      {
-        fogDensity: v.number({
-          label: 'Fog Density',
-          description: 'Density of fog effect for depth',
-          defaultValue: 0.095,
-          min: 0,
-          max: 0.1,
-          step: 0.005,
-        }),
+        triggerWave: field.toggle(
+          'Trigger Wave',
+          false,
+          'Fire a wave animation through the tunnel',
+        ),
+        waveSpeed: field.number(
+          'Wave Speed',
+          8.5,
+          [0.5, 10, 0.5],
+          'Speed at which the wave travels down the tunnel',
+        ),
+        waveAmplitude: field.number(
+          'Wave Amplitude',
+          1,
+          [0.5, 5, 0.1],
+          'How far cubes move outward from center',
+        ),
+        waveDuration: field.number(
+          'Wave Duration',
+          0.4,
+          [0.2, 2, 0.1],
+          'Duration of the wave animation per cube',
+        ),
       },
     ),
-    postProcessing: v.group(
+    atmosphere: field.group('Atmosphere', 'Environmental fog effects', {
+      fogDensity: field.number(
+        'Fog Density',
+        0.095,
+        [0, 0.1, 0.005],
+        'Density of fog effect for depth',
+      ),
+    }),
+    postProcessing: field.group(
+      'Post Processing',
+      'Bloom and depth of field effects',
       {
-        label: 'Post Processing',
-        description: 'Bloom and depth of field effects',
-      },
-      {
-        bloom: v.toggle({
-          label: 'Bloom Enabled',
-          description: 'Enable bloom glow effect',
-          defaultValue: true,
-        }),
-        bloomStrength: v.number({
-          label: 'Bloom Strength',
-          description: 'Intensity of the bloom glow effect',
-          defaultValue: 0.5,
-          min: 0,
-          max: 3,
-          step: 0.05,
-        }),
-        bloomRadius: v.number({
-          label: 'Bloom Radius',
-          description: 'Size of the bloom glow spread',
-          defaultValue: 0.8,
-          min: 0,
-          max: 1,
-          step: 0.01,
-        }),
-        bloomThreshold: v.number({
-          label: 'Bloom Threshold',
-          description: 'Brightness threshold for bloom effect',
-          defaultValue: 0.1,
-          min: 0,
-          max: 1,
-          step: 0.01,
-        }),
-        depthOfField: v.toggle({
-          label: 'Depth of Field',
-          description: 'Enable cinematic shallow focus effect',
-          defaultValue: false,
-        }),
-        dofFocus: v.number({
-          label: 'DOF Focus Distance',
-          description: 'Distance where objects are in focus',
-          defaultValue: 1,
-          min: 1,
-          max: 50,
-          step: 0.5,
-        }),
-        dofAperture: v.number({
-          label: 'DOF Aperture',
-          description: 'Blur amount (lower = more blur)',
-          defaultValue: 0.0011,
-          min: 0.0001,
-          max: 0.002,
-          step: 0.0001,
-        }),
+        bloom: field.toggle('Bloom Enabled', true, 'Enable bloom glow effect'),
+        bloomStrength: field.number(
+          'Bloom Strength',
+          0.5,
+          [0, 3, 0.05],
+          'Intensity of the bloom glow effect',
+        ),
+        bloomRadius: field.number(
+          'Bloom Radius',
+          0.8,
+          [0, 1, 0.01],
+          'Size of the bloom glow spread',
+        ),
+        bloomThreshold: field.number(
+          'Bloom Threshold',
+          0.1,
+          [0, 1, 0.01],
+          'Brightness threshold for bloom effect',
+        ),
+        depthOfField: field.toggle(
+          'Depth of Field',
+          false,
+          'Enable cinematic shallow focus effect',
+        ),
+        dofFocus: field.number(
+          'DOF Focus Distance',
+          1,
+          [1, 50, 0.5],
+          'Distance where objects are in focus',
+        ),
+        dofAperture: field.number(
+          'DOF Aperture',
+          0.0011,
+          [0.0001, 0.002, 0.0001],
+          'Blur amount (lower = more blur)',
+        ),
       },
     ),
   }),
