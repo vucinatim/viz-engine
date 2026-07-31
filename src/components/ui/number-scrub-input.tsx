@@ -18,6 +18,7 @@ interface NumberScrubInputProps {
   name?: string;
   // How many pixels correspond to one step increment during drag
   pixelsPerStep?: number;
+  ariaLabel?: string;
 }
 
 function clamp(value: number, min?: number, max?: number) {
@@ -46,6 +47,7 @@ const NumberScrubInput = React.forwardRef<
       id,
       name,
       pixelsPerStep = 10,
+      ariaLabel,
     },
     ref,
   ) => {
@@ -67,6 +69,7 @@ const NumberScrubInput = React.forwardRef<
     const startValueRef = useRef(0);
     const isDraggingRef = useRef(false);
     const hasMovedRef = useRef(false);
+    const isTypingRef = useRef(false);
     const handleRef = useRef<HTMLDivElement | null>(null);
 
     const setDragCursor = (active: boolean) => {
@@ -141,10 +144,26 @@ const NumberScrubInput = React.forwardRef<
       };
     }, [cleanupGlobalListeners]);
 
+    const commitTypedValue = () => {
+      if (!isTypingRef.current) return;
+      isTypingRef.current = false;
+      const parsed = Number.parseFloat(inputRef.current?.value ?? '');
+      if (!Number.isFinite(parsed)) {
+        if (inputRef.current) inputRef.current.value = String(value);
+        onGestureCancelRef.current?.();
+        return;
+      }
+      const nextValue = clamp(parsed, minRef.current, maxRef.current);
+      latestDragValueRef.current = nextValue;
+      if (onCommitRef.current) onCommitRef.current(nextValue);
+      else if (onTransientChangeRef.current) onChangeRef.current(nextValue);
+    };
+
     const handleHandleMouseDown: React.MouseEventHandler<HTMLDivElement> = (
       e,
     ) => {
       if (e.button !== 0) return; // only left click
+      commitTypedValue();
       startYRef.current = e.clientY;
       startValueRef.current = value;
       latestDragValueRef.current = value;
@@ -207,7 +226,8 @@ const NumberScrubInput = React.forwardRef<
       const parsed = parseFloat(e.target.value);
       if (Number.isNaN(parsed)) return;
       const clamped = clamp(parsed, min, max);
-      onChange(clamped);
+      latestDragValueRef.current = clamped;
+      (onTransientChange ?? onChange)(clamped);
     };
 
     const handleWheel: React.WheelEventHandler<HTMLInputElement> = (e) => {
@@ -216,8 +236,11 @@ const NumberScrubInput = React.forwardRef<
       e.preventDefault();
       const dir = e.deltaY < 0 ? 1 : -1;
       const modifier = e.shiftKey ? 10 : e.altKey ? 0.1 : 1;
-      const next = value + dir * step * modifier;
-      onChange(clamp(Number(next.toFixed(6)), min, max));
+      const next = latestDragValueRef.current + dir * step * modifier;
+      const clamped = clamp(Number(next.toFixed(6)), min, max);
+      latestDragValueRef.current = clamped;
+      inputRef.current.value = String(clamped);
+      (onTransientChangeRef.current ?? onChangeRef.current)(clamped);
     };
 
     const bump = (dir: 1 | -1, modifier = 1) => {
@@ -232,6 +255,7 @@ const NumberScrubInput = React.forwardRef<
           id={inputId}
           name={name ?? inputId}
           type="number"
+          aria-label={ariaLabel}
           className={cn(
             'h-8 w-16 rounded-md border border-input bg-background px-2 py-1 text-center text-xs ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none',
             inputClassName,
@@ -241,8 +265,27 @@ const NumberScrubInput = React.forwardRef<
           max={max}
           step={step}
           onChange={handleChange}
+          onBlur={commitTypedValue}
           onWheel={handleWheel}
-          onFocus={(e) => e.currentTarget.select()}
+          onFocus={(e) => {
+            if (!isTypingRef.current) {
+              isTypingRef.current = true;
+              latestDragValueRef.current = value;
+              onGestureStartRef.current?.();
+            }
+            e.currentTarget.select();
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.currentTarget.blur();
+            } else if (event.key === 'Escape') {
+              event.preventDefault();
+              isTypingRef.current = false;
+              event.currentTarget.value = String(value);
+              onGestureCancelRef.current?.();
+              event.currentTarget.blur();
+            }
+          }}
           inputMode="decimal"
         />
         <div

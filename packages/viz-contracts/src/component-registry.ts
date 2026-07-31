@@ -64,6 +64,55 @@ const isNonEmptyString = (value: unknown): value is string => {
   return typeof value === 'string' && value.trim().length > 0;
 };
 
+const isFiniteVector3 = (
+  value: unknown,
+): value is { x: number; y: number; z: number } =>
+  typeof value === 'object' &&
+  value !== null &&
+  ['x', 'y', 'z'].every((axis) =>
+    Number.isFinite((value as Record<string, unknown>)[axis]),
+  );
+
+const isValidDefaultValue = (
+  definition: Exclude<
+    VizComponentSettingDefinition,
+    { kind: 'group' } | { kind: 'action' }
+  >,
+  value: unknown,
+): boolean => {
+  switch (definition.kind) {
+    case 'number':
+      return (
+        typeof value === 'number' &&
+        Number.isFinite(value) &&
+        value >= definition.min &&
+        value <= definition.max
+      );
+    case 'text':
+    case 'file':
+      return typeof value === 'string';
+    case 'color':
+      return isNonEmptyString(value);
+    case 'boolean':
+      return typeof value === 'boolean';
+    case 'select':
+      return typeof value === 'string' && definition.options.includes(value);
+    case 'vector3':
+      return (
+        isFiniteVector3(value) &&
+        (definition.min === undefined ||
+          Object.values(value).every((axis) => axis >= definition.min!)) &&
+        (definition.max === undefined ||
+          Object.values(value).every((axis) => axis <= definition.max!))
+      );
+    case 'list':
+      return (
+        Array.isArray(value) &&
+        value.every((item) => isValidDefaultValue(definition.item, item))
+      );
+  }
+};
+
 const isValidSettingCondition = (
   condition: VizComponentSettingCondition,
 ): boolean => {
@@ -151,7 +200,9 @@ const validateSettingDefinition = (
       !Number.isFinite(definition.max) ||
       definition.min > definition.max ||
       definition.defaultValue < definition.min ||
-      definition.defaultValue > definition.max
+      definition.defaultValue > definition.max ||
+      (definition.step !== undefined &&
+        (!Number.isFinite(definition.step) || definition.step <= 0))
     ) {
       issues.push({
         code: 'invalid-setting-definition',
@@ -171,7 +222,80 @@ const validateSettingDefinition = (
         path,
         message: `Select setting "${path}" must contain its default value in its options.`,
       });
+    } else if (
+      definition.options.some((option) => !isNonEmptyString(option)) ||
+      new Set(definition.options).size !== definition.options.length
+    ) {
+      issues.push({
+        code: 'invalid-setting-definition',
+        componentId,
+        path,
+        message: `Select setting "${path}" must declare unique, non-empty options.`,
+      });
     }
+  } else if (definition.kind === 'vector3') {
+    if (
+      (definition.min !== undefined && !Number.isFinite(definition.min)) ||
+      (definition.max !== undefined && !Number.isFinite(definition.max)) ||
+      (definition.min !== undefined &&
+        definition.max !== undefined &&
+        definition.min > definition.max) ||
+      (definition.step !== undefined &&
+        (!Number.isFinite(definition.step) || definition.step <= 0)) ||
+      !isValidDefaultValue(definition, definition.defaultValue)
+    ) {
+      issues.push({
+        code: 'invalid-setting-definition',
+        componentId,
+        path,
+        message: `Vector setting "${path}" has invalid bounds, step, or default value.`,
+      });
+    }
+  } else if (definition.kind === 'list') {
+    if (!isValidDefaultValue(definition, definition.defaultValue)) {
+      issues.push({
+        code: 'invalid-setting-definition',
+        componentId,
+        path,
+        message: `List setting "${path}" contains an invalid default item.`,
+      });
+    }
+    issues.push(
+      ...validateSettingDefinition(
+        componentId,
+        definition.item,
+        `${path}[]`,
+        seenPaths,
+      ),
+    );
+  } else if (definition.kind === 'file') {
+    if (
+      typeof definition.defaultValue !== 'string' ||
+      definition.allowedExtensions?.some(
+        (extension) => !isNonEmptyString(extension),
+      )
+    ) {
+      issues.push({
+        code: 'invalid-setting-definition',
+        componentId,
+        path,
+        message: `File setting "${path}" has an invalid default value or extension.`,
+      });
+    }
+  } else if (
+    (definition.kind === 'text' &&
+      typeof definition.defaultValue !== 'string') ||
+    (definition.kind === 'color' &&
+      !isNonEmptyString(definition.defaultValue)) ||
+    (definition.kind === 'boolean' &&
+      typeof definition.defaultValue !== 'boolean')
+  ) {
+    issues.push({
+      code: 'invalid-setting-definition',
+      componentId,
+      path,
+      message: `Setting "${path}" has an invalid default value.`,
+    });
   } else if (definition.kind === 'action') {
     if (!isNonEmptyString(definition.actionId)) {
       issues.push({

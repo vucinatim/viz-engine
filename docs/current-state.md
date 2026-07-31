@@ -361,8 +361,27 @@ complete:
 See
 [Preview Semantics And Layer Mirrors](./parity/evidence/2026-07-31-goal-three-preview-semantics-and-layer-mirrors.md).
 
-The parity matrix now contains 35 verified and 7 partial capabilities, with
-zero gaps and zero unaudited rows. Goal Three remains open because the 7
+The authoring-schema and live-control checkpoint is now also complete:
+
+- all eight portable value kinds plus actions render through one generic
+  schema-driven editor, including conditional, grouped, list, vector, and file
+  cases
+- text, numeric typing, sliders, vectors, colors, and nested continuous values
+  share the session-host live-overlay and one-commit gesture contract
+- missing editor values resolve from schema defaults and malformed authoring
+  defaults, bounds, steps, options, extensions, vectors, and list items fail at
+  the component registry boundary
+- headed Chromium proves text and vector preview changes before commit, zero
+  pointer-rate project revisions, exactly one release revision, complete field
+  visibility, and clean diagnostics
+- 20 fixed-device slider gestures measured 0.26 ms mean transient publication,
+  1.42 ms runtime publication, and 7.93 ms visible response
+
+See
+[Authoring Schema And Live Controls](./parity/evidence/2026-07-31-goal-three-authoring-schema-and-live-controls.md).
+
+The parity matrix now contains 36 verified and 6 partial capabilities, with
+zero gaps and zero unaudited rows. Goal Three remains open because the 6
 broader capabilities still require full acceptance evidence, alongside agent
 tooling and the second original production.
 

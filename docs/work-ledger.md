@@ -2368,3 +2368,30 @@
     tests, 13 active headed Chromium journeys plus 1 ordinary-gate opt-in skip,
     all 17 package builds, the studio production build, and both consumer
     smokes
+- completed the Goal Three authoring-schema and live-control checkpoint:
+  - audited all 305 portable field definitions across the core catalog: 56
+    groups, 158 numbers, 30 colors, 26 booleans, 5 texts, 18 selects, 1 list,
+    8 vectors, 2 files, and 1 action
+  - made text and direct numeric entry use the same transient runtime overlay
+    and single commit-on-blur/release contract as sliders, vectors, colors, and
+    nested continuous list controls
+  - resolved absent or malformed control values from portable defaults and
+    strengthened registry validation for every declared default shape, bounds,
+    step, select option, file extension, vector, and list item
+  - added schema-label accessibility for the generic controls and inspectable
+    setting kind/path markers without introducing another state owner
+  - passed 25 focused deterministic tests and a headed vocabulary journey that
+    proves live text/vector preview, frozen canonical revision during input,
+    one revision at commit, all field kinds, conditional fields, list editing,
+    and clean diagnostics
+  - passed the fixed-device benchmark across 20 slider gestures at 0.26 ms mean
+    input-to-transient, 1.42 ms input-to-runtime, 7.93 ms input-to-visible, and
+    0.32 ms release-to-mutation
+  - passed the complete gate with 62 deterministic test files / 279 tests, 16
+    active headed Chromium journeys plus 1 opt-in skip, all 17 package builds,
+    the studio build, and both built-consumer smokes
+  - advanced `parameters.dynamic-schema-form` to verified, leaving 36 verified
+    and 6 partial parity capabilities
+  - recorded the architecture, assumptions, metrics, and machine-readable
+    summary in
+    `docs/parity/evidence/2026-07-31-goal-three-authoring-schema-and-live-controls.md`

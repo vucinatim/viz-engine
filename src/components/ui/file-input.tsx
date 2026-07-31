@@ -12,6 +12,7 @@ type FileInputProps = {
   onAssetSelect: (selection: FileInputSelection) => Promise<string>;
   acceptExtensions?: string[];
   placeholder?: string;
+  ariaLabel?: string;
 };
 
 export default function FileInput({
@@ -20,6 +21,7 @@ export default function FileInput({
   onAssetSelect,
   acceptExtensions,
   placeholder,
+  ariaLabel,
 }: FileInputProps) {
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [draft, setDraft] = useState(value);
@@ -70,6 +72,7 @@ export default function FileInput({
     <div className="flex items-center gap-2">
       <Input
         data-testid="asset-uri-input"
+        aria-label={ariaLabel}
         value={draft}
         aria-invalid={Boolean(error)}
         title={error}

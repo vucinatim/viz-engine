@@ -118,10 +118,10 @@
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/layer-parameters.tsx", "src/components/config/config.tsx"],
       "v2Evidence": ["src/components/editor/layer-parameters.tsx", "src/components/config/config.tsx", "packages/viz-components-core/src/registry.ts"],
-      "status": "partial",
+      "status": "verified",
       "acceptance": ["Every supported schema field renders an appropriate control.", "Edits update canonical layer configuration and preview deterministically.", "Defaults, bounds, optional fields, and nested values retain their meaning."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-authoring-workspace.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-authoring-workspace.md", "docs/parity/evidence/2026-07-31-goal-three-authoring-schema-and-live-controls.md"]
     },
     {
       "id": "parameters.presets-reset",

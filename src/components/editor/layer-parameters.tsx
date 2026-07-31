@@ -64,7 +64,10 @@ const ActionField = ({
   layerId: string;
   setting: Extract<VizComponentSettingDefinition, { kind: 'action' }>;
 }) => (
-  <div className="px-4 pb-6">
+  <div
+    className="px-4 pb-6"
+    data-testid="component-action-field"
+    data-setting-kind="action">
     <SettingLabel setting={setting} />
     <ComponentActionControl
       label={setting.buttonLabel ?? setting.label}
@@ -198,7 +201,11 @@ const ParameterField = memo(
     const type = getSettingNodeHandleType(setting);
 
     return (
-      <div className="flex grow flex-wrap justify-between px-4">
+      <div
+        className="flex grow flex-wrap justify-between px-4"
+        data-testid="component-setting-field"
+        data-setting-kind={setting.kind}
+        data-setting-path={paramPath.join('.')}>
         <SimpleTooltip
           text={setting.description}
           trigger={

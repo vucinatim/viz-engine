@@ -53,6 +53,13 @@ const Slider = React.forwardRef<
       }
     };
 
+    const commitGesture = (nextValue: number) => {
+      if (!gestureActiveRef.current) return;
+      gestureActiveRef.current = false;
+      if (onCommit) onCommit(nextValue);
+      else if (onTransientChange) onChange(nextValue);
+    };
+
     const cancelGesture = () => {
       gestureActiveRef.current = false;
       setLiveValue(value);
@@ -71,8 +78,7 @@ const Slider = React.forwardRef<
               (onTransientChange ?? onChange)(nextValue);
             }}
             onValueCommit={([nextValue]) => {
-              gestureActiveRef.current = false;
-              onCommit?.(nextValue);
+              commitGesture(nextValue);
             }}
             onPointerDown={beginGesture}
             onPointerCancel={cancelGesture}
@@ -123,11 +129,23 @@ const Slider = React.forwardRef<
           step={step}
           onChange={(event) => {
             const nextValue = Number.parseFloat(event.target.value);
+            if (!Number.isFinite(nextValue)) return;
             setLiveValue(nextValue);
-            onChange(nextValue);
+            (onTransientChange ?? onChange)(nextValue);
           }}
+          onBlur={() => commitGesture(liveValue)}
           onFocus={(event) => {
+            beginGesture();
             event.target.select();
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.currentTarget.blur();
+            } else if (event.key === 'Escape') {
+              event.preventDefault();
+              cancelGesture();
+              event.currentTarget.blur();
+            }
           }}
         />
       </div>

@@ -2,6 +2,7 @@ import {
   findComponentSetting,
   isSettingVisible,
   listComponentParameterIds,
+  resolveComponentSettingValue,
 } from '@/components/config/config';
 import { createEditorCompFromDefinition } from '@/components/config/create-component-from-authoring';
 import {
@@ -134,6 +135,52 @@ describe('portable component authoring schema', () => {
       expect(editorComp.componentId).toBe(component.id);
       expect(() => structuredClone(editorComp.defaultValues)).not.toThrow();
     }
+
+    expect(createCoreComponentRegistry().getValidationIssues()).toEqual([]);
+  });
+
+  it('resolves absent and malformed editor values from portable defaults', () => {
+    const settings = v.config({
+      amount: v.number({
+        label: 'Amount',
+        defaultValue: 0.5,
+        min: 0,
+        max: 1,
+      }),
+      mode: v.select({
+        label: 'Mode',
+        defaultValue: 'safe',
+        options: ['safe', 'bold'],
+      }),
+      position: v.vector3({
+        label: 'Position',
+        defaultValue: { x: 1, y: 2, z: 3 },
+      }),
+      palette: v.list({
+        label: 'Palette',
+        defaultValue: ['#ffffff'],
+        itemConfig: v.color({
+          label: 'Color',
+          defaultValue: '#000000',
+        }),
+      }),
+    });
+
+    expect(resolveComponentSettingValue(settings.fields.amount!, NaN)).toBe(
+      0.5,
+    );
+    expect(
+      resolveComponentSettingValue(settings.fields.mode!, 'unsupported'),
+    ).toBe('safe');
+    expect(
+      resolveComponentSettingValue(settings.fields.position!, {
+        x: 8,
+        y: undefined,
+      }),
+    ).toEqual({ x: 8, y: 2, z: 3 });
+    expect(
+      resolveComponentSettingValue(settings.fields.palette!, undefined),
+    ).toEqual(['#ffffff']);
   });
 
   it('composes independent capability packs with inspectable origin identity', () => {
@@ -243,5 +290,48 @@ describe('portable component authoring schema', () => {
       message:
         'Select setting "invalid-authoring.mode" must contain its default value in its options.',
     });
+  });
+
+  it('rejects invalid vector, list-item, and numeric-step defaults', () => {
+    const invalidComponent: VizComponentImplementation = {
+      ...simpleCubeComponent,
+      id: 'invalid-composite-authoring',
+      authoring: defineVizComponentAuthoring({
+        componentId: 'invalid-composite-authoring',
+        config: v.config({
+          amount: v.number({
+            label: 'Amount',
+            defaultValue: 0.5,
+            min: 0,
+            max: 1,
+            step: 0,
+          }),
+          position: v.vector3({
+            label: 'Position',
+            defaultValue: { x: 0, y: 5, z: 0 },
+            min: -1,
+            max: 1,
+          }),
+          palette: v.list({
+            label: 'Palette',
+            defaultValue: [''],
+            itemConfig: v.color({
+              label: 'Color',
+              defaultValue: '#ffffff',
+            }),
+          }),
+        }),
+      }),
+    };
+
+    expect(
+      createVizComponentRegistry([invalidComponent])
+        .getValidationIssues()
+        .map((issue) => issue.message),
+    ).toEqual([
+      'Number setting "invalid-composite-authoring.amount" has invalid bounds or default value.',
+      'Vector setting "invalid-composite-authoring.position" has invalid bounds, step, or default value.',
+      'List setting "invalid-composite-authoring.palette" contains an invalid default item.',
+    ]);
   });
 });

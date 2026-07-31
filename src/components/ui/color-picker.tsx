@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './popover';
 
 interface ColorPickerPopoverProps {
   value: string;
+  ariaLabel?: string;
   onChange: (value: string) => void;
   onTransientChange?: (value: string) => void;
   onCommit?: (value: string) => void;
@@ -24,6 +25,7 @@ const ColorPickerPopover = forwardRef<
     onCommit,
     onGestureStart,
     onGestureCancel,
+    ariaLabel,
   } = props;
   const [open, setOpen] = useState(false);
   const [localValue, setLocalValue] = useState<string>(value);
@@ -449,6 +451,7 @@ const ColorPickerPopover = forwardRef<
       <PopoverTrigger asChild>
         <Button
           ref={ref}
+          aria-label={ariaLabel}
           variant="outline"
           className="relative h-8 w-full text-xs">
           <div className="absolute inset-0 flex items-center justify-between gap-x-4 px-2">

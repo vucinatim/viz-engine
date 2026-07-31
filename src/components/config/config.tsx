@@ -7,8 +7,8 @@ import type { ReactNode } from 'react';
 import { Button } from '../ui/button';
 import { ColorPickerPopover } from '../ui/color-picker';
 import FileInput, { type FileInputSelection } from '../ui/file-input';
-import { Input } from '../ui/input';
 import { ListEditor } from '../ui/list-editor';
+import { LiveTextInput } from '../ui/live-text-input';
 import { SimpleSelect } from '../ui/select';
 import { Slider } from '../ui/slider';
 import { Switch } from '../ui/switch';
@@ -141,6 +141,47 @@ export interface ComponentSettingControlProps {
   onAssetSelect?: (selection: FileInputSelection) => Promise<string>;
 }
 
+export const resolveComponentSettingValue = (
+  setting: ComponentSettingControlProps['setting'],
+  value: unknown,
+): unknown => {
+  switch (setting.kind) {
+    case 'number':
+      return typeof value === 'number' && Number.isFinite(value)
+        ? value
+        : setting.defaultValue;
+    case 'boolean':
+      return typeof value === 'boolean' ? value : setting.defaultValue;
+    case 'text':
+    case 'color':
+    case 'file':
+      return typeof value === 'string' ? value : setting.defaultValue;
+    case 'select':
+      return typeof value === 'string' && setting.options.includes(value)
+        ? value
+        : setting.defaultValue;
+    case 'vector3': {
+      if (typeof value !== 'object' || value === null) {
+        return structuredClone(setting.defaultValue);
+      }
+      const candidate = value as Record<string, unknown>;
+      return Object.fromEntries(
+        (['x', 'y', 'z'] as const).map((axis) => [
+          axis,
+          typeof candidate[axis] === 'number' &&
+          Number.isFinite(candidate[axis])
+            ? candidate[axis]
+            : setting.defaultValue[axis],
+        ]),
+      );
+    }
+    case 'list':
+      return Array.isArray(value)
+        ? value
+        : structuredClone(setting.defaultValue);
+  }
+};
+
 export const ComponentSettingControl = ({
   setting,
   value,
@@ -151,12 +192,8 @@ export const ComponentSettingControl = ({
   onGestureCancel,
   onAssetSelect,
 }: ComponentSettingControlProps): ReactNode => {
-  const listValue =
-    setting.kind === 'list'
-      ? Array.isArray(value)
-        ? value
-        : setting.defaultValue
-      : [];
+  const resolvedValue = resolveComponentSettingValue(setting, value);
+  const listValue = setting.kind === 'list' ? (resolvedValue as unknown[]) : [];
   const replaceListItem = (index: number, item: unknown) => {
     const nextValue = [...listValue];
     nextValue[index] = item;
@@ -168,7 +205,7 @@ export const ComponentSettingControl = ({
       return (
         <Slider
           ariaLabel={setting.label}
-          value={value as number}
+          value={resolvedValue as number}
           className="w-full"
           onChange={onChange}
           onTransientChange={onTransientChange}
@@ -183,7 +220,8 @@ export const ComponentSettingControl = ({
     case 'color':
       return (
         <ColorPickerPopover
-          value={value as string}
+          ariaLabel={setting.label}
+          value={resolvedValue as string}
           onChange={onChange}
           onTransientChange={onTransientChange}
           onCommit={onCommit}
@@ -193,15 +231,21 @@ export const ComponentSettingControl = ({
       );
     case 'text':
       return (
-        <Input
-          value={value as string}
-          onChange={(event) => onChange(event.target.value)}
+        <LiveTextInput
+          aria-label={setting.label}
+          value={resolvedValue as string}
+          onChange={onChange}
+          onTransientChange={onTransientChange}
+          onCommit={onCommit}
+          onGestureStart={onGestureStart}
+          onGestureCancel={onGestureCancel}
         />
       );
     case 'file':
       return (
         <FileInput
-          value={value as string}
+          ariaLabel={setting.label}
+          value={resolvedValue as string}
           acceptExtensions={setting.allowedExtensions}
           onAssetSelect={async (selection) => {
             if (!onAssetSelect) {
@@ -214,12 +258,17 @@ export const ComponentSettingControl = ({
       );
     case 'boolean':
       return (
-        <Switch checked={value as boolean} onClick={() => onChange(!value)} />
+        <Switch
+          aria-label={setting.label}
+          checked={resolvedValue as boolean}
+          onCheckedChange={onChange}
+        />
       );
     case 'select':
       return (
         <SimpleSelect
-          value={value as string}
+          ariaLabel={setting.label}
+          value={resolvedValue as string}
           onChange={onChange}
           options={setting.options}
         />
@@ -227,7 +276,8 @@ export const ComponentSettingControl = ({
     case 'vector3':
       return (
         <Vector3Input
-          value={value as { x: number; y: number; z: number }}
+          ariaLabel={setting.label}
+          value={resolvedValue as { x: number; y: number; z: number }}
           onChange={onChange}
           onTransientChange={onTransientChange}
           onCommit={onCommit}
@@ -249,7 +299,7 @@ export const ComponentSettingControl = ({
           renderItem={(item, index) => (
             <ComponentSettingControl
               setting={setting.item}
-              value={item}
+              value={resolveComponentSettingValue(setting.item, item)}
               onChange={(nextItem) =>
                 onChange(replaceListItem(index, nextItem))
               }

@@ -19,6 +19,7 @@ type Vector3InputProps = {
   labelY?: string;
   labelZ?: string;
   labelSuffix?: string; // e.g. "°"
+  ariaLabel?: string;
 };
 
 export default function Vector3Input({
@@ -37,6 +38,7 @@ export default function Vector3Input({
   labelY = 'Y',
   labelZ = 'Z',
   labelSuffix,
+  ariaLabel,
 }: Vector3InputProps) {
   return (
     <div className={cn('grid w-full grid-cols-3 gap-2', className)}>
@@ -46,6 +48,7 @@ export default function Vector3Input({
           {labelSuffix ? ` ${labelSuffix}` : ''}
         </label>
         <NumberScrubInput
+          ariaLabel={`${ariaLabel ?? 'Vector'} ${labelX}`}
           value={value.x}
           onChange={(n) => onChange({ ...value, x: n })}
           onTransientChange={(n) =>
@@ -66,6 +69,7 @@ export default function Vector3Input({
           {labelSuffix ? ` ${labelSuffix}` : ''}
         </label>
         <NumberScrubInput
+          ariaLabel={`${ariaLabel ?? 'Vector'} ${labelY}`}
           value={value.y}
           onChange={(n) => onChange({ ...value, y: n })}
           onTransientChange={(n) =>
@@ -86,6 +90,7 @@ export default function Vector3Input({
           {labelSuffix ? ` ${labelSuffix}` : ''}
         </label>
         <NumberScrubInput
+          ariaLabel={`${ariaLabel ?? 'Vector'} ${labelZ}`}
           value={value.z}
           onChange={(n) => onChange({ ...value, z: n })}
           onTransientChange={(n) =>

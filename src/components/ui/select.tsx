@@ -17,6 +17,7 @@ type SimpleSelectProps = React.ComponentPropsWithoutRef<
   onChange: (value: string) => void;
   options: string[];
   size?: 'md' | 'sm' | 'xs';
+  ariaLabel?: string;
 };
 
 export const SimpleSelect = ({
@@ -25,9 +26,11 @@ export const SimpleSelect = ({
   onChange,
   options,
   size = 'md',
+  ariaLabel,
 }: SimpleSelectProps) => (
   <Select value={value} onValueChange={onChange}>
     <SelectTrigger
+      aria-label={ariaLabel}
       className={cn(
         'w-full',
         size === 'sm' && 'h-7 px-2.5 text-[11px]',

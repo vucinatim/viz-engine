@@ -249,8 +249,11 @@ const createTriangleGltf = (): Buffer => {
 };
 
 const isKnownBrowserDiagnostic = (message: string) =>
-  message.includes('GL Driver Message') &&
-  message.includes('GPU stall due to ReadPixels');
+  (message.includes('GL Driver Message') &&
+    message.includes('GPU stall due to ReadPixels')) ||
+  (message.startsWith('THREE.FBXLoader:') &&
+    (message.includes('map is not supported in three.js') ||
+      message.includes('more than 4 skinning weights')));
 
 const readRuntimeCanvasSignal = (page: Page) =>
   page.evaluate(() => {
@@ -1802,6 +1805,219 @@ test('attaches a portable model asset through the preserved editor and restores 
       usesBrowserLocalUri: false,
     });
 
+  expect(diagnostics).toEqual([]);
+});
+
+test('renders the complete authoring vocabulary and keeps continuous edits live until commit', async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  const diagnostics: string[] = [];
+  page.on('console', (message) => {
+    if (
+      (message.type() === 'error' || message.type() === 'warning') &&
+      !isKnownBrowserDiagnostic(message.text())
+    ) {
+      diagnostics.push(`${message.type()}: ${message.text()}`);
+    }
+  });
+  page.on('pageerror', (error) =>
+    diagnostics.push(`pageerror: ${error.message}`),
+  );
+
+  await waitForEditor(page);
+  const observedKinds = new Set<string>();
+  const observeVisibleKinds = async () => {
+    const kinds = await page
+      .getByTestId('component-setting-field')
+      .evaluateAll((fields) =>
+        fields
+          .filter((field) => (field as HTMLElement).offsetParent !== null)
+          .map((field) => field.getAttribute('data-setting-kind'))
+          .filter((kind): kind is string => kind !== null),
+      );
+    kinds.forEach((kind) => observedKinds.add(kind));
+  };
+  const addLayer = async (name: string) => {
+    const previousIds = (await readEditorSnapshot(page)).layerIds;
+    await page.getByText('Add New Layer', { exact: true }).click();
+    await page.getByPlaceholder('Search visual compositions...').fill(name);
+    await page.getByText(name, { exact: true }).click();
+    const nextIds = (await readEditorSnapshot(page)).layerIds;
+    const layerId = nextIds.find((id) => !previousIds.includes(id));
+    if (!layerId) throw new Error(`Could not identify added ${name} layer.`);
+    return page.locator(
+      `[data-testid="layer-card"][data-layer-id="${layerId}"]`,
+    );
+  };
+
+  const morphCard = await addLayer('Morph Shapes');
+  await morphCard.getByText('Shape A Settings', { exact: true }).click();
+  const shapeField = morphCard.locator(
+    '[data-setting-path="shapeASettings.shape"]',
+  );
+  await shapeField.getByRole('combobox', { name: 'Shape' }).click();
+  await page.getByRole('option', { name: 'custom-text' }).click();
+
+  const textField = morphCard.locator(
+    '[data-setting-path="shapeASettings.text"]',
+  );
+  const textInput = textField.getByRole('textbox', { name: 'Custom Text' });
+  await expect(textInput).toBeVisible();
+  await observeVisibleKinds();
+  const textLayerId = await morphCard.getAttribute('data-layer-id');
+  const beforeText = await page.evaluate(() => ({
+    revision:
+      window.__vizEditorDebug?.vizSessionStore.getState().project.revision ??
+      -1,
+    renderCycle:
+      window.__vizEditorDebug?.editorControl.preview.inspectRuntimePreview()
+        .renderCycle ?? -1,
+  }));
+  await textInput.focus();
+  await textInput.fill('LIVE V2');
+  await expect
+    .poll(async () =>
+      page.evaluate((layerId) => {
+        const debug = window.__vizEditorDebug;
+        return {
+          canonical: (
+            debug?.vizSessionStore
+              .getState()
+              .project.workingProject.layers.find(
+                (layer) => layer.id === layerId,
+              )?.settings.shapeASettings as Record<string, unknown> | undefined
+          )?.text,
+          live: debug?.vizSessionHost.getLiveLayerSetting({
+            layerId: layerId!,
+            path: ['shapeASettings', 'text'],
+          })?.value,
+          revision: debug?.vizSessionStore.getState().project.revision,
+          renderCycle:
+            debug?.editorControl.preview.inspectRuntimePreview().renderCycle,
+        };
+      }, textLayerId),
+    )
+    .toMatchObject({
+      canonical: '',
+      live: 'LIVE V2',
+      revision: beforeText.revision,
+      renderCycle: expect.any(Number),
+    });
+  expect(
+    await page.evaluate(
+      () =>
+        window.__vizEditorDebug?.editorControl.preview.inspectRuntimePreview()
+          .renderCycle ?? -1,
+    ),
+  ).toBeGreaterThan(beforeText.renderCycle);
+  await textInput.blur();
+  await expect
+    .poll(async () =>
+      page.evaluate((layerId) => {
+        const debug = window.__vizEditorDebug;
+        return {
+          value: (
+            debug?.vizSessionStore
+              .getState()
+              .project.workingProject.layers.find(
+                (layer) => layer.id === layerId,
+              )?.settings.shapeASettings as Record<string, unknown> | undefined
+          )?.text,
+          revision: debug?.vizSessionStore.getState().project.revision,
+          live: debug?.vizSessionHost.getLiveLayerSetting({
+            layerId: layerId!,
+            path: ['shapeASettings', 'text'],
+          }),
+        };
+      }, textLayerId),
+    )
+    .toEqual({
+      value: 'LIVE V2',
+      revision: beforeText.revision + 1,
+      live: undefined,
+    });
+
+  const positionField = morphCard.locator(
+    '[data-setting-path="shapeASettings.position"]',
+  );
+  const xInput = positionField.getByRole('spinbutton', {
+    name: 'Position X',
+  });
+  const scrubHandle = positionField
+    .getByTitle('Drag to adjust (Shift=10x, Alt=0.1x). Click arrows to step.')
+    .first();
+  await scrubHandle.scrollIntoViewIfNeeded();
+  const scrubBox = await scrubHandle.boundingBox();
+  if (!scrubBox) throw new Error('Vector scrub handle is not visible.');
+  const beforeVector = await readEditorSnapshot(page);
+  await page.mouse.move(
+    scrubBox.x + scrubBox.width / 2,
+    scrubBox.y + scrubBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(scrubBox.x + scrubBox.width / 2, scrubBox.y - 40, {
+    steps: 8,
+  });
+  expect((await readEditorSnapshot(page)).revision).toBe(beforeVector.revision);
+  expect(Number(await xInput.inputValue())).toBeGreaterThan(0);
+  await expect
+    .poll(async () =>
+      page.evaluate((layerId) => {
+        const value =
+          window.__vizEditorDebug?.vizSessionHost.getLiveLayerSetting({
+            layerId: layerId!,
+            path: ['shapeASettings', 'position'],
+          })?.value as { x?: number } | undefined;
+        return value?.x;
+      }, textLayerId),
+    )
+    .toBeGreaterThan(0);
+  await page.mouse.up();
+  await expect
+    .poll(async () => (await readEditorSnapshot(page)).revision)
+    .toBe(beforeVector.revision + 1);
+
+  await shapeField.getByRole('combobox', { name: 'Shape' }).click();
+  await page.getByRole('option', { name: 'model' }).click();
+  await expect(
+    morphCard.locator('[data-setting-path="shapeASettings.modelUrl"]'),
+  ).toBeVisible();
+
+  const lightTunnelCard = await addLayer('Light Tunnel');
+  await lightTunnelCard.getByText('Visual Style', { exact: true }).click();
+  const paletteField = lightTunnelCard.locator(
+    '[data-setting-path="appearance.colorPalette"]',
+  );
+  await expect(
+    paletteField.getByRole('button', { name: 'Color', exact: true }),
+  ).toHaveCount(2);
+  const beforeList = await readEditorSnapshot(page);
+  await paletteField.getByRole('button', { name: 'Add Color' }).click();
+  await expect(
+    paletteField.getByRole('button', { name: 'Color', exact: true }),
+  ).toHaveCount(3);
+  expect((await readEditorSnapshot(page)).revision).toBe(
+    beforeList.revision + 1,
+  );
+
+  const stageCard = await addLayer('Stage Scene');
+  await stageCard.getByText('Camera', { exact: true }).click();
+  await expect(stageCard.getByTestId('component-action-field')).toBeVisible();
+
+  await observeVisibleKinds();
+  for (const kind of [
+    'number',
+    'color',
+    'text',
+    'file',
+    'boolean',
+    'select',
+    'vector3',
+    'list',
+  ]) {
+    expect(observedKinds.has(kind), `visible ${kind} setting`).toBe(true);
+  }
   expect(diagnostics).toEqual([]);
 });
 
