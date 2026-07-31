@@ -1,6 +1,6 @@
 import { getRuntimeNodeInput, getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useRef } from 'react';
-import { useRafLoop } from 'react-use';
+import { useGraphLiveUpdate } from '../live-update';
 import { prepareNodeCanvas, type NodeBodyProps } from './node-body';
 
 // Visual body for HSL Color node showing color swatch and HSL values
@@ -11,7 +11,7 @@ const HSLColorBody = ({ id: nodeId }: NodeBodyProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const infoRef = useRef<HTMLDivElement>(null);
 
-  useRafLoop(() => {
+  useGraphLiveUpdate(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const prepared = prepareNodeCanvas(canvas);

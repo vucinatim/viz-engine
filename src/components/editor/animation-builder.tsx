@@ -1,8 +1,11 @@
 import editorControl from '@/lib/editor-control';
 import { cn } from '@/lib/utils';
 import { describeProjectGraph, useVizSessionSelector } from '@/lib/viz-session';
+import type { Edge, ReactFlowInstance } from '@xyflow/react';
 import { AudioLines } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { GraphNode } from '../node-network/graph-types';
+import { GraphLiveUpdateProvider } from '../node-network/live-update';
 import NodeNetworkRenderer from '../node-network/node-network-renderer';
 import useNodeNetworkStore, {
   useSpecificNetwork,
@@ -28,7 +31,12 @@ const AnimationBuilder = () => {
 
   const [isHovering, setIsHovering] = useState(false);
   const [hasMouseEntered, setHasMouseEntered] = useState(false);
-  const reactFlowInstance = useRef<any>(null);
+  const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
+  const reactFlowInstance = useRef<ReactFlowInstance<GraphNode, Edge> | null>(
+    null,
+  );
+  const overlayVisible =
+    !areNetworksMinimized && (isHovering || shouldForceShowOverlay);
 
   // Get formatted parameter info
   const graphPresentation = useMemo(
@@ -52,6 +60,10 @@ const AnimationBuilder = () => {
       editorControl.history.setNodeEditorFocused(false);
     }
   }, [isHovering, nodeNetworkId, areNetworksMinimized]);
+
+  useEffect(() => {
+    setSelectedNodeIds([]);
+  }, [nodeNetworkId]);
 
   return (
     <div
@@ -90,27 +102,32 @@ const AnimationBuilder = () => {
       )}>
       {nodeNetwork && nodeNetworkId && (
         <>
-          <div
-            className={cn(
-              'h-full w-full opacity-0 transition-opacity',
-              isHovering && (isPlaying ? 'opacity-80' : 'opacity-100'),
-              areNetworksMinimized && 'pointer-events-none opacity-0',
-            )}>
-            {nodeNetwork && !areNetworksMinimized && (
-              <NodeNetworkRenderer
-                key={nodeNetworkId}
+          <GraphLiveUpdateProvider active={overlayVisible}>
+            <div
+              data-graph-overlay-active={overlayVisible}
+              className={cn(
+                'h-full w-full opacity-0 transition-opacity',
+                overlayVisible && (isPlaying ? 'opacity-80' : 'opacity-100'),
+                areNetworksMinimized && 'pointer-events-none opacity-0',
+              )}>
+              {nodeNetwork && !areNetworksMinimized && (
+                <NodeNetworkRenderer
+                  key={nodeNetworkId}
+                  nodeNetworkId={nodeNetworkId}
+                  onReactFlowInit={(instance) => {
+                    reactFlowInstance.current = instance;
+                  }}
+                  onSelectionChange={setSelectedNodeIds}
+                  reactFlowInstance={reactFlowInstance}
+                />
+              )}
+              <NodeEditorToolbar
                 nodeNetworkId={nodeNetworkId}
-                onReactFlowInit={(instance) => {
-                  reactFlowInstance.current = instance;
-                }}
                 reactFlowInstance={reactFlowInstance}
+                selectedNodeIds={selectedNodeIds}
               />
-            )}
-            <NodeEditorToolbar
-              nodeNetworkId={nodeNetworkId}
-              reactFlowInstance={reactFlowInstance}
-            />
-          </div>
+            </div>
+          </GraphLiveUpdateProvider>
           <div
             className={cn(
               'pointer-events-none absolute top-4 right-4 rounded-lg bg-zinc-600/30 px-4 py-2 transition-opacity',

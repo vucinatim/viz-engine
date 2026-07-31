@@ -40,6 +40,7 @@ Browser comparison records live in [evidence](./evidence/). Start with:
 - [2026-07-31 Goal Three transport, discovery, and sample repair](./evidence/2026-07-31-goal-three-transport-discovery-and-sample-repair.md)
 - [2026-07-31 Goal Three shell and layer diagnostics parity](./evidence/2026-07-31-goal-three-shell-and-layer-diagnostics-parity.md)
 - [2026-07-31 Goal Three profiler and performance statistics](./evidence/2026-07-31-goal-three-profiler-and-performance-statistics.md)
+- [2026-07-31 Goal Three node editor and live graph](./evidence/2026-07-31-goal-three-node-editor-and-live-graph.md)
 
 ## Pinned Reference
 

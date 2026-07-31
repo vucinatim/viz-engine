@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { getRuntimeNodeInput, getRuntimeNodeState } from '@/lib/viz-session';
 import { memo, useRef } from 'react';
-import { useRafLoop } from 'react-use';
+import { useGraphLiveUpdate } from '../live-update';
 import type { NodeBodyProps } from './node-body';
 
 const RateLimiterBody = ({ id: nodeId }: NodeBodyProps) => {
@@ -12,7 +12,7 @@ const RateLimiterBody = ({ id: nodeId }: NodeBodyProps) => {
   const valueDisplayRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
 
-  useRafLoop(() => {
+  useGraphLiveUpdate(() => {
     const state =
       (getRuntimeNodeState(nodeId) as Record<string, unknown> | undefined) ??
       {};

@@ -46,18 +46,23 @@ declare global {
     __vizLivePerformanceSample?: Promise<LiveInteractionSample>;
     __vizCommitPerformanceSample?: Promise<CommitInteractionSample>;
     __vizMovementPerformanceSample?: Promise<VisibleMovementSample>;
+    __vizViewportPerformanceSample?: Promise<VisibleMovementSample>;
   }
 }
 
 const PERFORMANCE_ENABLED = process.env.VIZ_PERFORMANCE === '1';
 const PERFORMANCE_WORKLOAD =
   process.env.VIZ_PERFORMANCE_WORKLOAD ?? 'simple-example';
+const GRAPH_PERFORMANCE_WORKLOAD =
+  process.env.VIZ_GRAPH_PERFORMANCE_WORKLOAD ?? 'simple-example';
 const ITERATIONS = Math.max(
   4,
   Number.parseInt(process.env.VIZ_PERFORMANCE_ITERATIONS ?? '20', 10),
 );
 const WARMUP_MILLISECONDS = 3_000;
 const FRAME_SAMPLE_MILLISECONDS = 5_000;
+const GRAPH_WARMUP_MILLISECONDS = 1_500;
+const GRAPH_FRAME_SAMPLE_MILLISECONDS = 3_000;
 const SAMPLE_TIMEOUT_MILLISECONDS = 2_000;
 
 const isKnownBrowserDiagnostic = (message: string): boolean =>
@@ -415,6 +420,66 @@ const readVisibleMovementSample = (
     return window.__vizMovementPerformanceSample;
   });
 
+const armViewportMovementSample = async (page: Page): Promise<void> => {
+  await page.evaluate((timeoutMilliseconds) => {
+    const viewport = document.querySelector<HTMLElement>(
+      '[data-testid="node-network"] .react-flow__viewport',
+    );
+    if (!viewport) {
+      throw new Error('React Flow viewport is not mounted.');
+    }
+    const initialTransform = viewport.style.transform;
+    window.__vizViewportPerformanceSample = new Promise(
+      (resolveSample, reject) => {
+        let inputAt: number | undefined;
+        let settled = false;
+        const inputListener = () => {
+          inputAt = performance.now();
+        };
+        const cleanup = () => {
+          window.removeEventListener('wheel', inputListener, true);
+          window.clearTimeout(timeout);
+        };
+        const observe = () => {
+          if (settled) return;
+          if (
+            inputAt !== undefined &&
+            viewport.style.transform !== initialTransform
+          ) {
+            settled = true;
+            cleanup();
+            resolveSample({
+              inputToVisibleMs: performance.now() - inputAt,
+            });
+            return;
+          }
+          requestAnimationFrame(observe);
+        };
+        window.addEventListener('wheel', inputListener, {
+          capture: true,
+          once: true,
+        });
+        const timeout = window.setTimeout(() => {
+          settled = true;
+          cleanup();
+          reject(new Error('Timed out measuring visible viewport movement.'));
+        }, timeoutMilliseconds);
+        requestAnimationFrame(observe);
+      },
+    );
+  }, SAMPLE_TIMEOUT_MILLISECONDS);
+};
+
+const readViewportMovementSample = (
+  page: Page,
+): Promise<VisibleMovementSample> =>
+  page.evaluate(async () => {
+    if (!window.__vizViewportPerformanceSample) {
+      throw new Error('A viewport performance sample was not armed.');
+    }
+    return window.__vizViewportPerformanceSample;
+  });
+
 const collectFrameIntervals = (
   page: Page,
   warmupMilliseconds: number,
@@ -584,22 +649,57 @@ test('records fixed-device editor interaction performance', async ({
     expect(commit.revisionDelta).toBe(1);
   }
 
-  if (!identity.graphParameterId || !identity.graphId) {
+  let graphParameterId = identity.graphParameterId;
+  let graphId = identity.graphId;
+  if (GRAPH_PERFORMANCE_WORKLOAD === 'signal-cathedral') {
+    await page.evaluate(async () => {
+      const debug = window.__vizEditorDebug;
+      if (!debug) {
+        throw new Error('Viz editor debug control is not mounted.');
+      }
+      const response = await fetch(
+        '/productions/signal-cathedral/project.json',
+      );
+      if (!response.ok) {
+        throw new Error(
+          `Could not load Signal Cathedral (${response.status}).`,
+        );
+      }
+      debug.editorControl.project.importWorkingProject(await response.json());
+    });
+    graphParameterId = 'layer-signal-cathedral:reactivity:structurePulse';
+    graphId = 'graph-signal-cathedral-reactivity';
+    await expect(page.getByTestId('layer-card')).toHaveCount(1);
+  } else if (GRAPH_PERFORMANCE_WORKLOAD !== 'simple-example') {
+    throw new Error(
+      `Unsupported VIZ_GRAPH_PERFORMANCE_WORKLOAD "${GRAPH_PERFORMANCE_WORKLOAD}".`,
+    );
+  }
+
+  if (!graphParameterId || !graphId) {
     throw new Error('The performance fixture is missing its editable graph.');
   }
   await page.evaluate((parameterId) => {
     window.__vizEditorDebug?.editorControl.nodeEditor.openNetwork(parameterId);
     window.__vizEditorDebug?.editorControl.nodeEditor.focus();
-  }, identity.graphParameterId);
+  }, graphParameterId);
   await expect(page.getByTestId('node-network')).toBeVisible();
+  const graphFrameIntervals = await collectFrameIntervals(
+    page,
+    GRAPH_WARMUP_MILLISECONDS,
+    GRAPH_FRAME_SAMPLE_MILLISECONDS,
+  );
   const mathNodeId = await page.evaluate((graphId) => {
     const graph = window.__vizEditorDebug?.vizSessionStore
       .getState()
       .project.workingProject.graphs?.find(
         (candidate) => candidate.id === graphId,
       );
-    return graph?.nodes.find((node) => node.type === 'Math')?.id;
-  }, identity.graphId);
+    return (
+      graph?.nodes.find((node) => node.id === 'scale-mids')?.id ??
+      graph?.nodes.find((node) => node.type === 'Math')?.id
+    );
+  }, graphId);
   if (!mathNodeId) {
     throw new Error('The performance fixture is missing its Math graph node.');
   }
@@ -631,6 +731,54 @@ test('records fixed-device editor interaction performance', async ({
     nodeCommitSamples.push(commit);
     expect(commit.revisionDelta).toBe(1);
   }
+
+  const graphCanvas = page.getByTestId('node-network');
+  const graphFixture = await page.evaluate((graphId) => {
+    const state = window.__vizEditorDebug?.vizSessionStore.getState();
+    const project = state?.project.workingProject;
+    const graph = project?.graphs?.find(
+      (candidate) => candidate.id === graphId,
+    );
+    return {
+      projectId: project?.projectId,
+      projectName: project?.name,
+      graphId,
+      canonicalNodeCount: graph?.nodes.length ?? 0,
+      outputCount: graph?.outputs.length ?? 0,
+      renderedNodeCount: document.querySelectorAll(
+        '[data-testid="node-network"] .react-flow__node',
+      ).length,
+    };
+  }, graphId);
+  const graphCanvasBox = await graphCanvas.boundingBox();
+  if (!graphCanvasBox) {
+    throw new Error('Graph canvas does not have a visible bounding box.');
+  }
+  await page.mouse.move(
+    graphCanvasBox.x + graphCanvasBox.width / 2,
+    graphCanvasBox.y + graphCanvasBox.height / 2,
+  );
+  const viewportRevision = await getProjectRevision(page);
+  const graphPanSamples: VisibleMovementSample[] = [];
+  for (let index = 0; index < ITERATIONS; index += 1) {
+    await armViewportMovementSample(page);
+    await page.mouse.wheel(index % 2 === 0 ? 18 : -18, 10);
+    graphPanSamples.push(await readViewportMovementSample(page));
+  }
+  expect(await getProjectRevision(page)).toBe(viewportRevision);
+
+  const graphZoomSamples: VisibleMovementSample[] = [];
+  await page.keyboard.down('Control');
+  try {
+    for (let index = 0; index < ITERATIONS; index += 1) {
+      await armViewportMovementSample(page);
+      await page.mouse.wheel(0, index % 2 === 0 ? -24 : 24);
+      graphZoomSamples.push(await readViewportMovementSample(page));
+    }
+  } finally {
+    await page.keyboard.up('Control');
+  }
+  expect(await getProjectRevision(page)).toBe(viewportRevision);
 
   const browserState = await page.evaluate(() => {
     const memory = (
@@ -675,8 +823,12 @@ test('records fixed-device editor interaction performance', async ({
     fixture: {
       ...identity,
       workload: PERFORMANCE_WORKLOAD,
+      graphWorkload: GRAPH_PERFORMANCE_WORKLOAD,
+      graph: graphFixture,
       warmupMilliseconds: WARMUP_MILLISECONDS,
       frameSampleMilliseconds: FRAME_SAMPLE_MILLISECONDS,
+      graphWarmupMilliseconds: GRAPH_WARMUP_MILLISECONDS,
+      graphFrameSampleMilliseconds: GRAPH_FRAME_SAMPLE_MILLISECONDS,
       interactionIterations: ITERATIONS,
     },
     framePacing: {
@@ -740,16 +892,40 @@ test('records fixed-device editor interaction performance', async ({
         nodeCommitSamples.map((sample) => sample.releaseToVisibleMs),
       ),
     },
+    graphViewport: {
+      panInputToVisible: summarize(
+        graphPanSamples.map((sample) => sample.inputToVisibleMs),
+      ),
+      zoomInputToVisible: summarize(
+        graphZoomSamples.map((sample) => sample.inputToVisibleMs),
+      ),
+      revisionDelta: (await getProjectRevision(page)) - viewportRevision,
+    },
+    graphFramePacing: {
+      display: {
+        ...summarize(graphFrameIntervals.display),
+        estimatedRefreshRateHz:
+          1_000 / percentile(graphFrameIntervals.display, 0.5),
+        longFrameThresholdMs: 25,
+        longFrameCount: graphFrameIntervals.display.filter(
+          (sample) => sample > 25,
+        ).length,
+      },
+      runtime: {
+        ...summarize(graphFrameIntervals.runtime),
+        longFrameThresholdMs: 25,
+        longFrameCount: graphFrameIntervals.runtime.filter(
+          (sample) => sample > 25,
+        ).length,
+      },
+    },
     memory: browserState.memory,
     diagnostics,
     rawCommitSamples: {
       continuousParameter: sliderCommitSamples,
       graphNodeMove: nodeCommitSamples,
     },
-    scope:
-      PERFORMANCE_WORKLOAD === 'simple-example'
-        ? 'Fixed-device simple-example interaction baseline. V1 comparison and broader workloads are recorded separately.'
-        : `Fixed-device ${PERFORMANCE_WORKLOAD} interaction workload.`,
+    scope: `Fixed-device ${PERFORMANCE_WORKLOAD} parameter workload and ${GRAPH_PERFORMANCE_WORKLOAD} graph workload. V1 comparison is recorded separately.`,
   };
 
   const reportJson = `${JSON.stringify(report, null, 2)}\n`;
@@ -769,5 +945,7 @@ test('records fixed-device editor interaction performance', async ({
 
   expect(frameIntervals.display.length).toBeGreaterThan(30);
   expect(frameIntervals.runtime.length).toBeGreaterThan(30);
+  expect(graphFrameIntervals.display.length).toBeGreaterThan(30);
+  expect(graphFrameIntervals.runtime.length).toBeGreaterThan(30);
   expect(diagnostics).toEqual([]);
 });

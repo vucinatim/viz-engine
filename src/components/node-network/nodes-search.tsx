@@ -1,3 +1,4 @@
+import { generateGraphNodeId } from '@/lib/id-utils';
 import { useEffect, useRef } from 'react';
 import {
   Command,
@@ -44,12 +45,12 @@ const NodesSearch = ({
       <CommandEmpty>{'No nodes found.'}</CommandEmpty>
       <CommandList>
         <CommandGroup heading="Suggestions">
-          {nodes.map((node, index) => (
+          {nodes.map((node) => (
             <CommandItem
-              key={`${node.label}-${index}`}
+              key={node.label}
               value={node.label}
               onSelect={() => {
-                const nodeId = `${networkId}-node-${Date.now()}`;
+                const nodeId = generateGraphNodeId(networkId);
                 const initialInputValues = node.inputs.reduce(
                   (acc, input) => {
                     acc[input.id] = input.defaultValue;

@@ -14,6 +14,7 @@ import HarmonicPresenceBody from './bodies/harmonic-presence-body';
 import HSLColorBody from './bodies/hsl-color-body';
 import HysteresisGateBody from './bodies/hysteresis-gate-body';
 import MultiBandAnalysisBody from './bodies/multi-band-analysis-body';
+import type { NodeBodyProps } from './bodies/node-body';
 import NormalizeBody from './bodies/normalize-body';
 import PitchDetectionBody from './bodies/pitch-detection-body';
 import RateLimiterBody from './bodies/rate-limiter-body';
@@ -26,10 +27,10 @@ import TonalPresenceBody from './bodies/tonal-presence-body';
 import ValueMapperBody from './bodies/value-mapper-body';
 
 export type AnimNode = Omit<VizNodeAuthoringDefinition, 'computeSignal'> & {
-  customBody?: ComponentType<any>;
+  customBody?: ComponentType<NodeBodyProps>;
 };
 
-const customBodies: Readonly<Record<string, ComponentType<any>>> = {
+const customBodies: Readonly<Record<string, ComponentType<NodeBodyProps>>> = {
   'Adaptive Normalize (Quantile)': AdaptiveNormalizeQuantileBody,
   Normalize: NormalizeBody,
   'Frequency Band': frequencyBandBody,

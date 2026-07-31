@@ -6,6 +6,7 @@ import {
   useCanUndo,
   useVizSessionSelector,
 } from '@/lib/viz-session';
+import type { Edge, ReactFlowInstance } from '@xyflow/react';
 import {
   Copy,
   FileJson,
@@ -17,17 +18,17 @@ import {
   Undo2,
 } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useRafLoop } from 'react-use';
 import { toast } from 'sonner';
 import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
 import { cn } from '../../lib/utils';
 import { NodeHandleType } from '../config/node-types';
+import type { GraphNode } from '../node-network/graph-types';
 import { isProtectedGraphNode } from '../node-network/graph-types';
+import { useGraphLiveUpdate } from '../node-network/live-update';
 import {
   applyPresetToNodeNetwork,
   getNodeNetwork,
-  setEdgesInNetwork,
-  setNodesInNetwork,
+  removeNodesFromNetwork,
   useIsNetworkEnabled,
   useSpecificNetwork,
 } from '../node-network/node-network-store';
@@ -39,12 +40,17 @@ import SearchSelect from '../ui/search-select';
 
 interface NodeEditorToolbarProps {
   nodeNetworkId: string;
-  reactFlowInstance: React.MutableRefObject<any>;
+  reactFlowInstance: React.MutableRefObject<ReactFlowInstance<
+    GraphNode,
+    Edge
+  > | null>;
+  selectedNodeIds: readonly string[];
 }
 
 const NodeEditorToolbar = ({
   nodeNetworkId,
   reactFlowInstance,
+  selectedNodeIds,
 }: NodeEditorToolbarProps) => {
   // Add node popover state
   const [isAddNodeOpen, setIsAddNodeOpen] = useState(false);
@@ -65,12 +71,6 @@ const NodeEditorToolbar = ({
     (state) => state.project.workingProject,
   );
 
-  // Create wrapper functions to match the expected interface
-  const setNodes = (newNodes: any[]) =>
-    setNodesInNetwork(nodeNetworkId, newNodes);
-  const setEdges = (newEdges: any[]) =>
-    setEdgesInNetwork(nodeNetworkId, newEdges);
-
   // Get parameter info using the generic function
   // Only subscribe to isEnabled, not the entire network
   const isNetworkEnabled = useIsNetworkEnabled(nodeNetworkId);
@@ -88,11 +88,11 @@ const NodeEditorToolbar = ({
     // Derive output type from current Output node definition if present; fallback to number
     const network = getNodeNetwork(nodeNetworkId);
     let outputType: NodeHandleType = 'number';
-    const outputNode = network?.nodes.find((n) =>
-      n.id.includes('-output-node'),
+    const outputNode = network?.nodes.find(
+      (node) => node.data.graphOutputKey !== undefined,
     );
-    const typeFromNode = (outputNode?.data as any)?.definition?.inputs?.[0]
-      ?.type as NodeHandleType | undefined;
+    const typeFromNode = outputNode?.data.definition.inputs[0]?.type as
+      NodeHandleType | undefined;
     if (typeFromNode) outputType = typeFromNode;
     applyPresetToNodeNetwork(nodeNetworkId, presetId, outputType);
   };
@@ -104,91 +104,31 @@ const NodeEditorToolbar = ({
   });
 
   const handleDelete = () => {
-    if (!reactFlowInstance.current) return;
-
-    const selectedNodes = reactFlowInstance.current
-      .getNodes()
-      .filter((node: any) => node.selected);
-
-    if (selectedNodes.length === 0) return;
-
-    const selectedNodeIds = selectedNodes.map((node: any) => node.id);
-
-    // Filter out protected nodes (input/output)
-    const deletableNodeIds = selectedNodeIds.filter((id: string) => {
-      const node = reactFlowInstance.current
-        .getNodes()
-        .find((candidate: any) => candidate.id === id);
-      return node && !isProtectedGraphNode(node);
-    });
+    const network = getNodeNetwork(nodeNetworkId);
+    if (!network) return;
+    const selectedIds = new Set(selectedNodeIds);
+    const deletableNodeIds = network.nodes
+      .filter((node) => selectedIds.has(node.id) && !isProtectedGraphNode(node))
+      .map((node) => node.id);
 
     if (deletableNodeIds.length === 0) return;
-
-    // Get current nodes and edges from store when needed
-    const network = getNodeNetwork(nodeNetworkId);
-    if (!network) return;
-
-    const { nodes, edges } = network;
-
-    // Remove selected nodes
-    const newNodes = nodes.filter(
-      (node) => !deletableNodeIds.includes(node.id),
-    );
-
-    // Remove edges connected to deleted nodes
-    const newEdges = edges.filter(
-      (edge) =>
-        !deletableNodeIds.includes(edge.source) &&
-        !deletableNodeIds.includes(edge.target),
-    );
-
-    setNodes(newNodes);
-    setEdges(newEdges);
+    removeNodesFromNetwork(nodeNetworkId, deletableNodeIds);
   };
 
-  // Check if there are any deletable selected nodes
-  const hasDeletableSelection = () => {
-    if (!reactFlowInstance.current) return false;
-
-    const selectedNodes = reactFlowInstance.current
-      .getNodes()
-      .filter((node: any) => node.selected);
-
-    return selectedNodes.some((node: any) => !isProtectedGraphNode(node));
-  };
+  const selectedIds = new Set(selectedNodeIds);
+  const hasDeletableSelection =
+    getNodeNetwork(nodeNetworkId)?.nodes.some(
+      (node) => selectedIds.has(node.id) && !isProtectedGraphNode(node),
+    ) ?? false;
 
   const handleCopyGraphJson = async () => {
-    const network = getNodeNetwork(nodeNetworkId);
-    if (!network) return;
-
-    const safeNodes = network.nodes.map((node) => {
-      const def: any = node.data.definition as any;
-      let serializedDefinition: any = def;
-      if (def && def.label === 'Output') {
-        const type = def.inputs?.[0]?.type;
-        serializedDefinition = { label: 'Output', type };
-      } else if (def && typeof def.label === 'string') {
-        serializedDefinition = def.label;
-      }
-      return {
-        ...node,
-        data: {
-          ...node.data,
-          definition: serializedDefinition,
-        },
-      } as any;
-    });
-
-    const payload = {
-      name: network.name,
-      isEnabled: network.isEnabled,
-      isMinimized: network.isMinimized ?? false,
-      nodes: safeNodes,
-      edges: network.edges,
-    };
+    const graph = project.graphs?.find(
+      (candidate) => candidate.id === nodeNetworkId,
+    );
+    if (!graph) return;
 
     try {
-      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+      await navigator.clipboard.writeText(JSON.stringify(graph, null, 2));
       toast.success('Graph JSON copied to clipboard');
     } catch (e) {
       console.error('Failed to copy graph JSON', e);
@@ -242,6 +182,7 @@ const NodeEditorToolbar = ({
                   variant="ghost"
                   size="sm"
                   className="h-7 w-7 p-0 text-white/80 hover:bg-white/10 hover:text-white"
+                  aria-label="Add graph node"
                   tooltip="Add Node">
                   <Plus size={14} />
                 </Button>
@@ -259,6 +200,7 @@ const NodeEditorToolbar = ({
               variant="ghost"
               size="sm"
               className="h-7 w-7 p-0 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-50"
+              aria-label="Undo graph edit"
               onClick={undo}
               disabled={!canUndo}
               tooltip="Undo">
@@ -268,6 +210,7 @@ const NodeEditorToolbar = ({
               variant="ghost"
               size="sm"
               className="h-7 w-7 p-0 text-white/80 hover:bg-white/10 hover:text-white disabled:opacity-50"
+              aria-label="Redo graph edit"
               onClick={redo}
               disabled={!canRedo}
               tooltip="Redo">
@@ -277,8 +220,9 @@ const NodeEditorToolbar = ({
               variant="ghost"
               size="sm"
               className="h-7 w-7 p-0 text-white/80 hover:bg-white/10 hover:text-white"
+              aria-label="Delete selected graph nodes"
               onClick={handleDelete}
-              disabled={!hasDeletableSelection()}
+              disabled={!hasDeletableSelection}
               tooltip="Delete">
               <Trash2 size={14} />
             </Button>
@@ -286,6 +230,7 @@ const NodeEditorToolbar = ({
               variant="ghost"
               size="sm"
               className="h-7 w-7 p-0 text-white/80 hover:bg-white/10 hover:text-white"
+              aria-label="Copy canonical graph JSON"
               onClick={handleCopyGraphJson}
               tooltip="Copy graph JSON">
               <FileJson size={14} />
@@ -294,6 +239,7 @@ const NodeEditorToolbar = ({
               variant="ghost"
               size="sm"
               className="h-7 w-7 p-0 text-white/80 hover:bg-white/10 hover:text-white"
+              aria-label="Copy graph"
               onClick={handleCopyNetwork}
               tooltip="Copy network">
               <Copy size={14} />
@@ -322,6 +268,7 @@ const NodeEditorToolbar = ({
             variant="ghostly"
             size="icon"
             tooltip="Close"
+            aria-label="Close graph editor"
             className="-mx-2"
             onClick={() => editorControl.nodeEditor.closeNetwork()}>
             <Minus size={20} />
@@ -343,7 +290,7 @@ const LiveValueDisplay = ({
 }: LiveValueDisplayProps) => {
   const ref = useRef<HTMLSpanElement>(null);
 
-  useRafLoop(() => {
+  useGraphLiveUpdate(() => {
     if (!ref.current) return;
     const value = getRuntimeGraphValue(nodeNetworkId, outputKey);
 
@@ -363,7 +310,10 @@ const LiveValueDisplay = ({
       <span className="text-xs whitespace-nowrap text-white/60">
         Live Output
       </span>
-      <span ref={ref} className="font-mono text-sm text-white">
+      <span
+        ref={ref}
+        data-testid="graph-live-output"
+        className="font-mono text-sm text-white">
         0.00
       </span>
     </div>
@@ -380,9 +330,9 @@ const PresetsSelect = ({
   onPresetSelect,
 }: PresetsSelectProps) => {
   const network = useSpecificNetwork(nodeNetworkId);
-  const outType = (
-    network?.nodes.find((n) => n.id.includes('-output-node'))?.data as any
-  )?.definition?.inputs?.[0]?.type as NodeHandleType | undefined;
+  const outType = network?.nodes.find(
+    (node) => node.data.graphOutputKey !== undefined,
+  )?.data.definition.inputs[0]?.type as NodeHandleType | undefined;
   const type: NodeHandleType = outType || 'number';
   const presets = getPresetsForType(type);
 
@@ -391,6 +341,7 @@ const PresetsSelect = ({
 
   return (
     <SearchSelect
+      ariaLabel="Load graph preset"
       triggerClassName="bg-white/10"
       trigger={
         <div className="flex items-center gap-2">

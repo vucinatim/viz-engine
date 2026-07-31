@@ -392,6 +392,21 @@ export const createStudioGraphAuthoringActions = ({
         commit([createNodeAddAction(graphId, node)]);
       }
     },
+    removeNodesFromNetwork(graphId: string, nodeIds: readonly string[]) {
+      const graph = getGraph(graphId);
+      if (!graph) {
+        return;
+      }
+      const existingNodeIds = new Set(graph.nodes.map((node) => node.id));
+      commit(
+        [...new Set(nodeIds)]
+          .filter((nodeId) => existingNodeIds.has(nodeId))
+          .map((nodeId): VizProjectAction => ({
+            type: 'graph.node.remove',
+            payload: { graphId, nodeId },
+          })),
+      );
+    },
     pasteFragment(
       graphId: string,
       fragment: VizGraphFragment,

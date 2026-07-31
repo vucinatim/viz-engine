@@ -169,11 +169,11 @@
       "importance": "critical",
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/animation-builder.tsx", "src/components/node-network/node-network-renderer.tsx"],
-      "v2Evidence": ["src/components/editor/animation-builder.tsx", "src/components/node-network/node-network-renderer.tsx", "src/components/node-network/node-network-store.ts", "src/lib/viz-session/graph-authoring-actions.ts"],
-      "status": "partial",
+      "v2Evidence": ["src/components/editor/animation-builder.tsx", "src/components/node-network/live-update.tsx", "src/components/node-network/node-network-renderer.tsx", "src/components/node-network/node-network-store.ts", "src/lib/viz-session/graph-authoring-actions.ts", "tests/browser/editor-critical-journey.spec.ts"],
+      "status": "verified",
       "acceptance": ["The graph opens for the selected layer with the correct graph loaded.", "Pan, zoom, selection, and close behavior feel equivalent to V1.", "Graph changes update runtime parameter evaluation through stable contracts."],
       "validationMethods": ["browser", "visual", "integration"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md", "docs/parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md"]
     },
     {
       "id": "nodes.create-delete-search",
@@ -182,11 +182,11 @@
       "importance": "critical",
       "parityDimensions": ["interaction", "functional"],
       "referenceEvidence": ["src/components/node-network/nodes-search.tsx", "src/components/node-network/node-network-renderer.tsx"],
-      "v2Evidence": ["src/components/node-network/nodes-search.tsx", "src/components/node-network/node-network-renderer.tsx"],
-      "status": "partial",
+      "v2Evidence": ["src/components/node-network/nodes-search.tsx", "src/components/node-network/node-network-renderer.tsx", "src/lib/viz-session/graph-authoring-actions.ts", "tests/browser/editor-critical-journey.spec.ts", "tests/foundation/editor-runtime-preview-plan.test.ts", "tests/foundation/viz-session-graph-authoring.test.ts"],
+      "status": "verified",
       "acceptance": ["The search catalog reflects the supported registry.", "Create and delete operations preserve a valid graph.", "Node positions and selection serialize and restore."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md"]
     },
     {
       "id": "nodes.connection-validation",
@@ -195,11 +195,11 @@
       "importance": "critical",
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/node-network/connection-validator.tsx", "src/components/node-network/node-network-renderer.tsx"],
-      "v2Evidence": ["src/components/node-network/connection-validator.tsx", "src/components/node-network/node-network-renderer.tsx", "src/components/node-network/graph-types.ts"],
+      "v2Evidence": ["src/components/node-network/connection-validator.tsx", "src/components/node-network/node-network-renderer.tsx", "src/components/node-network/graph-types.ts", "tests/foundation/graph-connection-validation.test.ts", "tests/browser/editor-critical-journey.spec.ts"],
       "status": "partial",
       "acceptance": ["Valid edges connect and evaluate.", "Invalid edges are prevented with understandable feedback.", "Loading malformed graph data cannot corrupt the active project."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md"]
     },
     {
       "id": "nodes.presets-clipboard",
@@ -208,11 +208,11 @@
       "importance": "high",
       "parityDimensions": ["interaction", "functional"],
       "referenceEvidence": ["src/components/node-network/presets.ts", "src/lib/hooks/use-node-graph-clipboard.ts"],
-      "v2Evidence": ["src/components/node-network/presets.ts", "src/lib/hooks/use-node-graph-clipboard.ts"],
-      "status": "partial",
+      "v2Evidence": ["src/components/node-network/presets.ts", "src/lib/hooks/use-node-graph-clipboard.ts", "tests/foundation/preset-registry.test.ts", "tests/foundation/graph-fragments.test.ts", "tests/browser/editor-critical-journey.spec.ts"],
+      "status": "verified",
       "acceptance": ["Presets create valid deterministic graphs.", "Copied subgraphs paste with new stable identifiers and intact internal edges.", "Clipboard failures are non-destructive and visible."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md"]
     },
     {
       "id": "nodes.live-evaluation",
@@ -221,11 +221,11 @@
       "importance": "critical",
       "parityDimensions": ["functional", "performance"],
       "referenceEvidence": ["src/components/node-network/node-network-store.ts", "src/components/editor/layer-renderer.tsx"],
-      "v2Evidence": ["packages/viz-nodes-core/src/index.ts", "src/lib/viz-session/store.ts", "src/lib/viz-session/runtime-preview-plan.ts", "src/components/editor/editor-runtime-preview-driver.tsx"],
+      "v2Evidence": ["packages/viz-nodes-core/src/index.ts", "src/lib/viz-session/store.ts", "src/lib/viz-session/runtime-preview-plan.ts", "src/components/editor/editor-runtime-preview-driver.tsx", "src/components/node-network/live-update.tsx", "tests/browser/editor-critical-journey.spec.ts", "tests/browser/editor-interaction-performance.spec.ts"],
       "status": "partial",
       "acceptance": ["Equivalent inputs and time produce equivalent graph outputs.", "Graph evaluation follows runtime time rather than incidental UI timing.", "Graph-heavy scenes remain within the approved frame budget."],
       "validationMethods": ["integration", "unit", "browser", "benchmark"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-viz-session-convergence-and-node-editor-parity.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-interaction-and-visible-parity-repair.md", "docs/parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-viz-session-convergence-and-node-editor-parity.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-interaction-and-visible-parity-repair.md", "docs/parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md", "docs/parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md"]
     },
     {
       "id": "audio.file-loading",
@@ -533,11 +533,11 @@
       "importance": "critical",
       "parityDimensions": ["performance", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/editor-layout.tsx", "src/components/node-network/node-network-renderer.tsx", "src/components/editor/layer-parameters.tsx"],
-      "v2Evidence": ["tests/browser/editor-interaction-performance.spec.ts", "packages/viz-editor-control/src/live-project-values.ts", "src/components/node-network/node-network-renderer.tsx"],
+      "v2Evidence": ["tests/browser/editor-interaction-performance.spec.ts", "packages/viz-editor-control/src/live-project-values.ts", "src/components/node-network/live-update.tsx", "src/components/node-network/node-network-renderer.tsx"],
       "status": "partial",
       "acceptance": ["A representative multi-layer and graph fixture defines the workload.", "Input-to-visible-update latency meets the approved baseline-relative budget.", "No primary interaction causes an avoidable long task or full application stall."],
       "validationMethods": ["benchmark", "browser"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md", "docs/parity/evidence/2026-07-31-goal-three-canonical-preview-compositor.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md", "docs/parity/evidence/2026-07-31-goal-three-canonical-preview-compositor.md", "docs/parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md"]
     },
     {
       "id": "performance.long-session-stability",

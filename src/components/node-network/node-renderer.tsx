@@ -8,9 +8,10 @@ import {
 import { destructureParameterId } from '@/lib/id-utils';
 import { useProjectedLayers } from '@/lib/projected-layers';
 import { cn } from '@/lib/utils';
-import { Handle, Position, useConnection } from '@xyflow/react';
+import type { VizNodeAuthoringIo } from '@viz-engine/nodes-core';
+import { Handle, Position, useConnection, type NodeProps } from '@xyflow/react';
 import { Info } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { MATH_OPERATIONS } from '../config/math-operations';
 import {
   NodeHandleType,
@@ -20,15 +21,14 @@ import {
 import SimpleTooltip from '../ui/simple-tooltip';
 import LiveValue from './live-value';
 import NodeLiteralInput from './node-literal-input';
-import { GraphNodeData, useNodeNetwork } from './node-network-store';
+import { GraphNode, useNodeNetwork } from './node-network-store';
 
-// Manually defining props instead of relying on NodeProps to avoid TS issues
-interface NodeRendererProps {
-  id: string;
-  data: GraphNodeData;
-  selected: boolean;
+type NodeRendererProps = Pick<
+  NodeProps<GraphNode>,
+  'id' | 'data' | 'selected'
+> & {
   nodeNetworkId: string;
-}
+};
 
 const NodeRenderer = ({
   id: nodeId,
@@ -37,17 +37,7 @@ const NodeRenderer = ({
   nodeNetworkId,
 }: NodeRendererProps) => {
   const { definition, inputValues } = data;
-  const {
-    label,
-    inputs,
-    outputs,
-    customBody: CustomBody,
-  } = definition ||
-  ({
-    label: 'Unknown',
-    inputs: [],
-    outputs: [],
-  } as any);
+  const { label, inputs, outputs, customBody: CustomBody } = definition;
 
   const {
     edges,
@@ -99,7 +89,7 @@ const NodeRenderer = ({
     return label;
   };
 
-  const renderInput = (input: any) => {
+  const renderInput = (input: VizNodeAuthoringIo) => {
     const isConnected = edges.some(
       (edge) => edge.target === nodeId && edge.targetHandle === input.id,
     );
@@ -220,7 +210,7 @@ const NodeRenderer = ({
           <div className="flex justify-between gap-x-4">
             {/* Inputs */}
             <div className="flex flex-col gap-y-2">
-              {(inputs || []).map((input: any, index: number) => (
+              {inputs.map((input, index) => (
                 <div key={input.id} className="flex h-8 items-center gap-x-2">
                   <ConnectionHandle
                     io={input}
@@ -237,7 +227,7 @@ const NodeRenderer = ({
             </div>
             {/* Outputs */}
             <div className="flex flex-col items-end gap-y-2">
-              {(outputs || []).map((output: any, index: number) => (
+              {outputs.map((output, index) => (
                 <div key={output.id} className="flex h-8 items-center gap-x-2">
                   <p className="pointer-events-none pr-1 text-xs">
                     {output.label}
@@ -257,7 +247,7 @@ const NodeRenderer = ({
               <CustomBody
                 id={nodeId}
                 data={data}
-                selected={selected}
+                selected={selected ?? false}
                 nodeNetworkId={nodeNetworkId}
               />
             </div>
@@ -269,7 +259,7 @@ const NodeRenderer = ({
 };
 
 interface RenderHandleProps {
-  io: any;
+  io: VizNodeAuthoringIo;
   position: Position;
   type: 'source' | 'target';
   index: number;
@@ -277,7 +267,6 @@ interface RenderHandleProps {
 
 const ConnectionHandle = ({ io, position, type, index }: RenderHandleProps) => {
   const [isHovered, setIsHovered] = useState(false);
-  const handleRef = useRef<HTMLDivElement>(null);
   const connection = useConnection();
   const handleColor = getTypeColor(io.type as NodeHandleType);
 
@@ -293,55 +282,23 @@ const ConnectionHandle = ({ io, position, type, index }: RenderHandleProps) => {
   // Determine if handle should glow
   const shouldGlow = isHovered || (isConnecting && isValidTarget);
 
-  const handleOverlayMouseDown = (e: React.MouseEvent) => {
-    const handleElement = handleRef.current;
-
-    if (handleElement) {
-      // Get the center of the small handle
-      const rect = handleElement.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-
-      // Temporarily hide the overlay to prevent interference
-      const overlay = e.currentTarget as HTMLElement;
-      overlay.style.pointerEvents = 'none';
-
-      // Create and dispatch mousedown at the center of the handle
-      const mouseDownEvent = new MouseEvent('mousedown', {
-        bubbles: true,
-        cancelable: true,
-        view: window,
-        clientX: centerX,
-        clientY: centerY,
-        screenX: e.screenX,
-        screenY: e.screenY,
-        button: 0,
-        buttons: 1,
-      });
-
-      handleElement.dispatchEvent(mouseDownEvent);
-
-      // Re-enable overlay after a short delay
-      setTimeout(() => {
-        overlay.style.pointerEvents = 'all';
-      }, 100);
-    }
-  };
-
   return (
-    <>
-      {/* Actual handle - small and positioned normally */}
-      <Handle
-        ref={handleRef}
-        type={type}
-        id={io.id}
-        position={position}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        className="group !h-3 !w-3"
+    <Handle
+      type={type}
+      id={io.id}
+      position={position}
+      aria-label={`${type === 'source' ? 'Output' : 'Input'} ${io.label} (${getTypeLabel(io.type as NodeHandleType)})`}
+      data-handle-value-type={io.type}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="group !flex !h-6 !w-6 !items-center !justify-center !border-0 !bg-transparent"
+      style={{
+        top: `${24 + index * 40}px`,
+        cursor: 'crosshair',
+      }}>
+      <span
+        className="pointer-events-none block h-3 w-3 rounded-full"
         style={{
-          top: `${24 + index * 40}px`,
-          cursor: 'crosshair',
           backgroundColor: handleColor,
           border: `1px solid ${shouldGlow ? '#ffffff' : handleColor}`,
           boxShadow: shouldGlow
@@ -349,25 +306,7 @@ const ConnectionHandle = ({ io, position, type, index }: RenderHandleProps) => {
             : '0 0 0 1px rgba(0,0,0,0.3)',
         }}
       />
-
-      {/* Larger invisible overlay - sibling, not child */}
-      <div
-        className="nodrag nopan absolute cursor-crosshair rounded-full"
-        onMouseDown={handleOverlayMouseDown}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        style={{
-          top: `${24 + index * 40}px`,
-          transform: 'translate(-50%, -50%)',
-          left: position === Position.Left ? '0' : 'auto',
-          right: position === Position.Right ? '-40px' : 'auto',
-          width: '40px',
-          height: '40px',
-          backgroundColor: 'transparent',
-          pointerEvents: 'all',
-        }}
-      />
-    </>
+    </Handle>
   );
 };
 

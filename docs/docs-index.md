@@ -24,6 +24,7 @@ This is the entrypoint for VizEngine documentation during the V2 rewrite.
 - [parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md](./parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md)
 - [profiler-measurement-contract.md](./profiler-measurement-contract.md)
 - [parity/evidence/2026-07-31-goal-three-profiler-and-performance-statistics.md](./parity/evidence/2026-07-31-goal-three-profiler-and-performance-statistics.md)
+- [parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md](./parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md)
 - [parity/evidence/artifacts/2026-07-31-goal-three-baseline.json](./parity/evidence/artifacts/2026-07-31-goal-three-baseline.json)
 
 ## Active Direction

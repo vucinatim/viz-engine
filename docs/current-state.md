@@ -268,8 +268,28 @@ The authoring-workspace checkpoint is now also complete:
 See
 [Authoring Workspace](./parity/evidence/2026-07-31-goal-three-authoring-workspace.md).
 
-The parity matrix now contains 18 verified and 24 partial capabilities, with
-zero gaps and zero unaudited rows. Goal Three remains open because the 24
+The node-editor and live-graph checkpoint is now also complete:
+
+- one overlay-scoped display scheduler replaces independent perpetual graph
+  animation loops and stops live presentation work while the graph is hidden
+- React Flow owns pointer-rate spatial state while node release creates one
+  canonical position commit; pan, zoom, and selection stay outside history
+- search, create, move, connect, replace, cycle feedback, clipboard, grouped
+  deletion, presets, undo/redo, reload, and live values pass a real headed
+  pointer journey with clean diagnostics
+- fixed-device Signal Cathedral results measured 9.70 ms median / 11.60 ms
+  p95 node movement, 1.10 ms / 2.00 ms pan, and 10.90 ms / 12.30 ms zoom
+- twenty pan and zoom samples created zero project revisions, while node and
+  slider releases each produced one revision
+- the complete gate passes 59 deterministic-test files / 268 tests, all 13
+  active headed Chromium journeys, every package and studio build, and both
+  consumer smokes
+
+See
+[Node Editor And Live Graph](./parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md).
+
+The parity matrix now contains 21 verified and 21 partial capabilities, with
+zero gaps and zero unaudited rows. Goal Three remains open because the 21
 broader capabilities still require full acceptance evidence, alongside agent
 tooling and the second original production.
 

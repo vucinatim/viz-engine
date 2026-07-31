@@ -3,7 +3,7 @@ import { getRuntimeNodeInput, getRuntimeNodeOutput } from '@/lib/viz-session';
 import { D3DragEvent, drag } from 'd3-drag';
 import { select } from 'd3-selection';
 import { memo, useEffect, useRef } from 'react';
-import { useRafLoop } from 'react-use';
+import { useGraphLiveUpdate } from '../live-update';
 import { useNodeNetwork } from '../node-network-store';
 import type { NodeBodyProps } from './node-body';
 
@@ -53,7 +53,7 @@ const HysteresisGateBody = ({
     setupDrag(highRef, 'high');
   }, [nodeId, beginInputGesture, updateLiveInputValue, commitInputGesture]);
 
-  useRafLoop(() => {
+  useGraphLiveUpdate(() => {
     const width = getWidth();
     if (width === 0) return;
 

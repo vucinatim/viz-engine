@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { getRuntimeNodeInput, getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useRef } from 'react';
-import { useRafLoop } from 'react-use';
+import { useGraphLiveUpdate } from '../live-update';
 import type { NodeBodyProps } from './node-body';
 
 const ThresholdCounterBody = ({ id: nodeId }: NodeBodyProps) => {
@@ -15,7 +15,7 @@ const ThresholdCounterBody = ({ id: nodeId }: NodeBodyProps) => {
   const lastCount = useRef<number>(0);
   const flashTimestamp = useRef<number>(0);
 
-  useRafLoop(() => {
+  useGraphLiveUpdate(() => {
     const output = getNodeOutput(nodeId);
     const count = Number(output?.count ?? 0);
     const maxValue = Number(getNodeInputValue(nodeId, 'maxValue') ?? 5);

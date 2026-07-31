@@ -1,5 +1,41 @@
 # Work Ledger
 
+## 2026-07-31
+
+- completed the Goal Three node-editor and live-graph checkpoint:
+  - replaced independent perpetual graph animation loops with one
+    overlay-scoped runtime subscription and display scheduler that stops while
+    the overlay is hidden
+  - retained React Flow as pointer-rate spatial presentation while committing
+    node position exactly once on release and keeping pan, zoom, selection, and
+    edge selection outside project history
+  - introduced structured type/cycle connection validation, visible invalid
+    feedback, replacement-aware cycle analysis, immediate local edge updates,
+    and UUID graph identities
+  - fixed real connection dragging after headed pointer proof exposed the
+    decorative handle dot intercepting React Flow's drag start
+  - replaced timer-driven context deletion with grouped canonical deletion and
+    fixed toolbar selection capability, canonical graph JSON copy, and preset
+    output-type derivation
+  - expanded the headed graph journey across pan, zoom, move, search, create,
+    connect, replace, invalid cycles, undo/redo, clipboard, grouped delete,
+    context delete, reload, presets, and playback-driven live values with clean
+    diagnostics
+  - added a fixed-device Signal Cathedral benchmark with 18 canonical nodes,
+    five named outputs, 23 rendered nodes, and 20 physical interaction samples
+  - measured node movement at 9.70 ms median / 11.60 ms p95, pan at 1.10 ms /
+    2.00 ms, and zoom at 10.90 ms / 12.30 ms; pan and zoom created zero
+    revisions
+  - advanced graph overlay, node create/delete/search, and graph
+    preset/clipboard parity to verified, leaving 21 verified and 21 partial
+    rows with zero gaps or unaudited capabilities
+  - recorded architecture, measurements, remaining boundaries, and the full
+    machine-readable benchmark in
+    `docs/parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md`
+  - passed the complete `pnpm check:foundation` gate with 59 Vitest files / 268
+    tests, 13 active headed Chromium journeys plus one opt-in skip, all 17
+    package builds, the studio build, and both consumer smokes
+
 ## 2026-07-30
 
 - activated Goal Two behavior-preserving minimization and final polish:

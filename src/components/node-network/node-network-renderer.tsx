@@ -1,14 +1,19 @@
+import { generateGraphEdgeId } from '@/lib/id-utils';
 import { ContextMenuTrigger } from '@radix-ui/react-context-menu';
 import {
-  addEdge,
-  applyEdgeChanges,
-  applyNodeChanges,
   Background,
   Connection,
   Controls,
   Edge,
   ReactFlow,
+  addEdge,
+  applyEdgeChanges,
+  applyNodeChanges,
   reconnectEdge,
+  type FinalConnectionState,
+  type NodeProps,
+  type NodeTypes,
+  type ReactFlowInstance,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import {
@@ -19,11 +24,13 @@ import {
   useRef,
   useState,
 } from 'react';
+import { toast } from 'sonner';
 import '../../lib/css/xyflow.css';
 import editorControl from '../../lib/editor-control';
 import { useNodeGraphClipboard } from '../../lib/hooks/use-node-graph-clipboard';
 import { useCanRedo, useCanUndo } from '../../lib/viz-session';
 import {
+  removeNodesFromNetwork,
   setEdgesInNetwork,
   setNodesInNetwork,
   useSpecificNetwork,
@@ -33,24 +40,31 @@ import {
   ContextMenuContent,
   ContextMenuItem,
 } from '../ui/context-menu';
-import { isConnectionValid } from './connection-validator';
-import { isProtectedGraphNode } from './graph-types';
+import {
+  isConnectionValid,
+  validateGraphConnection,
+} from './connection-validator';
+import { GraphNode, isProtectedGraphNode } from './graph-types';
 import NodeRenderer from './node-renderer';
 import NodesSearch from './nodes-search';
+
+type GraphFlowInstance = ReactFlowInstance<GraphNode, Edge>;
 
 const NodeNetworkRenderer = ({
   nodeNetworkId,
   onReactFlowInit,
+  onSelectionChange,
   reactFlowInstance,
 }: {
   nodeNetworkId: string;
-  onReactFlowInit?: (instance: any) => void;
-  reactFlowInstance?: React.MutableRefObject<any>;
+  onReactFlowInit?: (instance: GraphFlowInstance) => void;
+  onSelectionChange?: (nodeIds: string[]) => void;
+  reactFlowInstance?: React.MutableRefObject<GraphFlowInstance | null>;
 }) => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
   // Use the passed instance or create our own if not provided
-  const localReactFlowInstance = useRef<any>(null);
+  const localReactFlowInstance = useRef<GraphFlowInstance | null>(null);
   const finalReactFlowInstance = reactFlowInstance || localReactFlowInstance;
 
   // Get nodes and edges from the network store
@@ -58,7 +72,8 @@ const NodeNetworkRenderer = ({
   const nodes = useMemo(() => network?.nodes ?? [], [network?.nodes]);
   const edges = useMemo(() => network?.edges ?? [], [network?.edges]);
   const [paneMenuGeneration, setPaneMenuGeneration] = useState(0);
-  const flowNodesRef = useRef<any[]>(nodes);
+  const flowNodesRef = useRef<GraphNode[]>(nodes);
+  const flowEdgesRef = useRef<Edge[]>(edges);
   const isNodeDragActiveRef = useRef(false);
 
   useEffect(() => {
@@ -85,16 +100,30 @@ const NodeNetworkRenderer = ({
     finalReactFlowInstance.current?.setNodes(nextNodes);
   }, [finalReactFlowInstance, nodes]);
 
+  useEffect(() => {
+    const currentEdges = flowEdgesRef.current;
+    const nextEdges = edges.map((edge) => {
+      const current = currentEdges.find(
+        (candidate) => candidate.id === edge.id,
+      );
+      return current?.selected === undefined
+        ? edge
+        : { ...edge, selected: current.selected };
+    });
+    flowEdgesRef.current = nextEdges;
+    finalReactFlowInstance.current?.setEdges(nextEdges);
+  }, [edges, finalReactFlowInstance]);
+
   // Wrapped setters that push to history
   const setNodes = useCallback(
-    (newNodes: any[]) => {
+    (newNodes: GraphNode[]) => {
       setNodesInNetwork(nodeNetworkId, newNodes);
     },
     [nodeNetworkId],
   );
 
   const setEdges = useCallback(
-    (newEdges: any[]) => {
+    (newEdges: Edge[]) => {
       setEdgesInNetwork(nodeNetworkId, newEdges);
     },
     [nodeNetworkId],
@@ -152,53 +181,146 @@ const NodeNetworkRenderer = ({
   };
 
   const isValidConnection = useCallback((connection: Connection | Edge) => {
-    return isConnectionValid(connection as Connection, flowNodesRef.current);
+    return isConnectionValid(
+      connection as Connection,
+      flowNodesRef.current,
+      flowEdgesRef.current,
+    );
   }, []);
 
   // Handle edge reconnection
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
-      const newEdges = reconnectEdge(oldEdge, newConnection, edges);
+      const validation = validateGraphConnection(
+        newConnection,
+        flowNodesRef.current,
+        flowEdgesRef.current.filter((edge) => edge.id !== oldEdge.id),
+      );
+      if (!validation.valid) {
+        toast.error(validation.message);
+        return;
+      }
+      const newEdges = reconnectEdge(
+        oldEdge,
+        newConnection,
+        flowEdgesRef.current,
+      );
+      flowEdgesRef.current = newEdges;
+      finalReactFlowInstance.current?.setEdges(newEdges);
       setEdges(newEdges);
     },
-    [edges, setEdges],
+    [finalReactFlowInstance, setEdges],
   );
 
-  const nodeTypes = useMemo(
+  const reportInvalidConnection = useCallback(
+    (connectionState: FinalConnectionState) => {
+      if (
+        connectionState.isValid !== false ||
+        !connectionState.fromHandle ||
+        !connectionState.toHandle
+      ) {
+        return;
+      }
+      const from = connectionState.fromHandle;
+      const to = connectionState.toHandle;
+      const connection: Connection =
+        from.type === 'source'
+          ? {
+              source: from.nodeId,
+              sourceHandle: from.id ?? null,
+              target: to.nodeId,
+              targetHandle: to.id ?? null,
+            }
+          : {
+              source: to.nodeId,
+              sourceHandle: to.id ?? null,
+              target: from.nodeId,
+              targetHandle: from.id ?? null,
+            };
+      const validation = validateGraphConnection(
+        connection,
+        flowNodesRef.current,
+        flowEdgesRef.current,
+      );
+      if (!validation.valid) {
+        toast.error(validation.message);
+      }
+    },
+    [],
+  );
+
+  const nodeContextActionsRef = useRef({
+    canRedo,
+    canUndo,
+    copyNode,
+    duplicateNode,
+    getCanvasPosition,
+    mousePosition,
+    nodeNetworkId,
+    pasteNodesAtPosition,
+    redo,
+    undo,
+  });
+  nodeContextActionsRef.current = {
+    canRedo,
+    canUndo,
+    copyNode,
+    duplicateNode,
+    getCanvasPosition,
+    mousePosition,
+    nodeNetworkId,
+    pasteNodesAtPosition,
+    redo,
+    undo,
+  };
+
+  const nodeTypes = useMemo<NodeTypes>(
     () => ({
-      NodeRenderer: (props: any) => {
+      NodeRenderer: (props: NodeProps<GraphNode>) => {
         return (
           <ContextMenu>
             <ContextMenuTrigger>
-              <NodeRenderer {...props} nodeNetworkId={nodeNetworkId} />
+              <NodeRenderer
+                {...props}
+                nodeNetworkId={nodeContextActionsRef.current.nodeNetworkId}
+              />
             </ContextMenuTrigger>
             <ContextMenuContent>
               <ContextMenuItem
                 inset
                 onClick={() => {
-                  copyNode(props.id);
+                  nodeContextActionsRef.current.copyNode(props.id);
                 }}>
                 Copy
               </ContextMenuItem>
               <ContextMenuItem
                 inset
                 onClick={() => {
-                  duplicateNode(props.id);
+                  nodeContextActionsRef.current.duplicateNode(props.id);
                 }}>
                 Duplicate
               </ContextMenuItem>
               <ContextMenuItem
                 inset
                 onClick={() => {
-                  const canvasPosition = getCanvasPosition(mousePosition);
-                  pasteNodesAtPosition(canvasPosition);
+                  const actions = nodeContextActionsRef.current;
+                  const canvasPosition = actions.getCanvasPosition(
+                    actions.mousePosition,
+                  );
+                  actions.pasteNodesAtPosition(canvasPosition);
                 }}>
                 Paste
               </ContextMenuItem>
-              <ContextMenuItem inset onClick={undo} disabled={!canUndo}>
+              <ContextMenuItem
+                inset
+                onClick={nodeContextActionsRef.current.undo}
+                disabled={!nodeContextActionsRef.current.canUndo}>
                 Undo
               </ContextMenuItem>
-              <ContextMenuItem inset onClick={redo} disabled={!canRedo}>
+              <ContextMenuItem
+                inset
+                onClick={nodeContextActionsRef.current.redo}
+                disabled={!nodeContextActionsRef.current.canRedo}>
                 Redo
               </ContextMenuItem>
               <ContextMenuItem
@@ -208,29 +330,11 @@ const NodeNetworkRenderer = ({
                   const node = flowNodesRef.current.find(
                     (candidate) => candidate.id === props.id,
                   );
-                  const isProtected = node && isProtectedGraphNode(node);
-
-                  if (!isProtected) {
-                    // Use ReactFlow's built-in deletion mechanism
-                    // First select the node, then trigger delete
-                    if (finalReactFlowInstance.current) {
-                      // Select the node first
-                      finalReactFlowInstance.current.setNodes((nds: any[]) =>
-                        nds.map((n: any) => ({
-                          ...n,
-                          selected: n.id === props.id,
-                        })),
-                      );
-
-                      // Then trigger the delete action
-                      setTimeout(() => {
-                        if (finalReactFlowInstance.current) {
-                          finalReactFlowInstance.current.deleteElements({
-                            nodes: [{ id: props.id }],
-                          });
-                        }
-                      }, 10);
-                    }
+                  if (node && !isProtectedGraphNode(node)) {
+                    removeNodesFromNetwork(
+                      nodeContextActionsRef.current.nodeNetworkId,
+                      [props.id],
+                    );
                   }
                 }}>
                 Delete
@@ -240,8 +344,7 @@ const NodeNetworkRenderer = ({
         );
       },
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [nodeNetworkId], // Only depend on nodeNetworkId
+    [],
   );
 
   return (
@@ -254,7 +357,7 @@ const NodeNetworkRenderer = ({
       {/* The selection indicator is removed as per the edit hint */}
       <ContextMenu key={paneMenuGeneration}>
         <ContextMenuTrigger>
-          <ReactFlow
+          <ReactFlow<GraphNode, Edge>
             key={nodeNetworkId}
             onInit={(instance) => {
               finalReactFlowInstance.current = instance;
@@ -269,8 +372,12 @@ const NodeNetworkRenderer = ({
             colorMode="dark"
             nodeTypes={nodeTypes}
             defaultNodes={nodes}
-            edges={edges}
+            defaultEdges={edges}
+            onlyRenderVisibleElements
             isValidConnection={isValidConnection}
+            onConnectEnd={(_event, connectionState) =>
+              reportInvalidConnection(connectionState)
+            }
             connectionRadius={40}
             snapToGrid={false}
             edgesReconnectable={true}
@@ -311,6 +418,14 @@ const NodeNetworkRenderer = ({
                 }
               }
 
+              if (changes.some((change) => change.type === 'select')) {
+                onSelectionChange?.(
+                  flowNodesRef.current
+                    .filter((node) => node.selected)
+                    .map((node) => node.id),
+                );
+              }
+
               if (isDragEnd && isNodeDragActiveRef.current) {
                 isNodeDragActiveRef.current = false;
                 endDrag();
@@ -320,12 +435,25 @@ const NodeNetworkRenderer = ({
               !nodesToDelete.some(isProtectedGraphNode)
             }
             onEdgesChange={(changes) => {
-              const newEdges = applyEdgeChanges(changes, edges);
-              setEdges(newEdges);
+              const newEdges = applyEdgeChanges(changes, flowEdgesRef.current);
+              flowEdgesRef.current = newEdges;
+              if (changes.some((change) => change.type !== 'select')) {
+                setEdges(newEdges);
+              }
             }}
             onConnect={(params) => {
+              const validation = validateGraphConnection(
+                params,
+                flowNodesRef.current,
+                flowEdgesRef.current,
+              );
+              if (!validation.valid) {
+                toast.error(validation.message);
+                return;
+              }
+              const currentEdges = flowEdgesRef.current;
               // Check if there's already an edge connected to the target input
-              const existingEdgeIndex = edges.findIndex(
+              const existingEdgeIndex = currentEdges.findIndex(
                 (edge) =>
                   edge.target === params.target &&
                   edge.targetHandle === params.targetHandle,
@@ -333,18 +461,26 @@ const NodeNetworkRenderer = ({
 
               if (existingEdgeIndex !== -1) {
                 // Replace the existing edge
-                const newEdges = [...edges];
+                const newEdges = [...currentEdges];
                 newEdges[existingEdgeIndex] = {
-                  id: `edge-${Date.now()}-${Math.random()}`,
+                  id: generateGraphEdgeId(),
                   source: params.source,
                   sourceHandle: params.sourceHandle,
                   target: params.target,
                   targetHandle: params.targetHandle,
                 };
+                flowEdgesRef.current = newEdges;
+                finalReactFlowInstance.current?.setEdges(newEdges);
                 setEdges(newEdges);
               } else {
                 // Add new edge normally
-                setEdges(addEdge(params, edges));
+                const newEdges = addEdge(
+                  { ...params, id: generateGraphEdgeId() },
+                  currentEdges,
+                );
+                flowEdgesRef.current = newEdges;
+                finalReactFlowInstance.current?.setEdges(newEdges);
+                setEdges(newEdges);
               }
             }}
             defaultEdgeOptions={{

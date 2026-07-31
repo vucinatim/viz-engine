@@ -100,6 +100,11 @@ const addNodeToNetwork = (parameterId: string, node: GraphNode) => {
   vizSessionActions.graph.addNodeToNetwork(parameterId, node);
 };
 
+export const removeNodesFromNetwork = (
+  parameterId: string,
+  nodeIds: readonly string[],
+) => vizSessionActions.graph.removeNodesFromNetwork(parameterId, nodeIds);
+
 export const pasteGraphFragment = (
   parameterId: string,
   fragment: VizGraphFragment,

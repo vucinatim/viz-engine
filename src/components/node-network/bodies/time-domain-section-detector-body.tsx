@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useRef } from 'react';
-import { useRafLoop } from 'react-use';
+import { useGraphLiveUpdate } from '../live-update';
 import { prepareNodeCanvas, type NodeBodyProps } from './node-body';
 
 const TimeDomainSectionDetectorBody = ({ id: nodeId }: NodeBodyProps) => {
@@ -14,7 +14,7 @@ const TimeDomainSectionDetectorBody = ({ id: nodeId }: NodeBodyProps) => {
   const capacity = 120;
   const peakRef = useRef<number>(1);
 
-  useRafLoop(() => {
+  useGraphLiveUpdate(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 

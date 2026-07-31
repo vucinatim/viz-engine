@@ -1,6 +1,6 @@
 import { getRuntimeNodeInput } from '@/lib/viz-session';
 import { useRef } from 'react';
-import { useRafLoop } from 'react-use';
+import { useGraphLiveUpdate } from './live-update';
 
 interface LiveValueProps {
   nodeId: string;
@@ -27,7 +27,7 @@ const LiveValue = ({ nodeId, inputId, type }: LiveValueProps) => {
   const ref = useRef<HTMLSpanElement>(null);
   const getNodeInputValue = getRuntimeNodeInput;
 
-  useRafLoop(() => {
+  useGraphLiveUpdate(() => {
     if (!ref.current) return;
     const value = getNodeInputValue(nodeId, inputId);
 
@@ -36,7 +36,7 @@ const LiveValue = ({ nodeId, inputId, type }: LiveValueProps) => {
     }
   });
 
-  return <span ref={ref} />;
+  return <span ref={ref} data-testid="graph-live-value" />;
 };
 
 export default LiveValue;

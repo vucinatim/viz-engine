@@ -2,7 +2,7 @@ import { Label } from '@/components/ui/label';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import { getRuntimeNodeInput, getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useCallback, useRef, useState } from 'react';
-import { useRafLoop } from 'react-use';
+import { useGraphLiveUpdate } from '../live-update';
 import type { NodeBodyProps } from './node-body';
 
 const MIN_FREQ = 20;
@@ -33,7 +33,7 @@ function PitchDetectionBody({ id: nodeId, data }: NodeBodyProps) {
     );
   }, []);
 
-  useRafLoop(() => {
+  useGraphLiveUpdate(() => {
     const nodeOutputs = getNodeOutput(nodeId) as any;
     if (nodeOutputs) {
       setOutputs(nodeOutputs);

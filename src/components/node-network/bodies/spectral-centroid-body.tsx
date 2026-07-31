@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useRef } from 'react';
-import { useRafLoop } from 'react-use';
+import { useGraphLiveUpdate } from '../live-update';
 import { prepareNodeCanvas, type NodeBodyProps } from './node-body';
 
 const SpectralCentroidBody = ({ id: nodeId }: NodeBodyProps) => {
@@ -12,7 +12,7 @@ const SpectralCentroidBody = ({ id: nodeId }: NodeBodyProps) => {
   const centroidRing = useRef<number[]>([]);
   const capacity = 120;
 
-  useRafLoop(() => {
+  useGraphLiveUpdate(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 

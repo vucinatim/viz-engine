@@ -1,6 +1,11 @@
 export const generateLayerId = (compName: string) =>
   `layer-${compName}-${crypto.randomUUID()}`;
 
+export const generateGraphNodeId = (graphId: string) =>
+  `${graphId}-node-${crypto.randomUUID()}`;
+
+export const generateGraphEdgeId = () => `edge-${crypto.randomUUID()}`;
+
 export interface ParameterInfo {
   layerId: string;
   componentName: string;

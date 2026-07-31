@@ -23,6 +23,14 @@ type GraphSnapshot = {
     id: string;
     type: string;
     position?: { x: number; y: number };
+    inputs: Record<
+      string,
+      {
+        kind: string;
+        nodeId?: string;
+        output?: string;
+      }
+    >;
   }>;
   outputs: Array<{
     key: string;
@@ -91,6 +99,7 @@ const readGraphSnapshot = async (
         id: node.id,
         type: node.type,
         position: node.position,
+        inputs: node.inputs,
       })),
       outputs: graph.outputs.map((output) => ({
         key: output.key,
@@ -119,16 +128,6 @@ const openGraph = async (
   await expect(page.getByTestId('animation-builder')).toBeVisible();
   await expect(page.getByTestId('node-network')).toBeVisible();
   await expect(page.locator('.react-flow__node')).not.toHaveCount(0);
-  await expect
-    .poll(async () =>
-      page
-        .getByTestId('node-network')
-        .getByTestId('graph-node')
-        .evaluateAll((elements) =>
-          elements.map((element) => element.getAttribute('data-graph-node-id')),
-        ),
-    )
-    .toContain(`${expectedGraphId}-input-node`);
 };
 
 const getGraphNodeLocator = async (
@@ -151,6 +150,37 @@ const getGraphNodeLocator = async (
   throw new Error(
     `Graph node "${nodeId}" is not rendered. Rendered IDs: ${JSON.stringify(renderedIds)}`,
   );
+};
+
+const connectGraphHandles = async (
+  page: Page,
+  source: Locator,
+  target: Locator,
+) => {
+  const sourceBox = await source.boundingBox();
+  const targetBox = await target.boundingBox();
+  if (!sourceBox || !targetBox) {
+    throw new Error('Graph connection handles must both be visible.');
+  }
+  await page.mouse.move(
+    sourceBox.x + sourceBox.width / 2,
+    sourceBox.y + sourceBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    sourceBox.x + sourceBox.width / 2 + 12,
+    sourceBox.y + sourceBox.height / 2,
+    { steps: 3 },
+  );
+  await expect(
+    page.getByTestId('node-network').locator('.react-flow__connection'),
+  ).toBeVisible();
+  await page.mouse.move(
+    targetBox.x + targetBox.width / 2,
+    targetBox.y + targetBox.height / 2,
+    { steps: 8 },
+  );
+  await page.mouse.up();
 };
 
 const pressPrimaryShortcut = async (page: Page, key: string) => {
@@ -1638,6 +1668,74 @@ test('authors canonical graph nodes directly with history, clipboard, and reload
   const graphCanvas = page.getByTestId('node-network');
   const canvasBox = await graphCanvas.boundingBox();
   expect(canvasBox).not.toBeNull();
+
+  const liveGraphValueSamples = await page.evaluate(async () => {
+    const debug = window.__vizEditorDebug;
+    if (!debug) {
+      throw new Error('Viz editor debug control is not mounted.');
+    }
+    const samples: string[] = [];
+    debug.editorControl.preview.play();
+    for (let index = 0; index < 12; index += 1) {
+      await new Promise((resolve) => window.setTimeout(resolve, 80));
+      samples.push(
+        [...document.querySelectorAll('[data-testid="graph-live-value"]')]
+          .map((element) => element.textContent ?? '')
+          .join('|'),
+      );
+    }
+    debug.editorControl.preview.pause();
+    return samples;
+  });
+  expect(new Set(liveGraphValueSamples).size).toBeGreaterThan(1);
+  await expect(page.getByTestId('graph-live-output')).not.toHaveText('0.00');
+
+  const viewport = graphCanvas.locator('.react-flow__viewport');
+  const initialViewportTransform = await viewport.getAttribute('style');
+  const revisionBeforeViewportNavigation = (await readEditorSnapshot(page))
+    .revision;
+  await graphCanvas.hover();
+  await page.mouse.wheel(72, 48);
+  await expect
+    .poll(async () => viewport.getAttribute('style'))
+    .not.toBe(initialViewportTransform);
+  const pannedViewportTransform = await viewport.getAttribute('style');
+  await graphCanvas.locator('.react-flow__controls-zoomin').click();
+  await expect
+    .poll(async () => viewport.getAttribute('style'))
+    .not.toBe(pannedViewportTransform);
+  expect((await readEditorSnapshot(page)).revision).toBe(
+    revisionBeforeViewportNavigation,
+  );
+  await graphCanvas.locator('.react-flow__controls-fitview').click();
+
+  const initialMathNode = initial.nodes.find((node) => node.type === 'Math');
+  expect(initialMathNode).toBeDefined();
+  const initialMathLocator = await getGraphNodeLocator(
+    page,
+    initialMathNode!.id,
+  );
+  const initialMathBox = await initialMathLocator.boundingBox();
+  expect(initialMathBox).not.toBeNull();
+  const revisionBeforeNodeMove = (await readEditorSnapshot(page)).revision;
+  await page.mouse.move(initialMathBox!.x + 24, initialMathBox!.y + 6);
+  await page.mouse.down();
+  await page.mouse.move(initialMathBox!.x + 56, initialMathBox!.y + 18, {
+    steps: 6,
+  });
+  await page.mouse.up();
+  await expect
+    .poll(
+      async () =>
+        (await readGraphSnapshot(page, graphId!)).nodes.find(
+          (node) => node.id === initialMathNode!.id,
+        )?.position,
+    )
+    .not.toEqual(initialMathNode!.position);
+  expect((await readEditorSnapshot(page)).revision).toBe(
+    revisionBeforeNodeMove + 1,
+  );
+
   await graphCanvas.click({
     button: 'right',
     position: {
@@ -1679,9 +1777,48 @@ test('authors canonical graph nodes directly with history, clipboard, and reload
     .poll(async () => (await readGraphSnapshot(page, graphId!)).nodes.length)
     .toBe(initial.nodes.length + 1);
 
-  const addedLocator = await getGraphNodeLocator(page, duplicateNode!.id);
-  await addedLocator.click({ position: { x: 30, y: 5 } });
-  await expect(addedLocator).toHaveClass(/selected/);
+  const addedMathLocator = await getGraphNodeLocator(page, duplicateNode!.id);
+  const existingMathLocator = await getGraphNodeLocator(
+    page,
+    initialMathNode!.id,
+  );
+  const revisionBeforeConnection = (await readEditorSnapshot(page)).revision;
+  await connectGraphHandles(
+    page,
+    addedMathLocator.getByLabel('Output Result (Number)'),
+    existingMathLocator.getByLabel('Input A (Number)'),
+  );
+  await expect
+    .poll(
+      async () =>
+        (await readGraphSnapshot(page, graphId!)).nodes.find(
+          (node) => node.id === initialMathNode!.id,
+        )?.inputs.a,
+    )
+    .toMatchObject({
+      kind: 'node-output',
+      nodeId: duplicateNode!.id,
+      output: 'result',
+    });
+  expect((await readEditorSnapshot(page)).revision).toBe(
+    revisionBeforeConnection + 1,
+  );
+
+  const revisionBeforeCycleAttempt = (await readEditorSnapshot(page)).revision;
+  await connectGraphHandles(
+    page,
+    existingMathLocator.getByLabel('Output Result (Number)'),
+    addedMathLocator.getByLabel('Input A (Number)'),
+  );
+  await expect(
+    page.getByText('That connection would create a graph cycle.'),
+  ).toBeVisible();
+  expect((await readEditorSnapshot(page)).revision).toBe(
+    revisionBeforeCycleAttempt,
+  );
+
+  await addedMathLocator.click({ position: { x: 30, y: 5 } });
+  await expect(addedMathLocator).toHaveClass(/selected/);
   await pressPrimaryShortcut(page, 'c');
   await expect
     .poll(async () =>
@@ -1711,11 +1848,13 @@ test('authors canonical graph nodes directly with history, clipboard, and reload
   );
   expect(pasted).toBeDefined();
   const pastedLocator = await getGraphNodeLocator(page, pasted!.id);
-  await pastedLocator.click({
-    button: 'right',
-    position: { x: 30, y: 5 },
-  });
-  await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
+  await pastedLocator.click({ position: { x: 30, y: 5 } });
+  await expect(
+    page.getByRole('button', { name: 'Delete selected graph nodes' }),
+  ).toBeEnabled();
+  await page
+    .getByRole('button', { name: 'Delete selected graph nodes' })
+    .click();
   await expect
     .poll(async () => (await readGraphSnapshot(page, graphId!)).nodes.length)
     .toBe(initial.nodes.length + 1);
@@ -1748,6 +1887,26 @@ test('authors canonical graph nodes directly with history, clipboard, and reload
       output.nodeId.endsWith('-output-node'),
     ),
   ).toBe(false);
+
+  const beforePreset = await readGraphSnapshot(page, graphId!);
+  const revisionBeforePreset = (await readEditorSnapshot(page)).revision;
+  await page.getByRole('combobox', { name: 'Load graph preset' }).click();
+  await page
+    .getByPlaceholder('Search presets...')
+    .fill('Spectral Centroid Hue');
+  await page.getByRole('option', { name: /Spectral Centroid Hue/ }).click();
+  await expect
+    .poll(async () => (await readGraphSnapshot(page, graphId!)).nodes.length)
+    .toBe(4);
+  expect((await readEditorSnapshot(page)).revision).toBe(
+    revisionBeforePreset + 1,
+  );
+  await page.evaluate((parameterId) => {
+    window.__vizEditorDebug?.editorControl.history.undoNodeEditor(parameterId);
+  }, graphId);
+  await expect
+    .poll(async () => readGraphSnapshot(page, graphId!))
+    .toEqual(beforePreset);
   expect(diagnostics).toEqual([]);
 });
 

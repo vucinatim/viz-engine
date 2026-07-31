@@ -1,6 +1,6 @@
 import { getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useRef } from 'react';
-import { useRafLoop } from 'react-use';
+import { useGraphLiveUpdate } from '../live-update';
 import { prepareNodeCanvas, type NodeBodyProps } from './node-body';
 
 const SectionChangeDetectorBody = ({ id: nodeId, data }: NodeBodyProps) => {
@@ -13,7 +13,7 @@ const SectionChangeDetectorBody = ({ id: nodeId, data }: NodeBodyProps) => {
   const statsTextRef = useRef<HTMLDivElement>(null);
   const capacity = 90;
 
-  useRafLoop(() => {
+  useGraphLiveUpdate(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 

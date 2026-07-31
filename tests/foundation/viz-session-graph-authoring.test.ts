@@ -264,6 +264,36 @@ describe('VizSession graph authoring', () => {
     ).toEqual({ kind: 'literal', value: 0.75 });
   });
 
+  it('removes multiple nodes and their references in one undoable revision', () => {
+    vizSessionActions.project.importWorkingProject(
+      createSignalCathedralProject(),
+    );
+    const before = vizSessionActions.project.exportWorkingProject();
+    const revisionBefore = vizSessionStore.getState().project.revision;
+
+    vizSessionActions.graph.removeNodesFromNetwork(SIGNAL_CATHEDRAL_GRAPH_ID, [
+      'scale-bass',
+      'scale-loudness',
+    ]);
+
+    const removed = vizSessionActions.project.exportWorkingProject();
+    expect(vizSessionStore.getState().project.revision).toBe(
+      revisionBefore + 1,
+    );
+    expect(
+      removed.graphs?.[0]?.nodes.some((node) =>
+        ['scale-bass', 'scale-loudness'].includes(node.id),
+      ),
+    ).toBe(false);
+    expect(validateProjectDocument(removed)).toMatchObject({
+      ok: true,
+      issues: [],
+    });
+
+    vizSessionActions.history.undo();
+    expect(vizSessionActions.project.exportWorkingProject()).toEqual(before);
+  });
+
   it('roundtrips persisted graph definitions back into executable node definitions', () => {
     const parameterId = 'layer-3:settings.opacity';
 

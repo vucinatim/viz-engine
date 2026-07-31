@@ -1,6 +1,6 @@
 import { getRuntimeNodeOutput } from '@/lib/viz-session';
 import { memo, useRef } from 'react';
-import { useRafLoop } from 'react-use';
+import { useGraphLiveUpdate } from '../live-update';
 import { prepareNodeCanvas, type NodeBodyProps } from './node-body';
 
 const MultiBandAnalysisBody = ({ id: nodeId }: NodeBodyProps) => {
@@ -12,7 +12,7 @@ const MultiBandAnalysisBody = ({ id: nodeId }: NodeBodyProps) => {
   const highHistoryRef = useRef<number[]>([]);
   const capacity = 60;
 
-  useRafLoop(() => {
+  useGraphLiveUpdate(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
