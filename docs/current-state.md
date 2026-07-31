@@ -128,6 +128,34 @@ renderer lifecycle, diagnostic, test, type, parity row, and performance budget
 remains protected. See the
 [Goal Two certification](./parity/evidence/2026-07-31-behavior-preserving-minimization-and-final-polish.md).
 
+## Proposed Next Goal
+
+[Product Parity, Performance, And Agentic Creative Calibration](./plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
+is the proposed Goal Three direction and is ready for activation.
+
+It will turn the current architecture and production confidence into complete
+product confidence by:
+
+- auditing all 42 parity capabilities against the pinned V1 product
+- fixing every real visual, interaction, functional, and performance gap
+- establishing fixed-device editor and runtime performance evidence
+- improving agent perception, inspection, feedback, checkpoint, and live
+  capability-development workflows
+- producing a distinct second original music-reactive production through only
+  reusable public contracts
+- delivering both a polished final video and a portable, fully editable
+  project
+
+The plan is proposed, not active. Activation must capture a fresh immutable
+baseline from a clean, committed, and pushed worktree.
+
+The first direct manual calibration has already confirmed 11 affected parity
+rows as real gaps, including static playback, broken transparency, laggy
+continuous controls and node editing, missing graph/debug live values, Curve
+Spectrum visual failure, catalog-preview crashes, modal-motion and typography
+drift, and console warning floods. See
+[Pre-Goal Three Manual Product Calibration Findings](./parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md).
+
 ## Known Deliberate Deferrals
 
 - a native browser-free video executor, until a real deployment requires it
@@ -145,8 +173,9 @@ consolidation.
 - [Working agreements](./working-agreements.md)
 - [V2 vision](./visions/viz-engine-v2-vision.md)
 - [Product architecture and parity alignment](./visions/v2-product-architecture-and-parity-alignment.md)
-- [Active consolidation plan](./plans/v2/core-consolidation-and-minimization-program.md)
-- [Active minimization plan](./plans/v2/behavior-preserving-minimization-and-final-polish.md)
+- [Completed consolidation plan](./plans/v2/core-consolidation-and-minimization-program.md)
+- [Completed minimization plan](./plans/v2/behavior-preserving-minimization-and-final-polish.md)
+- [Proposed Goal Three](./plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
 - [Autonomous development contract](./plans/v2/autonomous-development-operating-contract.md)
 - [Parity matrix](./parity/README.md)
 - [Suggestions](./suggestions.md)

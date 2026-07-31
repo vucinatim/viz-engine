@@ -1919,3 +1919,32 @@
     to force the 10,000-line serious target
   - recorded the complete result in
     `docs/parity/evidence/2026-07-31-behavior-preserving-minimization-and-final-polish.md`
+- defined the proposed Goal Three direction in
+  `docs/plans/v2/product-parity-performance-and-agentic-creative-calibration.md`:
+  - complete controlled certification of all 42 product-parity capabilities
+  - fixed-device editor interaction, frame-pacing, and lifecycle evidence
+  - stronger canonical agent inspection, visual feedback, checkpoints, and
+    live capability-development workflow
+  - a distinct second original production authored through reusable public
+    contracts and delivered as both final media and a portable editable project
+  - targeted type-safety and cleanup work driven by real product and creative
+    friction rather than another numerical minimization campaign
+  - explicit assumptions, architecture guardrails, phases, evidence, stop
+    rules, non-goals, and completion requirements
+- recorded the first direct pre-Goal Three manual calibration:
+  - confirmed static playback because all bundled samples declare a one-frame
+    timeline while audio can advance independently
+  - confirmed portable CSS alpha loss and a frame-loop Three warning that
+    accumulated more than 20,000 times
+  - confirmed component-catalog preview can crash on Signal Cathedral because
+    it omits the composed studio Three-program registry
+  - identified pointer-rate canonical project validation/cloning/replacement
+    and frame-rate runtime-inspection publication as architectural performance
+    problems requiring a transient live-value boundary rather than blanket
+    memoization
+  - recorded typography, modal motion, debug live-value, Curve Spectrum, graph
+    live-value, node-editor performance, and accessibility failures
+  - reclassified 11 affected parity rows as gaps and made their regression proof
+    mandatory in Goal Three
+  - documented the findings in
+    `docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md`

@@ -27,10 +27,10 @@
       "parityDimensions": ["visual", "interaction"],
       "referenceEvidence": ["src/app/globals.css", "src/components/editor/editor-layout.tsx"],
       "v2Evidence": ["src/styles/globals.css", "src/components/editor/editor-layout.tsx"],
-      "status": "partial",
+      "status": "gap",
       "acceptance": ["Core screens are visually equivalent or intentionally improved without losing information density.", "Hover, focus, selected, disabled, and error states remain legible.", "No unapproved generic replacement UI appears in primary workflows."],
       "validationMethods": ["browser", "visual", "manual"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md"]
     },
     {
       "id": "shell.resizable-workspace",
@@ -79,10 +79,10 @@
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/editor-layer-search.tsx", "src/components/editor/layers-config-panel.tsx"],
       "v2Evidence": ["src/components/editor/editor-layer-search.tsx", "src/components/editor/layers-config-panel.tsx"],
-      "status": "partial",
+      "status": "gap",
       "acceptance": ["Search filters registered components predictably.", "Adding a result selects and reveals the new layer.", "Selection remains synchronized across panels and preview affordances."],
       "validationMethods": ["browser", "integration"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md"]
     },
     {
       "id": "layers.visibility-compositing",
@@ -92,10 +92,10 @@
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/layer-settings.tsx", "src/components/editor/layer-renderer.tsx"],
       "v2Evidence": ["src/components/editor/layer-settings.tsx", "src/components/editor/layer-renderer.tsx", "src/lib/projected-layers.ts", "src/lib/stores/editor-runtime-preview-attachment-store.ts"],
-      "status": "partial",
+      "status": "gap",
       "acceptance": ["Each control changes the intended rendered layer immediately.", "Values serialize and restore without semantic drift.", "Unsupported combinations fail clearly rather than silently."],
       "validationMethods": ["browser", "visual", "integration"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md"]
     },
     {
       "id": "layers.cards-and-disclosure",
@@ -144,10 +144,10 @@
       "parityDimensions": ["interaction", "functional", "performance"],
       "referenceEvidence": ["src/components/editor/layer-parameters.tsx", "src/components/editor/layer-renderer.tsx"],
       "v2Evidence": ["src/components/editor/layer-parameters.tsx", "src/components/editor/editor-runtime-preview-driver.tsx"],
-      "status": "not-audited",
+      "status": "gap",
       "acceptance": ["Continuous controls do not visibly lag behind input.", "One gesture creates an intelligible history result rather than excessive snapshots.", "Editing does not trigger avoidable full-editor rerenders."],
       "validationMethods": ["browser", "benchmark", "integration"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md"]
     },
     {
       "id": "components.stage-model-characters",
@@ -222,10 +222,10 @@
       "parityDimensions": ["functional", "performance"],
       "referenceEvidence": ["src/components/node-network/node-network-store.ts", "src/components/editor/layer-renderer.tsx"],
       "v2Evidence": ["packages/viz-nodes-core/src/index.ts", "src/lib/viz-session/store.ts", "src/lib/viz-session/runtime-preview-plan.ts", "src/components/editor/editor-runtime-preview-driver.tsx"],
-      "status": "partial",
+      "status": "gap",
       "acceptance": ["Equivalent inputs and time produce equivalent graph outputs.", "Graph evaluation follows runtime time rather than incidental UI timing.", "Graph-heavy scenes remain within the approved frame budget."],
       "validationMethods": ["integration", "unit", "browser", "benchmark"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-viz-session-convergence-and-node-editor-parity.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-viz-session-convergence-and-node-editor-parity.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md"]
     },
     {
       "id": "audio.file-loading",
@@ -300,10 +300,10 @@
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/custom-player-controls.tsx", "src/components/editor/remotion-player.tsx"],
       "v2Evidence": ["src/components/editor/custom-player-controls.tsx", "src/components/editor/remotion-player.tsx", "src/lib/viz-session/store.ts"],
-      "status": "partial",
+      "status": "gap",
       "acceptance": ["Transport state, displayed time, audio time, and rendered frame stay synchronized.", "Seeking while playing and paused has deterministic results.", "Loop boundaries do not drift or double-trigger."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md"]
     },
     {
       "id": "transport.timeline",
@@ -326,10 +326,10 @@
       "parityDimensions": ["visual", "functional", "performance"],
       "referenceEvidence": ["src/components/editor/renderer.tsx", "src/components/editor/layer-renderer.tsx"],
       "v2Evidence": ["src/components/editor/editor-runtime-preview-driver.tsx", "src/lib/viz-session/runtime-preview-plan.ts", "src/lib/stores/editor-runtime-preview-attachment-store.ts", "src/lib/viz-session/store.ts"],
-      "status": "partial",
+      "status": "gap",
       "acceptance": ["The preview image is produced from the canonical project and runtime inputs.", "Project changes update without stale adapters or duplicate ownership.", "Representative scenes meet the approved interactive frame budget."],
       "validationMethods": ["browser", "visual", "integration", "benchmark"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-viz-session-runtime-preview-ownership.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-viz-session-runtime-preview-ownership.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md"]
     },
     {
       "id": "preview.multi-layer-compositing",
@@ -339,10 +339,10 @@
       "parityDimensions": ["visual", "functional"],
       "referenceEvidence": ["src/components/editor/renderer.tsx", "src/components/editor/layer-renderer.tsx", "src/components/editor/layer-settings.tsx"],
       "v2Evidence": ["src/components/editor/layer-renderer.tsx", "src/components/editor/editor-runtime-preview-driver.tsx"],
-      "status": "partial",
+      "status": "gap",
       "acceptance": ["A parity fixture produces the expected ordered composite.", "Hidden, frozen, and transparent layers have the documented behavior.", "Preview and export share compatible scene semantics."],
       "validationMethods": ["visual", "integration", "browser"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md"]
     },
     {
       "id": "preview.layer-mirror",
@@ -417,10 +417,10 @@
       "parityDimensions": ["interaction", "functional"],
       "referenceEvidence": ["src/components/editor/editor-toolbar.tsx", "public/projects/simple-example.vizengine.json"],
       "v2Evidence": ["src/components/editor/editor-toolbar.tsx", "public/projects/simple-example.vizengine.json", "tests/foundation/public-sample-projects.test.ts"],
-      "status": "partial",
+      "status": "gap",
       "acceptance": ["Every published sample passes canonical validation.", "Loading each sample produces its intended visible scene.", "Samples exercise supported V2 contracts rather than legacy-only shapes."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md"]
     },
     {
       "id": "export.still-image",
@@ -456,10 +456,10 @@
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/debug-info-dialog.tsx", "src/components/editor/layer-renderer.tsx"],
       "v2Evidence": ["src/components/editor/debug-info-dialog.tsx", "src/components/editor/layer-renderer.tsx"],
-      "status": "partial",
+      "status": "gap",
       "acceptance": ["Debug information corresponds to current canonical runtime state.", "Toggling diagnostics does not alter scene semantics.", "Export excludes editor-only diagnostics unless explicitly requested."],
       "validationMethods": ["browser", "visual", "integration"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md"]
     },
     {
       "id": "debugging.profiler",
@@ -534,10 +534,10 @@
       "parityDimensions": ["performance", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/editor-layout.tsx", "src/components/node-network/node-network-renderer.tsx", "src/components/editor/layer-parameters.tsx"],
       "v2Evidence": ["tools/foundation/runtime-preview-plan-benchmark.ts"],
-      "status": "partial",
+      "status": "gap",
       "acceptance": ["A representative multi-layer and graph fixture defines the workload.", "Input-to-visible-update latency meets the approved baseline-relative budget.", "No primary interaction causes an avoidable long task or full application stall."],
       "validationMethods": ["benchmark", "browser"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md"]
     },
     {
       "id": "performance.long-session-stability",
