@@ -129,6 +129,7 @@ const AudioFileLoader = () => {
         }}
       />
       <input
+        name="audio-file"
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}

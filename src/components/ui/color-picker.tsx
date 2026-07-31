@@ -7,12 +7,24 @@ import { Popover, PopoverContent, PopoverTrigger } from './popover';
 interface ColorPickerPopoverProps {
   value: string;
   onChange: (value: string) => void;
+  onTransientChange?: (value: string) => void;
+  onCommit?: (value: string) => void;
+  onGestureStart?: () => void;
+  onGestureCancel?: () => void;
 }
 
 const ColorPickerPopover = forwardRef<
   HTMLButtonElement,
   ColorPickerPopoverProps
->(({ value, onChange }, ref) => {
+>((props, ref) => {
+  const {
+    value,
+    onChange,
+    onTransientChange,
+    onCommit,
+    onGestureStart,
+    onGestureCancel,
+  } = props;
   const [open, setOpen] = useState(false);
   const [localValue, setLocalValue] = useState<string>(value);
   const [inputValue, setInputValue] = useState<string>(value);
@@ -32,6 +44,7 @@ const ColorPickerPopover = forwardRef<
   const svDraggingRef = useRef<boolean>(false);
   const hueDraggingRef = useRef<boolean>(false);
   const alphaDraggingRef = useRef<boolean>(false);
+  const gestureBaseValueRef = useRef<string>(value);
 
   // Initialize canvases and refs only when opening; avoid re-parsing during drags
   useEffect(() => {
@@ -219,7 +232,7 @@ const ColorPickerPopover = forwardRef<
     });
   };
 
-  const commitColor = () => {
+  const getCurrentColor = () => {
     const factor = 10 ** ALPHA_PRECISION;
     const roundedAlpha = Math.max(
       0,
@@ -232,12 +245,46 @@ const ColorPickerPopover = forwardRef<
       valRef.current,
       roundedAlpha,
     );
+    return rgba;
+  };
+
+  const publishTransientColor = () => {
+    const rgba = getCurrentColor();
     setLocalValue(rgba);
-    onChange(rgba);
+    (onTransientChange ?? onChange)(rgba);
     // Ensure the alpha thumb remains visible after any commit
     requestAnimationFrame(() => {
       drawAlphaThumb(alphaCanvasRef.current, alphaRef.current);
     });
+  };
+
+  const commitGesture = () => {
+    (onCommit ?? onChange)(getCurrentColor());
+  };
+
+  const beginGesture = () => {
+    gestureBaseValueRef.current = localValue;
+    onGestureStart?.();
+  };
+
+  const cancelGesture = () => {
+    const baseValue = gestureBaseValueRef.current;
+    const parsed = parseColorString(baseValue);
+    hueRef.current = parsed.h;
+    satRef.current = parsed.s;
+    valRef.current = parsed.v;
+    alphaRef.current = parsed.a;
+    setLocalValue(baseValue);
+    setInputValue(baseValue);
+    requestAnimationFrame(() => {
+      drawHueCanvas(hueCanvasRef.current);
+      drawHueThumb(hueCanvasRef.current, parsed.h);
+      drawSVCanvas(svCanvasRef.current, parsed.h);
+      drawSVThumb(svCanvasRef.current, parsed.s, parsed.v);
+      drawAlphaCanvas(alphaCanvasRef.current, parsed.h, parsed.s, parsed.v);
+      drawAlphaThumb(alphaCanvasRef.current, parsed.a);
+    });
+    onGestureCancel?.();
   };
 
   const applyParsedColor = (str: string) => {
@@ -267,6 +314,7 @@ const ColorPickerPopover = forwardRef<
   const handleSVPointer = (evt: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = svCanvasRef.current;
     if (!canvas) return;
+    beginGesture();
     svDraggingRef.current = true;
     canvas.setPointerCapture(evt.pointerId);
     const update = (clientX: number, clientY: number) => {
@@ -284,23 +332,36 @@ const ColorPickerPopover = forwardRef<
         valRef.current,
       );
       drawAlphaThumb(alphaCanvasRef.current, alphaRef.current);
-      commitColor();
+      publishTransientColor();
     };
     update(evt.clientX, evt.clientY);
     const onMove = (e: PointerEvent) => update(e.clientX, e.clientY);
-    const onUp = () => {
+    const cleanup = () => {
       svDraggingRef.current = false;
-      canvas.releasePointerCapture(evt.pointerId);
+      if (canvas.hasPointerCapture(evt.pointerId)) {
+        canvas.releasePointerCapture(evt.pointerId);
+      }
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+    };
+    const onUp = () => {
+      cleanup();
+      commitGesture();
+    };
+    const onCancel = () => {
+      cleanup();
+      cancelGesture();
     };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
   };
 
   const handleHuePointer = (evt: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = hueCanvasRef.current;
     if (!canvas) return;
+    beginGesture();
     hueDraggingRef.current = true;
     canvas.setPointerCapture(evt.pointerId);
     const update = (clientX: number) => {
@@ -318,23 +379,36 @@ const ColorPickerPopover = forwardRef<
         satRef.current,
         valRef.current,
       );
-      commitColor();
+      publishTransientColor();
     };
     update(evt.clientX);
     const onMove = (e: PointerEvent) => update(e.clientX);
-    const onUp = () => {
+    const cleanup = () => {
       hueDraggingRef.current = false;
-      canvas.releasePointerCapture(evt.pointerId);
+      if (canvas.hasPointerCapture(evt.pointerId)) {
+        canvas.releasePointerCapture(evt.pointerId);
+      }
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+    };
+    const onUp = () => {
+      cleanup();
+      commitGesture();
+    };
+    const onCancel = () => {
+      cleanup();
+      cancelGesture();
     };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
   };
 
   const handleAlphaPointer = (evt: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = alphaCanvasRef.current;
     if (!canvas) return;
+    beginGesture();
     alphaDraggingRef.current = true;
     canvas.setPointerCapture(evt.pointerId);
     const update = (clientX: number) => {
@@ -344,18 +418,30 @@ const ColorPickerPopover = forwardRef<
       alphaRef.current = Math.round((x / rect.width) * factor) / factor;
       drawAlphaCanvas(canvas, hueRef.current, satRef.current, valRef.current);
       drawAlphaThumb(canvas, alphaRef.current);
-      commitColor();
+      publishTransientColor();
     };
     update(evt.clientX);
     const onMove = (e: PointerEvent) => update(e.clientX);
-    const onUp = () => {
+    const cleanup = () => {
       alphaDraggingRef.current = false;
-      canvas.releasePointerCapture(evt.pointerId);
+      if (canvas.hasPointerCapture(evt.pointerId)) {
+        canvas.releasePointerCapture(evt.pointerId);
+      }
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+    };
+    const onUp = () => {
+      cleanup();
+      commitGesture();
+    };
+    const onCancel = () => {
+      cleanup();
+      cancelGesture();
     };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
   };
 
   return (

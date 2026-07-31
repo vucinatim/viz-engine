@@ -1,9 +1,13 @@
+import { subscribeEditorRuntimePreviewInvalidation } from '@/lib/editor-runtime-preview-invalidation';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
+import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import useExportStore from '@/lib/stores/export-store';
 import {
   createVizSessionRuntimePreviewFrame,
   getVizSessionState,
   vizSessionActions,
+  vizSessionHost,
+  vizSessionStore,
 } from '@/lib/viz-session';
 import { useEffect, useRef } from 'react';
 
@@ -27,8 +31,22 @@ const EditorRuntimePreviewDriver = () => {
     lastFrameTimeRef.current =
       typeof performance !== 'undefined' ? performance.now() : Date.now();
 
+    const scheduleRender = () => {
+      if (rafIdRef.current === null) {
+        rafIdRef.current = requestAnimationFrame(renderFrame);
+      }
+    };
+
     const renderFrame = () => {
-      const { currentFrame, fps } = getVizSessionState().preview.transport;
+      rafIdRef.current = null;
+      const state = getVizSessionState();
+      const { currentFrame, fps, isPlaying } = state.preview.transport;
+      const attachmentStore = useEditorRuntimePreviewAttachmentStore.getState();
+      const isLiveCapture = state.audio.session.source?.kind === 'stream';
+      const shouldRenderContinuously =
+        isPlaying ||
+        isLiveCapture ||
+        attachmentStore.requiresContinuousRendering();
       const now =
         typeof performance !== 'undefined' ? performance.now() : Date.now();
       const elapsedMilliseconds = now - lastFrameTimeRef.current;
@@ -37,12 +55,15 @@ const EditorRuntimePreviewDriver = () => {
       // High-refresh displays can invoke rAF at 120 Hz or more. The authored
       // timeline is the useful ceiling; evaluating the same canonical frame
       // twice only burns CPU/GPU and can make editor interactions less smooth.
-      if (elapsedMilliseconds + 1 < targetIntervalMilliseconds) {
-        rafIdRef.current = requestAnimationFrame(renderFrame);
+      if (
+        shouldRenderContinuously &&
+        elapsedMilliseconds + 1 < targetIntervalMilliseconds
+      ) {
+        scheduleRender();
         return;
       }
 
-      const dt = elapsedMilliseconds / 1000;
+      const dt = shouldRenderContinuously ? elapsedMilliseconds / 1000 : 0;
       lastFrameTimeRef.current = now;
 
       const time =
@@ -59,12 +80,24 @@ const EditorRuntimePreviewDriver = () => {
       });
 
       vizSessionActions.preview.renderRuntimePreviewFrame(frame);
-      rafIdRef.current = requestAnimationFrame(renderFrame);
+      if (shouldRenderContinuously) {
+        scheduleRender();
+      }
     };
 
-    rafIdRef.current = requestAnimationFrame(renderFrame);
+    const unsubscribers = [
+      vizSessionStore.subscribe(scheduleRender),
+      vizSessionHost.subscribeLiveProjectValues(scheduleRender),
+      useAudioEngineStore.subscribe(scheduleRender),
+      useEditorRuntimePreviewAttachmentStore.subscribe(scheduleRender),
+      subscribeEditorRuntimePreviewInvalidation(scheduleRender),
+    ];
+    scheduleRender();
 
     return () => {
+      for (const unsubscribe of unsubscribers) {
+        unsubscribe();
+      }
       if (rafIdRef.current !== null) {
         cancelAnimationFrame(rafIdRef.current);
         rafIdRef.current = null;

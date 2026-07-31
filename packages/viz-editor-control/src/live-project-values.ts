@@ -1,5 +1,6 @@
 import type {
   VizLayer,
+  VizNodeGraphDocument,
   VizProjectAction,
   VizProjectDocument,
 } from '@viz-engine/contracts';
@@ -30,6 +31,19 @@ export interface VizLiveLayerPropertySnapshot {
   baseRevision: number;
 }
 
+export interface VizLiveGraphNodeInputTarget {
+  graphId: string;
+  nodeId: string;
+  inputKey: string;
+}
+
+export interface VizLiveGraphNodeInputSnapshot {
+  target: VizLiveGraphNodeInputTarget;
+  value: unknown;
+  graph: Readonly<VizNodeGraphDocument>;
+  baseRevision: number;
+}
+
 type LiveLayerValueKind = 'property' | 'setting';
 type LiveLayerValueTarget =
   VizLiveLayerPropertyTarget | VizLiveLayerSettingTarget;
@@ -42,12 +56,27 @@ interface LiveLayerValue {
   baseRevision: number;
 }
 
+interface LiveGraphGesture {
+  graphId: string;
+  graph: VizNodeGraphDocument;
+  baseRevision: number;
+  changes: Map<string, VizLiveGraphNodeInputSnapshot>;
+}
+
 const clone = <T>(value: T): T => structuredClone(value);
 
 const targetKey = (
   kind: LiveLayerValueKind,
   target: LiveLayerValueTarget,
 ): string => JSON.stringify([kind, target.layerId, target.path]);
+
+const graphTargetKey = (target: VizLiveGraphNodeInputTarget): string =>
+  JSON.stringify([
+    'graph-node-input',
+    target.graphId,
+    target.nodeId,
+    target.inputKey,
+  ]);
 
 const setValueAtPath = (
   current: unknown,
@@ -89,33 +118,64 @@ const getValueAtPath = (
   return value;
 };
 
-export const createVizLiveLayerValuesController = ({
+export const createVizLiveProjectValuesController = ({
   getProject,
   getRevision,
   applyAction,
+  applyActions,
 }: {
   getProject(): VizProjectDocument;
   getRevision(): number;
   applyAction(action: VizProjectAction): VizEditorSessionMutationResult;
+  applyActions(actions: VizProjectAction[]): VizEditorSessionMutationResult;
 }) => {
   const listeners = new Map<string, Set<() => void>>();
+  const valueListeners = new Set<() => void>();
   let current: LiveLayerValue | undefined;
+  let currentGraphGesture: LiveGraphGesture | undefined;
   let layerValues: Readonly<Record<string, Readonly<VizLayer>>> = {};
+  let graphValues: Readonly<Record<string, Readonly<VizNodeGraphDocument>>> =
+    {};
+  let settingSnapshot:
+    | {
+        edit: LiveLayerValue;
+        value: VizLiveLayerSettingSnapshot;
+      }
+    | undefined;
 
   const notify = (kind: LiveLayerValueKind, target: LiveLayerValueTarget) => {
     for (const listener of listeners.get(targetKey(kind, target)) ?? []) {
       listener();
     }
+    for (const listener of valueListeners) {
+      listener();
+    }
   };
 
   const cancelAll = () => {
-    if (!current) {
+    if (!current && !currentGraphGesture) {
       return;
     }
-    const { kind, target } = current;
+    const layerEdit = current;
+    const graphGesture = currentGraphGesture;
     current = undefined;
+    currentGraphGesture = undefined;
     layerValues = {};
-    notify(kind, target);
+    graphValues = {};
+    settingSnapshot = undefined;
+    if (layerEdit) {
+      notify(layerEdit.kind, layerEdit.target);
+    } else {
+      for (const change of graphGesture?.changes.values() ?? []) {
+        for (const listener of listeners.get(graphTargetKey(change.target)) ??
+          []) {
+          listener();
+        }
+      }
+      for (const listener of valueListeners) {
+        listener();
+      }
+    }
   };
 
   const begin = (
@@ -128,7 +188,9 @@ export const createVizLiveLayerValuesController = ({
     ) {
       return current;
     }
-    cancelAll();
+    if (currentGraphGesture) {
+      cancelAll();
+    }
     if (target.path.length === 0) {
       throw new Error(`A live layer ${kind} path cannot be empty.`);
     }
@@ -151,6 +213,109 @@ export const createVizLiveLayerValuesController = ({
     layerValues = { [target.layerId]: current.layer };
     notify(kind, target);
     return current;
+  };
+
+  const beginGraphGesture = (graphId: string): LiveGraphGesture => {
+    if (currentGraphGesture?.graphId === graphId) {
+      return currentGraphGesture;
+    }
+    cancelAll();
+    const graph = getProject().graphs?.find(
+      (candidate) => candidate.id === graphId,
+    );
+    if (!graph) {
+      throw new Error(`Cannot edit missing graph "${graphId}".`);
+    }
+    currentGraphGesture = {
+      graphId,
+      graph: clone(graph),
+      baseRevision: getRevision(),
+      changes: new Map(),
+    };
+    graphValues = { [graphId]: currentGraphGesture.graph };
+    for (const listener of valueListeners) {
+      listener();
+    }
+    return currentGraphGesture;
+  };
+
+  const updateGraphNodeInput = (
+    target: VizLiveGraphNodeInputTarget,
+    value: unknown,
+  ): VizLiveGraphNodeInputSnapshot => {
+    const gesture = beginGraphGesture(target.graphId);
+    const nodeIndex = gesture.graph.nodes.findIndex(
+      (candidate) => candidate.id === target.nodeId,
+    );
+    if (nodeIndex < 0) {
+      throw new Error(
+        `Cannot edit missing node "${target.nodeId}" in graph "${target.graphId}".`,
+      );
+    }
+    const node = gesture.graph.nodes[nodeIndex]!;
+    const graph = {
+      ...gesture.graph,
+      nodes: gesture.graph.nodes.with(nodeIndex, {
+        ...node,
+        inputs: {
+          ...node.inputs,
+          [target.inputKey]: {
+            kind: 'literal',
+            value: clone(value),
+          },
+        },
+      }),
+    };
+    const snapshot: VizLiveGraphNodeInputSnapshot = {
+      target: { ...target },
+      value: clone(value),
+      graph,
+      baseRevision: gesture.baseRevision,
+    };
+    const changes = new Map(gesture.changes);
+    changes.set(graphTargetKey(target), snapshot);
+    currentGraphGesture = { ...gesture, graph, changes };
+    graphValues = { [target.graphId]: graph };
+    for (const listener of listeners.get(graphTargetKey(target)) ?? []) {
+      listener();
+    }
+    for (const listener of valueListeners) {
+      listener();
+    }
+    return snapshot;
+  };
+
+  const commitGraphGesture = (
+    graphId: string,
+  ): VizEditorSessionMutationResult | undefined => {
+    const gesture = currentGraphGesture;
+    if (!gesture || gesture.graphId !== graphId) {
+      return undefined;
+    }
+    if (gesture.baseRevision !== getRevision()) {
+      cancelAll();
+      throw new Error(
+        'The project changed during the live graph gesture; the transient edit was cancelled.',
+      );
+    }
+    const actions = [...gesture.changes.values()].map(
+      (change): VizProjectAction => ({
+        type: 'graph.node.input.set',
+        payload: {
+          graphId: change.target.graphId,
+          nodeId: change.target.nodeId,
+          inputKey: change.target.inputKey,
+          binding: { kind: 'literal', value: clone(change.value) },
+        },
+      }),
+    );
+    if (actions.length === 0) {
+      cancelAll();
+      return undefined;
+    }
+    const result = applyActions(actions);
+    cancelAll();
+    return result;
   };
 
   const update = (
@@ -247,16 +412,30 @@ export const createVizLiveLayerValuesController = ({
       : undefined;
   const toSettingSnapshot = (
     edit: LiveLayerValue,
-  ): VizLiveLayerSettingSnapshot => ({
-    target: edit.target,
-    value: edit.value,
-    settings: edit.layer.settings ?? {},
-    layer: edit.layer,
-    baseRevision: edit.baseRevision,
-  });
+  ): VizLiveLayerSettingSnapshot => {
+    if (settingSnapshot?.edit === edit) {
+      return settingSnapshot.value;
+    }
+    const value = {
+      target: edit.target,
+      value: edit.value,
+      settings: edit.layer.settings ?? {},
+      layer: edit.layer,
+      baseRevision: edit.baseRevision,
+    };
+    settingSnapshot = { edit, value };
+    return value;
+  };
 
   return {
     getLayerValues: () => layerValues,
+    getGraphValues: () => graphValues,
+    subscribe: (listener: () => void) => {
+      valueListeners.add(listener);
+      return () => {
+        valueListeners.delete(listener);
+      };
+    },
     cancelAll,
     getSetting: (target: VizLiveLayerSettingTarget) => {
       const edit = get('setting', target);
@@ -296,5 +475,30 @@ export const createVizLiveLayerValuesController = ({
       target: VizLiveLayerPropertyTarget,
       listener: () => void,
     ) => subscribe('property', target, listener),
+    getGraphNodeInput: (target: VizLiveGraphNodeInputTarget) =>
+      currentGraphGesture?.changes.get(graphTargetKey(target)),
+    beginGraphGesture,
+    updateGraphNodeInput,
+    commitGraphGesture,
+    cancelGraphGesture: (graphId: string) => {
+      if (currentGraphGesture?.graphId === graphId) {
+        cancelAll();
+      }
+    },
+    subscribeGraphNodeInput: (
+      target: VizLiveGraphNodeInputTarget,
+      listener: () => void,
+    ) => {
+      const key = graphTargetKey(target);
+      const targetListeners = listeners.get(key) ?? new Set();
+      targetListeners.add(listener);
+      listeners.set(key, targetListeners);
+      return () => {
+        targetListeners.delete(listener);
+        if (targetListeners.size === 0) {
+          listeners.delete(key);
+        }
+      };
+    },
   };
 };

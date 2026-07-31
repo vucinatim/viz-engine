@@ -37,21 +37,31 @@ const AudioPanel = () => {
   }, [setAudioElementRef]);
 
   useEffect(() => {
+    const updateTimes = () => {
+      const audio = audioElementRef.current;
+      if (!audio) {
+        return;
+      }
+      const raw = audio.currentTime || 0;
+      setCurrentTime(raw);
+      setVisualTime(getVisualTime(raw, audioContext));
+    };
+
+    if (!isPlaying && !isCapturingTab) {
+      updateTimes();
+      return;
+    }
+
     let raf: number | null = null;
     const tick = () => {
-      const audio = audioElementRef.current;
-      if (audio) {
-        const raw = audio.currentTime || 0;
-        setCurrentTime(raw);
-        setVisualTime(getVisualTime(raw, audioContext));
-      }
+      updateTimes();
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => {
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [audioContext, setCurrentTime, setVisualTime]);
+  }, [audioContext, isCapturingTab, isPlaying, setCurrentTime, setVisualTime]);
 
   const { peaksLevels, duration, bufferDuration, isLoading } = useAudioEngine();
   useAudioPlaybackSync();

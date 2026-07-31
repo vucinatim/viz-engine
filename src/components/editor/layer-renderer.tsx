@@ -38,6 +38,8 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   const previewAttachmentRef = useRef<EditorRuntimePreviewAttachment | null>(
     null,
   );
+  const layerRef = useRef(layer);
+  layerRef.current = layer;
 
   // on panel resize, update canvas size
   useOnResize(canvasContainerRef, (entries) => {
@@ -62,7 +64,7 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   useEffect(() => {
     if (!layerCanvasRef.current) return;
     const previewAttachment = createEditorRuntimePreviewAttachment({
-      layer,
+      layer: layerRef.current,
       canvas: layerCanvasRef.current,
       debugCanvas: debugCanvasRef.current,
       resolutionMultiplier,
@@ -88,13 +90,20 @@ const LayerRenderer = ({ layer }: LayerRendererProps) => {
   }, [
     layer.id,
     layer.comp,
-    layer,
     layerFPSTracker,
     resolutionMultiplier,
     withDebug,
     registerLayerAttachment,
     unregisterLayerAttachment,
   ]);
+
+  useEffect(() => {
+    previewAttachmentRef.current?.updateLayer(layer);
+  }, [layer]);
+
+  useEffect(() => {
+    previewAttachmentRef.current?.setDebugCanvas(debugCanvasRef.current);
+  }, [layer.isDebugEnabled]);
 
   return (
     <div ref={canvasContainerRef} className="absolute inset-0">

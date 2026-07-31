@@ -60,6 +60,7 @@ const NodeNetworkRenderer = ({
   const [flowNodes, setFlowNodes] = useState<any[]>(nodes);
   const [paneMenuGeneration, setPaneMenuGeneration] = useState(0);
   const flowNodesRef = useRef<any[]>(nodes);
+  const isNodeDragActiveRef = useRef(false);
 
   useEffect(() => {
     setFlowNodes((currentNodes) =>
@@ -284,8 +285,7 @@ const NodeNetworkRenderer = ({
             edgesReconnectable={true}
             onReconnect={onReconnect}
             onNodesChange={(changes) => {
-              // Check if this is a drag operation
-              const isDragStart = changes.some(
+              const isDragging = changes.some(
                 (change) =>
                   change.type === 'position' && change.dragging === true,
               );
@@ -294,7 +294,8 @@ const NodeNetworkRenderer = ({
                   change.type === 'position' && change.dragging === false,
               );
 
-              if (isDragStart) {
+              if (isDragging && !isNodeDragActiveRef.current) {
+                isNodeDragActiveRef.current = true;
                 startDrag();
               }
 
@@ -316,19 +317,26 @@ const NodeNetworkRenderer = ({
               // React Flow measurement and selection are canvas-local UI state.
               // Only durable graph edits are written back to the canonical document.
               if (filteredChanges.length > 0) {
-                const newNodes = applyNodeChanges(filteredChanges, flowNodes);
+                const newNodes = applyNodeChanges(
+                  filteredChanges,
+                  flowNodesRef.current,
+                );
+                flowNodesRef.current = newNodes;
                 setFlowNodes(newNodes);
                 if (
                   filteredChanges.some(
                     (change) =>
-                      change.type !== 'dimensions' && change.type !== 'select',
+                      change.type !== 'dimensions' &&
+                      change.type !== 'select' &&
+                      !(change.type === 'position' && change.dragging === true),
                   )
                 ) {
                   setNodes(newNodes);
                 }
               }
 
-              if (isDragEnd) {
+              if (isDragEnd && isNodeDragActiveRef.current) {
+                isNodeDragActiveRef.current = false;
                 endDrag();
               }
             }}

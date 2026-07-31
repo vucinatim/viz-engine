@@ -1,6 +1,7 @@
 import { mirrorToCanvases } from '@/lib/comp-utils/mirror-to-canvases';
 import editorControl from '@/lib/editor-control';
 import type { LayerData } from '@/lib/editor-layer-types';
+import { invalidateEditorRuntimePreview } from '@/lib/editor-runtime-preview-invalidation';
 import type {
   VizSessionRuntimePreviewAudioFrameData,
   VizSessionRuntimePreviewFrame,
@@ -39,6 +40,9 @@ export interface EditorRuntimePreviewAttachment {
     audioFrameData: VizSessionRuntimePreviewAudioFrameData;
     renderPlan: VizRenderPlan;
   }) => void;
+  setDebugCanvas: (canvas: HTMLCanvasElement | null) => void;
+  updateLayer: (layer: LayerData) => void;
+  requiresContinuousRendering: () => boolean;
   whenReady: () => Promise<void>;
   actions: Record<string, () => void>;
   activateFlyCameraMode: () => void;
@@ -76,6 +80,8 @@ export const createEditorRuntimePreviewAttachment = ({
   profiler,
   programRegistry,
 }: CreateEditorRuntimePreviewAttachmentOptions): EditorRuntimePreviewAttachment => {
+  let currentLayer = layer;
+  let currentDebugCanvas = debugCanvas;
   let runtimePreviewController: VizThreePreviewController | null = null;
   let flyCameraPose: VizThreePreviewCameraPose | null = null;
   let flyCameraActive = false;
@@ -100,20 +106,28 @@ export const createEditorRuntimePreviewAttachment = ({
     const [x, y, z] = flyCameraPose.position;
     const [rotationX, rotationY, rotationZ] = flyCameraPose.rotation;
     editorControl.project.updateLayerValue(
-      layer.id,
+      currentLayer.id,
       ['camera', 'cinematicMode'],
       false,
     );
-    editorControl.project.updateLayerValue(layer.id, ['camera', 'position'], {
-      x,
-      y,
-      z,
-    });
-    editorControl.project.updateLayerValue(layer.id, ['camera', 'rotation'], {
-      x: rotationX,
-      y: rotationY,
-      z: rotationZ,
-    });
+    editorControl.project.updateLayerValue(
+      currentLayer.id,
+      ['camera', 'position'],
+      {
+        x,
+        y,
+        z,
+      },
+    );
+    editorControl.project.updateLayerValue(
+      currentLayer.id,
+      ['camera', 'rotation'],
+      {
+        x: rotationX,
+        y: rotationY,
+        z: rotationZ,
+      },
+    );
   };
 
   const deactivateFlyCamera = () => {
@@ -123,7 +137,7 @@ export const createEditorRuntimePreviewAttachment = ({
 
     flyCameraActive = false;
     removeFlyListeners();
-    runtimePreviewController?.setLayerCameraPose(layer.id, null);
+    runtimePreviewController?.setLayerCameraPose(currentLayer.id, null);
     commitFlyCameraPose();
   };
 
@@ -140,6 +154,7 @@ export const createEditorRuntimePreviewAttachment = ({
       return;
     }
     flyKeys.add(key);
+    invalidateEditorRuntimePreview();
   }
 
   function onFlyKeyUp(event: KeyboardEvent) {
@@ -151,6 +166,7 @@ export const createEditorRuntimePreviewAttachment = ({
     event.preventDefault();
     event.stopPropagation();
     flyKeys.delete(key);
+    invalidateEditorRuntimePreview();
   }
 
   function onFlyMouseMove(event: MouseEvent) {
@@ -174,6 +190,7 @@ export const createEditorRuntimePreviewAttachment = ({
         flyCameraPose.rotation[0] - event.movementY * lookSpeed,
       ),
     );
+    invalidateEditorRuntimePreview();
   }
 
   function onPointerLockChange() {
@@ -187,7 +204,9 @@ export const createEditorRuntimePreviewAttachment = ({
       return;
     }
 
-    flyCameraPose = runtimePreviewController.getLayerCameraPose(layer.id);
+    flyCameraPose = runtimePreviewController.getLayerCameraPose(
+      currentLayer.id,
+    );
     if (!flyCameraPose) {
       return;
     }
@@ -197,7 +216,8 @@ export const createEditorRuntimePreviewAttachment = ({
     document.addEventListener('keyup', onFlyKeyUp);
     document.addEventListener('mousemove', onFlyMouseMove);
     document.addEventListener('pointerlockchange', onPointerLockChange);
-    runtimePreviewController.setLayerCameraPose(layer.id, flyCameraPose);
+    runtimePreviewController.setLayerCameraPose(currentLayer.id, flyCameraPose);
+    invalidateEditorRuntimePreview();
 
     try {
       const request = canvas.requestPointerLock() as unknown;
@@ -252,7 +272,10 @@ export const createEditorRuntimePreviewAttachment = ({
       flyCameraPose.position[1] += movement.y;
       flyCameraPose.position[2] += movement.z;
     }
-    runtimePreviewController?.setLayerCameraPose(layer.id, flyCameraPose);
+    runtimePreviewController?.setLayerCameraPose(
+      currentLayer.id,
+      flyCameraPose,
+    );
   };
 
   return {
@@ -271,18 +294,22 @@ export const createEditorRuntimePreviewAttachment = ({
         displayHeight,
         resolutionMultiplier,
       );
-      if (debugCanvas) {
+      if (currentDebugCanvas) {
         applyCanvasResolution(
-          debugCanvas,
+          currentDebugCanvas,
           displayWidth,
           displayHeight,
           resolutionMultiplier,
         );
       }
       runtimePreviewController?.resize(canvas.width, canvas.height);
+      invalidateEditorRuntimePreview();
     },
     render: ({ frame, audioFrameData, renderPlan }) => {
-      lastConfigValues = layer.values;
+      lastConfigValues =
+        renderPlan.layers[0]?.resolvedSettings ??
+        renderPlan.layers[0]?.settings ??
+        currentLayer.values;
       updateFlyCamera(frame.dt);
 
       withDebug(
@@ -303,7 +330,7 @@ export const createEditorRuntimePreviewAttachment = ({
         {
           dataArray: audioFrameData.frequencyData,
           config: lastConfigValues,
-          configSchema: layer.comp.authoring.settings,
+          configSchema: currentLayer.comp.authoring.settings,
         },
       );
 
@@ -312,6 +339,26 @@ export const createEditorRuntimePreviewAttachment = ({
         mirrorToCanvases(canvas, mirrorCanvases);
       }
     },
+    setDebugCanvas: (nextDebugCanvas) => {
+      currentDebugCanvas = nextDebugCanvas;
+      if (
+        nextDebugCanvas &&
+        canvas.clientWidth > 0 &&
+        canvas.clientHeight > 0
+      ) {
+        applyCanvasResolution(
+          nextDebugCanvas,
+          canvas.clientWidth,
+          canvas.clientHeight,
+          resolutionMultiplier,
+        );
+      }
+      invalidateEditorRuntimePreview();
+    },
+    updateLayer: (nextLayer) => {
+      currentLayer = nextLayer;
+    },
+    requiresContinuousRendering: () => flyCameraActive,
     whenReady: () => runtimePreviewController?.whenReady() ?? Promise.resolve(),
     actions:
       layer.comp.componentId === 'stage-scene'

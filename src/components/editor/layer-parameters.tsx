@@ -12,7 +12,6 @@ import { cn } from '@/lib/utils';
 import {
   selectParameterGraphBindings,
   selectProjectedNodeNetworks,
-  useLiveLayerSetting,
   useVizSessionSelector,
 } from '@/lib/viz-session';
 import type {
@@ -184,8 +183,6 @@ const ParameterField = memo(
       }
       return current;
     });
-    const liveSetting = useLiveLayerSetting(layerId, paramPath);
-    const effectiveValue = liveSetting ? liveSetting.value : value;
     const graphBinding = useVizSessionSelector(
       (state) => selectParameterGraphBindings(state)[id],
     );
@@ -207,7 +204,7 @@ const ParameterField = memo(
           trigger={
             <div
               className={cn(
-                'text-2xs mr-1 mb-2 flex items-center gap-x-2 leading-none font-medium',
+                'mr-1 mb-2 flex items-center gap-x-2 text-2xs leading-none font-medium',
                 animated && !highlighted && 'text-animation-blue',
                 animated && highlighted && 'text-animation-purple',
               )}>
@@ -225,7 +222,7 @@ const ParameterField = memo(
             )}>
             <ComponentSettingControl
               setting={setting}
-              value={effectiveValue}
+              value={value}
               onChange={(nextValue) =>
                 editorControl.project.updateLayerValue(
                   layerId,

@@ -59,6 +59,7 @@ const EditorHeader = () => {
           </Label>
           <div className="flex items-center gap-x-2">
             <NumberScrubInput
+              id="resolution-multiplier"
               inputClassName="focus-visible:ring-0 focus-visible:outline-none"
               min={0.5}
               max={3}

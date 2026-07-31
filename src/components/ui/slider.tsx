@@ -34,22 +34,62 @@ const Slider = React.forwardRef<
     },
     ref,
   ) => {
+    const inputId = React.useId();
+    const [liveValue, setLiveValue] = React.useState(value);
+    const gestureActiveRef = React.useRef(false);
+
+    React.useEffect(() => {
+      if (!gestureActiveRef.current) {
+        setLiveValue(value);
+      }
+    }, [value]);
+
+    const beginGesture = () => {
+      if (!gestureActiveRef.current) {
+        gestureActiveRef.current = true;
+        onGestureStart?.();
+      }
+    };
+
+    const cancelGesture = () => {
+      gestureActiveRef.current = false;
+      setLiveValue(value);
+      onGestureCancel?.();
+    };
+
     return (
       <div className={cn('flex items-center gap-x-2', className)}>
         <div className="flex grow px-1">
           <SliderPrimitive.Root
             ref={ref}
             className="relative flex w-full cursor-pointer touch-none items-center select-none"
-            value={[value]}
-            onValueChange={([nextValue]) =>
-              (onTransientChange ?? onChange)(nextValue)
-            }
-            onValueCommit={([nextValue]) => onCommit?.(nextValue)}
-            onPointerDown={() => onGestureStart?.()}
-            onPointerCancel={() => onGestureCancel?.()}
+            value={[liveValue]}
+            onValueChange={([nextValue]) => {
+              setLiveValue(nextValue);
+              (onTransientChange ?? onChange)(nextValue);
+            }}
+            onValueCommit={([nextValue]) => {
+              gestureActiveRef.current = false;
+              onCommit?.(nextValue);
+            }}
+            onPointerDown={beginGesture}
+            onPointerCancel={cancelGesture}
             onKeyDown={(event) => {
               if (event.key === 'Escape') {
-                onGestureCancel?.();
+                cancelGesture();
+              } else if (
+                [
+                  'ArrowLeft',
+                  'ArrowRight',
+                  'ArrowUp',
+                  'ArrowDown',
+                  'Home',
+                  'End',
+                  'PageUp',
+                  'PageDown',
+                ].includes(event.key)
+              ) {
+                beginGesture();
               }
             }}
             min={min}
@@ -61,16 +101,21 @@ const Slider = React.forwardRef<
               </div>
             </SliderPrimitive.Track>
             <SliderPrimitive.Thumb className="block h-3 w-3 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50" />
-            <div className="text-2xs absolute inset-x-0 top-4 flex items-end justify-between">
+            <div className="absolute inset-x-0 top-4 flex items-end justify-between text-2xs">
               <p>{min}</p>
               <p>{max}</p>
             </div>
           </SliderPrimitive.Root>
         </div>
         <input
+          id={inputId}
+          name={inputId}
           type="number"
           className="h-8 w-16 rounded-md border border-input bg-background px-2 py-1 text-center text-xs ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
           value={value || 0}
+          min={min}
+          max={max}
+          step={step}
           onChange={(e) => onChange(parseFloat(e.target.value))}
           onFocus={(event) => {
             event.target.select();

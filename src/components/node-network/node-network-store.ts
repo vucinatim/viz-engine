@@ -143,6 +143,32 @@ const updateNodeNetworkInputValue = (
   );
 };
 
+const beginNodeNetworkInputGesture = (parameterId: string) => {
+  vizSessionActions.graph.beginInputGesture(parameterId);
+};
+
+const updateLiveNodeNetworkInputValue = (
+  parameterId: string,
+  nodeId: string,
+  inputId: string,
+  value: unknown,
+) => {
+  vizSessionActions.graph.updateLiveInputValue(
+    parameterId,
+    nodeId,
+    inputId,
+    value,
+  );
+};
+
+const commitNodeNetworkInputGesture = (parameterId: string) => {
+  vizSessionActions.graph.commitInputGesture(parameterId);
+};
+
+const cancelNodeNetworkInputGesture = (parameterId: string) => {
+  vizSessionActions.graph.cancelInputGesture(parameterId);
+};
+
 export const clearStaleNodeNetworks = () => {
   const openNetwork = useNodeNetworkStore.getState().openNetwork;
   vizSessionActions.graph.clearStaleNetworks();
@@ -164,6 +190,11 @@ export const useNodeNetwork = (parameterId: string) => {
     addNode: (node: GraphNode) => addNodeToNetwork(parameterId, node),
     updateInputValue: (nodeId: string, inputId: string, value: any) =>
       updateNodeNetworkInputValue(parameterId, nodeId, inputId, value),
+    beginInputGesture: () => beginNodeNetworkInputGesture(parameterId),
+    updateLiveInputValue: (nodeId: string, inputId: string, value: unknown) =>
+      updateLiveNodeNetworkInputValue(parameterId, nodeId, inputId, value),
+    commitInputGesture: () => commitNodeNetworkInputGesture(parameterId),
+    cancelInputGesture: () => cancelNodeNetworkInputGesture(parameterId),
   };
 };
 

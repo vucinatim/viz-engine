@@ -19,7 +19,8 @@ const HysteresisGateBody = ({
   const getNodeOutput = getRuntimeNodeOutput;
   const getNodeInputValue = getRuntimeNodeInput;
 
-  const { updateInputValue } = useNodeNetwork(nodeNetworkId);
+  const { beginInputGesture, updateLiveInputValue, commitInputGesture } =
+    useNodeNetwork(nodeNetworkId);
 
   const trackRef = useRef<HTMLDivElement>(null);
   const lowRef = useRef<HTMLDivElement>(null);
@@ -36,18 +37,21 @@ const HysteresisGateBody = ({
     ) => {
       if (!handleRef.current) return;
       const selection = select(handleRef.current);
-      const behavior = drag().on('drag', (e: DragEvt) => {
-        const width = getWidth();
-        const clampedX = Math.max(0, Math.min(e.x, width));
-        const value = clamp01(width === 0 ? 0 : clampedX / width);
-        updateInputValue(nodeId, inputId, value);
-      });
+      const behavior = drag()
+        .on('start', beginInputGesture)
+        .on('drag', (e: DragEvt) => {
+          const width = getWidth();
+          const clampedX = Math.max(0, Math.min(e.x, width));
+          const value = clamp01(width === 0 ? 0 : clampedX / width);
+          updateLiveInputValue(nodeId, inputId, value);
+        })
+        .on('end', commitInputGesture);
       selection.call(behavior as any);
     };
 
     setupDrag(lowRef, 'low');
     setupDrag(highRef, 'high');
-  }, [nodeId, updateInputValue]);
+  }, [nodeId, beginInputGesture, updateLiveInputValue, commitInputGesture]);
 
   useRafLoop(() => {
     const width = getWidth();

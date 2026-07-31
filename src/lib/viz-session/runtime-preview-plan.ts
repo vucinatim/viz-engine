@@ -13,6 +13,7 @@ import {
   createVizRuntimeSession,
   resolveVizComponentRuntimeInputValues,
   type VizRuntimeFrameInputValues,
+  type VizRuntimeGraphValues,
   type VizRuntimeLayerValues,
   type VizRuntimeSession,
 } from '@viz-engine/runtime';
@@ -48,6 +49,7 @@ interface CreateRuntimePreviewPlanOptions {
   resolvedAssets?: VizResolvedAsset[];
   resolvedArtifacts?: VizResolvedArtifact[];
   layerValues?: VizRuntimeLayerValues;
+  graphValues?: VizRuntimeGraphValues;
 }
 
 const componentRegistry = studioComponentRegistry;
@@ -229,6 +231,7 @@ export const createVizSessionRuntimePreviewPlan = (
     nodeRegistry,
     inputValues: createFrameInputValues(options),
     layerValues: options.layerValues,
+    graphValues: options.graphValues,
     runtimeInputs: {
       audio: toRuntimeAudioSnapshot(options.audioFrameData),
     },

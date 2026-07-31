@@ -275,6 +275,7 @@ export interface VizFramePlan {
 }
 
 export interface VizLayerRenderPlanEntry extends VizLayerFrameSnapshot {
+  resolvedSettings?: Record<string, unknown>;
   node?: VizRenderNode | null;
 }
 

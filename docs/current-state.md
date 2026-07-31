@@ -157,6 +157,29 @@ Spectrum visual failure, catalog-preview crashes, modal-motion and typography
 drift, and console warning floods. See
 [Pre-Goal Three Manual Product Calibration Findings](./parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md).
 
+Two implementation checkpoints have repaired the underlying playback and
+interaction architecture:
+
+- preview playback, audio time, transparency, composed program registries, and
+  preview failure containment now follow the canonical session/runtime path
+- one revision-guarded transient authoring overlay gives layer values,
+  properties, graph inputs, colors, vectors, and ranges immediate runtime
+  feedback while committing one canonical history transaction at gesture end
+- React is no longer the pointer-rate project bus; controls keep only narrow
+  local presentation state and preview work is explicitly invalidated
+- graph animation, resolved debug values, Curve Spectrum geometry, parameter
+  typography, centered dialog motion, and debug-canvas attachment are repaired
+- the complete deterministic gate passes 55 files and 242 tests, all seven
+  browser journeys pass, and package, studio, and consumer builds pass
+
+See the
+[runtime and live-edit repair](./parity/evidence/2026-07-31-goal-three-runtime-and-live-edit-repair.md)
+and
+[interaction and visible-parity repair](./parity/evidence/2026-07-31-goal-three-interaction-and-visible-parity-repair.md)
+evidence. Goal Three remains open for controlled V1/V2 comparison, fixed-device
+performance distributions, the Curve Spectrum area fill, complete catalog
+audit, agent tooling, and the second original production.
+
 ## Known Deliberate Deferrals
 
 - a native browser-free video executor, until a real deployment requires it

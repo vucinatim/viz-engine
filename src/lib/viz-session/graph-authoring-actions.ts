@@ -14,6 +14,7 @@ import type {
   VizProjectAction,
   VizProjectDocument,
 } from '@viz-engine/contracts';
+import type { VizSessionHost } from '@viz-engine/editor-control';
 import type { Edge } from '@xyflow/react';
 
 import type { VizGraphFragment } from './graph-fragments';
@@ -136,14 +137,18 @@ const createGraphDocumentActions = (
 };
 
 export const createStudioGraphAuthoringActions = ({
+  host,
   getProject,
   getNetworks,
   applyActions,
+  syncProject,
   syncOpenNetwork,
 }: {
+  host: VizSessionHost;
   getProject: () => VizProjectDocument;
   getNetworks: () => Record<string, NodeNetwork>;
   applyActions: (actions: VizProjectAction[]) => void;
+  syncProject: () => void;
   syncOpenNetwork: () => void;
 }) => {
   const commit = (actions: VizProjectAction[]) => {
@@ -591,6 +596,33 @@ export const createStudioGraphAuthoringActions = ({
           },
         ]);
       }
+    },
+    beginInputGesture(graphId: string) {
+      host.beginLiveGraphGesture(graphId);
+    },
+    updateLiveInputValue(
+      graphId: string,
+      nodeId: string,
+      inputKey: string,
+      value: unknown,
+    ) {
+      host.updateLiveGraphNodeInput({ graphId, nodeId, inputKey }, value);
+    },
+    commitInputGesture(graphId: string) {
+      const result = host.commitLiveGraphGesture(graphId);
+      if (!result) {
+        return;
+      }
+      if (!result.ok) {
+        throw new Error(
+          result.errors.map((error) => error.message).join('; ') ||
+            'Viz live graph commit failed',
+        );
+      }
+      syncProject();
+    },
+    cancelInputGesture(graphId: string) {
+      host.cancelLiveGraphGesture(graphId);
     },
     duplicateNetwork(fromParameterId: string, toParameterId: string) {
       const source = getGraph(fromParameterId);

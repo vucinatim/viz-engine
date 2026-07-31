@@ -118,8 +118,6 @@ const LayerSettings = ({ layer }: LayerSettingsProps) => {
                     ])
                   }
                   onTransientChange={(value) => {
-                    isInternalUpdateRef.current = true;
-                    field.onChange(value);
                     editorControl.project.updateLiveLayerProperty(
                       layer.id,
                       ['opacity'],
@@ -136,7 +134,6 @@ const LayerSettings = ({ layer }: LayerSettingsProps) => {
                     );
                   }}
                   onGestureCancel={() => {
-                    field.onChange(layer.layerSettings.opacity);
                     editorControl.project.cancelLayerPropertyGesture(layer.id, [
                       'opacity',
                     ]);
@@ -178,6 +175,32 @@ const LayerSettings = ({ layer }: LayerSettingsProps) => {
                 <ColorPickerPopover
                   value={field.value}
                   onChange={createOnChangeHandler(field.onChange)}
+                  onGestureStart={() =>
+                    editorControl.project.beginLayerPropertyGesture(layer.id, [
+                      'background',
+                    ])
+                  }
+                  onTransientChange={(value) => {
+                    editorControl.project.updateLiveLayerProperty(
+                      layer.id,
+                      ['background'],
+                      value,
+                    );
+                  }}
+                  onCommit={(value) => {
+                    isInternalUpdateRef.current = true;
+                    field.onChange(value);
+                    editorControl.project.commitLayerPropertyGesture(
+                      layer.id,
+                      ['background'],
+                      value,
+                    );
+                  }}
+                  onGestureCancel={() => {
+                    editorControl.project.cancelLayerPropertyGesture(layer.id, [
+                      'background',
+                    ]);
+                  }}
                 />
               </FormControl>
             </FormItem>

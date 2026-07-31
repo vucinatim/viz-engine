@@ -22,6 +22,7 @@ export interface EvaluateVizGraphsOptions {
   frame: number;
   registry?: VizNodeRegistry;
   inputValues?: VizRuntimeGraphInputValues;
+  graphValues?: VizRuntimeGraphValues;
 }
 
 export interface EvaluateSingleVizGraphOptions {
@@ -30,10 +31,15 @@ export interface EvaluateSingleVizGraphOptions {
   frame: number;
   registry: VizNodeRegistry;
   inputValues?: Readonly<Record<string, unknown>>;
+  useSessionCheckpoints?: boolean;
 }
 
 export type VizRuntimeGraphInputValues = Readonly<
   Record<string, Readonly<Record<string, unknown>>>
+>;
+
+export type VizRuntimeGraphValues = Readonly<
+  Record<string, Readonly<VizNodeGraphDocument>>
 >;
 
 interface EvaluateGraphFrameResult {
@@ -507,8 +513,10 @@ export const evaluateSingleVizGraph = ({
   frame,
   registry,
   inputValues,
+  useSessionCheckpoints = true,
 }: EvaluateSingleVizGraphOptions): VizGraphEvaluationResult => {
-  if (!usesTemporalNode(graph, registry)) {
+  const isTemporal = usesTemporalNode(graph, registry);
+  if (!isTemporal) {
     const result = evaluateGraphAtFrame({
       graph,
       session,
@@ -527,12 +535,17 @@ export const evaluateSingleVizGraph = ({
   }
 
   const targetFrame = session.getFrameContext(frame).frame;
-  const checkpoint = session.getGraphCheckpointBeforeOrAt(
-    graph.id,
-    targetFrame,
-  );
+  // A transient graph override must not reuse or mutate a checkpoint for the
+  // target frame because that checkpoint was evaluated from canonical inputs.
+  // Resuming from the preceding frame keeps feedback immediate without
+  // replaying the full timeline for every pointer event.
+  const checkpointFrame = useSessionCheckpoints ? targetFrame : targetFrame - 1;
+  const checkpoint =
+    checkpointFrame < 0
+      ? undefined
+      : session.getGraphCheckpointBeforeOrAt(graph.id, checkpointFrame);
 
-  if (checkpoint && checkpoint.frame === targetFrame) {
+  if (useSessionCheckpoints && checkpoint && checkpoint.frame === targetFrame) {
     return {
       graphId: graph.id,
       values: checkpoint.values,
@@ -573,8 +586,8 @@ export const evaluateSingleVizGraph = ({
     mergeUniqueIssues(issues, result.issues);
 
     if (
-      steppedFrame === targetFrame ||
-      steppedFrame % checkpointInterval === 0
+      useSessionCheckpoints &&
+      (steppedFrame === targetFrame || steppedFrame % checkpointInterval === 0)
     ) {
       session.setGraphCheckpoint(
         createGraphRuntimeCheckpoint({
@@ -602,8 +615,11 @@ export const evaluateVizGraphs = ({
   frame,
   registry,
   inputValues,
+  graphValues = {},
 }: EvaluateVizGraphsOptions): Map<string, VizGraphEvaluationResult> => {
-  const graphs = session.project.graphs ?? [];
+  const graphs = (session.project.graphs ?? []).map(
+    (graph) => graphValues[graph.id] ?? graph,
+  );
 
   if (graphs.length === 0 || !registry) {
     return new Map();
@@ -617,6 +633,7 @@ export const evaluateVizGraphs = ({
         session,
         frame,
         registry,
+        useSessionCheckpoints: graphValues[graph.id] === undefined,
         ...(inputValues?.[graph.id] === undefined
           ? {}
           : { inputValues: inputValues[graph.id] }),

@@ -217,6 +217,53 @@ describe('VizSession graph authoring', () => {
     });
   });
 
+  it('keeps graph input gestures external until one synchronized commit', () => {
+    const project = createSignalCathedralProject();
+    vizSessionActions.project.importWorkingProject(project);
+    const stateBefore = vizSessionStore.getState();
+    const revisionBefore = stateBefore.project.revision;
+
+    vizSessionActions.graph.beginInputGesture(SIGNAL_CATHEDRAL_GRAPH_ID);
+    vizSessionActions.graph.updateLiveInputValue(
+      SIGNAL_CATHEDRAL_GRAPH_ID,
+      'scale-bass',
+      'factor',
+      1.25,
+    );
+    vizSessionActions.graph.updateLiveInputValue(
+      SIGNAL_CATHEDRAL_GRAPH_ID,
+      'scale-loudness',
+      'factor',
+      0.75,
+    );
+
+    expect(vizSessionStore.getState()).toBe(stateBefore);
+    expect(vizSessionStore.getState().project.revision).toBe(revisionBefore);
+    expect(
+      vizSessionStore
+        .getState()
+        .project.workingProject.graphs?.[0]?.nodes.find(
+          (node) => node.id === 'scale-bass',
+        )?.inputs?.factor,
+    ).toEqual({ kind: 'literal', value: 1.24 });
+
+    vizSessionActions.graph.commitInputGesture(SIGNAL_CATHEDRAL_GRAPH_ID);
+
+    expect(vizSessionStore.getState().project.revision).toBe(
+      revisionBefore + 1,
+    );
+    const committedGraph =
+      vizSessionStore.getState().project.workingProject.graphs?.[0];
+    expect(
+      committedGraph?.nodes.find((node) => node.id === 'scale-bass')?.inputs
+        ?.factor,
+    ).toEqual({ kind: 'literal', value: 1.25 });
+    expect(
+      committedGraph?.nodes.find((node) => node.id === 'scale-loudness')?.inputs
+        ?.factor,
+    ).toEqual({ kind: 'literal', value: 0.75 });
+  });
+
   it('roundtrips persisted graph definitions back into executable node definitions', () => {
     const parameterId = 'layer-3:settings.opacity';
 

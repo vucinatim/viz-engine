@@ -32,19 +32,23 @@ import {
   type VizNodeRegistry,
 } from '@viz-engine/runtime';
 import {
-  createVizLiveLayerValuesController,
+  createVizLiveProjectValuesController,
+  type VizLiveGraphNodeInputSnapshot,
+  type VizLiveGraphNodeInputTarget,
   type VizLiveLayerPropertySnapshot,
   type VizLiveLayerPropertyTarget,
   type VizLiveLayerSettingSnapshot,
   type VizLiveLayerSettingTarget,
-} from './live-layer-values.js';
+} from './live-project-values.js';
 
 export type {
+  VizLiveGraphNodeInputSnapshot,
+  VizLiveGraphNodeInputTarget,
   VizLiveLayerPropertySnapshot,
   VizLiveLayerPropertyTarget,
   VizLiveLayerSettingSnapshot,
   VizLiveLayerSettingTarget,
-} from './live-layer-values.js';
+} from './live-project-values.js';
 
 export interface VizSessionSource {
   kind: 'example' | 'bundle' | 'memory';
@@ -101,6 +105,29 @@ export interface VizSessionHost {
   getNodeRegistry(): VizNodeRegistry;
   getServices(): VizSessionServices;
   getLiveLayerValues(): Readonly<Record<string, Readonly<VizLayer>>>;
+  getLiveGraphValues(): Readonly<
+    Record<
+      string,
+      Readonly<import('@viz-engine/contracts').VizNodeGraphDocument>
+    >
+  >;
+  subscribeLiveProjectValues(listener: () => void): () => void;
+  getLiveGraphNodeInput(
+    target: VizLiveGraphNodeInputTarget,
+  ): VizLiveGraphNodeInputSnapshot | undefined;
+  beginLiveGraphGesture(graphId: string): void;
+  updateLiveGraphNodeInput(
+    target: VizLiveGraphNodeInputTarget,
+    value: unknown,
+  ): VizLiveGraphNodeInputSnapshot;
+  commitLiveGraphGesture(
+    graphId: string,
+  ): VizEditorSessionMutationResult | undefined;
+  cancelLiveGraphGesture(graphId: string): void;
+  subscribeLiveGraphNodeInput(
+    target: VizLiveGraphNodeInputTarget,
+    listener: () => void,
+  ): () => void;
   getLiveLayerSetting(
     target: VizLiveLayerSettingTarget,
   ): VizLiveLayerSettingSnapshot | undefined;
@@ -250,10 +277,11 @@ export const createVizSessionHost = ({
       mode: 'live',
     },
   });
-  const liveLayerValues = createVizLiveLayerValuesController({
+  const liveProjectValues = createVizLiveProjectValuesController({
     getProject: session.getWorkingProject,
     getRevision: session.getRevision,
     applyAction: session.applyAction,
+    applyActions: session.applyActions,
   });
   function emit() {
     const snapshot = getSnapshot();
@@ -395,23 +423,33 @@ export const createVizSessionHost = ({
     getComponentRegistry: () => componentRegistry,
     getNodeRegistry: () => nodeRegistry,
     getServices: () => services,
-    getLiveLayerValues: liveLayerValues.getLayerValues,
-    getLiveLayerSetting: liveLayerValues.getSetting,
-    beginLiveLayerSetting: liveLayerValues.beginSetting,
-    updateLiveLayerSetting: liveLayerValues.updateSetting,
-    commitLiveLayerSetting: liveLayerValues.commitSetting,
-    cancelLiveLayerSetting: liveLayerValues.cancelSetting,
-    subscribeLiveLayerSetting: liveLayerValues.subscribeSetting,
-    getLiveLayerProperty: liveLayerValues.getProperty,
-    beginLiveLayerProperty: liveLayerValues.beginProperty,
-    updateLiveLayerProperty: liveLayerValues.updateProperty,
-    commitLiveLayerProperty: liveLayerValues.commitProperty,
-    cancelLiveLayerProperty: liveLayerValues.cancelProperty,
-    subscribeLiveLayerProperty: liveLayerValues.subscribeProperty,
+    getLiveLayerValues: liveProjectValues.getLayerValues,
+    getLiveGraphValues: liveProjectValues.getGraphValues,
+    subscribeLiveProjectValues: liveProjectValues.subscribe,
+    getLiveGraphNodeInput: liveProjectValues.getGraphNodeInput,
+    beginLiveGraphGesture: (graphId) => {
+      liveProjectValues.beginGraphGesture(graphId);
+    },
+    updateLiveGraphNodeInput: liveProjectValues.updateGraphNodeInput,
+    commitLiveGraphGesture: liveProjectValues.commitGraphGesture,
+    cancelLiveGraphGesture: liveProjectValues.cancelGraphGesture,
+    subscribeLiveGraphNodeInput: liveProjectValues.subscribeGraphNodeInput,
+    getLiveLayerSetting: liveProjectValues.getSetting,
+    beginLiveLayerSetting: liveProjectValues.beginSetting,
+    updateLiveLayerSetting: liveProjectValues.updateSetting,
+    commitLiveLayerSetting: liveProjectValues.commitSetting,
+    cancelLiveLayerSetting: liveProjectValues.cancelSetting,
+    subscribeLiveLayerSetting: liveProjectValues.subscribeSetting,
+    getLiveLayerProperty: liveProjectValues.getProperty,
+    beginLiveLayerProperty: liveProjectValues.beginProperty,
+    updateLiveLayerProperty: liveProjectValues.updateProperty,
+    commitLiveLayerProperty: liveProjectValues.commitProperty,
+    cancelLiveLayerProperty: liveProjectValues.cancelProperty,
+    subscribeLiveLayerProperty: liveProjectValues.subscribeProperty,
     registerResolvedAsset,
     registerResolvedArtifact,
     loadProject: (resources) => {
-      liveLayerValues.cancelAll();
+      liveProjectValues.cancelAll();
       assertValidResources(resources);
       currentResources = clone(resources);
       resourceRevision += 1;
@@ -438,25 +476,25 @@ export const createVizSessionHost = ({
       return getSnapshot();
     },
     transact: (transaction, options) => {
-      liveLayerValues.cancelAll();
+      liveProjectValues.cancelAll();
       return syncTimelineAfterMutation(session.transact(transaction, options));
     },
     applyAction: (action, options) => {
-      liveLayerValues.cancelAll();
+      liveProjectValues.cancelAll();
       return syncTimelineAfterMutation(session.applyAction(action, options));
     },
     applyActions: (actions, options) => {
-      liveLayerValues.cancelAll();
+      liveProjectValues.cancelAll();
       return syncTimelineAfterMutation(session.applyActions(actions, options));
     },
     undo: () => {
-      liveLayerValues.cancelAll();
+      liveProjectValues.cancelAll();
       session.undo();
       syncTransportTimeline(session.getWorkingProject());
       return getSnapshot();
     },
     redo: () => {
-      liveLayerValues.cancelAll();
+      liveProjectValues.cancelAll();
       session.redo();
       syncTransportTimeline(session.getWorkingProject());
       return getSnapshot();

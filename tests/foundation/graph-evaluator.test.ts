@@ -11,6 +11,7 @@ import {
   createVizNodeRegistry,
   createVizRuntimeSession,
   evaluateSingleVizGraph,
+  evaluateVizGraphs,
 } from '@viz-engine/runtime';
 import { describe, expect, it } from 'vitest';
 
@@ -42,6 +43,43 @@ describe('Viz graph evaluation', () => {
     expect(typeof result.nodes['node-bars-bass-scale']?.outputs.value).toBe(
       'number',
     );
+  });
+
+  it('evaluates transient graph values without poisoning canonical temporal checkpoints', () => {
+    const session = createVizRuntimeSession({
+      project: exampleProjectDocument,
+      mode: 'live',
+      resolvedAssets: exampleResolvedAssets,
+      resolvedArtifacts: exampleResolvedArtifacts,
+      seed: 'live-graph-values-seed',
+    });
+    const registry = createCoreNodeRegistry();
+    const canonical = evaluateVizGraphs({
+      session,
+      frame: 36,
+      registry,
+    }).get(exampleMainReactivityGraph.id);
+    const liveGraph = structuredClone(exampleMainReactivityGraph);
+    const scale = liveGraph.nodes.find(
+      (node) => node.id === 'node-bars-bass-scale',
+    );
+    scale!.inputs!.factor = { kind: 'literal', value: 1.84 };
+
+    const transient = evaluateVizGraphs({
+      session,
+      frame: 36,
+      registry,
+      graphValues: { [liveGraph.id]: liveGraph },
+    }).get(liveGraph.id);
+    const canonicalAgain = evaluateVizGraphs({
+      session,
+      frame: 36,
+      registry,
+    }).get(exampleMainReactivityGraph.id);
+
+    expect(transient?.nodes['node-bars-bass-scale']?.inputs.factor).toBe(1.84);
+    expect(transient?.values.barsBass).not.toBe(canonical?.values.barsBass);
+    expect(canonicalAgain).toEqual(canonical);
   });
 
   it('reports graph cycles explicitly instead of recursing forever', () => {

@@ -22,7 +22,13 @@ const FrequencyBandBody = ({
   const getNodeOutput = getRuntimeNodeOutput;
   const getLiveNodeValue = getRuntimeNodeInput;
 
-  const { edges, updateInputValue } = useNodeNetwork(nodeNetworkId);
+  const {
+    edges,
+    beginInputGesture,
+    updateLiveInputValue,
+    commitInputGesture,
+    cancelInputGesture,
+  } = useNodeNetwork(nodeNetworkId);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const startHandleRef = useRef<HTMLDivElement>(null);
@@ -83,11 +89,14 @@ const FrequencyBandBody = ({
     ) => {
       if (handleRef.current) {
         const d3Selection = select(handleRef.current);
-        const dragBehavior = drag().on('drag', (event: DragEvent) => {
-          const clampedX = Math.max(0, Math.min(event.x, width));
-          const newFreq = xToLogFreq(clampedX, width);
-          updateInputValue(nodeId, inputId, newFreq);
-        });
+        const dragBehavior = drag()
+          .on('start', beginInputGesture)
+          .on('drag', (event: DragEvent) => {
+            const clampedX = Math.max(0, Math.min(event.x, width));
+            const newFreq = xToLogFreq(clampedX, width);
+            updateLiveInputValue(nodeId, inputId, newFreq);
+          })
+          .on('end', commitInputGesture);
         d3Selection.call(dragBehavior as any);
       }
     };
@@ -115,9 +124,11 @@ const FrequencyBandBody = ({
               clickPercent < startPercent + handleMargin ||
               clickPercent > endPercent - handleMargin
             ) {
+              cancelInputGesture();
               return;
             }
 
+            beginInputGesture();
             dragStateRef.current.isDragging = true;
             dragStateRef.current.startX = event.x;
             dragStateRef.current.initialStartFreq =
@@ -153,11 +164,14 @@ const FrequencyBandBody = ({
 
             // Ensure start frequency is less than end frequency
             if (newStartFreq < newEndFreq) {
-              updateInputValue(nodeId, 'startFrequency', newStartFreq);
-              updateInputValue(nodeId, 'endFrequency', newEndFreq);
+              updateLiveInputValue(nodeId, 'startFrequency', newStartFreq);
+              updateLiveInputValue(nodeId, 'endFrequency', newEndFreq);
             }
           })
           .on('end', () => {
+            if (dragStateRef.current.isDragging) {
+              commitInputGesture();
+            }
             dragStateRef.current.isDragging = false;
           });
         d3Selection.call(dragBehavior as any);
@@ -169,7 +183,10 @@ const FrequencyBandBody = ({
     setupRangeDrag();
   }, [
     nodeId,
-    updateInputValue,
+    beginInputGesture,
+    updateLiveInputValue,
+    commitInputGesture,
+    cancelInputGesture,
     xToLogFreq,
     getLiveNodeValue,
     freqToLogPercent,

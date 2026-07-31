@@ -98,7 +98,14 @@ describe('Editor runtime preview planning', () => {
     expect(renderPlan.layers[0]?.resolvedInputs.spectrum?.value).toBe(
       audioFrameData.frequencyData,
     );
-    expect(renderPlan.layers[0]?.node?.kind).toBe('group');
+    const node = renderPlan.layers[0]?.node;
+    if (!node || node.kind !== 'group') {
+      throw new Error('Expected Curve Spectrum group node.');
+    }
+    expect(
+      node.children.filter((child) => child.kind === 'polyline'),
+    ).toHaveLength(1);
+    expect(node.children.some((child) => child.kind === 'group')).toBe(false);
     expect(renderPlan.issues).toEqual([]);
   });
 
@@ -259,6 +266,7 @@ describe('Editor runtime preview planning', () => {
     });
 
     expect(renderPlan.layers[0]?.resolvedInputs.speed?.value).toBeCloseTo(4);
+    expect(renderPlan.layers[0]?.resolvedSettings?.speed).toBeCloseTo(4);
     const node = renderPlan.layers[0]?.node;
     if (!node || node.kind !== 'shader') {
       throw new Error('Expected a shader runtime node.');

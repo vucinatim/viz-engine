@@ -145,6 +145,7 @@ export const createStudioPreviewActions = ({
         resolvedAssets: resources.resolvedAssets,
         resolvedArtifacts: resources.resolvedArtifacts,
         layerValues: host.getLiveLayerValues(),
+        graphValues: host.getLiveGraphValues(),
       });
       const lastRenderedLayerIds = attachmentStore.renderRuntimePlan(
         frame,

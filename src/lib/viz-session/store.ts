@@ -241,10 +241,12 @@ export const vizControl = createVizControl({
 });
 
 const studioGraphAuthoringActions = createStudioGraphAuthoringActions({
+  host: vizSessionHost,
   getProject: () => getProjectState().workingProject,
   getNetworks: getGraphNetworks,
   applyActions: (actions) =>
     applyProjectActions(actions, { syncLayerProjections: false }),
+  syncProject: syncProjectSessionProject,
   syncOpenNetwork: syncNetworkOpenState,
 });
 const studioBrowserAssetAttachment = createStudioBrowserAssetAttachment({

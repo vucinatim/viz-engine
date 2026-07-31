@@ -2,7 +2,9 @@ import type {
   VizComponentImplementation,
   VizRenderCircleNode,
   VizRenderGroupNode,
+  VizRenderPolylineNode,
   VizRenderRectNode,
+  VizRenderTextNode,
 } from '@viz-engine/contracts';
 import { curveSpectrumAuthoring } from './authoring/curve-spectrum.js';
 import { asNumber, asString } from './shared.js';
@@ -19,44 +21,6 @@ const asNumberArray = (value: unknown): number[] => {
   }
 
   return [];
-};
-
-const toRectSegment = (
-  layerId: string,
-  index: number,
-  start: Point,
-  end: Point,
-  thickness: number,
-  color: string,
-): VizRenderGroupNode => {
-  const dx = end.x - start.x;
-  const dy = end.y - start.y;
-  const length = Math.max(0.0001, Math.hypot(dx, dy));
-  const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-
-  return {
-    kind: 'group',
-    id: `${layerId}-segment-${index}`,
-    transform: {
-      translateX: start.x,
-      translateY: start.y,
-      rotationDegrees: angle,
-    },
-    children: [
-      {
-        kind: 'rect',
-        id: `${layerId}-segment-rect-${index}`,
-        x: 0,
-        y: -thickness / 2,
-        width: length,
-        height: thickness,
-        radius: thickness / 2,
-        style: {
-          fill: color,
-        },
-      },
-    ],
-  };
 };
 
 const computeFrequencyPoints = ({
@@ -171,6 +135,9 @@ export const curveSpectrumComponent: VizComponentImplementation = {
 
     for (let i = 0; i <= freqLines; i += 1) {
       const x = (viewport.width * i) / Math.max(freqLines, 1);
+      const frequency =
+        minFrequency *
+        Math.pow(maxFrequency / minFrequency, i / Math.max(freqLines, 1));
       children.push({
         kind: 'rect',
         id: `${layer.id}-freq-line-${i}`,
@@ -183,6 +150,17 @@ export const curveSpectrumComponent: VizComponentImplementation = {
           opacity: 0.5,
         },
       } satisfies VizRenderRectNode);
+      children.push({
+        kind: 'text',
+        id: `${layer.id}-freq-label-${i}`,
+        x: x + 5,
+        y: viewport.height - 5,
+        text: `${Math.round(frequency)} Hz`,
+        fontSize: 10,
+        style: {
+          fill: gridColor,
+        },
+      } satisfies VizRenderTextNode);
     }
 
     for (let i = 0; i <= ampLines; i += 1) {
@@ -199,6 +177,17 @@ export const curveSpectrumComponent: VizComponentImplementation = {
           opacity: 0.5,
         },
       } satisfies VizRenderRectNode);
+      children.push({
+        kind: 'text',
+        id: `${layer.id}-amp-label-${i}`,
+        x: 5,
+        y: y + 15,
+        text: `${Math.round((i / Math.max(ampLines, 1)) * 100 * scaleY)}%`,
+        fontSize: 10,
+        style: {
+          fill: gridColor,
+        },
+      } satisfies VizRenderTextNode);
     }
 
     const spectrumPoints = computeFrequencyPoints({
@@ -213,13 +202,17 @@ export const curveSpectrumComponent: VizComponentImplementation = {
     });
 
     if (lineThickness > 0) {
-      for (let index = 0; index < spectrumPoints.length - 1; index += 1) {
-        const start = spectrumPoints[index]!;
-        const end = spectrumPoints[index + 1]!;
-        children.push(
-          toRectSegment(layer.id, index, start, end, lineThickness, lineColor),
-        );
-      }
+      children.push({
+        kind: 'polyline',
+        id: `${layer.id}-curve`,
+        points: spectrumPoints,
+        lineCap: 'round',
+        lineJoin: 'round',
+        style: {
+          stroke: lineColor,
+          strokeWidth: lineThickness,
+        },
+      } satisfies VizRenderPolylineNode);
     }
 
     if (pointSize > 0) {

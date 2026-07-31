@@ -1994,3 +1994,33 @@
   - measured the checkpoint at 68,472 production lines and 87,447 combined
     maintained lines; the 827-line production increase remains subject to
     later friction-driven cleanup
+- completed the second Goal Three interaction and visible-parity repair
+  checkpoint:
+  - generalized the session-owned transient layer controller into one
+    transient authoring overlay for layer values, layer properties, graph-node
+    inputs, and multi-input graph gestures
+  - kept parameter fields, canonical Zustand project state, validation,
+    persistence, and history out of the pointer-rate path while preserving
+    immediate control and next-frame visual feedback
+  - changed React Flow node dragging to UI-local movement with one canonical
+    position commit
+  - added transient graph evaluation with read-only preceding-frame temporal
+    checkpoints and one synchronized canonical commit
+  - replaced unconditional paused rendering with explicit coalesced
+    invalidation and stopped paused Remotion/audio-time polling
+  - distinguished authored settings from resolved render settings and restored
+    animated debug values
+  - repaired Curve Spectrum geometry and labels, parameter typography, dialog
+    motion, conditional debug-canvas attachment, and touched control
+    accessibility
+  - mapped the supplied console trace to the already repaired production
+    program-registry preview failure
+  - directly proved live graph input before commit, stable session identity,
+    one revision on blur, zero paused idle cycles, and current debug values
+  - passed parity and dependency architecture validation, strict formatting
+    and lint, all package/studio/tool type checks, and 55 files / 242 tests
+  - passed all seven browser journeys in 1.5 minutes, all package and studio
+    builds, the packed-consumer smoke, and the built creative-loop smoke
+  - measured 69,254 production lines and 88,384 combined maintained lines
+  - recorded implementation and browser evidence in
+    `docs/parity/evidence/2026-07-31-goal-three-interaction-and-visible-parity-repair.md`

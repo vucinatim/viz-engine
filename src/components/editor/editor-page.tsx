@@ -15,7 +15,7 @@ import useBodyProps from '@/lib/stores/body-props-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { useNodeGraphClipboardStore } from '@/lib/stores/node-graph-clipboard-store';
 import useProfilerStore from '@/lib/stores/profiler-store';
-import { vizControl, vizSessionStore } from '@/lib/viz-session';
+import { vizControl, vizSessionHost, vizSessionStore } from '@/lib/viz-session';
 import { Suspense, lazy, useEffect } from 'react';
 
 declare global {
@@ -25,6 +25,7 @@ declare global {
       nodeGraphClipboardStore: typeof useNodeGraphClipboardStore;
       nodeNetworkStore: typeof useNodeNetworkStore;
       vizControl: typeof vizControl;
+      vizSessionHost: typeof vizSessionHost;
       vizSessionStore: typeof vizSessionStore;
     };
   }
@@ -63,6 +64,7 @@ export default function EditorPage() {
       nodeGraphClipboardStore: useNodeGraphClipboardStore,
       nodeNetworkStore: useNodeNetworkStore,
       vizControl,
+      vizSessionHost,
       vizSessionStore,
     };
 

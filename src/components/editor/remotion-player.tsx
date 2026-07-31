@@ -146,8 +146,12 @@ const RemotionPlayer = () => {
     }
   }, [currentFrame, isPlaying]);
 
-  // Poll current frame so preview transport stays canonical while the player runs
+  // Poll only while playback is active. Paused seeking is driven canonically by
+  // the controls, so a permanent idle requestAnimationFrame loop adds no value.
   useEffect(() => {
+    if (!isPlaying) {
+      return;
+    }
     let raf = 0;
     const tick = () => {
       const p = playerRef.current;
@@ -159,7 +163,7 @@ const RemotionPlayer = () => {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [isPlaying]);
 
   return (
     <div

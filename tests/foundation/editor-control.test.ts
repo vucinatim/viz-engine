@@ -92,8 +92,12 @@ describe('Viz local editor control surface', () => {
       .getWorkingProject()
       .layers.find((layer) => layer.id === target.layerId)?.settings?.color;
     let liveNotifications = 0;
+    let allLiveNotifications = 0;
     const unsubscribe = host.subscribeLiveLayerSetting(target, () => {
       liveNotifications += 1;
+    });
+    const unsubscribeAll = host.subscribeLiveProjectValues(() => {
+      allLiveNotifications += 1;
     });
 
     host.beginLiveLayerSetting(target);
@@ -108,6 +112,9 @@ describe('Viz local editor control surface', () => {
         .layers.find((layer) => layer.id === target.layerId)?.settings?.color,
     ).toBe(canonicalColor);
     expect(host.getLiveLayerSetting(target)?.value).toBe('#445566');
+    expect(host.getLiveLayerSetting(target)).toBe(
+      host.getLiveLayerSetting(target),
+    );
     expect(host.getLiveLayerValues()[target.layerId]?.settings?.color).toBe(
       '#445566',
     );
@@ -124,7 +131,9 @@ describe('Viz local editor control surface', () => {
     ).toBe('#445566');
     expect(host.getLiveLayerSetting(target)).toBeUndefined();
     expect(liveNotifications).toBe(4);
+    expect(allLiveNotifications).toBe(4);
     unsubscribe();
+    unsubscribeAll();
   });
 
   it('cancels live settings when canonical state changes', () => {
@@ -184,6 +193,59 @@ describe('Viz local editor control surface', () => {
     expect(host.getSnapshot().session.actionHistory).toHaveLength(1);
     expect(host.getWorkingProject().layers[0]?.opacity).toBe(0.4);
     expect(host.getLiveLayerValues()).toEqual({});
+  });
+
+  it('previews multi-input graph gestures and commits one canonical transaction', () => {
+    const host = createVizSessionHost({
+      initialProject: {
+        project: exampleProjectDocument,
+        resolvedAssets: exampleResolvedAssets,
+        resolvedArtifacts: exampleResolvedArtifacts,
+        source: { kind: 'example', label: 'live graph fixture' },
+      },
+    });
+    const graphId = 'graph-main-reactivity';
+    const factorTarget = {
+      graphId,
+      nodeId: 'node-bars-bass-scale',
+      inputKey: 'factor',
+    } as const;
+    const biasTarget = {
+      graphId,
+      nodeId: 'node-bars-loudness-bias',
+      inputKey: 'b',
+    } as const;
+
+    host.beginLiveGraphGesture(graphId);
+    host.updateLiveGraphNodeInput(factorTarget, 1.5);
+    host.updateLiveGraphNodeInput(biasTarget, 0.25);
+
+    expect(host.getSnapshot().session.revision).toBe(0);
+    expect(host.getSnapshot().session.actionHistory).toHaveLength(0);
+    expect(host.getLiveGraphNodeInput(factorTarget)?.value).toBe(1.5);
+    expect(host.getLiveGraphNodeInput(biasTarget)?.value).toBe(0.25);
+    const liveGraph = host.getLiveGraphValues()[graphId];
+    expect(
+      liveGraph?.nodes.find((node) => node.id === factorTarget.nodeId)?.inputs
+        ?.factor,
+    ).toEqual({ kind: 'literal', value: 1.5 });
+
+    const result = host.commitLiveGraphGesture(graphId);
+
+    expect(result?.status).toBe('applied');
+    expect(host.getSnapshot().session.revision).toBe(1);
+    expect(host.getSnapshot().session.actionHistory).toHaveLength(2);
+    const graph = host
+      .getWorkingProject()
+      .graphs?.find((candidate) => candidate.id === graphId);
+    expect(
+      graph?.nodes.find((node) => node.id === factorTarget.nodeId)?.inputs
+        ?.factor,
+    ).toEqual({ kind: 'literal', value: 1.5 });
+    expect(
+      graph?.nodes.find((node) => node.id === biasTarget.nodeId)?.inputs?.b,
+    ).toEqual({ kind: 'literal', value: 0.25 });
+    expect(host.getLiveGraphValues()).toEqual({});
   });
 
   it('inspects an explicitly injected project-local capability pack', () => {

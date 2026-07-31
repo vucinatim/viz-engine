@@ -14,6 +14,8 @@ interface NumberScrubInputProps {
   step?: number;
   className?: string;
   inputClassName?: string;
+  id?: string;
+  name?: string;
   // How many pixels correspond to one step increment during drag
   pixelsPerStep?: number;
 }
@@ -41,11 +43,15 @@ const NumberScrubInput = React.forwardRef<
       step = 0.1,
       className,
       inputClassName,
+      id,
+      name,
       pixelsPerStep = 10,
     },
     ref,
   ) => {
     const inputRef = useRef<HTMLInputElement | null>(null);
+    const generatedInputId = React.useId();
+    const inputId = id ?? generatedInputId;
     const mergedRef = useCallback(
       (node: HTMLInputElement) => {
         inputRef.current = node;
@@ -163,6 +169,9 @@ const NumberScrubInput = React.forwardRef<
           baseSteps * (stepRef.current || 0.1) * modifier;
         const clamped = clamp(next, minRef.current, maxRef.current);
         latestDragValueRef.current = Number(clamped.toFixed(6));
+        if (inputRef.current) {
+          inputRef.current.value = String(latestDragValueRef.current);
+        }
         (onTransientChangeRef.current ?? onChangeRef.current)?.(
           latestDragValueRef.current,
         );
@@ -180,6 +189,9 @@ const NumberScrubInput = React.forwardRef<
         inputRef.current?.focus();
       };
       const onBlur = (_ev: Event) => {
+        if (inputRef.current) {
+          inputRef.current.value = String(value);
+        }
         onGestureCancelRef.current?.();
         cleanupGlobalListeners();
       };
@@ -217,6 +229,8 @@ const NumberScrubInput = React.forwardRef<
       <div className={cn('flex items-center', className)}>
         <input
           ref={mergedRef}
+          id={inputId}
+          name={name ?? inputId}
           type="number"
           className={cn(
             'h-8 w-16 rounded-md border border-input bg-background px-2 py-1 text-center text-xs ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none',

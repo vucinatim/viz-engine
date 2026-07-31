@@ -11,7 +11,10 @@ import type {
   VizRuntimeLayerValues,
 } from './frame-plan.js';
 import { createVizFramePlan } from './frame-plan.js';
-import type { VizRuntimeGraphInputValues } from './graph-evaluator.js';
+import type {
+  VizRuntimeGraphInputValues,
+  VizRuntimeGraphValues,
+} from './graph-evaluator.js';
 import type { VizNodeRegistry } from './node-registry.js';
 import type { VizRuntimeSession } from './runtime-session.js';
 
@@ -23,6 +26,7 @@ export interface CreateVizRenderPlanOptions {
   inputValues?: VizRuntimeFrameInputValues;
   layerValues?: VizRuntimeLayerValues;
   graphInputValues?: VizRuntimeGraphInputValues;
+  graphValues?: VizRuntimeGraphValues;
   runtimeInputs?: VizRuntimeInputs;
   runtimeInputProvider?: (frame: number) => VizRuntimeInputs;
 }
@@ -76,6 +80,7 @@ export const createVizRenderPlan = ({
   inputValues,
   layerValues,
   graphInputValues,
+  graphValues,
   runtimeInputs,
   runtimeInputProvider,
 }: CreateVizRenderPlanOptions): VizRenderPlan => {
@@ -101,6 +106,7 @@ export const createVizRenderPlan = ({
       ...(inputValues === undefined ? {} : { inputValues }),
       ...(layerValues === undefined ? {} : { layerValues }),
       ...(graphInputValues === undefined ? {} : { graphInputValues }),
+      ...(graphValues === undefined ? {} : { graphValues }),
       ...(requestedRuntimeInputs === undefined
         ? {}
         : { runtimeInputs: requestedRuntimeInputs }),
@@ -179,6 +185,7 @@ export const createVizRenderPlan = ({
 
         return {
           ...frameLayer,
+          resolvedSettings: settings,
           node,
         };
       } catch (error) {

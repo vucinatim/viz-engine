@@ -232,6 +232,7 @@ const EditorToolbar = () => {
         <HistoryContextIndicator />
       </Menubar>
       <input
+        name="viz-project-file"
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}

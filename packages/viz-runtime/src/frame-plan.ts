@@ -16,7 +16,10 @@ import {
   sampleAudioFeatureValue,
 } from './audio-feature-timeline.js';
 import type { VizComponentRegistry } from './component-registry.js';
-import type { VizRuntimeGraphInputValues } from './graph-evaluator.js';
+import type {
+  VizRuntimeGraphInputValues,
+  VizRuntimeGraphValues,
+} from './graph-evaluator.js';
 import { evaluateVizGraphs } from './graph-evaluator.js';
 import type { VizNodeRegistry } from './node-registry.js';
 import {
@@ -33,6 +36,7 @@ export interface CreateVizFramePlanOptions {
   inputValues?: VizRuntimeFrameInputValues;
   layerValues?: VizRuntimeLayerValues;
   graphInputValues?: VizRuntimeGraphInputValues;
+  graphValues?: VizRuntimeGraphValues;
   runtimeInputs?: VizRuntimeInputs;
 }
 
@@ -284,6 +288,7 @@ export const createVizFramePlan = ({
   inputValues = {},
   layerValues = {},
   graphInputValues,
+  graphValues = {},
   runtimeInputs = {},
 }: CreateVizFramePlanOptions): VizFramePlan => {
   const frameContext = session.getFrameContext(frame);
@@ -306,6 +311,7 @@ export const createVizFramePlan = ({
     frame: frameContext.frame,
     ...(nodeRegistry === undefined ? {} : { registry: nodeRegistry }),
     inputValues: mergedGraphInputValues,
+    graphValues,
   });
 
   for (const result of graphResults.values()) {

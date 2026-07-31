@@ -168,7 +168,16 @@ export const ComponentSettingControl = ({
         />
       );
     case 'color':
-      return <ColorPickerPopover value={value as string} onChange={onChange} />;
+      return (
+        <ColorPickerPopover
+          value={value as string}
+          onChange={onChange}
+          onTransientChange={onTransientChange}
+          onCommit={onCommit}
+          onGestureStart={onGestureStart}
+          onGestureCancel={onGestureCancel}
+        />
+      );
     case 'text':
       return (
         <Input

@@ -1,4 +1,3 @@
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -20,6 +19,7 @@ import {
 } from '../config/node-types';
 import SimpleTooltip from '../ui/simple-tooltip';
 import LiveValue from './live-value';
+import NodeLiteralInput from './node-literal-input';
 import { GraphNodeData, useNodeNetwork } from './node-network-store';
 
 // Manually defining props instead of relying on NodeProps to avoid TS issues
@@ -49,7 +49,14 @@ const NodeRenderer = ({
     outputs: [],
   } as any);
 
-  const { edges, updateInputValue } = useNodeNetwork(nodeNetworkId);
+  const {
+    edges,
+    updateInputValue,
+    beginInputGesture,
+    updateLiveInputValue,
+    commitInputGesture,
+    cancelInputGesture,
+  } = useNodeNetwork(nodeNetworkId);
 
   // Check if this is a protected node (input/output)
   const isProtectedNode = label === 'Input' || label === 'Output';
@@ -126,32 +133,30 @@ const NodeRenderer = ({
         );
       case 'number':
         return (
-          <Input
-            type="text"
+          <NodeLiteralInput
+            kind="number"
             className="nodrag nopan h-6 w-16 bg-zinc-800 text-xs"
             value={inputValues[input.id] ?? ''}
-            onChange={(event) => {
-              const rawValue = event.target.value;
-              const numericValue = Number(rawValue);
-              updateInputValue(
-                nodeId,
-                input.id,
-                rawValue === '' || !Number.isFinite(numericValue)
-                  ? rawValue
-                  : numericValue,
-              );
-            }}
+            onBegin={beginInputGesture}
+            onTransientChange={(value) =>
+              updateLiveInputValue(nodeId, input.id, value)
+            }
+            onCommit={commitInputGesture}
+            onCancel={cancelInputGesture}
           />
         );
       case 'string':
         return (
-          <Input
-            type="text"
+          <NodeLiteralInput
+            kind="string"
             className="nodrag nopan h-6 w-24 bg-zinc-800 text-xs"
             value={inputValues[input.id] ?? ''}
-            onChange={(event) =>
-              updateInputValue(nodeId, input.id, event.target.value)
+            onBegin={beginInputGesture}
+            onTransientChange={(value) =>
+              updateLiveInputValue(nodeId, input.id, value)
             }
+            onCommit={commitInputGesture}
+            onCancel={cancelInputGesture}
           />
         );
       case 'boolean':
@@ -222,7 +227,6 @@ const NodeRenderer = ({
                     position={Position.Left}
                     type="target"
                     index={index}
-                    nodeId={nodeId}
                   />
                   <p className="pointer-events-none pl-1 text-xs">
                     {input.label}
@@ -243,7 +247,6 @@ const NodeRenderer = ({
                     position={Position.Right}
                     type="source"
                     index={index}
-                    nodeId={nodeId}
                   />
                 </div>
               ))}
@@ -270,16 +273,9 @@ interface RenderHandleProps {
   position: Position;
   type: 'source' | 'target';
   index: number;
-  nodeId: string;
 }
 
-const ConnectionHandle = ({
-  io,
-  position,
-  type,
-  index,
-  nodeId,
-}: RenderHandleProps) => {
+const ConnectionHandle = ({ io, position, type, index }: RenderHandleProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const handleRef = useRef<HTMLDivElement>(null);
   const connection = useConnection();
@@ -301,7 +297,6 @@ const ConnectionHandle = ({
     const handleElement = handleRef.current;
 
     if (handleElement) {
-      console.log('Clicking handle:', io.id, 'on node:', nodeId);
       // Get the center of the small handle
       const rect = handleElement.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
@@ -330,8 +325,6 @@ const ConnectionHandle = ({
       setTimeout(() => {
         overlay.style.pointerEvents = 'all';
       }, 100);
-    } else {
-      console.error('Handle ref not available for:', io.id);
     }
   };
 

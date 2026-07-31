@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/select';
 import { X } from 'lucide-react';
 import { useRef } from 'react';
+import NodeLiteralInput from '../node-literal-input';
 import { useNodeNetwork } from '../node-network-store';
 import type { NodeBodyProps } from './node-body';
 
@@ -20,7 +21,13 @@ const ValueMapperBody = ({
   data,
   nodeNetworkId,
 }: NodeBodyProps) => {
-  const { updateInputValue } = useNodeNetwork(nodeNetworkId);
+  const {
+    updateInputValue,
+    beginInputGesture,
+    updateLiveInputValue,
+    commitInputGesture,
+    cancelInputGesture,
+  } = useNodeNetwork(nodeNetworkId);
 
   const mapping = data.inputValues.mapping || {};
   const mode = (data.inputValues.mode || 'number') as string;
@@ -71,18 +78,35 @@ const ValueMapperBody = ({
           <ColorPickerPopover
             value={value as string}
             onChange={(c) => handleValueChange(key, c)}
+            onGestureStart={beginInputGesture}
+            onTransientChange={(color) =>
+              updateLiveInputValue(nodeId, 'mapping', {
+                ...mapping,
+                [key]: color,
+              })
+            }
+            onCommit={commitInputGesture}
+            onGestureCancel={cancelInputGesture}
           />
         );
       case 'number':
       case 'string':
       default:
         return (
-          <Input
-            type="text"
+          <NodeLiteralInput
+            kind={mode === 'number' ? 'number' : 'string'}
             value={value as string}
-            onChange={(e) => handleValueChange(key, e.target.value)}
             className="h-7 w-24 text-xs"
             placeholder={mode === 'number' ? '0' : 'Value'}
+            onBegin={beginInputGesture}
+            onTransientChange={(nextValue) =>
+              updateLiveInputValue(nodeId, 'mapping', {
+                ...mapping,
+                [key]: nextValue,
+              })
+            }
+            onCommit={commitInputGesture}
+            onCancel={cancelInputGesture}
           />
         );
     }
