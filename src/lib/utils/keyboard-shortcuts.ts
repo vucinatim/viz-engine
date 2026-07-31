@@ -43,7 +43,7 @@ export const formatShortcut = (config: ShortcutConfig): string => {
   }
 
   // Add the key (uppercase)
-  parts.push(key.toUpperCase());
+  parts.push(key === ' ' ? 'Space' : key.toUpperCase());
 
   // Join with + on Windows, no separator on Mac
   return platform ? parts.join('') : parts.join('+');
@@ -61,6 +61,7 @@ export const SHORTCUTS = {
   saveAs: { key: 's', modifiers: ['mod', 'shift'] as ShortcutModifier[] },
   open: { key: 'o', modifiers: ['mod'] as ShortcutModifier[] },
   fullscreen: { key: 'f', modifiers: ['ctrl'] as ShortcutModifier[] },
+  playPause: { key: ' ', modifiers: [] as ShortcutModifier[] },
   new: { key: 'n', modifiers: ['mod'] as ShortcutModifier[] },
   copy: { key: 'c', modifiers: ['mod'] as ShortcutModifier[] },
   cut: { key: 'x', modifiers: ['mod'] as ShortcutModifier[] },
@@ -82,7 +83,8 @@ export const toShortcutDefinition = (
 
   return {
     key,
-    ctrl: modifiers.includes('mod') || modifiers.includes('ctrl'),
+    mod: modifiers.includes('mod'),
+    ctrl: modifiers.includes('ctrl'),
     shift: modifiers.includes('shift'),
     alt: modifiers.includes('alt'),
     callback,

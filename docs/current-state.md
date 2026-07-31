@@ -247,8 +247,29 @@ The profiler and performance-stat checkpoint is now also complete:
 See
 [Profiler And Performance Statistics](./parity/evidence/2026-07-31-goal-three-profiler-and-performance-statistics.md).
 
-The parity matrix now contains 11 verified and 31 partial capabilities, with
-zero gaps and zero unaudited rows. Goal Three remains open because the 31
+The authoring-workspace checkpoint is now also complete:
+
+- versioned local panel layouts resize continuously, enforce their minimums,
+  preserve the preview, and restore after reload; GPU/canvas backing work
+  coalesces once at release rather than reallocating on every divider pixel
+- one focus-safe shortcut dispatcher owns playback, history, Save As,
+  fullscreen, and graph clipboard commands without stealing text input
+- layer add, duplicate, reorder, remove, preset, and reset commands use the
+  canonical project/history path
+- reset restores component defaults and declared default graphs without stale
+  bindings; partial presets complete from component defaults
+- nested list controls use the same transient/commit live-value protocol as
+  top-level continuous controls
+- history feedback truthfully describes one chronological project history
+  while reporting whether layer or graph editing is focused
+- a headed 11.7-second authoring journey and manual 1600 × 1000 calibration
+  pass with clean diagnostics
+
+See
+[Authoring Workspace](./parity/evidence/2026-07-31-goal-three-authoring-workspace.md).
+
+The parity matrix now contains 18 verified and 24 partial capabilities, with
+zero gaps and zero unaudited rows. Goal Three remains open because the 24
 broader capabilities still require full acceptance evidence, alongside agent
 tooling and the second original production.
 

@@ -14,10 +14,10 @@
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/app/page.tsx", "src/components/editor/editor-layout.tsx"],
       "v2Evidence": ["apps/viz-studio/src/App.tsx", "src/components/editor/editor-page.tsx", "src/components/editor/editor-layout.tsx"],
-      "status": "partial",
+      "status": "verified",
       "acceptance": ["All primary V1 work areas are reachable without navigation dead ends.", "Panel placement, hierarchy, and resizing preserve an efficient editing workflow.", "The shell remains usable at the supported desktop viewport sizes."],
       "validationMethods": ["browser", "visual", "integration"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-31-goal-three-authoring-workspace.md"]
     },
     {
       "id": "shell.visual-language",
@@ -40,10 +40,10 @@
       "parityDimensions": ["interaction", "functional", "performance"],
       "referenceEvidence": ["src/components/editor/editor-layout.tsx"],
       "v2Evidence": ["src/components/editor/editor-layout.tsx"],
-      "status": "partial",
+      "status": "verified",
       "acceptance": ["Dragging dividers updates panels continuously without layout corruption.", "Minimum sizes protect important controls.", "Preview interaction remains responsive while resizing."],
       "validationMethods": ["browser", "visual", "benchmark"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-authoring-workspace.md"]
     },
     {
       "id": "shell.keyboard-shortcuts",
@@ -53,10 +53,10 @@
       "parityDimensions": ["interaction", "functional"],
       "referenceEvidence": ["src/lib/utils/keyboard-shortcuts.ts", "src/app/page.tsx"],
       "v2Evidence": ["src/lib/utils/keyboard-shortcuts.ts", "src/components/editor/editor-page.tsx"],
-      "status": "partial",
+      "status": "verified",
       "acceptance": ["Playback, undo, redo, save, and editor shortcuts match the documented bindings.", "Focused inputs and editable controls are not disrupted.", "Shortcuts invoke the canonical V2 command path."],
       "validationMethods": ["browser", "integration"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-authoring-workspace.md"]
     },
     {
       "id": "layers.create-remove-reorder",
@@ -66,10 +66,10 @@
       "parityDimensions": ["interaction", "functional"],
       "referenceEvidence": ["src/components/editor/layers-config-panel.tsx", "src/components/editor/layer-config-card.tsx"],
       "v2Evidence": ["src/components/editor/layers-config-panel.tsx", "src/components/editor/layer-config-card.tsx", "src/lib/viz-session/store.ts"],
-      "status": "partial",
+      "status": "verified",
       "acceptance": ["Every operation updates the canonical project exactly once.", "Reordering is reflected immediately in rendering and persistence.", "Undo and redo restore the complete operation."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-authoring-workspace.md"]
     },
     {
       "id": "layers.search-and-selection",
@@ -105,10 +105,10 @@
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/layer-config-card.tsx"],
       "v2Evidence": ["src/components/editor/layer-config-card.tsx"],
-      "status": "partial",
+      "status": "verified",
       "acceptance": ["Expanded and collapsed cards expose the same essential information as V1.", "Contextual actions are discoverable and keyboard accessible.", "Large layer lists remain organized and scannable."],
       "validationMethods": ["browser", "visual"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-authoring-workspace.md"]
     },
     {
       "id": "parameters.dynamic-schema-form",
@@ -121,7 +121,7 @@
       "status": "partial",
       "acceptance": ["Every supported schema field renders an appropriate control.", "Edits update canonical layer configuration and preview deterministically.", "Defaults, bounds, optional fields, and nested values retain their meaning."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-authoring-workspace.md"]
     },
     {
       "id": "parameters.presets-reset",
@@ -131,10 +131,10 @@
       "parityDimensions": ["interaction", "functional"],
       "referenceEvidence": ["src/components/editor/layer-config-card.tsx", "src/components/editor/layer-parameters.tsx"],
       "v2Evidence": ["src/components/editor/layer-config-card.tsx", "src/components/editor/layer-parameters.tsx"],
-      "status": "partial",
+      "status": "verified",
       "acceptance": ["Applying a preset produces its complete documented configuration.", "Reset restores the component default without stale values.", "Preset and reset changes participate in history."],
       "validationMethods": ["browser", "integration"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-authoring-workspace.md"]
     },
     {
       "id": "parameters.live-edit-responsiveness",
@@ -378,10 +378,10 @@
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/history-context-indicator.tsx", "src/components/editor/history-manager.tsx"],
       "v2Evidence": ["src/components/editor/history-context-indicator.tsx", "src/lib/viz-session/react.ts", "src/lib/viz-session/store.ts"],
-      "status": "partial",
+      "status": "verified",
       "acceptance": ["Available undo and redo actions are accurately described.", "Context feedback follows focus and selection.", "Disabled states never imply an action that will do nothing."],
       "validationMethods": ["browser", "integration"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-authoring-workspace.md"]
     },
     {
       "id": "persistence.save-load-reset",

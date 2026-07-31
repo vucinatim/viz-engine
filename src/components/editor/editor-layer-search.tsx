@@ -16,6 +16,7 @@ const EditorLayerSearch = () => {
   return (
     <div className="w-full" data-testid="add-layer-search">
       <SearchSelect
+        ariaLabel="Add new layer"
         trigger={
           <div className="flex w-full items-center justify-start gap-x-4">
             <Search className="h-4 w-4 shrink-0 opacity-50" />

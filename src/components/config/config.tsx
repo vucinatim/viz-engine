@@ -151,6 +151,18 @@ export const ComponentSettingControl = ({
   onGestureCancel,
   onAssetSelect,
 }: ComponentSettingControlProps): ReactNode => {
+  const listValue =
+    setting.kind === 'list'
+      ? Array.isArray(value)
+        ? value
+        : setting.defaultValue
+      : [];
+  const replaceListItem = (index: number, item: unknown) => {
+    const nextValue = [...listValue];
+    nextValue[index] = item;
+    return nextValue;
+  };
+
   switch (setting.kind) {
     case 'number':
       return (
@@ -231,13 +243,29 @@ export const ComponentSettingControl = ({
     case 'list':
       return (
         <ListEditor<unknown>
-          value={(value as unknown[]) ?? setting.defaultValue}
+          value={listValue}
           onChange={onChange}
-          renderItem={(item, _index, onItemChange) => (
+          renderItem={(item, index) => (
             <ComponentSettingControl
               setting={setting.item}
               value={item}
-              onChange={onItemChange}
+              onChange={(nextItem) =>
+                onChange(replaceListItem(index, nextItem))
+              }
+              onTransientChange={
+                onTransientChange === undefined
+                  ? undefined
+                  : (nextItem) =>
+                      onTransientChange(replaceListItem(index, nextItem))
+              }
+              onCommit={
+                onCommit === undefined
+                  ? undefined
+                  : (nextItem) => onCommit(replaceListItem(index, nextItem))
+              }
+              onGestureStart={onGestureStart}
+              onGestureCancel={onGestureCancel}
+              onAssetSelect={onAssetSelect}
             />
           )}
           createDefaultItem={() => structuredClone(setting.item.defaultValue)}

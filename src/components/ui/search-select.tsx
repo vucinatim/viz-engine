@@ -19,6 +19,7 @@ export interface GroupedOption<T> {
 
 interface SearchSelectProps<T> {
   trigger: ReactNode;
+  ariaLabel?: string;
   triggerClassName?: string;
   options?: readonly T[];
   groupedOptions?: readonly GroupedOption<T>[];
@@ -38,6 +39,7 @@ interface SearchSelectProps<T> {
 
 const SearchSelect = <T,>({
   trigger,
+  ariaLabel,
   triggerClassName,
   options,
   groupedOptions,
@@ -114,6 +116,7 @@ const SearchSelect = <T,>({
           <Button
             variant="outline"
             role="combobox"
+            aria-label={ariaLabel}
             aria-expanded={open}
             className={cn(
               'w-full justify-center gap-x-2 bg-black/20 hover:bg-black/30',

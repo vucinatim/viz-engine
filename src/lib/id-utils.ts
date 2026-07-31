@@ -1,5 +1,5 @@
 export const generateLayerId = (compName: string) =>
-  `layer-${compName}-${new Date().getTime()}`;
+  `layer-${compName}-${crypto.randomUUID()}`;
 
 export interface ParameterInfo {
   layerId: string;

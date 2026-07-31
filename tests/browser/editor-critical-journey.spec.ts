@@ -7,6 +7,7 @@ const execFileAsync = promisify(execFile);
 
 type EditorSnapshot = {
   layerIds: string[];
+  layerOrder: string[];
   revision: number;
   currentFrame: number;
   durationFrames: number;
@@ -56,6 +57,7 @@ const readEditorSnapshot = async (page: Page): Promise<EditorSnapshot> =>
       .find(({ source }) => source.kind === 'graph-output');
     return {
       layerIds: project.layers.map((layer) => layer.id),
+      layerOrder: [...project.layerOrder],
       revision: state.project.revision,
       currentFrame: state.preview.transport.currentFrame,
       durationFrames: state.preview.transport.durationFrames,
@@ -383,6 +385,297 @@ test('preserves canonical editing, history, graph, and transport behavior', asyn
     path: '.artifacts/playwright/editor-critical-journey.png',
     fullPage: true,
   });
+  expect(diagnostics).toEqual([]);
+});
+
+test('keeps the authoring workspace continuous, focus-safe, and historically complete', async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  const diagnostics: string[] = [];
+  page.on('console', (message) => {
+    if (
+      (message.type() === 'error' || message.type() === 'warning') &&
+      !isKnownBrowserDiagnostic(message.text())
+    ) {
+      diagnostics.push(`${message.type()}: ${message.text()}`);
+    }
+  });
+  page.on('pageerror', (error) => {
+    diagnostics.push(`pageerror: ${error.message}`);
+  });
+
+  await waitForEditor(page);
+  await page.evaluate(() => {
+    window.__vizEditorDebug?.editorControl.preview.pause();
+    window.__vizEditorDebug?.editorControl.nodeEditor.closeNetwork();
+  });
+
+  const layersPanel = page.getByTestId('layers-panel');
+  const horizontalHandle = page.getByTestId(
+    'workspace-horizontal-resize-handle',
+  );
+  const initialPanelBox = await layersPanel.boundingBox();
+  const handleBox = await horizontalHandle.boundingBox();
+  expect(initialPanelBox).not.toBeNull();
+  expect(handleBox).not.toBeNull();
+
+  await page.evaluate(() => {
+    const panel = document.querySelector('[data-testid="layers-panel"]');
+    const probe = { samples: [] as Array<{ time: number; width: number }> };
+    (window as any).__workspaceResizeProbe = probe;
+    if (panel) {
+      const observer = new ResizeObserver(([entry]) => {
+        probe.samples.push({
+          time: performance.now(),
+          width: entry?.contentRect.width ?? 0,
+        });
+      });
+      observer.observe(panel);
+      (window as any).__workspaceResizeObserver = observer;
+    }
+  });
+  await page.mouse.move(
+    handleBox!.x + handleBox!.width / 2,
+    handleBox!.y + handleBox!.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(handleBox!.x + 150, handleBox!.y + 20, { steps: 30 });
+  await page.mouse.up();
+
+  const resizedPanelBox = await layersPanel.boundingBox();
+  expect(resizedPanelBox!.width).toBeGreaterThan(initialPanelBox!.width + 80);
+  const resizeSamples = await page.evaluate(() => {
+    const probe = (window as any).__workspaceResizeProbe as {
+      samples: Array<{ time: number; width: number }>;
+    };
+    (window as any).__workspaceResizeObserver?.disconnect();
+    return probe.samples;
+  });
+  expect(
+    new Set(resizeSamples.map((sample) => sample.width)).size,
+  ).toBeGreaterThan(15);
+  const activeResizeSamples = resizeSamples
+    .filter(
+      (sample, index) =>
+        index === 0 || sample.width !== resizeSamples[index - 1]!.width,
+    )
+    .slice(1);
+  const resizeIntervals = activeResizeSamples
+    .slice(1)
+    .map((sample, index) => sample.time - activeResizeSamples[index]!.time);
+  if (process.env.VIZ_WORKSPACE_RESIZE) {
+    const sortedResizeIntervals = resizeIntervals.toSorted(
+      (left, right) => left - right,
+    );
+    const percentile = (fraction: number) =>
+      sortedResizeIntervals[
+        Math.floor((sortedResizeIntervals.length - 1) * fraction)
+      ]!;
+    const medianResizeInterval = percentile(0.5);
+    const p95ResizeInterval = percentile(0.95);
+    const maximumResizeInterval = sortedResizeIntervals.at(-1)!;
+    console.log(
+      `Workspace resize: ${activeResizeSamples.length} changed widths, ${medianResizeInterval.toFixed(2)} ms median, ${p95ResizeInterval.toFixed(2)} ms p95, ${maximumResizeInterval.toFixed(2)} ms maximum interval`,
+    );
+    expect(medianResizeInterval).toBeLessThan(25);
+    expect(p95ResizeInterval).toBeLessThan(60);
+    expect(maximumResizeInterval).toBeLessThan(120);
+  }
+  await expect(horizontalHandle).toHaveAttribute('aria-valuemin', '20');
+  expect(await readRuntimeCanvasSignal(page)).toBeGreaterThan(0);
+
+  await page.waitForTimeout(150);
+  await page.reload();
+  await expect(page.getByTestId('viz-editor')).toBeVisible();
+  await expect
+    .poll(async () => page.evaluate(() => Boolean(window.__vizEditorDebug)))
+    .toBe(true);
+  await expect(page.getByTestId('layer-card')).toHaveCount(3);
+  const restoredPanelBox = await page.getByTestId('layers-panel').boundingBox();
+  expect(
+    Math.abs(restoredPanelBox!.width - resizedPanelBox!.width),
+  ).toBeLessThan(12);
+
+  await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
+  const initialHistoryCapabilities = await page.evaluate(() => ({
+    canUndo: window.__vizEditorDebug?.editorControl.history.canUndo() ?? false,
+    canRedo: window.__vizEditorDebug?.editorControl.history.canRedo() ?? false,
+  }));
+  const undoMenuItem = page.getByRole('menuitem', { name: /Undo/ });
+  const redoMenuItem = page.getByRole('menuitem', { name: /Redo/ });
+  if (initialHistoryCapabilities.canUndo) {
+    await expect(undoMenuItem).toBeEnabled();
+  } else {
+    await expect(undoMenuItem).toBeDisabled();
+  }
+  if (initialHistoryCapabilities.canRedo) {
+    await expect(redoMenuItem).toBeEnabled();
+  } else {
+    await expect(redoMenuItem).toBeDisabled();
+  }
+  await page.keyboard.press('Escape');
+
+  await page.getByTestId('viz-editor').click({ position: { x: 8, y: 8 } });
+  await page.keyboard.press('Space');
+  await expect
+    .poll(async () => (await readEditorSnapshot(page)).isPlaying)
+    .toBe(true);
+  await page.keyboard.press('Space');
+  await expect
+    .poll(async () => (await readEditorSnapshot(page)).isPlaying)
+    .toBe(false);
+
+  await page.getByRole('menuitem', { name: 'File', exact: true }).click();
+  await page.getByRole('menuitem', { name: /Save As/ }).click();
+  const projectName = page.getByLabel('Project Name');
+  await projectName.fill('focus-safe');
+  const revisionBeforeInput = (await readEditorSnapshot(page)).revision;
+  await projectName.press('Space');
+  expect(await projectName.inputValue()).toBe('focus-safe ');
+  await projectName.press(
+    process.platform === 'darwin' ? 'Meta+Z' : 'Control+Z',
+  );
+  expect((await readEditorSnapshot(page)).revision).toBe(revisionBeforeInput);
+  expect((await readEditorSnapshot(page)).isPlaying).toBe(false);
+  await page.getByRole('button', { name: 'Cancel' }).click();
+
+  await pressPrimaryShortcut(page, 'Shift+S');
+  await expect(
+    page.getByRole('dialog', { name: 'Save Project' }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Cancel' }).click();
+
+  const initial = await readEditorSnapshot(page);
+  const firstLayer = page.getByTestId('layer-card').first();
+  await firstLayer.getByTestId('duplicate-layer').click();
+  await expect(page.getByTestId('layer-card')).toHaveCount(4);
+  await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
+  await expect(page.getByRole('menuitem', { name: /Undo/ })).toBeEnabled();
+  await expect(page.getByRole('menuitem', { name: /Redo/ })).toBeDisabled();
+  await page.keyboard.press('Escape');
+  await pressPrimaryShortcut(page, 'Z');
+  await expect(page.getByTestId('layer-card')).toHaveCount(3);
+  await pressPrimaryShortcut(page, 'Shift+Z');
+  await expect(page.getByTestId('layer-card')).toHaveCount(4);
+
+  const duplicated = await readEditorSnapshot(page);
+  const duplicateId = duplicated.layerIds.find(
+    (layerId) => !initial.layerIds.includes(layerId),
+  );
+  expect(duplicateId).toBeDefined();
+  await page
+    .locator(`[data-layer-id="${duplicateId}"]`)
+    .getByTestId('delete-layer')
+    .click();
+  await expect(page.getByTestId('layer-card')).toHaveCount(3);
+  await pressPrimaryShortcut(page, 'Z');
+  await expect(page.getByTestId('layer-card')).toHaveCount(4);
+
+  const beforeReorder = await readEditorSnapshot(page);
+  const topCard = page.getByTestId('layer-card').first();
+  const settingsToggle = topCard.getByText('Settings', { exact: true });
+  if (await topCard.getByTestId('layer-drag-handle').isHidden()) {
+    await settingsToggle.click();
+  }
+  const dragHandle = topCard.getByTestId('layer-drag-handle');
+  const dragHandleBox = await dragHandle.boundingBox();
+  const reorderTargetBox = await page
+    .getByTestId('layer-card')
+    .nth(1)
+    .boundingBox();
+  expect(dragHandleBox).not.toBeNull();
+  expect(reorderTargetBox).not.toBeNull();
+  await page.mouse.move(
+    dragHandleBox!.x + dragHandleBox!.width / 2,
+    dragHandleBox!.y + dragHandleBox!.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    reorderTargetBox!.x + reorderTargetBox!.width / 2,
+    reorderTargetBox!.y + reorderTargetBox!.height / 2,
+    { steps: 10 },
+  );
+  await page.mouse.up();
+  await expect
+    .poll(async () => (await readEditorSnapshot(page)).layerOrder)
+    .not.toEqual(beforeReorder.layerOrder);
+  await pressPrimaryShortcut(page, 'Z');
+  await expect
+    .poll(async () => (await readEditorSnapshot(page)).layerOrder)
+    .toEqual(beforeReorder.layerOrder);
+
+  const noiseCard = page
+    .getByTestId('layer-card')
+    .filter({ hasText: 'Noise Shader' });
+  if (await noiseCard.getByTestId('reset-layer-parameters').isHidden()) {
+    await noiseCard.getByText('Settings', { exact: true }).click();
+  }
+  await noiseCard
+    .getByRole('combobox', { name: /Apply a preset to Noise Shader/i })
+    .click();
+  await page.getByRole('option', { name: 'Init', exact: true }).click();
+  const noiseLayerId = await noiseCard.getAttribute('data-layer-id');
+  expect(noiseLayerId).not.toBeNull();
+  await expect
+    .poll(async () =>
+      page.evaluate((layerId) => {
+        const layer = window.__vizEditorDebug?.vizSessionStore
+          .getState()
+          .project.workingProject.layers.find(
+            (candidate) => candidate.id === layerId,
+          );
+        return (layer?.settings.noise as { scale?: number } | undefined)?.scale;
+      }, noiseLayerId),
+    )
+    .toBe(3);
+  await page.evaluate((layerId) => {
+    window.__vizEditorDebug?.editorControl.project.updateLayerValue(
+      layerId!,
+      ['noise', 'scale'],
+      8.5,
+    );
+  }, noiseLayerId);
+  await noiseCard.getByTestId('reset-layer-parameters').click();
+  await expect
+    .poll(async () =>
+      page.evaluate((layerId) => {
+        const layer = window.__vizEditorDebug?.vizSessionStore
+          .getState()
+          .project.workingProject.layers.find(
+            (candidate) => candidate.id === layerId,
+          );
+        return (layer?.settings.noise as { scale?: number } | undefined)?.scale;
+      }, noiseLayerId),
+    )
+    .toBe(3);
+  await pressPrimaryShortcut(page, 'Z');
+  await expect
+    .poll(async () =>
+      page.evaluate((layerId) => {
+        const layer = window.__vizEditorDebug?.vizSessionStore
+          .getState()
+          .project.workingProject.layers.find(
+            (candidate) => candidate.id === layerId,
+          );
+        return (layer?.settings.noise as { scale?: number } | undefined)?.scale;
+      }, noiseLayerId),
+    )
+    .toBe(8.5);
+
+  const graphParameterId = initial.graphBindingParameterId;
+  expect(graphParameterId).toBeDefined();
+  await openGraph(page, graphParameterId!, initial.graphBindingGraphId);
+  await page.getByTestId('animation-builder').hover();
+  await expect(page.getByTestId('history-context-indicator')).toHaveAttribute(
+    'data-editor-focus',
+    'graph',
+  );
+  await page.getByTestId('history-context-indicator').focus();
+  await expect(
+    page.getByRole('tooltip').getByTestId('history-context-description'),
+  ).toContainText('one chronological project history');
+
   expect(diagnostics).toEqual([]);
 });
 

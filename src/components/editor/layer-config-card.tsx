@@ -11,9 +11,10 @@ import {
   Copy,
   GripVertical,
   Layers2,
+  RotateCcw,
   Trash,
 } from 'lucide-react';
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import { toast } from 'sonner';
 import { Button } from '../ui/button';
 import {
@@ -38,7 +39,6 @@ const getCanonicalLayerValues = (layerId: string) =>
 
 function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
   const comp = layer.comp;
-  const [selectedPreset, setSelectedPreset] = useState<any | null>();
 
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: layer.id });
@@ -67,6 +67,8 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
             <div
               {...attributes}
               {...listeners}
+              aria-label={`Reorder ${comp.name} layer`}
+              data-testid="layer-drag-handle"
               className={cn(
                 'flex w-6 shrink-0 cursor-grab flex-col items-center justify-center overflow-hidden bg-zinc-400/5 transition-all',
                 layer.isExpanded && 'w-0 opacity-0',
@@ -179,23 +181,31 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
           <div className="flex flex-col">
             <div className="z-10 flex flex-col gap-y-3 bg-gradient-to-b from-zinc-900 to-transparent px-4 pt-4 pb-4 transition-colors select-none group-hover:bg-zinc-700/20">
               <LayerSettings layer={layer} />
-              {comp.presets && comp.presets.length > 0 && (
-                <SearchSelect
-                  trigger={
-                    <p>{selectedPreset?.name ?? 'Select a preset...'}</p>
-                  }
-                  triggerClassName="bg-white/70 text-black hover:bg-black/40"
-                  options={comp.presets}
-                  extractKey={(preset) => preset.name}
-                  renderOption={(preset) => <div>{preset.name}</div>}
-                  noItemsMessage="No presets available."
-                  keepOpenOnSelect={true}
-                  onSelect={(preset) => {
-                    setSelectedPreset(preset);
-                    editorControl.project.applyLayerPreset(layer.id, preset);
-                  }}
-                />
-              )}
+              <div className="flex items-center gap-2">
+                {comp.presets && comp.presets.length > 0 && (
+                  <SearchSelect
+                    ariaLabel={`Apply a preset to ${comp.name}`}
+                    trigger={<p>Apply a preset...</p>}
+                    triggerClassName="bg-white/70 text-black hover:bg-black/40"
+                    options={comp.presets}
+                    extractKey={(preset) => preset.id}
+                    renderOption={(preset) => <div>{preset.name}</div>}
+                    noItemsMessage="No presets available."
+                    onSelect={(preset) =>
+                      editorControl.project.applyLayerPreset(layer.id, preset)
+                    }
+                  />
+                )}
+                <Button
+                  size="icon"
+                  variant="outline"
+                  tooltip="Reset layer parameters"
+                  aria-label={`Reset ${comp.name} parameters`}
+                  data-testid="reset-layer-parameters"
+                  onClick={() => editorControl.project.resetLayer(layer.id)}>
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             <div className="relative flex flex-col gap-y-2 border-b border-zinc-600 transition-colors select-none group-hover:bg-zinc-700/20">
               <LayerParameters

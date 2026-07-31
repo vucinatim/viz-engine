@@ -3,6 +3,7 @@ import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { AUDIO_THEME } from '@/lib/theme/audio-theme';
 import { getVizSessionState, vizSessionStore } from '@/lib/viz-session';
+import { workspaceResizeCoordinator } from '@/lib/workspace-resize-coordinator';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 const MINIMAP_HEIGHT = 28;
@@ -34,14 +35,19 @@ const useCanvasWidth = (ref: React.RefObject<HTMLCanvasElement>) => {
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return;
+    let nextWidth = 0;
+    const publishWidth = () => setWidth(nextWidth);
     const observer = new ResizeObserver((entries) => {
       const rect = entries[0]?.contentRect;
       if (!rect) return;
-      const next = Math.max(1, Math.floor(rect.width));
-      setWidth(next);
+      nextWidth = Math.max(1, Math.floor(rect.width));
+      workspaceResizeCoordinator.schedule(publishWidth);
     });
     observer.observe(canvas);
-    return () => observer.disconnect();
+    return () => {
+      workspaceResizeCoordinator.cancel(publishWidth);
+      observer.disconnect();
+    };
   }, [ref]);
 
   return width;
@@ -357,11 +363,15 @@ const WaveformCanvas = ({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const observer = new ResizeObserver(() => {
-      renderRef.current();
-    });
+    const render = () => renderRef.current();
+    const observer = new ResizeObserver(() =>
+      workspaceResizeCoordinator.schedule(render),
+    );
     observer.observe(canvas);
-    return () => observer.disconnect();
+    return () => {
+      workspaceResizeCoordinator.cancel(render);
+      observer.disconnect();
+    };
   }, []);
 
   useEffect(() => {

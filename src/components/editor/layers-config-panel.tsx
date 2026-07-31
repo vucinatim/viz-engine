@@ -83,13 +83,14 @@ const SortableLayers = ({ layers }: SortableLayersProps) => {
     }
 
     if (active.id !== over?.id) {
-      console.log('Reordering layers');
       editorControl.project.reorderLayers(
         active.id.toString(),
         over.id.toString(),
       );
     }
   }
+
+  const visualLayers = layers.toReversed();
 
   return (
     <DndContext
@@ -98,8 +99,10 @@ const SortableLayers = ({ layers }: SortableLayersProps) => {
       modifiers={[restrictToVerticalAxis]}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}>
-      <SortableContext items={layers} strategy={verticalListSortingStrategy}>
-        {layers.toReversed().map((layer, index) => (
+      <SortableContext
+        items={visualLayers}
+        strategy={verticalListSortingStrategy}>
+        {visualLayers.map((layer, index) => (
           <LayerConfigCard key={layer.id} index={index} layer={layer} />
         ))}
       </SortableContext>

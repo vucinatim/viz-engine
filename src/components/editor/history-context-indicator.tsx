@@ -9,10 +9,6 @@ import { useVizSessionSelector } from '@/lib/viz-session';
 import { Layers, Network } from 'lucide-react';
 import { memo } from 'react';
 
-/**
- * Visual indicator showing which history context is currently active.
- * This helps users understand what Ctrl+Z/Ctrl+Y will undo/redo.
- */
 const HistoryContextIndicator = () => {
   const openNodeNetwork = useNodeNetworkStore((state) => state.openNetwork);
   const isNodeEditorFocused = useVizSessionSelector(
@@ -24,43 +20,34 @@ const HistoryContextIndicator = () => {
     return null;
   }
 
-  const isNodeContext = isNodeEditorFocused;
+  const focusLabel = isNodeEditorFocused ? 'Graph editor' : 'Layer editor';
 
   return (
     <TooltipProvider>
       <Tooltip delayDuration={300}>
         <TooltipTrigger asChild>
-          <div className="flex h-full items-center px-2">
-            {isNodeContext ? (
+          <span
+            tabIndex={0}
+            aria-label={`Project history. ${focusLabel} focused.`}
+            data-testid="history-context-indicator"
+            data-editor-focus={isNodeEditorFocused ? 'graph' : 'layers'}
+            className="flex h-full items-center px-2">
+            {isNodeEditorFocused ? (
               <Network size={14} className="text-animation-purple" />
             ) : (
               <Layers size={14} className="text-blue-400/80" />
             )}
-          </div>
+          </span>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="max-w-xs">
-          <p className="text-xs">
-            {isNodeContext ? (
-              <>
-                <span className="font-semibold">Node History Active</span>
-                <br />
-                Undo/Redo will affect node graph changes.
-                <br />
-                <span className="text-white/60">
-                  Hover away from node editor to switch to layer history.
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="font-semibold">Layer History Active</span>
-                <br />
-                Undo/Redo will affect layer changes.
-                <br />
-                <span className="text-white/60">
-                  Hover over node editor to switch to node history.
-                </span>
-              </>
-            )}
+          <p className="text-xs" data-testid="history-context-description">
+            <span className="font-semibold">Project History</span>
+            <br />
+            {focusLabel} focused.
+            <br />
+            <span className="text-white/60">
+              Undo and redo follow one chronological project history.
+            </span>
           </p>
         </TooltipContent>
       </Tooltip>

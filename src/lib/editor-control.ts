@@ -21,15 +21,12 @@ import {
   resolveNetworkIdForParameter,
   vizSessionActions,
 } from '@/lib/viz-session';
-import type { VizProjectDocument } from '@viz-engine/contracts';
+import type {
+  VizComponentPreset,
+  VizProjectDocument,
+} from '@viz-engine/contracts';
 import type { VizEditorAudioAnalyzerState } from '@viz-engine/editor-session';
 import { toast } from 'sonner';
-
-type LayerPreset = {
-  name: string;
-  values: Record<string, any>;
-  networks?: Record<string, string>;
-};
 
 const editorControl = {
   inspect: {
@@ -61,6 +58,9 @@ const editorControl = {
     },
     duplicateLayer(layerId: string) {
       vizSessionActions.project.duplicateLayer(layerId);
+    },
+    resetLayer(layerId: string) {
+      vizSessionActions.project.resetLayer(layerId);
     },
     reorderLayers(activeId: string, overId: string) {
       vizSessionActions.project.reorderLayers(activeId, overId);
@@ -162,7 +162,7 @@ const editorControl = {
         uri,
       );
     },
-    applyLayerPreset(layerId: string, preset: LayerPreset) {
+    applyLayerPreset(layerId: string, preset: VizComponentPreset) {
       vizSessionActions.project.applyLayerPreset(layerId, preset);
     },
     importWorkingProject(project: VizProjectDocument) {

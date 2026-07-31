@@ -5,11 +5,7 @@ import { Button } from './button';
 interface ListEditorProps<T> {
   value: T[];
   onChange: (value: T[]) => void;
-  renderItem: (
-    item: T,
-    index: number,
-    onChange: (newItem: T) => void,
-  ) => ReactNode;
+  renderItem: (item: T, index: number) => ReactNode;
   createDefaultItem: () => T;
   itemLabel?: string;
 }
@@ -32,19 +28,11 @@ export function ListEditor<T>({
     onChange(safeValue.filter((_, i) => i !== index));
   };
 
-  const updateItem = (index: number, newItem: T) => {
-    const newValue = [...safeValue];
-    newValue[index] = newItem;
-    onChange(newValue);
-  };
-
   return (
     <div className="flex flex-col gap-2">
       {safeValue.map((item, index) => (
         <div key={index} className="flex items-center gap-2">
-          <div className="flex-1">
-            {renderItem(item, index, (newItem) => updateItem(index, newItem))}
-          </div>
+          <div className="flex-1">{renderItem(item, index)}</div>
           <Button
             type="button"
             variant="ghost"

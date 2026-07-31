@@ -54,6 +54,10 @@ const EditorToolbar = () => {
   const canRedo = useCanRedo();
   const profilerVisible = useProfilerStore((s) => s.visible);
 
+  const handleSaveProject = () => {
+    setIsSaveDialogOpen(true);
+  };
+
   // Track fullscreen state changes
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -79,7 +83,7 @@ const EditorToolbar = () => {
     }
   };
 
-  // Add keyboard shortcuts for undo/redo and fullscreen
+  // Global editor commands share one focus-safe shortcut dispatcher.
   useKeyboardShortcuts({
     shortcuts: [
       toShortcutDefinition(SHORTCUTS.undo, editorControl.history.undo, canUndo),
@@ -88,6 +92,11 @@ const EditorToolbar = () => {
         SHORTCUTS.redoAlt,
         editorControl.history.redo,
         canRedo,
+      ),
+      toShortcutDefinition(SHORTCUTS.saveAs, handleSaveProject),
+      toShortcutDefinition(
+        SHORTCUTS.playPause,
+        editorControl.preview.togglePlayback,
       ),
       toShortcutDefinition(SHORTCUTS.fullscreen, toggleFullscreen, true),
     ],
@@ -99,10 +108,6 @@ const EditorToolbar = () => {
     setSampleProjects(getBundledSampleProjects());
     setIsLoadingSamples(false);
   }, []);
-
-  const handleSaveProject = () => {
-    setIsSaveDialogOpen(true);
-  };
 
   const handleConfirmSave = () => {
     if (projectName.trim()) {
@@ -127,14 +132,10 @@ const EditorToolbar = () => {
   };
 
   const handleResetProject = () => {
-    console.log('[EditorToolbar] Opening reset dialog...');
     setIsResetDialogOpen(true);
   };
 
   const handleConfirmReset = async () => {
-    console.log(
-      '[EditorToolbar] User confirmed reset, calling resetProject()...',
-    );
     setIsResetDialogOpen(false);
     await editorControl.persistence.resetProject();
   };

@@ -77,6 +77,9 @@ already requirements of the active goal.
 
 ## Cleanup Candidates
 
+- Stop deriving component presentation labels by parsing layer or parameter
+  IDs. Carry explicit layer/component metadata into diagnostics and reports
+  when that surface is next revised; IDs should remain opaque identity.
 - Continue removing editor-era convenience accessors that encourage treating
   projection or attachment stores as canonical truth.
 - Move additional low-level browser/runtime attachments behind the existing

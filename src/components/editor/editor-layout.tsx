@@ -15,6 +15,12 @@ interface EditorLayoutProps {
   bottomRightChildren: ReactNode;
 }
 
+const workspaceLayoutIds = {
+  horizontal: 'viz-editor-workspace-horizontal-v1',
+  vertical: 'viz-editor-workspace-vertical-v1',
+  verticalWithMiddle: 'viz-editor-workspace-vertical-with-middle-v1',
+} as const;
+
 function EditorLayout({
   leftChildren,
   topRightChildren,
@@ -46,6 +52,7 @@ function EditorLayout({
 
   return (
     <ResizablePanelGroup
+      autoSaveId={workspaceLayoutIds.horizontal}
       direction="horizontal"
       className="flex h-full w-full items-stretch justify-stretch p-2">
       <ResizablePanel id="left-panel" order={0} minSize={20} defaultSize={30}>
@@ -53,9 +60,18 @@ function EditorLayout({
           {leftChildren}
         </div>
       </ResizablePanel>
-      <ResizableHandle />
+      <ResizableHandle
+        aria-label="Resize layer and preview panels"
+        data-testid="workspace-horizontal-resize-handle"
+      />
       <ResizablePanel id="right-panel" order={1} defaultSize={70}>
-        <ResizablePanelGroup direction="vertical">
+        <ResizablePanelGroup
+          autoSaveId={
+            midRightChildren
+              ? workspaceLayoutIds.verticalWithMiddle
+              : workspaceLayoutIds.vertical
+          }
+          direction="vertical">
           <ResizablePanel id="top-right-panel" defaultSize={72} minSize={20}>
             <div className="relative flex h-full w-full flex-col items-stretch justify-stretch">
               {topRightChildren}
@@ -63,7 +79,7 @@ function EditorLayout({
           </ResizablePanel>
           {midRightChildren && (
             <>
-              <ResizableHandle />
+              <ResizableHandle aria-label="Resize preview and middle panels" />
               <ResizablePanel id="mid-right-panel" defaultSize={50}>
                 <div className="relative flex h-full w-full">
                   {midRightChildren}
@@ -71,7 +87,10 @@ function EditorLayout({
               </ResizablePanel>
             </>
           )}
-          <ResizableHandle />
+          <ResizableHandle
+            aria-label="Resize preview and timeline panels"
+            data-testid="workspace-vertical-resize-handle"
+          />
           <ResizablePanel id="bottom-right-panel" defaultSize={28} minSize={20}>
             <div className="relative flex h-full w-full flex-col items-stretch justify-stretch">
               {bottomRightChildren}

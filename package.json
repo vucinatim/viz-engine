@@ -31,6 +31,7 @@
     "production:signal-cathedral": "tsx tools/foundation/materialize-signal-cathedral-production.ts",
     "benchmark:runtime-preview": "tsx tools/foundation/runtime-preview-plan-benchmark.ts",
     "benchmark:editor-interaction": "VIZ_PERFORMANCE=1 VIZ_PERFORMANCE_REPORT=.artifacts/performance/v2-simple-example.json playwright test --config playwright.performance.config.ts",
+    "benchmark:workspace-resize": "VIZ_WORKSPACE_RESIZE=1 playwright test --config playwright.performance.config.ts --grep \"authoring workspace\"",
     "benchmark:artifact-container": "tsx tools/foundation/measure-audio-artifact-container.ts",
     "compare:runtime-performance": "tsx tools/foundation/compare-performance-recordings-cli.ts",
     "parity:validate": "node tools/foundation/validate-v1-v2-parity-matrix.mjs",

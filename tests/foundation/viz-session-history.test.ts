@@ -125,4 +125,91 @@ describe('VizSession history', () => {
       ]?.nodes.some((node) => node.id === 'custom-node'),
     ).toBe(false);
   });
+
+  it('applies complete presets and resets settings plus graphs as one history operation', () => {
+    const { project, layerId } = buildProject();
+    const parameterId = `${layerId}:size`;
+
+    vizSessionActions.project.importWorkingProject(project);
+    vizSessionActions.project.updateLayerValue(layerId, ['size'], 4.2);
+    vizSessionActions.graph.createNetworkForParameter(parameterId, 'number');
+
+    vizSessionActions.project.applyLayerPreset(layerId, {
+      name: 'Partial preset proof',
+      values: { size: 2.4 },
+    });
+    expect(
+      vizSessionActions.project.exportWorkingProject().layers[0]?.settings,
+    ).toEqual({
+      color: '#FF00FF',
+      size: 2.4,
+      rotationSpeedX: 1,
+      rotationSpeedY: 1,
+    });
+
+    vizSessionActions.project.updateLayerValue(layerId, ['color'], '#123456');
+    vizSessionActions.project.resetLayer(layerId);
+    const reset = vizSessionActions.project.exportWorkingProject();
+    expect(reset.layers[0]?.settings).toEqual({
+      color: '#FF00FF',
+      size: 1.5,
+      rotationSpeedX: 1,
+      rotationSpeedY: 1,
+    });
+    expect(reset.graphs).toEqual([]);
+    expect(reset.layers[0]?.inputs).toEqual({});
+
+    vizSessionActions.history.undo();
+    const restored = vizSessionActions.project.exportWorkingProject();
+    expect(restored.layers[0]?.settings).toMatchObject({
+      color: '#123456',
+      size: 2.4,
+    });
+    expect(restored.graphs?.map((graph) => graph.id)).toContain(parameterId);
+    expect(restored.layers[0]?.inputs?.size).toMatchObject({
+      kind: 'graph-output',
+      graphId: parameterId,
+    });
+
+    vizSessionActions.history.redo();
+    expect(vizSessionActions.project.exportWorkingProject().graphs).toEqual([]);
+  });
+
+  it('restores complete create, duplicate, reorder, and remove commands', () => {
+    const comp = CompDefinitionMap.get('Simple Cube');
+    if (!comp) {
+      throw new Error('Simple Cube component definition not found');
+    }
+
+    vizSessionActions.project.importWorkingProject(createTestProject());
+    vizSessionActions.project.addLayer(comp);
+    const [createdId] =
+      vizSessionActions.project.exportWorkingProject().layerOrder;
+    expect(createdId).toBeDefined();
+
+    vizSessionActions.project.duplicateLayer(createdId!);
+    const duplicatedProject = vizSessionActions.project.exportWorkingProject();
+    const duplicateId = duplicatedProject.layerOrder.find(
+      (layerId) => layerId !== createdId,
+    );
+    expect(duplicateId).toBeDefined();
+
+    vizSessionActions.project.reorderLayers(duplicateId!, createdId!);
+    expect(vizSessionActions.project.exportWorkingProject().layerOrder).toEqual(
+      [duplicateId, createdId],
+    );
+    vizSessionActions.history.undo();
+    expect(vizSessionActions.project.exportWorkingProject().layerOrder).toEqual(
+      [createdId, duplicateId],
+    );
+
+    vizSessionActions.project.removeLayer(duplicateId!);
+    expect(vizSessionActions.project.exportWorkingProject().layerOrder).toEqual(
+      [createdId],
+    );
+    vizSessionActions.history.undo();
+    expect(vizSessionActions.project.exportWorkingProject().layerOrder).toEqual(
+      [createdId, duplicateId],
+    );
+  });
 });

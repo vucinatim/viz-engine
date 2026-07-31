@@ -2189,3 +2189,40 @@
   - recorded the controlled screenshots, metric meanings, overhead results,
     assumptions, browser boundaries, and validation in
     `docs/parity/evidence/2026-07-31-goal-three-profiler-and-performance-statistics.md`
+- completed the Goal Three authoring-workspace checkpoint:
+  - persisted both editor panel groups behind versioned local layout identities
+    and added accessible, visibly active divider affordances
+  - added one UI-only resize coordinator so panel CSS stays continuous while
+    WebGL buffers, waveforms, and Rhythm Lab canvases resize once on release
+  - measured the fixed-device 30-step shell resize at 7.00 ms median,
+    12.80 ms p95, and 60.70 ms maximum active interval
+  - consolidated playback, history, Save As, fullscreen, and graph clipboard
+    bindings behind one exact-modifier, focus-safe keyboard dispatcher
+  - removed the independent playback key listener and proved text entry does
+    not mutate the project or toggle playback
+  - reproduced and fixed timestamp layer-ID collisions with UUID identity
+  - aligned sortable registration with visible layer order and proved real
+    pointer reorder, undo, persistence order, duplicate, delete, and redo
+  - introduced a canonical reset-layer command that restores defaults,
+    removes stale graphs/bindings, reconstructs default graphs, and groups as
+    one history operation
+  - made partial presets complete from component defaults and removed stale
+    local preset-selection presentation
+  - propagated transient/commit/cancel callbacks into nested list settings so
+    continuous child controls retain the live-value architecture
+  - replaced false scoped-history copy with truthful unified chronological
+    history and focused-editor feedback
+  - added a headed Chromium journey covering continuous resize, reload
+    persistence, focus safety, commands, menu capability states, layer DnD,
+    preset/reset, and history context with no diagnostics
+  - manually calibrated the expanded authoring workspace at 1600 × 1000 and
+    captured the exact evidence artifact
+  - advanced seven parity rows to verified, leaving 18 verified, 24 partial,
+    zero gaps, and zero unaudited rows
+  - recorded architecture, assumptions, validation, screenshot, and honest
+    remaining boundaries in
+    `docs/parity/evidence/2026-07-31-goal-three-authoring-workspace.md`
+  - passed the complete `pnpm check:foundation` gate with 57 Vitest files / 263
+    tests, 13 active headed Chromium journeys plus 1 ordinary-gate opt-in skip,
+    all 17 package builds, the studio production build, and both consumer
+    smokes

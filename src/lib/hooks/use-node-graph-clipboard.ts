@@ -130,13 +130,13 @@ export const useNodeGraphClipboard = ({
     shortcuts: [
       {
         key: 'c',
-        ctrl: true,
+        mod: true,
         callback: copySelectedNodes,
         enabled,
       },
       {
         key: 'v',
-        ctrl: true,
+        mod: true,
         callback: () => {
           const viewport = reactFlowInstance.current?.getViewport();
           pasteNodesAtPosition(
@@ -152,7 +152,7 @@ export const useNodeGraphClipboard = ({
       },
       {
         key: 'd',
-        ctrl: true,
+        mod: true,
         callback: duplicateSelectedNodes,
         enabled,
       },

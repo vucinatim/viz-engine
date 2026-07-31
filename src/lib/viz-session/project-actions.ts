@@ -42,6 +42,26 @@ export interface StudioLayerPreset {
   networks?: Record<string, string>;
 }
 
+const isSettingRecord = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
+
+const mergeSettingValues = (
+  defaults: Record<string, unknown>,
+  overrides: Record<string, unknown>,
+): Record<string, unknown> =>
+  Object.fromEntries(
+    Object.entries({ ...defaults, ...overrides }).map(([key, value]) => {
+      const defaultValue = defaults[key];
+      const overrideValue = overrides[key];
+      return [
+        key,
+        isSettingRecord(defaultValue) && isSettingRecord(overrideValue)
+          ? mergeSettingValues(defaultValue, overrideValue)
+          : structuredClone(value),
+      ];
+    }),
+  );
+
 export const createStudioProjectActions = ({
   host,
   componentRegistry,
@@ -302,6 +322,37 @@ export const createStudioProjectActions = ({
         duplicateNetworks(source, layer);
       });
     },
+    resetLayer(layerId: string) {
+      ensureInitialized();
+      const layer = getState().workingProject.layers.find(
+        (candidate) => candidate.id === layerId,
+      );
+      const comp = layer ? resolveEditorComp(layer) : undefined;
+      if (!layer || !comp) {
+        return;
+      }
+
+      const resetLayer: VizLayer = {
+        ...layer,
+        settings: structuredClone(comp.defaultValues),
+        inputs: Object.fromEntries(
+          Object.entries(layer.inputs ?? {}).filter(
+            ([, input]) => input.kind !== 'graph-output',
+          ),
+        ),
+      };
+
+      runHistoryGroup(() => {
+        removeNetworks(layer);
+        applyActions([
+          {
+            type: 'layer.replace',
+            payload: { layerId, layer: resetLayer },
+          },
+        ]);
+        createDefaultNetworks(resetLayer);
+      });
+    },
     reorderLayers(activeId: string, overId: string) {
       ensureInitialized();
       if (activeId === overId) {
@@ -513,7 +564,10 @@ export const createStudioProjectActions = ({
               layerId,
               layer: {
                 ...layer,
-                settings: structuredClone(preset.values),
+                settings: mergeSettingValues(
+                  resolveEditorComp(layer)?.defaultValues ?? {},
+                  preset.values,
+                ),
               },
             },
           },

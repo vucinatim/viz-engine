@@ -1,6 +1,5 @@
 import editorControl from '@/lib/editor-control';
 import useAudioEngine from '@/lib/hooks/use-audio-engine';
-import useKeypress from '@/lib/hooks/use-keypress';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import { getVisualTime } from '@/lib/utils/audio-time';
 import { useVizSessionSelector, vizSessionActions } from '@/lib/viz-session';
@@ -66,7 +65,6 @@ const AudioPanel = () => {
   const playPause = () => {
     editorControl.preview.togglePlayback();
   };
-  useKeypress('Space', playPause);
 
   useEffect(() => {
     const audioElement = audioElementRef.current;

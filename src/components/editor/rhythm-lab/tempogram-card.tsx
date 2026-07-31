@@ -1,6 +1,7 @@
 import { PipelineStageDefinition } from '@/lib/rhythm-lab/analysis-graph';
 import { STAGE_COLORS } from '@/lib/rhythm-lab/stage-colors';
 import useRhythmLabStore from '@/lib/stores/rhythm-lab-store';
+import { workspaceResizeCoordinator } from '@/lib/workspace-resize-coordinator';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import StageCard from './stage-card';
 import StageParams from './stage-params';
@@ -115,9 +116,14 @@ const TempogramCard = ({ stage }: TempogramCardProps) => {
     draw();
     drawRef.current = draw;
 
-    const observer = new ResizeObserver(() => draw());
+    const observer = new ResizeObserver(() =>
+      workspaceResizeCoordinator.schedule(draw),
+    );
     observer.observe(canvas);
-    return () => observer.disconnect();
+    return () => {
+      workspaceResizeCoordinator.cancel(draw);
+      observer.disconnect();
+    };
   }, [tempogramCurve]);
 
   useEffect(() => {
