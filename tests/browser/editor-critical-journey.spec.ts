@@ -211,6 +211,35 @@ const isKnownBrowserDiagnostic = (message: string) =>
   message.includes('GL Driver Message') &&
   message.includes('GPU stall due to ReadPixels');
 
+const readRuntimeCanvasSignal = (page: Page) =>
+  page.evaluate(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>(
+      'canvas[data-runtime-preview-canvas]',
+    );
+    if (!canvas || canvas.width === 0 || canvas.height === 0) {
+      return 0;
+    }
+    const sample = document.createElement('canvas');
+    sample.width = 64;
+    sample.height = 36;
+    const context = sample.getContext('2d', { willReadFrequently: true });
+    if (!context) {
+      return 0;
+    }
+    context.drawImage(canvas, 0, 0, sample.width, sample.height);
+    const pixels = context.getImageData(0, 0, sample.width, sample.height).data;
+    let signal = 0;
+    for (let index = 0; index < pixels.length; index += 4) {
+      if (
+        pixels[index + 3]! > 8 &&
+        pixels[index]! + pixels[index + 1]! + pixels[index + 2]! > 12
+      ) {
+        signal += 1;
+      }
+    }
+    return signal;
+  });
+
 test('preserves canonical editing, history, graph, and transport behavior', async ({
   page,
 }) => {
@@ -293,6 +322,77 @@ test('preserves canonical editing, history, graph, and transport behavior', asyn
     path: '.artifacts/playwright/editor-critical-journey.png',
     fullPage: true,
   });
+  expect(diagnostics).toEqual([]);
+});
+
+test('discovers components and visibly loads every bundled sample', async ({
+  page,
+}) => {
+  await waitForEditor(page);
+  const diagnostics: string[] = [];
+  page.on('console', (message) => {
+    if (
+      (message.type() === 'error' || message.type() === 'warning') &&
+      !isKnownBrowserDiagnostic(message.text())
+    ) {
+      diagnostics.push(`${message.type()}: ${message.text()}`);
+    }
+  });
+  page.on('pageerror', (error) =>
+    diagnostics.push(`pageerror: ${error.message}`),
+  );
+
+  const before = await readEditorSnapshot(page);
+  const search = page.getByTestId('add-layer-search');
+  await search.getByRole('combobox').click();
+  await page
+    .getByPlaceholder('Search visual compositions...')
+    .fill('Curve Spectrum');
+  const curveOption = page
+    .locator('[cmdk-item]')
+    .filter({ hasText: 'Curve Spectrum' });
+  await expect(curveOption).toHaveCount(1);
+  await expect(curveOption).toBeVisible();
+  await page.keyboard.press('Enter');
+
+  await expect(page.getByTestId('layer-card')).toHaveCount(4);
+  const addedCard = page.getByTestId('layer-card').first();
+  await expect(
+    addedCard.getByRole('heading', { name: /Curve Spectrum/ }),
+  ).toBeVisible();
+  await expect(
+    addedCard.getByRole('button', { name: 'Settings' }),
+  ).toHaveAttribute('aria-expanded', 'true');
+  const afterAdd = await readEditorSnapshot(page);
+  expect(afterAdd.revision).toBe(before.revision + 1);
+  expect(afterAdd.layerIds).toHaveLength(before.layerIds.length + 1);
+
+  const samples = [
+    { id: 'simple-example', layers: 3 },
+    { id: 'layer-blending-showcase', layers: 4 },
+    { id: 'light-tunnel', layers: 2 },
+  ] as const;
+  for (const sample of samples) {
+    await page.getByRole('menuitem', { name: 'Examples', exact: true }).click();
+    await page.getByRole('menuitem', { name: sample.id }).click();
+    await expect(page.getByTestId('layer-card')).toHaveCount(sample.layers);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            window.__vizEditorDebug?.editorControl.project.exportWorkingProject()
+              .projectId,
+        ),
+      )
+      .toBe(sample.id);
+    await expect
+      .poll(() => readRuntimeCanvasSignal(page), { timeout: 10_000 })
+      .toBeGreaterThan(0);
+  }
+
+  await expect(page.locator('canvas[data-runtime-preview-canvas]')).toHaveCount(
+    1,
+  );
   expect(diagnostics).toEqual([]);
 });
 

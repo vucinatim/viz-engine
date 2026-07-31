@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import type { ReactNode } from 'react';
 import { useRef, useState } from 'react';
 import { Button } from './button';
 import {
@@ -11,30 +12,31 @@ import {
 } from './command';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 
-export interface GroupedOption {
+export interface GroupedOption<T> {
   groupLabel: string;
-  items: any[];
+  items: readonly T[];
 }
 
-interface SearchSelectProps {
-  trigger: React.ReactNode;
+interface SearchSelectProps<T> {
+  trigger: ReactNode;
   triggerClassName?: string;
-  options?: any[];
-  groupedOptions?: GroupedOption[];
-  renderOption: (option: any, isActive: boolean) => React.ReactNode;
-  onSelect: (option: any) => void;
-  extractKey: (option: any) => string;
+  options?: readonly T[];
+  groupedOptions?: readonly GroupedOption<T>[];
+  renderOption: (option: T, isActive: boolean) => ReactNode;
+  onSelect: (option: T) => void;
+  extractKey: (option: T) => string;
+  getSearchTerms?: (option: T) => readonly string[];
   placeholder?: string;
   noItemsMessage?: string;
   dropdownWidth?: number | string;
   align?: 'left' | 'right';
   keepOpenOnSelect?: boolean;
-  renderPreview?: (option: any, isHovered: boolean) => React.ReactNode;
-  onHover?: (option: any) => void;
-  isActive?: (option: any) => boolean;
+  renderPreview?: (option: T, isHovered: boolean) => ReactNode;
+  onHover?: (option: T) => void;
+  isActive?: (option: T) => boolean;
 }
 
-const SearchSelect = ({
+const SearchSelect = <T,>({
   trigger,
   triggerClassName,
   options,
@@ -42,6 +44,7 @@ const SearchSelect = ({
   onSelect,
   renderOption,
   extractKey,
+  getSearchTerms,
   placeholder,
   noItemsMessage,
   dropdownWidth,
@@ -50,7 +53,7 @@ const SearchSelect = ({
   renderPreview,
   onHover,
   isActive,
-}: SearchSelectProps) => {
+}: SearchSelectProps<T>) => {
   const [open, setOpen] = useState(false);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const layoutRef = useRef<HTMLDivElement>(null);
@@ -65,8 +68,44 @@ const SearchSelect = ({
 
   // Determine if we're using grouped or flat options
   const isGrouped = !!groupedOptions;
-  const flatOptions = options || [];
-  const groups = groupedOptions || [];
+  const flatOptions = options ?? [];
+  const groups = groupedOptions ?? [];
+
+  const renderItem = (option: T, index: number) => {
+    const key = extractKey(option);
+    const isHovered = hoveredKey === key;
+    const isOptionActive = isActive?.(option) ?? false;
+    return (
+      <CommandItem
+        key={`${key}-${index}`}
+        value={key}
+        keywords={
+          getSearchTerms === undefined ? undefined : [...getSearchTerms(option)]
+        }
+        onMouseEnter={() => {
+          setHoveredKey(key);
+          onHover?.(option);
+        }}
+        onMouseLeave={() => setHoveredKey(null)}
+        onSelect={() => {
+          onSelect(option);
+          if (!keepOpenOnSelect) {
+            setOpen(false);
+          }
+        }}
+        className={cn(
+          'transition-colors',
+          isOptionActive && 'bg-animation-purple/10',
+        )}>
+        <div className="flex-1">{renderOption(option, isOptionActive)}</div>
+        {renderPreview && (
+          <div className="ml-3 shrink-0">
+            {renderPreview(option, isHovered)}
+          </div>
+        )}
+      </CommandItem>
+    );
+  };
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -104,78 +143,12 @@ const SearchSelect = ({
             {isGrouped ? (
               groups.map((group, groupIndex) => (
                 <CommandGroup key={groupIndex} heading={group.groupLabel}>
-                  {group.items.map((option, index) => {
-                    const key = extractKey(option);
-                    const isHovered = hoveredKey === key;
-                    const isOptionActive = isActive ? isActive(option) : false;
-                    return (
-                      <CommandItem
-                        key={`${key}-${index}`}
-                        value={key}
-                        onMouseEnter={() => {
-                          setHoveredKey(key);
-                          onHover?.(option);
-                        }}
-                        onMouseLeave={() => setHoveredKey(null)}
-                        onSelect={() => {
-                          onSelect(option);
-                          if (!keepOpenOnSelect) {
-                            setOpen(false);
-                          }
-                        }}
-                        className={cn(
-                          'transition-colors',
-                          isOptionActive && 'bg-animation-purple/10',
-                        )}>
-                        <div className="flex-1">
-                          {renderOption(option, isOptionActive)}
-                        </div>
-                        {renderPreview && (
-                          <div className="ml-3 shrink-0">
-                            {renderPreview(option, isHovered)}
-                          </div>
-                        )}
-                      </CommandItem>
-                    );
-                  })}
+                  {group.items.map(renderItem)}
                 </CommandGroup>
               ))
             ) : (
               <CommandGroup heading="Suggestions">
-                {flatOptions.map((option, index) => {
-                  const key = extractKey(option);
-                  const isHovered = hoveredKey === key;
-                  const isOptionActive = isActive ? isActive(option) : false;
-                  return (
-                    <CommandItem
-                      key={`${key}-${index}`}
-                      value={key}
-                      onMouseEnter={() => {
-                        setHoveredKey(key);
-                        onHover?.(option);
-                      }}
-                      onMouseLeave={() => setHoveredKey(null)}
-                      onSelect={() => {
-                        onSelect(option);
-                        if (!keepOpenOnSelect) {
-                          setOpen(false);
-                        }
-                      }}
-                      className={cn(
-                        'transition-colors',
-                        isOptionActive && 'bg-animation-purple/10',
-                      )}>
-                      <div className="flex-1">
-                        {renderOption(option, isOptionActive)}
-                      </div>
-                      {renderPreview && (
-                        <div className="ml-3 shrink-0">
-                          {renderPreview(option, isHovered)}
-                        </div>
-                      )}
-                    </CommandItem>
-                  );
-                })}
+                {flatOptions.map(renderItem)}
               </CommandGroup>
             )}
           </CommandList>

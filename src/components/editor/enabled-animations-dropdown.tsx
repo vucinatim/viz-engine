@@ -12,6 +12,13 @@ import SearchSelect from '../ui/search-select';
 import AnimationItem from './animation-item';
 import LazyNodeNetworkPreview from './lazy-node-network-preview';
 
+type EnabledAnimation = ReturnType<typeof destructureParameterId> & {
+  parameterId: string;
+  graphId: string;
+  layerName: string;
+  layerId: string;
+};
+
 /**
  * Dropdown component for viewing and navigating enabled animations
  * Shows visual previews of node networks for quick recognition
@@ -27,14 +34,14 @@ const EnabledAnimationsDropdown = () => {
   const layers = useProjectedLayers();
 
   // Memoize the click handler
-  const handleSelect = useCallback((animation: any) => {
+  const handleSelect = useCallback((animation: EnabledAnimation) => {
     editorControl.nodeEditor.openNetwork(animation.parameterId);
     editorControl.nodeEditor.setShouldForceShowOverlay(true);
   }, []);
 
   // Check if animation is currently active
   const isActiveAnimation = useCallback(
-    (animation: any) => {
+    (animation: EnabledAnimation) => {
       return openNetwork === animation.graphId;
     },
     [openNetwork],
@@ -77,8 +84,8 @@ const EnabledAnimationsDropdown = () => {
   }, [enabledParameterIds, layers, parameterGraphBindings]);
 
   // Memoize render functions to prevent recreating them
-  const renderOption = useCallback((animation: any, isActive: boolean) => {
-    return (
+  const renderOption = useCallback(
+    (animation: EnabledAnimation, isActive: boolean) => (
       <AnimationItem
         displayName={animation.displayName}
         layerName={animation.layerName}
@@ -86,23 +93,29 @@ const EnabledAnimationsDropdown = () => {
         parameterId={animation.parameterId}
         isActive={isActive}
       />
-    );
-  }, []);
+    ),
+    [],
+  );
 
-  const renderPreview = useCallback((animation: any, isHovered: boolean) => {
-    return (
+  const renderPreview = useCallback(
+    (animation: EnabledAnimation, isHovered: boolean) => (
       <LazyNodeNetworkPreview
         parameterId={animation.graphId}
         isHovered={isHovered}
         width={120}
         height={68}
       />
-    );
-  }, []);
+    ),
+    [],
+  );
 
-  const extractKey = useCallback(
-    (animation: any) =>
-      `${animation.displayName} ${animation.fullPath} ${animation.layerName} ${animation.componentName}`,
+  const getSearchTerms = useCallback(
+    (animation: EnabledAnimation) => [
+      animation.displayName,
+      animation.fullPath,
+      animation.layerName,
+      animation.componentName,
+    ],
     [],
   );
 
@@ -135,7 +148,8 @@ const EnabledAnimationsDropdown = () => {
         triggerClassName="h-auto border-0 bg-transparent px-3 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground"
         dropdownWidth={360}
         groupedOptions={groupedAnimations}
-        extractKey={extractKey}
+        extractKey={(animation) => animation.parameterId}
+        getSearchTerms={getSearchTerms}
         renderOption={renderOption}
         renderPreview={renderPreview}
         noItemsMessage="No active animations"
