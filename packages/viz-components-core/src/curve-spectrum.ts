@@ -1,7 +1,8 @@
 import type {
   VizComponentImplementation,
-  VizRenderCircleNode,
   VizRenderGroupNode,
+  VizRenderPointCloudNode,
+  VizRenderPolygonNode,
   VizRenderPolylineNode,
   VizRenderRectNode,
   VizRenderTextNode,
@@ -31,7 +32,6 @@ const computeFrequencyPoints = ({
   spectrum,
   sampleRate,
   scaleY,
-  smoothing,
 }: {
   width: number;
   height: number;
@@ -40,7 +40,6 @@ const computeFrequencyPoints = ({
   spectrum: number[];
   sampleRate: number;
   scaleY: number;
-  smoothing: boolean;
 }): Point[] => {
   if (spectrum.length === 0 || width <= 0 || height <= 0) {
     return [];
@@ -50,27 +49,90 @@ const computeFrequencyPoints = ({
   const freqRatio = Math.max(1.0001, maxFrequency / Math.max(minFrequency, 1));
   const nyquist = Math.max(sampleRate / 2, 1);
   const indexScale = spectrum.length / nyquist;
+  const sampleCount = Math.min(Math.ceil(width), spectrum.length);
 
-  let lastY = height;
-
-  for (let x = 0; x < width; x += 1) {
+  for (let sampleIndex = 0; sampleIndex < sampleCount; sampleIndex += 1) {
+    const x =
+      sampleCount === 1 ? 0 : (sampleIndex / (sampleCount - 1)) * (width - 1);
     const freq = minFrequency * Math.pow(freqRatio, x / width);
     const index = Math.min(spectrum.length - 1, Math.floor(freq * indexScale));
     const value = spectrum[index] ?? 0;
     const normalized = (value / 255) * height * scaleY;
     const y = height - normalized;
 
-    if (smoothing) {
-      if (lastY !== y) {
-        points.push({ x, y });
-      }
-      lastY = y;
-    } else {
-      points.push({ x, y });
-    }
+    points.push({ x, y });
   }
 
   return points;
+};
+
+const createQuadraticCurvePoints = (points: Point[]): Point[] => {
+  if (points.length < 2) {
+    return points;
+  }
+
+  const curve: Point[] = [points[0]!];
+  let start = points[0]!;
+  const subdivisions = 2;
+
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const control = points[index]!;
+    const next = points[index + 1]!;
+    const end = {
+      x: (control.x + next.x) / 2,
+      y: (control.y + next.y) / 2,
+    };
+    for (let step = 1; step <= subdivisions; step += 1) {
+      const t = step / subdivisions;
+      const inverse = 1 - t;
+      curve.push({
+        x:
+          inverse * inverse * start.x +
+          2 * inverse * t * control.x +
+          t * t * end.x,
+        y:
+          inverse * inverse * start.y +
+          2 * inverse * t * control.y +
+          t * t * end.y,
+      });
+    }
+    start = end;
+  }
+
+  return curve;
+};
+
+const createCurveArea = (
+  curvePoints: Point[],
+  baselineY: number,
+): {
+  points: Point[];
+  triangleIndices: number[];
+} => {
+  const pointCount = curvePoints.length;
+  const baselinePoints = curvePoints
+    .toReversed()
+    .map((point) => ({ x: point.x, y: baselineY }));
+  const indices: number[] = [];
+
+  for (let index = 0; index < pointCount - 1; index += 1) {
+    const nextIndex = index + 1;
+    const baselineIndex = pointCount * 2 - 1 - index;
+    const nextBaselineIndex = baselineIndex - 1;
+    indices.push(
+      index,
+      baselineIndex,
+      nextIndex,
+      nextIndex,
+      baselineIndex,
+      nextBaselineIndex,
+    );
+  }
+
+  return {
+    points: [...curvePoints, ...baselinePoints],
+    triangleIndices: indices,
+  };
 };
 
 export const curveSpectrumComponent: VizComponentImplementation = {
@@ -125,6 +187,10 @@ export const curveSpectrumComponent: VizComponentImplementation = {
     const smoothing = Boolean(line.smoothing ?? true);
     const lineColor = asString(line.color, '#ffffff');
     const lineThickness = Math.max(0, asNumber(line.thickness, 1));
+    const gradientHeight = Math.min(
+      1,
+      Math.max(0, asNumber(line.gradientHeight, 0.8)),
+    );
     const pointColor = asString(points.pointColor, '#ffffff');
     const pointSize = Math.max(0, asNumber(points.pointSize, 3));
     const gridColor = asString(grid.color, 'rgba(204, 204, 204, 0.5)');
@@ -198,14 +264,37 @@ export const curveSpectrumComponent: VizComponentImplementation = {
       spectrum,
       sampleRate,
       scaleY,
-      smoothing,
     });
+    const curvePoints = smoothing
+      ? createQuadraticCurvePoints(spectrumPoints)
+      : spectrumPoints;
+
+    if (lineThickness > 0 && gradientHeight > 0 && curvePoints.length > 1) {
+      const curveArea = createCurveArea(curvePoints, viewport.height + 5);
+      children.push({
+        kind: 'polygon',
+        id: `${layer.id}-curve-area`,
+        points: curveArea.points,
+        triangleIndices: curveArea.triangleIndices,
+        fillGradient: {
+          from: { x: 0, y: viewport.height },
+          to: {
+            x: 0,
+            y: viewport.height - gradientHeight * viewport.height,
+          },
+          stops: [
+            { offset: 0, color: 'transparent' },
+            { offset: 1, color: lineColor, opacity: 0.5 },
+          ],
+        },
+      } satisfies VizRenderPolygonNode);
+    }
 
     if (lineThickness > 0) {
       children.push({
         kind: 'polyline',
         id: `${layer.id}-curve`,
-        points: spectrumPoints,
+        points: curvePoints,
         lineCap: 'round',
         lineJoin: 'round',
         style: {
@@ -216,21 +305,15 @@ export const curveSpectrumComponent: VizComponentImplementation = {
     }
 
     if (pointSize > 0) {
-      children.push(
-        ...spectrumPoints.map(
-          (point, index) =>
-            ({
-              kind: 'circle',
-              id: `${layer.id}-point-${index}`,
-              cx: point.x,
-              cy: point.y,
-              r: pointSize,
-              style: {
-                fill: pointColor,
-              },
-            }) satisfies VizRenderCircleNode,
-        ),
-      );
+      children.push({
+        kind: 'point-cloud',
+        id: `${layer.id}-points`,
+        points: spectrumPoints,
+        radius: pointSize,
+        style: {
+          fill: pointColor,
+        },
+      } satisfies VizRenderPointCloudNode);
     }
 
     return {

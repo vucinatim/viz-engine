@@ -173,6 +173,12 @@ describe('Editor runtime preview planning', () => {
     expect(
       node.children.filter((child) => child.kind === 'polyline'),
     ).toHaveLength(1);
+    const area = node.children.find((child) => child.kind === 'polygon');
+    expect(area?.triangleIndices?.length).toBeGreaterThan(0);
+    expect(
+      node.children.filter((child) => child.kind === 'point-cloud'),
+    ).toHaveLength(1);
+    expect(node.children.some((child) => child.kind === 'circle')).toBe(false);
     expect(node.children.some((child) => child.kind === 'group')).toBe(false);
     expect(renderPlan.issues).toEqual([]);
   });

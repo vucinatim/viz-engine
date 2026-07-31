@@ -50,6 +50,8 @@ declare global {
 }
 
 const PERFORMANCE_ENABLED = process.env.VIZ_PERFORMANCE === '1';
+const PERFORMANCE_WORKLOAD =
+  process.env.VIZ_PERFORMANCE_WORKLOAD ?? 'simple-example';
 const ITERATIONS = Math.max(
   4,
   Number.parseInt(process.env.VIZ_PERFORMANCE_ITERATIONS ?? '20', 10),
@@ -101,6 +103,31 @@ const waitForEditor = async (page: Page): Promise<void> => {
       ),
     )
     .toBe(3);
+
+  if (PERFORMANCE_WORKLOAD === 'curve-spectrum') {
+    await page.getByText('Add New Layer', { exact: true }).click();
+    await page
+      .getByPlaceholder('Search visual compositions...')
+      .fill('Curve Spectrum');
+    await page.getByText('Curve Spectrum', { exact: true }).click();
+    await expect(page.getByTestId('layer-card')).toHaveCount(4);
+    await expect
+      .poll(async () =>
+        page.evaluate(
+          () =>
+            window.__vizEditorDebug?.editorControl.preview.inspectRuntimePreview()
+              .lastRenderedLayerIds.length ?? 0,
+        ),
+      )
+      .toBe(4);
+    return;
+  }
+
+  if (PERFORMANCE_WORKLOAD !== 'simple-example') {
+    throw new Error(
+      `Unsupported VIZ_PERFORMANCE_WORKLOAD "${PERFORMANCE_WORKLOAD}".`,
+    );
+  }
 };
 
 const getProjectRevision = (page: Page): Promise<number> =>
@@ -174,7 +201,17 @@ const armLiveInteractionSample = async (page: Page): Promise<void> => {
         });
       const timeout = window.setTimeout(() => {
         cleanup();
-        reject(new Error('Timed out measuring a live interaction sample.'));
+        reject(
+          new Error(
+            `Timed out measuring a live interaction sample (${JSON.stringify({
+              inputObserved: inputAt !== undefined,
+              transientObserved: transientAt !== undefined,
+              beforeCycle,
+              currentCycle:
+                debug.editorControl.preview.inspectRuntimePreview().renderCycle,
+            })}).`,
+          ),
+        );
       }, timeoutMilliseconds);
     });
   }, SAMPLE_TIMEOUT_MILLISECONDS);
@@ -500,6 +537,7 @@ test('records fixed-device editor interaction performance', async ({
   const valueInput = speedField.locator('input[type="number"]');
   await expect(slider).toBeVisible();
   await expect(valueInput).toBeVisible();
+  await slider.scrollIntoViewIfNeeded();
 
   const sliderLiveSamples: LiveInteractionSample[] = [];
   const sliderCommitSamples: CommitInteractionSample[] = [];
@@ -636,6 +674,7 @@ test('records fixed-device editor interaction performance', async ({
     },
     fixture: {
       ...identity,
+      workload: PERFORMANCE_WORKLOAD,
       warmupMilliseconds: WARMUP_MILLISECONDS,
       frameSampleMilliseconds: FRAME_SAMPLE_MILLISECONDS,
       interactionIterations: ITERATIONS,
@@ -708,7 +747,9 @@ test('records fixed-device editor interaction performance', async ({
       graphNodeMove: nodeCommitSamples,
     },
     scope:
-      'Fixed-device simple-example interaction baseline. V1 comparison and broader workloads are recorded separately.',
+      PERFORMANCE_WORKLOAD === 'simple-example'
+        ? 'Fixed-device simple-example interaction baseline. V1 comparison and broader workloads are recorded separately.'
+        : `Fixed-device ${PERFORMANCE_WORKLOAD} interaction workload.`,
   };
 
   const reportJson = `${JSON.stringify(report, null, 2)}\n`;

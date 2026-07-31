@@ -1,0 +1,595 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-07-31T11:38:36.664Z",
+  "environment": {
+    "browserName": "chromium",
+    "browserVersion": "151.0.7922.34",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.7922.34 Safari/537.36",
+    "headless": false,
+    "platform": "darwin",
+    "release": "25.5.0",
+    "architecture": "arm64",
+    "cpu": "Apple M1 Pro",
+    "viewport": {
+      "width": 1600,
+      "height": 1000,
+      "devicePixelRatio": 1
+    }
+  },
+  "fixture": {
+    "projectId": "simple-example",
+    "projectName": "Simple Example",
+    "projectRevision": 3,
+    "layerCount": 4,
+    "graphCount": 3,
+    "componentIds": [
+      "noise-shader",
+      "simple-cube",
+      "fullscreen-shader",
+      "curve-spectrum"
+    ],
+    "assetIds": [],
+    "artifactIds": [],
+    "audioSourceKind": null,
+    "renderedLayerIds": [
+      "layer-Noise Shader-1760552438958",
+      "layer-Simple Cube-1760551531201",
+      "layer-Fullscreen Shader-1760552636719",
+      "layer-Curve Spectrum-1785497904344"
+    ],
+    "graphParameterId": "layer-Simple Cube-1760551531201:color",
+    "graphId": "layer-Simple Cube-1760551531201:color",
+    "workload": "curve-spectrum",
+    "warmupMilliseconds": 3000,
+    "frameSampleMilliseconds": 5000,
+    "interactionIterations": 10
+  },
+  "framePacing": {
+    "display": {
+      "count": 599,
+      "meanMs": 8.36126878130217,
+      "minMs": 7.300000000000182,
+      "medianMs": 8.300000000000182,
+      "p95Ms": 9.199999999998909,
+      "p99Ms": 9.399999999999636,
+      "maxMs": 17,
+      "estimatedRefreshRateHz": 120.48192771084074,
+      "longFrameThresholdMs": 25,
+      "longFrameCount": 0
+    },
+    "runtime": {
+      "count": 301,
+      "meanMs": 16.670431893677808,
+      "minMs": 5.5,
+      "medianMs": 16.700000002980232,
+      "p95Ms": 17.700000002980232,
+      "p99Ms": 22.799999997019768,
+      "maxMs": 28.599999994039536,
+      "longFrameThresholdMs": 25,
+      "longFrameCount": 2
+    }
+  },
+  "continuousParameter": {
+    "inputToTransient": {
+      "count": 10,
+      "meanMs": 0.2999999985098839,
+      "minMs": 0.19999998807907104,
+      "medianMs": 0.29999999701976776,
+      "p95Ms": 0.4000000059604645,
+      "p99Ms": 0.4000000059604645,
+      "maxMs": 0.5
+    },
+    "inputToRuntime": {
+      "count": 10,
+      "meanMs": 2.8899999976158144,
+      "minMs": 2.5999999940395355,
+      "medianMs": 2.7999999970197678,
+      "p95Ms": 3.0999999940395355,
+      "p99Ms": 3.0999999940395355,
+      "maxMs": 3.4000000059604645
+    },
+    "inputToVisible": {
+      "count": 10,
+      "meanMs": 11.400000001490117,
+      "minMs": 10.099999994039536,
+      "medianMs": 11.200000002980232,
+      "p95Ms": 12,
+      "p99Ms": 12,
+      "maxMs": 14.100000008940697
+    },
+    "releaseToMutation": {
+      "count": 10,
+      "meanMs": 0.34999999701976775,
+      "minMs": 0.20000000298023224,
+      "medianMs": 0.29999999701976776,
+      "p95Ms": 0.5,
+      "p99Ms": 0.5,
+      "maxMs": 0.5999999940395355
+    },
+    "releaseToEventComplete": {
+      "count": 10,
+      "meanMs": 26.85,
+      "minMs": 23.5,
+      "medianMs": 25.799999997019768,
+      "p95Ms": 30.600000008940697,
+      "p99Ms": 30.600000008940697,
+      "maxMs": 32
+    },
+    "releaseToNextDisplay": {
+      "count": 10,
+      "meanMs": 28.27999999821186,
+      "minMs": 24.900000005960464,
+      "medianMs": 27.299999997019768,
+      "p95Ms": 31.900000005960464,
+      "p99Ms": 31.900000005960464,
+      "maxMs": 33.5
+    },
+    "releaseToRuntime": {
+      "count": 10,
+      "meanMs": 29.859999999403954,
+      "minMs": 26.299999997019768,
+      "medianMs": 28.899999991059303,
+      "p95Ms": 33.29999999701977,
+      "p99Ms": 33.29999999701977,
+      "maxMs": 35.20000000298023
+    },
+    "releaseToVisible": {
+      "count": 10,
+      "meanMs": 35.91999999731779,
+      "minMs": 32.5,
+      "medianMs": 34.599999994039536,
+      "p95Ms": 39.29999999701977,
+      "p99Ms": 39.29999999701977,
+      "maxMs": 42.29999999701977
+    }
+  },
+  "graphNodeMove": {
+    "inputToVisible": {
+      "count": 10,
+      "meanMs": 19.909999997913836,
+      "minMs": 13.799999997019768,
+      "medianMs": 21.5,
+      "p95Ms": 22.400000005960464,
+      "p99Ms": 22.400000005960464,
+      "maxMs": 24
+    },
+    "releaseToMutation": {
+      "count": 10,
+      "meanMs": 0.6200000032782554,
+      "minMs": 0.5,
+      "medianMs": 0.6000000089406967,
+      "p95Ms": 0.7000000029802322,
+      "p99Ms": 0.7000000029802322,
+      "maxMs": 0.9000000059604645
+    },
+    "releaseToEventComplete": {
+      "count": 10,
+      "meanMs": 0.19000000208616258,
+      "minMs": 0.10000000894069672,
+      "medianMs": 0.20000000298023224,
+      "p95Ms": 0.20000000298023224,
+      "p99Ms": 0.20000000298023224,
+      "maxMs": 0.29999999701976776
+    },
+    "releaseToNextDisplay": {
+      "count": 10,
+      "meanMs": 29.62000000476837,
+      "minMs": 27.399999991059303,
+      "medianMs": 29.100000008940697,
+      "p95Ms": 31.30000001192093,
+      "p99Ms": 31.30000001192093,
+      "maxMs": 35
+    },
+    "releaseToRuntime": {
+      "count": 10,
+      "meanMs": 31.320000001788138,
+      "minMs": 28.799999997019768,
+      "medianMs": 30.400000005960464,
+      "p95Ms": 33.5,
+      "p99Ms": 33.5,
+      "maxMs": 36.20000000298023
+    },
+    "releaseToVisible": {
+      "count": 10,
+      "meanMs": 37.35000000298023,
+      "minMs": 34,
+      "medianMs": 36.29999999701977,
+      "p95Ms": 40.400000005960464,
+      "p99Ms": 40.400000005960464,
+      "maxMs": 42.70000000298023
+    }
+  },
+  "memory": {
+    "usedJSHeapBytes": 99560429,
+    "totalJSHeapBytes": 159536177,
+    "heapLimitBytes": 4395630592
+  },
+  "diagnostics": [],
+  "rawCommitSamples": {
+    "continuousParameter": [
+      {
+        "releaseToMutationMs": 0.5999999940395355,
+        "releaseToEventCompleteMs": 32,
+        "releaseToNextDisplayMs": 33.5,
+        "releaseToRuntimeMs": 35.20000000298023,
+        "releaseToVisibleMs": 42.29999999701977,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 35.20000000298023,
+            "renderCycle": 490,
+            "timings": {
+              "planMilliseconds": 0.5999999940395355,
+              "attachmentMilliseconds": 1,
+              "totalMilliseconds": 1.5999999940395355
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.29999999701976776,
+        "releaseToEventCompleteMs": 24.600000008940697,
+        "releaseToNextDisplayMs": 26.299999997019768,
+        "releaseToRuntimeMs": 27.900000005960464,
+        "releaseToVisibleMs": 33.70000000298023,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 27.900000005960464,
+            "renderCycle": 494,
+            "timings": {
+              "planMilliseconds": 0.6000000089406967,
+              "attachmentMilliseconds": 1,
+              "totalMilliseconds": 1.6000000089406967
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.29999999701976776,
+        "releaseToEventCompleteMs": 25.099999994039536,
+        "releaseToNextDisplayMs": 26.69999998807907,
+        "releaseToRuntimeMs": 28.299999997019768,
+        "releaseToVisibleMs": 34.599999994039536,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 28.299999997019768,
+            "renderCycle": 498,
+            "timings": {
+              "planMilliseconds": 0.5,
+              "attachmentMilliseconds": 1,
+              "totalMilliseconds": 1.6000000089406967
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.3999999910593033,
+        "releaseToEventCompleteMs": 25.799999997019768,
+        "releaseToNextDisplayMs": 27.299999997019768,
+        "releaseToRuntimeMs": 28.899999991059303,
+        "releaseToVisibleMs": 34.599999994039536,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 28.899999991059303,
+            "renderCycle": 502,
+            "timings": {
+              "planMilliseconds": 0.5,
+              "attachmentMilliseconds": 1,
+              "totalMilliseconds": 1.5999999940395355
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.29999999701976776,
+        "releaseToEventCompleteMs": 30.600000008940697,
+        "releaseToNextDisplayMs": 31.900000005960464,
+        "releaseToRuntimeMs": 33.29999999701977,
+        "releaseToVisibleMs": 39.29999999701977,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 33.29999999701977,
+            "renderCycle": 506,
+            "timings": {
+              "planMilliseconds": 0.3999999910593033,
+              "attachmentMilliseconds": 0.7999999970197678,
+              "totalMilliseconds": 1.3999999910593033
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.29999999701976776,
+        "releaseToEventCompleteMs": 24.799999997019768,
+        "releaseToNextDisplayMs": 26.099999994039536,
+        "releaseToRuntimeMs": 28,
+        "releaseToVisibleMs": 34.5,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 28,
+            "renderCycle": 510,
+            "timings": {
+              "planMilliseconds": 0.6000000089406967,
+              "attachmentMilliseconds": 1.2000000029802322,
+              "totalMilliseconds": 1.9000000059604645
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.5,
+        "releaseToEventCompleteMs": 27.799999997019768,
+        "releaseToNextDisplayMs": 29.099999994039536,
+        "releaseToRuntimeMs": 31,
+        "releaseToVisibleMs": 36.8999999910593,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 31,
+            "renderCycle": 514,
+            "timings": {
+              "planMilliseconds": 0.800000011920929,
+              "attachmentMilliseconds": 1,
+              "totalMilliseconds": 1.9000000059604645
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.29999999701976776,
+        "releaseToEventCompleteMs": 27,
+        "releaseToNextDisplayMs": 28.299999997019768,
+        "releaseToRuntimeMs": 29.5,
+        "releaseToVisibleMs": 35.20000000298023,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 29.5,
+            "renderCycle": 518,
+            "timings": {
+              "planMilliseconds": 0.4000000059604645,
+              "attachmentMilliseconds": 0.7999999970197678,
+              "totalMilliseconds": 1.2000000029802322
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.20000000298023224,
+        "releaseToEventCompleteMs": 23.5,
+        "releaseToNextDisplayMs": 24.900000005960464,
+        "releaseToRuntimeMs": 26.299999997019768,
+        "releaseToVisibleMs": 32.5,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 26.299999997019768,
+            "renderCycle": 522,
+            "timings": {
+              "planMilliseconds": 0.4000000059604645,
+              "attachmentMilliseconds": 0.8999999910593033,
+              "totalMilliseconds": 1.3999999910593033
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.29999999701976776,
+        "releaseToEventCompleteMs": 27.299999997019768,
+        "releaseToNextDisplayMs": 28.700000002980232,
+        "releaseToRuntimeMs": 30.200000002980232,
+        "releaseToVisibleMs": 35.599999994039536,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 30.200000002980232,
+            "renderCycle": 526,
+            "timings": {
+              "planMilliseconds": 0.5,
+              "attachmentMilliseconds": 0.9000000059604645,
+              "totalMilliseconds": 1.4000000059604645
+            }
+          }
+        ]
+      }
+    ],
+    "graphNodeMove": [
+      {
+        "releaseToMutationMs": 0.9000000059604645,
+        "releaseToEventCompleteMs": 0.10000000894069672,
+        "releaseToNextDisplayMs": 29.200000002980232,
+        "releaseToRuntimeMs": 30.700000002980232,
+        "releaseToVisibleMs": 37.6000000089407,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 30.700000002980232,
+            "renderCycle": 531,
+            "timings": {
+              "planMilliseconds": 0.4000000059604645,
+              "attachmentMilliseconds": 1,
+              "totalMilliseconds": 1.5
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.6000000089406967,
+        "releaseToEventCompleteMs": 0.20000000298023224,
+        "releaseToNextDisplayMs": 35,
+        "releaseToRuntimeMs": 36.20000000298023,
+        "releaseToVisibleMs": 42.70000000298023,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 36.20000000298023,
+            "renderCycle": 533,
+            "timings": {
+              "planMilliseconds": 0.4000000059604645,
+              "attachmentMilliseconds": 0.7999999970197678,
+              "totalMilliseconds": 1.2000000029802322
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.6000000089406967,
+        "releaseToEventCompleteMs": 0.20000000298023224,
+        "releaseToNextDisplayMs": 31.30000001192093,
+        "releaseToRuntimeMs": 32.6000000089407,
+        "releaseToVisibleMs": 37.6000000089407,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 32.6000000089407,
+            "renderCycle": 535,
+            "timings": {
+              "planMilliseconds": 0.3999999910593033,
+              "attachmentMilliseconds": 0.9000000059604645,
+              "totalMilliseconds": 1.2999999970197678
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.7000000029802322,
+        "releaseToEventCompleteMs": 0.29999999701976776,
+        "releaseToNextDisplayMs": 29.700000002980232,
+        "releaseToRuntimeMs": 31,
+        "releaseToVisibleMs": 37.099999994039536,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 31,
+            "renderCycle": 537,
+            "timings": {
+              "planMilliseconds": 0.29999999701976776,
+              "attachmentMilliseconds": 0.9000000059604645,
+              "totalMilliseconds": 1.2999999970197678
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.6000000089406967,
+        "releaseToEventCompleteMs": 0.20000000298023224,
+        "releaseToNextDisplayMs": 29.100000008940697,
+        "releaseToRuntimeMs": 30.200000002980232,
+        "releaseToVisibleMs": 36.1000000089407,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 30.200000002980232,
+            "renderCycle": 539,
+            "timings": {
+              "planMilliseconds": 0.3999999910593033,
+              "attachmentMilliseconds": 0.7000000029802322,
+              "totalMilliseconds": 1.0999999940395355
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.5999999940395355,
+        "releaseToEventCompleteMs": 0.19999998807907104,
+        "releaseToNextDisplayMs": 27.399999991059303,
+        "releaseToRuntimeMs": 28.799999997019768,
+        "releaseToVisibleMs": 34,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 28.799999997019768,
+            "renderCycle": 541,
+            "timings": {
+              "planMilliseconds": 0.3999999910593033,
+              "attachmentMilliseconds": 0.7999999970197678,
+              "totalMilliseconds": 1.2999999970197678
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.6000000089406967,
+        "releaseToEventCompleteMs": 0.20000000298023224,
+        "releaseToNextDisplayMs": 27.80000001192093,
+        "releaseToRuntimeMs": 33.5,
+        "releaseToVisibleMs": 40.400000005960464,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 33.5,
+            "renderCycle": 543,
+            "timings": {
+              "planMilliseconds": 0.29999999701976776,
+              "attachmentMilliseconds": 5.299999997019768,
+              "totalMilliseconds": 5.699999988079071
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.5999999940395355,
+        "releaseToEventCompleteMs": 0.20000000298023224,
+        "releaseToNextDisplayMs": 28.900000005960464,
+        "releaseToRuntimeMs": 30,
+        "releaseToVisibleMs": 35.79999999701977,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 30,
+            "renderCycle": 545,
+            "timings": {
+              "planMilliseconds": 0.29999999701976776,
+              "attachmentMilliseconds": 0.7999999970197678,
+              "totalMilliseconds": 1.0999999940395355
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.5,
+        "releaseToEventCompleteMs": 0.20000000298023224,
+        "releaseToNextDisplayMs": 28.600000008940697,
+        "releaseToRuntimeMs": 29.799999997019768,
+        "releaseToVisibleMs": 36.29999999701977,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 29.799999997019768,
+            "renderCycle": 547,
+            "timings": {
+              "planMilliseconds": 0.29999999701976776,
+              "attachmentMilliseconds": 0.8999999910593033,
+              "totalMilliseconds": 1.199999988079071
+            }
+          }
+        ]
+      },
+      {
+        "releaseToMutationMs": 0.5,
+        "releaseToEventCompleteMs": 0.10000000894069672,
+        "releaseToNextDisplayMs": 29.200000002980232,
+        "releaseToRuntimeMs": 30.400000005960464,
+        "releaseToVisibleMs": 35.900000005960464,
+        "revisionDelta": 1,
+        "runtimeEvents": [
+          {
+            "elapsedMs": 30.400000005960464,
+            "renderCycle": 549,
+            "timings": {
+              "planMilliseconds": 0.29999999701976776,
+              "attachmentMilliseconds": 0.9000000059604645,
+              "totalMilliseconds": 1.2000000029802322
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "scope": "Fixed-device curve-spectrum interaction workload."
+}

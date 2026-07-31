@@ -7,6 +7,8 @@ import type {
   VizRenderImageNode,
   VizRenderNode,
   VizRenderPlan,
+  VizRenderPointCloudNode,
+  VizRenderPolygonNode,
   VizRenderPolylineNode,
   VizRenderRectNode,
   VizRenderStyle,
@@ -109,6 +111,58 @@ const renderCircleNode = (node: VizRenderCircleNode): string => {
   return `<circle cx="${node.cx}" cy="${node.cy}" r="${node.r}"${createStyleAttribute(node.style)} />`;
 };
 
+const renderPointCloudNode = (node: VizRenderPointCloudNode): string => {
+  const style = createStyleAttribute(node.style);
+  return node.points
+    .map(
+      (point) =>
+        `<circle cx="${point.x}" cy="${point.y}" r="${node.radius}"${style} />`,
+    )
+    .join('');
+};
+
+const createSvgDefinitionId = (node: VizRenderPolygonNode): string => {
+  const source =
+    node.id ?? node.points.map((point) => `${point.x},${point.y}`).join('|');
+  let hash = 2166136261;
+  for (let index = 0; index < source.length; index += 1) {
+    hash = Math.imul(hash ^ source.charCodeAt(index), 16777619);
+  }
+  const label = source.replaceAll(/[^\w-]/g, '-').slice(0, 48) || 'polygon';
+  return `viz-gradient-${label}-${(hash >>> 0).toString(16)}`;
+};
+
+const renderPolygonNode = (node: VizRenderPolygonNode): string => {
+  if (node.points.length < 3) {
+    return '';
+  }
+
+  const points = escapeAttribute(
+    node.points.map((point) => `${point.x},${point.y}`).join(' '),
+  );
+  if (!node.fillGradient || node.fillGradient.stops.length === 0) {
+    return `<polygon points="${points}"${createStyleAttribute(node.style)} />`;
+  }
+
+  const gradientId = createSvgDefinitionId(node);
+  const { from, to } = node.fillGradient;
+  const stops = [...node.fillGradient.stops]
+    .sort((left, right) => left.offset - right.offset)
+    .map(
+      (stop) =>
+        `<stop offset="${Math.min(1, Math.max(0, stop.offset))}" stop-color="${escapeAttribute(stop.color)}"${
+          stop.opacity === undefined
+            ? ''
+            : ` stop-opacity="${Math.min(1, Math.max(0, stop.opacity))}"`
+        } />`,
+    )
+    .join('');
+  const style = { ...node.style };
+  delete style.fill;
+
+  return `<defs><linearGradient id="${gradientId}" gradientUnits="userSpaceOnUse" x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}">${stops}</linearGradient></defs><polygon points="${points}" fill="url(#${gradientId})"${createStyleAttribute(style)} />`;
+};
+
 const renderPolylineNode = (node: VizRenderPolylineNode): string => {
   if (node.points.length === 0) {
     return '';
@@ -182,6 +236,14 @@ export const renderVizRenderNode = (
 
   if (node.kind === 'circle') {
     return renderCircleNode(node);
+  }
+
+  if (node.kind === 'point-cloud') {
+    return renderPointCloudNode(node);
+  }
+
+  if (node.kind === 'polygon') {
+    return renderPolygonNode(node);
   }
 
   if (node.kind === 'polyline') {

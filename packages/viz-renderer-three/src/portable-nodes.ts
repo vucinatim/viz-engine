@@ -3,6 +3,8 @@ import type {
   VizRenderCircleNode,
   VizRenderImageNode,
   VizRenderNode,
+  VizRenderPointCloudNode,
+  VizRenderPolygonNode,
   VizRenderPolylineNode,
   VizRenderRectNode,
   VizRenderShaderNode,
@@ -13,18 +15,24 @@ import type {
 } from '@viz-engine/contracts';
 import {
   AdditiveBlending,
+  BufferGeometry,
   CanvasTexture,
   CircleGeometry,
   Color,
+  Float32BufferAttribute,
   Group,
   InterleavedBufferAttribute,
+  Line,
+  LineBasicMaterial,
   Mesh,
   MeshBasicMaterial,
   NormalBlending,
   OrthographicCamera,
   PlaneGeometry,
+  Points,
   SRGBColorSpace,
   ShaderMaterial,
+  ShapeUtils,
   Texture,
   Vector2,
   Vector3,
@@ -47,10 +55,21 @@ interface VizPolylineGroupUserData {
   vizPolyline?: true;
 }
 
+interface VizPolygonMeshUserData {
+  vizPolygon?: true;
+}
+
+interface VizPointCloudMeshUserData {
+  vizPointCloud?: true;
+}
+
 interface VizTextMeshUserData {
   vizTextCanvas?: HTMLCanvasElement;
   vizOwnedTexture?: CanvasTexture;
+  vizTextTextureKey?: string;
 }
+
+export type VizThreePortableObject = Group | Line | Mesh | Points;
 
 export interface VizInheritedRenderState {
   opacity: number;
@@ -179,7 +198,7 @@ const createMaterial = (
 };
 
 const applyTransform = (
-  object: Group | Mesh,
+  object: VizThreePortableObject,
   transform: VizRenderTransform | undefined,
 ): void => {
   if (!transform) {
@@ -348,6 +367,325 @@ const convertCircleToMesh = (
   return mesh;
 };
 
+const pointCloudVertexShader = `
+uniform float vizPointSize;
+
+void main() {
+  gl_PointSize = vizPointSize;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+const pointCloudFragmentShader = `
+uniform vec3 vizColor;
+uniform float vizOpacity;
+
+void main() {
+  vec2 centered = gl_PointCoord - vec2(0.5);
+  if (dot(centered, centered) > 0.25) {
+    discard;
+  }
+  gl_FragColor = vec4(vizColor, vizOpacity);
+}
+`;
+
+const updatePointCloudPositions = (
+  points: Points,
+  node: VizRenderPointCloudNode,
+  viewportWidth: number,
+  viewportHeight: number,
+): void => {
+  const positions = points.geometry.getAttribute('position');
+  if (
+    !(positions instanceof Float32BufferAttribute) ||
+    node.points.length > positions.count
+  ) {
+    throw new Error(
+      `Point cloud contains ${node.points.length} points but its position buffer only holds ${positions.count}.`,
+    );
+  }
+  node.points.forEach((point, index) => {
+    positions.setXYZ(
+      index,
+      point.x - viewportWidth / 2,
+      viewportHeight / 2 - point.y,
+      0,
+    );
+  });
+  positions.needsUpdate = true;
+  points.geometry.setDrawRange(0, node.points.length);
+};
+
+const updatePointCloudMaterial = (
+  material: ShaderMaterial,
+  node: VizRenderPointCloudNode,
+  inherited: VizInheritedRenderState,
+): void => {
+  const style = mergeRenderableStyle(inherited, node.style);
+  const fill = resolveCssColor(style.fill ?? '#ffffff');
+  const opacity = clampOpacity((style.opacity ?? 1) * fill.opacity);
+  (material.uniforms.vizPointSize!.value as number) = node.radius * 2;
+  (material.uniforms.vizColor!.value as Color).set(fill.value);
+  (material.uniforms.vizOpacity!.value as number) = opacity;
+  material.blending = getVizThreeBlending(style.blendMode);
+};
+
+const convertPointCloudToPoints = (
+  node: VizRenderPointCloudNode,
+  inherited: VizInheritedRenderState,
+  viewportWidth: number,
+  viewportHeight: number,
+): Points => {
+  const capacity = Math.max(1, node.points.length);
+  const geometry = new BufferGeometry();
+  geometry.setAttribute(
+    'position',
+    new Float32BufferAttribute(new Float32Array(capacity * 3), 3),
+  );
+  const material = new ShaderMaterial({
+    vertexShader: pointCloudVertexShader,
+    fragmentShader: pointCloudFragmentShader,
+    uniforms: {
+      vizPointSize: { value: node.radius * 2 },
+      vizColor: { value: new Color('#ffffff') },
+      vizOpacity: { value: 1 },
+    },
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+  });
+  updatePointCloudMaterial(material, node, inherited);
+  const points = new Points(geometry, material);
+  updatePointCloudPositions(points, node, viewportWidth, viewportHeight);
+  points.frustumCulled = false;
+  points.userData = {
+    ...points.userData,
+    vizPointCloud: true,
+  } satisfies VizPointCloudMeshUserData;
+  return points;
+};
+
+const polygonVertexShader = `
+attribute vec4 vizColor;
+varying vec4 vVizColor;
+
+void main() {
+  vVizColor = vizColor;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+const polygonFragmentShader = `
+varying vec4 vVizColor;
+
+void main() {
+  gl_FragColor = vVizColor;
+}
+`;
+
+interface PreparedPolygonGradientStop {
+  offset: number;
+  color: Color;
+  opacity: number;
+}
+
+interface PreparedPolygonFill {
+  fromX: number;
+  fromY: number;
+  deltaX: number;
+  deltaY: number;
+  lengthSquared: number;
+  opacity: number;
+  stops: PreparedPolygonGradientStop[];
+}
+
+const preparePolygonFill = (
+  node: VizRenderPolygonNode,
+  inherited: VizInheritedRenderState,
+): PreparedPolygonFill => {
+  const opacity = inherited.opacity * (node.style?.opacity ?? 1);
+  const gradient = node.fillGradient;
+  const sourceStops =
+    gradient?.stops.length === 0 || gradient === undefined
+      ? [{ offset: 0, color: node.style?.fill ?? '#ffffff' }]
+      : gradient.stops;
+  const stops = sourceStops
+    .map((stop) => {
+      const resolved = resolveCssColor(stop.color);
+      return {
+        offset: stop.offset,
+        color: new Color(resolved.value),
+        opacity: resolved.opacity * (stop.opacity ?? 1),
+      };
+    })
+    .sort((left, right) => left.offset - right.offset);
+
+  return {
+    fromX: gradient?.from.x ?? 0,
+    fromY: gradient?.from.y ?? 0,
+    deltaX: gradient === undefined ? 0 : gradient.to.x - gradient.from.x,
+    deltaY: gradient === undefined ? 0 : gradient.to.y - gradient.from.y,
+    lengthSquared:
+      gradient === undefined
+        ? 0
+        : Math.pow(gradient.to.x - gradient.from.x, 2) +
+          Math.pow(gradient.to.y - gradient.from.y, 2),
+    opacity,
+    stops,
+  };
+};
+
+const samplePolygonFill = (
+  fill: PreparedPolygonFill,
+  point: VizRenderPolygonNode['points'][number],
+): [number, number, number, number] => {
+  const progress =
+    fill.lengthSquared === 0
+      ? 0
+      : Math.min(
+          1,
+          Math.max(
+            0,
+            ((point.x - fill.fromX) * fill.deltaX +
+              (point.y - fill.fromY) * fill.deltaY) /
+              fill.lengthSquared,
+          ),
+        );
+  const rightIndex = fill.stops.findIndex((stop) => stop.offset >= progress);
+  const right =
+    rightIndex === -1
+      ? fill.stops[fill.stops.length - 1]!
+      : fill.stops[rightIndex]!;
+  const left = rightIndex <= 0 ? right : fill.stops[rightIndex - 1]!;
+  const span = Math.max(0.000001, right.offset - left.offset);
+  const mix = Math.min(1, Math.max(0, (progress - left.offset) / span));
+  return [
+    left.color.r + (right.color.r - left.color.r) * mix,
+    left.color.g + (right.color.g - left.color.g) * mix,
+    left.color.b + (right.color.b - left.color.b) * mix,
+    clampOpacity(
+      fill.opacity * (left.opacity + (right.opacity - left.opacity) * mix),
+    ),
+  ];
+};
+
+const createPolygonGeometry = (
+  node: VizRenderPolygonNode,
+  inherited: VizInheritedRenderState,
+  viewportWidth: number,
+  viewportHeight: number,
+): BufferGeometry => {
+  const fill = preparePolygonFill(node, inherited);
+  const geometry = new BufferGeometry();
+  geometry.setAttribute(
+    'position',
+    new Float32BufferAttribute(
+      node.points.flatMap((point) => [
+        point.x - viewportWidth / 2,
+        viewportHeight / 2 - point.y,
+        0,
+      ]),
+      3,
+    ),
+  );
+  geometry.setAttribute(
+    'vizColor',
+    new Float32BufferAttribute(
+      node.points.flatMap((point) => samplePolygonFill(fill, point)),
+      4,
+    ),
+  );
+  geometry.setIndex(
+    node.triangleIndices ??
+      ShapeUtils.triangulateShape(
+        node.points.map(
+          (point) =>
+            new Vector2(
+              point.x - viewportWidth / 2,
+              viewportHeight / 2 - point.y,
+            ),
+        ),
+        [],
+      ).flat(),
+  );
+  return geometry;
+};
+
+const updatePolygonGeometry = (
+  geometry: BufferGeometry,
+  node: VizRenderPolygonNode,
+  inherited: VizInheritedRenderState,
+  viewportWidth: number,
+  viewportHeight: number,
+): boolean => {
+  if (node.triangleIndices === undefined) {
+    return false;
+  }
+
+  const positions = geometry.getAttribute('position');
+  const colors = geometry.getAttribute('vizColor');
+  const index = geometry.getIndex();
+  if (
+    !(positions instanceof Float32BufferAttribute) ||
+    !(colors instanceof Float32BufferAttribute) ||
+    positions.count !== node.points.length ||
+    colors.count !== node.points.length ||
+    index === null ||
+    index.count !== node.triangleIndices.length
+  ) {
+    return false;
+  }
+
+  const fill = preparePolygonFill(node, inherited);
+  node.points.forEach((point, pointIndex) => {
+    positions.setXYZ(
+      pointIndex,
+      point.x - viewportWidth / 2,
+      viewportHeight / 2 - point.y,
+      0,
+    );
+    colors.setXYZW(pointIndex, ...samplePolygonFill(fill, point));
+  });
+  node.triangleIndices.forEach((vertexIndex, indexPosition) => {
+    index.setX(indexPosition, vertexIndex);
+  });
+  positions.needsUpdate = true;
+  colors.needsUpdate = true;
+  index.needsUpdate = true;
+  return true;
+};
+
+const createPolygonMaterial = (
+  node: VizRenderPolygonNode,
+  inherited: VizInheritedRenderState,
+): ShaderMaterial =>
+  new ShaderMaterial({
+    vertexShader: polygonVertexShader,
+    fragmentShader: polygonFragmentShader,
+    transparent: true,
+    blending: getVizThreeBlending(node.style?.blendMode ?? inherited.blendMode),
+    depthTest: false,
+    depthWrite: false,
+  });
+
+const convertPolygonToMesh = (
+  node: VizRenderPolygonNode,
+  inherited: VizInheritedRenderState,
+  viewportWidth: number,
+  viewportHeight: number,
+): Mesh => {
+  const mesh = new Mesh(
+    createPolygonGeometry(node, inherited, viewportWidth, viewportHeight),
+    createPolygonMaterial(node, inherited),
+  );
+  mesh.frustumCulled = false;
+  mesh.userData = {
+    ...mesh.userData,
+    vizPolygon: true,
+  } satisfies VizPolygonMeshUserData;
+  return mesh;
+};
+
 const createPolylineLine = ({
   node,
   color,
@@ -364,19 +702,38 @@ const createPolylineLine = ({
   inherited: VizInheritedRenderState;
   viewportWidth: number;
   viewportHeight: number;
-}): Line2 => {
+}): Line | Line2 => {
   const resolvedColor = resolveCssColor(color);
   const finalOpacity = clampOpacity(
     inherited.opacity * opacity * resolvedColor.opacity,
   );
+  const positions = node.points.flatMap((point) => [
+    point.x - viewportWidth / 2,
+    viewportHeight / 2 - point.y,
+    0,
+  ]);
+  if (width <= 1) {
+    const geometry = new BufferGeometry();
+    geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+    const line = new Line(
+      geometry,
+      new LineBasicMaterial({
+        color: new Color(resolvedColor.value),
+        opacity: finalOpacity,
+        transparent: finalOpacity < 1,
+        blending: getVizThreeBlending(
+          node.style?.blendMode ?? inherited.blendMode,
+        ),
+        depthTest: false,
+        depthWrite: false,
+      }),
+    );
+    line.frustumCulled = false;
+    return line;
+  }
+
   const geometry = new LineGeometry();
-  geometry.setPositions(
-    node.points.flatMap((point) => [
-      point.x - viewportWidth / 2,
-      viewportHeight / 2 - point.y,
-      0,
-    ]),
-  );
+  geometry.setPositions(positions);
   const material = new LineMaterial({
     color: new Color(resolvedColor.value).getHex(),
     linewidth: Math.max(0.01, width),
@@ -515,6 +872,15 @@ const drawTextCanvas = (
   };
 };
 
+const createTextTextureKey = (node: VizRenderTextNode): string =>
+  JSON.stringify([
+    node.text,
+    node.fontSize,
+    node.fontFamily,
+    node.fontWeight,
+    node.style?.fill,
+  ]);
+
 const convertTextToObject = (
   node: VizRenderTextNode,
   inherited: VizInheritedRenderState,
@@ -555,6 +921,7 @@ const convertTextToObject = (
     ...mesh.userData,
     vizTextCanvas: canvas,
     vizOwnedTexture: texture,
+    vizTextTextureKey: createTextTextureKey(node),
   } satisfies VizTextMeshUserData;
   return mesh;
 };
@@ -620,13 +987,26 @@ export const createVizThreePortableNodeObject = (
   inherited: VizInheritedRenderState,
   viewportWidth: number,
   viewportHeight: number,
-): Group | Mesh => {
+): VizThreePortableObject => {
   if (node.kind === 'rect') {
     return convertRectToMesh(node, inherited, viewportWidth, viewportHeight);
   }
 
   if (node.kind === 'circle') {
     return convertCircleToMesh(node, inherited, viewportWidth, viewportHeight);
+  }
+
+  if (node.kind === 'point-cloud') {
+    return convertPointCloudToPoints(
+      node,
+      inherited,
+      viewportWidth,
+      viewportHeight,
+    );
+  }
+
+  if (node.kind === 'polygon') {
+    return convertPolygonToMesh(node, inherited, viewportWidth, viewportHeight);
   }
 
   if (node.kind === 'polyline') {
@@ -677,7 +1057,7 @@ export const createVizThreePortableNodeObject = (
   return group;
 };
 
-export const disposeVizThreeObject = (object: Group | Mesh): void => {
+export const disposeVizThreeObject = (object: VizThreePortableObject): void => {
   const ownedTexture = object.userData.vizOwnedTexture;
   if (ownedTexture instanceof Texture) {
     ownedTexture.dispose();
@@ -698,13 +1078,13 @@ export const disposeVizThreeObject = (object: Group | Mesh): void => {
   }
 
   for (const child of [...object.children]) {
-    disposeVizThreeObject(child as Group | Mesh);
+    disposeVizThreeObject(child as VizThreePortableObject);
   }
 };
 
 export const clearVizThreeObjectChildren = (rootGroup: Group): void => {
   for (const child of [...rootGroup.children]) {
-    disposeVizThreeObject(child as Group | Mesh);
+    disposeVizThreeObject(child as VizThreePortableObject);
     rootGroup.remove(child);
   }
 };
@@ -801,7 +1181,7 @@ const updateShaderMesh = (
 };
 
 const updateMaterialStyle = (
-  material: MeshBasicMaterial | LineMaterial,
+  material: LineBasicMaterial | LineMaterial | MeshBasicMaterial,
   style: VizRenderStyle,
   fallbackColor: string,
 ): void => {
@@ -958,6 +1338,26 @@ const updateCircleObject = (
   return true;
 };
 
+const updatePointCloudObject = (
+  object: VizThreePortableObject,
+  node: VizRenderPointCloudNode,
+  inherited: VizInheritedRenderState,
+  viewportWidth: number,
+  viewportHeight: number,
+): boolean => {
+  if (
+    !(object instanceof Points) ||
+    object.userData.vizPointCloud !== true ||
+    !(object.material instanceof ShaderMaterial) ||
+    object.geometry.getAttribute('position').count < node.points.length
+  ) {
+    return false;
+  }
+  updatePointCloudPositions(object, node, viewportWidth, viewportHeight);
+  updatePointCloudMaterial(object.material, node, inherited);
+  return true;
+};
+
 const updateImageObject = (
   object: Group | Mesh,
   node: VizRenderImageNode,
@@ -1002,12 +1402,24 @@ const updateTextObject = (
   if (!canvas || !texture) {
     return false;
   }
-  const dimensions = drawTextCanvas(canvas, node);
-  if (!dimensions) {
-    return false;
+  const textureKey = createTextTextureKey(node);
+  let dimensions: { width: number; height: number };
+  if (userData.vizTextTextureKey === textureKey) {
+    const geometry = object.geometry as PlaneGeometry;
+    dimensions = {
+      width: geometry.parameters.width,
+      height: geometry.parameters.height,
+    };
+  } else {
+    const nextDimensions = drawTextCanvas(canvas, node);
+    if (!nextDimensions) {
+      return false;
+    }
+    dimensions = nextDimensions;
+    texture.needsUpdate = true;
+    updatePlaneGeometry(object, dimensions.width, dimensions.height);
+    userData.vizTextTextureKey = textureKey;
   }
-  texture.needsUpdate = true;
-  updatePlaneGeometry(object, dimensions.width, dimensions.height);
   const origin = getTextOrigin(node, dimensions.width, dimensions.height);
   object.position.x = origin.x + dimensions.width / 2 - viewportWidth / 2;
   object.position.y = viewportHeight / 2 - (origin.y + dimensions.height / 2);
@@ -1063,6 +1475,31 @@ const updateLinePositions = (
   }
 };
 
+const updateNativeLinePositions = (
+  line: Line,
+  node: VizRenderPolylineNode,
+  viewportWidth: number,
+  viewportHeight: number,
+): boolean => {
+  const positions = line.geometry.getAttribute('position');
+  if (
+    !(positions instanceof Float32BufferAttribute) ||
+    positions.count !== node.points.length
+  ) {
+    return false;
+  }
+  node.points.forEach((point, index) => {
+    positions.setXYZ(
+      index,
+      point.x - viewportWidth / 2,
+      viewportHeight / 2 - point.y,
+      0,
+    );
+  });
+  positions.needsUpdate = true;
+  return true;
+};
+
 const updatePolylineObject = (
   object: Group,
   node: VizRenderPolylineNode,
@@ -1086,21 +1523,36 @@ const updatePolylineObject = (
   const strokeWidth = Math.max(0.01, node.style?.strokeWidth ?? 1);
   const coreLine = object.children.at(-1);
 
-  if (!(coreLine instanceof Line2)) {
-    return false;
-  }
-
-  updateLinePositions(coreLine, node, viewportWidth, viewportHeight);
   const coreStyle = mergeRenderableStyle(inherited, {
     ...node.style,
     fill: stroke,
   });
-  updateMaterialStyle(coreLine.material as LineMaterial, coreStyle, stroke);
-  (coreLine.material as LineMaterial).linewidth = strokeWidth;
-  (coreLine.material as LineMaterial).resolution.set(
-    viewportWidth,
-    viewportHeight,
-  );
+  if (coreLine instanceof Line2) {
+    if (strokeWidth <= 1) {
+      return false;
+    }
+    updateLinePositions(coreLine, node, viewportWidth, viewportHeight);
+    updateMaterialStyle(coreLine.material as LineMaterial, coreStyle, stroke);
+    (coreLine.material as LineMaterial).linewidth = strokeWidth;
+    (coreLine.material as LineMaterial).resolution.set(
+      viewportWidth,
+      viewportHeight,
+    );
+  } else if (coreLine instanceof Line) {
+    if (
+      strokeWidth > 1 ||
+      !updateNativeLinePositions(coreLine, node, viewportWidth, viewportHeight)
+    ) {
+      return false;
+    }
+    updateMaterialStyle(
+      coreLine.material as LineBasicMaterial,
+      coreStyle,
+      stroke,
+    );
+  } else {
+    return false;
+  }
 
   if (expectedLineCount === 2) {
     const glowLine = object.children[0];
@@ -1132,6 +1584,50 @@ const updatePolylineObject = (
   return true;
 };
 
+const updatePolygonMesh = (
+  mesh: Mesh,
+  node: VizRenderPolygonNode,
+  inherited: VizInheritedRenderState,
+  viewportWidth: number,
+  viewportHeight: number,
+): boolean => {
+  if (
+    mesh.userData.vizPolygon !== true ||
+    !(mesh.material instanceof ShaderMaterial)
+  ) {
+    return false;
+  }
+
+  if (
+    updatePolygonGeometry(
+      mesh.geometry,
+      node,
+      inherited,
+      viewportWidth,
+      viewportHeight,
+    )
+  ) {
+    mesh.material.blending = getVizThreeBlending(
+      node.style?.blendMode ?? inherited.blendMode,
+    );
+    return true;
+  }
+
+  const previousGeometry = mesh.geometry;
+  mesh.geometry = createPolygonGeometry(
+    node,
+    inherited,
+    viewportWidth,
+    viewportHeight,
+  );
+  previousGeometry.dispose();
+  mesh.material.blending = getVizThreeBlending(
+    node.style?.blendMode ?? inherited.blendMode,
+  );
+  mesh.material.needsUpdate = true;
+  return true;
+};
+
 const resetAndApplyTransform = (
   object: Group | Mesh,
   transform: VizRenderTransform | undefined,
@@ -1143,7 +1639,7 @@ const resetAndApplyTransform = (
 };
 
 export const updateVizThreePortableNodeObject = (
-  object: Group | Mesh,
+  object: VizThreePortableObject,
   previousNode: VizRenderNode,
   nextNode: VizRenderNode,
   inherited: VizInheritedRenderState,
@@ -1174,18 +1670,47 @@ export const updateVizThreePortableNodeObject = (
     );
   }
 
+  if (nextNode.kind === 'polygon') {
+    return (
+      object instanceof Mesh &&
+      updatePolygonMesh(
+        object,
+        nextNode,
+        inherited,
+        viewportWidth,
+        viewportHeight,
+      )
+    );
+  }
+
   if (nextNode.kind === 'rect' && previousNode.kind === 'rect') {
-    return updateRectObject(
-      object,
-      nextNode,
-      inherited,
-      viewportWidth,
-      viewportHeight,
+    return (
+      (object instanceof Group || object instanceof Mesh) &&
+      updateRectObject(
+        object,
+        nextNode,
+        inherited,
+        viewportWidth,
+        viewportHeight,
+      )
     );
   }
 
   if (nextNode.kind === 'circle' && previousNode.kind === 'circle') {
-    return updateCircleObject(
+    return (
+      (object instanceof Group || object instanceof Mesh) &&
+      updateCircleObject(
+        object,
+        nextNode,
+        inherited,
+        viewportWidth,
+        viewportHeight,
+      )
+    );
+  }
+
+  if (nextNode.kind === 'point-cloud' && previousNode.kind === 'point-cloud') {
+    return updatePointCloudObject(
       object,
       nextNode,
       inherited,
@@ -1195,22 +1720,28 @@ export const updateVizThreePortableNodeObject = (
   }
 
   if (nextNode.kind === 'image' && previousNode.kind === 'image') {
-    return updateImageObject(
-      object,
-      nextNode,
-      inherited,
-      viewportWidth,
-      viewportHeight,
+    return (
+      (object instanceof Group || object instanceof Mesh) &&
+      updateImageObject(
+        object,
+        nextNode,
+        inherited,
+        viewportWidth,
+        viewportHeight,
+      )
     );
   }
 
   if (nextNode.kind === 'text' && previousNode.kind === 'text') {
-    return updateTextObject(
-      object,
-      nextNode,
-      inherited,
-      viewportWidth,
-      viewportHeight,
+    return (
+      (object instanceof Group || object instanceof Mesh) &&
+      updateTextObject(
+        object,
+        nextNode,
+        inherited,
+        viewportWidth,
+        viewportHeight,
+      )
     );
   }
 
@@ -1233,7 +1764,9 @@ export const updateVizThreePortableNodeObject = (
       const childObject = object.children[index];
       return (
         previousChild !== undefined &&
-        (childObject instanceof Group || childObject instanceof Mesh) &&
+        (childObject instanceof Group ||
+          childObject instanceof Mesh ||
+          childObject instanceof Points) &&
         updateVizThreePortableNodeObject(
           childObject,
           previousChild,

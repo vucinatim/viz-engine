@@ -2057,3 +2057,30 @@
     smoke
   - recorded the full evidence and machine-readable report in
     `docs/parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md`
+- completed the Goal Three Curve Spectrum portable-rendering checkpoint:
+  - compared against pinned V1 commit
+    `e806fbc10980615588b52ff574bc923c6f00f35e`
+  - introduced renderer-neutral gradient-polygon and point-cloud render nodes
+    instead of an editor-canvas exception
+  - restored the midpoint-quadratic curve, area gradient, points, grids, and
+    labels through the shared runtime render plan
+  - used exact stable strip topology for concave spectrum fills and persistent
+    Three position, color, and index buffers
+  - replaced hundreds or thousands of point meshes with one GPU point cloud,
+    retained wide lines only when width or glow requires them, and reused
+    unchanged text textures
+  - implemented equivalent SVG polygon-gradient and point-cloud rendering
+  - removed dynamic wide-line buffer sizing and completed the headed workload
+    with no console, page, or WebGL diagnostics
+  - measured slider pointer-to-transient at 0.30 ms mean,
+    pointer-to-runtime at 2.89 ms, and pointer-to-visible at 11.40 ms across
+    ten physical gestures with exactly one revision per release
+  - passed 40 focused tests and the complete foundation gate: 42 valid parity
+    rows, clean dependency architecture, formatting, lint, all type checks,
+    56 files / 253 tests, seven browser journeys, all builds, and both
+    built-consumer smoke scenarios
+  - recorded evidence and the machine-readable report in
+    `docs/parity/evidence/2026-07-31-goal-three-curve-spectrum-portable-rendering.md`
+  - identified the editor's one-WebGL-controller-per-layer attachment as the
+    next required architectural repair for canonical alpha, blend behavior,
+    resource use, and broader frame pacing

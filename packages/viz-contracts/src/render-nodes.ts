@@ -51,6 +51,35 @@ export interface VizRenderPoint {
   y: number;
 }
 
+export interface VizRenderPointCloudNode {
+  kind: 'point-cloud';
+  id?: string;
+  points: VizRenderPoint[];
+  radius: number;
+  style?: VizRenderStyle;
+}
+
+export interface VizRenderGradientStop {
+  offset: number;
+  color: string;
+  opacity?: number;
+}
+
+export interface VizRenderLinearGradient {
+  from: VizRenderPoint;
+  to: VizRenderPoint;
+  stops: VizRenderGradientStop[];
+}
+
+export interface VizRenderPolygonNode {
+  kind: 'polygon';
+  id?: string;
+  points: VizRenderPoint[];
+  triangleIndices?: number[];
+  fillGradient?: VizRenderLinearGradient;
+  style?: VizRenderStyle;
+}
+
 export interface VizRenderPolylineGlow {
   color: string;
   blur: number;
@@ -153,6 +182,8 @@ export type VizRenderNode =
   | VizRenderGroupNode
   | VizRenderRectNode
   | VizRenderCircleNode
+  | VizRenderPointCloudNode
+  | VizRenderPolygonNode
   | VizRenderPolylineNode
   | VizRenderImageNode
   | VizRenderTextNode

@@ -11,6 +11,7 @@ import {
   MeshBasicMaterial,
   OrthographicCamera,
   PlaneGeometry,
+  Points,
   RGBAFormat,
   SRGBColorSpace,
   Scene,
@@ -330,7 +331,9 @@ const updateLayer = (
         })()
       : previousNode != null &&
           nextNode != null &&
-          (object instanceof Group || object instanceof Mesh)
+          (object instanceof Group ||
+            object instanceof Mesh ||
+            object instanceof Points)
         ? updateVizThreePortableNodeObject(
             object,
             previousNode,

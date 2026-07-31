@@ -28,6 +28,7 @@ import {
   Mesh,
   MeshBasicMaterial,
   OrthographicCamera,
+  Points,
   Scene,
   ShaderMaterial,
   Texture,
@@ -1156,6 +1157,121 @@ describe('Viz Three renderer proof', () => {
           .array,
       ),
     ).not.toEqual(before);
+  });
+
+  it('retains portable gradient-polygon materials while updating geometry', () => {
+    const createPolygonPlan = (middleY: number): VizRenderPlan => ({
+      frameContext: {
+        frame: middleY === 120 ? 0 : 1,
+        fps: 60,
+        durationInFrames: 120,
+        timeInSeconds: middleY === 120 ? 0 : 1 / 60,
+        deltaTimeSeconds: 1 / 60,
+        isFirstFrame: middleY === 120,
+        isLastFrame: false,
+        mode: 'live',
+        seed: 'persistent-polygon',
+      },
+      viewport: { width: 640, height: 360, backgroundColor: '#000000' },
+      materializedAssets: [],
+      issues: [],
+      layers: [
+        {
+          layerId: 'layer-polygon',
+          componentId: 'curve-spectrum',
+          rendererFamily: 'three',
+          enabled: true,
+          opacity: 1,
+          blendMode: 'normal',
+          resolvedInputs: {},
+          node: {
+            kind: 'polygon',
+            points: [
+              { x: 0, y: 200 },
+              { x: 320, y: middleY },
+              { x: 640, y: 200 },
+              { x: 640, y: 360 },
+              { x: 0, y: 360 },
+            ],
+            triangleIndices: [4, 1, 0, 4, 2, 1, 4, 3, 2],
+            fillGradient: {
+              from: { x: 0, y: 360 },
+              to: { x: 0, y: 80 },
+              stops: [
+                { offset: 0, color: 'transparent' },
+                { offset: 1, color: '#ff41ca', opacity: 0.5 },
+              ],
+            },
+          },
+        },
+      ],
+    });
+    const firstPlan = createPolygonPlan(120);
+    const nextPlan = createPolygonPlan(80);
+    const graph = createVizThreeCompositorGraph(firstPlan);
+    const mesh = graph.layers[0]!.contentRoot.children[0] as Mesh;
+    const material = mesh.material;
+    const geometry = mesh.geometry;
+    const before = Array.from(geometry.attributes.position!.array);
+
+    expect(mesh.material).toBeInstanceOf(ShaderMaterial);
+    expect(mesh.geometry.attributes.vizColor?.itemSize).toBe(4);
+    expect(updateVizThreeCompositorGraph(graph, firstPlan, nextPlan)).toBe(
+      true,
+    );
+    expect(graph.layers[0]!.contentRoot.children[0]).toBe(mesh);
+    expect(mesh.material).toBe(material);
+    expect(mesh.geometry).toBe(geometry);
+    expect(Array.from(mesh.geometry.attributes.position!.array)).not.toEqual(
+      before,
+    );
+  });
+
+  it('retains one GPU point buffer while updating portable point clouds', () => {
+    const firstPlan = createPortablePlan([
+      {
+        layerId: 'point-cloud',
+        node: {
+          kind: 'point-cloud',
+          points: [
+            { x: 100, y: 100 },
+            { x: 200, y: 200 },
+          ],
+          radius: 3,
+          style: { fill: '#ffffff' },
+        },
+      },
+    ]);
+    const nextPlan = createPortablePlan([
+      {
+        layerId: 'point-cloud',
+        node: {
+          kind: 'point-cloud',
+          points: [
+            { x: 120, y: 80 },
+            { x: 240, y: 160 },
+          ],
+          radius: 4,
+          style: { fill: '#ff41ca' },
+        },
+      },
+    ]);
+    const graph = createVizThreeCompositorGraph(firstPlan);
+    const points = graph.layers[0]!.contentRoot.children[0] as Points;
+    const geometry = points.geometry;
+    const material = points.material;
+    const before = geometry.attributes.position!.array.slice();
+
+    expect(points).toBeInstanceOf(Points);
+    expect(geometry.drawRange.count).toBe(2);
+    expect(updateVizThreeCompositorGraph(graph, firstPlan, nextPlan)).toBe(
+      true,
+    );
+    expect(graph.layers[0]!.contentRoot.children[0]).toBe(points);
+    expect(points.material).toBe(material);
+    expect(points.geometry).toBe(geometry);
+    expect(geometry.drawRange.count).toBe(2);
+    expect(geometry.attributes.position!.array).not.toEqual(before);
   });
 
   it('retains Instanced Supercube resources across structural updates', () => {

@@ -1,5 +1,5 @@
 import { createCoreComponentRegistry } from '@viz-engine/components-core';
-import type { VizRenderPlan } from '@viz-engine/contracts';
+import type { VizRenderNode, VizRenderPlan } from '@viz-engine/contracts';
 import {
   exampleProjectDocument,
   exampleResolvedArtifacts,
@@ -12,6 +12,35 @@ import {
   createVizRuntimeSession,
 } from '@viz-engine/runtime';
 import { describe, expect, it } from 'vitest';
+
+const createPortablePlan = (
+  nodes: Array<{ layerId: string; node: VizRenderNode }>,
+): VizRenderPlan => ({
+  frameContext: {
+    frame: 0,
+    fps: 60,
+    durationInFrames: 60,
+    timeInSeconds: 0,
+    deltaTimeSeconds: 1 / 60,
+    isFirstFrame: true,
+    isLastFrame: false,
+    mode: 'render',
+    seed: 'portable-svg',
+  },
+  viewport: { width: 640, height: 360 },
+  materializedAssets: [],
+  issues: [],
+  layers: nodes.map(({ layerId, node }) => ({
+    layerId,
+    componentId: 'portable-proof',
+    rendererFamily: 'three',
+    enabled: true,
+    opacity: 1,
+    blendMode: 'normal',
+    resolvedInputs: {},
+    node,
+  })),
+});
 
 describe('Viz SVG proof renderer', () => {
   it('renders a deterministic SVG document from the shared render plan', () => {
@@ -142,5 +171,86 @@ describe('Viz SVG proof renderer', () => {
     expect(markup).toContain('stroke-width="22"');
     expect(markup).toContain('stroke-linecap="round"');
     expect(markup).toContain('points="0,180 1,120 2,220"');
+  });
+
+  it('renders portable polygon fills with deterministic linear gradients', () => {
+    const renderPlan: VizRenderPlan = {
+      frameContext: {
+        frame: 0,
+        fps: 60,
+        durationInFrames: 120,
+        timeInSeconds: 0,
+        deltaTimeSeconds: 1 / 60,
+        isFirstFrame: true,
+        isLastFrame: false,
+        mode: 'render',
+        seed: 'gradient-polygon',
+      },
+      viewport: { width: 640, height: 360 },
+      materializedAssets: [],
+      issues: [],
+      layers: [
+        {
+          layerId: 'gradient-polygon-layer',
+          componentId: 'gradient-polygon-proof',
+          rendererFamily: 'three',
+          enabled: true,
+          opacity: 1,
+          blendMode: 'normal',
+          resolvedInputs: {},
+          node: {
+            kind: 'polygon',
+            id: 'gradient area',
+            points: [
+              { x: 0, y: 180 },
+              { x: 320, y: 80 },
+              { x: 640, y: 180 },
+              { x: 640, y: 360 },
+              { x: 0, y: 360 },
+            ],
+            fillGradient: {
+              from: { x: 0, y: 360 },
+              to: { x: 0, y: 80 },
+              stops: [
+                { offset: 0, color: 'transparent' },
+                { offset: 1, color: '#ff41ca', opacity: 0.5 },
+              ],
+            },
+          },
+        },
+      ],
+    };
+
+    const markup = renderVizRenderPlanToSvgMarkup(renderPlan);
+
+    expect(markup).toContain('<linearGradient ');
+    expect(markup).toContain('gradientUnits="userSpaceOnUse"');
+    expect(markup).toContain('stop-color="transparent"');
+    expect(markup).toContain('stop-opacity="0.5"');
+    expect(markup).toContain('<polygon ');
+    expect(markup).toContain('fill="url(#viz-gradient-gradient-area-');
+  });
+
+  it('renders portable point clouds as SVG circles', () => {
+    const markup = renderVizRenderPlanToSvgMarkup(
+      createPortablePlan([
+        {
+          layerId: 'point-cloud',
+          node: {
+            kind: 'point-cloud',
+            points: [
+              { x: 10, y: 20 },
+              { x: 30, y: 40 },
+            ],
+            radius: 3,
+            style: { fill: '#ffffff', opacity: 0.5 },
+          },
+        },
+      ]),
+    );
+
+    expect(markup.match(/<circle /g)).toHaveLength(2);
+    expect(markup).toContain('cx="10" cy="20" r="3"');
+    expect(markup).toContain('fill:#ffffff;opacity:0.5');
   });
 });
