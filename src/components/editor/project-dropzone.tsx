@@ -3,9 +3,10 @@ import { cn } from '@/lib/utils';
 import { FileJson } from 'lucide-react';
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { toast } from 'sonner';
 
 const DROPZONE_ACCEPTED_PROJECT_TYPES = {
-  'application/json': ['.vizengine'],
+  'application/json': ['.json'],
 };
 
 const ProjectDropzone = ({
@@ -17,13 +18,18 @@ const ProjectDropzone = ({
 }) => {
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      loadProject(acceptedFiles[0]);
+      void loadProject(acceptedFiles[0]);
     }
+  }, []);
+
+  const onDropRejected = useCallback(() => {
+    toast.error('Choose one .vizengine.json project file.');
   }, []);
 
   const { getRootProps, isDragActive, isDragAccept, isDragReject } =
     useDropzone({
       onDrop,
+      onDropRejected,
       accept: DROPZONE_ACCEPTED_PROJECT_TYPES,
       noClick: true,
       noKeyboard: true,
@@ -31,7 +37,10 @@ const ProjectDropzone = ({
     });
 
   return (
-    <div {...getRootProps()} className={cn('absolute inset-0', className)}>
+    <div
+      {...getRootProps()}
+      data-testid="project-dropzone"
+      className={cn('absolute inset-0', className)}>
       {children}
       {isDragActive && isDragActive && (
         <div

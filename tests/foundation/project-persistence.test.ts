@@ -6,6 +6,7 @@ import useNodeNetworkStore from '@/components/node-network/node-network-store';
 import {
   buildProjectFile,
   hydrateProjectData,
+  parseProjectFile,
 } from '@/lib/project-persistence';
 import useCompStore from '@/lib/stores/comp-store';
 import useEditorStore from '@/lib/stores/editor-store';
@@ -59,9 +60,18 @@ describe('Project persistence', () => {
       throw new Error('Could not resolve parameter id');
     }
 
-    vizSessionActions.project.importWorkingProject(
-      createTestProject(comp, layerId),
-    );
+    const authoredProject = createTestProject(comp, layerId);
+    authoredProject.layers[0] = {
+      ...authoredProject.layers[0]!,
+      enabled: false,
+      opacity: 0.42,
+      blendMode: 'screen',
+      surface: {
+        backgroundColor: 'rgba(12, 24, 36, 0.5)',
+        freezeWhenPaused: false,
+      },
+    };
+    vizSessionActions.project.importWorkingProject(authoredProject);
     vizSessionActions.graph.createNetworkForParameter(parameterId, 'number');
     useNodeNetworkStore.setState({
       openNetwork: parameterId,
@@ -93,6 +103,13 @@ describe('Project persistence', () => {
           {
             id: layerId,
             componentId: 'simple-cube',
+            enabled: false,
+            opacity: 0.42,
+            blendMode: 'screen',
+            surface: {
+              backgroundColor: 'rgba(12, 24, 36, 0.5)',
+              freezeWhenPaused: false,
+            },
           },
         ],
         graphs: [
@@ -140,9 +157,18 @@ describe('Project persistence', () => {
 
     await hydrateProjectData(projectFile);
 
-    expect(vizSessionActions.project.exportWorkingProject().layers[0]?.id).toBe(
-      layerId,
-    );
+    expect(
+      vizSessionActions.project.exportWorkingProject().layers[0],
+    ).toMatchObject({
+      id: layerId,
+      enabled: false,
+      opacity: 0.42,
+      blendMode: 'screen',
+      surface: {
+        backgroundColor: 'rgba(12, 24, 36, 0.5)',
+        freezeWhenPaused: false,
+      },
+    });
     expect(
       selectProjectedNodeNetworks(getVizSessionState())[parameterId],
     ).toBeDefined();
@@ -241,5 +267,31 @@ describe('Project persistence', () => {
         uri: 'https://assets.example.test/shared.glb',
       }),
     ]);
+  });
+
+  it('rejects malformed or unsupported files before mutating canonical or UI state', async () => {
+    const beforeProject = vizSessionActions.project.exportWorkingProject();
+    const beforeEditor = useEditorStore.getState();
+    const beforeNodeEditor = useNodeNetworkStore.getState();
+    const valid = buildProjectFile();
+
+    expect(() =>
+      parseProjectFile({ ...valid, version: 'viz-project@999' }),
+    ).toThrow('Unsupported project version');
+    await expect(
+      hydrateProjectData({
+        ...valid,
+        project: {
+          ...valid.project,
+          layers: 'invalid',
+        },
+      }),
+    ).rejects.toThrow();
+
+    expect(vizSessionActions.project.exportWorkingProject()).toEqual(
+      beforeProject,
+    );
+    expect(useEditorStore.getState()).toMatchObject(beforeEditor);
+    expect(useNodeNetworkStore.getState()).toMatchObject(beforeNodeEditor);
   });
 });

@@ -325,8 +325,24 @@ The waveform-navigation and Rhythm Lab checkpoint is now also complete:
 See
 [Waveform And Rhythm Lab](./parity/evidence/2026-07-31-goal-three-waveform-and-rhythm-lab.md).
 
-The parity matrix now contains 29 verified and 13 partial capabilities, with
-zero gaps and zero unaudited rows. Goal Three remains open because the 13
+The canonical project-lifecycle and still-output checkpoint is now also
+complete:
+
+- file envelope, version, document, UI metadata, and embedded assets validate
+  before canonical session import or UI projection
+- malformed, unsupported, and wrong-type imports explain failure without
+  console noise or active-project damage
+- save/reset/reopen preserves authored layer compositing semantics, graphs,
+  UI, and local asset bytes
+- controlled PNG export preserves exact size, color, alpha, frame, and
+  project/transport state
+- all 17 supported compositor blend modes and nested alpha remain pixel-tested
+
+See
+[Project Lifecycle And Still Output](./parity/evidence/2026-07-31-goal-three-project-lifecycle-and-still-output.md).
+
+The parity matrix now contains 33 verified and 9 partial capabilities, with
+zero gaps and zero unaudited rows. Goal Three remains open because the 9
 broader capabilities still require full acceptance evidence, alongside agent
 tooling and the second original production.
 

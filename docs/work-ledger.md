@@ -2,6 +2,26 @@
 
 ## 2026-07-31
 
+- completed the Goal Three project-lifecycle and still-output checkpoint:
+  - made project-file envelope, version, canonical document, editor metadata,
+    and embedded assets validate before any state mutation
+  - ordered canonical session import before editor/node UI projection so
+    failed imports cannot partially hydrate the workspace
+  - replaced expected file-failure alerts and console noise with visible toast
+    feedback and corrected drag acceptance for `.vizengine.json` files
+  - proved malformed JSON, unsupported versions, and wrong-type drops preserve
+    the exact active project
+  - extended deterministic roundtrip coverage across visibility, opacity,
+    blend mode, background alpha, freeze policy, graphs, UI, and local assets
+  - upgraded visible PNG export proof to check exact size, RGB, transparency,
+    valid bytes, and unchanged project/revision/transport state
+  - advanced layer compositing controls, both persistence rows, and still
+    export to verified, leaving 33 verified and 9 partial capabilities
+  - recorded architecture, acceptance, and remaining preview boundary in
+    `docs/parity/evidence/2026-07-31-goal-three-project-lifecycle-and-still-output.md`
+  - passed the complete foundation gate with 62 Vitest files / 275 tests, 15
+    active headed Chromium journeys plus one opt-in skip, all 17 package
+    builds, the studio production build, and both consumer smokes
 - completed the Goal Three waveform-navigation and Rhythm Lab checkpoint:
   - introduced a narrow transient selection presentation channel so waveform,
     analysis canvas, selection text, Onset, and Grid respond during pointer

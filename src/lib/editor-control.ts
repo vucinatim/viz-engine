@@ -370,7 +370,7 @@ const editorControl = {
       saveProject(projectName);
     },
     loadProject(file: File) {
-      loadProject(file);
+      return loadProject(file);
     },
     loadProjectFromUrl(url: string) {
       return loadProjectFromUrl(url);

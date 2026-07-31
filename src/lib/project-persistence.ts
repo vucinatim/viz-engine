@@ -12,6 +12,7 @@ import {
   type VizProjectDocument,
 } from '@viz-engine/contracts';
 import { assertValidProjectDocument } from '@viz-engine/runtime';
+import { toast } from 'sonner';
 
 const VIZ_ENGINE_PROJECT_VERSION = VIZ_PROJECT_SCHEMA_VERSION;
 const PROJECT_ASSET_PAYLOAD_POLICY = 'embed-local-bytes-v1' as const;
@@ -117,6 +118,47 @@ const decodeEmbeddedAssets = (
   return decoded;
 };
 
+const requireRecord = (
+  value: unknown,
+  label: string,
+): Record<string, unknown> => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error(`${label} must be an object.`);
+  }
+  return value as Record<string, unknown>;
+};
+
+export const parseProjectFile = (value: unknown): ProjectFile => {
+  const file = requireRecord(value, 'Project file');
+  if (file.version !== VIZ_ENGINE_PROJECT_VERSION) {
+    throw new Error(
+      `Unsupported project version "${String(file.version)}"; expected "${VIZ_ENGINE_PROJECT_VERSION}".`,
+    );
+  }
+  const project = file.project;
+  assertValidProjectDocument(project);
+  const nodeEditorUi = requireRecord(file.nodeEditorUi, 'nodeEditorUi');
+  const editorUi = requireRecord(file.editorUi, 'editorUi');
+  const rhythmSelection = requireRecord(
+    editorUi.rhythmSelection,
+    'editorUi.rhythmSelection',
+  );
+  if (
+    !(
+      nodeEditorUi.openNetwork === null ||
+      typeof nodeEditorUi.openNetwork === 'string'
+    ) ||
+    typeof nodeEditorUi.areNetworksMinimized !== 'boolean' ||
+    typeof editorUi.ambientMode !== 'boolean' ||
+    typeof editorUi.resolutionMultiplier !== 'number' ||
+    typeof rhythmSelection.start !== 'number' ||
+    typeof rhythmSelection.end !== 'number'
+  ) {
+    throw new Error('Project editor metadata is malformed.');
+  }
+  return file as unknown as ProjectFile;
+};
+
 export function buildProjectFile(): ProjectFile {
   const nodeNetworkStoreState = useNodeNetworkStore.getState();
   const editorStoreState = useEditorStore.getState();
@@ -161,54 +203,44 @@ export function saveProject(projectName: string = 'project') {
   URL.revokeObjectURL(url);
 }
 
-export async function hydrateProjectData(projectFile: ProjectFile) {
-  if (projectFile.version !== VIZ_ENGINE_PROJECT_VERSION) {
-    console.warn(
-      `Project file version (${projectFile.version}) does not match current version (${VIZ_ENGINE_PROJECT_VERSION}). There may be issues.`,
-    );
-  }
+export async function hydrateProjectData(projectFile: unknown) {
+  const validated = parseProjectFile(projectFile);
+  const embeddedAssets = decodeEmbeddedAssets(validated);
 
-  assertValidProjectDocument(projectFile.project);
-  const embeddedAssets = decodeEmbeddedAssets(projectFile);
+  vizSessionActions.project.importWorkingProject(
+    validated.project,
+    embeddedAssets,
+  );
 
   useNodeNetworkStore.setState((state) => ({
     ...state,
-    openNetwork: projectFile.nodeEditorUi.openNetwork,
-    areNetworksMinimized: projectFile.nodeEditorUi.areNetworksMinimized,
+    openNetwork: validated.nodeEditorUi.openNetwork,
+    areNetworksMinimized: validated.nodeEditorUi.areNetworksMinimized,
     shouldForceShowOverlay: false,
   }));
 
   useEditorStore.setState({
-    ambientMode: projectFile.editorUi.ambientMode,
-    resolutionMultiplier: projectFile.editorUi.resolutionMultiplier,
-    rhythmSelection: projectFile.editorUi.rhythmSelection,
-    layerUi: clone(projectFile.editorUi.layerUi ?? {}),
+    ambientMode: validated.editorUi.ambientMode,
+    resolutionMultiplier: validated.editorUi.resolutionMultiplier,
+    rhythmSelection: validated.editorUi.rhythmSelection,
+    layerUi: clone(validated.editorUi.layerUi ?? {}),
   });
-  vizSessionActions.project.importWorkingProject(
-    projectFile.project,
-    embeddedAssets,
-  );
   vizSessionActions.preview.reset();
 
   vizSessionActions.history.reset();
 }
 
-export function loadProject(file: File) {
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    try {
-      const json = e.target?.result as string;
-      const projectFile: ProjectFile = JSON.parse(json);
-
-      await hydrateProjectData(projectFile);
-
-      console.log('[loadProject] Project loaded successfully!');
-    } catch (error) {
-      console.error('Failed to load project file', error);
-      alert('Failed to load project file. See console for details.');
-    }
-  };
-  reader.readAsText(file);
+export async function loadProject(file: File) {
+  try {
+    await hydrateProjectData(JSON.parse(await file.text()));
+    toast.success('Project loaded');
+  } catch (error) {
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : 'Project file could not be loaded.',
+    );
+  }
 }
 
 export async function loadProjectFromUrl(url: string) {
@@ -219,14 +251,13 @@ export async function loadProjectFromUrl(url: string) {
     }
 
     const json = await response.text();
-    const projectFile: ProjectFile = JSON.parse(json);
-
-    await hydrateProjectData(projectFile);
-
-    console.log('[loadProjectFromUrl] Sample project loaded successfully!');
+    await hydrateProjectData(JSON.parse(json));
   } catch (error) {
-    console.error('Failed to load sample project', error);
-    alert('Failed to load sample project. See console for details.');
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : 'Sample project could not be loaded.',
+    );
   }
 }
 
@@ -302,29 +333,17 @@ function clearLocalStorage() {
 }
 
 export async function resetProject() {
-  console.log('[resetProject] Starting project reset...');
-
   try {
-    // Step 1: Clear all persisted data
-    console.log('[resetProject] Clearing IndexedDB...');
     await Promise.all([clearIndexedDB(), idbClearFiles()]);
-
-    console.log('[resetProject] Clearing localStorage...');
     clearLocalStorage();
-
-    // Step 2: Reset canonical stores first, then the editor adapters
     useNodeNetworkStore.setState({
       openNetwork: null,
       areNetworksMinimized: false,
       shouldForceShowOverlay: false,
     });
-
-    console.log('[resetProject] Resetting project state...');
     vizSessionActions.project.importWorkingProject(
       createEmptyVizProjectDocument(),
     );
-
-    console.log('[resetProject] Resetting editor UI state...');
     const currentResolutionMultiplier =
       useEditorStore.getState().resolutionMultiplier;
     useEditorStore.setState({
@@ -336,15 +355,12 @@ export async function resetProject() {
       layerUi: {},
     });
     vizSessionActions.preview.reset();
-
-    console.log('[resetProject] Resetting editor history...');
     vizSessionActions.history.reset();
-
-    console.log('[resetProject] Project reset complete!');
   } catch (error) {
-    console.error('[resetProject] Error during reset:', error);
-    alert(
-      `Failed to reset project: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    toast.error(
+      error instanceof Error
+        ? `Failed to reset project: ${error.message}`
+        : 'Failed to reset project.',
     );
   }
 }

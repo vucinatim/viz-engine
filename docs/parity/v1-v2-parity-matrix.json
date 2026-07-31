@@ -92,10 +92,10 @@
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/layer-settings.tsx", "src/components/editor/layer-renderer.tsx"],
       "v2Evidence": ["src/components/editor/layer-settings.tsx", "src/components/editor/layer-renderer.tsx", "src/lib/editor-runtime-preview-attachment.ts", "packages/viz-renderer-three/src/blend-compositor.ts"],
-      "status": "partial",
+      "status": "verified",
       "acceptance": ["Each control changes the intended rendered layer immediately.", "Values serialize and restore without semantic drift.", "Unsupported combinations fail clearly rather than silently."],
       "validationMethods": ["browser", "visual", "integration"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-canonical-preview-compositor.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-canonical-preview-compositor.md", "docs/parity/evidence/2026-07-31-goal-three-project-lifecycle-and-still-output.md"]
     },
     {
       "id": "layers.cards-and-disclosure",
@@ -342,7 +342,7 @@
       "status": "partial",
       "acceptance": ["A parity fixture produces the expected ordered composite.", "Hidden, frozen, and transparent layers have the documented behavior.", "Preview and export share compatible scene semantics."],
       "validationMethods": ["visual", "integration", "browser"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-canonical-preview-compositor.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-canonical-preview-compositor.md", "docs/parity/evidence/2026-07-31-goal-three-project-lifecycle-and-still-output.md"]
     },
     {
       "id": "preview.layer-mirror",
@@ -390,11 +390,11 @@
       "importance": "critical",
       "parityDimensions": ["interaction", "functional"],
       "referenceEvidence": ["src/lib/project-persistence.ts", "src/components/editor/editor-toolbar.tsx"],
-      "v2Evidence": ["src/lib/project-persistence.ts", "src/components/editor/editor-project-manager.tsx", "src/lib/viz-session/store.ts"],
-      "status": "partial",
+      "v2Evidence": ["src/lib/project-persistence.ts", "src/components/editor/editor-project-manager.tsx", "src/lib/viz-session/store.ts", "tests/foundation/project-persistence.test.ts", "tests/browser/editor-critical-journey.spec.ts"],
+      "status": "verified",
       "acceptance": ["A saved project round-trips without semantic loss.", "Invalid documents fail validation without damaging the active project.", "Reset produces the documented clean starting project."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md", "docs/parity/evidence/2026-07-31-goal-three-project-lifecycle-and-still-output.md"]
     },
     {
       "id": "persistence.drag-drop-import",
@@ -403,11 +403,11 @@
       "importance": "high",
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/project-dropzone.tsx", "src/lib/project-persistence.ts"],
-      "v2Evidence": ["src/components/editor/project-dropzone.tsx", "src/lib/project-persistence.ts"],
-      "status": "partial",
+      "v2Evidence": ["src/components/editor/project-dropzone.tsx", "src/lib/project-persistence.ts", "tests/foundation/project-persistence.test.ts", "tests/browser/editor-critical-journey.spec.ts"],
+      "status": "verified",
       "acceptance": ["A valid canonical document imports and becomes visible.", "Malformed, unsupported, or wrong file types explain the problem.", "Failed imports leave the current project unchanged."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-project-lifecycle-and-still-output.md"]
     },
     {
       "id": "persistence.sample-projects",
@@ -429,11 +429,11 @@
       "importance": "high",
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/export-image-dialog.tsx", "src/components/editor/renderer.tsx"],
-      "v2Evidence": ["src/components/editor/export-image-dialog.tsx", "src/lib/viz-session/browser-job-services.ts", "src/lib/utils/browser-render-executor.ts", "packages/viz-render/src/index.ts"],
-      "status": "partial",
+      "v2Evidence": ["src/components/editor/export-image-dialog.tsx", "src/lib/viz-session/browser-job-services.ts", "src/lib/utils/browser-render-executor.ts", "packages/viz-render/src/index.ts", "tests/browser/editor-critical-journey.spec.ts"],
+      "status": "verified",
       "acceptance": ["The exported image matches the chosen runtime frame and project state.", "Size and transparency options are honored.", "Export does not mutate playback or the active project."],
       "validationMethods": ["browser", "visual", "integration"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-31-goal-three-project-lifecycle-and-still-output.md"]
     },
     {
       "id": "export.video",

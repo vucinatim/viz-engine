@@ -1952,9 +1952,8 @@ test('roundtrips a saved canonical project through the visible file workflow', a
   const downloadPath = await download.path();
   expect(downloadPath).not.toBeNull();
 
-  const projectFile = JSON.parse(
-    await readFile(downloadPath!, 'utf8'),
-  ) as Record<string, any>;
+  const projectText = await readFile(downloadPath!, 'utf8');
+  const projectFile = JSON.parse(projectText) as Record<string, any>;
   expect(projectFile.version).toBe(projectFile.project.schemaVersion);
   expect(projectFile.project.layers).toHaveLength(4);
   expect(projectFile.project.graphs.length).toBeGreaterThan(0);
@@ -1976,6 +1975,44 @@ test('roundtrips a saved canonical project through the visible file workflow', a
   expect(
     reopened.layerIds.find((layerId) => !initial.layerIds.includes(layerId)),
   ).toMatch(/^layer-/);
+
+  const stableProject = await readEditorSnapshot(page);
+  await page.locator('input[accept=".vizengine.json"]').setInputFiles({
+    name: 'malformed.vizengine.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{not-json'),
+  });
+  await expect(
+    page.getByText(/Unexpected token|Expected property name/).last(),
+  ).toBeVisible();
+  expect(await readEditorSnapshot(page)).toEqual(stableProject);
+
+  await page.locator('input[accept=".vizengine.json"]').setInputFiles({
+    name: 'unsupported.vizengine.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(
+      JSON.stringify({ ...projectFile, version: 'viz-project@999' }),
+    ),
+  });
+  await expect(
+    page.getByText(/Unsupported project version "viz-project@999"/),
+  ).toBeVisible();
+  expect(await readEditorSnapshot(page)).toEqual(stableProject);
+
+  const rejectedDrop = await page.evaluateHandle(() => {
+    const transfer = new DataTransfer();
+    transfer.items.add(
+      new File(['not a project'], 'notes.txt', { type: 'text/plain' }),
+    );
+    return transfer;
+  });
+  await page
+    .getByTestId('project-dropzone')
+    .dispatchEvent('drop', { dataTransfer: rejectedDrop });
+  await expect(
+    page.getByText('Choose one .vizengine.json project file.'),
+  ).toBeVisible();
+  expect(await readEditorSnapshot(page)).toEqual(stableProject);
   expect(diagnostics).toEqual([]);
 });
 
@@ -1997,6 +2034,56 @@ test('exports a nonblank still through the visible editor workflow', async ({
   });
 
   await waitForEditor(page);
+  await page.evaluate(() => {
+    const debug = window.__vizEditorDebug!;
+    const project = debug.editorControl.project.exportWorkingProject();
+    project.projectId = 'still-export-proof';
+    project.name = 'Still Export Proof';
+    project.viewport = {
+      width: 320,
+      height: 180,
+      backgroundColor: 'transparent',
+    };
+    project.layerOrder = ['still-alpha-source'];
+    project.layers = [
+      {
+        id: 'still-alpha-source',
+        name: 'Strobe Light',
+        componentId: 'strobe-light',
+        enabled: true,
+        opacity: 0.65,
+        blendMode: 'normal',
+        surface: { backgroundColor: 'transparent' },
+        settings: {
+          mode: 'Manual',
+          color: 'rgb(192, 96, 32)',
+          strength: 1,
+        },
+      },
+    ];
+    project.graphs = [];
+    debug.editorControl.project.importWorkingProject(project);
+    debug.editorControl.preview.seekToFrame(23);
+    debug.editorControl.preview.pause();
+  });
+  await expect(page.getByTestId('layer-card')).toHaveCount(1);
+  await expect
+    .poll(async () =>
+      page.evaluate(
+        () =>
+          window.__vizEditorDebug!.editorControl.preview.inspectRuntimePreview()
+            .lastRenderedLayerIds[0],
+      ),
+    )
+    .toBe('still-alpha-source');
+  const stateBeforeExport = await page.evaluate(() => {
+    const debug = window.__vizEditorDebug!;
+    return {
+      project: debug.editorControl.project.exportWorkingProject(),
+      revision: debug.vizSessionStore.getState().project.revision,
+      transport: debug.vizSessionHost.getSnapshot().transport,
+    };
+  });
   await page.getByRole('menuitem', { name: 'File', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Export Image...' }).click();
   const dialog = page.getByRole('dialog', { name: 'Export Current Frame' });
@@ -2015,7 +2102,7 @@ test('exports a nonblank still through the visible editor workflow', async ({
     const sample = document.createElement('canvas');
     sample.width = 64;
     sample.height = 36;
-    const context = sample.getContext('2d');
+    const context = sample.getContext('2d', { willReadFrequently: true });
     if (!context) {
       throw new Error('Could not create image sampling context.');
     }
@@ -2038,11 +2125,36 @@ test('exports a nonblank still through the visible editor workflow', async ({
       height: image.naturalHeight,
       luminanceRange: maximum - minimum,
       nonblackRatio: nonblack / (pixels.length / 4),
+      center: [
+        ...context.getImageData(
+          Math.floor(sample.width / 2),
+          Math.floor(sample.height / 2),
+          1,
+          1,
+        ).data,
+      ],
     };
   });
   expect(imageStats).toMatchObject({ width: 1280, height: 720 });
-  expect(imageStats.luminanceRange).toBeGreaterThan(10);
-  expect(imageStats.nonblackRatio).toBeGreaterThan(0.01);
+  expect(imageStats.nonblackRatio).toBeGreaterThan(0.99);
+  expect(imageStats.center[0]).toBeGreaterThanOrEqual(188);
+  expect(imageStats.center[0]).toBeLessThanOrEqual(196);
+  expect(imageStats.center[1]).toBeGreaterThanOrEqual(92);
+  expect(imageStats.center[1]).toBeLessThanOrEqual(100);
+  expect(imageStats.center[2]).toBeGreaterThanOrEqual(28);
+  expect(imageStats.center[2]).toBeLessThanOrEqual(36);
+  expect(imageStats.center[3]).toBeGreaterThanOrEqual(163);
+  expect(imageStats.center[3]).toBeLessThanOrEqual(169);
+
+  const stateAfterCapture = await page.evaluate(() => {
+    const debug = window.__vizEditorDebug!;
+    return {
+      project: debug.editorControl.project.exportWorkingProject(),
+      revision: debug.vizSessionStore.getState().project.revision,
+      transport: debug.vizSessionHost.getSnapshot().transport,
+    };
+  });
+  expect(stateAfterCapture).toEqual(stateBeforeExport);
 
   const downloadPromise = page.waitForEvent('download');
   await dialog.getByRole('button', { name: 'Download' }).click();
