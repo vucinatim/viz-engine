@@ -183,6 +183,131 @@ describe('Editor runtime preview planning', () => {
     expect(renderPlan.issues).toEqual([]);
   });
 
+  it('freezes only opted-in live layer inputs while playback is paused', () => {
+    resetVizSessionRuntimePreviewPlanCache();
+    const curveSpectrum = CompDefinitionMap.get('Curve Spectrum');
+    if (!curveSpectrum) {
+      throw new Error('Expected Curve Spectrum component.');
+    }
+    const project = createTestProject(curveSpectrum, 'frozen-spectrum');
+    project.timeline.durationInFrames = 120;
+    const liveLayer = {
+      ...structuredClone(project.layers[0]!),
+      id: 'live-spectrum',
+      surface: {
+        ...project.layers[0]!.surface,
+        freezeWhenPaused: false,
+      },
+    };
+    project.layerOrder = ['frozen-spectrum', 'live-spectrum'];
+    project.layers = [project.layers[0]!, liveLayer];
+    const playingAudio = {
+      ...audioFrameData,
+      frequencyData: Uint8Array.from([12, 24, 36, 48]),
+    };
+    const pausedAudio = {
+      ...audioFrameData,
+      frequencyData: Uint8Array.from([210, 220, 230, 240]),
+    };
+
+    createVizSessionRuntimePreviewPlan({
+      project,
+      projectRevision: 1,
+      frame: createVizSessionRuntimePreviewFrame({
+        currentFrame: 1,
+        time: 1 / 60,
+        dt: 1 / 60,
+        fps: 60,
+        mode: 'live',
+      }),
+      viewport: { width: 640, height: 360 },
+      audioFrameData: playingAudio,
+      isPlaying: true,
+    });
+    const pausedPlan = createVizSessionRuntimePreviewPlan({
+      project,
+      projectRevision: 1,
+      frame: createVizSessionRuntimePreviewFrame({
+        currentFrame: 2,
+        time: 2 / 60,
+        dt: 0,
+        fps: 60,
+        mode: 'live',
+      }),
+      viewport: { width: 640, height: 360 },
+      audioFrameData: pausedAudio,
+      isPlaying: false,
+    });
+
+    expect(
+      Array.from(
+        pausedPlan.layers[0]?.resolvedInputs.spectrum?.value as Uint8Array,
+      ),
+    ).toEqual(Array.from(playingAudio.frequencyData));
+    expect(
+      Array.from(
+        pausedPlan.layers[1]?.resolvedInputs.spectrum?.value as Uint8Array,
+      ),
+    ).toEqual(Array.from(pausedAudio.frequencyData));
+
+    const exportPlan = createVizSessionRuntimePreviewPlan({
+      project,
+      projectRevision: 1,
+      frame: createVizSessionRuntimePreviewFrame({
+        currentFrame: 2,
+        time: 2 / 60,
+        dt: 0,
+        fps: 60,
+        mode: 'export',
+      }),
+      viewport: { width: 640, height: 360 },
+      audioFrameData: pausedAudio,
+      isPlaying: false,
+    });
+    for (const layer of exportPlan.layers) {
+      expect(
+        Array.from(layer.resolvedInputs.spectrum?.value as Uint8Array),
+      ).toEqual(Array.from(pausedAudio.frequencyData));
+    }
+  });
+
+  it('omits disabled layers from the canonical preview plan', () => {
+    resetVizSessionRuntimePreviewPlanCache();
+    const components = Array.from(CompDefinitionMap.values());
+    const first = components[0];
+    const second = components[1];
+    if (!first || !second) {
+      throw new Error('Expected at least two editor components.');
+    }
+    const firstProject = createTestProject(first, 'visible-layer');
+    const secondProject = createTestProject(second, 'hidden-layer');
+    secondProject.layers[0]!.enabled = false;
+    const project = {
+      ...firstProject,
+      layerOrder: ['visible-layer', 'hidden-layer'],
+      layers: [firstProject.layers[0]!, secondProject.layers[0]!],
+    };
+
+    const renderPlan = createVizSessionRuntimePreviewPlan({
+      project,
+      projectRevision: 1,
+      frame: createVizSessionRuntimePreviewFrame({
+        currentFrame: 12,
+        time: 0.2,
+        dt: 0,
+        fps: 60,
+        mode: 'live',
+      }),
+      viewport: { width: 640, height: 360 },
+      audioFrameData,
+      isPlaying: false,
+    });
+
+    expect(renderPlan.layers.map((layer) => layer.layerId)).toEqual([
+      'visible-layer',
+    ]);
+  });
+
   it('resolves baked graph features from the live session resources', () => {
     const series = (name: string, value: number) => ({
       name,

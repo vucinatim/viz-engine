@@ -341,8 +341,28 @@ complete:
 See
 [Project Lifecycle And Still Output](./parity/evidence/2026-07-31-goal-three-project-lifecycle-and-still-output.md).
 
-The parity matrix now contains 33 verified and 9 partial capabilities, with
-zero gaps and zero unaudited rows. Goal Three remains open because the 9
+The preview-semantics and focused-layer-mirror checkpoint is now also
+complete:
+
+- layer previews remain read-only presentations of one retained runtime, one
+  WebGL context, and one visible runtime canvas
+- mirror backing buffers now match displayed dimensions and editor quality,
+  eliminating the browser-default aspect distortion
+- layer opacity is applied exactly once by the compositor presentation path
+- visible keyboard controls hide and restore layers through the canonical
+  project path while mirror registration and render-plan membership clean up
+- deterministic tests define paused-live freeze opt-in and prove export always
+  consumes canonical frame audio
+- 20 fixed-device slider gestures measured 0.25 ms mean transient publication,
+  2.08 ms runtime publication, and 7.73 ms visible response
+- the current playback tail remains explicitly open rather than being hidden
+  behind the favorable interaction numbers
+
+See
+[Preview Semantics And Layer Mirrors](./parity/evidence/2026-07-31-goal-three-preview-semantics-and-layer-mirrors.md).
+
+The parity matrix now contains 35 verified and 7 partial capabilities, with
+zero gaps and zero unaudited rows. Goal Three remains open because the 7
 broader capabilities still require full acceptance evidence, alongside agent
 tooling and the second original production.
 

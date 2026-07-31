@@ -2,6 +2,35 @@
 
 ## 2026-07-31
 
+- completed the Goal Three preview-semantics and focused-layer-mirror
+  checkpoint:
+  - retained one canonical runtime plan, Three controller, WebGL context, and
+    visible runtime canvas; layer cards remain presentation attachments only
+  - replaced distorted browser-default mirror bitmaps with backing buffers
+    derived from displayed size and editor quality
+  - invalidated canonical presentation after backing-buffer resize so mirrors
+    cannot remain blank
+  - made layer visibility keyboard accessible and proved canonical hide/show,
+    render-plan membership, mirror teardown/restoration, and one-runtime
+    ownership in headed Chromium
+  - proved mirror opacity is applied once by the compositor instead of being
+    duplicated in CSS
+  - specified and tested frozen paused-live audio, opt-out live audio, hidden
+    layers, and deterministic export behavior
+  - measured 20 slider gestures at 0.25 ms mean transient publication,
+    2.08 ms runtime publication, 7.73 ms visible response, and 0.32 ms release
+    mutation
+  - retained the latest 19.00 ms median / 24.20 ms p95 runtime cadence and its
+    12 intervals over 25 ms as an open playback-performance boundary
+  - advanced multi-layer compositing and layer mirrors to verified while
+    keeping live rendering and broad performance rows partial
+  - recorded the architecture, acceptance, assumptions, performance artifact,
+    and honest boundary in
+    `docs/parity/evidence/2026-07-31-goal-three-preview-semantics-and-layer-mirrors.md`
+  - passed the complete foundation gate with 62 deterministic-test files / 277
+    tests, all 15 active headed Chromium journeys plus one opt-in skip, all 17
+    package builds, the studio production build, and both consumer smokes
+
 - completed the Goal Three project-lifecycle and still-output checkpoint:
   - made project-file envelope, version, canonical document, editor metadata,
     and embedded assets validate before any state mutation

@@ -1308,6 +1308,167 @@ test('composites canonical layer alpha and blend modes in one runtime canvas', a
   await expect(page.locator('canvas[data-runtime-preview-canvas]')).toHaveCount(
     1,
   );
+  await expect(page.getByTestId('layer-mirror-canvas')).toHaveCount(2);
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const multiplier =
+          window.__vizEditorDebug?.editorStore.getState()
+            .resolutionMultiplier ?? 1;
+        return Array.from(
+          document.querySelectorAll<HTMLCanvasElement>(
+            '[data-testid="layer-mirror-canvas"]',
+          ),
+        ).every(
+          (canvas) =>
+            canvas.width ===
+              Math.max(1, Math.round(canvas.clientWidth * multiplier)) &&
+            canvas.height ===
+              Math.max(1, Math.round(canvas.clientHeight * multiplier)),
+        );
+      }),
+    )
+    .toBe(true);
+
+  const mirrorPresentation = await page.evaluate(() => {
+    const multiplier =
+      window.__vizEditorDebug?.editorStore.getState().resolutionMultiplier ?? 1;
+    return Array.from(
+      document.querySelectorAll<HTMLCanvasElement>(
+        '[data-testid="layer-mirror-canvas"]',
+      ),
+    ).map((canvas) => ({
+      layerId: canvas.dataset.layerId,
+      width: canvas.width,
+      height: canvas.height,
+      expectedWidth: Math.max(1, Math.round(canvas.clientWidth * multiplier)),
+      expectedHeight: Math.max(1, Math.round(canvas.clientHeight * multiplier)),
+      opacity: getComputedStyle(canvas).opacity,
+    }));
+  });
+  expect(
+    Object.fromEntries(
+      mirrorPresentation.map((presentation) => [
+        presentation.layerId,
+        presentation,
+      ]),
+    ),
+  ).toMatchObject({
+    'blend-backdrop': {
+      layerId: 'blend-backdrop',
+      opacity: '1',
+    },
+    'blend-source': {
+      layerId: 'blend-source',
+      opacity: '1',
+    },
+  });
+
+  const readCanvasCenter = (selector: string) =>
+    page.evaluate((canvasSelector) => {
+      const canvas = document.querySelector<HTMLCanvasElement>(canvasSelector);
+      if (!canvas) {
+        return null;
+      }
+      const sample = document.createElement('canvas');
+      sample.width = canvas.width;
+      sample.height = canvas.height;
+      const context = sample.getContext('2d', { willReadFrequently: true });
+      if (!context) {
+        return null;
+      }
+      context.drawImage(canvas, 0, 0);
+      return [
+        ...context.getImageData(
+          Math.floor(canvas.width / 2),
+          Math.floor(canvas.height / 2),
+          1,
+          1,
+        ).data,
+      ];
+    }, selector);
+  const isNearColor = (
+    actual: number[] | null,
+    expected: readonly number[],
+    tolerance = 10,
+  ) =>
+    actual !== null &&
+    actual.every(
+      (channel, index) =>
+        Math.abs(channel - (expected[index] ?? channel)) <= tolerance,
+    );
+
+  await expect
+    .poll(async () =>
+      isNearColor(
+        await readCanvasCenter(
+          '[data-testid="layer-mirror-canvas"][data-layer-id="blend-backdrop"]',
+        ),
+        [64, 128, 192, 255],
+      ),
+    )
+    .toBe(true);
+  await expect
+    .poll(async () =>
+      isNearColor(
+        await readCanvasCenter(
+          '[data-testid="layer-mirror-canvas"][data-layer-id="blend-source"]',
+        ),
+        [192, 96, 32, 166],
+      ),
+    )
+    .toBe(true);
+
+  const sourceCard = page.locator(
+    '[data-testid="layer-card"][data-layer-id="blend-source"]',
+  );
+  const visibilityToggle = sourceCard.getByTestId('toggle-layer-visibility');
+  await visibilityToggle.click();
+  await expect(page.getByTestId('layer-mirror-canvas')).toHaveCount(1);
+  await expect
+    .poll(async () =>
+      page.evaluate(() => ({
+        enabled: window.__vizEditorDebug?.vizSessionStore
+          .getState()
+          .project.workingProject.layers.find(
+            (layer) => layer.id === 'blend-source',
+          )?.enabled,
+        rendered:
+          window.__vizEditorDebug?.editorControl.preview
+            .inspectRuntimePreview()
+            .lastRenderedLayerIds.includes('blend-source') ?? true,
+      })),
+    )
+    .toEqual({ enabled: false, rendered: false });
+  await expect
+    .poll(async () =>
+      isNearColor(
+        await readCanvasCenter('canvas[data-runtime-preview-canvas]'),
+        [64, 128, 192, 255],
+      ),
+    )
+    .toBe(true);
+
+  await visibilityToggle.click();
+  await expect(page.getByTestId('layer-mirror-canvas')).toHaveCount(2);
+  await expect
+    .poll(async () =>
+      page.evaluate(() => ({
+        enabled: window.__vizEditorDebug?.vizSessionStore
+          .getState()
+          .project.workingProject.layers.find(
+            (layer) => layer.id === 'blend-source',
+          )?.enabled,
+        rendered:
+          window.__vizEditorDebug?.editorControl.preview
+            .inspectRuntimePreview()
+            .lastRenderedLayerIds.includes('blend-source') ?? false,
+      })),
+    )
+    .toEqual({ enabled: true, rendered: true });
+  expect(
+    await page.locator('canvas[data-runtime-preview-canvas]').count(),
+  ).toBe(1);
 
   const blendModes = [
     'normal',

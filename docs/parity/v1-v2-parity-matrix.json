@@ -338,11 +338,11 @@
       "importance": "critical",
       "parityDimensions": ["visual", "functional"],
       "referenceEvidence": ["src/components/editor/renderer.tsx", "src/components/editor/layer-renderer.tsx", "src/components/editor/layer-settings.tsx"],
-      "v2Evidence": ["src/components/editor/layer-renderer.tsx", "src/lib/editor-runtime-preview-attachment.ts", "packages/viz-renderer-three/src/blend-compositor.ts", "packages/viz-renderer-svg/src/index.ts"],
-      "status": "partial",
+      "v2Evidence": ["src/components/editor/layer-renderer.tsx", "src/lib/editor-runtime-preview-attachment.ts", "src/lib/viz-session/runtime-preview-plan.ts", "packages/viz-renderer-three/src/blend-compositor.ts", "packages/viz-renderer-svg/src/index.ts", "tests/foundation/editor-runtime-preview-plan.test.ts", "tests/browser/editor-critical-journey.spec.ts"],
+      "status": "verified",
       "acceptance": ["A parity fixture produces the expected ordered composite.", "Hidden, frozen, and transparent layers have the documented behavior.", "Preview and export share compatible scene semantics."],
       "validationMethods": ["visual", "integration", "browser"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-canonical-preview-compositor.md", "docs/parity/evidence/2026-07-31-goal-three-project-lifecycle-and-still-output.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-canonical-preview-compositor.md", "docs/parity/evidence/2026-07-31-goal-three-project-lifecycle-and-still-output.md", "docs/parity/evidence/2026-07-31-goal-three-preview-semantics-and-layer-mirrors.md"]
     },
     {
       "id": "preview.layer-mirror",
@@ -351,11 +351,11 @@
       "importance": "standard",
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/layer-preview.tsx", "src/components/editor/layer-mirror-canvas.tsx"],
-      "v2Evidence": ["src/components/editor/layer-preview.tsx", "src/components/editor/layer-mirror-canvas.tsx"],
-      "status": "partial",
+      "v2Evidence": ["src/components/editor/layer-preview.tsx", "src/components/editor/layer-mirror-canvas.tsx", "src/lib/editor-runtime-preview-attachment.ts", "src/lib/stores/editor-runtime-preview-attachment-store.ts", "tests/browser/editor-critical-journey.spec.ts"],
+      "status": "verified",
       "acceptance": ["The focused preview represents the selected layer at the canonical time.", "Opening and closing it does not create a second source of scene truth.", "Resource cleanup occurs when the mirror is no longer visible."],
       "validationMethods": ["browser", "visual", "integration"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-canonical-preview-compositor.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-canonical-preview-compositor.md", "docs/parity/evidence/2026-07-31-goal-three-preview-semantics-and-layer-mirrors.md"]
     },
     {
       "id": "history.undo-redo",
