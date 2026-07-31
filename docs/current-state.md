@@ -176,8 +176,29 @@ See the
 [runtime and live-edit repair](./parity/evidence/2026-07-31-goal-three-runtime-and-live-edit-repair.md)
 and
 [interaction and visible-parity repair](./parity/evidence/2026-07-31-goal-three-interaction-and-visible-parity-repair.md)
-evidence. Goal Three remains open for controlled V1/V2 comparison, fixed-device
-performance distributions, the Curve Spectrum area fill, complete catalog
+evidence.
+
+The first repeatable fixed-device V2 performance baseline is also complete:
+
+- the headed 1600 × 1000 harness records display/runtime pacing and full
+  pointer-to-visible and release-to-settle distributions
+- session and host change notifications no longer construct unused full
+  snapshots
+- the editor reads one immutable canonical project view and preserves
+  unchanged layer projections
+- React Flow owns pointer-rate node movement and commits one canonical
+  position at drag end
+- temporal checkpoint carryover and runtime-semantic cache reuse removed the
+  measured 46–52 ms post-commit plan rebuild
+- on the measured Apple M1 Pro, slider movement reached the transient overlay
+  in 0.31 ms mean, runtime in 2.00 ms, and a visible frame in 8.87 ms
+- playback produced zero display or runtime frames over 25 ms in the
+  five-second sample
+
+See
+[Fixed-Device Interaction Performance](./parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md).
+Goal Three remains open for controlled V1/V2 comparison, broader workload
+performance, the Curve Spectrum area fill, complete catalog
 audit, agent tooling, and the second original production.
 
 ## Known Deliberate Deferrals

@@ -124,7 +124,7 @@ export const createVizLiveProjectValuesController = ({
   applyAction,
   applyActions,
 }: {
-  getProject(): VizProjectDocument;
+  getProject(): Readonly<VizProjectDocument>;
   getRevision(): number;
   applyAction(action: VizProjectAction): VizEditorSessionMutationResult;
   applyActions(actions: VizProjectAction[]): VizEditorSessionMutationResult;

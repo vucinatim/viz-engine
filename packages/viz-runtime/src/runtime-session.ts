@@ -21,6 +21,7 @@ export interface CreateVizRuntimeSessionOptions {
   resolvedArtifacts?: VizResolvedArtifact[];
   seed?: string;
   graphCheckpointIntervalFrames?: number;
+  initialGraphCheckpoints?: VizGraphRuntimeCheckpoint[];
 }
 
 export interface VizGraphRuntimeCheckpoint {
@@ -95,6 +96,7 @@ export const createVizRuntimeSession = ({
   resolvedArtifacts = [],
   seed = 'viz-default-seed',
   graphCheckpointIntervalFrames = 30,
+  initialGraphCheckpoints = [],
 }: CreateVizRuntimeSessionOptions): VizRuntimeSession => {
   assertValidProjectDocument(project);
 
@@ -110,6 +112,13 @@ export const createVizRuntimeSession = ({
     VizGraphId,
     Map<number, VizGraphRuntimeCheckpoint>
   >();
+  for (const checkpoint of initialGraphCheckpoints) {
+    const checkpoints =
+      graphCheckpointStore.get(checkpoint.graphId) ??
+      new Map<number, VizGraphRuntimeCheckpoint>();
+    checkpoints.set(checkpoint.frame, cloneGraphRuntimeCheckpoint(checkpoint));
+    graphCheckpointStore.set(checkpoint.graphId, checkpoints);
+  }
   const checkpointInterval = Math.max(
     1,
     Math.trunc(graphCheckpointIntervalFrames),

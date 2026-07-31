@@ -56,8 +56,8 @@ const JobStatusButton = () => {
 
   useEffect(
     () =>
-      vizControl.subscribe((snapshot) => {
-        setJobs(snapshot.jobSummaries);
+      vizControl.subscribeJobs((nextJobs) => {
+        setJobs(nextJobs);
       }),
     [],
   );

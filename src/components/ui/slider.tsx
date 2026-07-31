@@ -112,11 +112,15 @@ const Slider = React.forwardRef<
           name={inputId}
           type="number"
           className="h-8 w-16 rounded-md border border-input bg-background px-2 py-1 text-center text-xs ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
-          value={value || 0}
+          value={Number.isFinite(liveValue) ? liveValue : 0}
           min={min}
           max={max}
           step={step}
-          onChange={(e) => onChange(parseFloat(e.target.value))}
+          onChange={(event) => {
+            const nextValue = Number.parseFloat(event.target.value);
+            setLiveValue(nextValue);
+            onChange(nextValue);
+          }}
           onFocus={(event) => {
             event.target.select();
           }}

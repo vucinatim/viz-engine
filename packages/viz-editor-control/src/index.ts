@@ -231,6 +231,7 @@ export interface VizControl {
   setAudioAnalyzerState(state: VizEditorAudioAnalyzerState): VizControlSnapshot;
   setLiveInputAvailable(available: boolean): VizControlSnapshot;
   setBakedArtifactAvailable(available: boolean): VizControlSnapshot;
+  subscribeJobs(listener: (jobs: VizControlJobSummary[]) => void): () => void;
   subscribe(listener: (snapshot: VizControlSnapshot) => void): () => void;
 }
 
@@ -703,6 +704,20 @@ export const createVizControl = (
     setBakedArtifactAvailable: mutateHost((available) =>
       host.setBakedArtifactAvailable(available),
     ),
+    subscribeJobs: (listener) => {
+      const notify = () => {
+        listener(listJobs());
+      };
+      const unsubscribeAudio =
+        host.getServices().audioFeatureBakeJobs?.subscribe(notify) ??
+        (() => {});
+      const unsubscribeRender =
+        host.getServices().renderJobs?.subscribe(notify) ?? (() => {});
+      return () => {
+        unsubscribeAudio();
+        unsubscribeRender();
+      };
+    },
     subscribe: (listener) => {
       const unsubscribeHost = host.subscribe(() => {
         listener(getSnapshot());

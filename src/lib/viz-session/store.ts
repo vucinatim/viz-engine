@@ -2,7 +2,10 @@ import {
   studioComponentRegistry,
   studioNodeRegistry,
 } from '@/lib/viz-capabilities';
-import { type VizProjectAction } from '@viz-engine/contracts';
+import type {
+  VizProjectAction,
+  VizProjectDocument,
+} from '@viz-engine/contracts';
 import {
   createVizControl,
   createVizSessionHost,
@@ -175,7 +178,8 @@ const applyProjectActions = (
     );
   }
 
-  const canonicalProject = clone(result.project);
+  const canonicalProject =
+    vizSessionHost.getWorkingProjectView() as VizProjectDocument;
   if (options.syncLayerProjections !== false) {
     syncEditorProjection(canonicalProject);
   }
@@ -190,7 +194,7 @@ const applyProjectActions = (
 };
 
 const syncProjectSessionProject = () => {
-  const project = vizSessionHost.getWorkingProject();
+  const project = vizSessionHost.getWorkingProjectView() as VizProjectDocument;
   syncEditorProjection(project);
   resetVizSessionSelectorCaches();
   replaceProjectState({

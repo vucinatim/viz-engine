@@ -14,6 +14,7 @@ import useProfilerStore from '@/lib/stores/profiler-store';
 import type {
   VizSessionAudioState,
   VizSessionPreviewState,
+  VizSessionRuntimeInspectionState,
 } from '@/lib/viz-session';
 import {
   getVizSessionState,
@@ -238,6 +239,13 @@ const editorControl = {
     },
     inspectRuntimePreview() {
       return vizSessionActions.preview.inspectRuntimePreview();
+    },
+    subscribeRuntimePreview(
+      listener: (
+        inspection: Readonly<VizSessionRuntimeInspectionState>,
+      ) => void,
+    ) {
+      return vizSessionActions.preview.subscribeRuntimePreview(listener);
     },
     setState(partial: Partial<VizSessionPreviewState>) {
       vizSessionActions.preview.setState(partial);

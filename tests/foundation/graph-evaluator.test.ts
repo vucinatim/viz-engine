@@ -393,5 +393,27 @@ describe('Viz graph evaluation', () => {
         .listGraphCheckpoints('graph-temporal-checkpoint-test')
         .map((checkpoint) => checkpoint.frame),
     ).toEqual([0, 15, 30, 45, 60, 75, 90]);
+
+    const resumedSession = createVizRuntimeSession({
+      project: session.project,
+      mode: 'render',
+      resolvedArtifacts: exampleResolvedArtifacts,
+      seed: 'graph-temporal-checkpoint-seed',
+      graphCheckpointIntervalFrames: 15,
+      initialGraphCheckpoints: session.listGraphCheckpoints(
+        'graph-temporal-checkpoint-test',
+      ),
+    });
+    const resumedGraph = resumedSession.project.graphs?.[0];
+    stepCalls = 0;
+
+    evaluateSingleVizGraph({
+      graph: resumedGraph!,
+      session: resumedSession,
+      frame: 90,
+      registry,
+    });
+
+    expect(stepCalls).toBe(0);
   });
 });

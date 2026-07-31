@@ -79,4 +79,32 @@ describe('VizSession project state', () => {
       getVizSessionState().project.workingProject.layers[0].settings,
     ).toMatchObject({ value: 1 });
   });
+
+  it('preserves projections for layers untouched by a canonical edit', () => {
+    const comp = CompDefinitionMap.values().next().value;
+    if (!comp) {
+      throw new Error('Expected at least one component definition');
+    }
+    const project = createTestProject(comp, 'layer-changed');
+    const secondLayer = {
+      ...structuredClone(project.layers[0]!),
+      id: 'layer-unchanged',
+      name: 'Unchanged Layer',
+    };
+    project.layers.push(secondLayer);
+    project.layerOrder.push(secondLayer.id);
+    vizSessionActions.project.importWorkingProject(project);
+    const before = getProjectedLayers();
+    const canonicalBefore =
+      getVizSessionState().project.workingProject.layers[1];
+
+    vizSessionActions.project.updateLayerValue('layer-changed', ['value'], 2);
+    const after = getProjectedLayers();
+    const canonicalAfter =
+      getVizSessionState().project.workingProject.layers[1];
+
+    expect(canonicalAfter).toBe(canonicalBefore);
+    expect(after[0]).not.toBe(before[0]);
+    expect(after[1]).toBe(before[1]);
+  });
 });

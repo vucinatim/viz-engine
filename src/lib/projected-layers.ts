@@ -9,6 +9,15 @@ import { vizSessionStore } from '@/lib/viz-session/store';
 import { useMemo } from 'react';
 import { useStore } from 'zustand';
 
+interface ProjectedLayerCacheEntry {
+  layer: Parameters<typeof createProjectedLayer>[0]['layer'];
+  comp: Parameters<typeof createProjectedLayer>[0]['comp'];
+  uiState: Parameters<typeof createProjectedLayer>[0]['uiState'];
+  projected: LayerData;
+}
+
+const projectedLayerCache = new Map<string, ProjectedLayerCacheEntry>();
+
 const projectLayers = (
   project: ReturnType<
     typeof vizSessionStore.getState
@@ -26,17 +35,36 @@ const projectLayers = (
     ...project.layers.filter((layer) => !project.layerOrder.includes(layer.id)),
   ];
 
+  const activeLayerIds = new Set(orderedLayers.map((layer) => layer.id));
+  for (const layerId of projectedLayerCache.keys()) {
+    if (!activeLayerIds.has(layerId)) {
+      projectedLayerCache.delete(layerId);
+    }
+  }
+
   return orderedLayers.flatMap((layer) => {
     const comp = findEditorCompForLayer(layer, comps);
-    return comp
-      ? [
-          createProjectedLayer({
-            layer,
-            comp,
-            uiState: layerUi[layer.id],
-          }),
-        ]
-      : [];
+    if (!comp) {
+      projectedLayerCache.delete(layer.id);
+      return [];
+    }
+    const uiState = layerUi[layer.id];
+    const cached = projectedLayerCache.get(layer.id);
+    if (
+      cached?.layer === layer &&
+      cached.comp === comp &&
+      cached.uiState === uiState
+    ) {
+      return [cached.projected];
+    }
+    const projected = createProjectedLayer({ layer, comp, uiState });
+    projectedLayerCache.set(layer.id, {
+      layer,
+      comp,
+      uiState,
+      projected,
+    });
+    return [projected];
   });
 };
 

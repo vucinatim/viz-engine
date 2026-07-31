@@ -107,6 +107,40 @@ describe('VizSession runtime preview inspection', () => {
     });
   });
 
+  it('publishes runtime completion for external inspection without touching session state', () => {
+    const comp = CompDefinitionMap.values().next().value;
+    if (!comp) {
+      throw new Error('Expected at least one component definition');
+    }
+    vizSessionActions.project.importWorkingProject(
+      createTestProject(comp, 'observed-layer'),
+    );
+    useEditorRuntimePreviewAttachmentStore
+      .getState()
+      .registerLayerAttachment('observed-layer', createAttachment());
+    const listener = vi.fn();
+    const unsubscribe =
+      vizSessionActions.preview.subscribeRuntimePreview(listener);
+    const previewState = vizSessionStore.getState().preview;
+
+    vizSessionActions.preview.renderRuntimePreviewFrame(
+      createVizSessionRuntimePreviewFrame({
+        currentFrame: 6,
+        time: 0.1,
+        dt: 1 / 60,
+        fps: 60,
+        mode: 'live',
+      }),
+    );
+
+    expect(listener).toHaveBeenCalledOnce();
+    expect(vizSessionStore.getState().preview).toBe(previewState);
+
+    unsubscribe();
+    vizSessionActions.preview.reset();
+    expect(listener).toHaveBeenCalledOnce();
+  });
+
   it('resets session inspection without deleting mounted browser attachments', () => {
     const comp = CompDefinitionMap.values().next().value;
     if (!comp) {
@@ -140,6 +174,7 @@ describe('VizSession runtime preview inspection', () => {
       lastLayerSnapshots: [],
       lastMaterializedAssets: [],
       lastPlanIssues: [],
+      lastTimings: null,
       lastError: null,
     });
     expect(

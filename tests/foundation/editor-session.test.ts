@@ -378,4 +378,57 @@ describe('Viz editor session foundation', () => {
     );
     expect(observedProjectIds).toEqual(['project-loaded-in-place']);
   });
+
+  it('publishes allocation-free change signals without requiring snapshots', () => {
+    const session = createVizEditorSession({
+      project: exampleProjectDocument,
+    });
+    let changes = 0;
+    const unsubscribe = session.subscribeChanges(() => {
+      changes += 1;
+    });
+
+    session.setPreviewState({ currentFrame: 12 });
+    session.setUiState({ activePanel: 'preview' });
+
+    expect(changes).toBe(2);
+    unsubscribe();
+    session.setPreviewState({ currentFrame: 24 });
+    expect(changes).toBe(2);
+  });
+
+  it('preserves immutable structural sharing while exported projects remain defensive', () => {
+    const session = createVizEditorSession({
+      project: exampleProjectDocument,
+    });
+    const before = session.getWorkingProjectView();
+    const unchangedLayer = before.layers.find(
+      (layer) => layer.id === 'layer-bars',
+    );
+    const changedLayer = before.layers.find(
+      (layer) => layer.id === 'layer-background',
+    );
+
+    session.applyAction({
+      type: 'layer.settings.set',
+      payload: {
+        layerId: 'layer-background',
+        path: 'color',
+        value: '#123456',
+      },
+    });
+
+    const after = session.getWorkingProjectView();
+    expect(after).not.toBe(before);
+    expect(after.layers.find((layer) => layer.id === 'layer-bars')).toBe(
+      unchangedLayer,
+    );
+    expect(
+      after.layers.find((layer) => layer.id === 'layer-background'),
+    ).not.toBe(changedLayer);
+
+    const exported = session.exportWorkingProject();
+    exported.name = 'Mutated Export';
+    expect(session.getWorkingProjectView().name).not.toBe('Mutated Export');
+  });
 });

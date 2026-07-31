@@ -12,6 +12,7 @@ import {
   createVizRenderPlan,
   createVizRuntimeSession,
   resolveVizComponentRuntimeInputValues,
+  type VizGraphRuntimeCheckpoint,
   type VizRuntimeFrameInputValues,
   type VizRuntimeGraphValues,
   type VizRuntimeLayerValues,
@@ -32,6 +33,7 @@ interface RuntimePreviewSessionCache {
   viewportWidth: number;
   viewportHeight: number;
   durationInFrames: number;
+  project: VizProjectDocument;
   session: VizRuntimeSession;
 }
 
@@ -127,6 +129,90 @@ const createSessionProject = ({
   },
 });
 
+const createGraphRuntimeIdentity = (
+  graph: NonNullable<VizProjectDocument['graphs']>[number],
+): string =>
+  JSON.stringify({
+    id: graph.id,
+    enabled: graph.enabled,
+    inputs: graph.inputs,
+    nodes: graph.nodes.map((node) => ({
+      id: node.id,
+      type: node.type,
+      inputs: node.inputs,
+    })),
+    outputs: graph.outputs.map((output) => ({
+      key: output.key,
+      nodeId: output.nodeId,
+      output: output.output,
+    })),
+  });
+
+const collectReusableGraphCheckpoints = (
+  cached: RuntimePreviewSessionCache,
+  options: CreateRuntimePreviewPlanOptions,
+  mode: VizExecutionMode,
+): VizGraphRuntimeCheckpoint[] => {
+  if (
+    cached.resourceRevision !== (options.resourceRevision ?? 0) ||
+    cached.mode !== mode ||
+    cached.fps !== options.frame.fps
+  ) {
+    return [];
+  }
+
+  const previousGraphs = new Map(
+    (cached.project.graphs ?? []).map((graph) => [graph.id, graph]),
+  );
+  return (options.project.graphs ?? []).flatMap((graph) => {
+    const previous = previousGraphs.get(graph.id);
+    if (
+      !previous ||
+      (previous !== graph &&
+        createGraphRuntimeIdentity(previous) !==
+          createGraphRuntimeIdentity(graph))
+    ) {
+      return [];
+    }
+    const checkpoint = cached.session.getGraphCheckpointBeforeOrAt(
+      graph.id,
+      options.frame.currentFrame,
+    );
+    return checkpoint ? [checkpoint] : [];
+  });
+};
+
+const hasEquivalentRuntimeProject = (
+  cached: RuntimePreviewSessionCache,
+  project: VizProjectDocument,
+): boolean => {
+  if (
+    cached.project.timeline !== project.timeline ||
+    cached.project.layers !== project.layers ||
+    cached.project.layerOrder !== project.layerOrder ||
+    cached.project.assetRefs !== project.assetRefs ||
+    cached.project.artifactRefs !== project.artifactRefs ||
+    cached.project.viewport.backgroundColor !== project.viewport.backgroundColor
+  ) {
+    return false;
+  }
+
+  const previousGraphs = cached.project.graphs ?? [];
+  const nextGraphs = project.graphs ?? [];
+  return (
+    previousGraphs.length === nextGraphs.length &&
+    previousGraphs.every((graph, index) => {
+      const nextGraph = nextGraphs[index];
+      return (
+        nextGraph !== undefined &&
+        (graph === nextGraph ||
+          createGraphRuntimeIdentity(graph) ===
+            createGraphRuntimeIdentity(nextGraph))
+      );
+    })
+  );
+};
+
 const getRuntimeSession = (
   options: CreateRuntimePreviewPlanOptions,
 ): VizRuntimeSession => {
@@ -146,6 +232,24 @@ const getRuntimeSession = (
     return cached.session;
   }
 
+  if (
+    cached &&
+    cached.resourceRevision === (options.resourceRevision ?? 0) &&
+    cached.mode === mode &&
+    cached.fps === options.frame.fps &&
+    cached.viewportWidth === options.viewport.width &&
+    cached.viewportHeight === options.viewport.height &&
+    cached.durationInFrames >= options.frame.currentFrame + 1 &&
+    hasEquivalentRuntimeProject(cached, options.project)
+  ) {
+    sessionCache = {
+      ...cached,
+      revision: options.projectRevision,
+      project: options.project,
+    };
+    return cached.session;
+  }
+
   const bundledAssets = resolveBundledStageModelAssets(
     options.project.assetRefs ?? [],
   );
@@ -161,6 +265,9 @@ const getRuntimeSession = (
     seed: 'editor-runtime-preview',
     resolvedAssets: [...resolvedAssets.values()],
     resolvedArtifacts: options.resolvedArtifacts ?? [],
+    initialGraphCheckpoints: cached
+      ? collectReusableGraphCheckpoints(cached, options, mode)
+      : [],
   });
   sessionCache = {
     revision: options.projectRevision,
@@ -170,6 +277,7 @@ const getRuntimeSession = (
     viewportWidth: options.viewport.width,
     viewportHeight: options.viewport.height,
     durationInFrames: session.project.timeline.durationInFrames,
+    project: options.project,
     session,
   };
   frozenAudioByLayerId.clear();

@@ -8,7 +8,10 @@ import {
 } from '@/lib/editor-component-preview-plan';
 import { studioCatalogComponents } from '@/lib/viz-capabilities';
 import { createVizSessionRuntimePreviewFrame } from '@/lib/viz-session';
-import { createVizSessionRuntimePreviewPlan } from '@/lib/viz-session/runtime-preview-plan';
+import {
+  createVizSessionRuntimePreviewPlan,
+  resetVizSessionRuntimePreviewPlanCache,
+} from '@/lib/viz-session/runtime-preview-plan';
 import { createCoreComponentRegistry } from '@viz-engine/components-core';
 import type { VizAudioFeatureTimelineArtifact } from '@viz-engine/contracts';
 import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
@@ -34,6 +37,71 @@ const audioFrameData = {
 };
 
 describe('Editor runtime preview planning', () => {
+  it('keeps the runtime session across graph-layout-only revisions', () => {
+    resetVizSessionRuntimePreviewPlanCache();
+    const project = createTestProject(FullscreenShader, 'layout-only-layer');
+    project.graphs = [
+      {
+        id: 'layout-only-graph',
+        name: 'Layout-only graph',
+        enabled: true,
+        nodes: [
+          {
+            id: 'constant',
+            type: 'Constant',
+            position: { x: 10, y: 20 },
+            inputs: {
+              value: { kind: 'literal', value: 0.5 },
+            },
+          },
+        ],
+        outputs: [
+          {
+            key: 'value',
+            nodeId: 'constant',
+            output: 'value',
+          },
+        ],
+      },
+    ];
+    const frame = createVizSessionRuntimePreviewFrame({
+      currentFrame: 12,
+      time: 0.2,
+      dt: 1 / 60,
+      fps: 60,
+      mode: 'live',
+    });
+    const firstPlan = createVizSessionRuntimePreviewPlan({
+      project,
+      projectRevision: 1,
+      frame,
+      viewport: { width: 640, height: 360 },
+      audioFrameData,
+      isPlaying: true,
+    });
+    const nextProject = {
+      ...project,
+      graphs: project.graphs.map((graph) => ({
+        ...graph,
+        nodes: graph.nodes.map((node) => ({
+          ...node,
+          position: { x: 30, y: 40 },
+        })),
+      })),
+    };
+    const nextPlan = createVizSessionRuntimePreviewPlan({
+      project: nextProject,
+      projectRevision: 2,
+      frame,
+      viewport: { width: 640, height: 360 },
+      audioFrameData,
+      isPlaying: true,
+    });
+
+    expect(nextPlan.viewport).toBe(firstPlan.viewport);
+    expect(nextPlan.graphResults).toStrictEqual(firstPlan.graphResults);
+  });
+
   it('evaluates the complete canonical project into one runtime plan', () => {
     const components = Array.from(CompDefinitionMap.values());
     const first = components[0];

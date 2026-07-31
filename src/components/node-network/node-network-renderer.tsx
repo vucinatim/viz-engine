@@ -57,39 +57,33 @@ const NodeNetworkRenderer = ({
   const network = useSpecificNetwork(nodeNetworkId);
   const nodes = useMemo(() => network?.nodes ?? [], [network?.nodes]);
   const edges = useMemo(() => network?.edges ?? [], [network?.edges]);
-  const [flowNodes, setFlowNodes] = useState<any[]>(nodes);
   const [paneMenuGeneration, setPaneMenuGeneration] = useState(0);
   const flowNodesRef = useRef<any[]>(nodes);
   const isNodeDragActiveRef = useRef(false);
 
   useEffect(() => {
-    setFlowNodes((currentNodes) =>
-      nodes.map((node) => {
-        const current = currentNodes.find(
-          (candidate) => candidate.id === node.id,
-        );
-        return current
-          ? {
-              ...node,
-              ...(current.measured === undefined
-                ? {}
-                : { measured: current.measured }),
-              ...(current.width === undefined ? {} : { width: current.width }),
-              ...(current.height === undefined
-                ? {}
-                : { height: current.height }),
-              ...(current.selected === undefined
-                ? {}
-                : { selected: current.selected }),
-            }
-          : node;
-      }),
-    );
-  }, [nodes]);
-
-  useEffect(() => {
-    flowNodesRef.current = flowNodes;
-  }, [flowNodes]);
+    const currentNodes = flowNodesRef.current;
+    const nextNodes = nodes.map((node) => {
+      const current = currentNodes.find(
+        (candidate) => candidate.id === node.id,
+      );
+      return current
+        ? {
+            ...node,
+            ...(current.measured === undefined
+              ? {}
+              : { measured: current.measured }),
+            ...(current.width === undefined ? {} : { width: current.width }),
+            ...(current.height === undefined ? {} : { height: current.height }),
+            ...(current.selected === undefined
+              ? {}
+              : { selected: current.selected }),
+          }
+        : node;
+    });
+    flowNodesRef.current = nextNodes;
+    finalReactFlowInstance.current?.setNodes(nextNodes);
+  }, [finalReactFlowInstance, nodes]);
 
   // Wrapped setters that push to history
   const setNodes = useCallback(
@@ -157,12 +151,9 @@ const NodeNetworkRenderer = ({
     setMousePosition(newMousePosition);
   };
 
-  const isValidConnection = useCallback(
-    (connection: Connection | Edge) => {
-      return isConnectionValid(connection as Connection, flowNodes);
-    },
-    [flowNodes],
-  );
+  const isValidConnection = useCallback((connection: Connection | Edge) => {
+    return isConnectionValid(connection as Connection, flowNodesRef.current);
+  }, []);
 
   // Handle edge reconnection
   const onReconnect = useCallback(
@@ -277,7 +268,7 @@ const NodeNetworkRenderer = ({
             panOnDrag={true}
             colorMode="dark"
             nodeTypes={nodeTypes}
-            nodes={flowNodes}
+            defaultNodes={nodes}
             edges={edges}
             isValidConnection={isValidConnection}
             connectionRadius={40}
@@ -299,32 +290,17 @@ const NodeNetworkRenderer = ({
                 startDrag();
               }
 
-              // Filter out deletion changes for protected nodes (input/output)
-              const filteredChanges = changes.filter((change) => {
-                if (change.type === 'remove') {
-                  // Check if the node being removed is a protected node
-                  // We can identify protected nodes by their ID pattern
-                  const node = flowNodesRef.current.find(
-                    (candidate) => candidate.id === change.id,
-                  );
-                  const isProtected =
-                    node !== undefined && isProtectedGraphNode(node);
-                  return !isProtected;
-                }
-                return true;
-              });
-
-              // React Flow measurement and selection are canvas-local UI state.
-              // Only durable graph edits are written back to the canonical document.
-              if (filteredChanges.length > 0) {
+              // React Flow owns pointer-rate canvas state. The canonical graph
+              // receives only durable edits, including one position commit when
+              // a drag ends.
+              if (changes.length > 0) {
                 const newNodes = applyNodeChanges(
-                  filteredChanges,
+                  changes,
                   flowNodesRef.current,
                 );
                 flowNodesRef.current = newNodes;
-                setFlowNodes(newNodes);
                 if (
-                  filteredChanges.some(
+                  changes.some(
                     (change) =>
                       change.type !== 'dimensions' &&
                       change.type !== 'select' &&
@@ -340,6 +316,9 @@ const NodeNetworkRenderer = ({
                 endDrag();
               }
             }}
+            onBeforeDelete={async ({ nodes: nodesToDelete }) =>
+              !nodesToDelete.some(isProtectedGraphNode)
+            }
             onEdgesChange={(changes) => {
               const newEdges = applyEdgeChanges(changes, edges);
               setEdges(newEdges);

@@ -21,6 +21,7 @@ This is the entrypoint for VizEngine documentation during the V2 rewrite.
 - [parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md](./parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md)
 - [parity/evidence/2026-07-31-goal-three-runtime-and-live-edit-repair.md](./parity/evidence/2026-07-31-goal-three-runtime-and-live-edit-repair.md)
 - [parity/evidence/2026-07-31-goal-three-interaction-and-visible-parity-repair.md](./parity/evidence/2026-07-31-goal-three-interaction-and-visible-parity-repair.md)
+- [parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md](./parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md)
 - [parity/evidence/artifacts/2026-07-31-goal-three-baseline.json](./parity/evidence/artifacts/2026-07-31-goal-three-baseline.json)
 
 ## Active Direction

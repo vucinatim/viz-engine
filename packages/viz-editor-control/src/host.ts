@@ -100,6 +100,7 @@ export interface VizSessionHost {
   getProjectRevision(): number;
   getResourceRevision(): number;
   getWorkingProject(): VizProjectDocument;
+  getWorkingProjectView(): Readonly<VizProjectDocument>;
   getProjectResources(): VizSessionProjectResources;
   getComponentRegistry(): VizComponentRegistry;
   getNodeRegistry(): VizNodeRegistry;
@@ -195,22 +196,21 @@ export interface VizSessionHost {
       | ((
           current: VizEditorUiState,
         ) => VizEditorUiState | Partial<VizEditorUiState>),
-  ): VizSessionHostSnapshot;
-  play(): VizSessionHostSnapshot;
-  pause(): VizSessionHostSnapshot;
-  togglePlayback(): VizSessionHostSnapshot;
-  seekToFrame(frame: number): VizSessionHostSnapshot;
-  advanceBySeconds(seconds: number): VizSessionHostSnapshot;
-  setLoop(loop: boolean): VizSessionHostSnapshot;
-  setTransportDurationFrames(durationFrames: number): VizSessionHostSnapshot;
-  setPreviewMode(mode: VizEditorTransportState['mode']): VizSessionHostSnapshot;
-  attachAudioSource(source: VizEditorAudioSource): VizSessionHostSnapshot;
-  clearAudioSource(): VizSessionHostSnapshot;
-  setAudioAnalyzerState(
-    state: VizEditorAudioAnalyzerState,
-  ): VizSessionHostSnapshot;
-  setLiveInputAvailable(available: boolean): VizSessionHostSnapshot;
-  setBakedArtifactAvailable(available: boolean): VizSessionHostSnapshot;
+  ): void;
+  play(): void;
+  pause(): void;
+  togglePlayback(): void;
+  seekToFrame(frame: number): void;
+  advanceBySeconds(seconds: number): void;
+  setLoop(loop: boolean): void;
+  setTransportDurationFrames(durationFrames: number): void;
+  setPreviewMode(mode: VizEditorTransportState['mode']): void;
+  attachAudioSource(source: VizEditorAudioSource): void;
+  clearAudioSource(): void;
+  setAudioAnalyzerState(state: VizEditorAudioAnalyzerState): void;
+  setLiveInputAvailable(available: boolean): void;
+  setBakedArtifactAvailable(available: boolean): void;
+  subscribeChanges(listener: () => void): () => void;
   subscribe(listener: (snapshot: VizSessionHostSnapshot) => void): () => void;
 }
 
@@ -269,6 +269,7 @@ export const createVizSessionHost = ({
   let currentResources = clone(initialProject);
   let resourceRevision = 0;
   const listeners = new Set<(snapshot: VizSessionHostSnapshot) => void>();
+  const changeListeners = new Set<() => void>();
   const session: VizEditorSession = createVizEditorSession({
     project: currentResources.project,
     actor,
@@ -284,6 +285,12 @@ export const createVizSessionHost = ({
     applyActions: session.applyActions,
   });
   function emit() {
+    for (const listener of changeListeners) {
+      listener();
+    }
+    if (listeners.size === 0) {
+      return;
+    }
     const snapshot = getSnapshot();
     for (const listener of listeners) {
       listener(snapshot);
@@ -340,7 +347,7 @@ export const createVizSessionHost = ({
     };
   }
 
-  session.subscribe(() => {
+  session.subscribeChanges(() => {
     emit();
   });
 
@@ -414,6 +421,7 @@ export const createVizSessionHost = ({
     getProjectRevision: () => session.getRevision(),
     getResourceRevision: () => resourceRevision,
     getWorkingProject: () => session.exportWorkingProject(),
+    getWorkingProjectView: () => session.getWorkingProjectView(),
     getProjectResources: () => ({
       project: session.exportWorkingProject(),
       resolvedAssets: clone(currentResources.resolvedAssets),
@@ -490,13 +498,13 @@ export const createVizSessionHost = ({
     undo: () => {
       liveProjectValues.cancelAll();
       session.undo();
-      syncTransportTimeline(session.getWorkingProject());
+      syncTransportTimeline(session.getWorkingProjectView());
       return getSnapshot();
     },
     redo: () => {
       liveProjectValues.cancelAll();
       session.redo();
-      syncTransportTimeline(session.getWorkingProject());
+      syncTransportTimeline(session.getWorkingProjectView());
       return getSnapshot();
     },
     canUndo: () => session.canUndo(),
@@ -510,59 +518,51 @@ export const createVizSessionHost = ({
     },
     setUiState: (next) => {
       session.setUiState(next);
-      return getSnapshot();
     },
     play: () => {
       transportController.play();
-      return getSnapshot();
     },
     pause: () => {
       transportController.pause();
-      return getSnapshot();
     },
     togglePlayback: () => {
       transportController.togglePlayback();
-      return getSnapshot();
     },
     seekToFrame: (frame) => {
       transportController.seekToFrame(frame);
-      return getSnapshot();
     },
     advanceBySeconds: (seconds) => {
       transportController.advanceBySeconds(seconds);
-      return getSnapshot();
     },
     setLoop: (loop) => {
       transportController.setLoop(loop);
-      return getSnapshot();
     },
     setTransportDurationFrames: (durationFrames) => {
       transportController.setDurationFrames(durationFrames);
-      return getSnapshot();
     },
     setPreviewMode: (mode) => {
       transportController.setMode(mode);
-      return getSnapshot();
     },
     attachAudioSource: (source) => {
       audioSessionController.attachSource(source);
-      return getSnapshot();
     },
     clearAudioSource: () => {
       audioSessionController.clearSource();
-      return getSnapshot();
     },
     setAudioAnalyzerState: (state) => {
       audioSessionController.setAnalyzerState(state);
-      return getSnapshot();
     },
     setLiveInputAvailable: (available) => {
       audioSessionController.setLiveInputAvailable(available);
-      return getSnapshot();
     },
     setBakedArtifactAvailable: (available) => {
       audioSessionController.setBakedArtifactAvailable(available);
-      return getSnapshot();
+    },
+    subscribeChanges: (listener) => {
+      changeListeners.add(listener);
+      return () => {
+        changeListeners.delete(listener);
+      };
     },
     subscribe: (listener) => {
       listeners.add(listener);

@@ -1,3 +1,7 @@
+import {
+  advanceEditorPreviewFrameDeadline,
+  isEditorPreviewFrameDue,
+} from '@/lib/editor-runtime-preview-clock';
 import { subscribeEditorRuntimePreviewInvalidation } from '@/lib/editor-runtime-preview-invalidation';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
@@ -18,6 +22,7 @@ const EditorRuntimePreviewDriver = () => {
   const lastFrameTimeRef = useRef(
     typeof performance !== 'undefined' ? performance.now() : Date.now(),
   );
+  const nextFrameDeadlineRef = useRef(lastFrameTimeRef.current);
 
   useEffect(() => {
     if (isExporting) {
@@ -30,6 +35,7 @@ const EditorRuntimePreviewDriver = () => {
 
     lastFrameTimeRef.current =
       typeof performance !== 'undefined' ? performance.now() : Date.now();
+    nextFrameDeadlineRef.current = lastFrameTimeRef.current;
 
     const scheduleRender = () => {
       if (rafIdRef.current === null) {
@@ -57,7 +63,7 @@ const EditorRuntimePreviewDriver = () => {
       // twice only burns CPU/GPU and can make editor interactions less smooth.
       if (
         shouldRenderContinuously &&
-        elapsedMilliseconds + 1 < targetIntervalMilliseconds
+        !isEditorPreviewFrameDue(now, nextFrameDeadlineRef.current)
       ) {
         scheduleRender();
         return;
@@ -65,6 +71,13 @@ const EditorRuntimePreviewDriver = () => {
 
       const dt = shouldRenderContinuously ? elapsedMilliseconds / 1000 : 0;
       lastFrameTimeRef.current = now;
+      nextFrameDeadlineRef.current = shouldRenderContinuously
+        ? advanceEditorPreviewFrameDeadline(
+            now,
+            nextFrameDeadlineRef.current,
+            targetIntervalMilliseconds,
+          )
+        : now;
 
       const time =
         typeof currentFrame === 'number' && fps > 0

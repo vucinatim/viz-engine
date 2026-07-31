@@ -2024,3 +2024,36 @@
   - measured 69,254 production lines and 88,384 combined maintained lines
   - recorded implementation and browser evidence in
     `docs/parity/evidence/2026-07-31-goal-three-interaction-and-visible-parity-repair.md`
+- completed the first repeatable Goal Three fixed-device interaction
+  performance checkpoint:
+  - added a dedicated headed Chromium harness at 1600 × 1000, DPR 1, with
+    fixed warmup, frame sample, slider gestures, graph-node gestures, fixture
+    identity, console diagnostics, memory, runtime timings, and raw samples
+  - proved pointer-rate slider updates remain outside canonical project state
+    and history while the numeric readout, transient overlay, runtime, and
+    visible output all update live
+  - introduced allocation-free session, host, and runtime-inspection change
+    subscriptions and stopped the Jobs badge from cloning the entire control
+    snapshot on transport ticks
+  - replaced duplicated deep-cloned UI project truth with the session-owned
+    immutable project view and preserved untouched layer/projection identity
+  - corrected high-refresh preview scheduling from roughly 48 Hz on a 144 Hz
+    display to the authored average 60 Hz cadence
+  - made React Flow own transient node positions and retained one canonical
+    position transaction at drag end
+  - retained runtime sessions for graph-layout-only revisions and carried only
+    the nearest valid temporal checkpoint across real runtime changes,
+    reducing observed post-commit plan work from 46–52 ms to 0.2–0.5 ms
+  - measured slider pointer-to-transient at 0.31 ms mean,
+    pointer-to-runtime at 2.00 ms, and pointer-to-visible at 8.87 ms across 20
+    headed gestures
+  - measured graph pointer-to-visible at 19.33 ms mean and canonical mutation
+    at 0.54 ms across 20 headed gestures
+  - measured zero display or runtime intervals over 25 ms during the
+    five-second playback sample
+  - passed the complete foundation gate: parity, architecture, formatting,
+    lint, all type checks, 56 files / 249 tests, seven browser journeys, all
+    package and studio builds, packed-consumer smoke, and built creative-loop
+    smoke
+  - recorded the full evidence and machine-readable report in
+    `docs/parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md`

@@ -192,7 +192,7 @@ export const createStudioProjectActions = ({
               state.sourceProject === null
                 ? null
                 : structuredClone(normalize(state.sourceProject)),
-            workingProject: structuredClone(project),
+            workingProject: host.getWorkingProjectView() as VizProjectDocument,
           });
         }
         return;
@@ -210,7 +210,7 @@ export const createStudioProjectActions = ({
         initialized: true,
         revision: host.getProjectRevision(),
         sourceProject: structuredClone(project),
-        workingProject: structuredClone(project),
+        workingProject: host.getWorkingProjectView() as VizProjectDocument,
       });
     },
     importWorkingProject(
@@ -226,7 +226,7 @@ export const createStudioProjectActions = ({
         initialized: true,
         revision: host.getProjectRevision(),
         sourceProject: structuredClone(canonicalProject),
-        workingProject: structuredClone(canonicalProject),
+        workingProject: host.getWorkingProjectView() as VizProjectDocument,
       });
       syncOpenNetwork();
     },

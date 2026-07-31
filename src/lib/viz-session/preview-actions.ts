@@ -11,6 +11,7 @@ import {
 import type {
   VizSessionPreviewState,
   VizSessionProjectState,
+  VizSessionRuntimeInspectionState,
   VizSessionRuntimePreviewAudioFrameData,
   VizSessionRuntimePreviewFrame,
 } from './types';
@@ -107,6 +108,7 @@ export const createStudioPreviewActions = ({
     frame: VizSessionRuntimePreviewFrame,
     providedAudioFrameData?: VizSessionRuntimePreviewAudioFrameData,
   ) {
+    const startedAt = performance.now();
     try {
       const attachmentStore = useEditorRuntimePreviewAttachmentStore.getState();
       const projectState = getProjectState();
@@ -134,6 +136,7 @@ export const createStudioPreviewActions = ({
         height: projectState.workingProject.viewport.height,
       };
       const resources = getResources();
+      const planStartedAt = performance.now();
       const renderPlan = createVizSessionRuntimePreviewPlan({
         project: projectState.workingProject,
         projectRevision: projectState.revision,
@@ -147,12 +150,18 @@ export const createStudioPreviewActions = ({
         layerValues: host.getLiveLayerValues(),
         graphValues: host.getLiveGraphValues(),
       });
+      const planCompletedAt = performance.now();
       const lastRenderedLayerIds = attachmentStore.renderRuntimePlan(
         frame,
         audioFrameData,
         renderPlan,
       );
-      runtimeInspection.publishFrame(frame, renderPlan, lastRenderedLayerIds);
+      const completedAt = performance.now();
+      runtimeInspection.publishFrame(frame, renderPlan, lastRenderedLayerIds, {
+        planMilliseconds: planCompletedAt - planStartedAt,
+        attachmentMilliseconds: completedAt - planCompletedAt,
+        totalMilliseconds: completedAt - startedAt,
+      });
     } catch (error) {
       runtimeInspection.publishError(frame, {
         message:
@@ -171,6 +180,11 @@ export const createStudioPreviewActions = ({
       layerCount: projectState.workingProject.layers.length,
       ...runtimeInspection.inspect(),
     };
+  },
+  subscribeRuntimePreview(
+    listener: (inspection: Readonly<VizSessionRuntimeInspectionState>) => void,
+  ) {
+    return runtimeInspection.subscribe(listener);
   },
   setState(partial: Partial<VizSessionPreviewState>) {
     replaceState({

@@ -21,18 +21,30 @@ export const createInitialRuntimeInspectionState =
     lastLayerSnapshots: [],
     lastMaterializedAssets: [],
     lastPlanIssues: [],
+    lastTimings: null,
     lastError: null,
   });
 
 let current = createInitialRuntimeInspectionState();
+const listeners = new Set<
+  (inspection: Readonly<VizSessionRuntimeInspectionState>) => void
+>();
+
+const publish = (next: VizSessionRuntimeInspectionState): void => {
+  current = next;
+  for (const listener of listeners) {
+    listener(current);
+  }
+};
 
 export const runtimeInspection = {
   publishFrame(
     frame: VizSessionRuntimePreviewFrame,
     renderPlan: VizRenderPlan,
     renderedLayerIds: string[],
+    timings: NonNullable<VizSessionRuntimeInspectionState['lastTimings']>,
   ) {
-    current = {
+    publish({
       status: 'idle',
       lastRequestedFrame: frame,
       lastCompletedFrame: frame,
@@ -43,22 +55,23 @@ export const runtimeInspection = {
       lastLayerSnapshots: renderPlan.layers,
       lastMaterializedAssets: renderPlan.materializedAssets,
       lastPlanIssues: renderPlan.issues,
+      lastTimings: timings,
       lastError: null,
-    };
+    });
   },
   publishError(
     frame: VizSessionRuntimePreviewFrame,
     error: VizSessionRuntimePreviewError,
   ) {
-    current = {
+    publish({
       ...current,
       status: 'failed',
       lastRequestedFrame: frame,
       lastError: error,
-    };
+    });
   },
   reset() {
-    current = createInitialRuntimeInspectionState();
+    publish(createInitialRuntimeInspectionState());
   },
   getCurrent(): Readonly<VizSessionRuntimeInspectionState> {
     return current;
@@ -68,5 +81,13 @@ export const runtimeInspection = {
   },
   inspect(): VizSessionRuntimeInspectionState {
     return structuredClone(current);
+  },
+  subscribe(
+    listener: (inspection: Readonly<VizSessionRuntimeInspectionState>) => void,
+  ): () => void {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
   },
 };

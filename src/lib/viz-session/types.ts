@@ -62,6 +62,11 @@ export interface VizSessionRuntimeInspectionState {
   lastLayerSnapshots: VizLayerRenderPlanEntry[];
   lastMaterializedAssets: VizMaterializedAsset[];
   lastPlanIssues: VizFramePlanIssue[];
+  lastTimings: {
+    planMilliseconds: number;
+    attachmentMilliseconds: number;
+    totalMilliseconds: number;
+  } | null;
   lastError: VizSessionRuntimePreviewError | null;
 }
 

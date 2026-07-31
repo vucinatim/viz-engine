@@ -101,6 +101,7 @@ export interface VizEditorSession {
   getRevision(): number;
   getSourceProject(): VizProjectDocument;
   getWorkingProject(): VizProjectDocument;
+  getWorkingProjectView(): Readonly<VizProjectDocument>;
   getUiState(): VizEditorUiState;
   getPreviewState(): VizEditorPreviewState;
   setUiState(
@@ -109,14 +110,14 @@ export interface VizEditorSession {
       | ((
           current: VizEditorUiState,
         ) => VizEditorUiState | Partial<VizEditorUiState>),
-  ): VizEditorSessionSnapshot;
+  ): void;
   setPreviewState(
     next:
       | Partial<VizEditorPreviewState>
       | ((
           current: VizEditorPreviewState,
         ) => VizEditorPreviewState | Partial<VizEditorPreviewState>),
-  ): VizEditorSessionSnapshot;
+  ): void;
   applyAction(
     action: VizProjectAction,
     options?: { actor?: VizActionActor },
@@ -153,6 +154,7 @@ export interface VizEditorSession {
   ): VizEditorSessionSnapshot;
   resetWorkingProject(): VizEditorSessionSnapshot;
   exportWorkingProject(): VizProjectDocument;
+  subscribeChanges(listener: () => void): () => void;
   subscribe(listener: (snapshot: VizEditorSessionSnapshot) => void): () => void;
 }
 
@@ -340,10 +342,8 @@ export const createVizEditorSession = ({
   previewState,
 }: CreateVizEditorSessionOptions): VizEditorSession => {
   const normalize = (projectDocument: VizProjectDocument) =>
-    cloneUnknown(
-      normalizeProject?.(cloneUnknown(projectDocument)) ?? projectDocument,
-    );
-  const initialProject = normalize(project);
+    normalizeProject?.(projectDocument) ?? projectDocument;
+  const initialProject = normalize(cloneUnknown(project));
   assertValidProjectDocument(initialProject);
 
   const sourceProject = cloneUnknown(initialProject);
@@ -363,8 +363,15 @@ export const createVizEditorSession = ({
     historyGroupStart: undefined,
   };
   const listeners = new Set<(snapshot: VizEditorSessionSnapshot) => void>();
+  const changeListeners = new Set<() => void>();
 
   const notify = () => {
+    for (const listener of changeListeners) {
+      listener();
+    }
+    if (listeners.size === 0) {
+      return;
+    }
     const snapshot = createSnapshot(state);
     for (const listener of listeners) {
       listener(snapshot);
@@ -374,7 +381,7 @@ export const createVizEditorSession = ({
   const pushPast = (
     projectDocument: VizProjectDocument,
   ): ProjectHistoryEntry[] => {
-    return [...state.past, { project: cloneUnknown(projectDocument) }].slice(
+    return [...state.past, { project: projectDocument }].slice(
       -MAX_PROJECT_HISTORY_SIZE,
     );
   };
@@ -405,7 +412,7 @@ export const createVizEditorSession = ({
         ? transaction.id
         : createGeneratedTransactionId();
     const transactionIssues: VizEditorSessionTransactionIssue[] = [];
-    const currentProject = cloneUnknown(state.workingProject);
+    const currentProject = state.workingProject;
     const currentValidation = validateProjectDocument(currentProject);
     const createMutationResult = ({
       ok,
@@ -618,6 +625,7 @@ export const createVizEditorSession = ({
     getRevision: () => state.revision,
     getSourceProject: () => cloneUnknown(state.sourceProject),
     getWorkingProject: () => cloneUnknown(state.workingProject),
+    getWorkingProjectView: () => state.workingProject,
     getUiState: () => cloneUnknown(state.uiState),
     getPreviewState: () => ({ ...state.previewState }),
     setUiState: (next) => {
@@ -627,7 +635,6 @@ export const createVizEditorSession = ({
       };
 
       notify();
-      return createSnapshot(state);
     },
     setPreviewState: (next) => {
       state = {
@@ -636,7 +643,6 @@ export const createVizEditorSession = ({
       };
 
       notify();
-      return createSnapshot(state);
     },
     applyAction: (action, options) => transact({ actions: [action] }, options),
     applyActions: (actions, options) => transact({ actions }, options),
@@ -649,12 +655,9 @@ export const createVizEditorSession = ({
 
       state = {
         ...state,
-        workingProject: cloneUnknown(previous.project),
+        workingProject: previous.project,
         past: state.past.slice(0, -1),
-        future: [
-          { project: cloneUnknown(state.workingProject) },
-          ...state.future,
-        ],
+        future: [{ project: state.workingProject }, ...state.future],
         issues: [],
         revision: state.revision + 1,
       };
@@ -669,7 +672,7 @@ export const createVizEditorSession = ({
 
       state = {
         ...state,
-        workingProject: cloneUnknown(next.project),
+        workingProject: next.project,
         past: pushPast(state.workingProject),
         future: state.future.slice(1),
         issues: [],
@@ -684,22 +687,19 @@ export const createVizEditorSession = ({
       if (state.historyGroupStart === undefined) {
         state = {
           ...state,
-          historyGroupStart: cloneUnknown(state.workingProject),
+          historyGroupStart: state.workingProject,
         };
       }
     },
     endHistoryGroup: () => {
       if (state.historyGroupStart !== undefined) {
-        const changed =
-          JSON.stringify(state.historyGroupStart) !==
-          JSON.stringify(state.workingProject);
+        const changed = state.historyGroupStart !== state.workingProject;
         state = {
           ...state,
           past: changed
-            ? [
-                ...state.past,
-                { project: cloneUnknown(state.historyGroupStart) },
-              ].slice(-MAX_PROJECT_HISTORY_SIZE)
+            ? [...state.past, { project: state.historyGroupStart }].slice(
+                -MAX_PROJECT_HISTORY_SIZE,
+              )
             : state.past,
           historyGroupStart: undefined,
         };
@@ -708,7 +708,7 @@ export const createVizEditorSession = ({
       return createSnapshot(state);
     },
     replaceWorkingProject: (projectDocument, options) => {
-      const normalizedProject = normalize(projectDocument);
+      const normalizedProject = normalize(cloneUnknown(projectDocument));
       assertValidProjectDocument(normalizedProject);
 
       state = {
@@ -734,7 +734,7 @@ export const createVizEditorSession = ({
       return createSnapshot(state);
     },
     loadProject: (projectDocument, options) => {
-      const normalizedProject = normalize(projectDocument);
+      const normalizedProject = normalize(cloneUnknown(projectDocument));
       assertValidProjectDocument(normalizedProject);
 
       state = {
@@ -778,6 +778,12 @@ export const createVizEditorSession = ({
       return createSnapshot(state);
     },
     exportWorkingProject: () => cloneUnknown(state.workingProject),
+    subscribeChanges: (listener) => {
+      changeListeners.add(listener);
+      return () => {
+        changeListeners.delete(listener);
+      };
+    },
     subscribe: (listener) => {
       listeners.add(listener);
       return () => {
