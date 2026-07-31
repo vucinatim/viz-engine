@@ -830,14 +830,14 @@ export const exportMemoryChart = (
     fill: '#8b5cf640',
   });
 
-export const exportFrameBudgetChart = (
+export const exportLongTaskShareChart = (
   session: RecordingSession,
   options: ChartExportOptions = {},
 ): Promise<Blob> =>
   exportTimeSeriesChart(session, options, {
-    title: 'Frame Budget Usage Over Time',
-    yLabel: 'Frame Budget (%)',
-    value: (snapshot) => snapshot.cpuUsage,
+    title: 'Main-thread Long-task Share Over Time',
+    yLabel: 'Long-task Share (%)',
+    value: (snapshot) => snapshot.longTaskShare,
     stroke: '#ea580c',
     fill: '#f9731640',
   });
@@ -852,11 +852,11 @@ export const exportLayerPerformanceChart = (
     maxValue: layer.rawMaxRenderTime,
   }));
   return exportGroupedChart(session, options, data, {
-    title: 'Layer Performance Breakdown',
+    title: 'Layer CPU Submit Time',
     xLabel: 'Layer',
-    yLabel: 'Render Time (ms)',
+    yLabel: 'CPU Submit Time (ms)',
     colors: ['#2563eb', '#dc2626'],
-    legends: ['Average Render Time', 'Maximum Render Time'],
+    legends: ['Average CPU Submit', 'Maximum CPU Submit'],
   });
 };
 
@@ -915,8 +915,8 @@ export async function exportAllChartsAsZip(
       exportFn: () => exportMemoryChart(session, options),
     },
     {
-      name: 'frame_budget',
-      exportFn: () => exportFrameBudgetChart(session, options),
+      name: 'long_task_share',
+      exportFn: () => exportLongTaskShareChart(session, options),
     },
     {
       name: 'layer_performance',
@@ -948,7 +948,7 @@ Generated: ${new Date().toISOString()}
 Charts included:
 - fps_performance.png: FPS performance over time
 - memory_usage.png: Memory usage over time  
-- frame_budget.png: Frame budget usage over time
+- long_task_share.png: Main-thread long-task share over time
 - layer_performance.png: Layer performance breakdown
 - node_network_performance.png: Node network computation time
 

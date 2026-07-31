@@ -2157,3 +2157,35 @@
   - recorded controlled artifacts, approved additions, assumptions, and the
     honest preview-color boundary in
     `docs/parity/evidence/2026-07-31-goal-three-shell-and-layer-diagnostics-parity.md`
+- completed the Goal Three profiler and performance-statistics checkpoint:
+  - compared the pinned V1 and current V2 profiler at 1600 × 1000, DPR 1,
+    during the same simple-project workload
+  - replaced the false V1 `Frame Budget`/CPU implication with browser Long
+    Task API share and longest-long-task measurements
+  - added canonical runtime cadence, frame-plan, renderer-attachment,
+    total-runtime, and issue telemetry without inventing per-graph or GPU
+    execution timings
+  - renamed the complete recording/report/export vocabulary around
+    `mainThread`, `longTaskShare`, `longestLongTask`, and layer CPU-submit time
+  - replaced the stale pasted-implementation profiler documentation with the
+    concise canonical `docs/profiler-measurement-contract.md`
+  - accumulated high-frequency observations locally and published compact
+    profiler telemetry twice per second
+  - made profiler opening, reset, close, foreground/background clocks, static
+    GPU capability, graph initialization, and hidden collection lifecycle
+    explicit and symmetric
+  - measured 59.194 FPS with collection disabled, 57.389 FPS enabled and
+    collapsed, and 58.788 FPS enabled and expanded on the Apple M1 Pro
+    five-second workload
+  - added a headed playback journey proving accessible opening, truthful live
+    labels, bounded runtime progress, real recording/reporting, reset/close,
+    unchanged project revision, and clean diagnostics
+  - advanced `debugging.profiler` and `debugging.performance-stats` to
+    verified, leaving 11 verified, 31 partial, zero gaps, and zero unaudited
+    parity rows
+  - passed the complete gate: architecture/format/lint/types, 56 files / 258
+    deterministic tests, 12 active headed browser journeys in 3.5 minutes, all
+    package and studio builds, and both built-consumer smoke scenarios
+  - recorded the controlled screenshots, metric meanings, overhead results,
+    assumptions, browser boundaries, and validation in
+    `docs/parity/evidence/2026-07-31-goal-three-profiler-and-performance-statistics.md`

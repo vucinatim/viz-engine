@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { RecordingSession } from '../../src/lib/stores/performance-recorder-types';
-import { computePerformanceBreakdown } from '../../src/lib/stores/performance-recorder-utils';
+import {
+  computePerformanceBreakdown,
+  computeSessionStatistics,
+} from '../../src/lib/stores/performance-recorder-utils';
 
 const session = {
   id: 'recording-1',
@@ -28,7 +31,8 @@ const session = {
       editorFPS: 50,
       editorAvgFPS: 55,
       memoryUsedMB: 100,
-      cpuUsage: 25,
+      longTaskShare: 25,
+      longestLongTask: 10,
       activeLayerCount: 1,
       activeNodeNetworkCount: 1,
       layers: [
@@ -53,7 +57,8 @@ const session = {
       editorFPS: 25,
       editorAvgFPS: 40,
       memoryUsedMB: 110,
-      cpuUsage: 50,
+      longTaskShare: 50,
+      longestLongTask: 20,
       activeLayerCount: 1,
       activeNodeNetworkCount: 1,
       layers: [
@@ -86,7 +91,7 @@ describe('performance report projection', () => {
           fps: 50,
           avgFps: 55,
           memory: 100,
-          frameBudget: 25,
+          longTaskShare: 25,
           layers: 1,
           nodeNetworks: 1,
         },
@@ -96,7 +101,7 @@ describe('performance report projection', () => {
           fps: 25,
           avgFps: 40,
           memory: 110,
-          frameBudget: 50,
+          longTaskShare: 50,
           layers: 1,
           nodeNetworks: 1,
         },
@@ -106,7 +111,7 @@ describe('performance report projection', () => {
           layerId: 'layer-1',
           name: 'Stage',
           avgRenderTime: 30,
-          maxRenderTime: 40,
+          maxRenderTime: 50,
           rawAvgRenderTime: 30,
           rawMaxRenderTime: 50,
           avgDrawCalls: 5,
@@ -131,6 +136,30 @@ describe('performance report projection', () => {
       layers: [],
       nodeNetworks: [],
       timeSeries: [],
+    });
+  });
+
+  it('counts actual display intervals instead of recorder samples', () => {
+    const frameSession = {
+      ...session,
+      snapshots: [
+        {
+          ...session.snapshots[0],
+          frameTimes: [16, 17, 40],
+          longestLongTask: 55,
+        },
+        {
+          ...session.snapshots[1],
+          frameTimes: [16, 18],
+          longestLongTask: 0,
+        },
+      ],
+    };
+
+    expect(computeSessionStatistics(frameSession).frames).toMatchObject({
+      totalIntervals: 5,
+      slowIntervals: 1,
+      slowIntervalPercentage: 20,
     });
   });
 });

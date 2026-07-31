@@ -1,5 +1,5 @@
-import { getNodeNetworks } from '@/components/node-network/node-network-store';
 import { getProjectedLayers } from '@/lib/projected-layers';
+import { getVizSessionState } from '@/lib/viz-session';
 import { create } from 'zustand';
 
 // Performance metrics interfaces
@@ -42,17 +42,27 @@ export interface LayerFPSMetrics {
   lastUpdate: number;
 }
 
-export interface CPUMetrics {
-  usage: number; // percentage estimate
-  taskDuration: number; // ms
+export interface MainThreadMetrics {
+  longTaskShare: number; // percentage of the sample window occupied by long tasks
+  longestLongTask: number; // longest observed long task in ms
 }
 
 export interface NodeNetworkMetrics {
   parameterId: string;
   parameterName: string;
-  computeTime: number; // in ms
+  computeTime: number | null; // per-graph timing is unavailable in the canonical runtime
   nodeCount: number;
+  issueCount: number;
   lastUpdate: number;
+}
+
+export interface RuntimeMetrics {
+  fps: FPSMetrics;
+  framePlanTime: number;
+  attachmentTime: number;
+  totalTime: number;
+  renderCycle: number;
+  issueCount: number;
 }
 
 export interface ProfilerState {
@@ -73,10 +83,11 @@ export interface ProfilerState {
   memory: MemoryMetrics;
   gpu: GPUMetrics;
   indexedDB: IndexedDBMetrics;
-  cpu: CPUMetrics;
+  mainThread: MainThreadMetrics;
 
   // Node Network Metrics
   nodeNetworkMap: Map<string, NodeNetworkMetrics>;
+  runtime: RuntimeMetrics;
 
   // Update timestamp
   lastUpdate: number;
@@ -96,14 +107,13 @@ export interface ProfilerState {
   updateMemory: (memory: MemoryMetrics) => void;
   updateGPU: (gpu: Partial<GPUMetrics>) => void;
   updateIndexedDB: (indexedDB: IndexedDBMetrics) => void;
-  updateCPU: (cpu: CPUMetrics) => void;
-  updateNodeNetwork: (
-    parameterId: string,
-    parameterName: string,
-    computeTime: number,
-    nodeCount: number,
+  updateMainThread: (metrics: MainThreadMetrics) => void;
+  updateNodeNetworks: (
+    networks: Omit<NodeNetworkMetrics, 'lastUpdate'>[],
   ) => void;
-  removeNodeNetwork: (parameterId: string) => void;
+  updateRuntime: (
+    metrics: Omit<RuntimeMetrics, 'fps'> & { fps: number },
+  ) => void;
   updateFrameTimes: (
     frameTimes: number[],
     maxFrameTime: number,
@@ -120,6 +130,15 @@ const createInitialFPSMetrics = (): FPSMetrics => ({
   min: Infinity,
   max: 0,
   samples: [],
+});
+
+const createInitialRuntimeMetrics = (): RuntimeMetrics => ({
+  fps: createInitialFPSMetrics(),
+  framePlanTime: 0,
+  attachmentTime: 0,
+  totalTime: 0,
+  renderCycle: 0,
+  issueCount: 0,
 });
 
 // Helper to update FPS metrics with new sample
@@ -176,12 +195,13 @@ const useProfilerStore = create<ProfilerState>((set, get) => ({
     percentage: 0,
   },
 
-  cpu: {
-    usage: 0,
-    taskDuration: 0,
+  mainThread: {
+    longTaskShare: 0,
+    longestLongTask: 0,
   },
 
   nodeNetworkMap: new Map(),
+  runtime: createInitialRuntimeMetrics(),
 
   lastUpdate: 0,
 
@@ -241,9 +261,9 @@ const useProfilerStore = create<ProfilerState>((set, get) => ({
       lastUpdate: performance.now(),
     }),
 
-  updateCPU: (cpu) =>
+  updateMainThread: (mainThread) =>
     set({
-      cpu,
+      mainThread,
       lastUpdate: performance.now(),
     }),
 
@@ -255,59 +275,52 @@ const useProfilerStore = create<ProfilerState>((set, get) => ({
       lastUpdate: performance.now(),
     }),
 
-  updateNodeNetwork: (parameterId, parameterName, computeTime, nodeCount) =>
-    set((state) => {
-      const newMap = new Map(state.nodeNetworkMap);
-      newMap.set(parameterId, {
-        parameterId,
-        parameterName,
-        computeTime,
-        nodeCount,
-        lastUpdate: performance.now(),
-      });
+  updateNodeNetworks: (networks) =>
+    set(() => {
+      const lastUpdate = performance.now();
       return {
-        nodeNetworkMap: newMap,
-        lastUpdate: performance.now(),
+        nodeNetworkMap: new Map(
+          networks.map((network) => [
+            network.parameterId,
+            { ...network, lastUpdate },
+          ]),
+        ),
+        lastUpdate,
       };
     }),
 
-  removeNodeNetwork: (parameterId) =>
-    set((state) => {
-      const newMap = new Map(state.nodeNetworkMap);
-      newMap.delete(parameterId);
-      return { nodeNetworkMap: newMap };
-    }),
+  updateRuntime: ({
+    fps,
+    framePlanTime,
+    attachmentTime,
+    totalTime,
+    renderCycle,
+    issueCount,
+  }) =>
+    set((state) => ({
+      runtime: {
+        fps: updateFPSMetrics(state.runtime.fps, fps),
+        framePlanTime,
+        attachmentTime,
+        totalTime,
+        renderCycle,
+        issueCount,
+      },
+      lastUpdate: performance.now(),
+    })),
 
   reset: () =>
     set({
       editorFPS: createInitialFPSMetrics(),
       layerFPSMap: new Map(),
       nodeNetworkMap: new Map(),
+      runtime: createInitialRuntimeMetrics(),
       frameTimes: [],
       maxFrameTime: 0,
       meanFrameTime: 0,
-      memory: {
-        usedJSHeapSize: 0,
-        totalJSHeapSize: 0,
-        jsHeapSizeLimit: 0,
-        percentage: 0,
-      },
-      gpu: {
-        available: false,
-        vendor: 'Unknown',
-        renderer: 'Unknown',
-        maxTextureSize: 0,
-        drawCalls: 0,
-        triangles: 0,
-      },
-      indexedDB: {
-        usage: 0,
-        quota: 0,
-        percentage: 0,
-      },
-      cpu: {
-        usage: 0,
-        taskDuration: 0,
+      mainThread: {
+        longTaskShare: 0,
+        longestLongTask: 0,
       },
       lastUpdate: performance.now(),
     }),
@@ -320,7 +333,7 @@ const useProfilerStore = create<ProfilerState>((set, get) => ({
       const layers = getProjectedLayers();
 
       // Create a fresh map and only add existing layers
-      const layerIds = new Set(layers.map((layer: any) => layer.id));
+      const layerIds = new Set(layers.map((layer) => layer.id));
       const newLayerFPSMap = new Map<string, LayerFPSMetrics>();
 
       // Remove stale entries (layers that no longer exist)
@@ -331,7 +344,7 @@ const useProfilerStore = create<ProfilerState>((set, get) => ({
       });
 
       // Add new layers that aren't tracked yet
-      layers.forEach((layer: any) => {
+      layers.forEach((layer) => {
         if (!newLayerFPSMap.has(layer.id)) {
           newLayerFPSMap.set(layer.id, {
             layerId: layer.id,
@@ -344,38 +357,28 @@ const useProfilerStore = create<ProfilerState>((set, get) => ({
         }
       });
 
-      // Initialize existing enabled node networks
-      const networks = getNodeNetworks();
-
-      // Create a fresh map and only add enabled networks
-      const enabledNetworkIds = new Set(
-        Object.entries(networks)
-          .filter(([_, network]: [string, any]) => network.isEnabled)
-          .map(([parameterId]) => parameterId),
-      );
+      const graphs = getVizSessionState().project.workingProject.graphs ?? [];
+      const graphIds = new Set(graphs.map((graph) => graph.id));
       const newNodeNetworkMap = new Map<string, NodeNetworkMetrics>();
 
-      // Remove stale entries (networks that no longer exist or are disabled)
       get().nodeNetworkMap.forEach((metrics, parameterId) => {
-        if (enabledNetworkIds.has(parameterId)) {
+        if (graphIds.has(parameterId)) {
           newNodeNetworkMap.set(parameterId, metrics);
         }
       });
 
-      // Add new networks that aren't tracked yet
-      Object.entries(networks).forEach(
-        ([parameterId, network]: [string, any]) => {
-          if (network.isEnabled && !newNodeNetworkMap.has(parameterId)) {
-            newNodeNetworkMap.set(parameterId, {
-              parameterId,
-              parameterName: network.name || parameterId,
-              computeTime: 0,
-              nodeCount: network.nodes?.length || 0,
-              lastUpdate: performance.now(),
-            });
-          }
-        },
-      );
+      for (const graph of graphs) {
+        if (!newNodeNetworkMap.has(graph.id)) {
+          newNodeNetworkMap.set(graph.id, {
+            parameterId: graph.id,
+            parameterName: graph.name,
+            computeTime: null,
+            nodeCount: graph.nodes.length,
+            issueCount: 0,
+            lastUpdate: performance.now(),
+          });
+        }
+      }
 
       set({
         layerFPSMap: newLayerFPSMap,

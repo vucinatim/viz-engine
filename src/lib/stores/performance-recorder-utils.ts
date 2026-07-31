@@ -60,9 +60,9 @@ export function createSnapshotFromProfiler(
     memoryLimitMB,
     memoryPercentage,
 
-    // CPU
-    cpuUsage: profilerState.cpu.usage,
-    cpuTaskDuration: profilerState.cpu.taskDuration,
+    // Main-thread long-task metrics
+    longTaskShare: profilerState.mainThread.longTaskShare,
+    longestLongTask: profilerState.mainThread.longestLongTask,
 
     // IndexedDB
     indexedDBUsageMB: profilerState.indexedDB.usage,
@@ -87,6 +87,7 @@ export function createSnapshotFromProfiler(
         parameterName: network.parameterName,
         computeTime: network.computeTime,
         nodeCount: network.nodeCount,
+        issueCount: network.issueCount,
       }),
     ),
 
@@ -265,21 +266,25 @@ export function computeSessionStatistics(
   // Extract time series data
   const editorFPSValues = snapshots.map((s) => s.editorFPS);
   const memoryValues = snapshots.map((s) => s.memoryUsedMB);
-  const cpuUsageValues = snapshots.map((s) => s.cpuUsage);
-  const cpuTaskValues = snapshots.map((s) => s.cpuTaskDuration);
+  const longTaskShareValues = snapshots.map((s) => s.longTaskShare);
+  const longestLongTaskValues = snapshots.map((s) => s.longestLongTask);
 
   // Extract frame time data (flatten all frame times from all snapshots)
   const allFrameTimes = snapshots.flatMap((s) => s.frameTimes);
 
-  // Count dropped frames (below 30 FPS)
-  const droppedFrames = editorFPSValues.filter((fps) => fps < 30).length;
-  const totalFrames = editorFPSValues.length;
-  const droppedFramePercentage =
-    totalFrames > 0 ? (droppedFrames / totalFrames) * 100 : 0;
+  // Count actual rAF intervals, not the much smaller set of recorder samples.
+  const slowIntervals = allFrameTimes.filter(
+    (frameTime) => frameTime > 1000 / 30,
+  ).length;
+  const totalIntervals = allFrameTimes.length;
+  const slowIntervalPercentage =
+    totalIntervals > 0 ? (slowIntervals / totalIntervals) * 100 : 0;
 
-  // Calculate stability (1 - CV, where 1 is perfect stability)
-  const cv = coefficientOfVariation(editorFPSValues);
-  const stability = Math.max(0, 1 - cv);
+  // Calculate interval stability (1 - CV, where 1 is perfectly uniform).
+  const stability =
+    totalIntervals > 0
+      ? Math.max(0, 1 - coefficientOfVariation(allFrameTimes))
+      : 0;
 
   // Layer statistics (aggregated across all snapshots)
   const allLayerRenderTimes = snapshots.flatMap((s) =>
@@ -315,11 +320,11 @@ export function computeSessionStatistics(
       p95: percentile(memoryValues, 95),
     },
 
-    cpu: {
-      meanUsage: mean(cpuUsageValues),
-      maxUsage: Math.max(...cpuUsageValues),
-      meanTaskDuration: mean(cpuTaskValues),
-      maxTaskDuration: Math.max(...cpuTaskValues),
+    mainThread: {
+      meanLongTaskShare: mean(longTaskShareValues),
+      maxLongTaskShare: Math.max(...longTaskShareValues),
+      meanLongestLongTask: mean(longestLongTaskValues),
+      maxLongestLongTask: Math.max(...longestLongTaskValues),
     },
 
     frameTimes: {
@@ -331,9 +336,9 @@ export function computeSessionStatistics(
     },
 
     frames: {
-      totalFrames,
-      droppedFrames,
-      droppedFramePercentage,
+      totalIntervals,
+      slowIntervals,
+      slowIntervalPercentage,
       stability,
     },
 
@@ -358,7 +363,7 @@ export function computePerformanceBreakdown(session: RecordingSession) {
     fps: Number(snapshot.editorFPS.toFixed(1)),
     avgFps: Number(snapshot.editorAvgFPS.toFixed(1)),
     memory: Number(snapshot.memoryUsedMB.toFixed(1)),
-    frameBudget: Number(snapshot.cpuUsage.toFixed(1)),
+    longTaskShare: Number(snapshot.longTaskShare.toFixed(1)),
     layers: snapshot.activeLayerCount,
     nodeNetworks: snapshot.activeNodeNetworkCount,
   }));
@@ -387,16 +392,14 @@ export function computePerformanceBreakdown(session: RecordingSession) {
         computeTimes: [],
         nodeCounts: [],
       };
-      samples.computeTimes.push(network.computeTime);
+      if (network.computeTime !== null) {
+        samples.computeTimes.push(network.computeTime);
+      }
       samples.nodeCounts.push(network.nodeCount);
       networkSamples.set(network.parameterId, samples);
     }
   }
 
-  const minimumFps = Math.min(
-    ...session.snapshots.map((snapshot) => snapshot.editorFPS),
-  );
-  const maximumFrameTime = minimumFps > 0 ? 1000 / minimumFps : Infinity;
   const layers = Array.from(layerSamples, ([layerId, samples]) => {
     const rawAvgRenderTime = mean(samples.renderTimes);
     const rawMaxRenderTime = Math.max(...samples.renderTimes);
@@ -406,27 +409,30 @@ export function computePerformanceBreakdown(session: RecordingSession) {
         session.snapshots[0]?.layers.find((layer) => layer.layerId === layerId)
           ?.layerName ?? layerId,
       avgRenderTime: Number(rawAvgRenderTime.toFixed(2)),
-      maxRenderTime: Number(
-        Math.min(rawMaxRenderTime, maximumFrameTime).toFixed(2),
-      ),
+      maxRenderTime: Number(rawMaxRenderTime.toFixed(2)),
       rawAvgRenderTime,
       rawMaxRenderTime,
       avgDrawCalls: Math.round(mean(samples.drawCalls)),
     };
   });
   const nodeNetworks = Array.from(networkSamples, ([parameterId, samples]) => {
+    if (samples.computeTimes.length === 0) {
+      return [];
+    }
     const { componentName, displayName } = destructureParameterId(parameterId);
     const rawAvgComputeTime = mean(samples.computeTimes);
-    return {
-      parameterId,
-      name: displayName,
-      layerName: componentName,
-      avgComputeTime: Number(rawAvgComputeTime.toFixed(3)),
-      maxComputeTime: Number(Math.max(...samples.computeTimes).toFixed(3)),
-      rawAvgComputeTime,
-      nodeCount: Math.round(mean(samples.nodeCounts)),
-    };
-  });
+    return [
+      {
+        parameterId,
+        name: displayName,
+        layerName: componentName,
+        avgComputeTime: Number(rawAvgComputeTime.toFixed(3)),
+        maxComputeTime: Number(Math.max(...samples.computeTimes).toFixed(3)),
+        rawAvgComputeTime,
+        nodeCount: Math.round(mean(samples.nodeCounts)),
+      },
+    ];
+  }).flat();
 
   return { layers, nodeNetworks, timeSeries };
 }
@@ -455,8 +461,8 @@ export function sessionToCSV(session: RecordingSession): string {
     'editorAvgFPS',
     'memoryUsedMB',
     'memoryPercentage',
-    'cpuUsage',
-    'cpuTaskDuration',
+    'longTaskShare',
+    'longestLongTask',
     'activeLayerCount',
     'activeNodeNetworkCount',
   ];
@@ -465,7 +471,7 @@ export function sessionToCSV(session: RecordingSession): string {
   const firstSnapshot = snapshots[0];
   firstSnapshot.layers.forEach((layer) => {
     headers.push(
-      `layer_${layer.layerName}_renderTime`,
+      `layer_${layer.layerName}_cpuSubmitTime`,
       `layer_${layer.layerName}_drawCalls`,
     );
   });
@@ -478,8 +484,8 @@ export function sessionToCSV(session: RecordingSession): string {
       snapshot.editorAvgFPS.toFixed(2),
       snapshot.memoryUsedMB.toFixed(2),
       snapshot.memoryPercentage.toFixed(2),
-      snapshot.cpuUsage.toFixed(2),
-      snapshot.cpuTaskDuration.toFixed(2),
+      snapshot.longTaskShare.toFixed(2),
+      snapshot.longestLongTask.toFixed(2),
       snapshot.activeLayerCount.toString(),
       snapshot.activeNodeNetworkCount.toString(),
     ];

@@ -1,6 +1,5 @@
-import { clearStaleNodeNetworks } from '@/components/node-network/node-network-store';
 import useRecorderStore from '@/lib/stores/performance-recorder-store';
-import useProfilerStore from '@/lib/stores/profiler-store';
+import useProfilerStore, { type FPSMetrics } from '@/lib/stores/profiler-store';
 import {
   Activity,
   ChevronDown,
@@ -13,6 +12,7 @@ import {
   Monitor,
   Pause,
   Play,
+  RotateCcw,
   Square,
   Trash2,
   X,
@@ -102,7 +102,11 @@ function MetricRow({
 }
 
 // FPS Metrics Display
-function FPSMetricsDisplay({ fps }: { fps: any }) {
+function FPSMetricsDisplay({ fps }: { fps: FPSMetrics }) {
+  if (fps.samples.length === 0) {
+    return <MetricRow label="Status" value="Waiting for samples" />;
+  }
+
   return (
     <>
       <MetricRow
@@ -128,14 +132,20 @@ export function ProfilerPanel() {
   // Profiler store state
   const enabled = useProfilerStore((s) => s.enabled);
   const visible = useProfilerStore((s) => s.visible);
+  const setEnabled = useProfilerStore((s) => s.setEnabled);
   const setVisible = useProfilerStore((s) => s.setVisible);
   const editorFPS = useProfilerStore((s) => s.editorFPS);
   const layerFPSMap = useProfilerStore((s) => s.layerFPSMap);
   const memory = useProfilerStore((s) => s.memory);
   const gpu = useProfilerStore((s) => s.gpu);
   const indexedDB = useProfilerStore((s) => s.indexedDB);
-  const cpu = useProfilerStore((s) => s.cpu);
+  const mainThread = useProfilerStore((s) => s.mainThread);
   const nodeNetworkMap = useProfilerStore((s) => s.nodeNetworkMap);
+  const runtime = useProfilerStore((s) => s.runtime);
+  const resetProfiler = useProfilerStore((s) => s.reset);
+  const initializeProfiler = useProfilerStore(
+    (s) => s.initializeExistingLayersAndNetworks,
+  );
 
   // Recorder store state
   const isRecording = useRecorderStore((s) => s.isRecording);
@@ -163,6 +173,7 @@ export function ProfilerPanel() {
   const [currentDuration, setCurrentDuration] = useState(0);
   const [isRecorderExpanded, setIsRecorderExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
   const [autoDuration, setAutoDuration] = useState<number>(0); // 0 = manual stop
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null,
@@ -221,6 +232,7 @@ export function ProfilerPanel() {
 
   const layers = Array.from(layerFPSMap.values());
   const nodeNetworks = Array.from(nodeNetworkMap.values());
+  const isExpanded = isHovered || isPinned;
 
   return (
     <div className="pointer-events-none fixed inset-0 z-50 flex items-start justify-end p-[13px]">
@@ -228,14 +240,17 @@ export function ProfilerPanel() {
         className="scrollbar-hide pointer-events-auto flex flex-col gap-1 overflow-hidden rounded-lg transition-all duration-300 ease-in-out"
         style={{
           maxHeight: '100%',
-          width: isHovered ? '20rem' : '2.5rem',
-          overflow: isHovered ? 'auto' : 'visible',
+          width: isExpanded ? '20rem' : '2.5rem',
+          overflow: isExpanded ? 'auto' : 'visible',
         }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}>
         {/* Collapsed Icon or Full Header */}
-        {!isHovered ? (
-          <Button className="mt-[3px] h-[33px] w-9 border-white/10 bg-black/80 backdrop-blur-sm">
+        {!isExpanded ? (
+          <Button
+            aria-label="Open performance profiler"
+            onClick={() => setIsPinned(true)}
+            className="mt-[3px] h-[33px] w-9 border-white/10 bg-black/80 backdrop-blur-sm">
             <div className="flex items-center justify-center">
               <Activity className="h-5 w-5 text-green-400" />
             </div>
@@ -248,10 +263,24 @@ export function ProfilerPanel() {
                 <h2 className="text-lg font-bold text-white">Performance</h2>
               </div>
               <button
-                onClick={() => setVisible(false)}
+                aria-label="Close profiler"
+                onClick={() => {
+                  setEnabled(false);
+                  setVisible(false);
+                }}
                 className="rounded p-1 text-muted-foreground transition-colors hover:bg-white/10 hover:text-white"
                 title="Close profiler">
                 <X className="h-4 w-4" />
+              </button>
+              <button
+                aria-label="Reset profiler metrics"
+                onClick={() => {
+                  resetProfiler();
+                  initializeProfiler();
+                }}
+                className="rounded p-1 text-muted-foreground transition-colors hover:bg-white/10 hover:text-white"
+                title="Reset profiler metrics">
+                <RotateCcw className="h-4 w-4" />
               </button>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -261,11 +290,16 @@ export function ProfilerPanel() {
         )}
 
         {/* Performance Recorder Section */}
-        {isHovered && (
+        {isExpanded && (
           <Card className="border-white/10 bg-black/60 p-3">
             <Collapsible
               open={isRecorderExpanded}
-              onOpenChange={setIsRecorderExpanded}>
+              onOpenChange={(open) => {
+                setIsRecorderExpanded(open);
+                if (open) {
+                  setIsPinned(true);
+                }
+              }}>
               <CollapsibleTrigger asChild>
                 <button className="flex w-full items-center justify-between text-left transition-colors hover:text-white">
                   <div className="flex items-center gap-2">
@@ -522,29 +556,65 @@ export function ProfilerPanel() {
         )}
 
         {/* Editor FPS */}
-        {isHovered && (
+        {isExpanded && (
           <MetricCard title="Editor FPS" icon={<Monitor className="h-4 w-4" />}>
             <FPSMetricsDisplay fps={editorFPS} />
           </MetricCard>
         )}
 
-        {/* Main Thread Metrics */}
-        {isHovered && (
-          <MetricCard title="Main Thread" icon={<Cpu className="h-4 w-4" />}>
+        {/* Runtime Metrics */}
+        {isExpanded && (
+          <MetricCard
+            title="Canonical Runtime"
+            icon={<Activity className="h-4 w-4" />}>
             <MetricRow
-              label="Frame Budget"
-              value={`${formatNumber(cpu.usage, 1)}%`}
-              colorClass={getPercentColor(cpu.usage)}
+              label="Render Cadence"
+              value={
+                runtime.fps.samples.length > 0
+                  ? `${formatNumber(runtime.fps.current, 1)} FPS`
+                  : 'Waiting'
+              }
+              colorClass={getFPSColor(runtime.fps.current)}
             />
             <MetricRow
-              label="Max Frame Time"
-              value={`${formatNumber(cpu.taskDuration, 2)} ms`}
+              label="Frame Plan"
+              value={`${formatNumber(runtime.framePlanTime, 2)} ms`}
+            />
+            <MetricRow
+              label="Renderer Attachment"
+              value={`${formatNumber(runtime.attachmentTime, 2)} ms`}
+            />
+            <MetricRow
+              label="Total Runtime"
+              value={`${formatNumber(runtime.totalTime, 2)} ms`}
+            />
+            <MetricRow
+              label="Plan Issues"
+              value={`${runtime.issueCount}`}
+              colorClass={
+                runtime.issueCount === 0 ? 'text-green-400' : 'text-red-400'
+              }
+            />
+          </MetricCard>
+        )}
+
+        {/* Main Thread Metrics */}
+        {isExpanded && (
+          <MetricCard title="Main Thread" icon={<Cpu className="h-4 w-4" />}>
+            <MetricRow
+              label="Long-task Share"
+              value={`${formatNumber(mainThread.longTaskShare, 1)}%`}
+              colorClass={getPercentColor(mainThread.longTaskShare)}
+            />
+            <MetricRow
+              label="Longest Long Task"
+              value={`${formatNumber(mainThread.longestLongTask, 2)} ms`}
             />
           </MetricCard>
         )}
 
         {/* Memory Metrics */}
-        {isHovered && (
+        {isExpanded && (
           <MetricCard title="Memory" icon={<HardDrive className="h-4 w-4" />}>
             <MetricRow
               label="Used"
@@ -562,7 +632,7 @@ export function ProfilerPanel() {
         )}
 
         {/* GPU Metrics */}
-        {isHovered && (
+        {isExpanded && (
           <MetricCard title="GPU" icon={<Activity className="h-4 w-4" />}>
             {gpu.available ? (
               <>
@@ -586,7 +656,7 @@ export function ProfilerPanel() {
         )}
 
         {/* IndexedDB Metrics */}
-        {isHovered && (
+        {isExpanded && (
           <MetricCard
             title="Storage (IndexedDB)"
             icon={<Database className="h-4 w-4" />}>
@@ -601,7 +671,7 @@ export function ProfilerPanel() {
         )}
 
         {/* Layer FPS Metrics */}
-        {isHovered && layers.length > 0 && (
+        {isExpanded && layers.length > 0 && (
           <MetricCard
             title="Layer Performance"
             icon={<Layers className="h-4 w-4" />}>
@@ -623,8 +693,8 @@ export function ProfilerPanel() {
                     value={`${formatNumber(layer.fps.average, 1)}`}
                   />
                   <MetricRow
-                    label="Render Time"
-                    value={`${formatNumber(layer.renderTime, 2)} ms`}
+                    label="CPU Submit"
+                    value={`${formatNumber(layer.renderTime, 3)} ms`}
                     colorClass={
                       layer.renderTime < 10
                         ? 'text-green-400'
@@ -653,7 +723,7 @@ export function ProfilerPanel() {
         )}
 
         {/* Node Network Metrics */}
-        {isHovered && (
+        {isExpanded && (
           <MetricCard
             title="Node Networks"
             icon={<Activity className="h-4 w-4" />}>
@@ -667,43 +737,25 @@ export function ProfilerPanel() {
                       {network.parameterName}
                     </div>
                     <MetricRow
-                      label="Compute Time"
-                      value={`${formatNumber(network.computeTime, 3)} ms`}
-                      colorClass={
-                        network.computeTime < 1
-                          ? 'text-green-400'
-                          : network.computeTime < 5
-                            ? 'text-yellow-400'
-                            : 'text-red-400'
-                      }
+                      label="Evaluation"
+                      value="Included in frame plan"
                     />
                     <MetricRow label="Nodes" value={`${network.nodeCount}`} />
+                    <MetricRow
+                      label="Issues"
+                      value={`${network.issueCount}`}
+                      colorClass={
+                        network.issueCount === 0
+                          ? 'text-green-400'
+                          : 'text-red-400'
+                      }
+                    />
                   </div>
                 ))}
-                <div className="border-t border-white/10 pt-2">
-                  <Button
-                    onClick={clearStaleNodeNetworks}
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-xs">
-                    <Trash2 className="mr-1 h-3 w-3" />
-                    Clear Stale Networks
-                  </Button>
-                </div>
               </div>
             ) : (
-              <div className="space-y-2">
-                <div className="text-center text-xs text-muted-foreground">
-                  No active networks
-                </div>
-                <Button
-                  onClick={clearStaleNodeNetworks}
-                  variant="outline"
-                  size="sm"
-                  className="w-full text-xs">
-                  <Trash2 className="mr-1 h-3 w-3" />
-                  Clear Stale Networks
-                </Button>
+              <div className="text-center text-xs text-muted-foreground">
+                No active graphs
               </div>
             )}
           </MetricCard>

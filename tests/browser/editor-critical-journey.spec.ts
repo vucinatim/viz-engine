@@ -776,6 +776,145 @@ test('keeps layer diagnostics current and separate from scene output', async ({
   expect(diagnostics).toEqual([]);
 });
 
+test('keeps profiler measurements truthful, recordable, and bounded during playback', async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  const diagnostics: string[] = [];
+  page.on('console', (message) => {
+    if (
+      (message.type() === 'error' || message.type() === 'warning') &&
+      !isKnownBrowserDiagnostic(message.text())
+    ) {
+      diagnostics.push(`${message.type()}: ${message.text()}`);
+    }
+  });
+  page.on('pageerror', (error) =>
+    diagnostics.push(`pageerror: ${error.message}`),
+  );
+
+  await waitForEditor(page);
+  await page.evaluate(() => {
+    window.__vizEditorDebug?.editorControl.nodeEditor.closeNetwork();
+    window.__vizEditorDebug?.editorControl.preview.play();
+  });
+  const before = await readEditorSnapshot(page);
+  const countRuntimeCycles = async () => {
+    const startingCycle = await page.evaluate(
+      () =>
+        window.__vizEditorDebug?.editorControl.preview.inspectRuntimePreview()
+          .renderCycle ?? 0,
+    );
+    await page.waitForTimeout(1_500);
+    return page.evaluate(
+      (start) =>
+        (window.__vizEditorDebug?.editorControl.preview.inspectRuntimePreview()
+          .renderCycle ?? start) - start,
+      startingCycle,
+    );
+  };
+  const baselineCycles = await countRuntimeCycles();
+  expect(baselineCycles).toBeGreaterThan(3);
+
+  await page.getByRole('menuitem', { name: 'View', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Performance' }).click();
+  const profilerButton = page.getByRole('button', {
+    name: 'Open performance profiler',
+  });
+  await expect(profilerButton).toBeVisible();
+  await profilerButton.evaluate((button: HTMLButtonElement) => {
+    button.focus();
+    button.click();
+  });
+  await expect(
+    page.getByRole('heading', { name: 'Performance', exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText('Canonical Runtime')).toBeVisible();
+  await expect
+    .poll(async () => {
+      const text = await page
+        .getByText('Render Cadence')
+        .locator('..')
+        .innerText();
+      return Number.parseFloat(text.match(/[\d.]+/)?.[0] ?? '0');
+    })
+    .toBeGreaterThan(0);
+  await expect(page.getByText('Included in frame plan').first()).toBeVisible();
+  await expect(page.getByText('Long-task Share')).toBeVisible();
+  await expect(page.getByText('Frame Budget', { exact: true })).toHaveCount(0);
+
+  const profiledCycles = await countRuntimeCycles();
+  expect(profiledCycles).toBeGreaterThanOrEqual(
+    Math.max(3, Math.floor(baselineCycles * 0.6)),
+  );
+
+  await page.evaluate(() =>
+    window.__vizEditorDebug?.editorControl.preview.pause(),
+  );
+  await page
+    .getByRole('button', { name: 'Performance Recorder' })
+    .evaluate((button: HTMLButtonElement) => button.click());
+  const recordingName = `Browser profiler ${Date.now()}`;
+  const recordingNameInput = page.getByLabel('Name', { exact: true });
+  await recordingNameInput.evaluate((input: HTMLInputElement, value) => {
+    const setter = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      'value',
+    )?.set;
+    setter?.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }, recordingName);
+  await expect(recordingNameInput).toHaveValue(recordingName);
+  await page
+    .getByRole('button', { name: 'Start', exact: true })
+    .evaluate((button: HTMLButtonElement) => button.click());
+  await expect(page.getByText('Recording:', { exact: true })).toBeVisible();
+  await page.evaluate(() =>
+    window.__vizEditorDebug?.editorControl.preview.play(),
+  );
+  await page.waitForTimeout(1_200);
+  await page.evaluate(() =>
+    window.__vizEditorDebug?.editorControl.preview.pause(),
+  );
+  await page
+    .getByRole('button', { name: 'Stop', exact: true })
+    .evaluate((button: HTMLButtonElement) => button.click());
+  await expect(page.getByText(recordingName, { exact: true })).toBeVisible();
+  await page
+    .getByRole('button', { name: 'Stats', exact: true })
+    .first()
+    .evaluate((button: HTMLButtonElement) => button.click());
+
+  const statsDialog = page.getByRole('dialog');
+  await expect(
+    statsDialog.getByRole('heading', { name: recordingName }),
+  ).toBeVisible();
+  await expect(
+    statsDialog.getByText('Long-task Share', { exact: true }),
+  ).toBeVisible();
+  await expect(
+    statsDialog.getByText('Frame Interval Statistics', { exact: true }),
+  ).toBeVisible();
+  await expect(
+    statsDialog.getByText('Total Intervals Sampled', { exact: true }),
+  ).toBeVisible();
+  await expect(
+    statsDialog.getByText('Frame Budget', { exact: true }),
+  ).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(statsDialog).toHaveCount(0);
+
+  await page
+    .getByRole('button', { name: 'Reset profiler metrics' })
+    .evaluate((button: HTMLButtonElement) => button.click());
+  await page
+    .getByRole('button', { name: 'Close profiler' })
+    .evaluate((button: HTMLButtonElement) => button.click());
+  await expect(profilerButton).toHaveCount(0);
+  expect((await readEditorSnapshot(page)).revision).toBe(before.revision);
+  expect(diagnostics).toEqual([]);
+});
+
 test('composites canonical layer alpha and blend modes in one runtime canvas', async ({
   page,
 }) => {

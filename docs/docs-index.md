@@ -22,6 +22,8 @@ This is the entrypoint for VizEngine documentation during the V2 rewrite.
 - [parity/evidence/2026-07-31-goal-three-runtime-and-live-edit-repair.md](./parity/evidence/2026-07-31-goal-three-runtime-and-live-edit-repair.md)
 - [parity/evidence/2026-07-31-goal-three-interaction-and-visible-parity-repair.md](./parity/evidence/2026-07-31-goal-three-interaction-and-visible-parity-repair.md)
 - [parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md](./parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md)
+- [profiler-measurement-contract.md](./profiler-measurement-contract.md)
+- [parity/evidence/2026-07-31-goal-three-profiler-and-performance-statistics.md](./parity/evidence/2026-07-31-goal-three-profiler-and-performance-statistics.md)
 - [parity/evidence/artifacts/2026-07-31-goal-three-baseline.json](./parity/evidence/artifacts/2026-07-31-goal-three-baseline.json)
 
 ## Active Direction
@@ -158,6 +160,7 @@ This is the current source of truth for where VizEngine is heading:
 - [structural-doctrine.md](./structural-doctrine.md)
 - [parity/README.md](./parity/README.md)
 - [parity/v1-v2-parity-matrix.json](./parity/v1-v2-parity-matrix.json)
+- [profiler-measurement-contract.md](./profiler-measurement-contract.md)
 - [plans/v2/autonomous-development-operating-contract.md](./plans/v2/autonomous-development-operating-contract.md)
 - [plans/v2/current-uncommitted-worktree-audit.md](./plans/v2/current-uncommitted-worktree-audit.md)
 - [suggestions.md](./suggestions.md)
@@ -178,6 +181,9 @@ Use these docs this way:
 - `parity/v1-v2-parity-matrix.json`
   Executable capability, UI/UX, and performance parity backlog against the
   immutable pre-V2 reference.
+- `profiler-measurement-contract.md`
+  Canonical meanings, sources, publication rules, and browser boundaries for
+  live and recorded performance telemetry.
 - `plans/v2/autonomous-development-operating-contract.md`
   Durable authority, recovery, quality-gate, and long-running goal protocol.
 - `plans/v2/current-uncommitted-worktree-audit.md`

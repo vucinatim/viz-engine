@@ -2,11 +2,11 @@
 // Reuses types from profiler-store.ts for consistency
 
 import type {
-  CPUMetrics,
   FPSMetrics,
   GPUMetrics,
   IndexedDBMetrics,
   LayerFPSMetrics,
+  MainThreadMetrics,
   MemoryMetrics,
   NodeNetworkMetrics,
 } from './profiler-store';
@@ -22,7 +22,7 @@ import type {
 export interface LayerSnapshot {
   layerId: string;
   layerName: string;
-  renderTime: number; // ms - primary performance metric
+  renderTime: number; // CPU time used to submit the layer render
   drawCalls: number;
   // Note: FPS metrics removed as they are redundant with editor FPS
   // Layer FPS is the same as editor FPS and provides no actionable information
@@ -34,8 +34,9 @@ export interface LayerSnapshot {
 export interface NodeNetworkSnapshot {
   parameterId: string;
   parameterName: string;
-  computeTime: number; // ms
+  computeTime: number | null; // per-graph timing is not exposed by the canonical runtime
   nodeCount: number;
+  issueCount: number;
 }
 
 /**
@@ -62,9 +63,9 @@ export interface PerformanceSnapshot {
   memoryLimitMB: number;
   memoryPercentage: number;
 
-  // CPU metrics
-  cpuUsage: number; // percentage estimate
-  cpuTaskDuration: number; // ms
+  // Main-thread long-task metrics
+  longTaskShare: number; // percentage of the sample window occupied by long tasks
+  longestLongTask: number; // longest observed long task in ms
 
   // IndexedDB metrics (MB)
   indexedDBUsageMB: number;
@@ -166,12 +167,12 @@ export interface SessionStatistics {
     p95: number;
   };
 
-  // CPU statistics
-  cpu: {
-    meanUsage: number;
-    maxUsage: number;
-    meanTaskDuration: number;
-    maxTaskDuration: number;
+  // Main-thread long-task statistics
+  mainThread: {
+    meanLongTaskShare: number;
+    maxLongTaskShare: number;
+    meanLongestLongTask: number;
+    maxLongestLongTask: number;
   };
 
   // Frame time statistics (individual frame measurements)
@@ -185,16 +186,16 @@ export interface SessionStatistics {
 
   // Frame analysis
   frames: {
-    totalFrames: number;
-    droppedFrames: number; // Frames below 30 FPS
-    droppedFramePercentage: number;
+    totalIntervals: number;
+    slowIntervals: number; // foreground display intervals longer than 33.33ms
+    slowIntervalPercentage: number;
     stability: number; // 1 - coefficient of variation (higher is better)
   };
 
   // Layer statistics (aggregated)
   layers: {
     avgLayerCount: number;
-    avgRenderTime: number; // ms
+    avgRenderTime: number; // average layer CPU submit time in ms
     avgDrawCalls: number;
   };
 }
@@ -265,11 +266,11 @@ export interface RecorderState {
 
 // Re-export profiler types for convenience
 export type {
-  CPUMetrics,
   FPSMetrics,
   GPUMetrics,
   IndexedDBMetrics,
   LayerFPSMetrics,
+  MainThreadMetrics,
   MemoryMetrics,
   NodeNetworkMetrics,
 };

@@ -225,9 +225,32 @@ The two remaining explicit parity gaps are now also closed:
 
 See
 [Shell And Layer Diagnostics Parity](./parity/evidence/2026-07-31-goal-three-shell-and-layer-diagnostics-parity.md).
-Goal Three remains open because 32 broader capabilities are still partial and
-one performance-stat capability is not yet audited, alongside agent tooling
-and the second original production.
+
+The profiler and performance-stat checkpoint is now also complete:
+
+- visible diagnostics distinguish browser display cadence from canonical
+  runtime cadence and runtime work boundaries
+- browser Long Task API share replaces the false V1 `Frame Budget`/CPU label
+- layer work is explicitly CPU-submit time, while unsupported per-graph and
+  GPU execution timing is never fabricated as zero
+- high-frequency observations are accumulated locally and published as compact
+  telemetry twice per second
+- closing Performance disables collection, reset preserves static capability
+  facts, and foreground clocks ignore background-tab gaps
+- the recorder, report, CSV, and chart vocabulary matches the live cards
+- measured runtime cadence remained within 3.05% of the profiler-disabled
+  sample on the fixed Apple M1 Pro workload
+- the complete gate passes 56 deterministic-test files / 258 tests, all 12
+  active headed browser journeys, all package and studio builds, and both
+  built-consumer smoke paths
+
+See
+[Profiler And Performance Statistics](./parity/evidence/2026-07-31-goal-three-profiler-and-performance-statistics.md).
+
+The parity matrix now contains 11 verified and 31 partial capabilities, with
+zero gaps and zero unaudited rows. Goal Three remains open because the 31
+broader capabilities still require full acceptance evidence, alongside agent
+tooling and the second original production.
 
 ## Known Deliberate Deferrals
 

@@ -12,8 +12,8 @@ import {
   downloadChartAsPNG,
   exportAllChartsAsZip,
   exportFPSChart,
-  exportFrameBudgetChart,
   exportLayerPerformanceChart,
+  exportLongTaskShareChart,
   exportMemoryChart,
   exportNodeNetworkPerformanceChart,
 } from '@/lib/utils/chart-export';
@@ -104,16 +104,18 @@ function generateJSONReport(
       },
       frameStability: {
         score: Number((stats.frames.stability * 100).toFixed(1)),
-        droppedFramePercentage: Number(
-          stats.frames.droppedFramePercentage.toFixed(1),
+        slowIntervalPercentage: Number(
+          stats.frames.slowIntervalPercentage.toFixed(1),
         ),
       },
       memory: {
         p95MB: Number(stats.memory.p95.toFixed(1)),
       },
       mainThread: {
-        meanFrameBudgetPercent: Number(stats.cpu.meanUsage.toFixed(1)),
-        note: 'Frame budget usage: 100% = using full 16.67ms frame time (60fps target)',
+        meanLongTaskSharePercent: Number(
+          stats.mainThread.meanLongTaskShare.toFixed(1),
+        ),
+        note: 'Long-task share is the percentage of each sample window occupied by browser Long Task API entries (tasks of at least 50ms).',
       },
     },
 
@@ -143,25 +145,35 @@ function generateJSONReport(
       },
 
       mainThread: {
-        meanFrameBudgetPercent: Number(stats.cpu.meanUsage.toFixed(3)),
-        maxFrameBudgetPercent: Number(stats.cpu.maxUsage.toFixed(3)),
+        meanLongTaskSharePercent: Number(
+          stats.mainThread.meanLongTaskShare.toFixed(3),
+        ),
+        maxLongTaskSharePercent: Number(
+          stats.mainThread.maxLongTaskShare.toFixed(3),
+        ),
+        meanLongestLongTaskMs: Number(
+          stats.mainThread.meanLongestLongTask.toFixed(3),
+        ),
+        maxLongestLongTaskMs: Number(
+          stats.mainThread.maxLongestLongTask.toFixed(3),
+        ),
         meanFrameTimeMs: Number(stats.frameTimes.mean.toFixed(3)),
         maxFrameTimeMs: Number(stats.frameTimes.max.toFixed(3)),
-        note: 'Frame budget: % of 16.67ms used per frame. Frame time: actual ms per frame.',
+        note: 'Long-task share measures blocking tasks of at least 50ms. Frame time is the observed foreground requestAnimationFrame interval.',
       },
 
-      frames: {
-        totalFramesSampled: stats.frames.totalFrames,
-        droppedFrames: stats.frames.droppedFrames,
-        droppedFramePercentage: Number(
-          stats.frames.droppedFramePercentage.toFixed(3),
+      frameIntervals: {
+        totalSampled: stats.frames.totalIntervals,
+        slowIntervals: stats.frames.slowIntervals,
+        slowIntervalPercentage: Number(
+          stats.frames.slowIntervalPercentage.toFixed(3),
         ),
         stabilityScore: Number((stats.frames.stability * 100).toFixed(3)),
       },
 
       layers: {
         averageLayerCount: Number(stats.layers.avgLayerCount.toFixed(3)),
-        averageRenderTimeMs: Number(stats.layers.avgRenderTime.toFixed(3)),
+        averageCpuSubmitTimeMs: Number(stats.layers.avgRenderTime.toFixed(3)),
         averageDrawCalls: Number(stats.layers.avgDrawCalls.toFixed(3)),
       },
     },
@@ -170,8 +182,8 @@ function generateJSONReport(
       performance.layers.length > 0
         ? performance.layers.map((layer) => ({
             layerName: layer.name,
-            averageRenderTimeMs: Number(layer.avgRenderTime.toFixed(3)),
-            maxRenderTimeMs: Number(layer.maxRenderTime.toFixed(3)),
+            averageCpuSubmitTimeMs: Number(layer.avgRenderTime.toFixed(3)),
+            maxCpuSubmitTimeMs: Number(layer.maxRenderTime.toFixed(3)),
             averageDrawCalls: layer.avgDrawCalls,
           }))
         : [],
@@ -213,7 +225,7 @@ function generateChartDataExport(
         'fps_current',
         'fps_rolling_avg',
         'memory_mb',
-        'frame_budget_percent',
+        'long_task_share_percent',
         'layer_count',
         'node_network_count',
       ],
@@ -222,7 +234,7 @@ function generateChartDataExport(
         d.fps,
         d.avgFps,
         d.memory,
-        d.frameBudget,
+        d.longTaskShare,
         d.layers,
         d.nodeNetworks,
       ]),
@@ -233,8 +245,8 @@ function generateChartDataExport(
       description: 'Per-layer performance aggregates',
       columns: [
         'layer_name',
-        'avg_render_ms',
-        'max_render_ms',
+        'avg_cpu_submit_ms',
+        'max_cpu_submit_ms',
         'avg_draw_calls',
       ],
       data: performance.layers.map((l) => [
@@ -422,64 +434,66 @@ const PerformanceStatsDialogComponent = ({
       <DialogContent className="scrollbar-custom max-h-[90vh] max-w-7xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">{session.name}</DialogTitle>
-          <DialogDescription>
-            Performance Analysis Report
-            <div className="mt-2 flex flex-wrap items-center gap-4 text-xs">
-              <span>
-                Duration:{' '}
-                <strong className="text-white">
-                  {formatDuration(session.duration)}
-                </strong>
-              </span>
-              <span>
-                Samples:{' '}
-                <strong className="text-white">
-                  {session.snapshots.length}
-                </strong>
-              </span>
-              <span>
-                Sample Rate:{' '}
-                <strong className="text-white">{session.sampleRate}ms</strong>
-              </span>
-              <span>
-                Date:{' '}
-                <strong className="text-white">
-                  {new Date(session.startTime).toLocaleString()}
-                </strong>
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDownloadReport}
-                  className="h-6 gap-1.5 px-2 text-xs"
-                  title="Download comprehensive JSON report with all statistics and metadata">
-                  <Download className="h-3 w-3" />
-                  Full Report
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDownloadChartData}
-                  className="h-6 gap-1.5 px-2 text-xs"
-                  title="Download simplified chart data for plotting tools (Python, LaTeX, etc.)">
-                  <Download className="h-3 w-3" />
-                  Chart Data
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDownloadAllCharts}
-                  disabled={exportingZip}
-                  className="h-6 gap-1.5 px-2 text-xs"
-                  title="Download all chart images as a ZIP file">
-                  {exportingZip ? (
-                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-                  ) : (
-                    <ImageIcon className="h-3 w-3" />
-                  )}
-                  {exportingZip ? 'Exporting...' : 'All Charts'}
-                </Button>
+          <DialogDescription asChild>
+            <div>
+              <p>Performance Analysis Report</p>
+              <div className="mt-2 flex flex-wrap items-center gap-4 text-xs">
+                <span>
+                  Duration:{' '}
+                  <strong className="text-white">
+                    {formatDuration(session.duration)}
+                  </strong>
+                </span>
+                <span>
+                  Samples:{' '}
+                  <strong className="text-white">
+                    {session.snapshots.length}
+                  </strong>
+                </span>
+                <span>
+                  Sample Rate:{' '}
+                  <strong className="text-white">{session.sampleRate}ms</strong>
+                </span>
+                <span>
+                  Date:{' '}
+                  <strong className="text-white">
+                    {new Date(session.startTime).toLocaleString()}
+                  </strong>
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadReport}
+                    className="h-6 gap-1.5 px-2 text-xs"
+                    title="Download comprehensive JSON report with all statistics and metadata">
+                    <Download className="h-3 w-3" />
+                    Full Report
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadChartData}
+                    className="h-6 gap-1.5 px-2 text-xs"
+                    title="Download simplified chart data for plotting tools (Python, LaTeX, etc.)">
+                    <Download className="h-3 w-3" />
+                    Chart Data
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadAllCharts}
+                    disabled={exportingZip}
+                    className="h-6 gap-1.5 px-2 text-xs"
+                    title="Download all chart images as a ZIP file">
+                    {exportingZip ? (
+                      <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                    ) : (
+                      <ImageIcon className="h-3 w-3" />
+                    )}
+                    {exportingZip ? 'Exporting...' : 'All Charts'}
+                  </Button>
+                </div>
               </div>
             </div>
           </DialogDescription>
@@ -502,7 +516,7 @@ const PerformanceStatsDialogComponent = ({
               <StatCard
                 label="Frame Stability"
                 value={`${(stats.frames.stability * 100).toFixed(1)}%`}
-                subValue={`Dropped: ${stats.frames.droppedFramePercentage.toFixed(1)}%`}
+                subValue={`Slow: ${stats.frames.slowIntervalPercentage.toFixed(1)}%`}
                 color={stats.frames.stability > 0.9 ? 'green' : 'yellow'}
               />
               <StatCard
@@ -512,9 +526,9 @@ const PerformanceStatsDialogComponent = ({
                 color="purple"
               />
               <StatCard
-                label="Frame Budget"
-                value={`${stats.cpu.meanUsage.toFixed(1)}%`}
-                subValue={`Max: ${stats.cpu.maxUsage.toFixed(1)}%`}
+                label="Long-task Share"
+                value={`${stats.mainThread.meanLongTaskShare.toFixed(1)}%`}
+                subValue={`Max: ${stats.mainThread.maxLongTaskShare.toFixed(1)}%`}
                 color="orange"
               />
             </div>
@@ -556,7 +570,7 @@ const PerformanceStatsDialogComponent = ({
             </div>
           </div>
 
-          {/* Memory & CPU Over Time */}
+          {/* Memory and main-thread diagnostics over time */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <ChartHeading
@@ -583,10 +597,10 @@ const PerformanceStatsDialogComponent = ({
 
             <div>
               <ChartHeading
-                title="Main Thread / Frame Budget Usage"
-                exporting={exportingCharts.has('frame_budget')}
+                title="Main-thread Long-task Share"
+                exporting={exportingCharts.has('long_task_share')}
                 onExport={() =>
-                  exportChart('frame_budget', exportFrameBudgetChart)
+                  exportChart('long_task_share', exportLongTaskShareChart)
                 }
               />
               <div className="rounded-lg border border-white/10 bg-black/40 p-4">
@@ -598,8 +612,8 @@ const PerformanceStatsDialogComponent = ({
                   yDomain={[0, 100]}
                   series={[
                     {
-                      dataKey: 'frameBudget',
-                      name: 'Frame Budget (%)',
+                      dataKey: 'longTaskShare',
+                      name: 'Long-task Share (%)',
                       color: '#f97316',
                     },
                   ]}
@@ -612,7 +626,7 @@ const PerformanceStatsDialogComponent = ({
           {layerPerformanceData.length > 0 && (
             <div>
               <ChartHeading
-                title="Layer Performance Breakdown"
+                title="Layer CPU Submit Time"
                 exporting={exportingCharts.has('layer_performance')}
                 onExport={() =>
                   exportChart('layer_performance', exportLayerPerformanceChart)
@@ -624,12 +638,12 @@ const PerformanceStatsDialogComponent = ({
                   bars={[
                     {
                       dataKey: 'avgRenderTime',
-                      name: 'Avg Render Time (ms)',
+                      name: 'Avg CPU Submit (ms)',
                       color: '#3b82f6',
                     },
                     {
                       dataKey: 'maxRenderTime',
-                      name: 'Max Render Time (ms)',
+                      name: 'Max CPU Submit (ms)',
                       color: '#ef4444',
                     },
                   ]}
@@ -721,26 +735,34 @@ const PerformanceStatsDialogComponent = ({
                 titleColor="text-orange-400"
                 rows={[
                   [
-                    'Mean Frame Budget Usage',
-                    `${stats.cpu.meanUsage.toFixed(3)}%`,
+                    'Mean Long-task Share',
+                    `${stats.mainThread.meanLongTaskShare.toFixed(3)}%`,
                   ],
                   [
-                    'Max Frame Budget Usage',
-                    `${stats.cpu.maxUsage.toFixed(3)}%`,
+                    'Max Long-task Share',
+                    `${stats.mainThread.maxLongTaskShare.toFixed(3)}%`,
+                  ],
+                  [
+                    'Mean Longest Long Task',
+                    `${stats.mainThread.meanLongestLongTask.toFixed(3)} ms`,
+                  ],
+                  [
+                    'Max Longest Long Task',
+                    `${stats.mainThread.maxLongestLongTask.toFixed(3)} ms`,
                   ],
                   ['Mean Frame Time', `${stats.frameTimes.mean.toFixed(3)} ms`],
                   ['Max Frame Time', `${stats.frameTimes.max.toFixed(3)} ms`],
                 ]}
               />
               <StatisticsTable
-                title="Frame Statistics"
+                title="Frame Interval Statistics"
                 titleColor="text-green-400"
                 rows={[
-                  ['Total Frames Sampled', stats.frames.totalFrames],
-                  ['Dropped Frames (<30 FPS)', stats.frames.droppedFrames],
+                  ['Total Intervals Sampled', stats.frames.totalIntervals],
+                  ['Slow Intervals (>33.33 ms)', stats.frames.slowIntervals],
                   [
-                    'Dropped Frame Percentage',
-                    `${stats.frames.droppedFramePercentage.toFixed(3)}%`,
+                    'Slow Interval Percentage',
+                    `${stats.frames.slowIntervalPercentage.toFixed(3)}%`,
                   ],
                   [
                     'Performance Stability Score',
@@ -756,7 +778,7 @@ const PerformanceStatsDialogComponent = ({
               rows={[
                 ['Average Layer Count', stats.layers.avgLayerCount.toFixed(3)],
                 [
-                  'Average Render Time',
+                  'Average CPU Submit Time',
                   `${stats.layers.avgRenderTime.toFixed(3)} ms`,
                 ],
                 ['Average Draw Calls', stats.layers.avgDrawCalls.toFixed(3)],
@@ -765,7 +787,7 @@ const PerformanceStatsDialogComponent = ({
 
             {layerPerformanceData.length > 0 && (
               <BreakdownTable
-                title="Per-Layer Performance Breakdown"
+                title="Per-Layer CPU Submit Breakdown"
                 titleColor="text-indigo-400"
                 rows={layerPerformanceData}
                 getKey={(layer) => layer.layerId}
@@ -776,11 +798,11 @@ const PerformanceStatsDialogComponent = ({
                     value: (layer) => layer.name,
                   },
                   {
-                    heading: 'Avg Render (ms)',
+                    heading: 'Avg CPU Submit (ms)',
                     value: (layer) => layer.avgRenderTime.toFixed(3),
                   },
                   {
-                    heading: 'Max Render (ms)',
+                    heading: 'Max CPU Submit (ms)',
                     value: (layer) => layer.maxRenderTime.toFixed(3),
                   },
                   {

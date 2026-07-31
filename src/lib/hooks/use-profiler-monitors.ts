@@ -1,10 +1,12 @@
 import useProfilerStore from '@/lib/stores/profiler-store';
+import { getVizSessionState, vizSessionActions } from '@/lib/viz-session';
 import { useEffect, useRef } from 'react';
 
 // Constants for update intervals (in ms)
-const MEMORY_UPDATE_INTERVAL = 100; // Update memory every 100ms (match display refresh rate)
+const TELEMETRY_UPDATE_INTERVAL = 500;
+const MEMORY_UPDATE_INTERVAL = 1000;
 const INDEXEDDB_UPDATE_INTERVAL = 5000; // Update IndexedDB every 5 seconds
-const CPU_UPDATE_INTERVAL = 100; // Update CPU estimate every 100ms (increased for accuracy)
+const MAX_FOREGROUND_FRAME_INTERVAL = 250;
 
 /**
  * Hook to monitor memory usage using Performance API
@@ -152,19 +154,18 @@ function useGPUMonitor() {
 }
 
 /**
- * Hook to monitor main thread activity and long tasks
- * Measures frame budget usage and detects blocking tasks
- *
- * Note: Real CPU usage % is not available in browsers for security reasons.
- * Instead, we measure main thread blocking time and frame budget utilization.
+ * Browser-safe main-thread diagnostics. Browsers do not expose CPU
+ * utilization, so the percentage is explicitly the share of each sample
+ * window occupied by Long Task API entries. Display-frame intervals are
+ * recorded separately and never presented as CPU usage.
  */
-function useCPUMonitor() {
-  const updateCPU = useProfilerStore((s) => s.updateCPU);
+function useMainThreadMonitor() {
+  const updateMainThread = useProfilerStore((s) => s.updateMainThread);
   const updateFrameTimes = useProfilerStore((s) => s.updateFrameTimes);
   const enabled = useProfilerStore((s) => s.enabled);
   const frameTimesRef = useRef<number[]>([]);
-  const longTaskCountRef = useRef(0);
   const longTaskDurationRef = useRef(0);
+  const longestTaskRef = useRef(0);
   const lastUpdateRef = useRef(performance.now());
 
   useEffect(() => {
@@ -179,8 +180,11 @@ function useCPUMonitor() {
         observer = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
             if (entry.entryType === 'longtask') {
-              longTaskCountRef.current++;
               longTaskDurationRef.current += entry.duration;
+              longestTaskRef.current = Math.max(
+                longestTaskRef.current,
+                entry.duration,
+              );
             }
           }
         });
@@ -191,94 +195,76 @@ function useCPUMonitor() {
       }
     }
 
-    // Measure frame times to estimate main thread utilization
+    // Record foreground display intervals independently from long tasks.
     let lastFrameTime = performance.now();
     const measureFrameTiming = () => {
       const now = performance.now();
       const frameTime = now - lastFrameTime;
       lastFrameTime = now;
 
-      // Store frame times (cap at 100 samples for rolling window)
-      frameTimesRef.current.push(frameTime);
-      if (frameTimesRef.current.length > 100) {
-        frameTimesRef.current.shift();
+      if (
+        !document.hidden &&
+        frameTime > 0 &&
+        frameTime <= MAX_FOREGROUND_FRAME_INTERVAL
+      ) {
+        frameTimesRef.current.push(frameTime);
       }
 
       animationFrameId = requestAnimationFrame(measureFrameTiming);
     };
 
-    const updateCPUMetrics = () => {
+    const publishMetrics = () => {
       const now = performance.now();
       const elapsed = now - lastUpdateRef.current;
       lastUpdateRef.current = now;
 
-      // Calculate frame budget usage (target: 16.67ms for 60fps)
-      const targetFrameTime = 16.67;
-      const frameTimes = frameTimesRef.current;
+      const frameTimes = frameTimesRef.current.splice(0);
+      const longTaskShare =
+        elapsed > 0
+          ? Math.min(100, (longTaskDurationRef.current / elapsed) * 100)
+          : 0;
 
-      let usage = 0;
-      let maxTaskDuration = 0;
-
-      if (frameTimes.length > 0) {
-        // Average frame time over the measurement window
-        const avgFrameTime =
-          frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
-        maxTaskDuration = Math.max(...frameTimes);
-
-        // Usage = how much of the frame budget we're using
-        // 100% = consistently hitting 16.67ms (full 60fps budget)
-        // >100% = dropping frames (capped at 100 for display)
-        usage = Math.min(100, (avgFrameTime / targetFrameTime) * 100);
-      }
-
-      // Factor in long tasks (heavy blocking)
-      if (longTaskCountRef.current > 0) {
-        // If we detected long tasks, boost usage to reflect blocking
-        const blockingPercent = Math.min(
-          100,
-          (longTaskDurationRef.current / elapsed) * 100,
-        );
-        usage = Math.max(usage, blockingPercent);
-      }
-
-      updateCPU({
-        usage: Math.round(usage),
-        taskDuration: maxTaskDuration,
+      updateMainThread({
+        longTaskShare,
+        longestLongTask: longestTaskRef.current,
       });
 
-      // Update frame times for accurate maxFrameTimeMs calculation
-      const currentFrameTimes = [...frameTimes];
-      const currentMaxFrameTime = maxTaskDuration;
+      const currentMaxFrameTime =
+        frameTimes.length > 0 ? Math.max(...frameTimes) : 0;
       const currentMeanFrameTime =
         frameTimes.length > 0
           ? frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length
           : 0;
 
-      updateFrameTimes(
-        currentFrameTimes,
-        currentMaxFrameTime,
-        currentMeanFrameTime,
-      );
+      updateFrameTimes(frameTimes, currentMaxFrameTime, currentMeanFrameTime);
 
-      // Reset long task counters
-      longTaskCountRef.current = 0;
       longTaskDurationRef.current = 0;
+      longestTaskRef.current = 0;
     };
 
     // Start measuring
     animationFrameId = requestAnimationFrame(measureFrameTiming);
 
     // Update metrics periodically
-    const timeoutId = setInterval(updateCPUMetrics, CPU_UPDATE_INTERVAL);
+    const resetFrameClock = () => {
+      lastFrameTime = performance.now();
+      lastUpdateRef.current = lastFrameTime;
+      frameTimesRef.current = [];
+      longTaskDurationRef.current = 0;
+      longestTaskRef.current = 0;
+    };
+    document.addEventListener('visibilitychange', resetFrameClock);
+    const timeoutId = setInterval(publishMetrics, TELEMETRY_UPDATE_INTERVAL);
 
     return () => {
       cancelAnimationFrame(animationFrameId);
       clearInterval(timeoutId);
+      document.removeEventListener('visibilitychange', resetFrameClock);
       if (observer) {
         observer.disconnect();
       }
     };
-  }, [enabled, updateCPU, updateFrameTimes]);
+  }, [enabled, updateFrameTimes, updateMainThread]);
 }
 
 /**
@@ -295,21 +281,25 @@ function useEditorFPSMonitor() {
     if (!enabled) return;
 
     let animationFrameId: number;
+    const reset = () => {
+      frameCountRef.current = 0;
+      fpsUpdateTimeRef.current = performance.now();
+      lastFrameTimeRef.current = fpsUpdateTimeRef.current;
+    };
 
     const measureFPS = () => {
       const now = performance.now();
-      frameCountRef.current++;
+      if (!document.hidden) {
+        frameCountRef.current++;
+      }
 
-      // Update FPS every 500ms
-      if (now - fpsUpdateTimeRef.current >= 500) {
+      if (now - fpsUpdateTimeRef.current >= TELEMETRY_UPDATE_INTERVAL) {
         const elapsed = (now - fpsUpdateTimeRef.current) / 1000;
-        const fps = frameCountRef.current / elapsed;
+        if (!document.hidden && elapsed <= 2) {
+          updateEditorFPS(frameCountRef.current / elapsed);
+        }
 
-        updateEditorFPS(fps);
-
-        // Reset counters
-        frameCountRef.current = 0;
-        fpsUpdateTimeRef.current = now;
+        reset();
       }
 
       lastFrameTimeRef.current = now;
@@ -317,12 +307,73 @@ function useEditorFPSMonitor() {
     };
 
     animationFrameId = requestAnimationFrame(measureFPS);
+    document.addEventListener('visibilitychange', reset);
 
     return () => {
       cancelAnimationFrame(animationFrameId);
+      document.removeEventListener('visibilitychange', reset);
     };
   }, [enabled, updateEditorFPS]);
 }
+
+function useRuntimeMonitor() {
+  const enabled = useProfilerStore((state) => state.enabled);
+
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
+    let sampleStartedAt = performance.now();
+    let renderedFrames = 0;
+
+    return vizSessionActions.preview.subscribeRuntimePreview((inspection) => {
+      if (!inspection.lastTimings || document.hidden) {
+        return;
+      }
+
+      renderedFrames += 1;
+      const now = performance.now();
+      const elapsed = now - sampleStartedAt;
+      if (elapsed < TELEMETRY_UPDATE_INTERVAL) {
+        return;
+      }
+
+      const profiler = useProfilerStore.getState();
+      const graphs = getCurrentProjectGraphs();
+      const resultsById = new Map(
+        inspection.lastGraphResults.map((result) => [result.graphId, result]),
+      );
+      profiler.updateNodeNetworks(
+        graphs.map((graph) => {
+          const result = resultsById.get(graph.id);
+          return {
+            parameterId: graph.id,
+            parameterName: graph.name,
+            computeTime: null,
+            nodeCount: result
+              ? Object.keys(result.nodes).length
+              : graph.nodes.length,
+            issueCount: result?.issues.length ?? 0,
+          };
+        }),
+      );
+      profiler.updateRuntime({
+        fps: renderedFrames / (elapsed / 1000),
+        framePlanTime: inspection.lastTimings.planMilliseconds,
+        attachmentTime: inspection.lastTimings.attachmentMilliseconds,
+        totalTime: inspection.lastTimings.totalMilliseconds,
+        renderCycle: inspection.renderCycle,
+        issueCount: inspection.lastPlanIssues.length,
+      });
+      sampleStartedAt = now;
+      renderedFrames = 0;
+    });
+  }, [enabled]);
+}
+
+const getCurrentProjectGraphs = () =>
+  getVizSessionState().project.workingProject.graphs ?? [];
 
 /**
  * Main hook that initializes all profiler monitors
@@ -349,6 +400,7 @@ export function useProfilerMonitors() {
   useMemoryMonitor();
   useIndexedDBMonitor();
   useGPUMonitor();
-  useCPUMonitor();
+  useMainThreadMonitor();
   useEditorFPSMonitor();
+  useRuntimeMonitor();
 }

@@ -468,11 +468,11 @@
       "importance": "high",
       "parityDimensions": ["visual", "functional", "performance"],
       "referenceEvidence": ["src/components/editor/profiler-panel.tsx", "src/lib/stores/profiler-store.ts"],
-      "v2Evidence": ["src/components/editor/profiler-panel.tsx", "src/lib/stores/profiler-store.ts", "src/lib/hooks/use-layer-fps-tracker.ts"],
-      "status": "partial",
+      "v2Evidence": ["src/components/editor/profiler-panel.tsx", "src/lib/stores/profiler-store.ts", "src/lib/hooks/use-profiler-monitors.ts", "src/lib/hooks/use-layer-fps-tracker.ts", "tests/browser/editor-critical-journey.spec.ts"],
+      "status": "verified",
       "acceptance": ["Measurements identify the active layer or runtime work they describe.", "Profiler overhead is measured and bounded.", "Opening, resetting, and closing the profiler works throughout playback."],
       "validationMethods": ["browser", "benchmark", "integration"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-29-canonical-document-cutover.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-29-canonical-document-cutover.md", "docs/parity/evidence/2026-07-31-goal-three-profiler-and-performance-statistics.md"]
     },
     {
       "id": "debugging.performance-stats",
@@ -481,11 +481,11 @@
       "importance": "standard",
       "parityDimensions": ["visual", "functional", "performance"],
       "referenceEvidence": ["src/components/editor/performance-stats-dialog.tsx"],
-      "v2Evidence": ["src/components/editor/performance-stats-dialog.tsx"],
-      "status": "not-audited",
+      "v2Evidence": ["src/components/editor/performance-stats-dialog.tsx", "src/lib/stores/performance-recorder-types.ts", "src/lib/stores/performance-recorder-utils.ts", "src/lib/utils/chart-export.ts", "tests/foundation/performance-recorder-utils.test.ts", "tests/browser/editor-critical-journey.spec.ts"],
+      "status": "verified",
       "acceptance": ["Displayed frame and resource metrics have documented meanings.", "The dialog remains readable during active playback.", "Collecting metrics does not materially change the result being measured."],
       "validationMethods": ["browser", "benchmark", "manual"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-profiler-and-performance-statistics.md"]
     },
     {
       "id": "rhythm-lab.workspace",

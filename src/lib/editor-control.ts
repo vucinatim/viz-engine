@@ -360,13 +360,9 @@ const editorControl = {
     toggleProfiler() {
       const profilerStore = useProfilerStore.getState();
 
-      if (!profilerStore.enabled) {
-        profilerStore.setEnabled(true);
-        profilerStore.setVisible(true);
-        return;
-      }
-
-      profilerStore.setVisible(!profilerStore.visible);
+      const visible = !profilerStore.visible;
+      profilerStore.setEnabled(visible);
+      profilerStore.setVisible(visible);
     },
   },
   persistence: {

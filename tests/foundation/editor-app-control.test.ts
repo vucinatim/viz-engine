@@ -201,7 +201,7 @@ describe('Local editor control facade', () => {
 
     editorControl.ui.toggleProfiler();
 
-    expect(useProfilerStore.getState().enabled).toBe(true);
+    expect(useProfilerStore.getState().enabled).toBe(false);
     expect(useProfilerStore.getState().visible).toBe(false);
 
     editorControl.audio.setTrackList(['a.mp3', 'b.mp3']);
