@@ -1,6 +1,5 @@
 import editorControl from '@/lib/editor-control';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import { useVizSessionSelector } from '@/lib/viz-session';
 
 const CaptureAudio = () => {
@@ -15,10 +14,6 @@ const CaptureAudio = () => {
   const isCapturingTab = useVizSessionSelector(
     (state) => state.audio.session.source?.kind === 'stream',
   );
-  const playerRef = useEditorRuntimePreviewAttachmentStore(
-    (state) => state.playerRef,
-  );
-
   const startTabCapture = async () => {
     try {
       const stream = await (navigator.mediaDevices as any).getDisplayMedia({
@@ -42,10 +37,7 @@ const CaptureAudio = () => {
       setTabCaptureStream(stream);
       const label = stream.getAudioTracks()[0]?.label || 'Captured Tab';
       editorControl.audio.attachCapturedStream(label);
-      // Immediately start the Remotion timeline
-      if (playerRef.current && !playerRef.current.isPlaying()) {
-        editorControl.preview.play();
-      }
+      editorControl.preview.play();
       stream.getAudioTracks().forEach((t: MediaStreamTrack) => {
         t.addEventListener('ended', () => {
           try {
@@ -56,10 +48,7 @@ const CaptureAudio = () => {
           setAudioSource(null);
           setTabCaptureStream(null);
           editorControl.audio.detachCapturedStream();
-          // Pause playback when capture ends unexpectedly
-          if (playerRef.current && playerRef.current.isPlaying()) {
-            editorControl.preview.pause();
-          }
+          editorControl.preview.pause();
         });
       });
     } catch (e) {
@@ -68,10 +57,7 @@ const CaptureAudio = () => {
       // Ensure UI exits capture state on failure/cancel
       setTabCaptureStream(null);
       editorControl.audio.detachCapturedStream();
-      // Pause playback on capture failure
-      if (playerRef.current && playerRef.current.isPlaying()) {
-        editorControl.preview.pause();
-      }
+      editorControl.preview.pause();
     }
   };
 
@@ -83,10 +69,7 @@ const CaptureAudio = () => {
     // Immediately clear capture state for UI
     setTabCaptureStream(null);
     editorControl.audio.detachCapturedStream();
-    // Pause playback when exiting capture mode
-    if (playerRef.current && playerRef.current.isPlaying()) {
-      editorControl.preview.pause();
-    }
+    editorControl.preview.pause();
   };
 
   return (

@@ -6,8 +6,8 @@ import EditorHeader from '@/components/editor/editor-header';
 import EditorLayout, { EditorPanel } from '@/components/editor/editor-layout';
 import EditorProjectManager from '@/components/editor/editor-project-manager';
 import LayersConfigPanel from '@/components/editor/layers-config-panel';
+import PreviewPlayer from '@/components/editor/preview-player';
 import ProjectDropzone from '@/components/editor/project-dropzone';
-import RemotionPlayer from '@/components/editor/remotion-player';
 import useNodeNetworkStore from '@/components/node-network/node-network-store';
 import editorControl from '@/lib/editor-control';
 import { useProfilerMonitors } from '@/lib/hooks/use-profiler-monitors';
@@ -107,7 +107,7 @@ export default function EditorPage() {
                 </Suspense>
               ) : (
                 <>
-                  <RemotionPlayer />
+                  <PreviewPlayer />
                   {(openNetwork || shouldForceShowOverlay) && (
                     <Suspense fallback={null}>
                       <AnimationBuilder />

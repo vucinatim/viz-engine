@@ -46,12 +46,11 @@ describe('Editor runtime preview attachment store', () => {
     useEditorRuntimePreviewAttachmentStore.getState().reset();
   });
 
-  it('owns browser callbacks, mirrors, and the player ref without scene or inspection state', () => {
+  it('owns browser callbacks and mirrors without scene or inspection state', () => {
     const attachmentStore = useEditorRuntimePreviewAttachmentStore.getState();
     const renderLayerA = vi.fn();
     const mirrorCanvas = {} as HTMLCanvasElement;
     const compositeMirrorCanvas = {} as HTMLCanvasElement;
-    const playerRef = { current: { seekTo: vi.fn() } } as any;
 
     attachmentStore.registerPreviewAttachment(
       {
@@ -62,7 +61,6 @@ describe('Editor runtime preview attachment store', () => {
     );
     attachmentStore.registerMirrorCanvas('layer-a', mirrorCanvas);
     attachmentStore.registerCompositeMirrorCanvas(compositeMirrorCanvas);
-    attachmentStore.setPlayerRef(playerRef);
 
     const frame = createVizSessionRuntimePreviewFrame({
       currentFrame: 90,
@@ -93,9 +91,6 @@ describe('Editor runtime preview attachment store', () => {
     expect(
       useEditorRuntimePreviewAttachmentStore.getState().compositeMirrorCanvases,
     ).toEqual([compositeMirrorCanvas]);
-    expect(useEditorRuntimePreviewAttachmentStore.getState().playerRef).toBe(
-      playerRef,
-    );
 
     const state = useEditorRuntimePreviewAttachmentStore.getState();
     expect(state).not.toHaveProperty('layers');
@@ -107,7 +102,6 @@ describe('Editor runtime preview attachment store', () => {
 
   it('prunes only layer-scoped browser entries', () => {
     const store = useEditorRuntimePreviewAttachmentStore.getState();
-    const playerRef = { current: { seekTo: vi.fn() } } as any;
     const attachment = {
       getViewport: () => ({ width: 1, height: 1 }),
       render: vi.fn(),
@@ -115,14 +109,12 @@ describe('Editor runtime preview attachment store', () => {
 
     store.registerPreviewAttachment(attachment, ['layer-a', 'layer-b']);
     store.registerMirrorCanvas('layer-a', {} as HTMLCanvasElement);
-    store.setPlayerRef(playerRef);
     store.pruneLayerEntries(['layer-b']);
 
     const state = useEditorRuntimePreviewAttachmentStore.getState();
     expect(state.previewAttachment).toBe(attachment);
     expect([...state.previewLayerIds]).toEqual(['layer-b']);
     expect(state.mirrorCanvasesByLayerId['layer-a']).toBeUndefined();
-    expect(state.playerRef).toBe(playerRef);
   });
 
   it('renders one full scene plan and routes measured layer diagnostics separately', () => {

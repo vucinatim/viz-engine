@@ -1,6 +1,5 @@
 import editorControl from '@/lib/editor-control';
 import useAudioEngine from '@/lib/hooks/use-audio-engine';
-import useAudioPlaybackSync from '@/lib/hooks/use-audio-playback-sync';
 import useKeypress from '@/lib/hooks/use-keypress';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import { getVisualTime } from '@/lib/utils/audio-time';
@@ -64,8 +63,6 @@ const AudioPanel = () => {
   }, [audioContext, isCapturingTab, isPlaying, setCurrentTime, setVisualTime]);
 
   const { peaksLevels, duration, bufferDuration, isLoading } = useAudioEngine();
-  useAudioPlaybackSync();
-
   const playPause = () => {
     editorControl.preview.togglePlayback();
   };

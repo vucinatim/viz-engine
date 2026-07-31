@@ -197,9 +197,25 @@ The first repeatable fixed-device V2 performance baseline is also complete:
 
 See
 [Fixed-Device Interaction Performance](./parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md).
+
+The transport, discovery, and bundled-sample checkpoint is now also complete:
+
+- the editor-session transport is the only live frame/seek/loop owner
+- file audio acts as the browser clock while no-audio and captured-input modes
+  advance the same canonical transport from elapsed time
+- Remotion Player and its browser attachment backchannel were removed from the
+  live editor
+- the waveform no longer rewrites playback time or owns a competing loop
+- preview scrubbing is immediate, pointer-captured, accessible, and outside
+  project history
+- human-readable component search and all bundled sample loads pass headed
+  browser proof
+
+See
+[Transport, Discovery, And Sample Repair](./parity/evidence/2026-07-31-goal-three-transport-discovery-and-sample-repair.md).
 Goal Three remains open for controlled V1/V2 comparison, broader workload
-performance, the Curve Spectrum area fill, complete catalog
-audit, agent tooling, and the second original production.
+performance, the complete catalog/debug audit, agent tooling, and the second
+original production.
 
 ## Known Deliberate Deferrals
 

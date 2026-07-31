@@ -472,8 +472,6 @@ export const createVizSessionHost = ({
       const audioSource = createProjectAudioSource(currentResources);
       if (audioSource) {
         audioSessionController.attachSource(audioSource);
-      } else {
-        audioSessionController.clearSource();
       }
       audioSessionController.setBakedArtifactId(
         currentResources.project.artifactRefs?.[0]?.id,

@@ -1,5 +1,12 @@
 import { cn } from '@/lib/utils';
-import React, { useCallback, useRef, useState } from 'react';
+import {
+  useCallback,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+} from 'react';
 
 interface CustomSeekerSliderProps {
   value: number;
@@ -19,73 +26,108 @@ const CustomSeekerSlider = ({
   const sliderRef = useRef<HTMLDivElement>(null);
 
   const percentage = max > 0 ? (value / max) * 100 : 0;
+  const style = {
+    '--preview-seeker-progress': `${percentage}%`,
+  } as CSSProperties;
 
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (!sliderRef.current) return;
+  const updateFromPointer = useCallback(
+    (clientX: number) => {
+      const slider = sliderRef.current;
+      if (!slider) {
+        return;
+      }
 
-      setIsDragging(true);
-      const rect = sliderRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const newValue = Math.max(0, Math.min(max, (x / rect.width) * max));
-      onChange(newValue);
+      const rect = slider.getBoundingClientRect();
+      const ratio = Math.max(
+        0,
+        Math.min(1, (clientX - rect.left) / rect.width),
+      );
+      slider.style.setProperty('--preview-seeker-progress', `${ratio * 100}%`);
+      onChange(ratio * max);
     },
     [max, onChange],
   );
 
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      if (!isDragging || !sliderRef.current) return;
-
-      const rect = sliderRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const newValue = Math.max(0, Math.min(max, (x / rect.width) * max));
-      onChange(newValue);
+  const handlePointerDown = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      event.currentTarget.setPointerCapture(event.pointerId);
+      setIsDragging(true);
+      updateFromPointer(event.clientX);
     },
-    [isDragging, max, onChange],
+    [updateFromPointer],
   );
 
-  const handleMouseUp = useCallback(() => {
+  const handlePointerMove = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        updateFromPointer(event.clientX);
+      }
+    },
+    [updateFromPointer],
+  );
+
+  const handlePointerUp = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
     setIsDragging(false);
   }, []);
 
-  // Add global mouse event listeners when dragging
-  React.useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      const step = Math.max(1 / 60, max / 100);
+      const nextValue =
+        event.key === 'Home'
+          ? 0
+          : event.key === 'End'
+            ? max
+            : event.key === 'ArrowLeft' || event.key === 'ArrowDown'
+              ? value - step
+              : event.key === 'ArrowRight' || event.key === 'ArrowUp'
+                ? value + step
+                : undefined;
+      if (nextValue === undefined) {
+        return;
+      }
+      event.preventDefault();
+      onChange(Math.max(0, Math.min(max, nextValue)));
+    },
+    [max, onChange, value],
+  );
 
   return (
     <div
       ref={sliderRef}
+      role="slider"
+      tabIndex={0}
+      aria-label="Preview position"
+      aria-valuemin={0}
+      aria-valuemax={max}
+      aria-valuenow={value}
+      data-testid="preview-seeker"
       className={cn(
-        'relative h-1 w-full cursor-pointer rounded-full bg-white/20 transition-all duration-200',
+        'relative h-1 w-full cursor-pointer touch-none rounded-full bg-white/20 transition-[height] duration-200',
         isHovering && 'h-2',
         className,
       )}
-      onMouseDown={handleMouseDown}
+      style={style}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onKeyDown={handleKeyDown}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}>
       {/* Progress track */}
-      <div
-        className="absolute top-0 left-0 h-full rounded-full bg-white/60 transition-all duration-200"
-        style={{ width: `${percentage}%` }}
-      />
+      <div className="absolute top-0 left-0 h-full w-[var(--preview-seeker-progress)] rounded-full bg-white/60" />
 
       {/* Thumb */}
       <div
         className={cn(
-          'absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white transition-all duration-200',
+          'absolute top-1/2 left-[var(--preview-seeker-progress)] h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white transition-[width,height] duration-200',
           isHovering && 'h-4 w-4',
           isDragging && 'h-5 w-5',
         )}
-        style={{ left: `${percentage}%` }}
       />
     </div>
   );

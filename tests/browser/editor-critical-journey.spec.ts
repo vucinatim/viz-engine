@@ -10,6 +10,7 @@ type EditorSnapshot = {
   revision: number;
   currentFrame: number;
   durationFrames: number;
+  fps: number;
   isPlaying: boolean;
   graphBindingParameterId?: string;
   graphBindingGraphId?: string;
@@ -27,6 +28,12 @@ type GraphSnapshot = {
     nodeId: string;
     output: string;
   }>;
+};
+
+type TransportSynchronization = EditorSnapshot & {
+  audioCurrentTime: number;
+  audioPaused: boolean;
+  renderedFrame?: number;
 };
 
 const readEditorSnapshot = async (page: Page): Promise<EditorSnapshot> =>
@@ -52,6 +59,7 @@ const readEditorSnapshot = async (page: Page): Promise<EditorSnapshot> =>
       revision: state.project.revision,
       currentFrame: state.preview.transport.currentFrame,
       durationFrames: state.preview.transport.durationFrames,
+      fps: state.preview.transport.fps,
       isPlaying: state.preview.transport.isPlaying,
       graphBindingParameterId:
         graphBindingParameterId === undefined
@@ -240,6 +248,33 @@ const readRuntimeCanvasSignal = (page: Page) =>
     return signal;
   });
 
+const readTransportSynchronization = async (
+  page: Page,
+): Promise<TransportSynchronization> =>
+  page.evaluate(() => {
+    const debug = window.__vizEditorDebug;
+    const audio = document.querySelector('audio');
+    if (!debug || !audio) {
+      throw new Error('Editor transport dependencies are not mounted.');
+    }
+
+    const state = debug.vizSessionStore.getState();
+    const transport = state.preview.transport;
+    return {
+      layerIds: state.project.workingProject.layers.map((layer) => layer.id),
+      revision: state.project.revision,
+      currentFrame: transport.currentFrame,
+      durationFrames: transport.durationFrames,
+      fps: transport.fps,
+      isPlaying: transport.isPlaying,
+      audioCurrentTime: audio.currentTime,
+      audioPaused: audio.paused,
+      renderedFrame:
+        debug.editorControl.preview.inspectRuntimePreview().lastCompletedFrame
+          ?.currentFrame,
+    };
+  });
+
 test('preserves canonical editing, history, graph, and transport behavior', async ({
   page,
 }) => {
@@ -322,6 +357,188 @@ test('preserves canonical editing, history, graph, and transport behavior', asyn
     path: '.artifacts/playwright/editor-critical-journey.png',
     fullPage: true,
   });
+  expect(diagnostics).toEqual([]);
+});
+
+test('keeps scrubbing, playback, audio, rendering, and loop boundaries synchronized', async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  const diagnostics: string[] = [];
+  page.on('console', (message) => {
+    if (
+      (message.type() === 'error' || message.type() === 'warning') &&
+      !isKnownBrowserDiagnostic(message.text())
+    ) {
+      diagnostics.push(`${message.type()}: ${message.text()}`);
+    }
+  });
+  page.on('pageerror', (error) =>
+    diagnostics.push(`pageerror: ${error.message}`),
+  );
+
+  await waitForEditor(page);
+  await expect
+    .poll(async () =>
+      page.evaluate(
+        () =>
+          window.__vizEditorDebug?.vizSessionStore.getState().audio.session
+            .source?.kind,
+      ),
+    )
+    .toBe('media-element');
+  await expect
+    .poll(async () =>
+      page.evaluate(() => {
+        const audio = document.querySelector('audio');
+        return Boolean(
+          audio &&
+          audio.readyState >= HTMLMediaElement.HAVE_METADATA &&
+          Number.isFinite(audio.duration) &&
+          audio.duration > 1,
+        );
+      }),
+    )
+    .toBe(true);
+
+  await page.evaluate(() =>
+    window.__vizEditorDebug?.editorControl.nodeEditor.closeNetwork(),
+  );
+  await expect(page.getByTestId('animation-builder')).toHaveCount(0);
+  const player = page.getByTestId('preview-player');
+  await player.hover();
+  const seeker = page.getByTestId('preview-seeker');
+  await expect(seeker).toBeVisible();
+  await page.waitForTimeout(250);
+  const bounds = await seeker.boundingBox();
+  expect(bounds).not.toBeNull();
+
+  const beforeScrub = await readTransportSynchronization(page);
+  const seekerY = bounds!.y + bounds!.height / 2;
+  await page.mouse.move(bounds!.x + bounds!.width * 0.1, seekerY);
+  await page.mouse.down();
+  await page.mouse.move(bounds!.x + bounds!.width * 0.4, seekerY, {
+    steps: 12,
+  });
+  await page.mouse.up();
+
+  const scrubbed = await readTransportSynchronization(page);
+  const expectedScrubFrame = Math.floor(scrubbed.durationFrames * 0.4);
+  expect(Math.abs(scrubbed.currentFrame - expectedScrubFrame)).toBeLessThan(2);
+  expect(
+    Math.abs(scrubbed.audioCurrentTime * scrubbed.fps - scrubbed.currentFrame),
+  ).toBeLessThan(2);
+  expect(scrubbed.revision).toBe(beforeScrub.revision);
+  await expect
+    .poll(async () => (await readTransportSynchronization(page)).renderedFrame)
+    .toBe(scrubbed.currentFrame);
+
+  await page.getByTestId('preview-playback-toggle').click();
+  await expect
+    .poll(async () => (await readTransportSynchronization(page)).audioPaused)
+    .toBe(false);
+  await expect
+    .poll(async () => (await readTransportSynchronization(page)).currentFrame)
+    .toBeGreaterThan(scrubbed.currentFrame + 5);
+  const playing = await readTransportSynchronization(page);
+  expect(
+    Math.abs(playing.audioCurrentTime * playing.fps - playing.currentFrame),
+  ).toBeLessThan(4);
+  expect(playing.renderedFrame).toBeGreaterThan(
+    scrubbed.renderedFrame ?? scrubbed.currentFrame,
+  );
+
+  await page.mouse.move(bounds!.x + bounds!.width * 0.6, seekerY);
+  await page.mouse.down();
+  await page.mouse.move(bounds!.x + bounds!.width * 0.7, seekerY, {
+    steps: 8,
+  });
+  await page.mouse.up();
+  const playingSeek = await readTransportSynchronization(page);
+  const expectedPlayingSeekFrame = Math.floor(playingSeek.durationFrames * 0.7);
+  expect(playingSeek.currentFrame).toBeGreaterThanOrEqual(
+    expectedPlayingSeekFrame - 3,
+  );
+  expect(playingSeek.currentFrame).toBeLessThan(
+    expectedPlayingSeekFrame + playingSeek.fps * 3,
+  );
+  expect(
+    Math.abs(
+      playingSeek.audioCurrentTime * playingSeek.fps - playingSeek.currentFrame,
+    ),
+  ).toBeLessThan(4);
+  await expect
+    .poll(async () => (await readTransportSynchronization(page)).currentFrame)
+    .toBeGreaterThan(playingSeek.currentFrame + 3);
+
+  const looped = await page.evaluate(
+    () =>
+      new Promise<{
+        currentFrame: number;
+        isPlaying: boolean;
+        audioCurrentTime: number;
+      }>((resolve, reject) => {
+        const debug = window.__vizEditorDebug;
+        const audio = document.querySelector('audio');
+        if (!debug || !audio) {
+          reject(new Error('Editor transport dependencies are not mounted.'));
+          return;
+        }
+
+        let sawBoundaryApproach = false;
+        const timeout = window.setTimeout(() => {
+          unsubscribe();
+          reject(
+            new Error('Preview transport did not cross its loop boundary.'),
+          );
+        }, 5_000);
+        const unsubscribe = debug.vizSessionStore.subscribe((state) => {
+          const transport = state.preview.transport;
+          if (transport.currentFrame >= 115) {
+            sawBoundaryApproach = true;
+          }
+          if (sawBoundaryApproach && transport.currentFrame < 90) {
+            window.clearTimeout(timeout);
+            unsubscribe();
+            resolve({
+              currentFrame: transport.currentFrame,
+              isPlaying: transport.isPlaying,
+              audioCurrentTime: audio.currentTime,
+            });
+          }
+        });
+
+        debug.editorControl.preview.pause();
+        debug.editorControl.preview.setDurationFrames(120);
+        debug.vizSessionHost.setLoop(true);
+        debug.editorControl.preview.seekToFrame(115);
+        debug.editorControl.preview.play();
+      }),
+  );
+  expect(looped.currentFrame).toBeLessThan(90);
+  expect(looped.isPlaying).toBe(true);
+  expect(looped.audioCurrentTime).toBeLessThan(1.5);
+
+  await page.evaluate(() => {
+    const debug = window.__vizEditorDebug;
+    debug?.editorControl.preview.pause();
+    debug?.vizSessionHost.setLoop(false);
+    debug?.editorControl.preview.seekToFrame(115);
+    debug?.editorControl.preview.play();
+  });
+  await expect
+    .poll(async () => (await readTransportSynchronization(page)).isPlaying)
+    .toBe(false);
+  const completed = await readTransportSynchronization(page);
+  expect(completed.currentFrame).toBe(119);
+  expect(completed.audioPaused).toBe(true);
+  await expect
+    .poll(async () => (await readTransportSynchronization(page)).renderedFrame)
+    .toBe(completed.currentFrame);
+  await page.evaluate(() =>
+    window.__vizEditorDebug?.vizSessionHost.setLoop(true),
+  );
+
   expect(diagnostics).toEqual([]);
 });
 

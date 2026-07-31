@@ -2,17 +2,25 @@ import editorControl from '@/lib/editor-control';
 import { cn } from '@/lib/utils';
 import { useVizSessionSelector } from '@/lib/viz-session';
 import { Maximize2, Minimize2, Pause, Play } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type RefObject,
+} from 'react';
 import { Button } from '../ui/button';
 import CustomSeekerSlider from './custom-seeker-slider';
 
 interface CustomPlayerControlsProps {
   className?: string;
+  containerRef: RefObject<HTMLDivElement>;
   durationInFrames: number;
 }
 
 const CustomPlayerControls = ({
   className,
+  containerRef,
   durationInFrames,
 }: CustomPlayerControlsProps) => {
   const isPlaying = useVizSessionSelector(
@@ -39,11 +47,10 @@ const CustomPlayerControls = ({
   // Update fullscreen state from document
   useEffect(() => {
     const updateFullscreen = () => {
-      const playerContainer = document.querySelector('.remotion-player');
       setIsFullscreen(
         !!(
           document.fullscreenElement &&
-          document.fullscreenElement === playerContainer
+          document.fullscreenElement === containerRef.current
         ),
       );
     };
@@ -57,11 +64,11 @@ const CustomPlayerControls = ({
     return () => {
       document.removeEventListener('fullscreenchange', updateFullscreen);
     };
-  }, []);
+  }, [containerRef]);
 
   // Handle hover detection on player container
   useEffect(() => {
-    const playerContainer = document.querySelector('.remotion-player');
+    const playerContainer = containerRef.current;
     if (!playerContainer) return;
 
     const handleMouseEnter = () => {
@@ -87,7 +94,7 @@ const CustomPlayerControls = ({
       playerContainer.removeEventListener('mouseleave', handleMouseLeave);
       playerContainer.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [isHovered]);
+  }, [containerRef, isHovered]);
 
   const handlePlayPause = useCallback(() => {
     editorControl.preview.togglePlayback();
@@ -102,8 +109,7 @@ const CustomPlayerControls = ({
       if (isFullscreen) {
         await document.exitFullscreen();
       } else {
-        // Find the player container and make it fullscreen
-        const playerContainer = document.querySelector('.remotion-player');
+        const playerContainer = containerRef.current;
         if (playerContainer) {
           await playerContainer.requestFullscreen();
         }
@@ -111,7 +117,7 @@ const CustomPlayerControls = ({
     } catch (error) {
       console.warn('Fullscreen toggle failed:', error);
     }
-  }, [isFullscreen]);
+  }, [containerRef, isFullscreen]);
 
   // Format time helper
   const formatTime = useCallback((time: number) => {

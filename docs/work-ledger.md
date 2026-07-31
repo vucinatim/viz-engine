@@ -2112,3 +2112,27 @@
   - recorded full architecture, validation, assumptions, boundaries, and the
     machine-readable workload in
     `docs/parity/evidence/2026-07-31-goal-three-canonical-preview-compositor.md`
+- completed the Goal Three transport, discovery, and bundled-sample checkpoint:
+  - replaced Remotion Player clock ownership with one browser adapter around
+    the deterministic editor-session transport
+  - synchronized media time, canonical frames, rendering, seeking, and
+    authored loop boundaries
+  - removed the player-ref attachment backchannel and the waveform's competing
+    media-time loop
+  - made project-without-audio loads preserve the active editor preview source
+    and sequenced default audio after persisted-project hydration
+  - made preview scrubbing pointer-captured, keyboard accessible, immediately
+    styled, and explicitly outside project history
+  - separated stable component identity from human search terms and removed
+    untyped search-option plumbing
+  - proved exact Curve Spectrum discovery and visible loading of every bundled
+    sample in headed Chromium
+  - proved paused and playing seek, audio/frame agreement, renderer progress,
+    loop wrap, non-loop completion, and clean diagnostics in a 33.8-second
+    headed browser journey
+  - passed the complete foundation gate: 42 parity rows, clean architecture,
+    formatting, lint, all type checks, 56 files / 257 tests, 10 active headed
+    browser journeys, all package and studio builds, and both built-consumer
+    smoke scenarios
+  - recorded architecture, acceptance evidence, and remaining boundaries in
+    `docs/parity/evidence/2026-07-31-goal-three-transport-discovery-and-sample-repair.md`

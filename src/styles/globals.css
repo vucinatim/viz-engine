@@ -34,14 +34,14 @@
 }
 
 @layer base {
-  .remotion-player:fullscreen {
+  .preview-player:fullscreen {
     background: black;
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
-  .remotion-player:fullscreen video {
+  .preview-player:fullscreen video {
     max-width: 100vw;
     max-height: 100vh;
     object-fit: contain;
@@ -171,20 +171,6 @@
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
-  }
-
-  .remotion-player [style*='cursor: pointer'][style*='touch-action: none'] {
-    display: none !important;
-  }
-
-  .remotion-player [style*='border-radius: 20px'][style*='font-weight: bold'] {
-    display: none !important;
-  }
-
-  .remotion-player
-    [style*='height: 8px;'][style*='width'][style='height: 8px;'],
-  .remotion-player div[style='height: 8px;'] {
-    display: none !important;
   }
 
   .aspect-video-custom {

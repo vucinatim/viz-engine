@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import {
   getVizSessionState,
   vizSessionActions,
@@ -10,7 +9,6 @@ import {
 describe('VizSession preview transport', () => {
   beforeEach(() => {
     vizSessionActions.preview.reset();
-    useEditorRuntimePreviewAttachmentStore.getState().reset();
   });
 
   it('owns explicit preview transport truth', () => {
@@ -46,11 +44,7 @@ describe('VizSession preview transport', () => {
     expect(vizSessionStore.getState().preview.transport.isPlaying).toBe(false);
   });
 
-  it('keeps the browser player attachment outside VizSession transport state', () => {
-    const dummyPlayerRef = { current: { seekTo: () => undefined } } as any;
-    useEditorRuntimePreviewAttachmentStore
-      .getState()
-      .setPlayerRef(dummyPlayerRef);
+  it('keeps browser attachments outside VizSession transport state', () => {
     vizSessionActions.preview.setDurationFrames(240);
     vizSessionActions.preview.seekToFrame(120);
     vizSessionActions.preview.play();
@@ -62,9 +56,6 @@ describe('VizSession preview transport', () => {
       currentFrame: 0,
       isPlaying: false,
     });
-    expect(useEditorRuntimePreviewAttachmentStore.getState().playerRef).toBe(
-      dummyPlayerRef,
-    );
     expect(vizSessionStore.getState().preview).not.toHaveProperty('playerRef');
   });
 });

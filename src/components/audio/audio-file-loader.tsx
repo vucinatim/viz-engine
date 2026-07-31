@@ -25,11 +25,15 @@ const AudioFileLoader = () => {
   const sessionSource = useVizSessionSelector(
     (state) => state.audio.session.source,
   );
+  const projectInitialized = useVizSessionSelector(
+    (state) => state.project.initialized,
+  );
 
   const [audioFiles, setAudioFiles] = useState<string[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const initializedDefaultRef = useRef(false);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -53,19 +57,30 @@ const AudioFileLoader = () => {
     const files = getBundledAudioFiles();
     setAudioFiles(files);
     editorControl.audio.setTrackList(files);
+  }, []);
+
+  useEffect(() => {
+    if (
+      !projectInitialized ||
+      initializedDefaultRef.current ||
+      audioFiles.length === 0
+    ) {
+      return;
+    }
+    initializedDefaultRef.current = true;
+
     const activeSource = getVizSessionState().audio.session.source;
     if (activeSource) {
       setSelectedFile(activeSource.label ?? activeSource.id);
       return;
     }
-    if (files.length > 0) {
-      const defaultFile =
-        files.find((f) => f === DEFAULT_AUDIO_FILE) || files[0];
-      const defaultIndex = files.indexOf(defaultFile);
-      setSelectedFile(defaultFile);
-      editorControl.audio.attachBundledTrack(defaultFile, defaultIndex);
-    }
-  }, []);
+
+    const defaultFile =
+      audioFiles.find((file) => file === DEFAULT_AUDIO_FILE) || audioFiles[0];
+    const defaultIndex = audioFiles.indexOf(defaultFile);
+    setSelectedFile(defaultFile);
+    editorControl.audio.attachBundledTrack(defaultFile, defaultIndex);
+  }, [audioFiles, projectInitialized]);
 
   // Sync selected file with current track index from store (e.g., when skip buttons are used)
   useEffect(() => {

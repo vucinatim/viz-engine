@@ -65,6 +65,9 @@ export const createStudioPreviewActions = ({
       getState().transport.fps > 0 ? getState().transport.fps : DEFAULT_FPS;
     host.seekToFrame(Math.floor(seconds * fps));
   },
+  advanceBySeconds(seconds: number) {
+    host.advanceBySeconds(seconds);
+  },
   syncCurrentFrame(frame: number) {
     if (frame !== getState().transport.currentFrame) {
       host.seekToFrame(frame);

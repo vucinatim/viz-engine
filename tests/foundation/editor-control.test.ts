@@ -441,6 +441,41 @@ describe('Viz local editor control surface', () => {
     });
   });
 
+  it('preserves the live preview audio source when a project declares none', () => {
+    const control = createVizControl();
+    control.attachAudioSource({
+      kind: 'media-element',
+      id: 'editor-preview-track',
+      label: 'Editor Preview Track',
+      uri: '/music/editor-preview.mp3',
+    });
+    const projectWithoutAudio = structuredClone(exampleProjectDocument);
+    projectWithoutAudio.layers = projectWithoutAudio.layers.filter(
+      (layer) => layer.id === 'layer-background',
+    );
+    projectWithoutAudio.layerOrder = ['layer-background'];
+    projectWithoutAudio.assetRefs = [];
+    projectWithoutAudio.artifactRefs = [];
+    projectWithoutAudio.graphs = [];
+
+    const snapshot = control.openProject({
+      project: projectWithoutAudio,
+      resolvedAssets: [],
+      resolvedArtifacts: [],
+      source: {
+        kind: 'memory',
+        label: 'Project without declared audio',
+      },
+    });
+
+    expect(snapshot.audioSession.source).toEqual({
+      kind: 'media-element',
+      id: 'editor-preview-track',
+      label: 'Editor Preview Track',
+      uri: '/music/editor-preview.mp3',
+    });
+  });
+
   it('exposes ui-state mutation, graph runtime inspection, and transport advancement', () => {
     const control = createVizControl();
     control.openExampleProject();

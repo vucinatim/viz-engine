@@ -78,11 +78,11 @@
       "importance": "high",
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/editor-layer-search.tsx", "src/components/editor/layers-config-panel.tsx"],
-      "v2Evidence": ["src/components/editor/editor-layer-search.tsx", "src/components/editor/layers-config-panel.tsx"],
-      "status": "gap",
+      "v2Evidence": ["src/components/editor/editor-layer-search.tsx", "src/components/editor/layers-config-panel.tsx", "src/components/ui/search-select.tsx", "tests/browser/editor-critical-journey.spec.ts"],
+      "status": "verified",
       "acceptance": ["Search filters registered components predictably.", "Adding a result selects and reveals the new layer.", "Selection remains synchronized across panels and preview affordances."],
       "validationMethods": ["browser", "integration"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-transport-discovery-and-sample-repair.md"]
     },
     {
       "id": "layers.visibility-compositing",
@@ -299,11 +299,11 @@
       "importance": "critical",
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/custom-player-controls.tsx", "src/components/editor/remotion-player.tsx"],
-      "v2Evidence": ["src/components/editor/custom-player-controls.tsx", "src/components/editor/remotion-player.tsx", "src/lib/viz-session/store.ts"],
-      "status": "gap",
+      "v2Evidence": ["src/components/editor/custom-player-controls.tsx", "src/components/editor/preview-player.tsx", "src/components/editor/editor-preview-transport-driver.tsx", "src/lib/viz-session/store.ts", "packages/viz-editor-session/src/live-preview.ts"],
+      "status": "verified",
       "acceptance": ["Transport state, displayed time, audio time, and rendered frame stay synchronized.", "Seeking while playing and paused has deterministic results.", "Loop boundaries do not drift or double-trigger."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-transport-discovery-and-sample-repair.md"]
     },
     {
       "id": "transport.timeline",
@@ -416,11 +416,11 @@
       "importance": "high",
       "parityDimensions": ["interaction", "functional"],
       "referenceEvidence": ["src/components/editor/editor-toolbar.tsx", "public/projects/simple-example.vizengine.json"],
-      "v2Evidence": ["src/components/editor/editor-toolbar.tsx", "public/projects/simple-example.vizengine.json", "tests/foundation/public-sample-projects.test.ts"],
-      "status": "gap",
+      "v2Evidence": ["src/components/editor/editor-toolbar.tsx", "public/projects/simple-example.vizengine.json", "tests/foundation/public-sample-projects.test.ts", "tests/browser/editor-critical-journey.spec.ts"],
+      "status": "verified",
       "acceptance": ["Every published sample passes canonical validation.", "Loading each sample produces its intended visible scene.", "Samples exercise supported V2 contracts rather than legacy-only shapes."],
       "validationMethods": ["browser", "integration", "unit"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-transport-discovery-and-sample-repair.md"]
     },
     {
       "id": "export.still-image",

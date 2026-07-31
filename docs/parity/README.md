@@ -37,6 +37,7 @@ Browser comparison records live in [evidence](./evidence/). Start with:
 - [2026-07-30 canonical render and feedback jobs](./evidence/2026-07-30-canonical-render-and-feedback-jobs.md)
 - [2026-07-30 Signal Cathedral production certification](./evidence/2026-07-30-signal-cathedral-production-certification.md)
 - [2026-07-31 Goal Three canonical preview compositor](./evidence/2026-07-31-goal-three-canonical-preview-compositor.md)
+- [2026-07-31 Goal Three transport, discovery, and sample repair](./evidence/2026-07-31-goal-three-transport-discovery-and-sample-repair.md)
 
 ## Pinned Reference
 

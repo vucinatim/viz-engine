@@ -71,9 +71,6 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.0.7
         version: 1.0.7(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@remotion/player':
-        specifier: 4.0.172
-        version: 4.0.172(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@viz-engine/rhythm-core':
         specifier: workspace:*
         version: link:packages/rhythm-core
@@ -1462,12 +1459,6 @@ packages:
         optional: true
       react-redux:
         optional: true
-
-  '@remotion/player@4.0.172':
-    resolution: {integrity: sha512-DHzrT+VzaxTcspdxUWtA4GF38xQVkdpErAd0tRK17nbtBwdp3uTwhCANCfxe/INZ+HtMf3glr25t6sDDd7ryQg==}
-    peerDependencies:
-      react: '>=16.8.0'
-      react-dom: '>=16.8.0'
 
   '@rolldown/pluginutils@1.0.0-beta.27':
     resolution: {integrity: sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA==}
@@ -2889,12 +2880,6 @@ packages:
   regenerator-runtime@0.14.1:
     resolution: {integrity: sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==}
 
-  remotion@4.0.172:
-    resolution: {integrity: sha512-doS96m8w/TLwbwytRq8gz9e2/JDvHiSw4CM47Hf7IBHkDaLokkO8R/lyVYf8fNYwJ5t7g+ylSYSDyYkXROrZJA==}
-    peerDependencies:
-      react: '>=16.8.0'
-      react-dom: '>=16.8.0'
-
   require-from-string@2.0.2:
     resolution: {integrity: sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==}
     engines: {node: '>=0.10.0'}
@@ -4314,12 +4299,6 @@ snapshots:
       react: 18.2.0
       react-redux: 9.2.0(@types/react@18.2.79)(react@18.2.0)(redux@5.0.1)
 
-  '@remotion/player@4.0.172(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
-    dependencies:
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-      remotion: 4.0.172(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-
   '@rolldown/pluginutils@1.0.0-beta.27': {}
 
   '@rollup/rollup-android-arm-eabi@4.60.3':
@@ -5709,11 +5688,6 @@ snapshots:
   redux@5.0.1: {}
 
   regenerator-runtime@0.14.1: {}
-
-  remotion@4.0.172(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
-    dependencies:
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
 
   require-from-string@2.0.2:
     optional: true

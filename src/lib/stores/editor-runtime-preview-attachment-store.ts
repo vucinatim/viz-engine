@@ -6,7 +6,6 @@ import type {
   VizSessionRuntimePreviewAudioFrameData,
   VizSessionRuntimePreviewFrame,
 } from '@/lib/viz-session/types';
-import type { PlayerRef } from '@remotion/player';
 import type { VizRenderPlan } from '@viz-engine/contracts';
 import { create } from 'zustand';
 
@@ -16,7 +15,6 @@ interface EditorRuntimePreviewAttachmentStore {
   debugAttachments: Map<string, LayerRuntimeDebugAttachment>;
   mirrorCanvasesByLayerId: Record<string, HTMLCanvasElement[]>;
   compositeMirrorCanvases: HTMLCanvasElement[];
-  playerRef: { current: PlayerRef | null };
   registerMirrorCanvas: (id: string, canvas: HTMLCanvasElement) => void;
   unregisterMirrorCanvas: (id: string, canvas: HTMLCanvasElement) => void;
   registerCompositeMirrorCanvas: (canvas: HTMLCanvasElement) => void;
@@ -37,7 +35,6 @@ interface EditorRuntimePreviewAttachmentStore {
     layerId: string,
     attachment: LayerRuntimeDebugAttachment,
   ) => void;
-  setPlayerRef: (playerRef: { current: PlayerRef | null }) => void;
   pruneLayerEntries: (activeLayerIds: string[]) => void;
   getPreviewViewport: () => {
     width: number;
@@ -69,7 +66,6 @@ const useEditorRuntimePreviewAttachmentStore =
     debugAttachments: new Map(),
     mirrorCanvasesByLayerId: {},
     compositeMirrorCanvases: [],
-    playerRef: { current: null },
     registerPreviewAttachment: (attachment, layerIds) =>
       set({
         previewAttachment: attachment,
@@ -151,7 +147,6 @@ const useEditorRuntimePreviewAttachmentStore =
           (candidate) => candidate !== canvas,
         ),
       })),
-    setPlayerRef: (playerRef) => set({ playerRef }),
     pruneLayerEntries: (activeLayerIds) =>
       set((state) => {
         const activeLayerIdSet = new Set(activeLayerIds);
@@ -218,7 +213,6 @@ const useEditorRuntimePreviewAttachmentStore =
         debugAttachments: new Map(),
         mirrorCanvasesByLayerId: {},
         compositeMirrorCanvases: [],
-        playerRef: { current: null },
       }),
   }));
 

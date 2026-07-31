@@ -2,11 +2,7 @@ import editorControl from '@/lib/editor-control';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { AUDIO_THEME } from '@/lib/theme/audio-theme';
-import {
-  getVizSessionState,
-  useVizSessionSelector,
-  vizSessionStore,
-} from '@/lib/viz-session';
+import { getVizSessionState, vizSessionStore } from '@/lib/viz-session';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 const MINIMAP_HEIGHT = 28;
@@ -492,25 +488,12 @@ const WaveformDisplay = ({
   bufferDuration: number;
   isLoading: boolean;
 }) => {
-  const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);
   const visualTimeRef = useRef(getVizSessionState().audio.visualTime);
-  const isPlaying = useVizSessionSelector(
-    (state) => state.preview.transport.isPlaying,
-  );
   const rhythmSelection = useEditorStore((s) => s.rhythmSelection);
   const [viewMode, setViewMode] = useState<'static' | 'follow'>('static');
   const selectionOverlayRef = useRef<HTMLDivElement>(null);
-  const loopRef = useRef({
-    mode: 'static' as 'static' | 'follow',
-    start: 0,
-    end: 0,
-  });
-  const loopRafRef = useRef<number | null>(null);
 
   const handleSeek = (t: number) => {
-    const audio = audioElementRef.current;
-    if (!audio) return;
-    audio.currentTime = t;
     editorControl.preview.seekToSeconds(t);
   };
 
@@ -535,66 +518,11 @@ const WaveformDisplay = ({
   const viewEnd = viewStart + selectionDuration;
 
   useEffect(() => {
-    loopRef.current = {
-      mode: viewMode,
-      start: viewStart * duration,
-      end: viewEnd * duration,
-    };
-  }, [duration, viewEnd, viewMode, viewStart]);
-
-  useEffect(() => {
     const unsub = vizSessionStore.subscribe((state) => {
       visualTimeRef.current = state.audio.visualTime;
     });
     return () => unsub();
   }, []);
-
-  useEffect(() => {
-    const audio = audioElementRef.current;
-    if (!audio) return;
-    audio.loop = viewMode === 'follow';
-
-    const tick = () => {
-      const loop = loopRef.current;
-      if (loop.mode === 'static' && loop.end > loop.start) {
-        if (audio.currentTime >= loop.end) {
-          audio.currentTime = loop.start;
-        }
-      }
-      loopRafRef.current = requestAnimationFrame(tick);
-    };
-
-    const onPlay = () => {
-      if (loopRafRef.current) cancelAnimationFrame(loopRafRef.current);
-      loopRafRef.current = requestAnimationFrame(tick);
-    };
-    const onPause = () => {
-      if (loopRafRef.current) cancelAnimationFrame(loopRafRef.current);
-      loopRafRef.current = null;
-    };
-    const onEnded = () => {
-      if (loopRef.current.mode === 'follow') {
-        audio.currentTime = 0;
-        audio.play().catch(() => {});
-      }
-    };
-
-    audio.addEventListener('play', onPlay);
-    audio.addEventListener('pause', onPause);
-    audio.addEventListener('ended', onEnded);
-
-    if (isPlaying && !audio.paused) {
-      onPlay();
-    }
-
-    return () => {
-      audio.removeEventListener('play', onPlay);
-      audio.removeEventListener('pause', onPause);
-      audio.removeEventListener('ended', onEnded);
-      if (loopRafRef.current) cancelAnimationFrame(loopRafRef.current);
-      loopRafRef.current = null;
-    };
-  }, [audioElementRef, isPlaying, viewMode]);
 
   useEffect(() => {
     const el = selectionOverlayRef.current;
@@ -617,7 +545,7 @@ const WaveformDisplay = ({
       return () => cancelAnimationFrame(raf);
     }
     el.style.left = `${viewStart * 100}%`;
-  }, [audioElementRef, duration, selectionDuration, viewMode, viewStart]);
+  }, [duration, selectionDuration, viewMode, viewStart]);
 
   const mainPeaks = useMemo(() => {
     if (!peaksLevels || peaksLevels.length === 0) return null;
