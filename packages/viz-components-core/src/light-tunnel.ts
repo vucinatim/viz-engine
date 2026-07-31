@@ -91,7 +91,7 @@ export const lightTunnelComponent: VizComponentImplementation = {
   implementationVersion: '1.0.0',
   authoring: lightTunnelAuthoring,
   description:
-    'Deterministic retained neon cube tunnel with lights, waves, fog, bloom, and depth of field.',
+    'Infinite neon cube tunnel with waves, fog, bloom, and depth of field.',
   render: ({ frameContext, layer, settings, sampleSettings }) => {
     const structure = asRecord(settings.structure);
     const appearance = asRecord(settings.appearance);

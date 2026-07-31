@@ -149,8 +149,7 @@ export const morphShapesComponent: VizComponentImplementation = {
   rendererFamily: 'three',
   implementationVersion: '1.0.0',
   authoring: morphShapesAuthoring,
-  description:
-    'Deterministic retained point-cloud morphing between procedural, model, and text shapes.',
+  description: 'Morph point clouds between procedural, model, and text shapes.',
   render: ({
     frameContext,
     layer,

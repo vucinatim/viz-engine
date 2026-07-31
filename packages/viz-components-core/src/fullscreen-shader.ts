@@ -433,7 +433,7 @@ export const fullscreenShaderComponent: VizComponentImplementation = {
   rendererFamily: 'three',
   implementationVersion: '1.0.0',
   authoring: fullscreenShaderAuthoring,
-  description: 'Deterministic package-runtime fullscreen GLSL shaders.',
+  description: 'Audio-reactive fullscreen GLSL shaders.',
   render: ({ viewport, frameContext, layer, settings }) => {
     const shaderName = asString(settings.shader, 'Radial Ripple Grid');
     const fragmentShader =

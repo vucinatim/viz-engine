@@ -122,6 +122,9 @@ function LayerConfigCard({ index, layer }: LayerConfigCardProps) {
                     size="iconMini"
                     variant="defaultLighter"
                     tooltip="Enable/Disable debug overlay"
+                    aria-label={`Toggle ${comp.name} debug overlay`}
+                    aria-pressed={layer.isDebugEnabled}
+                    data-testid="toggle-layer-debug"
                     className={cn(
                       'pointer-events-auto',
                       layer.isDebugEnabled ? 'border border-white' : '',

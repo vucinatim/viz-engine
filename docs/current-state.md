@@ -213,9 +213,21 @@ The transport, discovery, and bundled-sample checkpoint is now also complete:
 
 See
 [Transport, Discovery, And Sample Repair](./parity/evidence/2026-07-31-goal-three-transport-discovery-and-sample-repair.md).
-Goal Three remains open for controlled V1/V2 comparison, broader workload
-performance, the complete catalog/debug audit, agent tooling, and the second
-original production.
+
+The two remaining explicit parity gaps are now also closed:
+
+- controlled V1/V2 shell captures verify the recognizable layout, density,
+  typography, controls, expanded settings, and waveform language
+- creator-facing component descriptions replace architecture jargon in the
+  primary catalog and layer cards
+- the layer debug overlay visibly follows graph-resolved runtime values without
+  changing project revision, scene pixels, or exported project state
+
+See
+[Shell And Layer Diagnostics Parity](./parity/evidence/2026-07-31-goal-three-shell-and-layer-diagnostics-parity.md).
+Goal Three remains open because 32 broader capabilities are still partial and
+one performance-stat capability is not yet audited, alongside agent tooling
+and the second original production.
 
 ## Known Deliberate Deferrals
 

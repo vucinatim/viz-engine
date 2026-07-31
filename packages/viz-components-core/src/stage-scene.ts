@@ -38,7 +38,7 @@ export const stageSceneComponent: VizComponentImplementation = {
   implementationVersion: '1.0.0',
   authoring: stageSceneAuthoring,
   description:
-    'Deterministic retained EDM stage with a cinematic camera, crowd, lighting, lasers, beams, and shader wall.',
+    'Full 3D EDM stage with a cinematic camera, crowd, lights, lasers, beams, and effects.',
   inputs: STAGE_MODEL_ASSET_DEFINITIONS.map((definition) => ({
     key: definition.inputKey,
     label: definition.asset.label,

@@ -11,7 +11,8 @@ export const particleSystemComponent: VizComponentImplementation = {
   rendererFamily: 'three',
   implementationVersion: '1.0.0',
   authoring: particleSystemAuthoring,
-  description: 'Deterministic package-runtime instanced particle system.',
+  description:
+    'GPU-accelerated particles with physics and color interpolation.',
   render: ({ frameContext, layer, settings }) => {
     const appearance = asRecord(settings.appearance);
     const physics = asRecord(settings.physics);

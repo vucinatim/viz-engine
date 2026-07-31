@@ -79,7 +79,7 @@ export const strobeLightComponent: VizComponentImplementation = {
   rendererFamily: 'three',
   implementationVersion: '1.0.0',
   authoring: strobeLightAuthoring,
-  description: 'Deterministic package-runtime fullscreen strobe shader.',
+  description: 'Fullscreen strobe flash with intensity and manual modes.',
   render: ({ viewport, frameContext, layer, settings }) => {
     const mode = asString(settings.mode, 'Intensity');
     const color = asString(settings.color, '#ffffff');

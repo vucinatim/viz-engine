@@ -43,8 +43,7 @@ export const instancedSupercubeComponent: VizComponentImplementation = {
   rendererFamily: 'three',
   implementationVersion: '1.0.0',
   authoring: instancedSupercubeAuthoring,
-  description:
-    'Deterministic retained instanced hollow-cube lattice with explosion response.',
+  description: 'Interactive instanced cubes with an explosion response.',
   render: ({ frameContext, layer, settings, sampleSettings }) =>
     ({
       kind: 'three-program',

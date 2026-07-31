@@ -117,10 +117,12 @@ The complete foundation gate passed after the focused proof:
 - all package builds and the production studio build
 - packed-consumer and built creative-loop smoke tests
 
-The parity matrix now records seven verified capabilities. The only remaining
-explicit gaps are the controlled V1/V2 shell visual-language comparison and
-the complete layer-debug-info acceptance audit. All broader unproven rows
-remain honestly partial or not audited.
+At this checkpoint the parity matrix recorded seven verified capabilities and
+two remaining explicit gaps: the controlled V1/V2 shell visual-language
+comparison and the complete layer-debug-info acceptance audit. Both were
+subsequently closed in
+[Goal Three Shell And Layer Diagnostics Parity](./2026-07-31-goal-three-shell-and-layer-diagnostics-parity.md).
+All broader unproven rows remain honestly partial or not audited.
 
 ## Assumptions And Boundary
 

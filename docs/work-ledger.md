@@ -2136,3 +2136,24 @@
     smoke scenarios
   - recorded architecture, acceptance evidence, and remaining boundaries in
     `docs/parity/evidence/2026-07-31-goal-three-transport-discovery-and-sample-repair.md`
+- completed the Goal Three shell-language and layer-diagnostics checkpoint:
+  - captured the pinned V1 and current V2 simple editor at 1600 × 1000, DPR 1,
+    in normal and expanded-settings states
+  - verified matching editor hierarchy, density, typography, controls,
+    parameter styling, waveform layout, and feedback language
+  - recorded supplementary SSIM of 0.984239 for the normal left panel,
+    0.985452 for expanded settings, and 0.998371 for the bottom waveform panel
+  - replaced architecture jargon in preserved component descriptions with
+    concise creator-facing product copy
+  - added a headed diagnostic journey proving visible nonblank output,
+    graph-resolved value changes, unchanged project revision and scene pixels,
+    export separation, clean disable behavior, and no diagnostics
+  - advanced the final two explicit parity gaps to verified while retaining
+    all broader unproven rows as partial or not audited
+  - passed the complete gate with 42 parity rows and zero gaps, clean
+    architecture/format/lint/types, 56 files / 257 deterministic tests,
+    11 active headed browser journeys in 4.7 minutes, all package and studio
+    builds, and both built-consumer smoke scenarios
+  - recorded controlled artifacts, approved additions, assumptions, and the
+    honest preview-color boundary in
+    `docs/parity/evidence/2026-07-31-goal-three-shell-and-layer-diagnostics-parity.md`

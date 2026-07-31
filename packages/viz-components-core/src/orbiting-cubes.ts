@@ -11,7 +11,8 @@ export const orbitingCubesComponent: VizComponentImplementation = {
   rendererFamily: 'three',
   implementationVersion: '1.0.0',
   authoring: orbitingCubesAuthoring,
-  description: 'Deterministic package-runtime orbiting neuron-like cubes.',
+  description:
+    'Neuron-like structures with dendrites, a soma, and an orbiting camera.',
   render: ({ frameContext, layer, settings }) =>
     ({
       kind: 'three-program',

@@ -320,7 +320,8 @@ export const noiseShaderComponent: VizComponentImplementation = {
   rendererFamily: 'three',
   implementationVersion: '1.0.0',
   authoring: noiseShaderAuthoring,
-  description: 'Deterministic package-runtime procedural noise shader.',
+  description:
+    'Fullscreen procedural noise shader with extensive customization.',
   render: ({ viewport, frameContext, layer, settings }) => {
     const noise = asRecord(settings.noise);
     const animation = asRecord(settings.animation);

@@ -85,8 +85,14 @@ const LayerDebugRenderer = ({
       <div className="absolute inset-0 w-[300px] border-r border-white/10 bg-black/60" />
       <div
         ref={debugContainerRef}
+        data-testid="layer-debug-overlay"
+        data-layer-id={layer.id}
         className="scrollbar-hide pointer-events-none absolute inset-0 overflow-y-auto">
-        <canvas ref={debugCanvasRef} className="pointer-events-auto w-full" />
+        <canvas
+          ref={debugCanvasRef}
+          data-testid="layer-debug-canvas"
+          className="pointer-events-auto w-full"
+        />
       </div>
     </>
   );

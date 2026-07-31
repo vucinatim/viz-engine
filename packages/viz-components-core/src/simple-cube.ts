@@ -9,7 +9,7 @@ export const simpleCubeComponent: VizComponentImplementation = {
   id: 'simple-cube',
   name: 'Simple Cube',
   rendererFamily: 'three',
-  description: 'Deterministic package-runtime rotating cube scene.',
+  description: 'A simple 3D cube visualization.',
   implementationVersion: '1.0.0',
   authoring: simpleCubeAuthoring,
   render: ({ frameContext, layer, settings }) => {

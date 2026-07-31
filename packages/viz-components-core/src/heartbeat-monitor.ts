@@ -16,8 +16,7 @@ export const heartbeatMonitorComponent: VizComponentImplementation = {
   rendererFamily: 'three',
   implementationVersion: '1.0.0',
   authoring: heartbeatMonitorAuthoring,
-  description:
-    'Deterministic direct-frame heartbeat trail sampled from canonical component settings.',
+  description: 'A scrolling line graph inspired by an ECG.',
   inputs: [
     {
       key: 'yPosition',

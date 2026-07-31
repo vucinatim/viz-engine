@@ -141,7 +141,7 @@ export const curveSpectrumComponent: VizComponentImplementation = {
   rendererFamily: 'three',
   implementationVersion: '1.0.0',
   authoring: curveSpectrumAuthoring,
-  description: 'Runtime-rendered port of the V1 curve spectrum visual.',
+  description: 'Curve visualization of the audio spectrum.',
   inputs: [
     {
       key: 'spectrum',

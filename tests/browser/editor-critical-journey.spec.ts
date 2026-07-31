@@ -248,6 +248,32 @@ const readRuntimeCanvasSignal = (page: Page) =>
     return signal;
   });
 
+const readRuntimeCanvasFingerprint = (page: Page) =>
+  page.evaluate(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>(
+      'canvas[data-runtime-preview-canvas]',
+    );
+    if (!canvas || canvas.width === 0 || canvas.height === 0) {
+      throw new Error('Runtime preview canvas is not available.');
+    }
+
+    const sample = document.createElement('canvas');
+    sample.width = 64;
+    sample.height = 36;
+    const context = sample.getContext('2d', { willReadFrequently: true });
+    if (!context) {
+      throw new Error('Canvas fingerprint context is unavailable.');
+    }
+    context.drawImage(canvas, 0, 0, sample.width, sample.height);
+    const pixels = context.getImageData(0, 0, sample.width, sample.height).data;
+    let hash = 2_166_136_261;
+    for (const channel of pixels) {
+      hash ^= channel;
+      hash = Math.imul(hash, 16_777_619);
+    }
+    return hash >>> 0;
+  });
+
 const readTransportSynchronization = async (
   page: Page,
 ): Promise<TransportSynchronization> =>
@@ -610,6 +636,143 @@ test('discovers components and visibly loads every bundled sample', async ({
   await expect(page.locator('canvas[data-runtime-preview-canvas]')).toHaveCount(
     1,
   );
+  expect(diagnostics).toEqual([]);
+});
+
+test('keeps layer diagnostics current and separate from scene output', async ({
+  page,
+}) => {
+  const diagnostics: string[] = [];
+  page.on('console', (message) => {
+    if (
+      (message.type() === 'error' || message.type() === 'warning') &&
+      !isKnownBrowserDiagnostic(message.text())
+    ) {
+      diagnostics.push(`${message.type()}: ${message.text()}`);
+    }
+  });
+  page.on('pageerror', (error) =>
+    diagnostics.push(`pageerror: ${error.message}`),
+  );
+
+  await waitForEditor(page);
+  await page.evaluate(() =>
+    window.__vizEditorDebug?.editorControl.nodeEditor.closeNetwork(),
+  );
+  await expect(page.getByTestId('animation-builder')).toHaveCount(0);
+  await page.evaluate(() => {
+    const debugWindow = window as Window & {
+      __layerDebugTexts?: string[];
+    };
+    debugWindow.__layerDebugTexts = [];
+    const originalFillText = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function (
+      text,
+      x,
+      y,
+      maxWidth,
+    ) {
+      if (this.canvas.dataset.testid === 'layer-debug-canvas') {
+        debugWindow.__layerDebugTexts?.push(String(text));
+      }
+      if (maxWidth === undefined) {
+        originalFillText.call(this, text, x, y);
+      } else {
+        originalFillText.call(this, text, x, y, maxWidth);
+      }
+    };
+  });
+
+  const before = await readEditorSnapshot(page);
+  const beforeFingerprint = await readRuntimeCanvasFingerprint(page);
+  const firstLayer = page.getByTestId('layer-card').first();
+  const debugToggle = firstLayer.getByTestId('toggle-layer-debug');
+  await expect(debugToggle).toHaveAttribute('aria-pressed', 'false');
+  await debugToggle.click();
+  await expect(debugToggle).toHaveAttribute('aria-pressed', 'true');
+  const overlay = page.getByTestId('layer-debug-overlay');
+  const debugCanvas = page.getByTestId('layer-debug-canvas');
+  await expect(overlay).toBeVisible();
+  await expect(debugCanvas).toBeVisible();
+  await expect
+    .poll(async () =>
+      debugCanvas.evaluate((canvas: HTMLCanvasElement) => {
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        if (!context || canvas.width === 0 || canvas.height === 0) {
+          return 0;
+        }
+        const pixels = context.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height,
+        ).data;
+        let nontransparentPixels = 0;
+        for (let index = 3; index < pixels.length; index += 4) {
+          if (pixels[index]! > 0) {
+            nontransparentPixels += 1;
+          }
+        }
+        return nontransparentPixels;
+      }),
+    )
+    .toBeGreaterThan(100);
+
+  expect(await readRuntimeCanvasFingerprint(page)).toBe(beforeFingerprint);
+  expect((await readEditorSnapshot(page)).revision).toBe(before.revision);
+  await expect
+    .poll(async () =>
+      page.evaluate(
+        () =>
+          (
+            window as Window & {
+              __layerDebugTexts?: string[];
+            }
+          ).__layerDebugTexts?.includes('⚙️ Config') ?? false,
+      ),
+    )
+    .toBe(true);
+
+  await page.evaluate(() =>
+    window.__vizEditorDebug?.editorControl.preview.play(),
+  );
+  await expect
+    .poll(async () => (await readEditorSnapshot(page)).currentFrame)
+    .toBeGreaterThan(before.currentFrame + 60);
+  await page.evaluate(() =>
+    window.__vizEditorDebug?.editorControl.preview.pause(),
+  );
+  await expect
+    .poll(async () =>
+      page.evaluate(() => {
+        const texts =
+          (
+            window as Window & {
+              __layerDebugTexts?: string[];
+            }
+          ).__layerDebugTexts ?? [];
+        return new Set(
+          texts.filter((text) => /^(#[\da-f]{6}|rgba?\(|hsla?\()/i.test(text)),
+        ).size;
+      }),
+    )
+    .toBeGreaterThan(1);
+
+  const projectContainsDebugState = await page.evaluate(() => {
+    const project =
+      window.__vizEditorDebug?.editorControl.project.exportWorkingProject();
+    return project?.layers.some(
+      (layer) =>
+        'isDebugEnabled' in layer ||
+        'showDebug' in layer ||
+        'debugEnabled' in layer,
+    );
+  });
+  expect(projectContainsDebugState).toBe(false);
+
+  await debugToggle.click();
+  await expect(page.getByTestId('layer-debug-overlay')).toHaveCount(0);
+  expect((await readEditorSnapshot(page)).revision).toBe(before.revision);
   expect(diagnostics).toEqual([]);
 });
 

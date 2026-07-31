@@ -26,11 +26,11 @@
       "importance": "high",
       "parityDimensions": ["visual", "interaction"],
       "referenceEvidence": ["src/app/globals.css", "src/components/editor/editor-layout.tsx"],
-      "v2Evidence": ["src/styles/globals.css", "src/components/editor/editor-layout.tsx"],
-      "status": "gap",
+      "v2Evidence": ["src/styles/globals.css", "src/components/editor/editor-layout.tsx", "src/components/editor/layer-config-card.tsx", "packages/viz-components-core/src/index.ts"],
+      "status": "verified",
       "acceptance": ["Core screens are visually equivalent or intentionally improved without losing information density.", "Hover, focus, selected, disabled, and error states remain legible.", "No unapproved generic replacement UI appears in primary workflows."],
       "validationMethods": ["browser", "visual", "manual"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-calibration.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-shell-and-layer-diagnostics-parity.md"]
     },
     {
       "id": "shell.resizable-workspace",
@@ -455,11 +455,11 @@
       "importance": "high",
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/debug-info-dialog.tsx", "src/components/editor/layer-renderer.tsx"],
-      "v2Evidence": ["src/components/editor/debug-info-dialog.tsx", "src/components/editor/layer-renderer.tsx"],
-      "status": "gap",
+      "v2Evidence": ["src/components/editor/debug-info-dialog.tsx", "src/components/editor/layer-renderer.tsx", "src/lib/stores/editor-runtime-preview-attachment-store.ts", "tests/browser/editor-critical-journey.spec.ts"],
+      "status": "verified",
       "acceptance": ["Debug information corresponds to current canonical runtime state.", "Toggling diagnostics does not alter scene semantics.", "Export excludes editor-only diagnostics unless explicitly requested."],
       "validationMethods": ["browser", "visual", "integration"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-shell-and-layer-diagnostics-parity.md"]
     },
     {
       "id": "debugging.profiler",

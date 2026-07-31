@@ -22,7 +22,7 @@ export const featureExtractionBarsComponent: VizComponentImplementation = {
   implementationVersion: '1.0.0',
   authoring: featureExtractionBarsAuthoring,
   description:
-    "Runtime-backed port of the preserved editor's five feature channel visual.",
+    'Five music feature channels—kick, snare, bass, melody, and percussion—as animated bars.',
   inputs: CHANNELS.map((channel) => ({
     key: channel.key,
     label: channel.label,

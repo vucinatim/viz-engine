@@ -88,7 +88,7 @@ export const neuralNetworkComponent: VizComponentImplementation = {
   implementationVersion: '1.0.0',
   authoring: neuralNetworkAuthoring,
   description:
-    'Deterministic retained procedural neuron network with traveling activation signals.',
+    'Procedural neuron structures with traveling activation signals.',
   render: ({ frameContext, layer, settings, sampleSettings }) => {
     const postProcessing = asRecord(settings.postProcessing);
 

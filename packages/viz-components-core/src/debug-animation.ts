@@ -13,8 +13,7 @@ export const debugAnimationComponent: VizComponentImplementation = {
   rendererFamily: 'three',
   implementationVersion: '1.0.0',
   authoring: debugAnimationAuthoring,
-  description:
-    'Runtime-backed diagnostic values, labels, and normalized value bar.',
+  description: 'Visualize and inspect animated values.',
   render: ({ viewport, layer, settings }) => {
     const value = asNumber(settings.value, 50);
     const midi = asNumber(settings.midi, 60);
