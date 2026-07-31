@@ -15,6 +15,7 @@ import useBodyProps from '@/lib/stores/body-props-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { useNodeGraphClipboardStore } from '@/lib/stores/node-graph-clipboard-store';
 import useProfilerStore from '@/lib/stores/profiler-store';
+import useRhythmLabStore from '@/lib/stores/rhythm-lab-store';
 import { vizControl, vizSessionHost, vizSessionStore } from '@/lib/viz-session';
 import { Suspense, lazy, useEffect } from 'react';
 
@@ -22,8 +23,10 @@ declare global {
   interface Window {
     __vizEditorDebug?: {
       editorControl: typeof editorControl;
+      editorStore: typeof useEditorStore;
       nodeGraphClipboardStore: typeof useNodeGraphClipboardStore;
       nodeNetworkStore: typeof useNodeNetworkStore;
+      rhythmLabStore: typeof useRhythmLabStore;
       vizControl: typeof vizControl;
       vizSessionHost: typeof vizSessionHost;
       vizSessionStore: typeof vizSessionStore;
@@ -61,8 +64,10 @@ export default function EditorPage() {
 
     window.__vizEditorDebug = {
       editorControl,
+      editorStore: useEditorStore,
       nodeGraphClipboardStore: useNodeGraphClipboardStore,
       nodeNetworkStore: useNodeNetworkStore,
+      rhythmLabStore: useRhythmLabStore,
       vizControl,
       vizSessionHost,
       vizSessionStore,

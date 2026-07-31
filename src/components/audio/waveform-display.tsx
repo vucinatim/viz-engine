@@ -1,5 +1,9 @@
 import { audioPresentationClock } from '@/lib/audio-presentation-clock';
 import editorControl from '@/lib/editor-control';
+import {
+  rhythmSelectionPresentation,
+  type RhythmSelectionWindow,
+} from '@/lib/rhythm-selection-presentation';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { AUDIO_THEME } from '@/lib/theme/audio-theme';
@@ -154,6 +158,7 @@ const WaveformCanvas = ({
   amplitudeScale = 1,
   playheadColor = '#fff',
   ariaLabel = 'Audio position',
+  followSelectionWindow = false,
   onSeek,
 }: {
   peaks: Float32Array | null;
@@ -171,6 +176,7 @@ const WaveformCanvas = ({
   amplitudeScale?: number;
   playheadColor?: string;
   ariaLabel?: string;
+  followSelectionWindow?: boolean;
   onSeek?: (t: number) => void;
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -244,6 +250,16 @@ const WaveformCanvas = ({
     );
     return () => unsub();
   }, []);
+
+  useEffect(() => {
+    if (!followSelectionWindow) return;
+    return rhythmSelectionPresentation.subscribe(({ start, end }) => {
+      viewportStartRef.current = start;
+      viewportEndRef.current = end;
+      selectionDurationRef.current = end - start;
+      renderRef.current();
+    });
+  }, [followSelectionWindow]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -391,22 +407,27 @@ const WaveformCanvas = ({
   }, [audioElementRef, followPlayhead]);
 
   const seekFromClientX = (canvas: HTMLCanvasElement, clientX: number) => {
-    if (!onSeek || duration <= 0) return;
+    const durationNow = durationRef.current;
+    if (!onSeek || durationNow <= 0) return;
     const rect = canvas.getBoundingClientRect();
     const x = clientX - rect.left;
     const now = Math.max(0, visualTimeRef.current);
-    const viewSpan = clamp(selectionDuration, 0.0001, 1);
+    const viewSpan = clamp(selectionDurationRef.current, 0.0001, 1);
     const followStart =
-      duration > 0 ? clamp(now / duration - viewSpan / 2, 0, 1 - viewSpan) : 0;
-    const viewStart = followPlayhead ? followStart : clamp(viewportStart, 0, 1);
-    const viewEnd = followPlayhead
+      durationNow > 0
+        ? clamp(now / durationNow - viewSpan / 2, 0, 1 - viewSpan)
+        : 0;
+    const viewStart = followPlayheadRef.current
+      ? followStart
+      : clamp(viewportStartRef.current, 0, 1);
+    const viewEnd = followPlayheadRef.current
       ? viewStart + viewSpan
-      : clamp(viewportEnd, viewStart + 0.0001, 1);
-    const viewDuration = Math.max(0.0001, (viewEnd - viewStart) * duration);
-    const viewStartTime = viewStart * duration;
+      : clamp(viewportEndRef.current, viewStart + 0.0001, 1);
+    const viewDuration = Math.max(0.0001, (viewEnd - viewStart) * durationNow);
+    const viewStartTime = viewStart * durationNow;
     const t = Math.max(
       0,
-      Math.min(duration, viewStartTime + (x / rect.width) * viewDuration),
+      Math.min(durationNow, viewStartTime + (x / rect.width) * viewDuration),
     );
     onSeek(t);
   };
@@ -543,6 +564,7 @@ const WaveformDisplay = ({
   const rhythmSelection = useEditorStore((s) => s.rhythmSelection);
   const [viewMode, setViewMode] = useState<'static' | 'follow'>('static');
   const selectionOverlayRef = useRef<HTMLDivElement>(null);
+  const wheelCommitRef = useRef<number | null>(null);
 
   const handleSeek = (t: number) => {
     editorControl.preview.seekToSeconds(t);
@@ -564,9 +586,49 @@ const WaveformDisplay = ({
     const start = clamp(rhythmSelection.start, 0, 1 - selectionDuration);
     return { start, end: start + selectionDuration };
   }, [rhythmSelection.start, selectionDuration]);
+  const liveSelectionRef = useRef<RhythmSelectionWindow>(normalizedSelection);
 
   const viewStart = normalizedSelection.start;
   const viewEnd = viewStart + selectionDuration;
+
+  const updateSelectionPresentation = (next: RhythmSelectionWindow) => {
+    liveSelectionRef.current = next;
+    rhythmSelectionPresentation.publish(next);
+    const overlay = selectionOverlayRef.current;
+    if (overlay) {
+      overlay.style.left = `${next.start * 100}%`;
+      overlay.style.width = `${(next.end - next.start) * 100}%`;
+    }
+  };
+
+  const commitSelection = () => {
+    const current = useEditorStore.getState().rhythmSelection;
+    const next = liveSelectionRef.current;
+    if (current.start === next.start && current.end === next.end) return;
+    editorControl.ui.setRhythmSelection(next);
+  };
+
+  const transformSelection = (
+    mode: 'zoom' | 'pan',
+    amount: number,
+    anchor = 0.5,
+  ) => {
+    const current = liveSelectionRef.current;
+    const width = current.end - current.start;
+    if (mode === 'pan') {
+      const start = clamp(current.start + amount * width, 0, 1 - width);
+      return { start, end: start + width };
+    }
+    const nextWidth = clamp(width * amount, MIN_SELECTION, 1);
+    const anchorPosition = current.start + width * anchor;
+    const start = clamp(anchorPosition - nextWidth * anchor, 0, 1 - nextWidth);
+    return { start, end: start + nextWidth };
+  };
+
+  useEffect(() => {
+    liveSelectionRef.current = normalizedSelection;
+    rhythmSelectionPresentation.publish(normalizedSelection);
+  }, [normalizedSelection]);
 
   useEffect(() => {
     const unsub = audioPresentationClock.subscribe(({ visualTime }) => {
@@ -598,6 +660,65 @@ const WaveformDisplay = ({
     el.style.left = `${viewStart * 100}%`;
   }, [duration, selectionDuration, viewMode, viewStart]);
 
+  useEffect(
+    () => () => {
+      if (wheelCommitRef.current !== null) {
+        window.clearTimeout(wheelCommitRef.current);
+      }
+    },
+    [],
+  );
+
+  const handleSelectionWheel = (event: React.WheelEvent) => {
+    if (event.deltaX === 0 && event.deltaY === 0) return;
+    if (viewMode === 'follow') setViewMode('static');
+    const rect = event.currentTarget.getBoundingClientRect();
+    const anchor = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+    const isPan =
+      event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY);
+    const next = isPan
+      ? transformSelection(
+          'pan',
+          clamp((event.deltaX || event.deltaY) / rect.width, -0.25, 0.25),
+        )
+      : transformSelection(
+          'zoom',
+          Math.exp(clamp(event.deltaY, -200, 200) * 0.0012),
+          anchor,
+        );
+    updateSelectionPresentation(next);
+    if (wheelCommitRef.current !== null) {
+      window.clearTimeout(wheelCommitRef.current);
+    }
+    wheelCommitRef.current = window.setTimeout(() => {
+      wheelCommitRef.current = null;
+      commitSelection();
+    }, 120);
+  };
+
+  const handleSelectionKeyDown = (event: React.KeyboardEvent) => {
+    let next: RhythmSelectionWindow | null = null;
+    if (event.key === 'ArrowLeft') next = transformSelection('pan', -0.1);
+    else if (event.key === 'ArrowRight') next = transformSelection('pan', 0.1);
+    else if (event.key === '+' || event.key === '=')
+      next = transformSelection('zoom', 0.8);
+    else if (event.key === '-') next = transformSelection('zoom', 1.25);
+    else if (event.key === 'Home') {
+      const width =
+        liveSelectionRef.current.end - liveSelectionRef.current.start;
+      next = { start: 0, end: width };
+    } else if (event.key === 'End') {
+      const width =
+        liveSelectionRef.current.end - liveSelectionRef.current.start;
+      next = { start: 1 - width, end: 1 };
+    }
+    if (!next) return;
+    event.preventDefault();
+    if (viewMode === 'follow') setViewMode('static');
+    updateSelectionPresentation(next);
+    commitSelection();
+  };
+
   const mainPeaks = useMemo(() => {
     if (!peaksLevels || peaksLevels.length === 0) return null;
     const desiredBars = Math.max(
@@ -617,11 +738,17 @@ const WaveformDisplay = ({
     event: React.PointerEvent<HTMLDivElement>,
   ) => {
     const strip = event.currentTarget;
+    if (wheelCommitRef.current !== null) {
+      window.clearTimeout(wheelCommitRef.current);
+      wheelCommitRef.current = null;
+      commitSelection();
+    }
     strip.setPointerCapture(event.pointerId);
     const rect = strip.getBoundingClientRect();
     const pointerX = event.clientX - rect.left;
-    const baseStart = normalizedSelection.start;
-    const baseEnd = baseStart + selectionDuration;
+    const baseSelection = liveSelectionRef.current;
+    const baseStart = baseSelection.start;
+    const baseEnd = baseSelection.end;
     const selectionStartPx = baseStart * rect.width;
     const selectionEndPx = baseEnd * rect.width;
 
@@ -652,7 +779,7 @@ const WaveformDisplay = ({
           0,
           endAtDrag - MIN_SELECTION,
         );
-        editorControl.ui.setRhythmSelection({
+        updateSelectionPresentation({
           start: newStart,
           end: endAtDrag,
         });
@@ -660,7 +787,7 @@ const WaveformDisplay = ({
       }
       if (mode === 'right') {
         const newEnd = clamp(endAtDrag + delta, startAtDrag + MIN_SELECTION, 1);
-        editorControl.ui.setRhythmSelection({
+        updateSelectionPresentation({
           start: startAtDrag,
           end: newEnd,
         });
@@ -669,7 +796,7 @@ const WaveformDisplay = ({
       if (mode === 'move') {
         const width = endAtDrag - startAtDrag;
         const newStart = clamp(startAtDrag + delta, 0, 1 - width);
-        editorControl.ui.setRhythmSelection({
+        updateSelectionPresentation({
           start: newStart,
           end: newStart + width,
         });
@@ -688,28 +815,44 @@ const WaveformDisplay = ({
         newEnd = 1;
         newStart = 1 - width;
       }
-      editorControl.ui.setRhythmSelection({ start: newStart, end: newEnd });
+      updateSelectionPresentation({ start: newStart, end: newEnd });
     };
 
     update(event.clientX);
 
     const handlePointerMove = (moveEvent: PointerEvent) => {
+      if (moveEvent.pointerId !== event.pointerId) return;
       update(moveEvent.clientX);
     };
 
-    const handlePointerUp = (upEvent: PointerEvent) => {
-      strip.releasePointerCapture(upEvent.pointerId);
+    const finishPointerGesture = (pointerId: number, commit: boolean) => {
+      if (pointerId !== event.pointerId) return;
+      if (strip.hasPointerCapture(pointerId)) {
+        strip.releasePointerCapture(pointerId);
+      }
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerCancel);
+      if (commit) commitSelection();
+      else updateSelectionPresentation(baseSelection);
+    };
+
+    const handlePointerUp = (upEvent: PointerEvent) => {
+      finishPointerGesture(upEvent.pointerId, true);
+    };
+
+    const handlePointerCancel = (cancelEvent: PointerEvent) => {
+      finishPointerGesture(cancelEvent.pointerId, false);
     };
 
     window.addEventListener('pointermove', handlePointerMove);
     window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerCancel);
   };
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-0">
-      <div className="relative min-h-0 flex-1">
+      <div className="relative min-h-0 flex-1" onWheel={handleSelectionWheel}>
         <WaveformCanvas
           peaks={mainPeaks}
           duration={duration}
@@ -719,6 +862,7 @@ const WaveformDisplay = ({
           viewportStart={viewStart}
           viewportEnd={viewEnd}
           followPlayhead={viewMode === 'follow'}
+          followSelectionWindow
           selectionDuration={selectionDuration}
           amplitudeScale={MAIN_AMPLITUDE_SCALE}
           playheadColor="#ffffff"
@@ -741,6 +885,7 @@ const WaveformDisplay = ({
       </div>
       <div
         className="relative"
+        onWheel={handleSelectionWheel}
         style={{ height: MINIMAP_HEIGHT + TIMELINE_HEIGHT + TIMELINE_GAP }}>
         <div className="absolute inset-x-0 top-0">
           <WaveformCanvas
@@ -762,11 +907,18 @@ const WaveformDisplay = ({
           <TimelineCanvas duration={duration} />
         </div>
         <div
+          role="group"
+          aria-label="Waveform view window"
+          aria-keyshortcuts="ArrowLeft ArrowRight + - Home End"
+          data-testid="waveform-view-window"
+          tabIndex={0}
           className="absolute inset-x-0 bottom-0 cursor-crosshair"
           style={{ height: TIMELINE_HEIGHT }}
+          onKeyDown={handleSelectionKeyDown}
           onPointerDown={handleSelectionPointerDown}>
           <div
             ref={selectionOverlayRef}
+            data-testid="waveform-selection-window"
             className="absolute bottom-0 h-full rounded-sm border border-cyan-400/70 bg-cyan-400/10"
             style={{
               width: `${selectionDuration * 100}%`,

@@ -1,10 +1,10 @@
 import { audioPresentationClock } from '@/lib/audio-presentation-clock';
 import { PipelineStageDefinition } from '@/lib/rhythm-lab/analysis-graph';
 import { STAGE_COLORS } from '@/lib/rhythm-lab/stage-colors';
+import { rhythmSelectionPresentation } from '@/lib/rhythm-selection-presentation';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import useEditorStore from '@/lib/stores/editor-store';
 import useRhythmLabStore from '@/lib/stores/rhythm-lab-store';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import StageCard from './stage-card';
 import StageParams from './stage-params';
 
@@ -19,9 +19,13 @@ const OnsetCard = ({ stage }: OnsetCardProps) => {
   const enabled = useRhythmLabStore((s) => Boolean(s.enabledStages.onset));
   const audioBuffer = useAudioEngineStore((s) => s.audioBuffer);
   const visualTimeRef = useRef(audioPresentationClock.getSnapshot().visualTime);
-  const rhythmSelection = useEditorStore((s) => s.rhythmSelection);
+  const selectionRef = useRef(rhythmSelectionPresentation.getSnapshot());
   const rafRef = useRef(0);
-  const [level, setLevel] = useState(0);
+  const levelRef = useRef<HTMLDivElement>(null);
+
+  const setLevel = (level: number) => {
+    if (levelRef.current) levelRef.current.style.opacity = String(level);
+  };
 
   useEffect(() => {
     const unsub = audioPresentationClock.subscribe(({ visualTime }) => {
@@ -29,6 +33,14 @@ const OnsetCard = ({ stage }: OnsetCardProps) => {
     });
     return () => unsub();
   }, []);
+
+  useEffect(
+    () =>
+      rhythmSelectionPresentation.subscribe((selection) => {
+        selectionRef.current = selection;
+      }),
+    [],
+  );
 
   useEffect(() => {
     if (!enabled) {
@@ -42,7 +54,8 @@ const OnsetCard = ({ stage }: OnsetCardProps) => {
         return;
       }
 
-      const selectionStartSec = rhythmSelection.start * audioBuffer.duration;
+      const selectionStartSec =
+        selectionRef.current.start * audioBuffer.duration;
       const t = visualTimeRef.current - selectionStartSec;
       const onsetHop = analysisMeta.hopLength;
       const onsetWin = analysisMeta.winLength;
@@ -62,14 +75,7 @@ const OnsetCard = ({ stage }: OnsetCardProps) => {
 
     rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [
-    analysisMeta,
-    audioBuffer,
-    enabled,
-    onsetEnv,
-    rhythmSelection,
-    stats.max,
-  ]);
+  }, [analysisMeta, audioBuffer, enabled, onsetEnv, stats.max]);
 
   return (
     <StageCard
@@ -80,10 +86,11 @@ const OnsetCard = ({ stage }: OnsetCardProps) => {
       topStrip={
         <div className="h-full w-full bg-white/5">
           <div
+            ref={levelRef}
             className="h-full w-full"
             style={{
               backgroundColor: STAGE_COLORS.onset,
-              opacity: enabled ? level : 0,
+              opacity: 0,
             }}
           />
         </div>

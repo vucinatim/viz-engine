@@ -1,10 +1,10 @@
 import { audioPresentationClock } from '@/lib/audio-presentation-clock';
 import { PipelineStageDefinition } from '@/lib/rhythm-lab/analysis-graph';
 import { STAGE_COLORS } from '@/lib/rhythm-lab/stage-colors';
+import { rhythmSelectionPresentation } from '@/lib/rhythm-selection-presentation';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
-import useEditorStore from '@/lib/stores/editor-store';
 import useRhythmLabStore from '@/lib/stores/rhythm-lab-store';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import StageCard from './stage-card';
 import StageParams from './stage-params';
 
@@ -21,11 +21,15 @@ const GridCard = ({ stage }: GridCardProps) => {
   const enabled = useRhythmLabStore((s) => Boolean(s.enabledStages.grid));
   const audioBuffer = useAudioEngineStore((s) => s.audioBuffer);
   const visualTimeRef = useRef(audioPresentationClock.getSnapshot().visualTime);
-  const rhythmSelection = useEditorStore((s) => s.rhythmSelection);
+  const selectionRef = useRef(rhythmSelectionPresentation.getSnapshot());
   const rafRef = useRef(0);
   const lastTimeRef = useRef(-1);
   const beatIndexRef = useRef(0);
-  const [flash, setFlash] = useState(0);
+  const flashRef = useRef<HTMLDivElement>(null);
+
+  const setFlash = (flash: number) => {
+    if (flashRef.current) flashRef.current.style.opacity = String(flash);
+  };
 
   useEffect(() => {
     const unsub = audioPresentationClock.subscribe(({ visualTime }) => {
@@ -33,6 +37,14 @@ const GridCard = ({ stage }: GridCardProps) => {
     });
     return () => unsub();
   }, []);
+
+  useEffect(
+    () =>
+      rhythmSelectionPresentation.subscribe((selection) => {
+        selectionRef.current = selection;
+      }),
+    [],
+  );
 
   useEffect(() => {
     if (!enabled) {
@@ -47,7 +59,8 @@ const GridCard = ({ stage }: GridCardProps) => {
         return;
       }
 
-      const selectionStartSec = rhythmSelection.start * audioBuffer.duration;
+      const selectionStartSec =
+        selectionRef.current.start * audioBuffer.duration;
       const tLocal = visualTimeRef.current - selectionStartSec;
       if (tLocal < lastTimeRef.current) {
         beatIndexRef.current = 0;
@@ -72,7 +85,7 @@ const GridCard = ({ stage }: GridCardProps) => {
 
     rafRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [audioBuffer, beatsTimes, enabled, rhythmSelection]);
+  }, [audioBuffer, beatsTimes, enabled]);
 
   return (
     <StageCard
@@ -83,10 +96,11 @@ const GridCard = ({ stage }: GridCardProps) => {
       topStrip={
         <div className="h-full w-full bg-white/5">
           <div
+            ref={flashRef}
             className="h-full w-full"
             style={{
               backgroundColor: STAGE_COLORS.grid,
-              opacity: enabled ? flash : 0,
+              opacity: 0,
             }}
           />
         </div>

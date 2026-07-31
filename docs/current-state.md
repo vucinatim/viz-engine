@@ -308,8 +308,25 @@ The audio and transport-reactivity checkpoint is now also complete:
 See
 [Audio And Transport Reactivity](./parity/evidence/2026-07-31-goal-three-audio-and-transport-reactivity.md).
 
-The parity matrix now contains 26 verified and 16 partial capabilities, with
-zero gaps and zero unaudited rows. Goal Three remains open because the 16
+The waveform-navigation and Rhythm Lab checkpoint is now also complete:
+
+- pointer, wheel, and keyboard window navigation update waveform and Rhythm
+  Lab presentation live without pointer-rate editor-store writes
+- pointer release, a settled wheel burst, and a discrete keyboard command each
+  create one durable editor-UI update and zero project revisions
+- Rhythm Lab preserves its five-stage V1 workspace while frame-rate Onset and
+  Grid presentation bypass React state
+- worker results publish atomically with exact source-buffer identity; stale
+  cross-track results clear before paint and replacement analysis completes
+- deterministic rhythm-core replay and a headed source/workspace journey pass
+- 24 pointer samples measured 8.10 ms median and 9.20 ms p95 visible update
+  intervals with clean diagnostics
+
+See
+[Waveform And Rhythm Lab](./parity/evidence/2026-07-31-goal-three-waveform-and-rhythm-lab.md).
+
+The parity matrix now contains 29 verified and 13 partial capabilities, with
+zero gaps and zero unaudited rows. Goal Three remains open because the 13
 broader capabilities still require full acceptance evidence, alongside agent
 tooling and the second original production.
 

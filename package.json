@@ -34,6 +34,7 @@
     "benchmark:node-editor": "VIZ_PERFORMANCE=1 VIZ_GRAPH_PERFORMANCE_WORKLOAD=signal-cathedral VIZ_PERFORMANCE_REPORT=.artifacts/performance/v2-signal-cathedral-node-editor.json playwright test --config playwright.performance.config.ts",
     "benchmark:workspace-resize": "VIZ_WORKSPACE_RESIZE=1 playwright test --config playwright.performance.config.ts --grep \"authoring workspace\"",
     "benchmark:audio": "VIZ_AUDIO_PERFORMANCE_REPORT=.artifacts/performance/v2-audio-workflow.json playwright test tests/browser/audio-workflow.spec.ts",
+    "benchmark:waveform": "VIZ_WAVEFORM_PERFORMANCE_REPORT=.artifacts/performance/v2-waveform-rhythm-workflow.json playwright test tests/browser/waveform-rhythm-workflow.spec.ts",
     "benchmark:artifact-container": "tsx tools/foundation/measure-audio-artifact-container.ts",
     "compare:runtime-performance": "tsx tools/foundation/compare-performance-recordings-cli.ts",
     "parity:validate": "node tools/foundation/validate-v1-v2-parity-matrix.mjs",

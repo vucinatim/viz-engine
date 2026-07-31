@@ -2,6 +2,32 @@
 
 ## 2026-07-31
 
+- completed the Goal Three waveform-navigation and Rhythm Lab checkpoint:
+  - introduced a narrow transient selection presentation channel so waveform,
+    analysis canvas, selection text, Onset, and Grid respond during pointer
+    movement without pointer-rate editor-store or broad React updates
+  - added live pointer resize/move, pointer-anchored wheel zoom, horizontal and
+    Shift-wheel pan, cancellation, and keyboard pan/zoom/positioning
+  - committed the editor view selection once per pointer gesture, wheel burst,
+    or keyboard command while leaving authored project revision unchanged
+  - replaced Rhythm Lab's multi-setter worker publication with one atomic,
+    typed result carrying its exact source-buffer identity
+  - invalidated stale results before paint, preserved same-source results
+    across workspace remounts, and automatically analyzed a replacement track
+  - removed React state from Onset and Grid frame-rate feedback and added
+    visible unavailable, ready, computing, success, and failure states
+  - added deterministic 120 BPM repeatability and atomic-store foundation
+    tests plus a headed pointer/source/workspace journey with clean diagnostics
+  - measured 24 live pointer samples at 8.10 ms median / 9.20 ms p95, one
+    release commit, and zero project revisions
+  - advanced waveform navigation and both Rhythm Lab rows to verified, leaving
+    29 verified and 13 partial parity capabilities
+  - recorded architecture, screenshot, machine-readable performance,
+    assumptions, and boundaries in
+    `docs/parity/evidence/2026-07-31-goal-three-waveform-and-rhythm-lab.md`
+  - passed the complete foundation gate with 62 Vitest files / 274 tests, 15
+    active headed Chromium journeys plus one opt-in skip, all 17 package
+    builds, the studio production build, and both consumer smokes
 - completed the Goal Three audio and transport-reactivity checkpoint:
   - removed frame-rate audio time and playing-frame copies from the
     React-facing session store while keeping the session host canonical

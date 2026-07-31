@@ -62,6 +62,7 @@ export default defineConfig({
       ),
       '@viz-engine/editor-control': packageEntry('viz-editor-control'),
       '@viz-engine/nodes-core': packageEntry('viz-nodes-core'),
+      '@viz-engine/rhythm-core': packageEntry('rhythm-core'),
       '@viz-engine/production-signal-cathedral': packageEntry(
         'viz-production-signal-cathedral',
       ),

@@ -24,7 +24,10 @@ const StageCard = ({
   const color = STAGE_COLORS[stageId] || '#7a7a7a';
 
   return (
-    <div className="h-full min-w-[240px] overflow-y-auto rounded-md border border-white/10 bg-black/50">
+    <div
+      className="h-full min-w-[240px] overflow-y-auto rounded-md border border-white/10 bg-black/50"
+      data-testid="rhythm-stage-card"
+      data-stage-id={stageId}>
       {topStrip ? <div className="h-2 w-full">{topStrip}</div> : null}
       <div className="p-3 pt-2">
         <div className="mb-2 flex items-center justify-between">
@@ -34,6 +37,7 @@ const StageCard = ({
               type="button"
               className="flex items-center gap-1 text-[10px] text-white/40 uppercase"
               onClick={() => setEnabledStage(stageId, !enabled)}
+              aria-label={`${enabled ? 'Disable' : 'Enable'} ${title}`}
               aria-pressed={enabled}>
               {status}
               <span

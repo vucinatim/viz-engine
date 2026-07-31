@@ -5,11 +5,12 @@ import {
   PIPELINE_STAGES,
 } from '@/lib/rhythm-lab/analysis-graph';
 import { STAGE_COLORS } from '@/lib/rhythm-lab/stage-colors';
+import { rhythmSelectionPresentation } from '@/lib/rhythm-selection-presentation';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import useRhythmLabStore from '@/lib/stores/rhythm-lab-store';
 import { X } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../ui/button';
 import {
   ResizableHandle,
@@ -32,12 +33,14 @@ const RhythmLabPanel = () => {
   const workerRef = useRef<Worker | null>(null);
   const requestIdRef = useRef(0);
   const selectionRef = useRef(rhythmSelection);
+  const selectionInfoRef = useRef<HTMLDivElement>(null);
   const waveformCacheRef = useRef<{
     plotWidth: number;
     startSample: number;
     endSample: number;
     rmsLevels: Float32Array;
   } | null>(null);
+  const requestSourceRef = useRef<AudioBuffer | null>(null);
   const paramsRef = useRef(useRhythmLabStore.getState().params);
   const params = useRhythmLabStore((s) => s.params);
   const onsetEnv = useRhythmLabStore((s) => s.onsetEnv);
@@ -47,22 +50,17 @@ const RhythmLabPanel = () => {
   const outputView = useRhythmLabStore((s) => s.outputView);
   const isComputing = useRhythmLabStore((s) => s.isComputing);
   const setOutputView = useRhythmLabStore((s) => s.setOutputView);
-  const setOnsetEnv = useRhythmLabStore((s) => s.setOnsetEnv);
-  const setTempogramCurve = useRhythmLabStore((s) => s.setTempogramCurve);
-  const setTempogramTempos = useRhythmLabStore((s) => s.setTempogramTempos);
-  const setTempoValue = useRhythmLabStore((s) => s.setTempoValue);
-  const setTempoCandidates = useRhythmLabStore((s) => s.setTempoCandidates);
-  const setTempoRefined = useRhythmLabStore((s) => s.setTempoRefined);
-  const setBeats = useRhythmLabStore((s) => s.setBeats);
-  const setBeatsTimes = useRhythmLabStore((s) => s.setBeatsTimes);
-  const setBeatConfidence = useRhythmLabStore((s) => s.setBeatConfidence);
-  const setBeatPhase = useRhythmLabStore((s) => s.setBeatPhase);
-  const setBeatPeriodFrames = useRhythmLabStore((s) => s.setBeatPeriodFrames);
-  const setStats = useRhythmLabStore((s) => s.setStats);
-  const setTempogramStats = useRhythmLabStore((s) => s.setTempogramStats);
-  const setAnalysisMeta = useRhythmLabStore((s) => s.setAnalysisMeta);
+  const commitAnalysis = useRhythmLabStore((s) => s.commitAnalysis);
   const setIsComputing = useRhythmLabStore((s) => s.setIsComputing);
-  const [computeToken, setComputeToken] = useState(0);
+  const resetAnalysis = useRhythmLabStore((s) => s.resetAnalysis);
+  const initialComputeTokenRef = useRef(
+    useRhythmLabStore.getState().analysisMeta ? 1 : 0,
+  );
+  const handledComputeTokenRef = useRef(initialComputeTokenRef.current);
+  const [computeToken, setComputeToken] = useState(
+    initialComputeTokenRef.current,
+  );
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -117,38 +115,43 @@ const RhythmLabPanel = () => {
         winLength: number;
       };
       if (id !== requestIdRef.current) return;
-      setOnsetEnv(env);
-      setTempogramCurve(tempoCurve ?? null);
-      setTempogramTempos(tempoBins ?? null);
-      if (typeof tempo === 'number') {
-        setTempoValue(tempo);
-      }
-      if (typeof tempoRefined === 'number') {
-        setTempoRefined(tempoRefined);
-      }
-      setTempoCandidates(tempoCandidates ?? null);
-      setBeats(beats ?? null);
-      setBeatsTimes(beatsTimes ?? null);
-      if (typeof beatConfidence === 'number') {
-        setBeatConfidence(beatConfidence);
-      }
-      if (typeof beatPhase === 'number') {
-        setBeatPhase(beatPhase);
-      }
-      if (typeof beatPeriodFrames === 'number') {
-        setBeatPeriodFrames(beatPeriodFrames);
-      }
-      if (nextTempoStats) {
-        setTempogramStats(nextTempoStats);
-      }
-      setStats(nextStats);
-      setAnalysisMeta({
-        sampleRate,
-        hopLength: responseHop,
-        sampleCount,
-        winLength,
-      });
+      const source = requestSourceRef.current;
+      if (!source) return;
+      commitAnalysis(
+        {
+          onsetEnv: env,
+          tempogramCurve: tempoCurve ?? null,
+          tempogramTempos: tempoBins ?? null,
+          tempoValue: tempo ?? 0,
+          tempoCandidates: tempoCandidates ?? null,
+          tempoRefined: tempoRefined ?? 0,
+          beats: beats ?? null,
+          beatsTimes: beatsTimes ?? null,
+          beatConfidence: beatConfidence ?? 0,
+          beatPhase: beatPhase ?? 0,
+          beatPeriodFrames: beatPeriodFrames ?? 0,
+          tempogramStats: nextTempoStats ?? {
+            min: 0,
+            max: 0,
+            mean: 0,
+            points: 0,
+          },
+          stats: nextStats,
+          analysisMeta: {
+            sampleRate,
+            hopLength: responseHop,
+            sampleCount,
+            winLength,
+          },
+        },
+        source,
+      );
+      setAnalysisError(null);
+    };
+    worker.onerror = () => {
+      requestSourceRef.current = null;
       setIsComputing(false);
+      setAnalysisError('Rhythm analysis could not be completed.');
     };
     return () => {
       worker.terminate();
@@ -161,9 +164,34 @@ const RhythmLabPanel = () => {
     selectionRef.current = rhythmSelection;
   }, [rhythmSelection]);
 
+  useEffect(
+    () =>
+      rhythmSelectionPresentation.subscribe((selection) => {
+        selectionRef.current = selection;
+        if (!selectionInfoRef.current || !audioBuffer) return;
+        const startSec = selection.start * audioBuffer.duration;
+        const endSec = selection.end * audioBuffer.duration;
+        selectionInfoRef.current.textContent = `${startSec.toFixed(
+          2,
+        )}s - ${endSec.toFixed(2)}s (${Math.max(0, endSec - startSec).toFixed(
+          2,
+        )}s)`;
+      }),
+    [audioBuffer],
+  );
+
   useEffect(() => {
     paramsRef.current = params;
   }, [params]);
+
+  useLayoutEffect(() => {
+    if (useRhythmLabStore.getState().analysisSource === audioBuffer) return;
+    requestIdRef.current += 1;
+    requestSourceRef.current = null;
+    waveformCacheRef.current = null;
+    setAnalysisError(null);
+    resetAnalysis();
+  }, [audioBuffer, resetAnalysis]);
 
   const selectionInfo = useMemo(() => {
     if (!audioBuffer) return { startSec: 0, endSec: 0, duration: 0 };
@@ -179,12 +207,21 @@ const RhythmLabPanel = () => {
 
   const triggerCompute = () => {
     if (!audioBuffer || !isRhythmLabOpen) return;
+    setAnalysisError(null);
     setIsComputing(true);
     setComputeToken((token) => token + 1);
   };
 
   useEffect(() => {
-    if (!audioBuffer || !isRhythmLabOpen || computeToken === 0) {
+    const sourceMismatch =
+      useRhythmLabStore.getState().analysisSource !== audioBuffer;
+    const manuallyRequested = computeToken !== handledComputeTokenRef.current;
+    if (
+      !audioBuffer ||
+      !isRhythmLabOpen ||
+      computeToken === 0 ||
+      (!manuallyRequested && !sourceMismatch)
+    ) {
       setIsComputing(false);
       return;
     }
@@ -193,6 +230,8 @@ const RhythmLabPanel = () => {
       setIsComputing(false);
       return;
     }
+
+    setIsComputing(true);
 
     const channel = audioBuffer.getChannelData(0);
     const selection = selectionRef.current;
@@ -206,6 +245,8 @@ const RhythmLabPanel = () => {
 
     const id = requestIdRef.current + 1;
     requestIdRef.current = id;
+    requestSourceRef.current = audioBuffer;
+    handledComputeTokenRef.current = computeToken;
 
     worker.postMessage(
       {
@@ -256,10 +297,11 @@ const RhythmLabPanel = () => {
       ctx.fillRect(0, 0, width, height);
 
       const channel = audioBuffer.getChannelData(0);
-      const startSample = Math.floor(rhythmSelection.start * channel.length);
+      const selection = selectionRef.current;
+      const startSample = Math.floor(selection.start * channel.length);
       const endSample = Math.max(
         startSample + 1,
-        Math.floor(rhythmSelection.end * channel.length),
+        Math.floor(selection.end * channel.length),
       );
       const slice = channel.subarray(startSample, endSample);
 
@@ -394,8 +436,9 @@ const RhythmLabPanel = () => {
       }
 
       if (enabledStages.grid && beatsTimes && beatsTimes.length > 0) {
-        const selectionStartSec = rhythmSelection.start * audioBuffer.duration;
-        const selectionEndSec = rhythmSelection.end * audioBuffer.duration;
+        const selection = selectionRef.current;
+        const selectionStartSec = selection.start * audioBuffer.duration;
+        const selectionEndSec = selection.end * audioBuffer.duration;
         const selectionDuration = Math.max(
           0.0001,
           selectionEndSec - selectionStartSec,
@@ -415,8 +458,8 @@ const RhythmLabPanel = () => {
         }
       }
 
-      const selectionStartSec = rhythmSelection.start * audioBuffer.duration;
-      const selectionEndSec = rhythmSelection.end * audioBuffer.duration;
+      const selectionStartSec = selection.start * audioBuffer.duration;
+      const selectionEndSec = selection.end * audioBuffer.duration;
       const selectionDuration = Math.max(
         0.0001,
         selectionEndSec - selectionStartSec,
@@ -468,6 +511,16 @@ const RhythmLabPanel = () => {
     return () => unsub();
   }, []);
 
+  const analysisStatus = !audioBuffer
+    ? 'No audio available'
+    : analysisError
+      ? analysisError
+      : isComputing
+        ? 'Computing analysis'
+        : analysisMeta
+          ? 'Analysis ready'
+          : 'Ready to analyze';
+
   return (
     <div className="absolute inset-0 flex flex-col overflow-hidden">
       <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
@@ -478,7 +531,16 @@ const RhythmLabPanel = () => {
           </div>
         </div>
         <div className="flex min-w-0 items-center gap-3">
-          <div className="text-[11px] text-white/50">
+          <div
+            role="status"
+            data-testid="rhythm-analysis-status"
+            className="text-[11px] text-white/50">
+            {analysisStatus}
+          </div>
+          <div
+            ref={selectionInfoRef}
+            data-testid="rhythm-selection-info"
+            className="text-[11px] text-white/50">
             {selectionInfo.startSec.toFixed(2)}s -{' '}
             {selectionInfo.endSec.toFixed(2)}s (
             {selectionInfo.duration.toFixed(2)}s)
@@ -496,8 +558,12 @@ const RhythmLabPanel = () => {
             variant="outline"
             className="h-7 px-2 text-[10px]"
             onClick={triggerCompute}
-            disabled={!audioBuffer || !isRhythmLabOpen}>
-            {isComputing ? 'Computing...' : 'Recompute'}
+            disabled={!audioBuffer || !isRhythmLabOpen || isComputing}>
+            {isComputing
+              ? 'Computing...'
+              : analysisMeta
+                ? 'Recompute'
+                : 'Analyze'}
           </Button>
           <Button
             variant="outline"
@@ -511,7 +577,11 @@ const RhythmLabPanel = () => {
       <ResizablePanelGroup direction="vertical" className="min-h-0 flex-1">
         <ResizablePanel defaultSize={34} minSize={20} className="min-h-0">
           <div className="relative h-full min-h-0 overflow-hidden">
-            <canvas ref={canvasRef} className="h-full w-full" />
+            <canvas
+              ref={canvasRef}
+              data-testid="rhythm-analysis-canvas"
+              className="h-full w-full"
+            />
           </div>
         </ResizablePanel>
         <ResizableHandle className="bg-white/10" />
