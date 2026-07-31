@@ -2,6 +2,39 @@
 
 ## 2026-07-31
 
+- completed the Goal Three endurance and performance certification:
+  - exposed read-only renderer resource statistics through the existing preview
+    inspection path without creating a duplicate resource owner
+  - added bounded subscriber and audio-engine topology inspection for the
+    singleton live-presentation channels
+  - created `pnpm benchmark:endurance` with fixed device, viewport, DPR,
+    warm-up, measured windows, explicit GC, visible pixel checks, and a
+    machine-readable report
+  - ran one warm-up plus six edit-heavy cycles across audio switching,
+    duplicate/delete, Rhythm Lab, profiler, Stage FBX model loading/playback,
+    Signal Cathedral live graphs, and project reopen
+  - proved exact steady renderer counts after every cycle: 4 cached models / 0
+    active leases, 6 geometries, 9 textures, 7 shader programs, and 5 render
+    targets
+  - proved exact stable presentation subscribers, one audio topology, one
+    runtime canvas/audio element, and bounded hidden graph ownership
+  - measured 11.34 MB forced-GC heap growth/range, 13.90 ms end playback median,
+    21.50 ms p95, 28.60 ms maximum, and nonblank changing output
+  - combined the endurance result with the pinned-V1 comparison, 180-second
+    soak, Signal Cathedral graph sample, and interaction-family benchmarks
+  - advanced live preview and all three performance rows to verified, leaving
+    all 42 parity capabilities verified
+  - made the loop-boundary browser proof observe the canonical transport
+    subscription instead of a lossy display-clock poll that could miss frame
+    zero under full-suite load
+  - recorded the architecture, budgets, artifacts, assumptions, and honest
+    creative-production boundary in
+    `docs/parity/evidence/2026-07-31-goal-three-endurance-and-performance-certification.md`
+  - passed the complete foundation gate with 62 deterministic-test files / 283
+    tests, all 16 active headed Chromium journeys plus two opt-in performance
+    skips, all 17 package builds, the studio production build, and both
+    consumer smokes
+
 - completed the Goal Three graph-validation and deterministic-evaluation
   checkpoint:
   - made untrusted graph containers, inputs, node bindings, references,

@@ -2,15 +2,20 @@ import type { Comp } from '@/components/config/create-component';
 import type { NodeHandleType } from '@/components/config/node-types';
 import type { LayerSettings } from '@/components/editor/layer-settings';
 import useNodeNetworkStore from '@/components/node-network/node-network-store';
+import { audioPresentationClock } from '@/lib/audio-presentation-clock';
+import { getEditorRuntimePreviewInvalidationSubscriberCount } from '@/lib/editor-runtime-preview-invalidation';
 import {
   loadProject,
   loadProjectFromUrl,
   resetProject,
   saveProject,
 } from '@/lib/project-persistence';
+import { rhythmSelectionPresentation } from '@/lib/rhythm-selection-presentation';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
+import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import useProfilerStore from '@/lib/stores/profiler-store';
+import { transportPresentationClock } from '@/lib/transport-presentation-clock';
 import type {
   VizSessionAudioState,
   VizSessionPreviewState,
@@ -19,6 +24,7 @@ import type {
 import {
   getVizSessionState,
   resolveNetworkIdForParameter,
+  runtimeInspection,
   vizSessionActions,
 } from '@/lib/viz-session';
 import type {
@@ -41,6 +47,16 @@ const editorControl = {
     },
     assets() {
       return vizSessionActions.inspection.assets();
+    },
+    subscribers() {
+      return {
+        audioPresentation: audioPresentationClock.getSubscriberCount(),
+        transportPresentation: transportPresentationClock.getSubscriberCount(),
+        rhythmSelection: rhythmSelectionPresentation.getSubscriberCount(),
+        runtimeInspection: runtimeInspection.getSubscriberCount(),
+        runtimeInvalidation:
+          getEditorRuntimePreviewInvalidationSubscriberCount(),
+      };
     },
   },
   project: {
@@ -240,6 +256,11 @@ const editorControl = {
     inspectRuntimePreview() {
       return vizSessionActions.preview.inspectRuntimePreview();
     },
+    inspectRuntimeResources() {
+      return useEditorRuntimePreviewAttachmentStore
+        .getState()
+        .inspectRuntimeResources();
+    },
     subscribeRuntimePreview(
       listener: (
         inspection: Readonly<VizSessionRuntimeInspectionState>,
@@ -304,6 +325,19 @@ const editorControl = {
     },
   },
   audio: {
+    inspectEngine() {
+      const state = useAudioEngineStore.getState();
+      return {
+        contextState: state.audioContext?.state ?? null,
+        hasAnalyzer: state.audioAnalyzer !== null,
+        hasGain: state.gainNode !== null,
+        hasElementSource: state.elementAudioSource !== null,
+        hasActiveSource: state.audioSource.current !== null,
+        hasBuffer: state.audioBuffer !== null,
+        hasCaptureStream: state.tabCaptureStream !== null,
+        sourceLoadStatus: state.sourceLoad.status,
+      };
+    },
     setTrackList(trackList: string[]) {
       vizSessionActions.audio.setTrackList(trackList);
     },

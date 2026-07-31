@@ -33,6 +33,9 @@ export interface EditorRuntimePreviewAttachment {
   invokeLayerAction: (layerId: string, actionId: string) => boolean;
   requiresContinuousRendering: () => boolean;
   whenReady: () => Promise<void>;
+  getResourceStats: () => ReturnType<
+    VizThreePreviewController['getResourceStats']
+  > | null;
   destroy: () => void;
 }
 
@@ -370,6 +373,8 @@ export const createEditorRuntimePreviewAttachment = ({
     },
     requiresContinuousRendering: () => flyCameraActive,
     whenReady: () => runtimePreviewController?.whenReady() ?? Promise.resolve(),
+    getResourceStats: () =>
+      runtimePreviewController?.getResourceStats() ?? null,
     destroy: () => {
       deactivateFlyCamera();
       removeFlyListeners();

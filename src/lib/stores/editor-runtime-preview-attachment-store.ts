@@ -7,6 +7,7 @@ import type {
   VizSessionRuntimePreviewFrame,
 } from '@/lib/viz-session/types';
 import type { VizRenderPlan } from '@viz-engine/contracts';
+import type { VizThreePreviewResourceStats } from '@viz-engine/renderer-three';
 import { create } from 'zustand';
 
 interface EditorRuntimePreviewAttachmentStore {
@@ -48,6 +49,7 @@ interface EditorRuntimePreviewAttachmentStore {
   ) => string[];
   requiresContinuousRendering: () => boolean;
   whenRuntimeResourcesReady: () => Promise<void>;
+  inspectRuntimeResources: () => VizThreePreviewResourceStats | null;
   reset: () => void;
 }
 
@@ -206,6 +208,8 @@ const useEditorRuntimePreviewAttachmentStore =
     whenRuntimeResourcesReady: async () => {
       await (get().previewAttachment?.whenReady?.() ?? Promise.resolve());
     },
+    inspectRuntimeResources: () =>
+      get().previewAttachment?.getResourceStats?.() ?? null,
     reset: () =>
       set({
         previewAttachment: null,

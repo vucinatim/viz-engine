@@ -6,6 +6,9 @@ export const invalidateEditorRuntimePreview = (): void => {
   }
 };
 
+export const getEditorRuntimePreviewInvalidationSubscriberCount = () =>
+  listeners.size;
+
 export const subscribeEditorRuntimePreviewInvalidation = (
   listener: () => void,
 ): (() => void) => {

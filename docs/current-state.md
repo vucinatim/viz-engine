@@ -398,10 +398,26 @@ complete:
 See
 [Graph Validation And Deterministic Evaluation](./parity/evidence/2026-07-31-goal-three-graph-validation-and-deterministic-evaluation.md).
 
-The parity matrix now contains 38 verified and 4 partial capabilities, with
-zero gaps and zero unaudited rows. Goal Three remains open because the 4
-broader capabilities still require full acceptance evidence, alongside agent
-tooling and the second original production.
+The endurance and performance checkpoint is now also complete:
+
+- one warm-up plus six measured cycles exercise audio switching, layer edits,
+  Rhythm Lab, profiler, Stage models, Signal Cathedral graphs, playback, and
+  project reopen
+- renderer geometries, textures, programs, targets, model caches/leases,
+  audio topology, singleton subscribers, and DOM attachments return to the
+  exact warmed steady state after every cycle
+- forced-GC heap growth measured 11.34 MB against a 32 MB budget
+- end-of-run playback measured 13.90 ms median / 21.50 ms p95 with nonblank,
+  changing pixels and clean diagnostics
+- fixed-device parameter, node, graph, waveform, volume, and workspace-resize
+  evidence covers every primary continuous interaction family
+
+See
+[Endurance And Performance Certification](./parity/evidence/2026-07-31-goal-three-endurance-and-performance-certification.md).
+
+The parity matrix now contains 42 verified capabilities, with zero partial,
+gap, or unaudited rows. Goal Three remains open for agent workflow calibration
+and the second original production.
 
 ## Known Deliberate Deferrals
 

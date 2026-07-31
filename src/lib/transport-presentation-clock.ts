@@ -16,6 +16,7 @@ const listeners = new Set<TransportPresentationListener>();
 
 export const transportPresentationClock = {
   getSnapshot: () => transport,
+  getSubscriberCount: () => listeners.size,
   publish(nextTransport: VizEditorTransportState) {
     transport = nextTransport;
     listeners.forEach((listener) => listener(transport));

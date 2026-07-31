@@ -47,6 +47,13 @@ export interface VizThreePreviewResourceStats {
   retainedPrograms: number;
   cachedImageTextures: number;
   pendingImageLoads: number;
+  modelResources: number;
+  loadingModelResources: number;
+  activeModelReferences: number;
+  geometries: number;
+  textures: number;
+  shaderPrograms: number;
+  renderTargets: number;
 }
 
 export interface VizThreePreviewLayerRenderStats {
@@ -285,6 +292,7 @@ export const createVizThreePreviewController = ({
     },
     getResourceStats() {
       const imageStats = imageResources.getStats();
+      const modelDiagnostics = modelResources.getDiagnostics();
       return {
         layers: compositorGraph.layers.length,
         retainedPrograms: compositorGraph.layers.filter(
@@ -292,6 +300,18 @@ export const createVizThreePreviewController = ({
         ).length,
         cachedImageTextures: imageStats.cachedTextures,
         pendingImageLoads: imageStats.pendingLoads,
+        modelResources: modelDiagnostics.length,
+        loadingModelResources: modelDiagnostics.filter(
+          (resource) => resource.status === 'loading',
+        ).length,
+        activeModelReferences: modelDiagnostics.reduce(
+          (total, resource) => total + resource.references,
+          0,
+        ),
+        geometries: renderer.info.memory.geometries,
+        textures: renderer.info.memory.textures,
+        shaderPrograms: renderer.info.programs?.length ?? 0,
+        renderTargets: compositorGraph.layers.length + 2,
       };
     },
     dispose() {

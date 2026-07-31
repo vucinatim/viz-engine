@@ -17,6 +17,7 @@ const listeners = new Set<AudioPresentationListener>();
 
 export const audioPresentationClock = {
   getSnapshot: () => time,
+  getSubscriberCount: () => listeners.size,
   publish(nextTime: AudioPresentationTime) {
     time = nextTime;
     listeners.forEach((listener) => listener(time));

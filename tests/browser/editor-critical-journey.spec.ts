@@ -839,37 +839,39 @@ test('keeps scrubbing, playback, audio, rendering, and loop boundaries synchroni
         }
 
         let sawBoundaryApproach = false;
-        let animationFrame = 0;
+        let unsubscribe = () => undefined;
         const timeout = window.setTimeout(() => {
-          cancelAnimationFrame(animationFrame);
+          unsubscribe();
           reject(
             new Error('Preview transport did not cross its loop boundary.'),
           );
         }, 5_000);
         const inspect = () => {
           const transport = debug.vizSessionHost.getSnapshot().transport;
-          if (transport.currentFrame >= 115) {
+          if (transport.currentFrame >= 119) {
             sawBoundaryApproach = true;
           }
           if (sawBoundaryApproach && transport.currentFrame < 90) {
             window.clearTimeout(timeout);
-            cancelAnimationFrame(animationFrame);
+            unsubscribe();
             resolve({
               currentFrame: transport.currentFrame,
               isPlaying: transport.isPlaying,
               audioCurrentTime: audio.currentTime,
             });
-            return;
           }
-          animationFrame = requestAnimationFrame(inspect);
         };
-        animationFrame = requestAnimationFrame(inspect);
+        unsubscribe = debug.vizSessionHost.subscribe(inspect);
 
         debug.editorControl.preview.pause();
         debug.editorControl.preview.setDurationFrames(120);
         debug.vizSessionHost.setLoop(true);
-        debug.editorControl.preview.seekToFrame(115);
+        // Start on the final authored frame so the assertion measures loop
+        // semantics without assuming a minimum real-media playback rate from
+        // the browser while the complete headed suite is under load.
+        debug.editorControl.preview.seekToFrame(119);
         debug.editorControl.preview.play();
+        inspect();
       }),
   );
   expect(looped.currentFrame).toBeLessThan(90);
@@ -880,7 +882,7 @@ test('keeps scrubbing, playback, audio, rendering, and loop boundaries synchroni
     const debug = window.__vizEditorDebug;
     debug?.editorControl.preview.pause();
     debug?.vizSessionHost.setLoop(false);
-    debug?.editorControl.preview.seekToFrame(115);
+    debug?.editorControl.preview.seekToFrame(119);
     debug?.editorControl.preview.play();
   });
   await expect

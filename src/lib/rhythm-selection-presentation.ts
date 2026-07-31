@@ -12,6 +12,7 @@ const listeners = new Set<RhythmSelectionListener>();
 
 export const rhythmSelectionPresentation = {
   getSnapshot: () => selection,
+  getSubscriberCount: () => listeners.size,
   publish(nextSelection: RhythmSelectionWindow) {
     if (
       selection.start === nextSelection.start &&

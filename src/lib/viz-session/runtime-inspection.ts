@@ -82,6 +82,9 @@ export const runtimeInspection = {
   inspect(): VizSessionRuntimeInspectionState {
     return structuredClone(current);
   },
+  getSubscriberCount(): number {
+    return listeners.size;
+  },
   subscribe(
     listener: (inspection: Readonly<VizSessionRuntimeInspectionState>) => void,
   ): () => void {

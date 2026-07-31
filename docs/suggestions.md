@@ -41,6 +41,10 @@ already requirements of the active goal.
 - Add an offline model-preparation command for material normalization,
   supported texture maps, bounded skin weights, validation, and deterministic
   derivative identity.
+- Add an explicit project-scoped or bounded-LRU policy to the renderer model
+  cache if real sessions begin cycling through many distinct external models.
+  The warmed bundled Stage set is stable and releases every active lease, so do
+  not add eviction complexity until that broader workload exists.
 - Expose the proven substrate through a generic `Model3D` product surface with
   hierarchy, clip, material, and morph inspection. Keep character, facial, and
   retargeting semantics in their specialized layer.
