@@ -53,6 +53,7 @@ const readEditorSnapshot = async (page: Page): Promise<EditorSnapshot> =>
     }
 
     const state = debug.vizSessionStore.getState();
+    const transport = debug.vizSessionHost.getSnapshot().transport;
     const project = state.project.workingProject;
     const graphBindingParameterId = project.layers
       .flatMap((layer) =>
@@ -67,10 +68,10 @@ const readEditorSnapshot = async (page: Page): Promise<EditorSnapshot> =>
       layerIds: project.layers.map((layer) => layer.id),
       layerOrder: [...project.layerOrder],
       revision: state.project.revision,
-      currentFrame: state.preview.transport.currentFrame,
-      durationFrames: state.preview.transport.durationFrames,
-      fps: state.preview.transport.fps,
-      isPlaying: state.preview.transport.isPlaying,
+      currentFrame: transport.currentFrame,
+      durationFrames: transport.durationFrames,
+      fps: transport.fps,
+      isPlaying: transport.isPlaying,
       graphBindingParameterId:
         graphBindingParameterId === undefined
           ? undefined
@@ -317,7 +318,7 @@ const readTransportSynchronization = async (
     }
 
     const state = debug.vizSessionStore.getState();
-    const transport = state.preview.transport;
+    const transport = debug.vizSessionHost.getSnapshot().transport;
     return {
       layerIds: state.project.workingProject.layers.map((layer) => layer.id),
       revision: state.project.revision,
@@ -835,27 +836,31 @@ test('keeps scrubbing, playback, audio, rendering, and loop boundaries synchroni
         }
 
         let sawBoundaryApproach = false;
+        let animationFrame = 0;
         const timeout = window.setTimeout(() => {
-          unsubscribe();
+          cancelAnimationFrame(animationFrame);
           reject(
             new Error('Preview transport did not cross its loop boundary.'),
           );
         }, 5_000);
-        const unsubscribe = debug.vizSessionStore.subscribe((state) => {
-          const transport = state.preview.transport;
+        const inspect = () => {
+          const transport = debug.vizSessionHost.getSnapshot().transport;
           if (transport.currentFrame >= 115) {
             sawBoundaryApproach = true;
           }
           if (sawBoundaryApproach && transport.currentFrame < 90) {
             window.clearTimeout(timeout);
-            unsubscribe();
+            cancelAnimationFrame(animationFrame);
             resolve({
               currentFrame: transport.currentFrame,
               isPlaying: transport.isPlaying,
               audioCurrentTime: audio.currentTime,
             });
+            return;
           }
-        });
+          animationFrame = requestAnimationFrame(inspect);
+        };
+        animationFrame = requestAnimationFrame(inspect);
 
         debug.editorControl.preview.pause();
         debug.editorControl.preview.setDurationFrames(120);

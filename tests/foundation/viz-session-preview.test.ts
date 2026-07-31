@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   getVizSessionState,
   vizSessionActions,
+  vizSessionHost,
   vizSessionStore,
 } from '@/lib/viz-session';
 
@@ -29,18 +30,19 @@ describe('VizSession preview transport', () => {
     vizSessionActions.preview.play();
     vizSessionActions.preview.seekToSeconds(2.5);
 
-    expect(getVizSessionState().preview.transport).toMatchObject({
+    expect(vizSessionHost.getSnapshot().transport).toMatchObject({
       durationFrames: 600,
       currentFrame: 150,
       isPlaying: true,
     });
 
     vizSessionActions.preview.syncCurrentFrame(180);
-    expect(getVizSessionState().preview.transport.currentFrame).toBe(180);
-    expect(vizSessionStore.getState().preview.transport.currentFrame).toBe(180);
+    expect(vizSessionHost.getSnapshot().transport.currentFrame).toBe(180);
+    expect(vizSessionStore.getState().preview.transport.currentFrame).toBe(0);
 
     vizSessionActions.preview.pause();
     expect(getVizSessionState().preview.transport.isPlaying).toBe(false);
+    expect(getVizSessionState().preview.transport.currentFrame).toBe(180);
     expect(vizSessionStore.getState().preview.transport.isPlaying).toBe(false);
   });
 

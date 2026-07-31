@@ -53,8 +53,6 @@ const createInitialAudioState = (
   currentTrackUrl: null,
   trackList: [],
   currentTrackIndex: -1,
-  currentTime: 0,
-  visualTime: 0,
 });
 
 const createInitialHistoryState = (): VizSessionHistoryState => ({

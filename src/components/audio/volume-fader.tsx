@@ -6,6 +6,9 @@ import { useEffect, useRef } from 'react';
 
 const VolumeFader = () => {
   const gainNode = useAudioEngineStore((s) => s.gainNode);
+  const volume = useAudioEngineStore((s) => s.volume);
+  const setLiveVolume = useAudioEngineStore((s) => s.setLiveVolume);
+  const commitVolume = useAudioEngineStore((s) => s.commitVolume);
   const audioAnalyzer = useAudioEngineStore((s) => s.audioAnalyzer);
   const audioContext = useAudioEngineStore((s) => s.audioContext);
   const audioSource = useAudioEngineStore((s) => s.audioSource);
@@ -355,16 +358,6 @@ const VolumeFader = () => {
     };
   }, [audioAnalyzer, gainNode, audioContext, audioSource, SHOW_METER_SCALE]);
 
-  useEffect(() => {
-    if (!gainNode) return;
-    gainNode.gain.value = 1; // Default to unity gain for audible playback
-  }, [gainNode]);
-
-  const handleVolumeChange = (value: number[]) => {
-    if (!gainNode) return;
-    gainNode.gain.value = value[0]; // Set gain based on slider input
-  };
-
   return (
     <div className="relative h-full w-full">
       <canvas
@@ -374,10 +367,12 @@ const VolumeFader = () => {
         className="h-full w-full"
       />
       <SliderPrimitive.Root
+        data-testid="audio-volume-slider"
         orientation="vertical"
         className="absolute inset-x-0 inset-y-4 flex cursor-pointer touch-none items-center justify-center select-none"
-        defaultValue={[1]}
-        onValueChange={handleVolumeChange}
+        defaultValue={[volume]}
+        onValueChange={([nextVolume]) => setLiveVolume(nextVolume)}
+        onValueCommit={([nextVolume]) => commitVolume(nextVolume)}
         min={0}
         max={1}
         step={0.01}>
@@ -386,7 +381,10 @@ const VolumeFader = () => {
             <SliderPrimitive.Range className="absolute h-full bg-primary" />
           </div>
         </SliderPrimitive.Track>
-        <SliderPrimitive.Thumb className="block h-6 w-6 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50" />
+        <SliderPrimitive.Thumb
+          aria-label="Audio volume"
+          className="block h-6 w-6 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+        />
       </SliderPrimitive.Root>
     </div>
   );

@@ -1,6 +1,8 @@
+import { transportPresentationClock } from '@/lib/transport-presentation-clock';
 import { cn } from '@/lib/utils';
 import {
   useCallback,
+  useEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -24,11 +26,35 @@ const CustomSeekerSlider = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
+  const valueRef = useRef(value);
 
-  const percentage = max > 0 ? (value / max) * 100 : 0;
+  const renderedTransport = transportPresentationClock.getSnapshot();
+  const renderedValue =
+    renderedTransport.currentFrame / Math.max(1, renderedTransport.fps);
+  const percentage = max > 0 ? (renderedValue / max) * 100 : 0;
   const style = {
     '--preview-seeker-progress': `${percentage}%`,
   } as CSSProperties;
+
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
+
+  useEffect(
+    () =>
+      transportPresentationClock.subscribe(({ currentFrame, fps }) => {
+        const nextValue = currentFrame / Math.max(1, fps);
+        valueRef.current = nextValue;
+        const slider = sliderRef.current;
+        if (!slider) return;
+        slider.style.setProperty(
+          '--preview-seeker-progress',
+          `${Math.max(0, Math.min(100, (nextValue / max) * 100))}%`,
+        );
+        slider.setAttribute('aria-valuenow', String(nextValue));
+      }),
+    [max],
+  );
 
   const updateFromPointer = useCallback(
     (clientX: number) => {
@@ -82,9 +108,9 @@ const CustomSeekerSlider = ({
           : event.key === 'End'
             ? max
             : event.key === 'ArrowLeft' || event.key === 'ArrowDown'
-              ? value - step
+              ? valueRef.current - step
               : event.key === 'ArrowRight' || event.key === 'ArrowUp'
-                ? value + step
+                ? valueRef.current + step
                 : undefined;
       if (nextValue === undefined) {
         return;
@@ -92,7 +118,7 @@ const CustomSeekerSlider = ({
       event.preventDefault();
       onChange(Math.max(0, Math.min(max, nextValue)));
     },
-    [max, onChange, value],
+    [max, onChange],
   );
 
   return (
@@ -103,7 +129,7 @@ const CustomSeekerSlider = ({
       aria-label="Preview position"
       aria-valuemin={0}
       aria-valuemax={max}
-      aria-valuenow={value}
+      aria-valuenow={renderedValue}
       data-testid="preview-seeker"
       className={cn(
         'relative h-1 w-full cursor-pointer touch-none rounded-full bg-white/20 transition-[height] duration-200',

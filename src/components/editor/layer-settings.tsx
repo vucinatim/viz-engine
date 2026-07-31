@@ -110,6 +110,7 @@ const LayerSettings = ({ layer }: LayerSettingsProps) => {
               <FormLabel>Opacity</FormLabel>
               <FormControl className="-mt-2">
                 <Slider
+                  ariaLabel="Opacity"
                   value={field.value}
                   onChange={createOnChangeHandler(field.onChange)}
                   onGestureStart={() =>

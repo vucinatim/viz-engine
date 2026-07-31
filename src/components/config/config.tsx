@@ -167,6 +167,7 @@ export const ComponentSettingControl = ({
     case 'number':
       return (
         <Slider
+          ariaLabel={setting.label}
           value={value as number}
           className="w-full"
           onChange={onChange}

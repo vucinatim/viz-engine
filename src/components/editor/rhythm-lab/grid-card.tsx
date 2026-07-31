@@ -1,9 +1,9 @@
+import { audioPresentationClock } from '@/lib/audio-presentation-clock';
 import { PipelineStageDefinition } from '@/lib/rhythm-lab/analysis-graph';
 import { STAGE_COLORS } from '@/lib/rhythm-lab/stage-colors';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import useRhythmLabStore from '@/lib/stores/rhythm-lab-store';
-import { getVizSessionState, vizSessionStore } from '@/lib/viz-session';
 import { useEffect, useRef, useState } from 'react';
 import StageCard from './stage-card';
 import StageParams from './stage-params';
@@ -20,7 +20,7 @@ const GridCard = ({ stage }: GridCardProps) => {
   const beatPeriodFrames = useRhythmLabStore((s) => s.beatPeriodFrames);
   const enabled = useRhythmLabStore((s) => Boolean(s.enabledStages.grid));
   const audioBuffer = useAudioEngineStore((s) => s.audioBuffer);
-  const visualTimeRef = useRef(getVizSessionState().audio.visualTime);
+  const visualTimeRef = useRef(audioPresentationClock.getSnapshot().visualTime);
   const rhythmSelection = useEditorStore((s) => s.rhythmSelection);
   const rafRef = useRef(0);
   const lastTimeRef = useRef(-1);
@@ -28,8 +28,8 @@ const GridCard = ({ stage }: GridCardProps) => {
   const [flash, setFlash] = useState(0);
 
   useEffect(() => {
-    const unsub = vizSessionStore.subscribe((state) => {
-      visualTimeRef.current = state.audio.visualTime;
+    const unsub = audioPresentationClock.subscribe(({ visualTime }) => {
+      visualTimeRef.current = visualTime;
     });
     return () => unsub();
   }, []);

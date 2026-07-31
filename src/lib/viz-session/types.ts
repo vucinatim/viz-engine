@@ -81,8 +81,6 @@ export interface VizSessionAudioState {
   currentTrackUrl: string | null;
   trackList: string[];
   currentTrackIndex: number;
-  currentTime: number;
-  visualTime: number;
 }
 
 export interface VizSessionHistoryState {

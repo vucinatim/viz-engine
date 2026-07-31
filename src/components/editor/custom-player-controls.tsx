@@ -1,4 +1,5 @@
 import editorControl from '@/lib/editor-control';
+import { transportPresentationClock } from '@/lib/transport-presentation-clock';
 import { cn } from '@/lib/utils';
 import { useVizSessionSelector } from '@/lib/viz-session';
 import { Maximize2, Minimize2, Pause, Play } from 'lucide-react';
@@ -6,6 +7,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type RefObject,
 } from 'react';
@@ -18,6 +20,13 @@ interface CustomPlayerControlsProps {
   durationInFrames: number;
 }
 
+const formatTime = (time: number) => {
+  if (!isFinite(time)) return '0:00';
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
 const CustomPlayerControls = ({
   className,
   containerRef,
@@ -26,22 +35,31 @@ const CustomPlayerControls = ({
   const isPlaying = useVizSessionSelector(
     (state) => state.preview.transport.isPlaying,
   );
-  const currentFrame = useVizSessionSelector(
-    (state) => state.preview.transport.currentFrame,
-  );
   const fps = useVizSessionSelector((state) => state.preview.transport.fps);
   const isCapturingTab = useVizSessionSelector(
     (state) => state.audio.session.source?.kind === 'stream',
   );
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const currentTime = useMemo(
-    () => currentFrame / Math.max(1, fps),
-    [currentFrame, fps],
-  );
+  const timeTextRef = useRef<HTMLDivElement>(null);
+  const initialCurrentTime =
+    transportPresentationClock.getSnapshot().currentFrame / Math.max(1, fps);
   const duration = useMemo(
     () => durationInFrames / Math.max(1, fps),
     [durationInFrames, fps],
+  );
+
+  useEffect(
+    () =>
+      transportPresentationClock.subscribe(
+        ({ currentFrame, durationFrames, fps: transportFps }) => {
+          if (!timeTextRef.current) return;
+          timeTextRef.current.textContent = `${formatTime(
+            currentFrame / Math.max(1, transportFps),
+          )} / ${formatTime(durationFrames / Math.max(1, transportFps))}`;
+        },
+      ),
+    [],
   );
 
   // Update fullscreen state from document
@@ -119,15 +137,6 @@ const CustomPlayerControls = ({
     }
   }, [containerRef, isFullscreen]);
 
-  // Format time helper
-  const formatTime = useCallback((time: number) => {
-    if (!isFinite(time)) return '0:00';
-
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  }, []);
-
   return (
     <div
       className={cn(
@@ -155,15 +164,17 @@ const CustomPlayerControls = ({
             <>
               <div className="pointer-events-auto min-w-0 flex-1">
                 <CustomSeekerSlider
-                  value={currentTime}
+                  value={initialCurrentTime}
                   max={duration || 1}
                   onChange={handleSeek}
                 />
               </div>
 
               {/* Time Display - Smaller and on the right */}
-              <div className="min-w-[60px] text-right font-mono text-xs text-white/80">
-                {formatTime(currentTime)} / {formatTime(duration)}
+              <div
+                ref={timeTextRef}
+                className="min-w-[60px] text-right font-mono text-xs text-white/80">
+                {formatTime(initialCurrentTime)} / {formatTime(duration)}
               </div>
             </>
           )}

@@ -2,6 +2,37 @@
 
 ## 2026-07-31
 
+- completed the Goal Three audio and transport-reactivity checkpoint:
+  - removed frame-rate audio time and playing-frame copies from the
+    React-facing session store while keeping the session host canonical
+  - introduced narrow imperative audio and transport presentation clocks for
+    timecode, seeker, waveform, Rhythm Lab, and runtime scheduling
+  - made bundled and local loading transactional with visible progress/error,
+    stale-request protection, previous-session preservation, and owned object
+    URL cleanup
+  - separated the retained media-element source from the active capture source
+    so capture stop restores the existing graph without constructing an
+    invalid second media source
+  - made capture failure visible and successful teardown idempotently stop all
+    tracks, disconnect the stream source, and restore the exact prior source
+  - made volume pointer-rate gain updates imperative and release-committed,
+    accessible by pointer and keyboard, and stable across gain-node rebuilds
+  - added continuous pointer and keyboard waveform seeking with named main and
+    overview controls
+  - proved a 42-frame playing sample causes zero React-session updates and a
+    20-value volume drag measures 8.40 ms median / 15.10 ms p95 with zero
+    project revisions
+  - added headed coverage for bundled navigation, corrupt-source rollback,
+    generated valid WAV metadata/waveform, capture denial, successful capture
+    teardown, volume, seeking, and clean diagnostics
+  - advanced local loading, bundled selection, capture, volume, and timeline
+    parity to verified, leaving 26 verified and 16 partial rows
+  - recorded architecture, measurements, assumptions, and remaining boundaries
+    in
+    `docs/parity/evidence/2026-07-31-goal-three-audio-and-transport-reactivity.md`
+  - passed the complete foundation gate with 60 Vitest files / 271 tests, 14
+    active headed Chromium journeys plus one opt-in skip, all 17 package
+    builds, the studio production build, and both consumer smokes
 - completed the Goal Three node-editor and live-graph checkpoint:
   - replaced independent perpetual graph animation loops with one
     overlay-scoped runtime subscription and display scheduler that stops while

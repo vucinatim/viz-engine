@@ -3,6 +3,7 @@ import {
   getVizSessionState,
   useVizSessionSelector,
   vizSessionActions,
+  vizSessionHost,
 } from '@/lib/viz-session';
 import { useEffect } from 'react';
 
@@ -76,7 +77,7 @@ const EditorPreviewTransportDriver = () => {
       sourceKind === 'file' || sourceKind === 'media-element';
     if (hasMediaSource) {
       const targetTime =
-        getVizSessionState().preview.transport.currentFrame / Math.max(1, fps);
+        vizSessionHost.getSnapshot().transport.currentFrame / Math.max(1, fps);
       if (Math.abs(audio.currentTime - targetTime) > 1 / Math.max(1, fps)) {
         audio.currentTime = targetTime;
       }
@@ -97,7 +98,7 @@ const EditorPreviewTransportDriver = () => {
 
     const tick = (now: number) => {
       const state = getVizSessionState();
-      const transport = state.preview.transport;
+      const transport = vizSessionHost.getSnapshot().transport;
       if (!transport.isPlaying) {
         return;
       }

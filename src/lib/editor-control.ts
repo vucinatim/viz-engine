@@ -308,10 +308,10 @@ const editorControl = {
       vizSessionActions.audio.setTrackList(trackList);
     },
     attachBundledTrack(filename: string, index?: number) {
-      vizSessionActions.audio.attachBundledTrack(filename, index);
+      return vizSessionActions.audio.attachBundledTrack(filename, index);
     },
     attachLocalFile(file: File, objectUrl: string) {
-      vizSessionActions.audio.attachLocalFile(file, objectUrl);
+      return vizSessionActions.audio.attachLocalFile(file, objectUrl);
     },
     attachCapturedStream(label: string) {
       vizSessionActions.audio.attachCapturedStream(label);
@@ -320,10 +320,10 @@ const editorControl = {
       vizSessionActions.audio.detachCapturedStream();
     },
     skipToNext() {
-      vizSessionActions.audio.skipToNext();
+      return vizSessionActions.audio.skipToNext();
     },
     skipToPrevious() {
-      vizSessionActions.audio.skipToPrevious();
+      return vizSessionActions.audio.skipToPrevious();
     },
     restartTrack() {
       vizSessionActions.audio.restartTrack();

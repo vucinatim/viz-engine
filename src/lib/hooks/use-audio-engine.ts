@@ -29,7 +29,7 @@ const computeRmsPeaks = (buffer: AudioBuffer, target: number) => {
 
 const useAudioEngine = () => {
   const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);
-  const audioSource = useAudioEngineStore((s) => s.audioSource);
+  const elementAudioSource = useAudioEngineStore((s) => s.elementAudioSource);
   const audioContext = useAudioEngineStore((s) => s.audioContext);
   const audioAnalyzer = useAudioEngineStore((s) => s.audioAnalyzer);
   const gainNode = useAudioEngineStore((s) => s.gainNode);
@@ -37,6 +37,9 @@ const useAudioEngine = () => {
   const setAnalyzer = useAudioEngineStore((s) => s.setAnalyzer);
   const setGainNode = useAudioEngineStore((s) => s.setGainNode);
   const setAudioBuffer = useAudioEngineStore((s) => s.setAudioBuffer);
+  const setElementAudioSource = useAudioEngineStore(
+    (s) => s.setElementAudioSource,
+  );
   const isCapturingTab = useVizSessionSelector(
     (state) => state.audio.session.source?.kind === 'stream',
   );
@@ -86,12 +89,12 @@ const useAudioEngine = () => {
       if (audioContext.state === 'suspended') {
         await audioContext.resume();
       }
-      if (!audioSource.current) {
+      if (!elementAudioSource) {
         const source = audioContext.createMediaElementSource(audio);
-        audioSource.current = source;
         source.connect(audioAnalyzer);
         source.connect(gainNode);
         gainNode.connect(audioContext.destination);
+        setElementAudioSource(source);
       }
       setAnalyzerState('active');
       setLiveInputAvailable(true);
@@ -103,10 +106,11 @@ const useAudioEngine = () => {
     audioAnalyzer,
     audioContext,
     audioElementRef,
-    audioSource,
+    elementAudioSource,
     gainNode,
     setAnalyzerState,
     setLiveInputAvailable,
+    setElementAudioSource,
   ]);
 
   useEffect(() => {

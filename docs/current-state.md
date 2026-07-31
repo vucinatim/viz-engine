@@ -288,8 +288,28 @@ The node-editor and live-graph checkpoint is now also complete:
 See
 [Node Editor And Live Graph](./parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md).
 
-The parity matrix now contains 21 verified and 21 partial capabilities, with
-zero gaps and zero unaudited rows. Goal Three remains open because the 21
+The audio and transport-reactivity checkpoint is now also complete:
+
+- the session host remains the sole transport owner while narrow imperative
+  clocks drive frame-rate DOM, canvas, and runtime presentation
+- playing frames no longer invalidate the React session store; a measured
+  42-frame sample produced zero React-session updates
+- local and bundled audio selection is transactional, visibly reports failure,
+  preserves the prior valid source, and owns object-URL cleanup
+- volume updates the Web Audio gain directly during pointer movement and
+  commits one durable presentation value on release
+- capture denial and successful start/stop preserve editor function, stop all
+  tracks, and restore the original media-element source
+- waveform and overview seeking now have accessible pointer and keyboard
+  behavior; full-track zoom/scroll certification remains open
+- measured 20 pointer-rate volume changes at 8.40 ms median and 15.10 ms p95,
+  with zero project revisions and clean browser diagnostics
+
+See
+[Audio And Transport Reactivity](./parity/evidence/2026-07-31-goal-three-audio-and-transport-reactivity.md).
+
+The parity matrix now contains 26 verified and 16 partial capabilities, with
+zero gaps and zero unaudited rows. Goal Three remains open because the 16
 broader capabilities still require full acceptance evidence, alongside agent
 tooling and the second original production.
 

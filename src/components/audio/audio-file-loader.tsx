@@ -1,6 +1,7 @@
 import editorControl from '@/lib/editor-control';
 import useSetBodyProps from '@/lib/hooks/use-set-body-props';
 import { getBundledAudioFiles } from '@/lib/public-manifests';
+import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import { cn } from '@/lib/utils';
 import { getVizSessionState, useVizSessionSelector } from '@/lib/viz-session';
 import { AlertCircle, Folder, Music } from 'lucide-react';
@@ -28,6 +29,7 @@ const AudioFileLoader = () => {
   const projectInitialized = useVizSessionSelector(
     (state) => state.project.initialized,
   );
+  const sourceLoad = useAudioEngineStore((state) => state.sourceLoad);
 
   const [audioFiles, setAudioFiles] = useState<string[]>([]);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -35,11 +37,10 @@ const AudioFileLoader = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const initializedDefaultRef = useRef(false);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       const objectUrl = URL.createObjectURL(acceptedFiles[0]);
-      editorControl.audio.attachLocalFile(acceptedFiles[0], objectUrl);
-      setSelectedFile(acceptedFiles[0].name);
+      await editorControl.audio.attachLocalFile(acceptedFiles[0], objectUrl);
     }
   }, []);
   const { getRootProps, isDragActive, isDragReject, fileRejections } =
@@ -79,7 +80,7 @@ const AudioFileLoader = () => {
       audioFiles.find((file) => file === DEFAULT_AUDIO_FILE) || audioFiles[0];
     const defaultIndex = audioFiles.indexOf(defaultFile);
     setSelectedFile(defaultFile);
-    editorControl.audio.attachBundledTrack(defaultFile, defaultIndex);
+    void editorControl.audio.attachBundledTrack(defaultFile, defaultIndex);
   }, [audioFiles, projectInitialized]);
 
   // Sync selected file with current track index from store (e.g., when skip buttons are used)
@@ -94,16 +95,19 @@ const AudioFileLoader = () => {
     setSelectedFile(sessionSource?.label ?? sessionSource?.id ?? null);
   }, [currentTrackIndex, sessionSource, trackList]);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
       const objectUrl = URL.createObjectURL(file);
-      editorControl.audio.attachLocalFile(file, objectUrl);
+      await editorControl.audio.attachLocalFile(file, objectUrl);
     }
+    event.target.value = '';
   };
 
   const isAudioReject = useMemo(
-    () => fileRejections.some((rejection) => rejection.file.type === 'audio/*'),
+    () => fileRejections.length > 0,
     [fileRejections],
   );
 
@@ -139,10 +143,19 @@ const AudioFileLoader = () => {
         placeholder="Search audio files..."
         onSelect={(filename) => {
           const trackIndex = audioFiles.indexOf(filename);
-          setSelectedFile(filename);
-          editorControl.audio.attachBundledTrack(filename, trackIndex);
+          void editorControl.audio.attachBundledTrack(filename, trackIndex);
         }}
       />
+      {sourceLoad.status === 'loading' && (
+        <span className="text-xs text-white/60" role="status">
+          Loading {sourceLoad.label}…
+        </span>
+      )}
+      {sourceLoad.status === 'error' && (
+        <span className="max-w-60 text-xs text-rose-300" role="alert">
+          {sourceLoad.message}
+        </span>
+      )}
       <input
         name="audio-file"
         type="file"

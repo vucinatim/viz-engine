@@ -234,11 +234,11 @@
       "importance": "critical",
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/audio/audio-file-loader.tsx", "src/components/audio/audio-panel.tsx"],
-      "v2Evidence": ["src/components/audio/audio-file-loader.tsx", "src/components/audio/audio-panel.tsx", "src/components/editor/editor-audio-session-manager.tsx"],
-      "status": "partial",
+      "v2Evidence": ["src/components/audio/audio-file-loader.tsx", "src/components/audio/audio-panel.tsx", "src/lib/audio-source-loader.ts", "src/lib/viz-session/audio-actions.ts", "tests/browser/audio-workflow.spec.ts"],
+      "status": "verified",
       "acceptance": ["A supported file becomes the active audio source exactly once.", "Unsupported or failed loads preserve the previous valid session and explain the error.", "Loaded metadata, duration, and waveform agree."],
       "validationMethods": ["browser", "integration"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-audio-and-transport-reactivity.md"]
     },
     {
       "id": "audio.waveform-navigation",
@@ -251,7 +251,7 @@
       "status": "partial",
       "acceptance": ["Playhead position and waveform time mapping remain accurate at every zoom level.", "Seeking is immediate and does not fight playback synchronization.", "Zooming and scrolling remain responsive on a representative full-length track."],
       "validationMethods": ["browser", "visual", "integration", "benchmark"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md", "docs/parity/evidence/2026-07-31-goal-three-audio-and-transport-reactivity.md"]
     },
     {
       "id": "audio.bundled-track-selection",
@@ -260,11 +260,11 @@
       "importance": "high",
       "parityDimensions": ["interaction", "functional"],
       "referenceEvidence": ["src/components/audio/audio-panel.tsx"],
-      "v2Evidence": ["src/components/audio/audio-panel.tsx", "src/components/editor/editor-audio-session-manager.tsx"],
-      "status": "partial",
+      "v2Evidence": ["src/components/audio/audio-panel.tsx", "src/components/audio/audio-file-loader.tsx", "src/lib/audio-source-loader.ts", "src/lib/viz-session/audio-actions.ts", "tests/browser/audio-workflow.spec.ts"],
+      "status": "verified",
       "acceptance": ["Selecting a bundled track loads the intended source and metadata.", "Previous and next navigation has deterministic boundary behavior.", "Changing tracks keeps transport and analysis state coherent."],
       "validationMethods": ["browser", "integration"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-audio-and-transport-reactivity.md"]
     },
     {
       "id": "audio.capture-input",
@@ -273,11 +273,11 @@
       "importance": "high",
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/audio/capture-audio.tsx"],
-      "v2Evidence": ["src/components/audio/capture-audio.tsx", "src/components/editor/editor-audio-session-manager.tsx"],
-      "status": "partial",
+      "v2Evidence": ["src/components/audio/capture-audio.tsx", "src/lib/stores/audio-engine-store.ts", "src/lib/viz-session/audio-actions.ts", "tests/browser/audio-workflow.spec.ts"],
+      "status": "verified",
       "acceptance": ["Permission is requested only from a user action.", "Starting, stopping, and switching input clean up all resources.", "Denied or unavailable input leaves the editor functional with clear feedback."],
       "validationMethods": ["browser", "manual", "integration"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-audio-and-transport-reactivity.md"]
     },
     {
       "id": "audio.volume",
@@ -286,11 +286,11 @@
       "importance": "standard",
       "parityDimensions": ["interaction", "functional"],
       "referenceEvidence": ["src/components/audio/volume-fader.tsx"],
-      "v2Evidence": ["src/components/audio/volume-fader.tsx", "src/lib/stores/audio-engine-store.ts"],
-      "status": "partial",
+      "v2Evidence": ["src/components/audio/volume-fader.tsx", "src/lib/stores/audio-engine-store.ts", "tests/foundation/viz-session-audio.test.ts", "tests/browser/audio-workflow.spec.ts"],
+      "status": "verified",
       "acceptance": ["The displayed value matches audible gain.", "Keyboard and pointer control work across the supported range.", "Project or session transitions do not create gain jumps."],
       "validationMethods": ["browser", "integration"],
-      "validationEvidence": []
+      "validationEvidence": ["docs/parity/evidence/2026-07-31-goal-three-audio-and-transport-reactivity.md"]
     },
     {
       "id": "transport.play-pause-seek-loop",
@@ -312,11 +312,11 @@
       "importance": "high",
       "parityDimensions": ["visual", "interaction", "functional"],
       "referenceEvidence": ["src/components/editor/video-timeline.tsx", "src/components/editor/custom-player-controls.tsx"],
-      "v2Evidence": ["src/components/editor/video-timeline.tsx", "src/components/editor/custom-player-controls.tsx"],
-      "status": "partial",
+      "v2Evidence": ["src/components/editor/custom-player-controls.tsx", "src/components/editor/custom-seeker-slider.tsx", "src/components/editor/editor-preview-transport-driver.tsx", "src/lib/transport-presentation-clock.ts", "tests/browser/editor-critical-journey.spec.ts", "tests/browser/audio-workflow.spec.ts"],
+      "status": "verified",
       "acceptance": ["Timeline visuals agree with the canonical transport state.", "Pointer and keyboard seeking reach the intended time.", "Duration changes do not leave stale ranges or markers."],
       "validationMethods": ["browser", "visual", "integration"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md", "docs/parity/evidence/2026-07-31-goal-three-transport-discovery-and-sample-repair.md", "docs/parity/evidence/2026-07-31-goal-three-audio-and-transport-reactivity.md"]
     },
     {
       "id": "preview.live-rendering",
@@ -524,7 +524,7 @@
       "status": "partial",
       "acceptance": ["A fixed device, viewport, scene, audio source, and observation window define the benchmark.", "V2 frame pacing and interaction latency meet the approved baseline-relative budget.", "The benchmark records warm-up, median, tail behavior, and visible correctness."],
       "validationMethods": ["benchmark", "browser", "visual"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-31-goal-three-audio-and-transport-reactivity.md"]
     },
     {
       "id": "performance.editor-responsiveness",
@@ -537,7 +537,7 @@
       "status": "partial",
       "acceptance": ["A representative multi-layer and graph fixture defines the workload.", "Input-to-visible-update latency meets the approved baseline-relative budget.", "No primary interaction causes an avoidable long task or full application stall."],
       "validationMethods": ["benchmark", "browser"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md", "docs/parity/evidence/2026-07-31-goal-three-canonical-preview-compositor.md", "docs/parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md", "docs/parity/evidence/2026-07-31-goal-three-canonical-preview-compositor.md", "docs/parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md", "docs/parity/evidence/2026-07-31-goal-three-audio-and-transport-reactivity.md"]
     },
     {
       "id": "performance.long-session-stability",

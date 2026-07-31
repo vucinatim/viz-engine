@@ -1,8 +1,8 @@
+import { audioPresentationClock } from '@/lib/audio-presentation-clock';
 import editorControl from '@/lib/editor-control';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import { AUDIO_THEME } from '@/lib/theme/audio-theme';
-import { getVizSessionState, vizSessionStore } from '@/lib/viz-session';
 import { workspaceResizeCoordinator } from '@/lib/workspace-resize-coordinator';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -153,6 +153,7 @@ const WaveformCanvas = ({
   showHoverPlayhead = true,
   amplitudeScale = 1,
   playheadColor = '#fff',
+  ariaLabel = 'Audio position',
   onSeek,
 }: {
   peaks: Float32Array | null;
@@ -169,12 +170,13 @@ const WaveformCanvas = ({
   showHoverPlayhead?: boolean;
   amplitudeScale?: number;
   playheadColor?: string;
+  ariaLabel?: string;
   onSeek?: (t: number) => void;
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const width = useCanvasWidth(canvasRef);
   const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);
-  const visualTimeRef = useRef(getVizSessionState().audio.visualTime);
+  const visualTimeRef = useRef(audioPresentationClock.getSnapshot().visualTime);
   const rafRef = useRef<number | null>(null);
   const hoverXRef = useRef<number | null>(null);
   const renderRef = useRef<() => void>(() => {});
@@ -231,9 +233,15 @@ const WaveformCanvas = ({
   ]);
 
   useEffect(() => {
-    const unsub = vizSessionStore.subscribe((state) => {
-      visualTimeRef.current = state.audio.visualTime;
-    });
+    const unsub = audioPresentationClock.subscribe(
+      ({ currentTime, visualTime }) => {
+        visualTimeRef.current = visualTime;
+        canvasRef.current?.setAttribute(
+          'aria-valuenow',
+          String(Math.min(durationRef.current, currentTime)),
+        );
+      },
+    );
     return () => unsub();
   }, []);
 
@@ -382,10 +390,10 @@ const WaveformCanvas = ({
     }
   }, [audioElementRef, followPlayhead]);
 
-  const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
+  const seekFromClientX = (canvas: HTMLCanvasElement, clientX: number) => {
     if (!onSeek || duration <= 0) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = event.clientX - rect.left;
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
     const now = Math.max(0, visualTimeRef.current);
     const viewSpan = clamp(selectionDuration, 0.0001, 1);
     const followStart =
@@ -403,11 +411,34 @@ const WaveformCanvas = ({
     onSeek(t);
   };
 
+  const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!onSeek) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    seekFromClientX(event.currentTarget, event.clientX);
+  };
+
   const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      seekFromClientX(event.currentTarget, event.clientX);
+    }
+
     if (!showHoverPlayhead) return;
     const rect = event.currentTarget.getBoundingClientRect();
     hoverXRef.current = event.clientX - rect.left;
     renderRef.current();
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLCanvasElement>) => {
+    if (!onSeek || duration <= 0) return;
+    const currentTime = audioElementRef.current?.currentTime ?? 0;
+    const step = event.shiftKey ? 5 : 1 / 30;
+    if (event.key === 'ArrowLeft') onSeek(Math.max(0, currentTime - step));
+    else if (event.key === 'ArrowRight')
+      onSeek(Math.min(duration, currentTime + step));
+    else if (event.key === 'Home') onSeek(0);
+    else if (event.key === 'End') onSeek(duration);
+    else return;
+    event.preventDefault();
   };
 
   const handlePointerLeave = () => {
@@ -419,11 +450,21 @@ const WaveformCanvas = ({
   return (
     <canvas
       ref={canvasRef}
+      role="slider"
+      tabIndex={onSeek ? 0 : undefined}
+      aria-label={ariaLabel}
+      aria-valuemin={0}
+      aria-valuemax={duration}
+      aria-valuenow={Math.min(
+        duration,
+        audioPresentationClock.getSnapshot().currentTime,
+      )}
       className="block h-full w-full"
       style={typeof height === 'number' ? { height } : undefined}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
+      onKeyDown={handleKeyDown}
     />
   );
 };
@@ -498,7 +539,7 @@ const WaveformDisplay = ({
   bufferDuration: number;
   isLoading: boolean;
 }) => {
-  const visualTimeRef = useRef(getVizSessionState().audio.visualTime);
+  const visualTimeRef = useRef(audioPresentationClock.getSnapshot().visualTime);
   const rhythmSelection = useEditorStore((s) => s.rhythmSelection);
   const [viewMode, setViewMode] = useState<'static' | 'follow'>('static');
   const selectionOverlayRef = useRef<HTMLDivElement>(null);
@@ -528,8 +569,8 @@ const WaveformDisplay = ({
   const viewEnd = viewStart + selectionDuration;
 
   useEffect(() => {
-    const unsub = vizSessionStore.subscribe((state) => {
-      visualTimeRef.current = state.audio.visualTime;
+    const unsub = audioPresentationClock.subscribe(({ visualTime }) => {
+      visualTimeRef.current = visualTime;
     });
     return () => unsub();
   }, []);
@@ -681,6 +722,7 @@ const WaveformDisplay = ({
           selectionDuration={selectionDuration}
           amplitudeScale={MAIN_AMPLITUDE_SCALE}
           playheadColor="#ffffff"
+          ariaLabel="Waveform position"
           onSeek={handleSeek}
         />
         <button
@@ -712,6 +754,7 @@ const WaveformDisplay = ({
             showHoverPlayhead={false}
             amplitudeScale={MINIMAP_AMPLITUDE_SCALE}
             playheadColor="#ffffff"
+            ariaLabel="Track overview position"
             onSeek={handleSeek}
           />
         </div>

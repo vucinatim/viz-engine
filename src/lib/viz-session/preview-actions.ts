@@ -69,7 +69,7 @@ export const createStudioPreviewActions = ({
     host.advanceBySeconds(seconds);
   },
   syncCurrentFrame(frame: number) {
-    if (frame !== getState().transport.currentFrame) {
+    if (frame !== host.getSnapshot().transport.currentFrame) {
       host.seekToFrame(frame);
     }
   },

@@ -1,3 +1,5 @@
+import { audioPresentationClock } from '@/lib/audio-presentation-clock';
+import { probeAudioUrl } from '@/lib/audio-source-loader';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import type { VizSessionHost } from '@viz-engine/editor-control';
 import type {
@@ -22,6 +24,7 @@ export const createStudioAudioActions = ({
   replaceState,
   seekToFrame,
 }: CreateStudioAudioActionsOptions) => {
+  let sourceRequest = 0;
   const snapshotState = (): Pick<
     VizSessionAudioState,
     'session' | 'diagnostics'
@@ -34,15 +37,24 @@ export const createStudioAudioActions = ({
     setTrackList(trackList: string[]) {
       replaceState({ ...getState(), trackList });
     },
-    setCurrentTime(currentTime: number) {
-      replaceState({ ...getState(), currentTime });
-    },
-    setVisualTime(visualTime: number) {
-      replaceState({ ...getState(), visualTime });
-    },
-    attachBundledTrack(filename: string, index?: number) {
+    async attachBundledTrack(filename: string, index?: number) {
       const url = bundledTrackUrl(filename);
-      useAudioEngineStore.getState().loadAudioUrl(url);
+      const request = ++sourceRequest;
+      const engine = useAudioEngineStore.getState();
+      engine.beginSourceLoad(filename);
+      try {
+        await probeAudioUrl(url);
+      } catch (cause) {
+        if (request === sourceRequest) {
+          engine.failSourceLoad(
+            filename,
+            cause instanceof Error ? cause.message : 'Audio loading failed.',
+          );
+        }
+        return false;
+      }
+      if (request !== sourceRequest) return false;
+      engine.loadAudioUrl(url);
       host.attachAudioSource({
         kind: 'media-element',
         id: filename,
@@ -57,12 +69,32 @@ export const createStudioAudioActions = ({
         currentTrackUrl: url,
         currentTrackIndex:
           typeof index === 'number' ? index : getState().currentTrackIndex,
-        currentTime: 0,
-        visualTime: 0,
       });
+      audioPresentationClock.reset();
+      engine.finishSourceLoad();
+      return true;
     },
-    attachLocalFile(audioFile: File, objectUrl: string) {
-      useAudioEngineStore.getState().loadAudioUrl(objectUrl);
+    async attachLocalFile(audioFile: File, objectUrl: string) {
+      const request = ++sourceRequest;
+      const engine = useAudioEngineStore.getState();
+      engine.beginSourceLoad(audioFile.name);
+      try {
+        await probeAudioUrl(objectUrl);
+      } catch (cause) {
+        URL.revokeObjectURL(objectUrl);
+        if (request === sourceRequest) {
+          engine.failSourceLoad(
+            audioFile.name,
+            cause instanceof Error ? cause.message : 'Audio loading failed.',
+          );
+        }
+        return false;
+      }
+      if (request !== sourceRequest) {
+        URL.revokeObjectURL(objectUrl);
+        return false;
+      }
+      engine.loadAudioUrl(objectUrl, objectUrl);
       host.attachAudioSource({
         kind: 'file',
         id: `${audioFile.name}:${audioFile.lastModified}`,
@@ -76,9 +108,10 @@ export const createStudioAudioActions = ({
         audioFile,
         currentTrackUrl: objectUrl,
         currentTrackIndex: -1,
-        currentTime: 0,
-        visualTime: 0,
       });
+      audioPresentationClock.reset();
+      engine.finishSourceLoad();
+      return true;
     },
     attachCapturedStream(label: string) {
       host.attachAudioSource({
@@ -90,9 +123,8 @@ export const createStudioAudioActions = ({
       replaceState({
         ...getState(),
         ...snapshotState(),
-        currentTime: 0,
-        visualTime: 0,
       });
+      audioPresentationClock.reset();
     },
     detachCapturedStream() {
       const { currentTrackUrl } = getState();
@@ -103,9 +135,8 @@ export const createStudioAudioActions = ({
       replaceState({
         ...getState(),
         ...snapshotState(),
-        currentTime: 0,
-        visualTime: 0,
       });
+      audioPresentationClock.reset();
 
       if (!currentTrackUrl) {
         useAudioEngineStore.getState().clearElementSource();
@@ -133,35 +164,34 @@ export const createStudioAudioActions = ({
     setLiveInputAvailable(liveInputAvailable: boolean) {
       host.setLiveInputAvailable(liveInputAvailable);
     },
-    skipToNext() {
+    async skipToNext() {
       const { trackList, currentTrackIndex } = getState();
       if (trackList.length === 0) {
         return;
       }
       const nextIndex = (currentTrackIndex + 1) % trackList.length;
-      actions.attachBundledTrack(trackList[nextIndex], nextIndex);
+      return actions.attachBundledTrack(trackList[nextIndex], nextIndex);
     },
-    skipToPrevious() {
+    async skipToPrevious() {
       const { trackList, currentTrackIndex } = getState();
       if (trackList.length === 0) {
-        return;
+        return false;
       }
       if (useAudioEngineStore.getState().getElementCurrentTime() > 3) {
         actions.restartTrack();
-        return;
+        return true;
       }
       const previousIndex =
         currentTrackIndex <= 0 ? trackList.length - 1 : currentTrackIndex - 1;
-      actions.attachBundledTrack(trackList[previousIndex], previousIndex);
+      return actions.attachBundledTrack(
+        trackList[previousIndex],
+        previousIndex,
+      );
     },
     restartTrack() {
       useAudioEngineStore.getState().seekElementToTime(0);
       seekToFrame(0);
-      replaceState({
-        ...getState(),
-        currentTime: 0,
-        visualTime: 0,
-      });
+      audioPresentationClock.reset();
     },
     clearSelection() {
       host.clearAudioSource();
@@ -175,9 +205,8 @@ export const createStudioAudioActions = ({
         audioFile: null,
         currentTrackUrl: null,
         currentTrackIndex: -1,
-        currentTime: 0,
-        visualTime: 0,
       });
+      audioPresentationClock.reset();
     },
     reset() {
       host.clearAudioSource();
@@ -189,9 +218,8 @@ export const createStudioAudioActions = ({
         currentTrackUrl: null,
         trackList: [],
         currentTrackIndex: -1,
-        currentTime: 0,
-        visualTime: 0,
       });
+      audioPresentationClock.reset();
     },
     attachSource(source: VizEditorAudioSource) {
       host.attachAudioSource(source);

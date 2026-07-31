@@ -1,3 +1,4 @@
+import { audioPresentationClock } from '@/lib/audio-presentation-clock';
 import editorControl from '@/lib/editor-control';
 import {
   OUTPUT_VIEW_OPTIONS,
@@ -7,7 +8,6 @@ import { STAGE_COLORS } from '@/lib/rhythm-lab/stage-colors';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorStore from '@/lib/stores/editor-store';
 import useRhythmLabStore from '@/lib/stores/rhythm-lab-store';
-import { getVizSessionState, vizSessionStore } from '@/lib/viz-session';
 import { X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../ui/button';
@@ -27,7 +27,7 @@ const RhythmLabPanel = () => {
   const isRhythmLabOpen = useEditorStore((s) => s.isRhythmLabOpen);
   const rhythmSelection = useEditorStore((s) => s.rhythmSelection);
   const audioBuffer = useAudioEngineStore((s) => s.audioBuffer);
-  const visualTimeRef = useRef(getVizSessionState().audio.visualTime);
+  const visualTimeRef = useRef(audioPresentationClock.getSnapshot().visualTime);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const workerRef = useRef<Worker | null>(null);
   const requestIdRef = useRef(0);
@@ -462,8 +462,8 @@ const RhythmLabPanel = () => {
   ]);
 
   useEffect(() => {
-    const unsub = vizSessionStore.subscribe((state) => {
-      visualTimeRef.current = state.audio.visualTime;
+    const unsub = audioPresentationClock.subscribe(({ visualTime }) => {
+      visualTimeRef.current = visualTime;
     });
     return () => unsub();
   }, []);

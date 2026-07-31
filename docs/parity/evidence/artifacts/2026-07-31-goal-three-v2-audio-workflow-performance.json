@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-31T16:06:26.785Z",
+  "scenario": "audio-workflow",
+  "playback": {
+    "observedFrames": 42,
+    "reactSessionUpdates": 0
+  },
+  "volumeDrag": {
+    "changedValues": 20,
+    "committedValue": 0.45,
+    "medianUpdateIntervalMs": 8.4,
+    "p95UpdateIntervalMs": 15.1,
+    "maximumUpdateIntervalMs": 16.1,
+    "projectRevisionDelta": 0
+  },
+  "sourceFailure": {
+    "preservedPreviousSource": true,
+    "visibleError": true,
+    "validLocalWaveform": true
+  },
+  "captureDenial": {
+    "preservedPreviousSource": true,
+    "visibleError": true
+  },
+  "captureLifecycle": {
+    "restoredPreviousSource": true,
+    "stoppedAllTracks": true
+  },
+  "diagnostics": []
+}

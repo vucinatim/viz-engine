@@ -13,6 +13,7 @@ interface SliderProps {
   onCommit?: (value: number) => void;
   onGestureStart?: () => void;
   onGestureCancel?: () => void;
+  ariaLabel?: string;
 }
 
 const Slider = React.forwardRef<
@@ -31,6 +32,7 @@ const Slider = React.forwardRef<
       onCommit,
       onGestureStart,
       onGestureCancel,
+      ariaLabel,
     },
     ref,
   ) => {
@@ -100,7 +102,10 @@ const Slider = React.forwardRef<
                 <SliderPrimitive.Range className="absolute h-full bg-primary" />
               </div>
             </SliderPrimitive.Track>
-            <SliderPrimitive.Thumb className="block h-3 w-3 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50" />
+            <SliderPrimitive.Thumb
+              aria-label={ariaLabel}
+              className="block h-3 w-3 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+            />
             <div className="absolute inset-x-0 top-4 flex items-end justify-between text-2xs">
               <p>{min}</p>
               <p>{max}</p>

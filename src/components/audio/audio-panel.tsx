@@ -1,8 +1,9 @@
+import { audioPresentationClock } from '@/lib/audio-presentation-clock';
 import editorControl from '@/lib/editor-control';
 import useAudioEngine from '@/lib/hooks/use-audio-engine';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import { getVisualTime } from '@/lib/utils/audio-time';
-import { useVizSessionSelector, vizSessionActions } from '@/lib/viz-session';
+import { useVizSessionSelector } from '@/lib/viz-session';
 import { Music, Pause, Play, SkipBack, SkipForward } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { Button } from '../ui/button';
@@ -21,8 +22,6 @@ const AudioPanel = () => {
   const isCapturingTab = useVizSessionSelector(
     (state) => state.audio.session.source?.kind === 'stream',
   );
-  const setCurrentTime = vizSessionActions.audio.setCurrentTime;
-  const setVisualTime = vizSessionActions.audio.setVisualTime;
   const setAudioElementRef = useAudioEngineStore((s) => s.setAudioElementRef);
   const audioContext = useAudioEngineStore((s) => s.audioContext);
 
@@ -41,8 +40,10 @@ const AudioPanel = () => {
         return;
       }
       const raw = audio.currentTime || 0;
-      setCurrentTime(raw);
-      setVisualTime(getVisualTime(raw, audioContext));
+      audioPresentationClock.publish({
+        currentTime: raw,
+        visualTime: getVisualTime(raw, audioContext),
+      });
     };
 
     if (!isPlaying && !isCapturingTab) {
@@ -59,7 +60,7 @@ const AudioPanel = () => {
     return () => {
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [audioContext, isCapturingTab, isPlaying, setCurrentTime, setVisualTime]);
+  }, [audioContext, isCapturingTab, isPlaying]);
 
   const { peaksLevels, duration, bufferDuration, isLoading } = useAudioEngine();
   const playPause = () => {
@@ -102,9 +103,10 @@ const AudioPanel = () => {
           <div className="flex items-center justify-center gap-1">
             {!isCapturingTab && (
               <Button
+                aria-label="Previous track"
                 variant="ghost"
                 size="icon"
-                onClick={editorControl.audio.skipToPrevious}
+                onClick={() => void editorControl.audio.skipToPrevious()}
                 tooltip="Previous track / Restart (< 3s)"
                 className="h-9 w-9 opacity-80 hover:opacity-100">
                 <SkipBack className="h-5 w-5" />
@@ -119,9 +121,10 @@ const AudioPanel = () => {
             </Toggle>
             {!isCapturingTab && (
               <Button
+                aria-label="Next track"
                 variant="ghost"
                 size="icon"
-                onClick={editorControl.audio.skipToNext}
+                onClick={() => void editorControl.audio.skipToNext()}
                 tooltip="Next track"
                 className="h-9 w-9 opacity-80 hover:opacity-100">
                 <SkipForward className="h-5 w-5" />
@@ -163,16 +166,28 @@ const AudioPanel = () => {
 export default AudioPanel;
 
 const TimecodeText = () => {
-  const currentTime = useVizSessionSelector((state) => state.audio.currentTime);
-  const t = currentTime || 0;
-  const mm = Math.floor(t / 60)
-    .toString()
-    .padStart(2, '0');
-  const ss = Math.floor(t % 60)
-    .toString()
-    .padStart(2, '0');
-  const cs = Math.floor((t % 1) * 100)
-    .toString()
-    .padStart(2, '0');
-  return <p className="font-mono text-xs text-white">{`${mm}:${ss}.${cs}`}</p>;
+  const ref = useRef<HTMLParagraphElement>(null);
+
+  useEffect(
+    () =>
+      audioPresentationClock.subscribe(({ currentTime }) => {
+        const mm = Math.floor(currentTime / 60)
+          .toString()
+          .padStart(2, '0');
+        const ss = Math.floor(currentTime % 60)
+          .toString()
+          .padStart(2, '0');
+        const cs = Math.floor((currentTime % 1) * 100)
+          .toString()
+          .padStart(2, '0');
+        if (ref.current) ref.current.textContent = `${mm}:${ss}.${cs}`;
+      }),
+    [],
+  );
+
+  return (
+    <p ref={ref} className="font-mono text-xs text-white">
+      00:00.00
+    </p>
+  );
 };

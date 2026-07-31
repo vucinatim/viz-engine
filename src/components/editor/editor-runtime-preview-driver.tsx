@@ -6,6 +6,7 @@ import { subscribeEditorRuntimePreviewInvalidation } from '@/lib/editor-runtime-
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import useExportStore from '@/lib/stores/export-store';
+import { transportPresentationClock } from '@/lib/transport-presentation-clock';
 import {
   createVizSessionRuntimePreviewFrame,
   getVizSessionState,
@@ -46,7 +47,8 @@ const EditorRuntimePreviewDriver = () => {
     const renderFrame = () => {
       rafIdRef.current = null;
       const state = getVizSessionState();
-      const { currentFrame, fps, isPlaying } = state.preview.transport;
+      const { currentFrame, fps, isPlaying } =
+        vizSessionHost.getSnapshot().transport;
       const attachmentStore = useEditorRuntimePreviewAttachmentStore.getState();
       const isLiveCapture = state.audio.session.source?.kind === 'stream';
       const shouldRenderContinuously =
@@ -100,6 +102,7 @@ const EditorRuntimePreviewDriver = () => {
 
     const unsubscribers = [
       vizSessionStore.subscribe(scheduleRender),
+      transportPresentationClock.subscribe(scheduleRender),
       vizSessionHost.subscribeLiveProjectValues(scheduleRender),
       useAudioEngineStore.subscribe(scheduleRender),
       useEditorRuntimePreviewAttachmentStore.subscribe(scheduleRender),

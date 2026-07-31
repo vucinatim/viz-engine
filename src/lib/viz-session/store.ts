@@ -14,6 +14,7 @@ import { applyVizComponentDefaultAssets } from '@viz-engine/runtime';
 
 import { useNodeNetworkStore } from '@/components/node-network/node-network-store';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
+import { transportPresentationClock } from '@/lib/transport-presentation-clock';
 
 import { createStudioAudioActions } from './audio-actions';
 import { createStudioBrowserAssetAttachment } from './browser-asset-attachment';
@@ -69,13 +70,25 @@ export const vizSessionHost = createVizSessionHost({
       runtimeComponentRegistry.get(componentId),
     ),
   onTransportStateChange: (transport) => {
-    vizSessionStore.setState((state) => ({
-      ...state,
-      preview: {
-        ...state.preview,
-        transport,
-      },
-    }));
+    transportPresentationClock.publish(transport);
+    vizSessionStore.setState((state) => {
+      const previous = state.preview.transport;
+      const onlyPlayingFrameChanged =
+        transport.isPlaying &&
+        previous.isPlaying &&
+        transport.fps === previous.fps &&
+        transport.durationFrames === previous.durationFrames &&
+        transport.loop === previous.loop &&
+        transport.mode === previous.mode;
+      if (onlyPlayingFrameChanged) return state;
+      return {
+        ...state,
+        preview: {
+          ...state.preview,
+          transport,
+        },
+      };
+    });
   },
   onAudioSessionStateChange: (session, diagnostics) => {
     vizSessionStore.setState((state) => ({
@@ -120,6 +133,7 @@ const getRuntimePreviewResources = () => {
 };
 
 export const vizSessionStore = createStudioSessionStore(vizSessionHost);
+transportPresentationClock.publish(vizSessionHost.getSnapshot().transport);
 
 const getProjectState = () => vizSessionStore.getState().project;
 const getGraphNetworks = () =>
@@ -233,8 +247,6 @@ export const vizControl = createVizControl({
         audioFile: null,
         currentTrackUrl: audioSource?.uri ?? null,
         currentTrackIndex: -1,
-        currentTime: 0,
-        visualTime: 0,
       });
       syncNetworkOpenState();
       return;

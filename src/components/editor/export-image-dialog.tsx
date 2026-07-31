@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { useVizSessionSelector, vizControl } from '@/lib/viz-session';
+import { vizControl } from '@/lib/viz-session';
 import { Download, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -43,14 +43,12 @@ const ExportImageDialog = ({ open, onOpenChange }: ExportImageDialogProps) => {
   const [format, setFormat] = useState<ImageFormat>('jpeg');
   const [quality, setQuality] = useState(0.95);
 
-  const currentFrame = useVizSessionSelector(
-    (state) => state.preview.transport.currentFrame,
-  );
   const captureCurrentFrame = async () => {
     setIsCapturing(true);
     try {
       const project = vizControl.getWorkingProject();
       const snapshot = vizControl.getSnapshot();
+      const currentFrame = snapshot.transport.currentFrame;
       const renderJobs = vizControl.getHost().getServices().renderJobs;
       if (!renderJobs) throw new Error('Image export service is unavailable.');
       const job = renderJobs.start(
@@ -187,6 +185,7 @@ const ExportImageDialog = ({ open, onOpenChange }: ExportImageDialogProps) => {
                 </span>
               </div>
               <Slider
+                ariaLabel="Image quality"
                 value={quality}
                 onChange={(value: number) => {
                   setQuality(value);
