@@ -41,6 +41,7 @@ Browser comparison records live in [evidence](./evidence/). Start with:
 - [2026-07-31 Goal Three shell and layer diagnostics parity](./evidence/2026-07-31-goal-three-shell-and-layer-diagnostics-parity.md)
 - [2026-07-31 Goal Three profiler and performance statistics](./evidence/2026-07-31-goal-three-profiler-and-performance-statistics.md)
 - [2026-07-31 Goal Three node editor and live graph](./evidence/2026-07-31-goal-three-node-editor-and-live-graph.md)
+- [2026-07-31 Goal Three graph validation and deterministic evaluation](./evidence/2026-07-31-goal-three-graph-validation-and-deterministic-evaluation.md)
 - [2026-07-31 Goal Three audio and transport reactivity](./evidence/2026-07-31-goal-three-audio-and-transport-reactivity.md)
 
 ## Pinned Reference

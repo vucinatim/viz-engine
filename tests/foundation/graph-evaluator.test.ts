@@ -1,4 +1,7 @@
-import type { VizNodeImplementation } from '@viz-engine/contracts';
+import type {
+  VizNodeGraphDocument,
+  VizNodeImplementation,
+} from '@viz-engine/contracts';
 import {
   exampleAudioTimelineArtifact,
   exampleMainReactivityGraph,
@@ -14,6 +17,16 @@ import {
   evaluateVizGraphs,
 } from '@viz-engine/runtime';
 import { describe, expect, it } from 'vitest';
+
+const createIsolatedGraphProject = (graphs: VizNodeGraphDocument[]) => ({
+  ...exampleProjectDocument,
+  graphs,
+  layers: exampleProjectDocument.layers.map((layer) => ({
+    ...layer,
+    graphId: undefined,
+    inputs: undefined,
+  })),
+});
 
 describe('Viz graph evaluation', () => {
   it('evaluates embedded graph outputs deterministically from project-scoped inputs', () => {
@@ -43,6 +56,42 @@ describe('Viz graph evaluation', () => {
     expect(typeof result.nodes['node-bars-bass-scale']?.outputs.value).toBe(
       'number',
     );
+  });
+
+  it('produces identical outputs for equivalent canonical frame inputs regardless of evaluation history', () => {
+    const createSession = () =>
+      createVizRuntimeSession({
+        project: exampleProjectDocument,
+        mode: 'render',
+        resolvedAssets: exampleResolvedAssets,
+        resolvedArtifacts: exampleResolvedArtifacts,
+        seed: 'equivalent-graph-input-seed',
+      });
+    const registry = createCoreNodeRegistry();
+    const directSession = createSession();
+    const sequentialSession = createSession();
+
+    const direct = evaluateSingleVizGraph({
+      graph: exampleMainReactivityGraph,
+      session: directSession,
+      frame: 72,
+      registry,
+    });
+    evaluateSingleVizGraph({
+      graph: exampleMainReactivityGraph,
+      session: sequentialSession,
+      frame: 18,
+      registry,
+    });
+    const afterEarlierFrame = evaluateSingleVizGraph({
+      graph: exampleMainReactivityGraph,
+      session: sequentialSession,
+      frame: 72,
+      registry,
+    });
+
+    expect(direct.issues).toEqual([]);
+    expect(afterEarlierFrame).toEqual(direct);
   });
 
   it('evaluates transient graph values without poisoning canonical temporal checkpoints', () => {
@@ -83,65 +132,57 @@ describe('Viz graph evaluation', () => {
   });
 
   it('reports graph cycles explicitly instead of recursing forever', () => {
-    const session = createVizRuntimeSession({
-      project: {
-        ...exampleProjectDocument,
-        graphs: [
-          {
-            id: 'graph-cycle-test',
-            name: 'Cycle Test',
-            nodes: [
-              {
-                id: 'node-a',
-                type: 'add',
-                inputs: {
-                  a: {
-                    kind: 'node-output',
-                    nodeId: 'node-b',
-                    output: 'value',
-                  },
-                  b: {
-                    kind: 'literal',
-                    value: 1,
-                  },
-                },
-              },
-              {
-                id: 'node-b',
-                type: 'add',
-                inputs: {
-                  a: {
-                    kind: 'node-output',
-                    nodeId: 'node-a',
-                    output: 'value',
-                  },
-                  b: {
-                    kind: 'literal',
-                    value: 1,
-                  },
-                },
-              },
-            ],
-            outputs: [
-              {
-                key: 'value',
-                nodeId: 'node-a',
-                output: 'value',
-              },
-            ],
+    const cycleGraph = {
+      id: 'graph-cycle-test',
+      name: 'Cycle Test',
+      nodes: [
+        {
+          id: 'node-a',
+          type: 'add',
+          inputs: {
+            a: {
+              kind: 'node-output' as const,
+              nodeId: 'node-b',
+              output: 'value',
+            },
+            b: {
+              kind: 'literal' as const,
+              value: 1,
+            },
           },
-        ],
-      },
+        },
+        {
+          id: 'node-b',
+          type: 'add',
+          inputs: {
+            a: {
+              kind: 'node-output' as const,
+              nodeId: 'node-a',
+              output: 'value',
+            },
+            b: {
+              kind: 'literal' as const,
+              value: 1,
+            },
+          },
+        },
+      ],
+      outputs: [
+        {
+          key: 'value',
+          nodeId: 'node-a',
+          output: 'value',
+        },
+      ],
+    };
+    const session = createVizRuntimeSession({
+      project: createIsolatedGraphProject([]),
       mode: 'render',
       seed: 'graph-cycle-seed',
     });
 
-    const [cycleGraph] = session.project.graphs ?? [];
-
-    expect(cycleGraph).toBeDefined();
-
     const result = evaluateSingleVizGraph({
-      graph: cycleGraph!,
+      graph: cycleGraph,
       session,
       frame: 0,
       registry: createCoreNodeRegistry(),
@@ -154,56 +195,53 @@ describe('Viz graph evaluation', () => {
 
   it('replays temporal nodes deterministically with fixed-step frame time', () => {
     const session = createVizRuntimeSession({
-      project: {
-        ...exampleProjectDocument,
-        graphs: [
-          {
-            id: 'graph-temporal-decay-test',
-            name: 'Temporal Decay Test',
-            inputs: {
-              fluxSource: {
-                kind: 'artifact-feature',
-                artifactId: exampleAudioTimelineArtifact.id,
-                feature: 'spectral-flux',
+      project: createIsolatedGraphProject([
+        {
+          id: 'graph-temporal-decay-test',
+          name: 'Temporal Decay Test',
+          inputs: {
+            fluxSource: {
+              kind: 'artifact-feature',
+              artifactId: exampleAudioTimelineArtifact.id,
+              feature: 'spectral-flux',
+            },
+          },
+          nodes: [
+            {
+              id: 'node-flux-input',
+              type: 'graph-input',
+              inputs: {
+                inputKey: {
+                  kind: 'literal',
+                  value: 'fluxSource',
+                },
               },
             },
-            nodes: [
-              {
-                id: 'node-flux-input',
-                type: 'graph-input',
-                inputs: {
-                  inputKey: {
-                    kind: 'literal',
-                    value: 'fluxSource',
-                  },
+            {
+              id: 'node-flux-decay',
+              type: 'decay',
+              inputs: {
+                value: {
+                  kind: 'node-output',
+                  nodeId: 'node-flux-input',
+                  output: 'value',
+                },
+                falloffPerSecond: {
+                  kind: 'literal',
+                  value: 0.35,
                 },
               },
-              {
-                id: 'node-flux-decay',
-                type: 'decay',
-                inputs: {
-                  value: {
-                    kind: 'node-output',
-                    nodeId: 'node-flux-input',
-                    output: 'value',
-                  },
-                  falloffPerSecond: {
-                    kind: 'literal',
-                    value: 0.35,
-                  },
-                },
-              },
-            ],
-            outputs: [
-              {
-                key: 'decayedFlux',
-                nodeId: 'node-flux-decay',
-                output: 'value',
-              },
-            ],
-          },
-        ],
-      },
+            },
+          ],
+          outputs: [
+            {
+              key: 'decayedFlux',
+              nodeId: 'node-flux-decay',
+              output: 'value',
+            },
+          ],
+        },
+      ]),
       mode: 'render',
       resolvedArtifacts: [
         {
@@ -302,56 +340,53 @@ describe('Viz graph evaluation', () => {
     };
 
     const session = createVizRuntimeSession({
-      project: {
-        ...exampleProjectDocument,
-        graphs: [
-          {
-            id: 'graph-temporal-checkpoint-test',
-            name: 'Temporal Checkpoint Test',
-            inputs: {
-              fluxSource: {
-                kind: 'artifact-feature',
-                artifactId: exampleAudioTimelineArtifact.id,
-                feature: 'spectral-flux',
+      project: createIsolatedGraphProject([
+        {
+          id: 'graph-temporal-checkpoint-test',
+          name: 'Temporal Checkpoint Test',
+          inputs: {
+            fluxSource: {
+              kind: 'artifact-feature',
+              artifactId: exampleAudioTimelineArtifact.id,
+              feature: 'spectral-flux',
+            },
+          },
+          nodes: [
+            {
+              id: 'node-flux-input',
+              type: 'graph-input',
+              inputs: {
+                inputKey: {
+                  kind: 'literal',
+                  value: 'fluxSource',
+                },
               },
             },
-            nodes: [
-              {
-                id: 'node-flux-input',
-                type: 'graph-input',
-                inputs: {
-                  inputKey: {
-                    kind: 'literal',
-                    value: 'fluxSource',
-                  },
+            {
+              id: 'node-decay',
+              type: 'counting-decay',
+              inputs: {
+                value: {
+                  kind: 'node-output',
+                  nodeId: 'node-flux-input',
+                  output: 'value',
+                },
+                falloffPerSecond: {
+                  kind: 'literal',
+                  value: 0.35,
                 },
               },
-              {
-                id: 'node-decay',
-                type: 'counting-decay',
-                inputs: {
-                  value: {
-                    kind: 'node-output',
-                    nodeId: 'node-flux-input',
-                    output: 'value',
-                  },
-                  falloffPerSecond: {
-                    kind: 'literal',
-                    value: 0.35,
-                  },
-                },
-              },
-            ],
-            outputs: [
-              {
-                key: 'value',
-                nodeId: 'node-decay',
-                output: 'value',
-              },
-            ],
-          },
-        ],
-      },
+            },
+          ],
+          outputs: [
+            {
+              key: 'value',
+              nodeId: 'node-decay',
+              output: 'value',
+            },
+          ],
+        },
+      ]),
       mode: 'render',
       resolvedArtifacts: exampleResolvedArtifacts,
       seed: 'graph-temporal-checkpoint-seed',

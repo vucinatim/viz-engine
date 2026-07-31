@@ -2376,6 +2376,44 @@ test('roundtrips a saved canonical project through the visible file workflow', a
   ).toBeVisible();
   expect(await readEditorSnapshot(page)).toEqual(stableProject);
 
+  await page.locator('input[accept=".vizengine.json"]').setInputFiles({
+    name: 'malformed-graph.vizengine.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(
+      JSON.stringify({
+        ...projectFile,
+        project: {
+          ...projectFile.project,
+          graphs: [
+            ...projectFile.project.graphs,
+            {
+              id: 'malformed-graph',
+              name: 'Malformed Graph',
+              nodes: [
+                {
+                  id: 'target',
+                  type: 'Math',
+                  inputs: {
+                    a: {
+                      kind: 'node-output',
+                      nodeId: 'missing-node',
+                      output: 'result',
+                    },
+                  },
+                },
+              ],
+              outputs: [],
+            },
+          ],
+        },
+      }),
+    ),
+  });
+  await expect(
+    page.getByText(/references missing upstream node "missing-node"/).last(),
+  ).toBeVisible();
+  expect(await readEditorSnapshot(page)).toEqual(stableProject);
+
   const rejectedDrop = await page.evaluateHandle(() => {
     const transfer = new DataTransfer();
     transfer.items.add(

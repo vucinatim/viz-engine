@@ -287,6 +287,34 @@ describe('Project persistence', () => {
         },
       }),
     ).rejects.toThrow();
+    await expect(
+      hydrateProjectData({
+        ...valid,
+        project: {
+          ...valid.project,
+          graphs: [
+            {
+              id: 'malformed-graph',
+              name: 'Malformed Graph',
+              nodes: [
+                {
+                  id: 'target',
+                  type: 'Math',
+                  inputs: {
+                    a: {
+                      kind: 'node-output',
+                      nodeId: 'missing-node',
+                      output: 'result',
+                    },
+                  },
+                },
+              ],
+              outputs: [],
+            },
+          ],
+        },
+      }),
+    ).rejects.toThrow('references missing upstream node "missing-node"');
 
     expect(vizSessionActions.project.exportWorkingProject()).toEqual(
       beforeProject,

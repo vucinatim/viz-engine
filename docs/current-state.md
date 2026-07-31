@@ -380,8 +380,26 @@ The authoring-schema and live-control checkpoint is now also complete:
 See
 [Authoring Schema And Live Controls](./parity/evidence/2026-07-31-goal-three-authoring-schema-and-live-controls.md).
 
-The parity matrix now contains 36 verified and 6 partial capabilities, with
-zero gaps and zero unaudited rows. Goal Three remains open because the 6
+The graph-validation and deterministic-evaluation checkpoint is now also
+complete:
+
+- malformed graph containers, bindings, value sources, references, outputs,
+  and cycles fail at the portable document boundary
+- visible malformed-file import explains the exact problem while preserving
+  the complete active project
+- equivalent sessions produce deeply equal frame-72 outputs regardless of
+  evaluation history, while temporal replay follows fixed frame time
+- transient graph values remain isolated from canonical temporal checkpoints
+- headed Chromium proves continuously changing graph values and visible output
+  without using React as the runtime signal clock
+- the 18-node Signal Cathedral graph recorded 15.40 ms median / 23.30 ms p95
+  canonical runtime cadence on the fixed device
+
+See
+[Graph Validation And Deterministic Evaluation](./parity/evidence/2026-07-31-goal-three-graph-validation-and-deterministic-evaluation.md).
+
+The parity matrix now contains 38 verified and 4 partial capabilities, with
+zero gaps and zero unaudited rows. Goal Three remains open because the 4
 broader capabilities still require full acceptance evidence, alongside agent
 tooling and the second original production.
 

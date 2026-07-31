@@ -2,6 +2,32 @@
 
 ## 2026-07-31
 
+- completed the Goal Three graph-validation and deterministic-evaluation
+  checkpoint:
+  - made untrusted graph containers, inputs, node bindings, references,
+    outputs, and cycles fail at the portable project boundary with typed issues
+  - validated graph asset/artifact sources and layer graph-output names rather
+    than deferring malformed values to the runtime frame path
+  - proved a visible malformed graph import explains failure and preserves the
+    complete active project snapshot
+  - retained evaluator cycle detection as defense in depth for direct unsaved
+    graph evaluation
+  - proved independent sessions produce deeply equal frame-72 graph output
+    regardless of prior evaluation history, fixed-step temporal replay remains
+    deterministic, and transient values do not poison canonical checkpoints
+  - reconfirmed real headed graph authoring, playback-driven live values, and
+    malformed-project rollback in Chromium
+  - accepted the 18-node Signal Cathedral graph sample at 15.40 ms median /
+    23.30 ms p95 canonical runtime cadence while preserving all tail samples
+  - advanced graph connection validation and live evaluation to verified,
+    leaving 38 verified and 4 partial parity rows
+  - recorded the architecture, evidence, assumptions, and honest broader
+    performance boundary in
+    `docs/parity/evidence/2026-07-31-goal-three-graph-validation-and-deterministic-evaluation.md`
+  - passed the complete foundation gate with 62 deterministic-test files / 283
+    tests, all 16 active headed Chromium journeys plus one opt-in skip, all 17
+    package builds, the studio production build, and both consumer smokes
+
 - completed the Goal Three preview-semantics and focused-layer-mirror
   checkpoint:
   - retained one canonical runtime plan, Three controller, WebGL context, and
