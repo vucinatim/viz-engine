@@ -83,10 +83,6 @@ export const coverImageComponent: VizComponentImplementation = {
       kind: 'group',
       id: layer.id,
       children: [matteRect, imageNode, rimRect],
-      style: {
-        opacity: layer.opacity,
-        blendMode: layer.blendMode,
-      },
     } satisfies VizRenderGroupNode;
   },
 };

@@ -26,8 +26,34 @@ export function useLayerFPSTracker(layerId: string, layerName: string) {
   }, [layerId, removeLayerFPS]);
 
   // Return a function to call before and after render
-  return useMemo(
-    () => ({
+  return useMemo(() => {
+    const recordRender = (renderTime: number, drawCalls: number = 0): void => {
+      const enabled = useProfilerStore.getState().enabled;
+      if (!enabled) return;
+
+      const now = performance.now();
+      lastRenderTimeRef.current = renderTime;
+      drawCallsRef.current = drawCalls;
+      frameCountRef.current++;
+
+      if (now - fpsUpdateTimeRef.current >= 500) {
+        const elapsed = (now - fpsUpdateTimeRef.current) / 1000;
+        const fps = frameCountRef.current / elapsed;
+        useProfilerStore
+          .getState()
+          .updateLayerFPS(
+            layerId,
+            layerName,
+            fps,
+            lastRenderTimeRef.current,
+            drawCallsRef.current,
+          );
+        frameCountRef.current = 0;
+        fpsUpdateTimeRef.current = now;
+      }
+    };
+
+    return {
       /**
        * Call this right before starting the layer render
        */
@@ -43,38 +69,9 @@ export function useLayerFPSTracker(layerId: string, layerName: string) {
        * @param drawCalls - Optional number of draw calls made this frame
        */
       endRender: (drawCalls: number = 0) => {
-        // Check enabled state dynamically each time
-        const enabled = useProfilerStore.getState().enabled;
-        if (!enabled) return;
-
-        const now = performance.now();
-        const renderTime = now - renderStartTimeRef.current;
-        lastRenderTimeRef.current = renderTime;
-        drawCallsRef.current = drawCalls;
-
-        frameCountRef.current++;
-
-        // Update FPS every 500ms
-        if (now - fpsUpdateTimeRef.current >= 500) {
-          const elapsed = (now - fpsUpdateTimeRef.current) / 1000;
-          const fps = frameCountRef.current / elapsed;
-
-          // Get the update function at call time
-          const updateLayerFPS = useProfilerStore.getState().updateLayerFPS;
-          updateLayerFPS(
-            layerId,
-            layerName,
-            fps,
-            lastRenderTimeRef.current,
-            drawCallsRef.current,
-          );
-
-          // Reset counters
-          frameCountRef.current = 0;
-          fpsUpdateTimeRef.current = now;
-        }
+        recordRender(performance.now() - renderStartTimeRef.current, drawCalls);
       },
-    }),
-    [layerId, layerName],
-  );
+      recordRender,
+    };
+  }, [layerId, layerName]);
 }

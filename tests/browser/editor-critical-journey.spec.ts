@@ -296,6 +296,268 @@ test('preserves canonical editing, history, graph, and transport behavior', asyn
   expect(diagnostics).toEqual([]);
 });
 
+test('composites canonical layer alpha and blend modes in one runtime canvas', async ({
+  page,
+}) => {
+  await waitForEditor(page);
+  const diagnostics: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error' || message.type() === 'warning') {
+      diagnostics.push(`${message.type()}: ${message.text()}`);
+    }
+  });
+  page.on('pageerror', (error) =>
+    diagnostics.push(`pageerror: ${error.message}`),
+  );
+
+  await page.evaluate(() => {
+    const debug = window.__vizEditorDebug;
+    if (!debug) {
+      throw new Error('Viz editor debug control is not mounted.');
+    }
+    const project = debug.editorControl.project.exportWorkingProject();
+    project.projectId = 'browser-blend-proof';
+    project.name = 'Browser Blend Proof';
+    project.viewport = {
+      width: 320,
+      height: 180,
+      backgroundColor: 'transparent',
+    };
+    project.layerOrder = ['blend-backdrop', 'blend-source'];
+    project.layers = [
+      {
+        id: 'blend-backdrop',
+        name: 'Strobe Light',
+        componentId: 'strobe-light',
+        enabled: true,
+        opacity: 1,
+        blendMode: 'normal',
+        surface: { backgroundColor: 'transparent' },
+        settings: {
+          mode: 'Manual',
+          color: 'rgb(64, 128, 192)',
+          strength: 1,
+        },
+      },
+      {
+        id: 'blend-source',
+        name: 'Strobe Light',
+        componentId: 'strobe-light',
+        enabled: true,
+        opacity: 0.65,
+        blendMode: 'normal',
+        surface: { backgroundColor: 'transparent' },
+        settings: {
+          mode: 'Manual',
+          color: 'rgb(192, 96, 32)',
+          strength: 1,
+        },
+      },
+    ];
+    project.graphs = [];
+    debug.editorControl.project.importWorkingProject(project);
+  });
+  await expect(page.getByTestId('layer-card')).toHaveCount(2);
+  await expect(page.locator('canvas[data-runtime-preview-canvas]')).toHaveCount(
+    1,
+  );
+
+  const blendModes = [
+    'normal',
+    'multiply',
+    'screen',
+    'overlay',
+    'darken',
+    'lighten',
+    'color-dodge',
+    'color-burn',
+    'hard-light',
+    'soft-light',
+    'difference',
+    'exclusion',
+    'hue',
+    'saturation',
+    'color',
+    'luminosity',
+    'add',
+  ] as const;
+
+  for (const blendMode of blendModes) {
+    const beforeCycle = await page.evaluate(
+      () =>
+        window.__vizEditorDebug?.editorControl.preview.inspectRuntimePreview()
+          .renderCycle ?? 0,
+    );
+    await page.evaluate((mode) => {
+      const debug = window.__vizEditorDebug;
+      if (!debug) {
+        throw new Error('Viz editor debug control is not mounted.');
+      }
+      const project = debug.editorControl.project.exportWorkingProject();
+      const source = project.layers.find(
+        (layer) => layer.id === 'blend-source',
+      );
+      if (!source) {
+        throw new Error('Blend source layer is missing.');
+      }
+      source.blendMode = mode;
+      debug.editorControl.project.importWorkingProject(project);
+    }, blendMode);
+    await expect
+      .poll(async () =>
+        page.evaluate(
+          () =>
+            window.__vizEditorDebug?.editorControl.preview.inspectRuntimePreview()
+              .renderCycle ?? 0,
+        ),
+      )
+      .toBeGreaterThan(beforeCycle);
+
+    const comparison = await page.evaluate((mode) => {
+      const canvas = document.querySelector<HTMLCanvasElement>(
+        'canvas[data-runtime-preview-canvas]',
+      );
+      if (!canvas) {
+        throw new Error('Runtime preview canvas is not mounted.');
+      }
+      const sample = document.createElement('canvas');
+      sample.width = canvas.width;
+      sample.height = canvas.height;
+      const sampleContext = sample.getContext('2d', {
+        willReadFrequently: true,
+      });
+      if (!sampleContext) {
+        throw new Error('Could not create the sample canvas.');
+      }
+      sampleContext.drawImage(canvas, 0, 0);
+      const actual = [
+        ...sampleContext.getImageData(
+          Math.floor(canvas.width / 2),
+          Math.floor(canvas.height / 2),
+          1,
+          1,
+        ).data,
+      ];
+
+      const expectedCanvas = document.createElement('canvas');
+      expectedCanvas.width = 1;
+      expectedCanvas.height = 1;
+      const expectedContext = expectedCanvas.getContext('2d', {
+        willReadFrequently: true,
+      });
+      if (!expectedContext) {
+        throw new Error('Could not create the reference canvas.');
+      }
+      expectedContext.fillStyle = 'rgb(64, 128, 192)';
+      expectedContext.fillRect(0, 0, 1, 1);
+      expectedContext.globalCompositeOperation =
+        mode === 'add' ? 'lighter' : mode;
+      expectedContext.globalAlpha = 0.65;
+      expectedContext.fillStyle = 'rgb(192, 96, 32)';
+      expectedContext.fillRect(0, 0, 1, 1);
+      return {
+        actual,
+        expected: [...expectedContext.getImageData(0, 0, 1, 1).data],
+      };
+    }, blendMode);
+
+    comparison.actual.forEach((channel, index) => {
+      expect(
+        Math.abs(channel - comparison.expected[index]!),
+        `${blendMode} channel ${index}: ${comparison.actual.join(',')} vs ${comparison.expected.join(',')}`,
+      ).toBeLessThanOrEqual(10);
+    });
+  }
+
+  const beforeAlphaCycle = await page.evaluate(
+    () =>
+      window.__vizEditorDebug?.editorControl.preview.inspectRuntimePreview()
+        .renderCycle ?? 0,
+  );
+  await page.evaluate(() => {
+    const debug = window.__vizEditorDebug;
+    if (!debug) {
+      throw new Error('Viz editor debug control is not mounted.');
+    }
+    const project = debug.editorControl.project.exportWorkingProject();
+    project.layerOrder = ['alpha-source'];
+    project.layers = [
+      {
+        id: 'alpha-source',
+        name: 'Solid Color',
+        componentId: 'solid-color',
+        enabled: true,
+        opacity: 0.65,
+        blendMode: 'normal',
+        surface: { backgroundColor: 'transparent' },
+        settings: { color: 'rgba(192, 96, 32, 0.5)' },
+      },
+    ];
+    debug.editorControl.project.importWorkingProject(project);
+  });
+  await expect
+    .poll(async () =>
+      page.evaluate(
+        () =>
+          window.__vizEditorDebug?.editorControl.preview.inspectRuntimePreview()
+            .renderCycle ?? 0,
+      ),
+    )
+    .toBeGreaterThan(beforeAlphaCycle);
+
+  const alphaComparison = await page.evaluate(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>(
+      'canvas[data-runtime-preview-canvas]',
+    );
+    if (!canvas) {
+      throw new Error('Runtime preview canvas is not mounted.');
+    }
+    const sample = document.createElement('canvas');
+    sample.width = canvas.width;
+    sample.height = canvas.height;
+    const sampleContext = sample.getContext('2d', {
+      willReadFrequently: true,
+    });
+    if (!sampleContext) {
+      throw new Error('Could not create the sample canvas.');
+    }
+    sampleContext.drawImage(canvas, 0, 0);
+    const actual = [
+      ...sampleContext.getImageData(
+        Math.floor(canvas.width / 2),
+        Math.floor(canvas.height / 2),
+        1,
+        1,
+      ).data,
+    ];
+
+    const expectedCanvas = document.createElement('canvas');
+    expectedCanvas.width = 1;
+    expectedCanvas.height = 1;
+    const expectedContext = expectedCanvas.getContext('2d', {
+      willReadFrequently: true,
+    });
+    if (!expectedContext) {
+      throw new Error('Could not create the reference canvas.');
+    }
+    expectedContext.globalAlpha = 0.65;
+    expectedContext.fillStyle = 'rgba(192, 96, 32, 0.5)';
+    expectedContext.fillRect(0, 0, 1, 1);
+    return {
+      actual,
+      expected: [...expectedContext.getImageData(0, 0, 1, 1).data],
+    };
+  });
+  alphaComparison.actual.forEach((channel, index) => {
+    expect(
+      Math.abs(channel - alphaComparison.expected[index]!),
+      `nested alpha channel ${index}: ${alphaComparison.actual.join(',')} vs ${alphaComparison.expected.join(',')}`,
+    ).toBeLessThanOrEqual(3);
+  });
+
+  expect(diagnostics).toEqual([]);
+});
+
 test('attaches a portable model asset through the preserved editor and restores it', async ({
   page,
 }) => {

@@ -74,10 +74,6 @@ export const reactiveBarsComponent: VizComponentImplementation = {
       kind: 'group',
       id: layer.id,
       children: bars,
-      style: {
-        opacity: layer.opacity,
-        blendMode: layer.blendMode,
-      },
     } satisfies VizRenderGroupNode;
   },
 };

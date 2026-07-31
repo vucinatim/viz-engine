@@ -399,6 +399,10 @@ export const createVizFramePlan = ({
         resolvedInputs,
       };
 
+      if (layer.surface?.backgroundColor !== undefined) {
+        snapshot.backgroundColor = layer.surface.backgroundColor;
+      }
+
       if (component?.name !== undefined) {
         snapshot.componentName = component.name;
       }

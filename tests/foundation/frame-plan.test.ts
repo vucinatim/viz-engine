@@ -99,6 +99,41 @@ describe('Viz frame planning', () => {
     );
     expect(coverLayer?.node?.kind).toBe('group');
     expect(barsLayer?.node?.kind).toBe('group');
+    for (const layer of renderPlan.layers) {
+      if (layer.node?.kind === 'group') {
+        expect(layer.node.style?.opacity).toBeUndefined();
+        expect(layer.node.style?.blendMode).toBeUndefined();
+      }
+    }
+  });
+
+  it('carries layer-surface backgrounds into the canonical frame and render plans', () => {
+    const project = structuredClone(exampleProjectDocument);
+    project.layers[0]!.surface = {
+      backgroundColor: 'rgba(12, 34, 56, 0.4)',
+    };
+    const session = createVizRuntimeSession({
+      project,
+      mode: 'render',
+      resolvedAssets: exampleResolvedAssets,
+      resolvedArtifacts: exampleResolvedArtifacts,
+      seed: 'layer-surface-seed',
+    });
+    const framePlan = createVizFramePlan({
+      session,
+      frame: 12,
+      registry: createCoreComponentRegistry(),
+      nodeRegistry,
+    });
+    const renderPlan = createVizRenderPlan({
+      session,
+      frame: 12,
+      registry: createCoreComponentRegistry(),
+      nodeRegistry,
+    });
+
+    expect(framePlan.layers[0]?.backgroundColor).toBe('rgba(12, 34, 56, 0.4)');
+    expect(renderPlan.layers[0]?.backgroundColor).toBe('rgba(12, 34, 56, 0.4)');
   });
 
   it('applies frame-scoped runtime input values without mutating the project', () => {

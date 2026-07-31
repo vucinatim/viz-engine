@@ -51,10 +51,6 @@ export const solidColorComponent: VizComponentImplementation = {
       kind: 'group',
       id: layer.id,
       children: [baseRect, glowRect],
-      style: {
-        opacity: layer.opacity,
-        blendMode: layer.blendMode,
-      },
     };
 
     return group;

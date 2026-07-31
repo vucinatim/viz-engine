@@ -1,6 +1,9 @@
 import { mirrorToCanvases } from '@/lib/comp-utils/mirror-to-canvases';
 import editorControl from '@/lib/editor-control';
-import type { LayerData } from '@/lib/editor-layer-types';
+import type {
+  LayerData,
+  LayerRuntimePreviewRenderResult,
+} from '@/lib/editor-layer-types';
 import { invalidateEditorRuntimePreview } from '@/lib/editor-runtime-preview-invalidation';
 import type {
   VizSessionRuntimePreviewAudioFrameData,
@@ -15,20 +18,6 @@ import {
 } from '@viz-engine/renderer-three';
 import * as THREE from 'three';
 
-type WithDebug = (
-  drawFunction: () => void,
-  debugData: {
-    dataArray: Uint8Array;
-    config: Record<string, any>;
-    configSchema: LayerData['comp']['authoring']['settings'];
-  },
-) => void;
-
-type LayerProfiler = {
-  startRender: () => void;
-  endRender: (drawCalls?: number) => void;
-};
-
 export interface EditorRuntimePreviewAttachment {
   getViewport: () => {
     width: number;
@@ -39,24 +28,20 @@ export interface EditorRuntimePreviewAttachment {
     frame: VizSessionRuntimePreviewFrame;
     audioFrameData: VizSessionRuntimePreviewAudioFrameData;
     renderPlan: VizRenderPlan;
-  }) => void;
-  setDebugCanvas: (canvas: HTMLCanvasElement | null) => void;
-  updateLayer: (layer: LayerData) => void;
+  }) => LayerRuntimePreviewRenderResult;
+  updateLayers: (layers: LayerData[]) => void;
+  invokeLayerAction: (layerId: string, actionId: string) => boolean;
   requiresContinuousRendering: () => boolean;
   whenReady: () => Promise<void>;
-  actions: Record<string, () => void>;
-  activateFlyCameraMode: () => void;
   destroy: () => void;
 }
 
 interface CreateEditorRuntimePreviewAttachmentOptions {
-  layer: LayerData;
+  layers: LayerData[];
   canvas: HTMLCanvasElement;
-  debugCanvas: HTMLCanvasElement | null;
   resolutionMultiplier: number;
-  withDebug: WithDebug;
-  getMirrorCanvases: () => HTMLCanvasElement[];
-  profiler: LayerProfiler;
+  getMirrorCanvasesByLayerId: () => Record<string, HTMLCanvasElement[]>;
+  getCompositeMirrorCanvases: () => HTMLCanvasElement[];
   programRegistry: VizThreeProgramRegistry;
 }
 
@@ -71,22 +56,23 @@ const applyCanvasResolution = (
 };
 
 export const createEditorRuntimePreviewAttachment = ({
-  layer,
+  layers,
   canvas,
-  debugCanvas,
   resolutionMultiplier,
-  withDebug,
-  getMirrorCanvases,
-  profiler,
+  getMirrorCanvasesByLayerId,
+  getCompositeMirrorCanvases,
   programRegistry,
 }: CreateEditorRuntimePreviewAttachmentOptions): EditorRuntimePreviewAttachment => {
-  let currentLayer = layer;
-  let currentDebugCanvas = debugCanvas;
+  let currentLayers = new Map(layers.map((layer) => [layer.id, layer]));
   let runtimePreviewController: VizThreePreviewController | null = null;
   let flyCameraPose: VizThreePreviewCameraPose | null = null;
+  let flyCameraLayerId: string | null = null;
   let flyCameraActive = false;
-  let lastConfigValues: Record<string, any> = structuredClone(
-    layer.comp.defaultValues,
+  const lastConfigValuesByLayerId = new Map(
+    layers.map((layer) => [
+      layer.id,
+      structuredClone(layer.comp.defaultValues) as Record<string, any>,
+    ]),
   );
   const flyKeys = new Set<string>();
 
@@ -99,19 +85,19 @@ export const createEditorRuntimePreviewAttachment = ({
   };
 
   const commitFlyCameraPose = () => {
-    if (!flyCameraPose) {
+    if (!flyCameraPose || !flyCameraLayerId) {
       return;
     }
 
     const [x, y, z] = flyCameraPose.position;
     const [rotationX, rotationY, rotationZ] = flyCameraPose.rotation;
     editorControl.project.updateLayerValue(
-      currentLayer.id,
+      flyCameraLayerId,
       ['camera', 'cinematicMode'],
       false,
     );
     editorControl.project.updateLayerValue(
-      currentLayer.id,
+      flyCameraLayerId,
       ['camera', 'position'],
       {
         x,
@@ -120,7 +106,7 @@ export const createEditorRuntimePreviewAttachment = ({
       },
     );
     editorControl.project.updateLayerValue(
-      currentLayer.id,
+      flyCameraLayerId,
       ['camera', 'rotation'],
       {
         x: rotationX,
@@ -137,8 +123,11 @@ export const createEditorRuntimePreviewAttachment = ({
 
     flyCameraActive = false;
     removeFlyListeners();
-    runtimePreviewController?.setLayerCameraPose(currentLayer.id, null);
+    if (flyCameraLayerId) {
+      runtimePreviewController?.setLayerCameraPose(flyCameraLayerId, null);
+    }
     commitFlyCameraPose();
+    flyCameraLayerId = null;
   };
 
   function onFlyKeyDown(event: KeyboardEvent) {
@@ -178,9 +167,12 @@ export const createEditorRuntimePreviewAttachment = ({
       return;
     }
 
+    const config = flyCameraLayerId
+      ? lastConfigValuesByLayerId.get(flyCameraLayerId)
+      : undefined;
     const lookSpeed =
-      typeof lastConfigValues.camera?.lookSpeed === 'number'
-        ? lastConfigValues.camera.lookSpeed
+      typeof config?.camera?.lookSpeed === 'number'
+        ? config.camera.lookSpeed
         : 0.002;
     flyCameraPose.rotation[1] -= event.movementX * lookSpeed;
     flyCameraPose.rotation[0] = Math.max(
@@ -199,24 +191,23 @@ export const createEditorRuntimePreviewAttachment = ({
     }
   }
 
-  const activateFlyCameraMode = () => {
+  const activateFlyCameraMode = (layerId: string) => {
     if (flyCameraActive || !runtimePreviewController) {
       return;
     }
 
-    flyCameraPose = runtimePreviewController.getLayerCameraPose(
-      currentLayer.id,
-    );
+    flyCameraPose = runtimePreviewController.getLayerCameraPose(layerId);
     if (!flyCameraPose) {
       return;
     }
 
+    flyCameraLayerId = layerId;
     flyCameraActive = true;
     document.addEventListener('keydown', onFlyKeyDown);
     document.addEventListener('keyup', onFlyKeyUp);
     document.addEventListener('mousemove', onFlyMouseMove);
     document.addEventListener('pointerlockchange', onPointerLockChange);
-    runtimePreviewController.setLayerCameraPose(currentLayer.id, flyCameraPose);
+    runtimePreviewController.setLayerCameraPose(layerId, flyCameraPose);
     invalidateEditorRuntimePreview();
 
     try {
@@ -236,9 +227,12 @@ export const createEditorRuntimePreviewAttachment = ({
       return;
     }
 
+    const config = flyCameraLayerId
+      ? lastConfigValuesByLayerId.get(flyCameraLayerId)
+      : undefined;
     const moveSpeed =
-      typeof lastConfigValues.camera?.moveSpeed === 'number'
-        ? lastConfigValues.camera.moveSpeed
+      typeof config?.camera?.moveSpeed === 'number'
+        ? config.camera.moveSpeed
         : 20;
     const rotation = new THREE.Euler(
       flyCameraPose.rotation[0],
@@ -272,10 +266,12 @@ export const createEditorRuntimePreviewAttachment = ({
       flyCameraPose.position[1] += movement.y;
       flyCameraPose.position[2] += movement.z;
     }
-    runtimePreviewController?.setLayerCameraPose(
-      currentLayer.id,
-      flyCameraPose,
-    );
+    if (flyCameraLayerId) {
+      runtimePreviewController?.setLayerCameraPose(
+        flyCameraLayerId,
+        flyCameraPose,
+      );
+    }
   };
 
   return {
@@ -294,77 +290,86 @@ export const createEditorRuntimePreviewAttachment = ({
         displayHeight,
         resolutionMultiplier,
       );
-      if (currentDebugCanvas) {
-        applyCanvasResolution(
-          currentDebugCanvas,
-          displayWidth,
-          displayHeight,
-          resolutionMultiplier,
-        );
-      }
       runtimePreviewController?.resize(canvas.width, canvas.height);
       invalidateEditorRuntimePreview();
     },
-    render: ({ frame, audioFrameData, renderPlan }) => {
-      lastConfigValues =
-        renderPlan.layers[0]?.resolvedSettings ??
-        renderPlan.layers[0]?.settings ??
-        currentLayer.values;
-      updateFlyCamera(frame.dt);
-
-      withDebug(
-        () => {
-          profiler.startRender();
-          if (runtimePreviewController) {
-            runtimePreviewController.update(renderPlan);
-          } else {
-            runtimePreviewController = createVizThreePreviewController({
-              canvas,
-              renderPlan,
-              preserveDrawingBuffer: true,
-              programRegistry,
-            });
-          }
-          profiler.endRender();
-        },
-        {
-          dataArray: audioFrameData.frequencyData,
-          config: lastConfigValues,
-          configSchema: currentLayer.comp.authoring.settings,
-        },
-      );
-
-      const mirrorCanvases = getMirrorCanvases();
-      if (mirrorCanvases.length > 0) {
-        mirrorToCanvases(canvas, mirrorCanvases);
-      }
-    },
-    setDebugCanvas: (nextDebugCanvas) => {
-      currentDebugCanvas = nextDebugCanvas;
-      if (
-        nextDebugCanvas &&
-        canvas.clientWidth > 0 &&
-        canvas.clientHeight > 0
-      ) {
-        applyCanvasResolution(
-          nextDebugCanvas,
-          canvas.clientWidth,
-          canvas.clientHeight,
-          resolutionMultiplier,
+    render: ({ frame, renderPlan }) => {
+      for (const layerPlan of renderPlan.layers) {
+        lastConfigValuesByLayerId.set(
+          layerPlan.layerId,
+          layerPlan.resolvedSettings ??
+            layerPlan.settings ??
+            currentLayers.get(layerPlan.layerId)?.values ??
+            {},
         );
       }
-      invalidateEditorRuntimePreview();
+      updateFlyCamera(frame.dt);
+
+      if (runtimePreviewController) {
+        runtimePreviewController.update(renderPlan);
+      } else {
+        runtimePreviewController = createVizThreePreviewController({
+          canvas,
+          renderPlan,
+          preserveDrawingBuffer: true,
+          programRegistry,
+        });
+      }
+
+      mirrorToCanvases(canvas, getCompositeMirrorCanvases());
+      const mirrorCanvasesByLayerId = getMirrorCanvasesByLayerId();
+      let presentedMirror = false;
+      for (const [layerId, mirrorCanvases] of Object.entries(
+        mirrorCanvasesByLayerId,
+      )) {
+        if (
+          mirrorCanvases.length > 0 &&
+          runtimePreviewController.presentLayer(layerId)
+        ) {
+          mirrorToCanvases(canvas, mirrorCanvases);
+          presentedMirror = true;
+        }
+      }
+      if (presentedMirror) {
+        runtimePreviewController.presentComposite();
+      }
+
+      return {
+        layerStats: runtimePreviewController.getLastRenderStats().layers,
+      };
     },
-    updateLayer: (nextLayer) => {
-      currentLayer = nextLayer;
+    updateLayers: (nextLayers) => {
+      currentLayers = new Map(nextLayers.map((layer) => [layer.id, layer]));
+      for (const layerId of lastConfigValuesByLayerId.keys()) {
+        if (!currentLayers.has(layerId)) {
+          lastConfigValuesByLayerId.delete(layerId);
+        }
+      }
+      for (const layer of nextLayers) {
+        if (!lastConfigValuesByLayerId.has(layer.id)) {
+          lastConfigValuesByLayerId.set(
+            layer.id,
+            structuredClone(layer.comp.defaultValues),
+          );
+        }
+      }
+      if (flyCameraLayerId && !currentLayers.has(flyCameraLayerId)) {
+        deactivateFlyCamera();
+      }
+    },
+    invokeLayerAction: (layerId, actionId) => {
+      const layer = currentLayers.get(layerId);
+      if (
+        layer?.comp.componentId !== 'stage-scene' ||
+        actionId !== 'stage.enter-fly-mode'
+      ) {
+        return false;
+      }
+      activateFlyCameraMode(layerId);
+      return true;
     },
     requiresContinuousRendering: () => flyCameraActive,
     whenReady: () => runtimePreviewController?.whenReady() ?? Promise.resolve(),
-    actions:
-      layer.comp.componentId === 'stage-scene'
-        ? { 'stage.enter-fly-mode': activateFlyCameraMode }
-        : {},
-    activateFlyCameraMode,
     destroy: () => {
       deactivateFlyCamera();
       removeFlyListeners();

@@ -117,7 +117,7 @@ export const updateVizThreeOrthoCamera = (
 
 const clampOpacity = (value: number): number => Math.min(1, Math.max(0, value));
 
-const resolveCssColor = (
+export const resolveVizThreeCssColor = (
   value: string,
 ): {
   value: string;
@@ -184,7 +184,7 @@ const createMaterial = (
   fallbackFill = '#ffffff',
   overrides: MeshBasicMaterialParameters = {},
 ): MeshBasicMaterial => {
-  const fill = resolveCssColor(style?.fill ?? fallbackFill);
+  const fill = resolveVizThreeCssColor(style?.fill ?? fallbackFill);
   const opacity = clampOpacity((style?.opacity ?? 1) * fill.opacity);
 
   return new MeshBasicMaterial({
@@ -422,7 +422,7 @@ const updatePointCloudMaterial = (
   inherited: VizInheritedRenderState,
 ): void => {
   const style = mergeRenderableStyle(inherited, node.style);
-  const fill = resolveCssColor(style.fill ?? '#ffffff');
+  const fill = resolveVizThreeCssColor(style.fill ?? '#ffffff');
   const opacity = clampOpacity((style.opacity ?? 1) * fill.opacity);
   (material.uniforms.vizPointSize!.value as number) = node.radius * 2;
   (material.uniforms.vizColor!.value as Color).set(fill.value);
@@ -511,7 +511,7 @@ const preparePolygonFill = (
       : gradient.stops;
   const stops = sourceStops
     .map((stop) => {
-      const resolved = resolveCssColor(stop.color);
+      const resolved = resolveVizThreeCssColor(stop.color);
       return {
         offset: stop.offset,
         color: new Color(resolved.value),
@@ -703,7 +703,7 @@ const createPolylineLine = ({
   viewportWidth: number;
   viewportHeight: number;
 }): Line | Line2 => {
-  const resolvedColor = resolveCssColor(color);
+  const resolvedColor = resolveVizThreeCssColor(color);
   const finalOpacity = clampOpacity(
     inherited.opacity * opacity * resolvedColor.opacity,
   );
@@ -864,7 +864,9 @@ const drawTextCanvas = (
   context.font = font;
   context.textAlign = 'left';
   context.textBaseline = 'middle';
-  context.fillStyle = resolveCssColor(node.style?.fill ?? '#ffffff').value;
+  context.fillStyle = resolveVizThreeCssColor(
+    node.style?.fill ?? '#ffffff',
+  ).value;
   context.fillText(node.text, 2 * textureScale, textureHeight / 2);
   return {
     width: textureWidth / textureScale,
@@ -1185,7 +1187,9 @@ const updateMaterialStyle = (
   style: VizRenderStyle,
   fallbackColor: string,
 ): void => {
-  const color = resolveCssColor(style.fill ?? style.stroke ?? fallbackColor);
+  const color = resolveVizThreeCssColor(
+    style.fill ?? style.stroke ?? fallbackColor,
+  );
   material.color.set(color.value);
   material.opacity = clampOpacity((style.opacity ?? 1) * color.opacity);
   material.transparent = material.opacity < 1;
@@ -1425,7 +1429,7 @@ const updateTextObject = (
   object.position.y = viewportHeight / 2 - (origin.y + dimensions.height / 2);
   const style = mergeRenderableStyle(inherited, node.style);
   const material = object.material as MeshBasicMaterial;
-  const color = resolveCssColor(node.style?.fill ?? '#ffffff');
+  const color = resolveVizThreeCssColor(node.style?.fill ?? '#ffffff');
   material.color.set('#ffffff');
   material.opacity = clampOpacity((style.opacity ?? 1) * color.opacity);
   material.transparent = material.opacity < 1;

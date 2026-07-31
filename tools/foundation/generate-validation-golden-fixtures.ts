@@ -1,14 +1,12 @@
 import { createCoreComponentRegistry } from '@viz-engine/components-core';
-import {
-  exportExampleBundle,
-  loadLocalVizProjectBundle,
-} from '@viz-engine/dev-cli';
+import { exportExampleBundle } from '@viz-engine/dev-cli';
 import {
   exampleProjectDocument,
   exampleResolvedArtifacts,
   exampleResolvedAssets,
 } from '@viz-engine/example-projects';
 import { createCoreNodeRegistry } from '@viz-engine/nodes-core';
+import { loadLocalVizProjectBundle } from '@viz-engine/project-bundle/node';
 import { renderVizRenderPlanToSvgMarkup } from '@viz-engine/renderer-svg';
 import {
   createVizFramePlan,

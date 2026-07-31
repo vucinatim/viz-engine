@@ -1,7 +1,6 @@
 import { LayerData } from '@/lib/editor-layer-types';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import { useEffect, useRef } from 'react';
-import { LayerCanvas } from './layer-renderer';
 
 interface LayerMirrorCanvasProps {
   layer: LayerData;
@@ -29,7 +28,7 @@ const LayerMirrorCanvas = ({ layer }: LayerMirrorCanvasProps) => {
     };
   }, [canvasRef, registerMirrorCanvas, unregisterMirrorCanvas, layer.id]);
 
-  return <LayerCanvas layer={layer} ref={canvasRef} />;
+  return <canvas ref={canvasRef} className="absolute h-full w-full" />;
 };
 
 export default LayerMirrorCanvas;

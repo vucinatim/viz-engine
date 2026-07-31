@@ -25,10 +25,7 @@ describe('editor runtime preview attachment readiness', () => {
 
     useEditorRuntimePreviewAttachmentStore
       .getState()
-      .registerLayerAttachment('layer-a', attachment);
-    useEditorRuntimePreviewAttachmentStore
-      .getState()
-      .registerLayerAttachment('layer-b', attachment);
+      .registerPreviewAttachment(attachment, ['layer-a', 'layer-b']);
 
     await expect(ready).resolves.toBeUndefined();
   });

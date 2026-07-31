@@ -149,10 +149,13 @@ describe('Local editor control facade', () => {
       createTestProject(comp, 'runtime-layer'),
     );
     const attachmentStore = useEditorRuntimePreviewAttachmentStore.getState();
-    attachmentStore.registerLayerAttachment('runtime-layer', {
-      getViewport: () => ({ width: 640, height: 360 }),
-      render: vi.fn(),
-    });
+    attachmentStore.registerPreviewAttachment(
+      {
+        getViewport: () => ({ width: 640, height: 360 }),
+        render: vi.fn(),
+      },
+      ['runtime-layer'],
+    );
     const frame = createVizSessionRuntimePreviewFrame({
       currentFrame: 48,
       time: 0.8,

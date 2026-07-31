@@ -2084,3 +2084,31 @@
   - identified the editor's one-WebGL-controller-per-layer attachment as the
     next required architectural repair for canonical alpha, blend behavior,
     resource use, and broader frame pacing
+- completed the Goal Three canonical preview-compositor checkpoint:
+  - replaced one WebGL controller and visible canvas per layer with one
+    full-plan attachment, Three renderer, WebGL context, and runtime canvas
+  - made the compositor the single owner of layer order, surface background,
+    opacity, blend mode, viewport alpha, and final presentation
+  - implemented source-over GPU composition for all 17 canonical layer blend
+    modes with explicit linear/sRGB conversion
+  - fixed nested premultiplied alpha after a direct probe exposed double
+    attenuation inside semi-transparent layers
+  - removed duplicated layer opacity/blend styles from component root nodes
+    and made the SVG adapter consume canonical layer semantics directly
+  - retained layer cards, ambient composition, per-layer debug/profiler data,
+    and Stage fly mode without creating secondary runtime owners
+  - repaired the golden generator's stale dev-CLI bundle-loader import
+  - compared every blend mode and nested transparent output against Canvas2D
+    pixels in the headed browser suite with a clean console
+  - measured slider pointer-to-transient at 0.30 ms, pointer-to-runtime at
+    2.85 ms, and pointer-to-visible at 10.42 ms across 20 gestures
+  - measured graph pointer-to-visible at 18.88 ms and canonical mutation at
+    0.58 ms across 20 gestures; recorded heap was 91.13 MiB
+  - retained one display and two runtime intervals above 25 ms as evidence for
+    later broader-scene profiling
+  - passed the complete foundation gate: parity, architecture, formatting,
+    lint, all type checks, 56 files / 256 tests, eight active browser
+    journeys, all builds, and both built-consumer smoke scenarios
+  - recorded full architecture, validation, assumptions, boundaries, and the
+    machine-readable workload in
+    `docs/parity/evidence/2026-07-31-goal-three-canonical-preview-compositor.md`

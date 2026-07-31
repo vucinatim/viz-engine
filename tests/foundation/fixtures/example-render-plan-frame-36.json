@@ -61,10 +61,6 @@
       "node": {
         "kind": "group",
         "id": "layer-background",
-        "style": {
-          "blendMode": "normal",
-          "opacity": 1
-        },
         "children": [
           {
             "kind": "rect",
@@ -129,10 +125,6 @@
       "node": {
         "kind": "group",
         "id": "layer-cover",
-        "style": {
-          "blendMode": "normal",
-          "opacity": 0.94
-        },
         "children": [
           {
             "kind": "rect",
@@ -204,10 +196,6 @@
       "node": {
         "kind": "group",
         "id": "layer-bars",
-        "style": {
-          "blendMode": "screen",
-          "opacity": 1
-        },
         "children": [
           {
             "kind": "rect",
@@ -650,10 +638,6 @@
       "node": {
         "kind": "group",
         "id": "layer-bloom",
-        "style": {
-          "blendMode": "add",
-          "opacity": 0.65
-        },
         "children": [
           {
             "kind": "circle",

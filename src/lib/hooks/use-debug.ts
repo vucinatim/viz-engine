@@ -24,10 +24,12 @@ function useDebug(
         dataArray,
         config,
         configSchema,
+        renderMilliseconds,
       }: {
         dataArray: Uint8Array;
         config: Record<string, unknown>;
         configSchema: VizComponentGroupSetting;
+        renderMilliseconds?: number;
       },
     ) => {
       const drawStart = performance.now();
@@ -51,7 +53,7 @@ function useDebug(
         fps: smoothedFpsRef.current,
         currentTime: audioElementRef.current?.currentTime || 0,
         currentLevel: calculateAudioLevel(dataArray),
-        lastFrameTime: drawEnd - drawStart,
+        lastFrameTime: renderMilliseconds ?? drawEnd - drawStart,
       };
 
       // Render debug overlay if debug canvas is available

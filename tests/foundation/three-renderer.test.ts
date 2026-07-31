@@ -13,6 +13,7 @@ import {
   createVizThreeProgramRegistry,
   createVizThreeSceneGraph,
   disposeVizThreeCompositorGraph,
+  getVizThreeLayerClearColor,
   summarizeVizThreeSceneGraph,
   updateVizThreeCompositorGraph,
 } from '@viz-engine/renderer-three';
@@ -21,6 +22,7 @@ import {
   createVizRuntimeSession,
 } from '@viz-engine/runtime';
 import {
+  Color,
   Group,
   InstancedMesh,
   InterleavedBufferAttribute,
@@ -280,6 +282,31 @@ describe('Viz Three renderer proof', () => {
           (layer.compositeSurface.material as MeshBasicMaterial).opacity,
       ),
     ).toEqual(renderPlan.layers.map((layer) => layer.opacity));
+    expect(
+      compositorGraph.layers.every(
+        (layer) =>
+          (layer.compositeSurface.material as MeshBasicMaterial).transparent,
+      ),
+    ).toBe(true);
+  });
+
+  it('resolves layer-surface alpha into a premultiplied clear color', () => {
+    const clear = getVizThreeLayerClearColor({
+      layerId: 'surface-alpha',
+      componentId: 'portable-test',
+      rendererFamily: 'three',
+      enabled: true,
+      opacity: 1,
+      blendMode: 'normal',
+      backgroundColor: 'rgba(12, 34, 56, 0.4)',
+      resolvedInputs: {},
+    });
+
+    expect(clear.opacity).toBeCloseTo(0.4, 6);
+    const expected = new Color('rgb(12, 34, 56)').multiplyScalar(0.4);
+    expect(clear.color.r).toBeCloseTo(expected.r, 6);
+    expect(clear.color.g).toBeCloseTo(expected.g, 6);
+    expect(clear.color.b).toBeCloseTo(expected.b, 6);
   });
 
   it('keeps layer opacity at the compositor surface instead of baking it into inner meshes', () => {

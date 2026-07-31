@@ -1,9 +1,11 @@
 import type { VizRenderPlan } from '@viz-engine/contracts';
-import { Color, WebGLRenderer } from 'three';
+import { WebGLRenderer } from 'three';
 
+import { createVizThreeBlendCompositor } from './blend-compositor.js';
 import {
   createVizThreeCompositorGraph,
   disposeVizThreeCompositorGraph,
+  getVizThreeLayerClearColor,
   resizeVizThreeCompositorGraph,
   updateVizThreeCompositorGraph,
 } from './compositor.js';
@@ -21,6 +23,9 @@ export interface VizThreePreviewController {
   update(renderPlan: VizRenderPlan): void;
   resize(width: number, height: number): void;
   render(): void;
+  presentLayer(layerId: string): boolean;
+  presentComposite(): void;
+  getLastRenderStats(): VizThreePreviewRenderStats;
   getLayerCameraPose(layerId: string): VizThreePreviewCameraPose | null;
   setLayerCameraPose(
     layerId: string,
@@ -44,6 +49,16 @@ export interface VizThreePreviewResourceStats {
   pendingImageLoads: number;
 }
 
+export interface VizThreePreviewLayerRenderStats {
+  milliseconds: number;
+  drawCalls: number;
+}
+
+export interface VizThreePreviewRenderStats {
+  layers: Record<string, VizThreePreviewLayerRenderStats>;
+  composite: VizThreePreviewLayerRenderStats;
+}
+
 const createRenderer = ({
   canvas,
   preserveDrawingBuffer,
@@ -52,7 +67,7 @@ const createRenderer = ({
   preserveDrawingBuffer: boolean;
 }) => {
   const context = canvas.getContext('webgl2', {
-    alpha: false,
+    alpha: true,
     antialias: true,
     preserveDrawingBuffer,
   });
@@ -70,7 +85,7 @@ const createRenderer = ({
     canvas,
     context,
     antialias: true,
-    alpha: false,
+    alpha: true,
     preserveDrawingBuffer,
   });
 };
@@ -88,6 +103,7 @@ export const createVizThreePreviewController = ({
 }): VizThreePreviewController => {
   const renderer = createRenderer({ canvas, preserveDrawingBuffer });
   renderer.autoClear = true;
+  renderer.info.autoReset = false;
 
   let currentRenderPlan = renderPlan;
   let render = () => undefined;
@@ -98,17 +114,39 @@ export const createVizThreePreviewController = ({
     modelResources,
     programRegistry,
   );
+  const blendCompositor = createVizThreeBlendCompositor(
+    renderPlan.viewport.width,
+    renderPlan.viewport.height,
+  );
   const imageResources = createVizThreeImageResourceManager({
     onReady: () => render(),
   });
   const cameraPoseOverrides = new Map<string, VizThreePreviewCameraPose>();
+  let lastRenderStats: VizThreePreviewRenderStats = {
+    layers: {},
+    composite: { milliseconds: 0, drawCalls: 0 },
+  };
 
   const resize = (width: number, height: number) => {
     renderer.setSize(width, height, false);
     resizeVizThreeCompositorGraph(compositorGraph, width, height);
+    blendCompositor.resize(width, height);
+  };
+
+  const presentComposite = () => {
+    const stats = blendCompositor.compose(
+      renderer,
+      compositorGraph,
+      currentRenderPlan.viewport,
+    );
+    lastRenderStats = {
+      ...lastRenderStats,
+      composite: stats,
+    };
   };
 
   render = () => {
+    const layerStats: VizThreePreviewRenderStats['layers'] = {};
     for (const layer of compositorGraph.layers) {
       const cameraPose = cameraPoseOverrides.get(layer.layer.layerId);
       if (cameraPose) {
@@ -117,29 +155,26 @@ export const createVizThreePreviewController = ({
         layer.contentCamera.updateMatrixWorld();
       }
       renderer.setRenderTarget(layer.renderTarget);
-      renderer.setClearColor(0x000000, 0);
+      const background = getVizThreeLayerClearColor(layer.layer);
+      renderer.setClearColor(background.color, background.opacity);
       renderer.clear(true, true, true);
+      renderer.info.reset();
+      const startedAt = performance.now();
       if (layer.programInstance) {
         layer.programInstance.render(renderer, layer.renderTarget);
       } else {
         renderer.render(layer.contentScene, layer.contentCamera);
       }
+      layerStats[layer.layer.layerId] = {
+        milliseconds: performance.now() - startedAt,
+        drawCalls: renderer.info.render.calls,
+      };
     }
-
-    renderer.setRenderTarget(null);
-    if (currentRenderPlan.viewport.backgroundColor === undefined) {
-      renderer.setClearColor(0x000000, 0);
-    } else {
-      renderer.setClearColor(
-        new Color(currentRenderPlan.viewport.backgroundColor),
-        1,
-      );
-    }
-    renderer.clear(true, true, true);
-    renderer.render(
-      compositorGraph.compositeScene,
-      compositorGraph.compositeCamera,
-    );
+    lastRenderStats = {
+      ...lastRenderStats,
+      layers: layerStats,
+    };
+    presentComposite();
   };
 
   const hydrate = () => {
@@ -169,6 +204,10 @@ export const createVizThreePreviewController = ({
             nextRenderPlan.viewport.height,
             false,
           );
+          blendCompositor.resize(
+            nextRenderPlan.viewport.width,
+            nextRenderPlan.viewport.height,
+          );
         }
         hydrate();
         render();
@@ -189,6 +228,21 @@ export const createVizThreePreviewController = ({
     },
     resize,
     render,
+    presentLayer(layerId) {
+      const selectedLayer = compositorGraph.layers.find(
+        (layer) => layer.layer.layerId === layerId,
+      );
+      if (!selectedLayer) {
+        return false;
+      }
+
+      blendCompositor.presentLayer(renderer, selectedLayer);
+      return true;
+    },
+    presentComposite() {
+      blendCompositor.presentComposite(renderer);
+    },
+    getLastRenderStats: () => lastRenderStats,
     getLayerCameraPose(layerId) {
       const layer = compositorGraph.layers.find(
         (candidate) => candidate.layer.layerId === layerId,
@@ -242,6 +296,7 @@ export const createVizThreePreviewController = ({
     },
     dispose() {
       disposeVizThreeCompositorGraph(compositorGraph);
+      blendCompositor.dispose();
       imageResources.dispose();
       cameraPoseOverrides.clear();
       modelResources.dispose();

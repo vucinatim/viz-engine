@@ -27,6 +27,6 @@ export const syncEditorProjection = (project: VizProjectDocument): void => {
 
   useEditorRuntimePreviewAttachmentStore
     .getState()
-    .pruneLayerAttachments(projectedLayerIds);
+    .pruneLayerEntries(projectedLayerIds);
   editorStore.pruneLayerUi(project.layers.map((layer) => layer.id));
 };

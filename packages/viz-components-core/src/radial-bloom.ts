@@ -55,10 +55,6 @@ export const radialBloomComponent: VizComponentImplementation = {
       kind: 'group',
       id: layer.id,
       children: [outerCircle, innerCircle],
-      style: {
-        opacity: layer.opacity,
-        blendMode: layer.blendMode,
-      },
     } satisfies VizRenderGroupNode;
   },
 };

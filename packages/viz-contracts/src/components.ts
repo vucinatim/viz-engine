@@ -263,6 +263,7 @@ export interface VizLayerFrameSnapshot {
   enabled: boolean;
   opacity: number;
   blendMode: VizBlendMode;
+  backgroundColor?: string;
   resolvedInputs: Record<string, VizResolvedInputValue>;
   settings?: Record<string, unknown>;
 }

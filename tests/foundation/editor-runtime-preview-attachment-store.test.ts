@@ -50,13 +50,18 @@ describe('Editor runtime preview attachment store', () => {
     const attachmentStore = useEditorRuntimePreviewAttachmentStore.getState();
     const renderLayerA = vi.fn();
     const mirrorCanvas = {} as HTMLCanvasElement;
+    const compositeMirrorCanvas = {} as HTMLCanvasElement;
     const playerRef = { current: { seekTo: vi.fn() } } as any;
 
-    attachmentStore.registerLayerAttachment('layer-a', {
-      getViewport: () => ({ width: 640, height: 360 }),
-      render: renderLayerA,
-    });
+    attachmentStore.registerPreviewAttachment(
+      {
+        getViewport: () => ({ width: 640, height: 360 }),
+        render: renderLayerA,
+      },
+      ['layer-a'],
+    );
     attachmentStore.registerMirrorCanvas('layer-a', mirrorCanvas);
+    attachmentStore.registerCompositeMirrorCanvas(compositeMirrorCanvas);
     attachmentStore.setPlayerRef(playerRef);
 
     const frame = createVizSessionRuntimePreviewFrame({
@@ -85,6 +90,9 @@ describe('Editor runtime preview attachment store', () => {
         'layer-a'
       ],
     ).toEqual([mirrorCanvas]);
+    expect(
+      useEditorRuntimePreviewAttachmentStore.getState().compositeMirrorCanvases,
+    ).toEqual([compositeMirrorCanvas]);
     expect(useEditorRuntimePreviewAttachmentStore.getState().playerRef).toBe(
       playerRef,
     );
@@ -97,37 +105,87 @@ describe('Editor runtime preview attachment store', () => {
     expect(state).not.toHaveProperty('runtimeBackedLayerIds');
   });
 
-  it('prunes only layer-scoped browser attachments', () => {
+  it('prunes only layer-scoped browser entries', () => {
     const store = useEditorRuntimePreviewAttachmentStore.getState();
     const playerRef = { current: { seekTo: vi.fn() } } as any;
+    const attachment = {
+      getViewport: () => ({ width: 1, height: 1 }),
+      render: vi.fn(),
+    };
 
-    store.registerLayerAttachment('layer-a', {
-      getViewport: () => ({ width: 1, height: 1 }),
-      render: vi.fn(),
-    });
-    store.registerLayerAttachment('layer-b', {
-      getViewport: () => ({ width: 1, height: 1 }),
-      render: vi.fn(),
-    });
+    store.registerPreviewAttachment(attachment, ['layer-a', 'layer-b']);
     store.registerMirrorCanvas('layer-a', {} as HTMLCanvasElement);
     store.setPlayerRef(playerRef);
-    store.pruneLayerAttachments(['layer-b']);
+    store.pruneLayerEntries(['layer-b']);
 
     const state = useEditorRuntimePreviewAttachmentStore.getState();
-    expect([...state.layerAttachments.keys()]).toEqual(['layer-b']);
+    expect(state.previewAttachment).toBe(attachment);
+    expect([...state.previewLayerIds]).toEqual(['layer-b']);
     expect(state.mirrorCanvasesByLayerId['layer-a']).toBeUndefined();
     expect(state.playerRef).toBe(playerRef);
+  });
+
+  it('renders one full scene plan and routes measured layer diagnostics separately', () => {
+    const store = useEditorRuntimePreviewAttachmentStore.getState();
+    const render = vi.fn(() => ({
+      layerStats: {
+        'layer-b': { milliseconds: 1.25, drawCalls: 3 },
+      },
+    }));
+    const renderDebug = vi.fn();
+    store.registerPreviewAttachment(
+      {
+        getViewport: () => ({ width: 640, height: 360 }),
+        render,
+      },
+      ['layer-a', 'layer-b'],
+    );
+    store.registerDebugAttachment('layer-b', { render: renderDebug });
+    const frame = createVizSessionRuntimePreviewFrame({
+      currentFrame: 90,
+      time: 1.5,
+      dt: 0.25,
+      fps: 60,
+      mode: 'live',
+    });
+    const renderPlan = createRenderPlan('layer-a', 'layer-b');
+
+    expect(store.renderRuntimePlan(frame, audioFrameData, renderPlan)).toEqual([
+      'layer-a',
+      'layer-b',
+    ]);
+    expect(render).toHaveBeenCalledOnce();
+    expect(render).toHaveBeenCalledWith({
+      frame,
+      audioFrameData,
+      renderPlan,
+    });
+    expect(renderDebug).toHaveBeenCalledWith({
+      frame,
+      audioFrameData,
+      layerPlan: renderPlan.layers[1],
+      stats: { milliseconds: 1.25, drawCalls: 3 },
+    });
   });
 
   it('invokes registered component actions through the attachment boundary', () => {
     const store = useEditorRuntimePreviewAttachmentStore.getState();
     const enterFlyMode = vi.fn();
 
-    store.registerLayerAttachment('stage', {
-      getViewport: () => ({ width: 1, height: 1 }),
-      render: vi.fn(),
-      actions: { 'stage.enter-fly-mode': enterFlyMode },
-    });
+    store.registerPreviewAttachment(
+      {
+        getViewport: () => ({ width: 1, height: 1 }),
+        render: vi.fn(),
+        invokeLayerAction: (layerId, actionId) => {
+          if (layerId !== 'stage' || actionId !== 'stage.enter-fly-mode') {
+            return false;
+          }
+          enterFlyMode();
+          return true;
+        },
+      },
+      ['stage'],
+    );
 
     expect(store.invokeLayerAction('stage', 'stage.enter-fly-mode')).toBe(true);
     expect(enterFlyMode).toHaveBeenCalledOnce();
@@ -139,26 +197,22 @@ describe('Editor runtime preview attachment store', () => {
 
   it('waits for every registered runtime resource boundary', async () => {
     const store = useEditorRuntimePreviewAttachmentStore.getState();
-    const readyOrder: string[] = [];
+    const ready = vi.fn();
 
-    store.registerLayerAttachment('layer-a', {
-      getViewport: () => ({ width: 1, height: 1 }),
-      render: vi.fn(),
-      whenReady: async () => {
-        await Promise.resolve();
-        readyOrder.push('a');
+    store.registerPreviewAttachment(
+      {
+        getViewport: () => ({ width: 1, height: 1 }),
+        render: vi.fn(),
+        whenReady: async () => {
+          await Promise.resolve();
+          ready();
+        },
       },
-    });
-    store.registerLayerAttachment('layer-b', {
-      getViewport: () => ({ width: 1, height: 1 }),
-      render: vi.fn(),
-      whenReady: async () => {
-        readyOrder.push('b');
-      },
-    });
+      ['layer-a', 'layer-b'],
+    );
 
     await store.whenRuntimeResourcesReady();
 
-    expect(readyOrder.sort()).toEqual(['a', 'b']);
+    expect(ready).toHaveBeenCalledOnce();
   });
 });

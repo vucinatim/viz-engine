@@ -4,7 +4,10 @@ import type {
   VizSessionRuntimePreviewAudioFrameData,
   VizSessionRuntimePreviewFrame,
 } from '@/lib/viz-session/types';
-import type { VizRenderPlan } from '@viz-engine/contracts';
+import type {
+  VizLayerRenderPlanEntry,
+  VizRenderPlan,
+} from '@viz-engine/contracts';
 
 export interface LayerData {
   id: string;
@@ -24,9 +27,26 @@ export interface LayerRuntimePreviewAttachment {
     frame: VizSessionRuntimePreviewFrame;
     audioFrameData: VizSessionRuntimePreviewAudioFrameData;
     renderPlan: VizRenderPlan;
-  }) => void;
-  updateLayer?: (layer: LayerData) => void;
+  }) => LayerRuntimePreviewRenderResult | void;
+  invokeLayerAction?: (layerId: string, actionId: string) => boolean;
   requiresContinuousRendering?: () => boolean;
-  actions?: Record<string, () => void>;
   whenReady?: () => Promise<void>;
+}
+
+export interface LayerRuntimePreviewRenderStats {
+  milliseconds: number;
+  drawCalls: number;
+}
+
+export interface LayerRuntimePreviewRenderResult {
+  layerStats: Record<string, LayerRuntimePreviewRenderStats>;
+}
+
+export interface LayerRuntimeDebugAttachment {
+  render: (input: {
+    frame: VizSessionRuntimePreviewFrame;
+    audioFrameData: VizSessionRuntimePreviewAudioFrameData;
+    layerPlan: VizLayerRenderPlanEntry;
+    stats: LayerRuntimePreviewRenderStats | undefined;
+  }) => void;
 }

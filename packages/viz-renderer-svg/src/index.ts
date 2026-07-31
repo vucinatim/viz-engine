@@ -269,11 +269,15 @@ const renderLayerNode = (
   layer: VizLayerRenderPlanEntry,
   materializedImageAssets: ReadonlyMap<string, VizMaterializedImageAsset>,
 ): string => {
-  if (!layer.node) {
+  if (!layer.enabled || !layer.node) {
     return '';
   }
 
-  return `<g data-layer-id="${escapeAttribute(layer.layerId)}">${renderVizRenderNode(layer.node, materializedImageAssets)}</g>`;
+  const blendMode =
+    layer.blendMode === 'add' ? 'plus-lighter' : layer.blendMode;
+  const style = `opacity:${layer.opacity};mix-blend-mode:${blendMode}`;
+
+  return `<g data-layer-id="${escapeAttribute(layer.layerId)}" style="${escapeAttribute(style)}">${renderVizRenderNode(layer.node, materializedImageAssets)}</g>`;
 };
 
 export const renderVizRenderPlanToSvgFragment = (

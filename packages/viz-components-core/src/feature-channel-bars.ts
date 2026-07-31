@@ -81,10 +81,6 @@ export const featureChannelBarsComponent: VizComponentImplementation = {
       kind: 'group',
       id: layer.id,
       children: [...trackNodes, ...fillNodes],
-      style: {
-        opacity: layer.opacity,
-        blendMode: layer.blendMode,
-      },
     } satisfies VizRenderGroupNode;
   },
 };

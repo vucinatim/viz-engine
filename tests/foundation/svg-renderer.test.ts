@@ -67,6 +67,12 @@ describe('Viz SVG proof renderer', () => {
     expect(markup.includes('data-layer-id="layer-bars"')).toBe(true);
     expect(markup.includes('data-layer-id="layer-bloom"')).toBe(true);
     expect(markup.includes('<image ')).toBe(true);
+    expect(markup).toContain(
+      'data-layer-id="layer-cover" style="opacity:0.94;mix-blend-mode:normal"',
+    );
+    expect(markup).toContain(
+      'data-layer-id="layer-bloom" style="opacity:0.65;mix-blend-mode:plus-lighter"',
+    );
   });
 
   it('renders portable text nodes with explicit alignment and escaped content', () => {

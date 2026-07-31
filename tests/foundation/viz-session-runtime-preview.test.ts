@@ -37,7 +37,7 @@ describe('VizSession runtime preview inspection', () => {
     );
     useEditorRuntimePreviewAttachmentStore
       .getState()
-      .registerLayerAttachment('runtime-layer', createAttachment());
+      .registerPreviewAttachment(createAttachment(), ['runtime-layer']);
 
     const frame = createVizSessionRuntimePreviewFrame({
       currentFrame: 30,
@@ -77,11 +77,11 @@ describe('VizSession runtime preview inspection', () => {
     vizSessionActions.project.importWorkingProject(
       createTestProject(comp, 'broken-layer'),
     );
-    useEditorRuntimePreviewAttachmentStore.getState().registerLayerAttachment(
-      'broken-layer',
+    useEditorRuntimePreviewAttachmentStore.getState().registerPreviewAttachment(
       createAttachment(() => {
         throw new Error('render failed');
       }),
+      ['broken-layer'],
     );
     const frame = createVizSessionRuntimePreviewFrame({
       currentFrame: 12,
@@ -117,7 +117,7 @@ describe('VizSession runtime preview inspection', () => {
     );
     useEditorRuntimePreviewAttachmentStore
       .getState()
-      .registerLayerAttachment('observed-layer', createAttachment());
+      .registerPreviewAttachment(createAttachment(), ['observed-layer']);
     const listener = vi.fn();
     const unsubscribe =
       vizSessionActions.preview.subscribeRuntimePreview(listener);
@@ -151,7 +151,7 @@ describe('VizSession runtime preview inspection', () => {
     );
     useEditorRuntimePreviewAttachmentStore
       .getState()
-      .registerLayerAttachment('mounted-layer', createAttachment());
+      .registerPreviewAttachment(createAttachment(), ['mounted-layer']);
     const frame = createVizSessionRuntimePreviewFrame({
       currentFrame: 1,
       time: 1 / 60,
@@ -178,7 +178,7 @@ describe('VizSession runtime preview inspection', () => {
       lastError: null,
     });
     expect(
-      useEditorRuntimePreviewAttachmentStore.getState().layerAttachments.size,
-    ).toBe(1);
+      useEditorRuntimePreviewAttachmentStore.getState().previewLayerIds,
+    ).toEqual(new Set(['mounted-layer']));
   });
 });

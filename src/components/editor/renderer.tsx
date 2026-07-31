@@ -9,9 +9,7 @@ const Renderer = memo(() => {
   return (
     <div className="h-full w-full" data-renderer-container>
       <EditorRuntimePreviewDriver />
-      {layers.map((layer) => (
-        <LayerRenderer key={layer.id} layer={layer} />
-      ))}
+      <LayerRenderer layers={layers} />
     </div>
   );
 });

@@ -13,7 +13,6 @@ import {
   PlaneGeometry,
   Points,
   RGBAFormat,
-  SRGBColorSpace,
   Scene,
   WebGLRenderTarget,
   type Camera,
@@ -29,6 +28,7 @@ import {
   createVizThreePortableNodeObject,
   disposeVizThreeObject,
   getVizThreeBlending,
+  resolveVizThreeCssColor,
   updateVizThreeOrthoCamera,
   updateVizThreePortableNodeObject,
 } from './portable-nodes.js';
@@ -68,6 +68,16 @@ export interface VizThreeCompositorGraph {
   programRegistry: VizThreeProgramRegistry;
 }
 
+const getVizThreeSceneBackground = (
+  backgroundColor: string | undefined,
+): Color | null => {
+  if (backgroundColor === undefined) {
+    return null;
+  }
+  const background = resolveVizThreeCssColor(backgroundColor);
+  return background.opacity === 0 ? null : new Color(background.value);
+};
+
 const createLayerContentRoot = (
   layer: VizLayerRenderPlanEntry,
   viewportWidth: number,
@@ -96,7 +106,7 @@ const createCompositeSurface = (
     new PlaneGeometry(width, height),
     new MeshBasicMaterial({
       color: new Color('#ffffff'),
-      transparent: layer.opacity < 1,
+      transparent: true,
       opacity: layer.opacity,
       blending: getVizThreeBlending(layer.blendMode),
       depthWrite: false,
@@ -118,7 +128,6 @@ const createLayerRenderTarget = (
     depthBuffer: false,
     stencilBuffer: false,
   });
-  renderTarget.texture.colorSpace = SRGBColorSpace;
   renderTarget.texture.generateMipmaps = false;
   renderTarget.texture.minFilter = LinearFilter;
   renderTarget.texture.magFilter = LinearFilter;
@@ -183,10 +192,9 @@ export const createVizThreeCompositorGraph = (
   programRegistry: VizThreeProgramRegistry = createCoreVizThreeProgramRegistry(),
 ): VizThreeCompositorGraph => {
   const compositeScene = new Scene();
-  compositeScene.background =
-    renderPlan.viewport.backgroundColor === undefined
-      ? null
-      : new Color(renderPlan.viewport.backgroundColor);
+  compositeScene.background = getVizThreeSceneBackground(
+    renderPlan.viewport.backgroundColor,
+  );
   const compositeCamera = createVizThreeOrthoCamera(
     renderPlan.viewport.width,
     renderPlan.viewport.height,
@@ -230,10 +238,9 @@ export const createVizThreeSceneGraph = (
   renderPlan: VizRenderPlan,
 ): VizThreeSceneGraph => {
   const scene = new Scene();
-  scene.background =
-    renderPlan.viewport.backgroundColor === undefined
-      ? null
-      : new Color(renderPlan.viewport.backgroundColor);
+  scene.background = getVizThreeSceneBackground(
+    renderPlan.viewport.backgroundColor,
+  );
   const camera = createVizThreeOrthoCamera(
     renderPlan.viewport.width,
     renderPlan.viewport.height,
@@ -350,9 +357,24 @@ const updateLayer = (
   graphLayer.layer = nextLayer;
   const material = graphLayer.compositeSurface.material as MeshBasicMaterial;
   material.opacity = nextLayer.opacity;
-  material.transparent = nextLayer.opacity < 1;
+  material.transparent = true;
   material.blending = getVizThreeBlending(nextLayer.blendMode);
   return true;
+};
+
+export const getVizThreeLayerClearColor = (
+  layer: VizLayerRenderPlanEntry,
+): {
+  color: Color;
+  opacity: number;
+} => {
+  const background = resolveVizThreeCssColor(
+    layer.backgroundColor ?? 'transparent',
+  );
+  return {
+    color: new Color(background.value).multiplyScalar(background.opacity),
+    opacity: background.opacity,
+  };
 };
 
 export const updateVizThreeCompositorGraph = (
@@ -427,9 +449,8 @@ export const updateVizThreeCompositorGraph = (
     graph.compositeRoot.add(layer.compositeSurface);
   }
   resizeVizThreeCompositorGraph(graph, width, height);
-  graph.compositeScene.background =
-    nextPlan.viewport.backgroundColor === undefined
-      ? null
-      : new Color(nextPlan.viewport.backgroundColor);
+  graph.compositeScene.background = getVizThreeSceneBackground(
+    nextPlan.viewport.backgroundColor,
+  );
   return true;
 };
