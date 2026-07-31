@@ -4,6 +4,7 @@ import type {
   VizValueSource,
 } from '@viz-engine/contracts';
 
+import { runtimeInspection } from './runtime-inspection';
 import { getVizSessionState } from './store';
 import type { VizSessionState } from './types';
 
@@ -185,12 +186,13 @@ export const describeProjectGraph = (
 };
 
 const selectRuntimeGraphValue = (
-  state: VizSessionState,
+  _state: VizSessionState,
   graphId: string,
   outputKey = 'value',
 ): unknown =>
-  findGraphResult(state.preview.runtimeInspection.lastGraphResults, graphId)
-    ?.values[outputKey];
+  findGraphResult(runtimeInspection.getGraphResults(), graphId)?.values[
+    outputKey
+  ];
 
 export const selectRuntimeGraphValueForParameter = (
   state: VizSessionState,
@@ -212,25 +214,23 @@ export const getRuntimeGraphValue = (
   outputKey = 'value',
 ): unknown => selectRuntimeGraphValue(getVizSessionState(), graphId, outputKey);
 
+export const getRuntimeGraphValueForParameter = (
+  parameterId: string,
+): unknown =>
+  selectRuntimeGraphValueForParameter(getVizSessionState(), parameterId);
+
 export const getRuntimeNodeInput = (
   nodeId: string,
   inputKey: string,
 ): unknown =>
-  findNodeSnapshot(
-    getVizSessionState().preview.runtimeInspection.lastGraphResults,
-    nodeId,
-  )?.inputs[inputKey];
+  findNodeSnapshot(runtimeInspection.getGraphResults(), nodeId)?.inputs[
+    inputKey
+  ];
 
 export const getRuntimeNodeOutput = (
   nodeId: string,
 ): Record<string, unknown> | undefined =>
-  findNodeSnapshot(
-    getVizSessionState().preview.runtimeInspection.lastGraphResults,
-    nodeId,
-  )?.outputs;
+  findNodeSnapshot(runtimeInspection.getGraphResults(), nodeId)?.outputs;
 
 export const getRuntimeNodeState = (nodeId: string): unknown =>
-  findNodeSnapshot(
-    getVizSessionState().preview.runtimeInspection.lastGraphResults,
-    nodeId,
-  )?.state;
+  findNodeSnapshot(runtimeInspection.getGraphResults(), nodeId)?.state;

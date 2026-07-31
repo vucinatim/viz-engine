@@ -31,12 +31,17 @@ export interface CreateVizFramePlanOptions {
   registry?: VizComponentRegistry;
   nodeRegistry?: VizNodeRegistry;
   inputValues?: VizRuntimeFrameInputValues;
+  layerValues?: VizRuntimeLayerValues;
   graphInputValues?: VizRuntimeGraphInputValues;
   runtimeInputs?: VizRuntimeInputs;
 }
 
 export type VizRuntimeFrameInputValues = Readonly<
   Record<string, Readonly<Record<string, unknown>>>
+>;
+
+export type VizRuntimeLayerValues = Readonly<
+  Record<string, Readonly<VizLayer>>
 >;
 
 const getDefaultRendererFamily = (
@@ -277,6 +282,7 @@ export const createVizFramePlan = ({
   registry,
   nodeRegistry,
   inputValues = {},
+  layerValues = {},
   graphInputValues,
   runtimeInputs = {},
 }: CreateVizFramePlanOptions): VizFramePlan => {
@@ -319,6 +325,7 @@ export const createVizFramePlan = ({
 
   const layers = session
     .getOrderedLayers()
+    .map((layer) => layerValues[layer.id] ?? layer)
     .filter((layer) => shouldIncludeLayer(layer, session.mode))
     .map((layer) => {
       const component = registry?.get(layer.componentId);

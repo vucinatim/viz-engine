@@ -9,8 +9,10 @@ interface SliderProps {
   max?: number;
   step?: number;
   className?: string;
-  onDragStart?: () => void;
-  onDragEnd?: () => void;
+  onTransientChange?: (value: number) => void;
+  onCommit?: (value: number) => void;
+  onGestureStart?: () => void;
+  onGestureCancel?: () => void;
 }
 
 const Slider = React.forwardRef<
@@ -25,8 +27,10 @@ const Slider = React.forwardRef<
       max = 1,
       step = 0.001,
       className,
-      onDragStart,
-      onDragEnd,
+      onTransientChange,
+      onCommit,
+      onGestureStart,
+      onGestureCancel,
     },
     ref,
   ) => {
@@ -37,16 +41,16 @@ const Slider = React.forwardRef<
             ref={ref}
             className="relative flex w-full cursor-pointer touch-none items-center select-none"
             value={[value]}
-            onValueChange={(value) => onChange(value[0])}
-            onValueCommit={() => {
-              // Called when user releases the slider
-              // Turn off bypass BEFORE the final onChange happens
-              // This ensures the debounced history push can execute
-              onDragEnd?.();
-            }}
-            onPointerDown={() => {
-              // Called when user starts dragging
-              onDragStart?.();
+            onValueChange={([nextValue]) =>
+              (onTransientChange ?? onChange)(nextValue)
+            }
+            onValueCommit={([nextValue]) => onCommit?.(nextValue)}
+            onPointerDown={() => onGestureStart?.()}
+            onPointerCancel={() => onGestureCancel?.()}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                onGestureCancel?.();
+              }
             }}
             min={min}
             max={max}

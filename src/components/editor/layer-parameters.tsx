@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import {
   selectParameterGraphBindings,
   selectProjectedNodeNetworks,
+  useLiveLayerSetting,
   useVizSessionSelector,
 } from '@/lib/viz-session';
 import type {
@@ -183,6 +184,8 @@ const ParameterField = memo(
       }
       return current;
     });
+    const liveSetting = useLiveLayerSetting(layerId, paramPath);
+    const effectiveValue = liveSetting ? liveSetting.value : value;
     const graphBinding = useVizSessionSelector(
       (state) => selectParameterGraphBindings(state)[id],
     );
@@ -222,7 +225,7 @@ const ParameterField = memo(
             )}>
             <ComponentSettingControl
               setting={setting}
-              value={value}
+              value={effectiveValue}
               onChange={(nextValue) =>
                 editorControl.project.updateLayerValue(
                   layerId,
@@ -230,14 +233,27 @@ const ParameterField = memo(
                   nextValue,
                 )
               }
-              onDragStart={() =>
-                editorControl.history.startGesture(
-                  `${layerId}:${paramPath.join('.')}`,
+              onGestureStart={() =>
+                editorControl.project.beginLayerValueGesture(layerId, paramPath)
+              }
+              onTransientChange={(nextValue) =>
+                editorControl.project.updateLiveLayerValue(
+                  layerId,
+                  paramPath,
+                  nextValue,
                 )
               }
-              onDragEnd={() =>
-                editorControl.history.endGesture(
-                  `${layerId}:${paramPath.join('.')}`,
+              onCommit={(nextValue) =>
+                editorControl.project.commitLayerValueGesture(
+                  layerId,
+                  paramPath,
+                  nextValue,
+                )
+              }
+              onGestureCancel={() =>
+                editorControl.project.cancelLayerValueGesture(
+                  layerId,
+                  paramPath,
                 )
               }
               onAssetSelect={async (selection) => {

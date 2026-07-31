@@ -67,7 +67,6 @@ export interface VizSessionRuntimeInspectionState {
 
 export interface VizSessionPreviewState {
   transport: VizEditorTransportState;
-  runtimeInspection: VizSessionRuntimeInspectionState;
 }
 
 export interface VizSessionAudioState {

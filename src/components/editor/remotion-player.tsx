@@ -8,7 +8,6 @@ import CustomPlayerControls from './custom-player-controls';
 import Renderer from './renderer';
 
 type AspectRatio = 'free' | number;
-const FPS = 60;
 const ASPECT_RATIO = 'free' as AspectRatio;
 
 const RemotionPlayer = () => {
@@ -24,6 +23,7 @@ const RemotionPlayer = () => {
   const durationInFrames = useVizSessionSelector(
     (state) => state.preview.transport.durationFrames,
   );
+  const fps = useVizSessionSelector((state) => state.preview.transport.fps);
 
   const audioElementRef = useAudioEngineStore((s) => s.audioElementRef);
   const isCapturingTab = useVizSessionSelector(
@@ -53,14 +53,14 @@ const RemotionPlayer = () => {
     const updateDuration = () => {
       const dur = audioElement.duration;
       if (Number.isFinite(dur) && dur > 0) {
-        const nextDurationFrames = Math.max(1, Math.ceil(dur * FPS));
+        const nextDurationFrames = Math.max(1, Math.ceil(dur * fps));
         vizSessionActions.preview.setDurationFrames(nextDurationFrames);
       } else if (isCapturingTab) {
         // MediaStreams often report Infinity
         const fallbackSeconds = 60 * 30; // 30 min
         const nextDurationFrames = Math.max(
           1,
-          Math.ceil(fallbackSeconds * FPS),
+          Math.ceil(fallbackSeconds * fps),
         );
         vizSessionActions.preview.setDurationFrames(nextDurationFrames);
       } // else keep previous duration
@@ -78,17 +78,17 @@ const RemotionPlayer = () => {
       audioElement.removeEventListener('loadedmetadata', updateDuration);
       audioElement.removeEventListener('durationchange', updateDuration);
     };
-  }, [audioElementRef, src, isCapturingTab]);
+  }, [audioElementRef, fps, src, isCapturingTab]);
 
   // While capturing tab audio, MediaStream duration is Infinity.
   // Provide a large finite duration so <Player/> remains happy.
   useEffect(() => {
     if (isCapturingTab) {
       const fallbackSeconds = 60 * 30; // 30 minutes
-      const nextDurationFrames = Math.max(1, Math.ceil(fallbackSeconds * FPS));
+      const nextDurationFrames = Math.max(1, Math.ceil(fallbackSeconds * fps));
       vizSessionActions.preview.setDurationFrames(nextDurationFrames);
     }
-  }, [isCapturingTab]);
+  }, [fps, isCapturingTab]);
 
   const isFullscreen = playerRef.current?.isFullscreen();
 
@@ -177,7 +177,7 @@ const RemotionPlayer = () => {
         compositionWidth={width}
         compositionHeight={height}
         durationInFrames={durationInFrames}
-        fps={FPS}
+        fps={fps}
         clickToPlay={false}
         loop
         showPlaybackRateControl={false}

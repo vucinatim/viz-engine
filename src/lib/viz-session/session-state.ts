@@ -8,7 +8,6 @@ import { validateProjectDocument } from '@viz-engine/runtime';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { createStore } from 'zustand/vanilla';
 
-import { createInitialRuntimeInspectionState } from './preview-actions';
 import { createEmptyVizProjectDocument } from './project-document';
 import type {
   VizSessionAudioState,
@@ -43,10 +42,7 @@ const createInitialProjectState = (): VizSessionProjectState => ({
 
 const createInitialPreviewState = (
   host: VizSessionHost,
-): VizSessionPreviewState => ({
-  transport: host.getSnapshot().transport,
-  runtimeInspection: createInitialRuntimeInspectionState(),
-});
+): VizSessionPreviewState => ({ transport: host.getSnapshot().transport });
 
 const createInitialAudioState = (
   host: VizSessionHost,

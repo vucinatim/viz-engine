@@ -5,6 +5,10 @@ import React, { useCallback, useEffect, useRef } from 'react';
 interface NumberScrubInputProps {
   value: number;
   onChange: (value: number) => void;
+  onTransientChange?: (value: number) => void;
+  onCommit?: (value: number) => void;
+  onGestureStart?: () => void;
+  onGestureCancel?: () => void;
   min?: number;
   max?: number;
   step?: number;
@@ -28,6 +32,10 @@ const NumberScrubInput = React.forwardRef<
     {
       value,
       onChange,
+      onTransientChange,
+      onCommit,
+      onGestureStart,
+      onGestureCancel,
       min,
       max,
       step = 0.1,
@@ -70,14 +78,33 @@ const NumberScrubInput = React.forwardRef<
     const maxRef = useRef(max);
     const stepRef = useRef(step);
     const onChangeRef = useRef(onChange);
+    const onTransientChangeRef = useRef(onTransientChange);
+    const onCommitRef = useRef(onCommit);
+    const onGestureStartRef = useRef(onGestureStart);
+    const onGestureCancelRef = useRef(onGestureCancel);
     const pxPerStepRef = useRef(pixelsPerStep);
+    const latestDragValueRef = useRef(value);
     useEffect(() => {
       minRef.current = min;
       maxRef.current = max;
       stepRef.current = step;
       onChangeRef.current = onChange;
+      onTransientChangeRef.current = onTransientChange;
+      onCommitRef.current = onCommit;
+      onGestureStartRef.current = onGestureStart;
+      onGestureCancelRef.current = onGestureCancel;
       pxPerStepRef.current = pixelsPerStep;
-    }, [min, max, step, onChange, pixelsPerStep]);
+    }, [
+      min,
+      max,
+      step,
+      onChange,
+      onTransientChange,
+      onCommit,
+      onGestureStart,
+      onGestureCancel,
+      pixelsPerStep,
+    ]);
 
     // Listener references to enable precise cleanup
     const moveListenerRef = useRef<((e: MouseEvent) => void) | null>(null);
@@ -114,8 +141,10 @@ const NumberScrubInput = React.forwardRef<
       if (e.button !== 0) return; // only left click
       startYRef.current = e.clientY;
       startValueRef.current = value;
+      latestDragValueRef.current = value;
       isDraggingRef.current = false;
       hasMovedRef.current = false;
+      onGestureStartRef.current?.();
 
       const onMove = (ev: MouseEvent) => {
         const deltaY = ev.clientY - startYRef.current;
@@ -133,14 +162,25 @@ const NumberScrubInput = React.forwardRef<
           startValueRef.current +
           baseSteps * (stepRef.current || 0.1) * modifier;
         const clamped = clamp(next, minRef.current, maxRef.current);
-        onChangeRef.current?.(Number(clamped.toFixed(6)));
+        latestDragValueRef.current = Number(clamped.toFixed(6));
+        (onTransientChangeRef.current ?? onChangeRef.current)?.(
+          latestDragValueRef.current,
+        );
         hasMovedRef.current = true;
       };
       const onUp = (_ev: MouseEvent) => {
+        if (hasMovedRef.current) {
+          (onCommitRef.current ?? onChangeRef.current)?.(
+            latestDragValueRef.current,
+          );
+        } else {
+          onGestureCancelRef.current?.();
+        }
         cleanupGlobalListeners();
         inputRef.current?.focus();
       };
       const onBlur = (_ev: Event) => {
+        onGestureCancelRef.current?.();
         cleanupGlobalListeners();
       };
       moveListenerRef.current = onMove;

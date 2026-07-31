@@ -83,6 +83,62 @@ const editorControl = {
     ) {
       vizSessionActions.project.updateLayerValue(layerId, path, value);
     },
+    beginLayerValueGesture(
+      layerId: string,
+      path: readonly (string | number)[],
+    ) {
+      vizSessionActions.project.beginLayerValueGesture(layerId, path);
+    },
+    updateLiveLayerValue(
+      layerId: string,
+      path: readonly (string | number)[],
+      value: unknown,
+    ) {
+      vizSessionActions.project.updateLiveLayerValue(layerId, path, value);
+    },
+    commitLayerValueGesture(
+      layerId: string,
+      path: readonly (string | number)[],
+      value: unknown,
+    ) {
+      vizSessionActions.project.commitLayerValueGesture(layerId, path, value);
+    },
+    cancelLayerValueGesture(
+      layerId: string,
+      path: readonly (string | number)[],
+    ) {
+      vizSessionActions.project.cancelLayerValueGesture(layerId, path);
+    },
+    beginLayerPropertyGesture(
+      layerId: string,
+      path: readonly (string | number)[],
+    ) {
+      vizSessionActions.project.beginLayerPropertyGesture(layerId, path);
+    },
+    updateLiveLayerProperty(
+      layerId: string,
+      path: readonly (string | number)[],
+      value: unknown,
+    ) {
+      vizSessionActions.project.updateLiveLayerProperty(layerId, path, value);
+    },
+    commitLayerPropertyGesture(
+      layerId: string,
+      path: readonly (string | number)[],
+      value: unknown,
+    ) {
+      vizSessionActions.project.commitLayerPropertyGesture(
+        layerId,
+        path,
+        value,
+      );
+    },
+    cancelLayerPropertyGesture(
+      layerId: string,
+      path: readonly (string | number)[],
+    ) {
+      vizSessionActions.project.cancelLayerPropertyGesture(layerId, path);
+    },
     attachLayerFileAsset(
       layerId: string,
       path: (string | number)[],

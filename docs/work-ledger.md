@@ -1956,3 +1956,41 @@
     lint, types, 55 Vitest files, and 232 tests
   - the existing browser churn journey then failed its unchanged 40-second
     budget at 47.755 seconds; six of seven browser journeys passed
+- completed the first Goal Three runtime and interaction repair checkpoint:
+  - recovered missing IndexedDB object stores through a preserving schema
+    upgrade instead of failing editor hydration
+  - replaced one-frame sample timelines with the declared audio duration and
+    synchronized canonical FPS/duration into transport
+  - restored playback with advancing audio and scene frames in direct browser
+    testing
+  - composed CSS alpha correctly into Three material opacity without warning
+    floods
+  - made production capability-pack previews use the studio Three-program
+    registry and isolated any future thumbnail failure from the editor
+  - introduced one session-owned transient layer-value controller for settings
+    and layer properties, with exact-control subscriptions, next-frame runtime
+    values, cancellation, and one-action release commits
+  - routed numeric sliders, vector scrubbing, and layer opacity through the
+    transient contract without pointer-rate project validation or broad React
+    publication
+  - moved runtime inspection off the React-facing session state, removed
+    per-frame structured cloning and host-snapshot cloning, and kept
+    agent/debug inspection available on demand
+  - restored animated parameter values through imperative display-frame reads
+    of canonical runtime graph results
+  - passed strict package and studio type checks plus 48 focused control,
+    runtime, preview, editor, and renderer tests
+  - directly proved one project revision and one action per drag, stable
+    preview-state identity across thousands of runtime cycles, current runtime
+    opacity, persistence across reload, and a clean browser console
+  - retained pointer-up presentation delay as an open measured performance
+    issue rather than treating the interaction work as certified
+  - recorded the checkpoint in
+    `docs/parity/evidence/2026-07-31-goal-three-runtime-and-live-edit-repair.md`
+  - passed the complete isolated gate: 42 valid parity rows, clean dependency
+    architecture, formatting, lint, all type checks, 55 files / 239 tests, all
+    seven browser journeys in 4.5 minutes, all package and studio builds, and
+    both built-consumer smoke scenarios
+  - measured the checkpoint at 68,472 production lines and 87,447 combined
+    maintained lines; the 827-line production increase remains subject to
+    later friction-driven cleanup

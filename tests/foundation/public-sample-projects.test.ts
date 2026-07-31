@@ -27,6 +27,9 @@ describe('Bundled sample project files', () => {
       );
       expect(projectFile.project).toHaveProperty('layerOrder');
       expect(projectFile.project).toHaveProperty('graphs');
+      expect(projectFile.project.timeline.durationInFrames).toBeGreaterThan(
+        projectFile.project.timeline.fps,
+      );
       expect(projectFile).toHaveProperty('nodeEditorUi');
       expect(projectFile).toHaveProperty('editorUi');
       expect(projectFile).not.toHaveProperty('graphs');

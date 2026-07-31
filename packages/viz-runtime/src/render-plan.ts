@@ -6,7 +6,10 @@ import type {
 } from '@viz-engine/contracts';
 import type { VizComponentRegistry } from './component-registry.js';
 import { resolveVizComponentSettings } from './component-settings.js';
-import type { VizRuntimeFrameInputValues } from './frame-plan.js';
+import type {
+  VizRuntimeFrameInputValues,
+  VizRuntimeLayerValues,
+} from './frame-plan.js';
 import { createVizFramePlan } from './frame-plan.js';
 import type { VizRuntimeGraphInputValues } from './graph-evaluator.js';
 import type { VizNodeRegistry } from './node-registry.js';
@@ -18,6 +21,7 @@ export interface CreateVizRenderPlanOptions {
   registry: VizComponentRegistry;
   nodeRegistry?: VizNodeRegistry;
   inputValues?: VizRuntimeFrameInputValues;
+  layerValues?: VizRuntimeLayerValues;
   graphInputValues?: VizRuntimeGraphInputValues;
   runtimeInputs?: VizRuntimeInputs;
   runtimeInputProvider?: (frame: number) => VizRuntimeInputs;
@@ -70,6 +74,7 @@ export const createVizRenderPlan = ({
   registry,
   nodeRegistry,
   inputValues,
+  layerValues,
   graphInputValues,
   runtimeInputs,
   runtimeInputProvider,
@@ -94,6 +99,7 @@ export const createVizRenderPlan = ({
       registry,
       ...(nodeRegistry === undefined ? {} : { nodeRegistry }),
       ...(inputValues === undefined ? {} : { inputValues }),
+      ...(layerValues === undefined ? {} : { layerValues }),
       ...(graphInputValues === undefined ? {} : { graphInputValues }),
       ...(requestedRuntimeInputs === undefined
         ? {}
@@ -105,7 +111,10 @@ export const createVizRenderPlan = ({
   const framePlan = getFramePlan(frame);
 
   const projectLayersById = new Map(
-    session.project.layers.map((layer) => [layer.id, layer]),
+    session.project.layers.map((layer) => [
+      layer.id,
+      layerValues?.[layer.id] ?? layer,
+    ]),
   );
   const issues = [...framePlan.issues];
 
@@ -127,8 +136,9 @@ export const createVizRenderPlan = ({
       }
 
       try {
+        const layerSettings = frameLayer.settings ?? projectLayer.settings;
         const settings = resolveVizComponentSettings(
-          projectLayer.settings,
+          layerSettings,
           frameLayer.resolvedInputs,
         );
         const hasTemporalSettingInput = Object.values(
@@ -141,7 +151,11 @@ export const createVizRenderPlan = ({
         const node = component.render({
           frameContext: framePlan.frameContext,
           viewport: session.project.viewport,
-          layer: projectLayer,
+          layer:
+            layerSettings === undefined ||
+            layerSettings === projectLayer.settings
+              ? projectLayer
+              : { ...projectLayer, settings: layerSettings },
           settings,
           resolvedInputs: frameLayer.resolvedInputs,
           materializedAssets: session.getMaterializedAssetMap(),
@@ -157,7 +171,7 @@ export const createVizRenderPlan = ({
             );
 
             return resolveVizComponentSettings(
-              projectLayer.settings,
+              sampledLayer?.settings ?? projectLayer.settings,
               sampledLayer?.resolvedInputs ?? {},
             );
           },

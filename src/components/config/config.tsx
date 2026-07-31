@@ -134,8 +134,10 @@ export interface ComponentSettingControlProps {
   >;
   value: unknown;
   onChange: (value: unknown) => void;
-  onDragStart?: () => void;
-  onDragEnd?: () => void;
+  onTransientChange?: (value: unknown) => void;
+  onCommit?: (value: unknown) => void;
+  onGestureStart?: () => void;
+  onGestureCancel?: () => void;
   onAssetSelect?: (selection: FileInputSelection) => Promise<string>;
 }
 
@@ -143,8 +145,10 @@ export const ComponentSettingControl = ({
   setting,
   value,
   onChange,
-  onDragStart,
-  onDragEnd,
+  onTransientChange,
+  onCommit,
+  onGestureStart,
+  onGestureCancel,
   onAssetSelect,
 }: ComponentSettingControlProps): ReactNode => {
   switch (setting.kind) {
@@ -154,8 +158,10 @@ export const ComponentSettingControl = ({
           value={value as number}
           className="w-full"
           onChange={onChange}
-          onDragStart={onDragStart}
-          onDragEnd={onDragEnd}
+          onTransientChange={onTransientChange}
+          onCommit={onCommit}
+          onGestureStart={onGestureStart}
+          onGestureCancel={onGestureCancel}
           min={setting.min}
           max={setting.max}
           step={setting.step}
@@ -201,6 +207,10 @@ export const ComponentSettingControl = ({
         <Vector3Input
           value={value as { x: number; y: number; z: number }}
           onChange={onChange}
+          onTransientChange={onTransientChange}
+          onCommit={onCommit}
+          onGestureStart={onGestureStart}
+          onGestureCancel={onGestureCancel}
           min={setting.min}
           max={setting.max}
           step={setting.step}

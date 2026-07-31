@@ -98,6 +98,7 @@ export interface CreateVizEditorSessionOptions {
 
 export interface VizEditorSession {
   getSnapshot(): VizEditorSessionSnapshot;
+  getRevision(): number;
   getSourceProject(): VizProjectDocument;
   getWorkingProject(): VizProjectDocument;
   getUiState(): VizEditorUiState;
@@ -614,6 +615,7 @@ export const createVizEditorSession = ({
 
   return {
     getSnapshot: () => createSnapshot(state),
+    getRevision: () => state.revision,
     getSourceProject: () => cloneUnknown(state.sourceProject),
     getWorkingProject: () => cloneUnknown(state.workingProject),
     getUiState: () => cloneUnknown(state.uiState),

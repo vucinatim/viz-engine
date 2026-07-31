@@ -112,6 +112,35 @@ const LayerSettings = ({ layer }: LayerSettingsProps) => {
                 <Slider
                   value={field.value}
                   onChange={createOnChangeHandler(field.onChange)}
+                  onGestureStart={() =>
+                    editorControl.project.beginLayerPropertyGesture(layer.id, [
+                      'opacity',
+                    ])
+                  }
+                  onTransientChange={(value) => {
+                    isInternalUpdateRef.current = true;
+                    field.onChange(value);
+                    editorControl.project.updateLiveLayerProperty(
+                      layer.id,
+                      ['opacity'],
+                      value,
+                    );
+                  }}
+                  onCommit={(value) => {
+                    isInternalUpdateRef.current = true;
+                    field.onChange(value);
+                    editorControl.project.commitLayerPropertyGesture(
+                      layer.id,
+                      ['opacity'],
+                      value,
+                    );
+                  }}
+                  onGestureCancel={() => {
+                    field.onChange(layer.layerSettings.opacity);
+                    editorControl.project.cancelLayerPropertyGesture(layer.id, [
+                      'opacity',
+                    ]);
+                  }}
                   min={0}
                   max={1}
                   step={0.01}

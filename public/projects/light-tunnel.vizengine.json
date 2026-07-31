@@ -6,7 +6,7 @@
     "name": "Light Tunnel",
     "timeline": {
       "fps": 60,
-      "durationInFrames": 1
+      "durationInFrames": 8699
     },
     "viewport": {
       "width": 1920,
@@ -39,10 +39,7 @@
             "renderMode": "Solid",
             "colorMode": "Alternating",
             "edgeColor": "#00FFFF",
-            "colorPalette": [
-              "#FF00FF",
-              "#00FFFF"
-            ]
+            "colorPalette": ["#FF00FF", "#00FFFF"]
           },
           "edges": {
             "edgeThickness": 5.5,

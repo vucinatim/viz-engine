@@ -99,7 +99,7 @@ let runtimePreviewResourceCache:
   | undefined;
 
 const getRuntimePreviewResources = () => {
-  const resourceRevision = vizSessionHost.getSnapshot().resourceRevision;
+  const resourceRevision = vizSessionHost.getResourceRevision();
 
   if (
     !runtimePreviewResourceCache ||
@@ -183,7 +183,7 @@ const applyProjectActions = (
   resetVizSessionSelectorCaches();
   replaceProjectState({
     initialized: true,
-    revision: vizSessionHost.getSnapshot().session.revision,
+    revision: vizSessionHost.getProjectRevision(),
     sourceProject: projectState.sourceProject ?? clone(canonicalProject),
     workingProject: canonicalProject,
   });
@@ -196,7 +196,7 @@ const syncProjectSessionProject = () => {
   replaceProjectState({
     ...getProjectState(),
     initialized: true,
-    revision: vizSessionHost.getSnapshot().session.revision,
+    revision: vizSessionHost.getProjectRevision(),
     workingProject: project,
   });
   syncNetworkOpenState();
@@ -218,7 +218,7 @@ export const vizControl = createVizControl({
       resetVizSessionSelectorCaches();
       replaceProjectState({
         initialized: true,
-        revision: vizSessionHost.getSnapshot().session.revision,
+        revision: vizSessionHost.getProjectRevision(),
         sourceProject: clone(project),
         workingProject: clone(project),
       });
@@ -283,7 +283,6 @@ const studioHistoryActions = createStudioHistoryActions({
 });
 const studioInspectionActions = createStudioInspectionActions({
   host: vizSessionHost,
-  getPreviewState,
   inspectRuntime: studioPreviewActions.inspectRuntimePreview,
 });
 

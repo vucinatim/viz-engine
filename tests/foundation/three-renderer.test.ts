@@ -347,6 +347,72 @@ describe('Viz Three renderer proof', () => {
     expect(compositeMaterial.opacity).toBeCloseTo(0.5, 6);
   });
 
+  it('composes CSS color alpha with portable-node opacity without Three warnings', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const firstPlan = createPortablePlan([
+      {
+        layerId: 'css-alpha-layer',
+        node: {
+          kind: 'group',
+          style: { opacity: 0.5 },
+          children: [
+            {
+              kind: 'rect',
+              x: 20,
+              y: 20,
+              width: 100,
+              height: 60,
+              style: {
+                fill: 'rgba(204, 102, 51, 0.2)',
+                opacity: 0.5,
+              },
+            },
+            {
+              kind: 'polyline',
+              points: [
+                { x: 0, y: 0 },
+                { x: 100, y: 100 },
+              ],
+              style: {
+                stroke: '#33ccff80',
+                opacity: 0.5,
+              },
+            },
+          ],
+        },
+      },
+    ]);
+    const nextPlan = structuredClone(firstPlan);
+    const nextGroup = nextPlan.layers[0]!.node;
+    if (!nextGroup || nextGroup.kind !== 'group') {
+      throw new Error('Expected portable group fixture.');
+    }
+    const nextRect = nextGroup.children[0]!;
+    const nextLine = nextGroup.children[1]!;
+    if (nextRect.kind !== 'rect' || nextLine.kind !== 'polyline') {
+      throw new Error('Expected rect and polyline fixtures.');
+    }
+    nextRect.style = { fill: 'hsla(120, 100%, 50%, 40%)', opacity: 0.5 };
+    nextLine.style = { stroke: '#ff00ff40', opacity: 0.5 };
+
+    const graph = createVizThreeCompositorGraph(firstPlan);
+    const root = graph.layers[0]!.contentRoot.children[0] as Group;
+    const [rect] = collectMeshes(root);
+    const line = root.children[1] as Group;
+    const lineMaterial = (line.children[0] as Mesh)
+      .material as MeshBasicMaterial;
+
+    expect((rect!.material as MeshBasicMaterial).opacity).toBeCloseTo(0.05, 6);
+    expect(lineMaterial.opacity).toBeCloseTo(0.5 * 0.5 * (128 / 255), 6);
+    expect(updateVizThreeCompositorGraph(graph, firstPlan, nextPlan)).toBe(
+      true,
+    );
+    expect((rect!.material as MeshBasicMaterial).opacity).toBeCloseTo(0.1, 6);
+    expect(lineMaterial.opacity).toBeCloseTo(0.5 * 0.5 * (64 / 255), 6);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
   it('renders stroke-only rects as stroke meshes instead of a filled quad', () => {
     const renderPlan: VizRenderPlan = {
       frameContext: {

@@ -3,6 +3,7 @@ import { createCoreComponentRegistry } from '@viz-engine/components-core';
 import type {
   VizActionActor,
   VizComponentRegistry,
+  VizLayer,
   VizProjectAction,
   VizProjectDocument,
   VizProjectTransaction,
@@ -30,6 +31,20 @@ import {
   validateProjectDocument,
   type VizNodeRegistry,
 } from '@viz-engine/runtime';
+import {
+  createVizLiveLayerValuesController,
+  type VizLiveLayerPropertySnapshot,
+  type VizLiveLayerPropertyTarget,
+  type VizLiveLayerSettingSnapshot,
+  type VizLiveLayerSettingTarget,
+} from './live-layer-values.js';
+
+export type {
+  VizLiveLayerPropertySnapshot,
+  VizLiveLayerPropertyTarget,
+  VizLiveLayerSettingSnapshot,
+  VizLiveLayerSettingTarget,
+} from './live-layer-values.js';
 
 export interface VizSessionSource {
   kind: 'example' | 'bundle' | 'memory';
@@ -78,11 +93,52 @@ export interface CreateVizSessionHostOptions {
 
 export interface VizSessionHost {
   getSnapshot(): VizSessionHostSnapshot;
+  getProjectRevision(): number;
+  getResourceRevision(): number;
   getWorkingProject(): VizProjectDocument;
   getProjectResources(): VizSessionProjectResources;
   getComponentRegistry(): VizComponentRegistry;
   getNodeRegistry(): VizNodeRegistry;
   getServices(): VizSessionServices;
+  getLiveLayerValues(): Readonly<Record<string, Readonly<VizLayer>>>;
+  getLiveLayerSetting(
+    target: VizLiveLayerSettingTarget,
+  ): VizLiveLayerSettingSnapshot | undefined;
+  beginLiveLayerSetting(
+    target: VizLiveLayerSettingTarget,
+  ): VizLiveLayerSettingSnapshot;
+  updateLiveLayerSetting(
+    target: VizLiveLayerSettingTarget,
+    value: unknown,
+  ): VizLiveLayerSettingSnapshot;
+  commitLiveLayerSetting(
+    target: VizLiveLayerSettingTarget,
+    value?: unknown,
+  ): VizEditorSessionMutationResult | undefined;
+  cancelLiveLayerSetting(target: VizLiveLayerSettingTarget): void;
+  subscribeLiveLayerSetting(
+    target: VizLiveLayerSettingTarget,
+    listener: () => void,
+  ): () => void;
+  getLiveLayerProperty(
+    target: VizLiveLayerPropertyTarget,
+  ): VizLiveLayerPropertySnapshot | undefined;
+  beginLiveLayerProperty(
+    target: VizLiveLayerPropertyTarget,
+  ): VizLiveLayerPropertySnapshot;
+  updateLiveLayerProperty(
+    target: VizLiveLayerPropertyTarget,
+    value: unknown,
+  ): VizLiveLayerPropertySnapshot;
+  commitLiveLayerProperty(
+    target: VizLiveLayerPropertyTarget,
+    value?: unknown,
+  ): VizEditorSessionMutationResult | undefined;
+  cancelLiveLayerProperty(target: VizLiveLayerPropertyTarget): void;
+  subscribeLiveLayerProperty(
+    target: VizLiveLayerPropertyTarget,
+    listener: () => void,
+  ): () => void;
   registerResolvedAsset(asset: VizResolvedAsset): VizSessionHostSnapshot;
   registerResolvedArtifact(
     artifact: VizResolvedArtifact,
@@ -194,6 +250,11 @@ export const createVizSessionHost = ({
       mode: 'live',
     },
   });
+  const liveLayerValues = createVizLiveLayerValuesController({
+    getProject: session.getWorkingProject,
+    getRevision: session.getRevision,
+    applyAction: session.applyAction,
+  });
   function emit() {
     const snapshot = getSnapshot();
     for (const listener of listeners) {
@@ -298,23 +359,32 @@ export const createVizSessionHost = ({
     return getSnapshot();
   };
 
+  const syncTransportTimeline = (project: VizProjectDocument): void => {
+    const transport = transportController.getState();
+    if (
+      transport.fps !== project.timeline.fps ||
+      transport.durationFrames !== project.timeline.durationInFrames
+    ) {
+      transportController.setTimeline({
+        fps: project.timeline.fps,
+        durationFrames: project.timeline.durationInFrames,
+      });
+    }
+  };
+
   const syncTimelineAfterMutation = (
     result: VizEditorSessionMutationResult,
   ): VizEditorSessionMutationResult => {
-    if (
-      result.status === 'applied' &&
-      transportController.getState().durationFrames !==
-        result.project.timeline.durationInFrames
-    ) {
-      transportController.setDurationFrames(
-        result.project.timeline.durationInFrames,
-      );
+    if (result.status === 'applied') {
+      syncTransportTimeline(result.project);
     }
     return result;
   };
 
   return {
     getSnapshot,
+    getProjectRevision: () => session.getRevision(),
+    getResourceRevision: () => resourceRevision,
     getWorkingProject: () => session.exportWorkingProject(),
     getProjectResources: () => ({
       project: session.exportWorkingProject(),
@@ -325,9 +395,23 @@ export const createVizSessionHost = ({
     getComponentRegistry: () => componentRegistry,
     getNodeRegistry: () => nodeRegistry,
     getServices: () => services,
+    getLiveLayerValues: liveLayerValues.getLayerValues,
+    getLiveLayerSetting: liveLayerValues.getSetting,
+    beginLiveLayerSetting: liveLayerValues.beginSetting,
+    updateLiveLayerSetting: liveLayerValues.updateSetting,
+    commitLiveLayerSetting: liveLayerValues.commitSetting,
+    cancelLiveLayerSetting: liveLayerValues.cancelSetting,
+    subscribeLiveLayerSetting: liveLayerValues.subscribeSetting,
+    getLiveLayerProperty: liveLayerValues.getProperty,
+    beginLiveLayerProperty: liveLayerValues.beginProperty,
+    updateLiveLayerProperty: liveLayerValues.updateProperty,
+    commitLiveLayerProperty: liveLayerValues.commitProperty,
+    cancelLiveLayerProperty: liveLayerValues.cancelProperty,
+    subscribeLiveLayerProperty: liveLayerValues.subscribeProperty,
     registerResolvedAsset,
     registerResolvedArtifact,
     loadProject: (resources) => {
+      liveLayerValues.cancelAll();
       assertValidResources(resources);
       currentResources = clone(resources);
       resourceRevision += 1;
@@ -337,9 +421,7 @@ export const createVizSessionHost = ({
         },
       });
       transportController.pause();
-      transportController.setDurationFrames(
-        currentResources.project.timeline.durationInFrames,
-      );
+      syncTransportTimeline(currentResources.project);
       transportController.seekToFrame(0);
       const audioSource = createProjectAudioSource(currentResources);
       if (audioSource) {
@@ -355,24 +437,28 @@ export const createVizSessionHost = ({
       );
       return getSnapshot();
     },
-    transact: (transaction, options) =>
-      syncTimelineAfterMutation(session.transact(transaction, options)),
-    applyAction: (action, options) =>
-      syncTimelineAfterMutation(session.applyAction(action, options)),
-    applyActions: (actions, options) =>
-      syncTimelineAfterMutation(session.applyActions(actions, options)),
+    transact: (transaction, options) => {
+      liveLayerValues.cancelAll();
+      return syncTimelineAfterMutation(session.transact(transaction, options));
+    },
+    applyAction: (action, options) => {
+      liveLayerValues.cancelAll();
+      return syncTimelineAfterMutation(session.applyAction(action, options));
+    },
+    applyActions: (actions, options) => {
+      liveLayerValues.cancelAll();
+      return syncTimelineAfterMutation(session.applyActions(actions, options));
+    },
     undo: () => {
+      liveLayerValues.cancelAll();
       session.undo();
-      transportController.setDurationFrames(
-        session.getWorkingProject().timeline.durationInFrames,
-      );
+      syncTransportTimeline(session.getWorkingProject());
       return getSnapshot();
     },
     redo: () => {
+      liveLayerValues.cancelAll();
       session.redo();
-      transportController.setDurationFrames(
-        session.getWorkingProject().timeline.durationInFrames,
-      );
+      syncTransportTimeline(session.getWorkingProject());
       return getSnapshot();
     },
     canUndo: () => session.canUndo(),

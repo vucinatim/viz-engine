@@ -49,6 +49,143 @@ describe('Viz local editor control surface', () => {
     ).toBe(true);
   });
 
+  it('keeps transport fps and duration synchronized with the canonical project timeline', () => {
+    const host = createVizSessionHost({
+      initialProject: {
+        project: exampleProjectDocument,
+        resolvedAssets: exampleResolvedAssets,
+        resolvedArtifacts: exampleResolvedArtifacts,
+        source: { kind: 'example', label: 'initial' },
+      },
+    });
+    const project = structuredClone(exampleProjectDocument);
+    project.timeline = { fps: 24, durationInFrames: 288 };
+
+    host.loadProject({
+      project,
+      resolvedAssets: exampleResolvedAssets,
+      resolvedArtifacts: exampleResolvedArtifacts,
+      source: { kind: 'memory', label: '24 fps fixture' },
+    });
+
+    expect(host.getSnapshot().transport).toMatchObject({
+      fps: 24,
+      durationFrames: 288,
+      currentFrame: 0,
+    });
+  });
+
+  it('keeps live setting gestures transient until one canonical commit', () => {
+    const host = createVizSessionHost({
+      initialProject: {
+        project: exampleProjectDocument,
+        resolvedAssets: exampleResolvedAssets,
+        resolvedArtifacts: exampleResolvedArtifacts,
+        source: { kind: 'example', label: 'live setting fixture' },
+      },
+    });
+    const target = {
+      layerId: 'layer-background',
+      path: ['color'],
+    } as const;
+    const canonicalColor = host
+      .getWorkingProject()
+      .layers.find((layer) => layer.id === target.layerId)?.settings?.color;
+    let liveNotifications = 0;
+    const unsubscribe = host.subscribeLiveLayerSetting(target, () => {
+      liveNotifications += 1;
+    });
+
+    host.beginLiveLayerSetting(target);
+    host.updateLiveLayerSetting(target, '#112233');
+    host.updateLiveLayerSetting(target, '#445566');
+
+    expect(host.getSnapshot().session.revision).toBe(0);
+    expect(host.getSnapshot().session.actionHistory).toHaveLength(0);
+    expect(
+      host
+        .getWorkingProject()
+        .layers.find((layer) => layer.id === target.layerId)?.settings?.color,
+    ).toBe(canonicalColor);
+    expect(host.getLiveLayerSetting(target)?.value).toBe('#445566');
+    expect(host.getLiveLayerValues()[target.layerId]?.settings?.color).toBe(
+      '#445566',
+    );
+
+    const result = host.commitLiveLayerSetting(target);
+
+    expect(result?.status).toBe('applied');
+    expect(host.getSnapshot().session.revision).toBe(1);
+    expect(host.getSnapshot().session.actionHistory).toHaveLength(1);
+    expect(
+      host
+        .getWorkingProject()
+        .layers.find((layer) => layer.id === target.layerId)?.settings?.color,
+    ).toBe('#445566');
+    expect(host.getLiveLayerSetting(target)).toBeUndefined();
+    expect(liveNotifications).toBe(4);
+    unsubscribe();
+  });
+
+  it('cancels live settings when canonical state changes', () => {
+    const host = createVizSessionHost({
+      initialProject: {
+        project: exampleProjectDocument,
+        resolvedAssets: exampleResolvedAssets,
+        resolvedArtifacts: exampleResolvedArtifacts,
+        source: { kind: 'example', label: 'live setting cancellation fixture' },
+      },
+    });
+    const target = {
+      layerId: 'layer-background',
+      path: ['color'],
+    } as const;
+
+    host.updateLiveLayerSetting(target, '#112233');
+    host.applyAction({
+      type: 'layer.settings.set',
+      payload: {
+        layerId: 'layer-bars',
+        path: 'barCount',
+        value: 16,
+      },
+    });
+
+    expect(host.getLiveLayerSetting(target)).toBeUndefined();
+    expect(host.getLiveLayerValues()).toEqual({});
+  });
+
+  it('previews layer properties and commits one layer replacement', () => {
+    const host = createVizSessionHost({
+      initialProject: {
+        project: exampleProjectDocument,
+        resolvedAssets: exampleResolvedAssets,
+        resolvedArtifacts: exampleResolvedArtifacts,
+        source: { kind: 'example', label: 'live layer property fixture' },
+      },
+    });
+    const target = {
+      layerId: 'layer-background',
+      path: ['opacity'],
+    } as const;
+
+    host.beginLiveLayerProperty(target);
+    host.updateLiveLayerProperty(target, 0.75);
+    host.updateLiveLayerProperty(target, 0.4);
+
+    expect(host.getSnapshot().session.revision).toBe(0);
+    expect(host.getWorkingProject().layers[0]?.opacity).toBe(1);
+    expect(host.getLiveLayerValues()[target.layerId]?.opacity).toBe(0.4);
+
+    const result = host.commitLiveLayerProperty(target);
+
+    expect(result?.status).toBe('applied');
+    expect(host.getSnapshot().session.revision).toBe(1);
+    expect(host.getSnapshot().session.actionHistory).toHaveLength(1);
+    expect(host.getWorkingProject().layers[0]?.opacity).toBe(0.4);
+    expect(host.getLiveLayerValues()).toEqual({});
+  });
+
   it('inspects an explicitly injected project-local capability pack', () => {
     const localComponent: VizComponentImplementation = {
       id: 'project-signal-ribbon',

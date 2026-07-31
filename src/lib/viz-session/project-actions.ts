@@ -187,7 +187,7 @@ export const createStudioProjectActions = ({
           loadProject(project);
           replaceState({
             ...state,
-            revision: host.getSnapshot().session.revision,
+            revision: host.getProjectRevision(),
             sourceProject:
               state.sourceProject === null
                 ? null
@@ -208,7 +208,7 @@ export const createStudioProjectActions = ({
       loadProject(project);
       replaceState({
         initialized: true,
-        revision: host.getSnapshot().session.revision,
+        revision: host.getProjectRevision(),
         sourceProject: structuredClone(project),
         workingProject: structuredClone(project),
       });
@@ -224,7 +224,7 @@ export const createStudioProjectActions = ({
       loadProject(canonicalProject, embeddedBytes);
       replaceState({
         initialized: true,
-        revision: host.getSnapshot().session.revision,
+        revision: host.getProjectRevision(),
         sourceProject: structuredClone(canonicalProject),
         workingProject: structuredClone(canonicalProject),
       });
@@ -364,6 +364,84 @@ export const createStudioProjectActions = ({
           payload: { layerId, path: path.join('.'), value },
         },
       ]);
+    },
+    beginLayerValueGesture(
+      layerId: string,
+      path: readonly (string | number)[],
+    ) {
+      ensureInitialized();
+      host.beginLiveLayerSetting({ layerId, path });
+    },
+    updateLiveLayerValue(
+      layerId: string,
+      path: readonly (string | number)[],
+      value: unknown,
+    ) {
+      ensureInitialized();
+      host.updateLiveLayerSetting({ layerId, path }, value);
+    },
+    commitLayerValueGesture(
+      layerId: string,
+      path: readonly (string | number)[],
+      value: unknown,
+    ) {
+      ensureInitialized();
+      const result = host.commitLiveLayerSetting({ layerId, path }, value);
+      if (!result) {
+        return;
+      }
+      if (!result.ok) {
+        throw new Error(
+          result.errors.map((error) => error.message).join('; ') ||
+            'Viz live setting commit failed',
+        );
+      }
+      syncProject();
+    },
+    cancelLayerValueGesture(
+      layerId: string,
+      path: readonly (string | number)[],
+    ) {
+      host.cancelLiveLayerSetting({ layerId, path });
+    },
+    beginLayerPropertyGesture(
+      layerId: string,
+      path: readonly (string | number)[],
+    ) {
+      ensureInitialized();
+      host.beginLiveLayerProperty({ layerId, path });
+    },
+    updateLiveLayerProperty(
+      layerId: string,
+      path: readonly (string | number)[],
+      value: unknown,
+    ) {
+      ensureInitialized();
+      host.updateLiveLayerProperty({ layerId, path }, value);
+    },
+    commitLayerPropertyGesture(
+      layerId: string,
+      path: readonly (string | number)[],
+      value: unknown,
+    ) {
+      ensureInitialized();
+      const result = host.commitLiveLayerProperty({ layerId, path }, value);
+      if (!result) {
+        return;
+      }
+      if (!result.ok) {
+        throw new Error(
+          result.errors.map((error) => error.message).join('; ') ||
+            'Viz live layer commit failed',
+        );
+      }
+      syncProject();
+    },
+    cancelLayerPropertyGesture(
+      layerId: string,
+      path: readonly (string | number)[],
+    ) {
+      host.cancelLiveLayerProperty({ layerId, path });
     },
     async attachLayerAsset(
       layerId: string,

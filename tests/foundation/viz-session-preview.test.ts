@@ -58,7 +58,7 @@ describe('VizSession preview transport', () => {
 
     const snapshot = getVizSessionState().preview;
     expect(snapshot.transport).toMatchObject({
-      durationFrames: 1,
+      durationFrames: 240,
       currentFrame: 0,
       isPlaying: false,
     });

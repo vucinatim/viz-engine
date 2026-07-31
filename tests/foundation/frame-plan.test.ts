@@ -139,4 +139,56 @@ describe('Viz frame planning', () => {
         ?.inputs?.bass,
     ).toEqual(originalBassInput);
   });
+
+  it('renders transient layer settings without mutating the runtime project', () => {
+    const session = createVizRuntimeSession({
+      project: exampleProjectDocument,
+      mode: 'live',
+      resolvedAssets: exampleResolvedAssets,
+      resolvedArtifacts: exampleResolvedArtifacts,
+      seed: 'live-setting-seed',
+    });
+    const originalSettings = structuredClone(
+      session.project.layers.find((layer) => layer.id === 'layer-background')
+        ?.settings,
+    );
+    const layerValues = {
+      'layer-background': {
+        ...session.project.layers.find(
+          (layer) => layer.id === 'layer-background',
+        )!,
+        settings: {
+          color: '#445566',
+        },
+      },
+    };
+
+    const framePlan = createVizFramePlan({
+      session,
+      frame: 12,
+      registry: createCoreComponentRegistry(),
+      nodeRegistry,
+      layerValues,
+    });
+    const renderPlan = createVizRenderPlan({
+      session,
+      frame: 12,
+      registry: createCoreComponentRegistry(),
+      nodeRegistry,
+      layerValues,
+    });
+
+    expect(
+      framePlan.layers.find((layer) => layer.layerId === 'layer-background')
+        ?.settings,
+    ).toEqual(layerValues['layer-background'].settings);
+    expect(
+      renderPlan.layers.find((layer) => layer.layerId === 'layer-background')
+        ?.settings,
+    ).toEqual(layerValues['layer-background'].settings);
+    expect(
+      session.project.layers.find((layer) => layer.id === 'layer-background')
+        ?.settings,
+    ).toEqual(originalSettings);
+  });
 });

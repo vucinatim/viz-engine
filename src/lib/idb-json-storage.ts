@@ -14,19 +14,43 @@ export const createIdbJsonStorage = (opts: IdbJsonStorageOptions = {}) => {
   const storeName = opts.storeName ?? 'zustand-json';
   const throttleMs = Math.max(0, opts.throttleMs ?? 0);
 
-  let dbPromise: Promise<IDBDatabase> | null = null;
-  const getDb = (): Promise<IDBDatabase> => {
-    if (dbPromise) return dbPromise;
-    dbPromise = new Promise((resolve, reject) => {
-      const req = indexedDB.open(dbName, 1);
+  const openDb = (version?: number) =>
+    new Promise<IDBDatabase>((resolve, reject) => {
+      const req =
+        version === undefined
+          ? indexedDB.open(dbName)
+          : indexedDB.open(dbName, version);
       req.onupgradeneeded = () => {
         const db = req.result;
         if (!db.objectStoreNames.contains(storeName)) {
           db.createObjectStore(storeName);
         }
       };
-      req.onsuccess = () => resolve(req.result);
+      req.onsuccess = () => {
+        const db = req.result;
+        db.onversionchange = () => db.close();
+        resolve(db);
+      };
       req.onerror = () => reject(req.error);
+      req.onblocked = () =>
+        reject(
+          new Error(
+            `IndexedDB "${dbName}" is blocked by another open browser context.`,
+          ),
+        );
+    });
+
+  let dbPromise: Promise<IDBDatabase> | null = null;
+  const getDb = (): Promise<IDBDatabase> => {
+    if (dbPromise) return dbPromise;
+    dbPromise = openDb().then(async (db) => {
+      if (db.objectStoreNames.contains(storeName)) {
+        return db;
+      }
+
+      const nextVersion = db.version + 1;
+      db.close();
+      return openDb(nextVersion);
     });
     return dbPromise;
   };

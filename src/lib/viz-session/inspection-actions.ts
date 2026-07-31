@@ -1,15 +1,13 @@
 import type { VizSessionHost } from '@viz-engine/editor-control';
 import { validateProjectDocument } from '@viz-engine/runtime';
 
-import type { VizSessionPreviewState } from './types';
+import { runtimeInspection } from './runtime-inspection';
 
 export const createStudioInspectionActions = ({
   host,
-  getPreviewState,
   inspectRuntime,
 }: {
   host: VizSessionHost;
-  getPreviewState: () => VizSessionPreviewState;
   inspectRuntime: () => unknown;
 }) => ({
   project() {
@@ -28,9 +26,9 @@ export const createStudioInspectionActions = ({
     const graph = host
       .getWorkingProject()
       .graphs?.find((candidate) => candidate.id === graphId);
-    const runtime = getPreviewState().runtimeInspection.lastGraphResults.find(
-      (result) => result.graphId === graphId,
-    );
+    const runtime = runtimeInspection
+      .getGraphResults()
+      .find((result) => result.graphId === graphId);
     return {
       graph: graph ? structuredClone(graph) : undefined,
       runtime: runtime ? structuredClone(runtime) : undefined,
@@ -43,7 +41,7 @@ export const createStudioInspectionActions = ({
       assetRefs: structuredClone(project.assetRefs ?? []),
       artifactRefs: structuredClone(project.artifactRefs ?? []),
       materializedAssets: structuredClone(
-        getPreviewState().runtimeInspection.lastMaterializedAssets,
+        runtimeInspection.getCurrent().lastMaterializedAssets,
       ),
     };
   },

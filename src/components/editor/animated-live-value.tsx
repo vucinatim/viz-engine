@@ -1,7 +1,6 @@
-import {
-  selectRuntimeGraphValueForParameter,
-  useVizSessionSelector,
-} from '@/lib/viz-session';
+import { getRuntimeGraphValueForParameter } from '@/lib/viz-session';
+import { useRef } from 'react';
+import { useRafLoop } from 'react-use';
 
 export const AnimatedLiveValue = ({
   parameterId,
@@ -10,23 +9,27 @@ export const AnimatedLiveValue = ({
   parameterId: string;
   className?: string;
 }) => {
-  const value = useVizSessionSelector((state) =>
-    selectRuntimeGraphValueForParameter(state, parameterId),
-  );
-  if (value === undefined) {
-    return null;
-  }
-  let text: string;
-  if (typeof value === 'number') {
-    text = value.toFixed(2);
-  } else if (typeof value === 'string') {
-    text = value;
-  } else {
-    try {
-      text = JSON.stringify(value);
-    } catch {
-      text = String(value);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useRafLoop(() => {
+    if (!ref.current) {
+      return;
     }
-  }
-  return <span className={className}>{text}</span>;
+    const value = getRuntimeGraphValueForParameter(parameterId);
+    if (value === undefined) {
+      ref.current.innerText = '';
+    } else if (typeof value === 'number') {
+      ref.current.innerText = value.toFixed(2);
+    } else if (typeof value === 'string') {
+      ref.current.innerText = value;
+    } else {
+      try {
+        ref.current.innerText = JSON.stringify(value);
+      } catch {
+        ref.current.innerText = String(value);
+      }
+    }
+  });
+
+  return <span ref={ref} className={className} />;
 };

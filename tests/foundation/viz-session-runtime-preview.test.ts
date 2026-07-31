@@ -5,6 +5,7 @@ import useCompStore from '@/lib/stores/comp-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import {
   createVizSessionRuntimePreviewFrame,
+  runtimeInspection,
   vizSessionActions,
   vizSessionStore,
 } from '@/lib/viz-session';
@@ -45,9 +46,11 @@ describe('VizSession runtime preview inspection', () => {
       fps: 60,
       mode: 'live',
     });
+    const previewStateBeforeFrame = vizSessionStore.getState().preview;
     vizSessionActions.preview.renderRuntimePreviewFrame(frame);
 
-    expect(vizSessionStore.getState().preview.runtimeInspection).toMatchObject({
+    expect(vizSessionStore.getState().preview).toBe(previewStateBeforeFrame);
+    expect(runtimeInspection.getCurrent()).toMatchObject({
       status: 'idle',
       lastRequestedFrame: frame,
       lastCompletedFrame: frame,
@@ -58,9 +61,7 @@ describe('VizSession runtime preview inspection', () => {
       lastPlanIssues: [],
       lastError: null,
     });
-    expect(
-      vizSessionStore.getState().preview.runtimeInspection.lastLayerSnapshots,
-    ).toHaveLength(1);
+    expect(runtimeInspection.getCurrent().lastLayerSnapshots).toHaveLength(1);
     expect(vizSessionActions.preview.inspectRuntimePreview()).toMatchObject({
       layerCount: 1,
       lastRenderedLayerIds: ['runtime-layer'],
@@ -94,7 +95,7 @@ describe('VizSession runtime preview inspection', () => {
       vizSessionActions.preview.renderRuntimePreviewFrame(frame),
     ).toThrow('render failed');
 
-    expect(vizSessionStore.getState().preview.runtimeInspection).toMatchObject({
+    expect(runtimeInspection.getCurrent()).toMatchObject({
       status: 'failed',
       lastRequestedFrame: frame,
       lastCompletedFrame: null,
@@ -128,7 +129,7 @@ describe('VizSession runtime preview inspection', () => {
     vizSessionActions.preview.renderRuntimePreviewFrame(frame);
     vizSessionActions.preview.reset();
 
-    expect(vizSessionStore.getState().preview.runtimeInspection).toEqual({
+    expect(runtimeInspection.getCurrent()).toEqual({
       status: 'idle',
       lastRequestedFrame: null,
       lastCompletedFrame: null,

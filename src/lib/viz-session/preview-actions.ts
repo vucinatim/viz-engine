@@ -3,6 +3,7 @@ import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-
 import type { VizProjectAction } from '@viz-engine/contracts';
 import type { VizSessionHost } from '@viz-engine/editor-control';
 
+import { runtimeInspection } from './runtime-inspection';
 import {
   createVizSessionRuntimePreviewPlan,
   resetVizSessionRuntimePreviewPlanCache,
@@ -10,28 +11,11 @@ import {
 import type {
   VizSessionPreviewState,
   VizSessionProjectState,
-  VizSessionRuntimeInspectionState,
   VizSessionRuntimePreviewAudioFrameData,
   VizSessionRuntimePreviewFrame,
 } from './types';
 
 const DEFAULT_FPS = 60;
-const DEFAULT_DURATION_FRAMES = 1;
-
-export const createInitialRuntimeInspectionState =
-  (): VizSessionRuntimeInspectionState => ({
-    status: 'idle',
-    lastRequestedFrame: null,
-    lastCompletedFrame: null,
-    renderCycle: 0,
-    lastRenderedLayerIds: [],
-    runtimeBackedLayerIds: [],
-    lastGraphResults: [],
-    lastLayerSnapshots: [],
-    lastMaterializedAssets: [],
-    lastPlanIssues: [],
-    lastError: null,
-  });
 
 interface RuntimePreviewResources {
   resourceRevision: number;
@@ -112,12 +96,11 @@ export const createStudioPreviewActions = ({
   reset() {
     host.pause();
     host.seekToFrame(0);
-    host.setTransportDurationFrames(DEFAULT_DURATION_FRAMES);
     replaceState({
       ...getState(),
       transport: host.getSnapshot().transport,
-      runtimeInspection: createInitialRuntimeInspectionState(),
     });
+    runtimeInspection.reset();
     resetVizSessionRuntimePreviewPlanCache();
   },
   renderRuntimePreviewFrame(
@@ -161,66 +144,31 @@ export const createStudioPreviewActions = ({
         resourceRevision: resources.resourceRevision,
         resolvedAssets: resources.resolvedAssets,
         resolvedArtifacts: resources.resolvedArtifacts,
+        layerValues: host.getLiveLayerValues(),
       });
       const lastRenderedLayerIds = attachmentStore.renderRuntimePlan(
         frame,
         audioFrameData,
         renderPlan,
       );
-      const nextPreview = getState();
-
-      replaceState({
-        ...nextPreview,
-        runtimeInspection: {
-          ...nextPreview.runtimeInspection,
-          status: 'idle',
-          lastRequestedFrame: frame,
-          lastCompletedFrame: frame,
-          renderCycle: nextPreview.runtimeInspection.renderCycle + 1,
-          lastRenderedLayerIds,
-          runtimeBackedLayerIds: [...lastRenderedLayerIds],
-          lastGraphResults: structuredClone(renderPlan.graphResults),
-          lastLayerSnapshots: structuredClone(renderPlan.layers),
-          lastMaterializedAssets: structuredClone(
-            renderPlan.materializedAssets,
-          ),
-          lastPlanIssues: structuredClone(renderPlan.issues),
-          lastError: null,
-        },
-      });
+      runtimeInspection.publishFrame(frame, renderPlan, lastRenderedLayerIds);
     } catch (error) {
-      const nextPreview = getState();
-      replaceState({
-        ...nextPreview,
-        runtimeInspection: {
-          ...nextPreview.runtimeInspection,
-          status: 'failed',
-          lastRequestedFrame: frame,
-          lastError: {
-            message:
-              error instanceof Error
-                ? error.message
-                : 'Unknown runtime preview error',
-            frame,
-          },
-        },
+      runtimeInspection.publishError(frame, {
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Unknown runtime preview error',
+        frame,
       });
       throw error;
     }
   },
   inspectRuntimePreview() {
     const projectState = getProjectState();
-    const preview = getState().runtimeInspection;
     return {
       projectRevision: projectState.revision,
       layerCount: projectState.workingProject.layers.length,
-      ...preview,
-      lastRenderedLayerIds: [...preview.lastRenderedLayerIds],
-      runtimeBackedLayerIds: [...preview.runtimeBackedLayerIds],
-      lastGraphResults: structuredClone(preview.lastGraphResults),
-      lastLayerSnapshots: structuredClone(preview.lastLayerSnapshots),
-      lastMaterializedAssets: structuredClone(preview.lastMaterializedAssets),
-      lastPlanIssues: structuredClone(preview.lastPlanIssues),
+      ...runtimeInspection.inspect(),
     };
   },
   setState(partial: Partial<VizSessionPreviewState>) {

@@ -25,6 +25,10 @@ export interface VizEditorTransportController {
   pause(): VizEditorTransportState;
   togglePlayback(): VizEditorTransportState;
   seekToFrame(frame: number): VizEditorTransportState;
+  setTimeline(timeline: {
+    fps: number;
+    durationFrames: number;
+  }): VizEditorTransportState;
   setDurationFrames(durationFrames: number): VizEditorTransportState;
   setLoop(loop: boolean): VizEditorTransportState;
   setMode(mode: VizExecutionMode): VizEditorTransportState;
@@ -196,6 +200,21 @@ export const createVizEditorTransportController = ({
       state = {
         ...state,
         currentFrame: clampFrame(frame, state.durationFrames),
+      };
+      return emit();
+    },
+    setTimeline: (timeline) => {
+      subframeRemainder = 0;
+      const nextFps = Math.max(1, Math.trunc(timeline.fps));
+      const nextDurationFrames = Math.max(
+        1,
+        Math.trunc(timeline.durationFrames),
+      );
+      state = {
+        ...state,
+        fps: nextFps,
+        durationFrames: nextDurationFrames,
+        currentFrame: clampFrame(state.currentFrame, nextDurationFrames),
       };
       return emit();
     },

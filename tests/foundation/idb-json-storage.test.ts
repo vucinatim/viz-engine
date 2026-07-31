@@ -3,75 +3,102 @@
 import { createIdbJsonStorage } from '@/lib/idb-json-storage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const createIndexedDbHarness = () => {
+const createIndexedDbHarness = ({
+  initialStores = ['viz-session-store'],
+}: {
+  initialStores?: string[];
+} = {}) => {
   const values = new Map<string, string>();
   const writes: string[] = [];
+  const stores = new Set(initialStores);
+  const openVersions: Array<number | undefined> = [];
+  let databaseVersion = 1;
 
   const database = {
-    objectStoreNames: {
-      contains: () => true,
+    get version() {
+      return databaseVersion;
     },
-    createObjectStore: vi.fn(),
-    transaction: () => ({
-      objectStore: () => ({
-        get: (key: string) => {
-          const request: {
-            result?: string;
-            error: null;
-            onsuccess: (() => void) | null;
-            onerror: (() => void) | null;
-          } = {
-            result: values.get(key),
-            error: null,
-            onsuccess: null,
-            onerror: null,
-          };
-          queueMicrotask(() => request.onsuccess?.());
-          return request;
-        },
-        put: (value: string, key: string) => {
-          const request = {
-            error: null,
-            onsuccess: null as (() => void) | null,
-            onerror: null as (() => void) | null,
-          };
-          writes.push(value);
-          values.set(key, value);
-          queueMicrotask(() => request.onsuccess?.());
-          return request;
-        },
-        delete: (key: string) => {
-          const request = {
-            error: null,
-            onsuccess: null as (() => void) | null,
-            onerror: null as (() => void) | null,
-          };
-          values.delete(key);
-          queueMicrotask(() => request.onsuccess?.());
-          return request;
-        },
-      }),
+    objectStoreNames: {
+      contains: (name: string) => stores.has(name),
+    },
+    createObjectStore: vi.fn((name: string) => {
+      stores.add(name);
     }),
+    close: vi.fn(),
+    onversionchange: null as (() => void) | null,
+    transaction: (name: string) => {
+      if (!stores.has(name)) {
+        throw new DOMException(
+          `Object store "${name}" was not found.`,
+          'NotFoundError',
+        );
+      }
+      return {
+        objectStore: () => ({
+          get: (key: string) => {
+            const request: {
+              result?: string;
+              error: null;
+              onsuccess: (() => void) | null;
+              onerror: (() => void) | null;
+            } = {
+              result: values.get(key),
+              error: null,
+              onsuccess: null,
+              onerror: null,
+            };
+            queueMicrotask(() => request.onsuccess?.());
+            return request;
+          },
+          put: (value: string, key: string) => {
+            const request = {
+              error: null,
+              onsuccess: null as (() => void) | null,
+              onerror: null as (() => void) | null,
+            };
+            writes.push(value);
+            values.set(key, value);
+            queueMicrotask(() => request.onsuccess?.());
+            return request;
+          },
+          delete: (key: string) => {
+            const request = {
+              error: null,
+              onsuccess: null as (() => void) | null,
+              onerror: null as (() => void) | null,
+            };
+            values.delete(key);
+            queueMicrotask(() => request.onsuccess?.());
+            return request;
+          },
+        }),
+      };
+    },
   };
 
   const indexedDb = {
-    open: () => {
+    open: (_name: string, version?: number) => {
+      openVersions.push(version);
       const request = {
         result: database,
         error: null,
         onupgradeneeded: null as (() => void) | null,
         onsuccess: null as (() => void) | null,
         onerror: null as (() => void) | null,
+        onblocked: null as (() => void) | null,
       };
       queueMicrotask(() => {
-        request.onupgradeneeded?.();
+        if (version !== undefined && version > databaseVersion) {
+          databaseVersion = version;
+          request.onupgradeneeded?.();
+        }
         request.onsuccess?.();
       });
       return request;
     },
   };
 
-  return { indexedDb, values, writes };
+  return { database, indexedDb, openVersions, stores, values, writes };
 };
 
 describe('createIdbJsonStorage', () => {
@@ -109,6 +136,26 @@ describe('createIdbJsonStorage', () => {
     await vi.advanceTimersByTimeAsync(500);
 
     expect(harness.writes).toEqual(['{"revision":1}']);
+  });
+
+  it('repairs an existing database that is missing the requested store', async () => {
+    const harness = createIndexedDbHarness({ initialStores: ['legacy-store'] });
+    Object.defineProperty(globalThis, 'indexedDB', {
+      configurable: true,
+      value: harness.indexedDb,
+    });
+    const storage = createIdbJsonStorage({
+      storeName: 'viz-session-store',
+    });
+
+    await storage.setItem('session', '{"revision":1}');
+
+    expect(harness.openVersions).toEqual([undefined, 2]);
+    expect(harness.database.createObjectStore).toHaveBeenCalledWith(
+      'viz-session-store',
+    );
+    expect(harness.stores.has('legacy-store')).toBe(true);
+    expect(harness.values.get('session')).toBe('{"revision":1}');
   });
 
   it('flushes sustained changes on a bounded throttle cadence', async () => {

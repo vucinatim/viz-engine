@@ -30,7 +30,6 @@ import {
   Vector3,
   Vector4,
   type Blending,
-  type Material,
   type MeshBasicMaterialParameters,
 } from 'three';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
@@ -97,16 +96,80 @@ export const updateVizThreeOrthoCamera = (
   camera.updateProjectionMatrix();
 };
 
+const clampOpacity = (value: number): number => Math.min(1, Math.max(0, value));
+
+const resolveCssColor = (
+  value: string,
+): {
+  value: string;
+  opacity: number;
+} => {
+  const color = value.trim();
+  const normalized = color.toLowerCase();
+
+  if (normalized === 'transparent') {
+    return { value: '#000000', opacity: 0 };
+  }
+
+  if (/^#[\da-f]{4}$/i.test(color)) {
+    return {
+      value: `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`,
+      opacity: Number.parseInt(`${color[4]}${color[4]}`, 16) / 255,
+    };
+  }
+
+  if (/^#[\da-f]{8}$/i.test(color)) {
+    return {
+      value: color.slice(0, 7),
+      opacity: Number.parseInt(color.slice(7, 9), 16) / 255,
+    };
+  }
+
+  const functionalColor = /^(rgba?|hsla?)\((.*)\)$/i.exec(color);
+  if (!functionalColor) {
+    return { value: color, opacity: 1 };
+  }
+
+  const functionName = functionalColor[1]!.toLowerCase();
+  const body = functionalColor[2]!;
+  const commaParts = body.split(',').map((part) => part.trim());
+  const slashIndex = body.lastIndexOf('/');
+  const alphaText =
+    commaParts.length === 4
+      ? commaParts[3]
+      : slashIndex >= 0
+        ? body.slice(slashIndex + 1).trim()
+        : undefined;
+
+  if (alphaText === undefined) {
+    return { value: color, opacity: 1 };
+  }
+
+  const parsedAlpha = alphaText.endsWith('%')
+    ? Number.parseFloat(alphaText) / 100
+    : Number.parseFloat(alphaText);
+  const opacity = Number.isFinite(parsedAlpha) ? clampOpacity(parsedAlpha) : 1;
+  const opaqueBody =
+    commaParts.length === 4
+      ? commaParts.slice(0, 3).join(', ')
+      : body.slice(0, slashIndex).trim();
+
+  return {
+    value: `${functionName.startsWith('rgb') ? 'rgb' : 'hsl'}(${opaqueBody})`,
+    opacity,
+  };
+};
+
 const createMaterial = (
   style: VizRenderStyle | undefined,
   fallbackFill = '#ffffff',
   overrides: MeshBasicMaterialParameters = {},
 ): MeshBasicMaterial => {
-  const fill = style?.fill ?? fallbackFill;
-  const opacity = style?.opacity ?? 1;
+  const fill = resolveCssColor(style?.fill ?? fallbackFill);
+  const opacity = clampOpacity((style?.opacity ?? 1) * fill.opacity);
 
   return new MeshBasicMaterial({
-    color: new Color(fill),
+    color: new Color(fill.value),
     transparent: opacity < 1,
     opacity,
     blending: getVizThreeBlending(style?.blendMode),
@@ -133,28 +196,6 @@ const applyTransform = (
   object.position.y -= translateY;
   object.scale.set(scaleX, scaleY, 1);
   object.rotation.z = (-rotationDegrees * Math.PI) / 180;
-};
-
-const applyStyle = (
-  object: Group | Mesh,
-  style: VizRenderStyle | undefined,
-): void => {
-  if (!style) {
-    return;
-  }
-
-  if ('material' in object && object.material) {
-    const material = object.material as Material;
-
-    if ('opacity' in material && style.opacity !== undefined) {
-      material.opacity = style.opacity;
-      material.transparent = style.opacity < 1;
-    }
-
-    if ('blending' in material && style.blendMode !== undefined) {
-      material.blending = getVizThreeBlending(style.blendMode);
-    }
-  }
 };
 
 const composeInheritedRenderState = (
@@ -270,7 +311,6 @@ const convertRectToMesh = (
     const mesh = new Mesh(geometry, material);
     mesh.position.x = node.x + node.width / 2 - viewportWidth / 2;
     mesh.position.y = viewportHeight / 2 - (node.y + node.height / 2);
-    applyStyle(mesh, finalStyle);
     return mesh;
   }
 
@@ -283,7 +323,6 @@ const convertRectToMesh = (
     );
     fillMesh.position.x = node.x + node.width / 2 - viewportWidth / 2;
     fillMesh.position.y = viewportHeight / 2 - (node.y + node.height / 2);
-    applyStyle(fillMesh, finalStyle);
     group.add(fillMesh);
   }
 
@@ -306,7 +345,6 @@ const convertCircleToMesh = (
   const mesh = new Mesh(geometry, material);
   mesh.position.x = node.cx - viewportWidth / 2;
   mesh.position.y = viewportHeight / 2 - node.cy;
-  applyStyle(mesh, finalStyle);
   return mesh;
 };
 
@@ -327,6 +365,10 @@ const createPolylineLine = ({
   viewportWidth: number;
   viewportHeight: number;
 }): Line2 => {
+  const resolvedColor = resolveCssColor(color);
+  const finalOpacity = clampOpacity(
+    inherited.opacity * opacity * resolvedColor.opacity,
+  );
   const geometry = new LineGeometry();
   geometry.setPositions(
     node.points.flatMap((point) => [
@@ -336,10 +378,10 @@ const createPolylineLine = ({
     ]),
   );
   const material = new LineMaterial({
-    color: new Color(color).getHex(),
+    color: new Color(resolvedColor.value).getHex(),
     linewidth: Math.max(0.01, width),
-    opacity: inherited.opacity * opacity,
-    transparent: inherited.opacity * opacity < 1,
+    opacity: finalOpacity,
+    transparent: finalOpacity < 1,
     blending: getVizThreeBlending(node.style?.blendMode ?? inherited.blendMode),
     depthTest: false,
     depthWrite: false,
@@ -465,7 +507,7 @@ const drawTextCanvas = (
   context.font = font;
   context.textAlign = 'left';
   context.textBaseline = 'middle';
-  context.fillStyle = node.style?.fill ?? '#ffffff';
+  context.fillStyle = resolveCssColor(node.style?.fill ?? '#ffffff').value;
   context.fillText(node.text, 2 * textureScale, textureHeight / 2);
   return {
     width: textureWidth / textureScale,
@@ -763,8 +805,9 @@ const updateMaterialStyle = (
   style: VizRenderStyle,
   fallbackColor: string,
 ): void => {
-  material.color.set(style.fill ?? style.stroke ?? fallbackColor);
-  material.opacity = style.opacity ?? 1;
+  const color = resolveCssColor(style.fill ?? style.stroke ?? fallbackColor);
+  material.color.set(color.value);
+  material.opacity = clampOpacity((style.opacity ?? 1) * color.opacity);
   material.transparent = material.opacity < 1;
   material.blending = getVizThreeBlending(style.blendMode);
 };
@@ -970,8 +1013,9 @@ const updateTextObject = (
   object.position.y = viewportHeight / 2 - (origin.y + dimensions.height / 2);
   const style = mergeRenderableStyle(inherited, node.style);
   const material = object.material as MeshBasicMaterial;
+  const color = resolveCssColor(node.style?.fill ?? '#ffffff');
   material.color.set('#ffffff');
-  material.opacity = style.opacity ?? 1;
+  material.opacity = clampOpacity((style.opacity ?? 1) * color.opacity);
   material.transparent = material.opacity < 1;
   material.blending = getVizThreeBlending(style.blendMode);
   return true;

@@ -6,6 +6,7 @@ import {
   generateSyntheticTimeDomain,
   preloadAudioData,
 } from '@/lib/utils/synthetic-audio';
+import { studioThreeProgramRegistry } from '@/lib/viz-capabilities';
 import {
   createVizThreePreviewController,
   type VizThreePreviewController,
@@ -32,6 +33,7 @@ const CompPreview = ({
   const rafIdRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
   const [audioLoaded, setAudioLoaded] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
 
   const runtimeControllerRef = useRef<VizThreePreviewController | null>(null);
 
@@ -58,41 +60,55 @@ const CompPreview = ({
   // Render a single frame (static or animated)
   const renderFrame = useCallback(
     (time: number) => {
-      if (!canvasRef.current) return;
+      if (!canvasRef.current) return false;
 
-      const loopTime = time % LOOP_DURATION;
-      const frequencyData = generateSyntheticFrequency(loopTime, LOOP_DURATION);
-      const timeDomainData = generateSyntheticTimeDomain(
-        loopTime,
-        LOOP_DURATION,
-      );
+      try {
+        const loopTime = time % LOOP_DURATION;
+        const frequencyData = generateSyntheticFrequency(
+          loopTime,
+          LOOP_DURATION,
+        );
+        const timeDomainData = generateSyntheticTimeDomain(
+          loopTime,
+          LOOP_DURATION,
+        );
 
-      const internalWidth = Math.round(width * PREVIEW_RESOLUTION);
-      const internalHeight = Math.round(height * PREVIEW_RESOLUTION);
-      const runtimeRenderPlan = createEditorComponentPreviewPlan({
-        comp,
-        viewportWidth: internalWidth,
-        viewportHeight: internalHeight,
-        time: loopTime,
-        configValues: comp.defaultValues,
-        audioFrameData: {
-          frequencyData,
-          timeDomainData,
-          sampleRate: syntheticAnalyzer.current.context.sampleRate,
-          fftSize: syntheticAnalyzer.current.fftSize,
-        },
-      });
-      if (!runtimeControllerRef.current) {
-        canvasRef.current.width = internalWidth;
-        canvasRef.current.height = internalHeight;
-      }
-      if (runtimeControllerRef.current) {
-        runtimeControllerRef.current.update(runtimeRenderPlan);
-      } else {
-        runtimeControllerRef.current = createVizThreePreviewController({
-          canvas: canvasRef.current,
-          renderPlan: runtimeRenderPlan,
+        const internalWidth = Math.round(width * PREVIEW_RESOLUTION);
+        const internalHeight = Math.round(height * PREVIEW_RESOLUTION);
+        const runtimeRenderPlan = createEditorComponentPreviewPlan({
+          comp,
+          viewportWidth: internalWidth,
+          viewportHeight: internalHeight,
+          time: loopTime,
+          configValues: comp.defaultValues,
+          audioFrameData: {
+            frequencyData,
+            timeDomainData,
+            sampleRate: syntheticAnalyzer.current.context.sampleRate,
+            fftSize: syntheticAnalyzer.current.fftSize,
+          },
         });
+        if (!runtimeControllerRef.current) {
+          canvasRef.current.width = internalWidth;
+          canvasRef.current.height = internalHeight;
+        }
+        if (runtimeControllerRef.current) {
+          runtimeControllerRef.current.update(runtimeRenderPlan);
+        } else {
+          runtimeControllerRef.current = createVizThreePreviewController({
+            canvas: canvasRef.current,
+            renderPlan: runtimeRenderPlan,
+            programRegistry: studioThreeProgramRegistry,
+          });
+        }
+        return true;
+      } catch (error) {
+        runtimeControllerRef.current?.dispose();
+        runtimeControllerRef.current = null;
+        setFailure(
+          error instanceof Error ? error.message : 'Preview rendering failed.',
+        );
+        return false;
       }
     },
     [comp, height, width],
@@ -105,8 +121,9 @@ const CompPreview = ({
 
       const animate = () => {
         const currentTime = performance.now() / 1000 - startTimeRef.current;
-        renderFrame(currentTime);
-        rafIdRef.current = requestAnimationFrame(animate);
+        rafIdRef.current = renderFrame(currentTime)
+          ? requestAnimationFrame(animate)
+          : null;
       };
 
       rafIdRef.current = requestAnimationFrame(animate);
@@ -130,6 +147,7 @@ const CompPreview = ({
 
   // Initial render when component mounts
   useEffect(() => {
+    setFailure(null);
     renderFrame(0);
 
     return () => {
@@ -162,6 +180,13 @@ const CompPreview = ({
       {!audioLoaded && (
         <div className="absolute inset-0 flex items-center justify-center rounded border border-zinc-700 bg-black/80 text-xs text-zinc-500">
           Loading...
+        </div>
+      )}
+      {failure && (
+        <div
+          className="absolute inset-0 flex items-center justify-center rounded border border-red-500/40 bg-black/90 px-2 text-center text-[10px] leading-tight text-red-300"
+          title={failure}>
+          Preview unavailable
         </div>
       )}
     </div>
