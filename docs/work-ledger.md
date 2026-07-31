@@ -1948,3 +1948,11 @@
     mandatory in Goal Three
   - documented the findings in
     `docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md`
+- activated Goal Three from immutable clean, committed, and pushed baseline
+  `cfe627949227eaf5a1ebd2c94e2a7b77529bbc6b`
+  - captured production, tool, test, environment, parity, and gate state in
+    `docs/parity/evidence/artifacts/2026-07-31-goal-three-baseline.json`
+  - the activation foundation gate passed parity, architecture, formatting,
+    lint, types, 55 Vitest files, and 232 tests
+  - the existing browser churn journey then failed its unchanged 40-second
+    budget at 47.755 seconds; six of seven browser journeys passed

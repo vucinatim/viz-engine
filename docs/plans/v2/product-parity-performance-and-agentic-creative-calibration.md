@@ -1,14 +1,29 @@
 # Product Parity, Performance, And Agentic Creative Calibration
 
-Status: proposed and ready for activation.
+Status: active.
 
 Planning reference:
 `039e73707a27527b5abdb111028c8c210dbce5da` on
 `codex/viz-engine-v2`.
 
-The immutable execution baseline must be captured from a clean, committed, and
-pushed worktree when the goal is activated. The planning reference is not a
-substitute for that activation baseline.
+Immutable execution baseline:
+`cfe627949227eaf5a1ebd2c94e2a7b77529bbc6b` on
+`codex/viz-engine-v2`.
+
+The baseline contains the complete approved Goal Three plan, the first direct
+manual product-calibration findings, and the honestly reclassified parity
+matrix. It was committed and pushed from a clean worktree before execution
+began.
+
+Machine-readable activation evidence:
+[2026-07-31 Goal Three Baseline](../../parity/evidence/artifacts/2026-07-31-goal-three-baseline.json).
+
+The activation `pnpm check:foundation` run passed parity, architecture,
+formatting, lint, types, 55 Vitest files, and 232 deterministic tests. It then
+failed the existing browser churn budget: six duplicate/delete cycles took
+47.755 seconds against the existing 40-second ceiling. Six of seven browser
+journeys passed. The budget remains unchanged; the failure is part of the
+performance backlog rather than being waived.
 
 Parent direction:
 

@@ -160,11 +160,11 @@ proof surface is stronger. The
 records the architecture, behavior, browser, performance, and deterministic
 production evidence.
 
-The proposed next direction is
+The active Goal Three direction is
 [Product Parity, Performance, And Agentic Creative Calibration](docs/plans/v2/product-parity-performance-and-agentic-creative-calibration.md).
-It closes the complete V1/V2 product-parity matrix, establishes controlled
-editor-performance evidence, improves the agent's creative perception and
-feedback loop, and certifies a distinct second original production as both
+It is closing the complete V1/V2 product-parity matrix, establishing controlled
+editor-performance evidence, improving the agent's creative perception and
+feedback loop, and certifying a distinct second original production as both
 final media and a portable editable project.
 
 Historical milestones and decisions belong in

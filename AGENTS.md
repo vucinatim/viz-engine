@@ -12,6 +12,7 @@ Start here:
 - [docs/visions/v2-product-architecture-and-parity-alignment.md](./docs/visions/v2-product-architecture-and-parity-alignment.md)
 - [docs/plans/v2/v2-foundation-and-rewrite-plan.md](./docs/plans/v2/v2-foundation-and-rewrite-plan.md)
 - [docs/plans/v2/autonomous-development-operating-contract.md](./docs/plans/v2/autonomous-development-operating-contract.md)
+- [docs/plans/v2/product-parity-performance-and-agentic-creative-calibration.md](./docs/plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
 - [docs/parity/README.md](./docs/parity/README.md)
 
 ## Mission

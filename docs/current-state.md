@@ -128,12 +128,16 @@ renderer lifecycle, diagnostic, test, type, parity row, and performance budget
 remains protected. See the
 [Goal Two certification](./parity/evidence/2026-07-31-behavior-preserving-minimization-and-final-polish.md).
 
-## Proposed Next Goal
+## Active Goal
 
 [Product Parity, Performance, And Agentic Creative Calibration](./plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
-is the proposed Goal Three direction and is ready for activation.
+is active as Goal Three.
 
-It will turn the current architecture and production confidence into complete
+Its immutable execution baseline is
+`cfe627949227eaf5a1ebd2c94e2a7b77529bbc6b`, committed and pushed to
+`origin/codex/viz-engine-v2`.
+
+The goal turns the current architecture and production confidence into complete
 product confidence by:
 
 - auditing all 42 parity capabilities against the pinned V1 product
@@ -145,9 +149,6 @@ product confidence by:
   reusable public contracts
 - delivering both a polished final video and a portable, fully editable
   project
-
-The plan is proposed, not active. Activation must capture a fresh immutable
-baseline from a clean, committed, and pushed worktree.
 
 The first direct manual calibration has already confirmed 11 affected parity
 rows as real gaps, including static playback, broken transparency, laggy
@@ -175,7 +176,7 @@ consolidation.
 - [Product architecture and parity alignment](./visions/v2-product-architecture-and-parity-alignment.md)
 - [Completed consolidation plan](./plans/v2/core-consolidation-and-minimization-program.md)
 - [Completed minimization plan](./plans/v2/behavior-preserving-minimization-and-final-polish.md)
-- [Proposed Goal Three](./plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
+- [Active Goal Three](./plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
 - [Autonomous development contract](./plans/v2/autonomous-development-operating-contract.md)
 - [Parity matrix](./parity/README.md)
 - [Suggestions](./suggestions.md)

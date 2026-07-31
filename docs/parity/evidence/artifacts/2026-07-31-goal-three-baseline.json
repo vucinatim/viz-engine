@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "goal": "viz-engine-v2-product-parity-performance-agentic-creative-calibration",
+  "capturedAt": "2026-07-31",
+  "git": {
+    "baselineCommit": "cfe627949227eaf5a1ebd2c94e2a7b77529bbc6b",
+    "branch": "codex/viz-engine-v2",
+    "pushed": true
+  },
+  "reference": {
+    "v1Commit": "e806fbc10980615588b52ff574bc923c6f00f35e",
+    "parityCapabilityCount": 42,
+    "parityStatusCounts": {
+      "notAudited": 1,
+      "gap": 11,
+      "partial": 27,
+      "verified": 3,
+      "approvedChange": 0
+    }
+  },
+  "source": {
+    "production": {
+      "files": 349,
+      "lines": 67645
+    },
+    "tools": {
+      "files": 13,
+      "lines": 2457
+    },
+    "tests": {
+      "files": 57,
+      "lines": 12893
+    },
+    "allCode": {
+      "files": 445,
+      "lines": 86314
+    }
+  },
+  "environment": {
+    "operatingSystem": "macOS 26.5.2 (25F84)",
+    "hardwareModel": "MacBookPro18,3",
+    "processor": "Apple M1 Pro",
+    "memoryBytes": 17179869184,
+    "node": "22.22.0",
+    "pnpm": "9.9.0",
+    "playwright": "1.62.1",
+    "browserProject": "chromium / Desktop Chrome",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "deviceScaleFactor": 1,
+    "workers": 1
+  },
+  "tests": {
+    "vitestFilesPassed": 55,
+    "vitestTestsPassed": 232,
+    "browserJourneysPassed": 6,
+    "browserJourneysFailed": 1,
+    "browserJourneyCount": 7
+  },
+  "foundationGate": {
+    "command": "pnpm check:foundation",
+    "passed": false,
+    "failedStage": "test:browser",
+    "failure": {
+      "test": "keeps canonical and rendered resource counts stable through bounded edit and playback churn",
+      "budgetMilliseconds": 40000,
+      "observedMilliseconds": 47755,
+      "failedAssertion": "bounded duplicate/delete churn duration"
+    },
+    "stagesBeforeFailure": {
+      "parity": true,
+      "architecture": true,
+      "format": true,
+      "lint": true,
+      "types": true,
+      "deterministicTests": true
+    },
+    "stagesNotReached": [
+      "package builds",
+      "studio build",
+      "packed consumer smoke",
+      "built creative loop smoke"
+    ]
+  },
+  "knownMandatoryProductFindings": [
+    "broken transparency",
+    "parameter-label typography drift",
+    "continuous-control lag",
+    "static preview playback",
+    "non-animating graph signals",
+    "broken modal motion",
+    "stale debug animated values",
+    "ordinary-use console errors and warning floods",
+    "broken Curve Spectrum visual",
+    "node-editor lag",
+    "component-catalog preview registry crash",
+    "browser churn performance budget failure"
+  ]
+}
