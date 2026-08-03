@@ -43,10 +43,27 @@ describe('Viz local-first CLI surface', () => {
     ).toContain('live transact --transaction <json-file> [--url <origin>]');
     expect(
       (output.payload as { commands: { live: string[] } }).commands.live,
+    ).toContain('live components [--component-id <id>] [--url <origin>]');
+    expect(
+      (output.payload as { commands: { live: string[] } }).commands.live,
+    ).toContain('live nodes [--node-type <type>] [--url <origin>]');
+    expect(
+      (output.payload as { commands: { live: string[] } }).commands.live,
+    ).toContain('live graph-runtime [--frame <frame>] [--url <origin>]');
+    expect(
+      (output.payload as { commands: { live: string[] } }).commands.live,
+    ).toContain('live frame|render|debug [--frame <frame>] [--url <origin>]');
+    expect(
+      (output.payload as { commands: { live: string[] } }).commands.live,
     ).toContain('live bake-start --request <json-file> [--url <origin>]');
     expect(
       (output.payload as { commands: { live: string[] } }).commands.live,
     ).toContain('live render-start --request <json-file> [--url <origin>]');
+    expect(
+      (output.payload as { commands: { live: string[] } }).commands.live,
+    ).toContain(
+      'live job-download --job-id <id> [--output-id <id>] [--url <origin>]',
+    );
     expect(
       (output.payload as { commands: { local: string[] } }).commands.local,
     ).toContain(

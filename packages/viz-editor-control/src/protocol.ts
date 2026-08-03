@@ -464,8 +464,24 @@ const controlRequestSchema = z.discriminatedUnion('operation', [
   requestSchema('control.discover', {}),
   requestSchema('control.snapshot', {}),
   requestSchema('project.inspect', {}),
-  requestSchema('component.inspect', {}),
+  requestSchema('project.bundle.open', { url: nonEmptyString }),
+  requestSchema('component.inspect', {
+    componentId: nonEmptyString.optional(),
+  }),
+  requestSchema('node.inspect', { nodeType: nonEmptyString.optional() }),
   requestSchema('graph.inspect', { graphId: nonEmptyString.optional() }),
+  requestSchema('graph.runtime.inspect', {
+    frame: z.number().int().nonnegative().optional(),
+  }),
+  requestSchema('frame.inspect', {
+    frame: z.number().int().nonnegative().optional(),
+  }),
+  requestSchema('render.inspect', {
+    frame: z.number().int().nonnegative().optional(),
+  }),
+  requestSchema('debug.inspect', {
+    frame: z.number().int().nonnegative().optional(),
+  }),
   requestSchema('transaction.apply', {
     transaction: projectTransactionSchema,
   }),
@@ -476,6 +492,10 @@ const controlRequestSchema = z.discriminatedUnion('operation', [
   requestSchema('preview.seek', { frame: z.number().int().nonnegative() }),
   requestSchema('job.list', {}),
   requestSchema('job.inspect', { jobId: nonEmptyString }),
+  requestSchema('job.output.download', {
+    jobId: nonEmptyString,
+    outputId: nonEmptyString.optional(),
+  }),
   requestSchema('audio-bake.start', {
     request: audioFeatureBakeJobRequestSchema,
   }),
@@ -496,10 +516,37 @@ export type VizControlRequest =
   | (VizControlRequestBase & { operation: 'control.discover' })
   | (VizControlRequestBase & { operation: 'control.snapshot' })
   | (VizControlRequestBase & { operation: 'project.inspect' })
-  | (VizControlRequestBase & { operation: 'component.inspect' })
+  | (VizControlRequestBase & {
+      operation: 'project.bundle.open';
+      url: string;
+    })
+  | (VizControlRequestBase & {
+      operation: 'component.inspect';
+      componentId?: string;
+    })
+  | (VizControlRequestBase & {
+      operation: 'node.inspect';
+      nodeType?: string;
+    })
   | (VizControlRequestBase & {
       operation: 'graph.inspect';
       graphId?: string;
+    })
+  | (VizControlRequestBase & {
+      operation: 'graph.runtime.inspect';
+      frame?: number;
+    })
+  | (VizControlRequestBase & {
+      operation: 'frame.inspect';
+      frame?: number;
+    })
+  | (VizControlRequestBase & {
+      operation: 'render.inspect';
+      frame?: number;
+    })
+  | (VizControlRequestBase & {
+      operation: 'debug.inspect';
+      frame?: number;
     })
   | (VizControlRequestBase & {
       operation: 'transaction.apply';
@@ -517,6 +564,11 @@ export type VizControlRequest =
   | (VizControlRequestBase & {
       operation: 'job.inspect';
       jobId: string;
+    })
+  | (VizControlRequestBase & {
+      operation: 'job.output.download';
+      jobId: string;
+      outputId?: string;
     })
   | (VizControlRequestBase & {
       operation: 'audio-bake.start';
@@ -580,8 +632,14 @@ export const vizControlDiscovery: VizControlDiscovery = {
     'control.discover',
     'control.snapshot',
     'project.inspect',
+    'project.bundle.open',
     'component.inspect',
+    'node.inspect',
     'graph.inspect',
+    'graph.runtime.inspect',
+    'frame.inspect',
+    'render.inspect',
+    'debug.inspect',
     'transaction.apply',
     'history.undo',
     'history.redo',
@@ -590,6 +648,7 @@ export const vizControlDiscovery: VizControlDiscovery = {
     'preview.seek',
     'job.list',
     'job.inspect',
+    'job.output.download',
     'audio-bake.start',
     'render.start',
     'job.cancel',

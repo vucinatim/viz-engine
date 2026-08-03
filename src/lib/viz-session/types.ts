@@ -86,6 +86,12 @@ export interface VizSessionAudioState {
 export interface VizSessionHistoryState {
   isNodeEditorFocused: boolean;
   activeGestureId: string | null;
+  recentAgentActivity: {
+    transactionId: string;
+    actorId?: string;
+    timestamp: string;
+    actionTypes: string[];
+  } | null;
 }
 
 export interface VizSessionState {

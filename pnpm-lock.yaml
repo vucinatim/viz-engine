@@ -357,6 +357,15 @@ importers:
         specifier: workspace:*
         version: link:../viz-contracts
 
+  packages/viz-production-afterlight-assembly:
+    dependencies:
+      '@viz-engine/components-core':
+        specifier: workspace:*
+        version: link:../viz-components-core
+      '@viz-engine/contracts':
+        specifier: workspace:*
+        version: link:../viz-contracts
+
   packages/viz-production-signal-cathedral:
     dependencies:
       '@viz-engine/components-core':

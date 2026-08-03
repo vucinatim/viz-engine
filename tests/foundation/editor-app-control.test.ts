@@ -245,6 +245,13 @@ describe('Local editor control facade', () => {
         id: 'viz-studio-live-control',
       },
     });
+    expect(getVizSessionState().history.recentAgentActivity).toEqual({
+      transactionId: 'studio-agent-edit',
+      actorId: 'viz-studio-live-control',
+      timestamp: vizSessionHost.getSnapshot().session.actionHistory.at(-1)
+        ?.timestamp,
+      actionTypes: ['layer.settings.set'],
+    });
 
     editorControl.project.updateLayerValue(layerId, ['size'], 3);
     expect(vizSessionHost.getSnapshot().session.revision).toBe(

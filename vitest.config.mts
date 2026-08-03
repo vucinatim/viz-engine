@@ -51,6 +51,13 @@ export default defineConfig({
         'src',
         'node.ts',
       ),
+      '@viz-engine/project-bundle/browser': path.resolve(
+        repoRoot,
+        'packages',
+        'viz-project-bundle',
+        'src',
+        'browser.ts',
+      ),
       '@viz-engine/actions': packageEntry('viz-actions'),
       '@viz-engine/editor-session': packageEntry('viz-editor-session'),
       '@viz-engine/editor-control/node': path.resolve(
@@ -65,6 +72,9 @@ export default defineConfig({
       '@viz-engine/rhythm-core': packageEntry('rhythm-core'),
       '@viz-engine/production-signal-cathedral': packageEntry(
         'viz-production-signal-cathedral',
+      ),
+      '@viz-engine/production-afterlight-assembly': packageEntry(
+        'viz-production-afterlight-assembly',
       ),
       '@viz-engine/renderer-svg': packageEntry('viz-renderer-svg'),
       '@viz-engine/renderer-three': packageEntry('viz-renderer-three'),

@@ -1,3 +1,4 @@
+import type { VizSessionProjectResources } from './host.js';
 import type { VizControl } from './index.js';
 import {
   decodeVizControlRequest,
@@ -108,13 +109,33 @@ export const executeVizControlRequest = (
           ok: true,
           result: control.inspectProject(),
         };
+      case 'project.bundle.open':
+        return {
+          protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
+          id: request.id,
+          operation: request.operation,
+          ok: false,
+          error: {
+            code: 'operation-failed',
+            message:
+              'This control host has no asynchronous bundle resolver attached.',
+          },
+        };
       case 'component.inspect':
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
           id: request.id,
           operation: request.operation,
           ok: true,
-          result: control.inspectComponents(),
+          result: control.inspectComponents(request.componentId),
+        };
+      case 'node.inspect':
+        return {
+          protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
+          id: request.id,
+          operation: request.operation,
+          ok: true,
+          result: control.inspectNodes(request.nodeType),
         };
       case 'graph.inspect':
         return {
@@ -126,6 +147,38 @@ export const executeVizControlRequest = (
             request.graphId === undefined
               ? control.inspectGraphs()
               : control.inspectGraph(request.graphId),
+        };
+      case 'graph.runtime.inspect':
+        return {
+          protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
+          id: request.id,
+          operation: request.operation,
+          ok: true,
+          result: control.inspectGraphRuntime(request.frame),
+        };
+      case 'frame.inspect':
+        return {
+          protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
+          id: request.id,
+          operation: request.operation,
+          ok: true,
+          result: control.inspectFrame(request.frame),
+        };
+      case 'render.inspect':
+        return {
+          protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
+          id: request.id,
+          operation: request.operation,
+          ok: true,
+          result: control.inspectRender(request.frame),
+        };
+      case 'debug.inspect':
+        return {
+          protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
+          id: request.id,
+          operation: request.operation,
+          ok: true,
+          result: control.createDebugSnapshot(request.frame),
         };
       case 'transaction.apply': {
         const result = control.applyTransaction(request.transaction);
@@ -203,6 +256,18 @@ export const executeVizControlRequest = (
           ok: true,
           result: control.inspectJob(request.jobId),
         };
+      case 'job.output.download':
+        return {
+          protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
+          id: request.id,
+          operation: request.operation,
+          ok: false,
+          error: {
+            code: 'operation-failed',
+            message:
+              'This control host has no asynchronous output downloader attached.',
+          },
+        };
       case 'audio-bake.start':
         return {
           protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
@@ -253,6 +318,76 @@ export const executeVizControlRequest = (
           error instanceof Error
             ? error.message
             : 'Viz control operation failed.',
+      },
+    };
+  }
+};
+
+export interface VizControlAsyncRequestServices {
+  openBundle(url: string): Promise<VizSessionProjectResources>;
+  downloadRenderOutput?: (jobId: string, outputId?: string) => Promise<unknown>;
+}
+
+export const executeVizControlRequestAsync = async (
+  control: VizControl,
+  rawRequest: unknown,
+  services: VizControlAsyncRequestServices,
+): Promise<VizControlResponse> => {
+  const decoded = decodeVizControlRequest(rawRequest);
+  if (
+    !decoded.ok ||
+    (decoded.value.operation !== 'project.bundle.open' &&
+      decoded.value.operation !== 'job.output.download')
+  ) {
+    return executeVizControlRequest(control, rawRequest);
+  }
+
+  const request = decoded.value;
+  try {
+    if (request.operation === 'job.output.download') {
+      if (!services.downloadRenderOutput) {
+        throw new Error(
+          'This control host has no asynchronous output downloader attached.',
+        );
+      }
+      return {
+        protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
+        id: request.id,
+        operation: request.operation,
+        ok: true,
+        result: await services.downloadRenderOutput(
+          request.jobId,
+          request.outputId,
+        ),
+      };
+    }
+    const snapshot = control.openProject(
+      await services.openBundle(request.url),
+    );
+    return {
+      protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
+      id: request.id,
+      operation: request.operation,
+      ok: true,
+      result: {
+        source: snapshot.source,
+        revision: snapshot.session.revision,
+        projectId: snapshot.session.workingProject.projectId,
+        projectName: snapshot.session.workingProject.name,
+        resourceCounts: snapshot.resourceCounts,
+        graphSummaries: snapshot.graphSummaries,
+      },
+    };
+  } catch (error) {
+    return {
+      protocolVersion: VIZ_CONTROL_PROTOCOL_VERSION,
+      id: request.id,
+      operation: request.operation,
+      ok: false,
+      error: {
+        code: 'operation-failed',
+        message:
+          error instanceof Error ? error.message : 'Could not open Viz bundle.',
       },
     };
   }

@@ -33,6 +33,9 @@
       "@viz-engine/project-bundle/node": [
         "packages/viz-project-bundle/src/node.ts"
       ],
+      "@viz-engine/project-bundle/browser": [
+        "packages/viz-project-bundle/src/browser.ts"
+      ],
       "@viz-engine/actions": ["packages/viz-actions/src/index.ts"],
       "@viz-engine/editor-session": [
         "packages/viz-editor-session/src/index.ts"
@@ -49,6 +52,9 @@
       ],
       "@viz-engine/production-signal-cathedral": [
         "packages/viz-production-signal-cathedral/src/index.ts"
+      ],
+      "@viz-engine/production-afterlight-assembly": [
+        "packages/viz-production-afterlight-assembly/src/index.ts"
       ],
       "@viz-engine/renderer-svg": ["packages/viz-renderer-svg/src/index.ts"],
       "@viz-engine/renderer-three": ["packages/viz-renderer-three/src/index.ts"]

@@ -18,6 +18,7 @@ This is the entrypoint for VizEngine documentation during the V2 rewrite.
 - [parity/evidence/2026-07-30-signal-cathedral-production-certification.md](./parity/evidence/2026-07-30-signal-cathedral-production-certification.md)
 - [parity/evidence/2026-07-30-core-consolidation-and-quality-hardening.md](./parity/evidence/2026-07-30-core-consolidation-and-quality-hardening.md)
 - [parity/evidence/2026-07-31-behavior-preserving-minimization-and-final-polish.md](./parity/evidence/2026-07-31-behavior-preserving-minimization-and-final-polish.md)
+- [parity/evidence/2026-08-03-goal-three-agent-loop-and-afterlight-assembly-certification.md](./parity/evidence/2026-08-03-goal-three-agent-loop-and-afterlight-assembly-certification.md)
 - [parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md](./parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md)
 - [parity/evidence/2026-07-31-goal-three-runtime-and-live-edit-repair.md](./parity/evidence/2026-07-31-goal-three-runtime-and-live-edit-repair.md)
 - [parity/evidence/2026-07-31-goal-three-interaction-and-visible-parity-repair.md](./parity/evidence/2026-07-31-goal-three-interaction-and-visible-parity-repair.md)
@@ -26,6 +27,7 @@ This is the entrypoint for VizEngine documentation during the V2 rewrite.
 - [parity/evidence/2026-07-31-goal-three-profiler-and-performance-statistics.md](./parity/evidence/2026-07-31-goal-three-profiler-and-performance-statistics.md)
 - [parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md](./parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md)
 - [parity/evidence/artifacts/2026-07-31-goal-three-baseline.json](./parity/evidence/artifacts/2026-07-31-goal-three-baseline.json)
+- [parity/evidence/artifacts/2026-08-03-goal-three-final-certification.json](./parity/evidence/artifacts/2026-08-03-goal-three-final-certification.json)
 
 ## Active Direction
 

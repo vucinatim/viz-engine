@@ -7,6 +7,7 @@ import { Button } from '../ui/button';
 import { Label } from '../ui/label';
 import { NumberScrubInput } from '../ui/number-scrub-input';
 import { Switch } from '../ui/switch';
+import AgentActivityIndicator from './agent-activity-indicator';
 import { DebugInfoDialog } from './debug-info-dialog';
 import EditorToolbar from './editor-toolbar';
 import ExportButton from './export-button';
@@ -80,6 +81,7 @@ const EditorHeader = () => {
           Rhythm Lab
         </Button>
         <ExportButton />
+        <AgentActivityIndicator />
         <JobStatusButton />
         <HelpDialog />
         <DebugInfoDialog />

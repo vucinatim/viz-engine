@@ -74,6 +74,7 @@ export const createStudioHistoryActions = ({
       replaceState({
         isNodeEditorFocused: false,
         activeGestureId: null,
+        recentAgentActivity: null,
       });
     },
     setState(partial: Partial<VizSessionHistoryState>) {

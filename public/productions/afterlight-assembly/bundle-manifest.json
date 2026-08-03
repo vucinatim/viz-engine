@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "kind": "viz.project-bundle-manifest.v1",
+  "projectFile": "project.json",
+  "executionManifestFile": "execution-manifest.json",
+  "assetEntries": [
+    {
+      "assetId": "asset-afterlight-dancefloor-dnb",
+      "kind": "audio",
+      "path": "assets/asset-afterlight-dancefloor-dnb.mp3",
+      "mimeType": "audio/mpeg",
+      "metadata": {
+        "derivation": {
+          "sourcePath": "public/music/[DnB] Dancefloor DnB.mp3",
+          "sourceStartSeconds": 60,
+          "durationSeconds": 12
+        },
+        "sourceContentIdentity": "sha256:8ed6942b63378b0ebd1597f9ead5987126d6d0a0c6a60987e05c844d013af923",
+        "derivationTool": "ffmpeg",
+        "derivationArguments": {
+          "sourceStartSeconds": 60,
+          "durationSeconds": 12,
+          "codec": "libmp3lame",
+          "bitrate": "192k",
+          "stripMetadata": true
+        }
+      }
+    },
+    {
+      "assetId": "viz-builtin-stage-female-dj",
+      "kind": "model",
+      "path": "assets/viz-builtin-stage-female-dj.fbx",
+      "mimeType": "application/vnd.autodesk.fbx",
+      "metadata": {
+        "contentIdentity": "sha256:87c7b85a746330c4423bf0598ae0356a9289299316030d46cf067f7fc9cd9c16",
+        "modelFormat": "fbx",
+        "stageRole": "dj"
+      }
+    },
+    {
+      "assetId": "viz-builtin-stage-female-dancer",
+      "kind": "model",
+      "path": "assets/viz-builtin-stage-female-dancer.fbx",
+      "mimeType": "application/vnd.autodesk.fbx",
+      "metadata": {
+        "contentIdentity": "sha256:fd6847858a95d9de88e64d0c070b44e95b3c822bf3231ff347f2832dc9396479",
+        "modelFormat": "fbx",
+        "stageRole": "femaleDancer"
+      }
+    },
+    {
+      "assetId": "viz-builtin-stage-male-dancer",
+      "kind": "model",
+      "path": "assets/viz-builtin-stage-male-dancer.fbx",
+      "mimeType": "application/vnd.autodesk.fbx",
+      "metadata": {
+        "contentIdentity": "sha256:c9cf2a023a282b391534e8a10a91092438def435d786e9d12309ef367eb43582",
+        "modelFormat": "fbx",
+        "stageRole": "maleDancer"
+      }
+    },
+    {
+      "assetId": "viz-builtin-stage-male-cheer",
+      "kind": "model",
+      "path": "assets/viz-builtin-stage-male-cheer.fbx",
+      "mimeType": "application/vnd.autodesk.fbx",
+      "metadata": {
+        "contentIdentity": "sha256:354aab94cf2a971baf58f4007ab0eecfa379126f1a11d421a56dd8f68ee3959b",
+        "modelFormat": "fbx",
+        "stageRole": "maleCheer"
+      }
+    }
+  ],
+  "artifactEntries": [
+    {
+      "artifactId": "artifact-audio-features-9fd7cad5",
+      "kind": "audio-feature-timeline",
+      "path": "baked/artifact-audio-features-9fd7cad5.vizaudio",
+      "encoding": "viz-audio-feature-timeline-v1",
+      "metadata": {
+        "profile": "standard",
+        "executionIdentity": "viz-bake.audio-feature-timeline.v1:d084160d"
+      }
+    }
+  ]
+}

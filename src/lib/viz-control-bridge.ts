@@ -1,9 +1,10 @@
 import { vizControl } from '@/lib/viz-session';
 import {
-  executeVizControlRequest,
+  executeVizControlRequestAsync,
   VIZ_CONTROL_PROTOCOL_VERSION,
   type VizControlEvent,
 } from '@viz-engine/editor-control';
+import { loadBrowserVizProjectBundle } from '@viz-engine/project-bundle/browser';
 
 interface BridgeRequest {
   targetEditorInstanceId: string;
@@ -82,14 +83,67 @@ export const mountVizControlBridge = (): (() => void) => {
     }
   };
 
-  const handleRequest = (data: unknown) => {
+  const handleRequest = async (data: unknown) => {
     if (
       !isBridgeRequest(data) ||
       data.targetEditorInstanceId !== editorInstanceId
     ) {
       return;
     }
-    const response = executeVizControlRequest(vizControl, data.request);
+    const response = await executeVizControlRequestAsync(
+      vizControl,
+      data.request,
+      {
+        openBundle: async (url) => {
+          const bundle = await loadBrowserVizProjectBundle(url);
+          return {
+            project: bundle.project,
+            resolvedAssets: bundle.resolvedAssets,
+            resolvedArtifacts: bundle.resolvedArtifacts,
+            source: {
+              kind: 'bundle',
+              label: bundle.project.name,
+              bundleDirectory: bundle.bundleUrl,
+            },
+          };
+        },
+        downloadRenderOutput: async (jobId, outputId) => {
+          const job = vizControl.getHost().getServices().renderJobs?.get(jobId);
+          if (!job) throw new Error(`Render job "${jobId}" was not found.`);
+          if (job.status !== 'succeeded' || !job.result) {
+            throw new Error(`Render job "${jobId}" has not succeeded.`);
+          }
+          const output = outputId
+            ? job.result.outputs.find((candidate) => candidate.id === outputId)
+            : job.result.outputs[0];
+          if (!output) {
+            throw new Error(
+              outputId
+                ? `Render output "${outputId}" was not found.`
+                : `Render job "${jobId}" has no output.`,
+            );
+          }
+          const fileStem =
+            output.label
+              .trim()
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-+|-+$/g, '') || 'viz-render-output';
+          const fileName = `${fileStem}.${output.format}`;
+          const link = document.createElement('a');
+          link.href = output.uri;
+          link.download = fileName;
+          link.click();
+          return {
+            jobId,
+            outputId: output.id,
+            fileName,
+            contentIdentity: output.contentIdentity,
+            byteLength: output.byteLength,
+          };
+        },
+      },
+    );
     import.meta.hot?.send('viz-control:response', {
       editorInstanceId,
       response,

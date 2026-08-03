@@ -18,6 +18,7 @@ const tiers = new Map([
   ['@viz-engine/example-projects', 1],
   ['@viz-engine/nodes-core', 1],
   ['@viz-engine/production-signal-cathedral', 1],
+  ['@viz-engine/production-afterlight-assembly', 1],
   ['@viz-engine/remotion-adapter', 1],
   ['@viz-engine/render', 1],
   ['@viz-engine/renderer-svg', 1],

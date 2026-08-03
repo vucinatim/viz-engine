@@ -60,9 +60,11 @@ already requirements of the active goal.
   and future agent tooling.
 - Keep `@viz-engine/editor-control` small and durable; add operations only for
   stable editor/runtime concepts.
-- Add a true live pick-up loop for newly authored or changed capability packs,
-  so an agent can write a component and the user can inspect it with minimal
-  friction.
+- If future third-party capability development needs runtime plugin discovery,
+  design a trusted manifest/loading boundary. The current first-party loop uses
+  explicit workspace registration, Vite HMR, live capability inspection, and
+  portable bundle open; do not add arbitrary runtime code loading only to avoid
+  an intentional install/restart boundary for new packages.
 - Keep browser media-element ownership outside pure session packages.
 - Keep transport controls mechanically simple and explicitly controlled on the
   critical live-loop path.

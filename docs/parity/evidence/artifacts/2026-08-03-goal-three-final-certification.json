@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-08-03",
+  "goal": "product-parity-performance-and-agentic-creative-calibration",
+  "status": "certified",
+  "parity": {
+    "total": 42,
+    "verified": 42,
+    "partial": 0,
+    "gap": 0,
+    "notAudited": 0
+  },
+  "agentWorkflow": {
+    "liveBundleOpen": true,
+    "liveOutputDownload": true,
+    "agentActivityVisible": true,
+    "sourceCli": true,
+    "builtCli": true,
+    "inspectionOperations": [
+      "component.inspect",
+      "node.inspect",
+      "graph.inspect",
+      "graph.runtime.inspect",
+      "frame.inspect",
+      "render.inspect",
+      "debug.inspect"
+    ]
+  },
+  "production": {
+    "id": "afterlight-assembly",
+    "projectId": "project-afterlight-assembly",
+    "durationFrames": 720,
+    "fps": 60,
+    "assets": 5,
+    "artifacts": 1,
+    "layers": 1,
+    "graphs": 1,
+    "nodes": 30,
+    "outputs": 12,
+    "identities": {
+      "project": "sha256:4da634764ba0424c174f97841b8d816af5edda584622ca0732b432bd2513d267",
+      "audio": "sha256:8ed6942b63378b0ebd1597f9ead5987126d6d0a0c6a60987e05c844d013af923",
+      "artifact": "sha256:62d4b342614af0e040e4d037414595f8c2e4698a9ff990b391af3a1430beadfa",
+      "bakeExecution": "viz-bake.audio-feature-timeline.v1:d084160d",
+      "renderSource": "viz-render-source.v1:79d6579f"
+    }
+  },
+  "outputs": {
+    "still": {
+      "path": "public/productions/afterlight-assembly/renders/afterlight-assembly-drop-still.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "66ff14edbb705cb291e0bc7aacd05ebe86ccb1ea44423a9b6191882b7b32f7a2"
+    },
+    "contactSheet": {
+      "path": "public/productions/afterlight-assembly/renders/afterlight-assembly-contact-sheet.jpeg",
+      "width": 1936,
+      "height": 728,
+      "frames": [0, 152, 300, 420, 600, 719],
+      "sha256": "c3dd60d6ae759fcaf4048d65188c53bc0a187d6da3e49ab48c5ae1fec3d2f190",
+      "blankFrames": 0,
+      "frozenFramePairs": 0,
+      "minimumAverageLuminance": 0.10164706869553436,
+      "maximumAverageLuminance": 0.4551471861383447
+    },
+    "video": {
+      "path": "public/productions/afterlight-assembly/renders/afterlight-assembly-final.mp4",
+      "sha256": "acb803e5475c6ed7649ffc79d11a6a557bf932be0dc2ae70a7cb4a617f834f54",
+      "byteLength": 15315714,
+      "durationSeconds": 12,
+      "width": 1280,
+      "height": 720,
+      "fps": 30,
+      "frameCount": 360,
+      "videoCodec": "h264",
+      "audioCodec": "aac",
+      "audioSampleRate": 48000,
+      "audioChannels": 2,
+      "blankFrames": 0,
+      "frozenFramePairs": 0,
+      "averageRenderMilliseconds": 3.863333332373036,
+      "p95RenderMilliseconds": 4.399999976158142,
+      "maximumRenderMilliseconds": 6.199999988079071,
+      "encodeMilliseconds": 46278.90000003576,
+      "independentBlackIntervals": 0,
+      "independentFrozenIntervals": 0,
+      "independentSilenceIntervals": 0
+    }
+  },
+  "finalGate": {
+    "command": "pnpm check:foundation",
+    "parityCapabilities": 42,
+    "architecturePackages": 18,
+    "foundationTestFiles": 64,
+    "foundationTests": 291,
+    "browserTestsDiscovered": 18,
+    "browserTestsPassed": 16,
+    "browserTestsSkipped": 2,
+    "packageBuilds": 18,
+    "studioBuild": true,
+    "builtConsumerSmoke": true,
+    "builtCreativeLoopSmoke": true
+  }
+}

@@ -1,6 +1,6 @@
 # Current State
 
-Last reconciled: 2026-07-31
+Last reconciled: 2026-08-03
 
 ## Product Direction
 
@@ -62,7 +62,7 @@ Remotion, still jobs, and video jobs. Remotion remains an adapter.
 - live HTTP/SSE control mounted over the same session as the editor
 - source-mode and built-package CLI paths
 
-## Certified Production
+## Certified Productions
 
 [Signal Cathedral](./plans/v2/first-agent-authored-production-signal-cathedral.md)
 proves the complete loop:
@@ -77,6 +77,17 @@ proves the complete loop:
 
 See
 [Signal Cathedral Production Certification](./parity/evidence/2026-07-30-signal-cathedral-production-certification.md).
+
+[Afterlight Assembly](./parity/evidence/2026-08-03-goal-three-agent-loop-and-afterlight-assembly-certification.md)
+proves the second-production and calibrated agent loop:
+
+- browser-resolved portable bundle open in the already-running editor
+- focused component/node and runtime/frame/render/debug inspection
+- visible canonical agent transaction activity
+- browser render-job output retrieval through the live control contract
+- one editable 30-node, 12-output Stage graph
+- four bundled FBX performers, a 420-character crowd, and cinematic camera
+- validated still, contact sheet, and 12-second H.264/AAC final video
 
 ## Certified Consolidation Baseline
 
@@ -128,10 +139,10 @@ renderer lifecycle, diagnostic, test, type, parity row, and performance budget
 remains protected. See the
 [Goal Two certification](./parity/evidence/2026-07-31-behavior-preserving-minimization-and-final-polish.md).
 
-## Active Goal
+## Completed Goal Three
 
 [Product Parity, Performance, And Agentic Creative Calibration](./plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
-is active as Goal Three.
+is complete as Goal Three.
 
 Its immutable execution baseline is
 `cfe627949227eaf5a1ebd2c94e2a7b77529bbc6b`, committed and pushed to
@@ -415,9 +426,19 @@ The endurance and performance checkpoint is now also complete:
 See
 [Endurance And Performance Certification](./parity/evidence/2026-07-31-goal-three-endurance-and-performance-certification.md).
 
-The parity matrix now contains 42 verified capabilities, with zero partial,
-gap, or unaudited rows. Goal Three remains open for agent workflow calibration
-and the second original production.
+The parity matrix contains 42 verified capabilities, with zero partial, gap, or
+unaudited rows. Goal Three is now complete: the calibrated live agent loop can
+inspect, mutate, open, render, diagnose, and retrieve output through canonical
+contracts, and Afterlight Assembly supplies the distinct second original
+production, editable public bundle, and final media proof.
+
+The final complete gate passes clean architecture and static checks, 64
+deterministic test files / 291 tests, 16 active headed Chromium journeys with 2
+intentional opt-in skips, all 18 package builds, the Studio production build,
+and both built-consumer smoke scenarios.
+
+See
+[Goal Three Agent Loop And Afterlight Assembly Certification](./parity/evidence/2026-08-03-goal-three-agent-loop-and-afterlight-assembly-certification.md).
 
 ## Known Deliberate Deferrals
 
@@ -438,7 +459,7 @@ consolidation.
 - [Product architecture and parity alignment](./visions/v2-product-architecture-and-parity-alignment.md)
 - [Completed consolidation plan](./plans/v2/core-consolidation-and-minimization-program.md)
 - [Completed minimization plan](./plans/v2/behavior-preserving-minimization-and-final-polish.md)
-- [Active Goal Three](./plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
+- [Completed Goal Three](./plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
 - [Autonomous development contract](./plans/v2/autonomous-development-operating-contract.md)
 - [Parity matrix](./parity/README.md)
 - [Suggestions](./suggestions.md)

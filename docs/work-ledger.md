@@ -2454,3 +2454,32 @@
   - recorded the architecture, assumptions, metrics, and machine-readable
     summary in
     `docs/parity/evidence/2026-07-31-goal-three-authoring-schema-and-live-controls.md`
+- completed the Goal Three agent-workflow calibration and second original
+  production:
+  - exposed focused component/node discovery plus canonical graph-runtime,
+    frame, render, and debug inspection through source and built live CLI paths
+  - fixed root CLI working-directory semantics and added browser-safe portable
+    bundle loading into the already-running canonical editor session
+  - made external agent transactions visible through the editor's canonical
+    action history without adding frame-rate React subscriptions
+  - added browser-owned render-output retrieval behind the existing live
+    control and render-job contracts
+  - authored Afterlight Assembly as a 12-second Dancefloor DnB Stage production
+    with four bundled FBX performers, 420 crowd characters, one cinematic
+    camera, one 30-node graph, and 12 audio-reactive outputs
+  - rejected the first technically valid but overexposed contact sheet, tuned
+    the production light envelope, and accepted the second six-frame sheet with
+    luminance from 0.101647 to 0.455147 and no blank or frozen samples
+  - rendered and independently probed a 12.000-second, 1280 × 720, 30 fps H.264
+    video with 48 kHz stereo AAC, 360 changing frames, no blank/frozen frames,
+    and no detected black, freeze, or silence intervals
+  - consolidated Signal Cathedral and Afterlight production materialization on
+    one audio/bundle helper while preserving Signal Cathedral identities
+  - passed the final uncontended `pnpm check:foundation` gate with 42/42 parity
+    capabilities, clean 18-package architecture, formatting, lint, all type
+    checks, 64 deterministic test files / 291 tests, 16 passed headed Chromium
+    journeys plus 2 intentional opt-in skips, all 18 package builds, the Studio
+    production build, and both built-consumer smoke scenarios
+  - recorded the architecture, creative review, bundle identities, media probe,
+    assumptions, and machine-readable results in
+    `docs/parity/evidence/2026-08-03-goal-three-agent-loop-and-afterlight-assembly-certification.md`

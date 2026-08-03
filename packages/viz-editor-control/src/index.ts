@@ -12,6 +12,10 @@ import type {
   VizGraphId,
   VizJobId,
   VizJobRecord,
+  VizNodeAuthoring,
+  VizNodeCategory,
+  VizNodeDefinitionInput,
+  VizNodeDefinitionOutput,
   VizProjectAction,
   VizProjectDocument,
   VizProjectTransaction,
@@ -73,6 +77,17 @@ export interface VizComponentSummary {
   authoring: VizComponentAuthoring | undefined;
   inputCount: number;
   inputKeys: string[];
+}
+
+export interface VizNodeSummary {
+  nodeType: string;
+  name: string;
+  category: VizNodeCategory;
+  description: string | undefined;
+  inputs: VizNodeDefinitionInput[];
+  outputs: VizNodeDefinitionOutput[];
+  authoring: VizNodeAuthoring | undefined;
+  metadata: Record<string, unknown> | undefined;
 }
 
 export interface VizControlSnapshot extends VizSessionHostSnapshot {
@@ -184,7 +199,8 @@ export interface VizControl {
           | Partial<VizControlSnapshot['session']['uiState']>),
   ): VizControlSnapshot;
   inspectGraphs(): VizGraphSummary[];
-  inspectComponents(): VizComponentSummary[];
+  inspectComponents(componentId?: string): VizComponentSummary[];
+  inspectNodes(nodeType?: string): VizNodeSummary[];
   inspectGraph(
     graphId: VizGraphId,
   ): NonNullable<VizProjectDocument['graphs']>[number] | undefined;
@@ -267,6 +283,18 @@ const createComponentSummaries = (
     };
   });
 };
+
+const createNodeSummaries = (registry: VizNodeRegistry): VizNodeSummary[] =>
+  registry.list().map((node) => ({
+    nodeType: node.type,
+    name: node.name,
+    category: node.category,
+    description: node.description,
+    inputs: node.inputs ?? [],
+    outputs: node.outputs,
+    authoring: node.authoring,
+    metadata: node.metadata,
+  }));
 
 const createJobSummary = (job: VizControlJobRecord): VizControlJobSummary => {
   const outputArtifactIds =
@@ -634,8 +662,19 @@ export const createVizControl = (
       return getSnapshot();
     },
     inspectGraphs: () => createGraphSummaries(host.getWorkingProject()),
-    inspectComponents: () =>
-      clone(createComponentSummaries(host.getComponentRegistry())),
+    inspectComponents: (componentId) =>
+      clone(
+        createComponentSummaries(host.getComponentRegistry()).filter(
+          (component) =>
+            componentId === undefined || component.componentId === componentId,
+        ),
+      ),
+    inspectNodes: (nodeType) =>
+      clone(
+        createNodeSummaries(host.getNodeRegistry()).filter(
+          (node) => nodeType === undefined || node.nodeType === nodeType,
+        ),
+      ),
     inspectGraph: (graphId) => {
       return clone(
         host.getWorkingProject().graphs?.find((graph) => graph.id === graphId),

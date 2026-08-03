@@ -44,6 +44,7 @@ Browser comparison records live in [evidence](./evidence/). Start with:
 - [2026-07-31 Goal Three graph validation and deterministic evaluation](./evidence/2026-07-31-goal-three-graph-validation-and-deterministic-evaluation.md)
 - [2026-07-31 Goal Three endurance and performance certification](./evidence/2026-07-31-goal-three-endurance-and-performance-certification.md)
 - [2026-07-31 Goal Three audio and transport reactivity](./evidence/2026-07-31-goal-three-audio-and-transport-reactivity.md)
+- [2026-08-03 Goal Three agent loop and Afterlight Assembly certification](./evidence/2026-08-03-goal-three-agent-loop-and-afterlight-assembly-certification.md)
 
 ## Pinned Reference
 

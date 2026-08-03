@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "kind": "viz.execution-manifest.v1",
+  "project": {
+    "projectId": "project-afterlight-assembly",
+    "schemaVersion": "2.0.0-alpha.1",
+    "contentIdentity": "sha256:4da634764ba0424c174f97841b8d816af5edda584622ca0732b432bd2513d267"
+  },
+  "runtime": {
+    "packageId": "@viz-engine/runtime",
+    "version": "0.0.1"
+  },
+  "capabilityPacks": [
+    {
+      "id": "@viz-engine/components-core",
+      "version": "0.0.1"
+    }
+  ],
+  "components": [
+    {
+      "componentId": "stage-scene",
+      "implementationVersion": "1.0.0",
+      "capabilityPack": {
+        "id": "@viz-engine/components-core",
+        "version": "0.0.1"
+      }
+    }
+  ],
+  "nodePackages": [
+    {
+      "packageId": "@viz-engine/nodes-core",
+      "version": "0.0.1",
+      "nodeTypes": [
+        "add",
+        "clamp",
+        "decay",
+        "graph-input",
+        "multiply"
+      ]
+    }
+  ],
+  "renderer": {
+    "package": {
+      "packageId": "@viz-engine/renderer-three",
+      "version": "0.0.1"
+    },
+    "backend": {
+      "id": "browser-webgl",
+      "version": "viz-render.browser-webgl.v1"
+    },
+    "programs": [
+      {
+        "programId": "viz-core/instanced-supercube/v1",
+        "implementationVersion": "1.0.0",
+        "capabilityPack": {
+          "id": "@viz-engine/components-core",
+          "version": "0.0.1"
+        }
+      },
+      {
+        "programId": "viz-core/light-tunnel/v1",
+        "implementationVersion": "1.0.0",
+        "capabilityPack": {
+          "id": "@viz-engine/components-core",
+          "version": "0.0.1"
+        }
+      },
+      {
+        "programId": "viz-core/morph-shapes/v1",
+        "implementationVersion": "1.0.0",
+        "capabilityPack": {
+          "id": "@viz-engine/components-core",
+          "version": "0.0.1"
+        }
+      },
+      {
+        "programId": "viz-core/neural-network/v1",
+        "implementationVersion": "1.0.0",
+        "capabilityPack": {
+          "id": "@viz-engine/components-core",
+          "version": "0.0.1"
+        }
+      },
+      {
+        "programId": "viz-core/orbiting-cubes/v1",
+        "implementationVersion": "1.0.0",
+        "capabilityPack": {
+          "id": "@viz-engine/components-core",
+          "version": "0.0.1"
+        }
+      },
+      {
+        "programId": "viz-core/particle-system/v1",
+        "implementationVersion": "1.0.0",
+        "capabilityPack": {
+          "id": "@viz-engine/components-core",
+          "version": "0.0.1"
+        }
+      },
+      {
+        "programId": "viz-core/simple-cube/v1",
+        "implementationVersion": "1.0.0",
+        "capabilityPack": {
+          "id": "@viz-engine/components-core",
+          "version": "0.0.1"
+        }
+      },
+      {
+        "programId": "viz-core/stage-scene/v1",
+        "implementationVersion": "1.0.0",
+        "capabilityPack": {
+          "id": "@viz-engine/components-core",
+          "version": "0.0.1"
+        }
+      }
+    ]
+  },
+  "bakes": [
+    {
+      "artifactId": "artifact-audio-features-9fd7cad5",
+      "sourceAssetId": "asset-afterlight-dancefloor-dnb",
+      "executionIdentity": "viz-bake.audio-feature-timeline.v1:d084160d"
+    }
+  ],
+  "assets": [
+    {
+      "assetId": "asset-afterlight-dancefloor-dnb",
+      "contentIdentity": "sha256:8ed6942b63378b0ebd1597f9ead5987126d6d0a0c6a60987e05c844d013af923"
+    },
+    {
+      "assetId": "viz-builtin-stage-female-dj",
+      "contentIdentity": "sha256:87c7b85a746330c4423bf0598ae0356a9289299316030d46cf067f7fc9cd9c16"
+    },
+    {
+      "assetId": "viz-builtin-stage-female-dancer",
+      "contentIdentity": "sha256:fd6847858a95d9de88e64d0c070b44e95b3c822bf3231ff347f2832dc9396479"
+    },
+    {
+      "assetId": "viz-builtin-stage-male-dancer",
+      "contentIdentity": "sha256:c9cf2a023a282b391534e8a10a91092438def435d786e9d12309ef367eb43582"
+    },
+    {
+      "assetId": "viz-builtin-stage-male-cheer",
+      "contentIdentity": "sha256:354aab94cf2a971baf58f4007ab0eecfa379126f1a11d421a56dd8f68ee3959b"
+    }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "artifact-audio-features-9fd7cad5",
+      "contentIdentity": "sha256:62d4b342614af0e040e4d037414595f8c2e4698a9ff990b391af3a1430beadfa"
+    }
+  ],
+  "metadata": {
+    "determinism": "semantic",
+    "production": "afterlight-assembly"
+  }
+}

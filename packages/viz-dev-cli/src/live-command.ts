@@ -12,8 +12,14 @@ import { VizCliInputError } from './types.js';
 const operations: Record<string, string> = {
   snapshot: 'control.snapshot',
   project: 'project.inspect',
+  'bundle-open': 'project.bundle.open',
   components: 'component.inspect',
+  nodes: 'node.inspect',
   graphs: 'graph.inspect',
+  'graph-runtime': 'graph.runtime.inspect',
+  frame: 'frame.inspect',
+  render: 'render.inspect',
+  debug: 'debug.inspect',
   undo: 'history.undo',
   redo: 'history.redo',
   play: 'preview.play',
@@ -22,6 +28,7 @@ const operations: Record<string, string> = {
   transact: 'transaction.apply',
   jobs: 'job.list',
   job: 'job.inspect',
+  'job-download': 'job.output.download',
   'bake-start': 'audio-bake.start',
   'render-start': 'render.start',
   'job-cancel': 'job.cancel',
@@ -73,17 +80,47 @@ export const runLiveCommand = async (argv: string[]): Promise<VizCliOutput> => {
     );
   }
   const payload: Record<string, unknown> = {};
-  if (action === 'graphs') {
+  if (action === 'bundle-open') {
+    payload.url = args.require('--bundle-url', 'bundle URL');
+  } else if (action === 'components') {
+    const componentId = args.optional('--component-id');
+    if (componentId) {
+      payload.componentId = componentId;
+    }
+  } else if (action === 'nodes') {
+    const nodeType = args.optional('--node-type');
+    if (nodeType) {
+      payload.nodeType = nodeType;
+    }
+  } else if (action === 'graphs') {
     const graphId = args.optional('--graph-id');
     if (graphId) {
       payload.graphId = graphId;
+    }
+  } else if (
+    action === 'graph-runtime' ||
+    action === 'frame' ||
+    action === 'render' ||
+    action === 'debug'
+  ) {
+    const frame = args.number('--frame', { integer: true, minimum: 0 });
+    if (frame !== undefined) {
+      payload.frame = frame;
     }
   } else if (action === 'seek') {
     payload.frame = args.frame();
   } else if (action === 'transact') {
     payload.transaction = args.json('--transaction', 'transaction file');
-  } else if (action === 'job' || action === 'job-cancel') {
+  } else if (
+    action === 'job' ||
+    action === 'job-download' ||
+    action === 'job-cancel'
+  ) {
     payload.jobId = requireJobId(args);
+    if (action === 'job-download') {
+      const outputId = args.optional('--output-id');
+      if (outputId) payload.outputId = outputId;
+    }
   } else if (action === 'bake-start') {
     payload.request = args.json('--request', 'audio bake request file');
   } else if (action === 'render-start') {

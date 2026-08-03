@@ -58,6 +58,7 @@ const createInitialAudioState = (
 const createInitialHistoryState = (): VizSessionHistoryState => ({
   isNodeEditorFocused: false,
   activeGestureId: null,
+  recentAgentActivity: null,
 });
 
 interface PersistedVizProjectState {

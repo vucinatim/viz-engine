@@ -1,0 +1,1034 @@
+{
+  "schemaVersion": "2.0.0-alpha.1",
+  "projectId": "project-afterlight-assembly",
+  "name": "Afterlight Assembly",
+  "timeline": {
+    "fps": 60,
+    "durationInFrames": 720
+  },
+  "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "backgroundColor": "#030108"
+  },
+  "layerOrder": [
+    "layer-afterlight-stage"
+  ],
+  "layers": [
+    {
+      "id": "layer-afterlight-stage",
+      "name": "Afterlight Festival Stage",
+      "componentId": "stage-scene",
+      "enabled": true,
+      "opacity": 1,
+      "blendMode": "normal",
+      "rendererFamily": "three",
+      "settings": {
+        "camera": {
+          "position": {
+            "x": 0,
+            "y": 8,
+            "z": 40
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "enterWasdMode": null,
+          "moveSpeed": 20,
+          "lookSpeed": 0.002,
+          "cinematicMode": true,
+          "cinematicPath": "Crowd Flyover",
+          "cinematicDuration": 12,
+          "cinematicLookAt": {
+            "x": 0,
+            "y": 6,
+            "z": 0
+          },
+          "cinematicLerpSpeed": 0.12
+        },
+        "shaderWall": {
+          "enabled": true,
+          "scale": 1.5,
+          "rotationSpeed": 0.25,
+          "colorSpeed": 2.4,
+          "travelSpeed": 0.5,
+          "brightness": 1.35
+        },
+        "lighting": {
+          "hemisphereIntensity": 0.85,
+          "ambientIntensity": 0.28
+        },
+        "postProcessing": {
+          "bloom": true,
+          "bloomStrength": 0.45,
+          "bloomRadius": 0.72,
+          "bloomThreshold": 0.28
+        },
+        "lasers": {
+          "enabled": true,
+          "mode": "auto",
+          "colorMode": "single",
+          "singleColor": "#ff315f",
+          "rotationSpeed": 1,
+          "maxConcurrentLasers": 10
+        },
+        "movingLights": {
+          "enabled": true,
+          "mode": "auto",
+          "colorMode": "single",
+          "singleColor": "#7b61ff",
+          "intensity": 5,
+          "speed": 1.35
+        },
+        "beams": {
+          "enabled": true,
+          "mode": "auto",
+          "colorMode": "single",
+          "singleColor": "#33e6ff",
+          "intensity": 1
+        },
+        "stageLights": {
+          "enabled": true,
+          "color": "#ff315f"
+        },
+        "stageWash": {
+          "enabled": true,
+          "intensity": 5
+        },
+        "strobes": {
+          "enabled": true,
+          "intensity": 300,
+          "flashRate": 0.2
+        },
+        "blinders": {
+          "enabled": false,
+          "mode": "controlled",
+          "intensity": 0
+        },
+        "overheadBlinder": {
+          "enabled": true,
+          "intensity": 0
+        },
+        "accentLights": {
+          "enabled": true,
+          "light1Color": "#ff315f",
+          "light2Color": "#33e6ff",
+          "djSpotIntensity": 1.4
+        },
+        "characters": {
+          "showDj": true,
+          "animationSpeed": 0.72,
+          "crowdCount": 420
+        },
+        "debug": {
+          "showHelpers": false
+        }
+      },
+      "inputs": {
+        "djModel": {
+          "kind": "asset-ref",
+          "assetId": "viz-builtin-stage-female-dj"
+        },
+        "femaleDancerModel": {
+          "kind": "asset-ref",
+          "assetId": "viz-builtin-stage-female-dancer"
+        },
+        "maleDancerModel": {
+          "kind": "asset-ref",
+          "assetId": "viz-builtin-stage-male-dancer"
+        },
+        "maleCheerModel": {
+          "kind": "asset-ref",
+          "assetId": "viz-builtin-stage-male-cheer"
+        },
+        "shaderWall:scale": {
+          "kind": "graph-output",
+          "graphId": "graph-afterlight-stage-reactivity",
+          "output": "wallScale"
+        },
+        "shaderWall:rotationSpeed": {
+          "kind": "graph-output",
+          "graphId": "graph-afterlight-stage-reactivity",
+          "output": "wallRotation"
+        },
+        "shaderWall:travelSpeed": {
+          "kind": "graph-output",
+          "graphId": "graph-afterlight-stage-reactivity",
+          "output": "wallTravel"
+        },
+        "shaderWall:brightness": {
+          "kind": "graph-output",
+          "graphId": "graph-afterlight-stage-reactivity",
+          "output": "wallBrightness"
+        },
+        "beams:intensity": {
+          "kind": "graph-output",
+          "graphId": "graph-afterlight-stage-reactivity",
+          "output": "beamIntensity"
+        },
+        "movingLights:intensity": {
+          "kind": "graph-output",
+          "graphId": "graph-afterlight-stage-reactivity",
+          "output": "movingIntensity"
+        },
+        "stageWash:intensity": {
+          "kind": "graph-output",
+          "graphId": "graph-afterlight-stage-reactivity",
+          "output": "washIntensity"
+        },
+        "strobes:flashRate": {
+          "kind": "graph-output",
+          "graphId": "graph-afterlight-stage-reactivity",
+          "output": "strobeRate"
+        },
+        "blinders:intensity": {
+          "kind": "graph-output",
+          "graphId": "graph-afterlight-stage-reactivity",
+          "output": "blinderIntensity"
+        },
+        "overheadBlinder:intensity": {
+          "kind": "graph-output",
+          "graphId": "graph-afterlight-stage-reactivity",
+          "output": "overheadIntensity"
+        },
+        "postProcessing:bloomStrength": {
+          "kind": "graph-output",
+          "graphId": "graph-afterlight-stage-reactivity",
+          "output": "bloomStrength"
+        },
+        "characters:animationSpeed": {
+          "kind": "graph-output",
+          "graphId": "graph-afterlight-stage-reactivity",
+          "output": "characterSpeed"
+        }
+      },
+      "requiredAssetIds": [
+        "asset-afterlight-dancefloor-dnb",
+        "viz-builtin-stage-female-dj",
+        "viz-builtin-stage-female-dancer",
+        "viz-builtin-stage-male-dancer",
+        "viz-builtin-stage-male-cheer"
+      ],
+      "requiredArtifactIds": [
+        "artifact-audio-features-9fd7cad5"
+      ],
+      "renderPolicy": {
+        "supportedModes": [
+          "live",
+          "render"
+        ],
+        "requiresBake": true,
+        "preferredRendererFamily": "three"
+      }
+    }
+  ],
+  "assetRefs": [
+    {
+      "id": "asset-afterlight-dancefloor-dnb",
+      "kind": "audio",
+      "source": "generated",
+      "label": "Afterlight Assembly — Dancefloor DnB 60–72s",
+      "mimeType": "audio/mpeg",
+      "originalFileName": "afterlight-dancefloor-dnb-60s-72s.mp3",
+      "metadata": {
+        "derivation": {
+          "sourcePath": "public/music/[DnB] Dancefloor DnB.mp3",
+          "sourceStartSeconds": 60,
+          "durationSeconds": 12
+        },
+        "sourceContentIdentity": "sha256:8ed6942b63378b0ebd1597f9ead5987126d6d0a0c6a60987e05c844d013af923",
+        "derivationTool": "ffmpeg",
+        "derivationArguments": {
+          "sourceStartSeconds": 60,
+          "durationSeconds": 12,
+          "codec": "libmp3lame",
+          "bitrate": "192k",
+          "stripMetadata": true
+        }
+      }
+    },
+    {
+      "id": "viz-builtin-stage-female-dj",
+      "kind": "model",
+      "source": "bundle",
+      "label": "Stage Female DJ",
+      "mimeType": "application/vnd.autodesk.fbx",
+      "originalFileName": "female-dj.fbx",
+      "metadata": {
+        "contentIdentity": "sha256:87c7b85a746330c4423bf0598ae0356a9289299316030d46cf067f7fc9cd9c16",
+        "modelFormat": "fbx",
+        "stageRole": "dj"
+      }
+    },
+    {
+      "id": "viz-builtin-stage-female-dancer",
+      "kind": "model",
+      "source": "bundle",
+      "label": "Stage Female Dancer",
+      "mimeType": "application/vnd.autodesk.fbx",
+      "originalFileName": "female-dancer.fbx",
+      "metadata": {
+        "contentIdentity": "sha256:fd6847858a95d9de88e64d0c070b44e95b3c822bf3231ff347f2832dc9396479",
+        "modelFormat": "fbx",
+        "stageRole": "femaleDancer"
+      }
+    },
+    {
+      "id": "viz-builtin-stage-male-dancer",
+      "kind": "model",
+      "source": "bundle",
+      "label": "Stage Male Dancer",
+      "mimeType": "application/vnd.autodesk.fbx",
+      "originalFileName": "male-dancer.fbx",
+      "metadata": {
+        "contentIdentity": "sha256:c9cf2a023a282b391534e8a10a91092438def435d786e9d12309ef367eb43582",
+        "modelFormat": "fbx",
+        "stageRole": "maleDancer"
+      }
+    },
+    {
+      "id": "viz-builtin-stage-male-cheer",
+      "kind": "model",
+      "source": "bundle",
+      "label": "Stage Male Cheer",
+      "mimeType": "application/vnd.autodesk.fbx",
+      "originalFileName": "male-cheer.fbx",
+      "metadata": {
+        "contentIdentity": "sha256:354aab94cf2a971baf58f4007ab0eecfa379126f1a11d421a56dd8f68ee3959b",
+        "modelFormat": "fbx",
+        "stageRole": "maleCheer"
+      }
+    }
+  ],
+  "artifactRefs": [
+    {
+      "id": "artifact-audio-features-9fd7cad5",
+      "kind": "audio-feature-timeline",
+      "label": "asset-afterlight-dancefloor-dnb Standard Audio Features",
+      "sourceAssetId": "asset-afterlight-dancefloor-dnb",
+      "metadata": {
+        "profile": "standard",
+        "executionIdentity": "viz-bake.audio-feature-timeline.v1:d084160d"
+      }
+    }
+  ],
+  "graphs": [
+    {
+      "id": "graph-afterlight-stage-reactivity",
+      "name": "Afterlight Assembly Stage Reactivity",
+      "inputs": {
+        "bass": {
+          "kind": "artifact-feature",
+          "artifactId": "artifact-audio-features-9fd7cad5",
+          "feature": "bass-energy"
+        },
+        "mids": {
+          "kind": "artifact-feature",
+          "artifactId": "artifact-audio-features-9fd7cad5",
+          "feature": "mid-energy"
+        },
+        "treble": {
+          "kind": "artifact-feature",
+          "artifactId": "artifact-audio-features-9fd7cad5",
+          "feature": "treble-energy"
+        },
+        "loudness": {
+          "kind": "artifact-feature",
+          "artifactId": "artifact-audio-features-9fd7cad5",
+          "feature": "loudness"
+        },
+        "onset": {
+          "kind": "artifact-feature",
+          "artifactId": "artifact-audio-features-9fd7cad5",
+          "feature": "onset-strength"
+        },
+        "flux": {
+          "kind": "artifact-feature",
+          "artifactId": "artifact-audio-features-9fd7cad5",
+          "feature": "spectral-flux"
+        }
+      },
+      "nodes": [
+        {
+          "id": "input-bass",
+          "type": "graph-input",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "inputs": {
+            "inputKey": {
+              "kind": "literal",
+              "value": "bass"
+            }
+          }
+        },
+        {
+          "id": "input-mids",
+          "type": "graph-input",
+          "position": {
+            "x": 0,
+            "y": 170
+          },
+          "inputs": {
+            "inputKey": {
+              "kind": "literal",
+              "value": "mids"
+            }
+          }
+        },
+        {
+          "id": "input-treble",
+          "type": "graph-input",
+          "position": {
+            "x": 0,
+            "y": 340
+          },
+          "inputs": {
+            "inputKey": {
+              "kind": "literal",
+              "value": "treble"
+            }
+          }
+        },
+        {
+          "id": "input-loudness",
+          "type": "graph-input",
+          "position": {
+            "x": 0,
+            "y": 510
+          },
+          "inputs": {
+            "inputKey": {
+              "kind": "literal",
+              "value": "loudness"
+            }
+          }
+        },
+        {
+          "id": "input-onset",
+          "type": "graph-input",
+          "position": {
+            "x": 0,
+            "y": 680
+          },
+          "inputs": {
+            "inputKey": {
+              "kind": "literal",
+              "value": "onset"
+            }
+          }
+        },
+        {
+          "id": "input-flux",
+          "type": "graph-input",
+          "position": {
+            "x": 0,
+            "y": 850
+          },
+          "inputs": {
+            "inputKey": {
+              "kind": "literal",
+              "value": "flux"
+            }
+          }
+        },
+        {
+          "id": "wallScale-scale",
+          "type": "multiply",
+          "position": {
+            "x": 260,
+            "y": -55
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-bass",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 1.15
+            }
+          }
+        },
+        {
+          "id": "wallScale-offset",
+          "type": "add",
+          "position": {
+            "x": 520,
+            "y": -55
+          },
+          "inputs": {
+            "a": {
+              "kind": "node-output",
+              "nodeId": "wallScale-scale",
+              "output": "value"
+            },
+            "b": {
+              "kind": "literal",
+              "value": 1.5
+            }
+          }
+        },
+        {
+          "id": "beamIntensity-scale",
+          "type": "multiply",
+          "position": {
+            "x": 260,
+            "y": 0
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-bass",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 1.4
+            }
+          }
+        },
+        {
+          "id": "beamIntensity-offset",
+          "type": "add",
+          "position": {
+            "x": 520,
+            "y": 0
+          },
+          "inputs": {
+            "a": {
+              "kind": "node-output",
+              "nodeId": "beamIntensity-scale",
+              "output": "value"
+            },
+            "b": {
+              "kind": "literal",
+              "value": 0.35
+            }
+          }
+        },
+        {
+          "id": "characterSpeed-scale",
+          "type": "multiply",
+          "position": {
+            "x": 260,
+            "y": 55
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-bass",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 1.2
+            }
+          }
+        },
+        {
+          "id": "characterSpeed-offset",
+          "type": "add",
+          "position": {
+            "x": 520,
+            "y": 55
+          },
+          "inputs": {
+            "a": {
+              "kind": "node-output",
+              "nodeId": "characterSpeed-scale",
+              "output": "value"
+            },
+            "b": {
+              "kind": "literal",
+              "value": 0.72
+            }
+          }
+        },
+        {
+          "id": "wallTravel-scale",
+          "type": "multiply",
+          "position": {
+            "x": 260,
+            "y": 285
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-mids",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 1.8
+            }
+          }
+        },
+        {
+          "id": "wallTravel-offset",
+          "type": "add",
+          "position": {
+            "x": 520,
+            "y": 285
+          },
+          "inputs": {
+            "a": {
+              "kind": "node-output",
+              "nodeId": "wallTravel-scale",
+              "output": "value"
+            },
+            "b": {
+              "kind": "literal",
+              "value": 0.5
+            }
+          }
+        },
+        {
+          "id": "wallRotation-scale",
+          "type": "multiply",
+          "position": {
+            "x": 260,
+            "y": 625
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-treble",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 2.35
+            }
+          }
+        },
+        {
+          "id": "wallRotation-offset",
+          "type": "add",
+          "position": {
+            "x": 520,
+            "y": 625
+          },
+          "inputs": {
+            "a": {
+              "kind": "node-output",
+              "nodeId": "wallRotation-scale",
+              "output": "value"
+            },
+            "b": {
+              "kind": "literal",
+              "value": 0.25
+            }
+          }
+        },
+        {
+          "id": "strobeRate-scale",
+          "type": "multiply",
+          "position": {
+            "x": 260,
+            "y": 680
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-treble",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 0.65
+            }
+          }
+        },
+        {
+          "id": "strobeRate-offset",
+          "type": "add",
+          "position": {
+            "x": 520,
+            "y": 680
+          },
+          "inputs": {
+            "a": {
+              "kind": "node-output",
+              "nodeId": "strobeRate-scale",
+              "output": "value"
+            },
+            "b": {
+              "kind": "literal",
+              "value": 0.03
+            }
+          }
+        },
+        {
+          "id": "movingIntensity-scale",
+          "type": "multiply",
+          "position": {
+            "x": 260,
+            "y": 965
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-loudness",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 7
+            }
+          }
+        },
+        {
+          "id": "movingIntensity-offset",
+          "type": "add",
+          "position": {
+            "x": 520,
+            "y": 965
+          },
+          "inputs": {
+            "a": {
+              "kind": "node-output",
+              "nodeId": "movingIntensity-scale",
+              "output": "value"
+            },
+            "b": {
+              "kind": "literal",
+              "value": 2
+            }
+          }
+        },
+        {
+          "id": "washIntensity-scale",
+          "type": "multiply",
+          "position": {
+            "x": 260,
+            "y": 1020
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-loudness",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 10
+            }
+          }
+        },
+        {
+          "id": "washIntensity-offset",
+          "type": "add",
+          "position": {
+            "x": 520,
+            "y": 1020
+          },
+          "inputs": {
+            "a": {
+              "kind": "node-output",
+              "nodeId": "washIntensity-scale",
+              "output": "value"
+            },
+            "b": {
+              "kind": "literal",
+              "value": 2
+            }
+          }
+        },
+        {
+          "id": "wallBrightness-scale",
+          "type": "multiply",
+          "position": {
+            "x": 260,
+            "y": 1645
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-flux",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 1.1
+            }
+          }
+        },
+        {
+          "id": "wallBrightness-offset",
+          "type": "add",
+          "position": {
+            "x": 520,
+            "y": 1645
+          },
+          "inputs": {
+            "a": {
+              "kind": "node-output",
+              "nodeId": "wallBrightness-scale",
+              "output": "value"
+            },
+            "b": {
+              "kind": "literal",
+              "value": 1
+            }
+          }
+        },
+        {
+          "id": "bloomStrength-scale",
+          "type": "multiply",
+          "position": {
+            "x": 260,
+            "y": 1700
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-flux",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 0.5
+            }
+          }
+        },
+        {
+          "id": "bloomStrength-offset",
+          "type": "add",
+          "position": {
+            "x": 520,
+            "y": 1700
+          },
+          "inputs": {
+            "a": {
+              "kind": "node-output",
+              "nodeId": "bloomStrength-scale",
+              "output": "value"
+            },
+            "b": {
+              "kind": "literal",
+              "value": 0.45
+            }
+          }
+        },
+        {
+          "id": "onset-scale",
+          "type": "multiply",
+          "position": {
+            "x": 260,
+            "y": 680
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-onset",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 0.75
+            }
+          }
+        },
+        {
+          "id": "onset-clamp",
+          "type": "clamp",
+          "position": {
+            "x": 520,
+            "y": 680
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "onset-scale",
+              "output": "value"
+            },
+            "min": {
+              "kind": "literal",
+              "value": 0
+            },
+            "max": {
+              "kind": "literal",
+              "value": 1
+            }
+          }
+        },
+        {
+          "id": "onset-decay",
+          "type": "decay",
+          "position": {
+            "x": 780,
+            "y": 680
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "onset-clamp",
+              "output": "value"
+            },
+            "falloffPerSecond": {
+              "kind": "literal",
+              "value": 2.8
+            }
+          }
+        },
+        {
+          "id": "overhead-intensity-scale",
+          "type": "multiply",
+          "position": {
+            "x": 1040,
+            "y": 730
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "onset-decay",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 45
+            }
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "key": "wallScale",
+          "nodeId": "wallScale-offset",
+          "output": "value",
+          "position": {
+            "x": 1050,
+            "y": -55
+          }
+        },
+        {
+          "key": "beamIntensity",
+          "nodeId": "beamIntensity-offset",
+          "output": "value",
+          "position": {
+            "x": 1050,
+            "y": 0
+          }
+        },
+        {
+          "key": "characterSpeed",
+          "nodeId": "characterSpeed-offset",
+          "output": "value",
+          "position": {
+            "x": 1050,
+            "y": 55
+          }
+        },
+        {
+          "key": "wallTravel",
+          "nodeId": "wallTravel-offset",
+          "output": "value",
+          "position": {
+            "x": 1050,
+            "y": 285
+          }
+        },
+        {
+          "key": "wallRotation",
+          "nodeId": "wallRotation-offset",
+          "output": "value",
+          "position": {
+            "x": 1050,
+            "y": 625
+          }
+        },
+        {
+          "key": "strobeRate",
+          "nodeId": "strobeRate-offset",
+          "output": "value",
+          "position": {
+            "x": 1050,
+            "y": 680
+          }
+        },
+        {
+          "key": "movingIntensity",
+          "nodeId": "movingIntensity-offset",
+          "output": "value",
+          "position": {
+            "x": 1050,
+            "y": 965
+          }
+        },
+        {
+          "key": "washIntensity",
+          "nodeId": "washIntensity-offset",
+          "output": "value",
+          "position": {
+            "x": 1050,
+            "y": 1020
+          }
+        },
+        {
+          "key": "wallBrightness",
+          "nodeId": "wallBrightness-offset",
+          "output": "value",
+          "position": {
+            "x": 1050,
+            "y": 1645
+          }
+        },
+        {
+          "key": "bloomStrength",
+          "nodeId": "bloomStrength-offset",
+          "output": "value",
+          "position": {
+            "x": 1050,
+            "y": 1700
+          }
+        },
+        {
+          "key": "blinderIntensity",
+          "nodeId": "onset-decay",
+          "output": "value",
+          "position": {
+            "x": 1300,
+            "y": 680
+          }
+        },
+        {
+          "key": "overheadIntensity",
+          "nodeId": "overhead-intensity-scale",
+          "output": "value",
+          "position": {
+            "x": 1300,
+            "y": 730
+          }
+        }
+      ],
+      "metadata": {
+        "production": "afterlight-assembly",
+        "intent": "Readable music-feature lanes controlling stage light, motion, camera atmosphere, and character energy."
+      }
+    }
+  ],
+  "metadata": {
+    "authoringMode": "agent-authored-production",
+    "production": "afterlight-assembly",
+    "creativeDirection": "A crowd-level cinematic festival performance moving from sustained energy through a breakdown into a color-saturated drop.",
+    "capabilityPacks": [
+      {
+        "id": "@viz-engine/components-core",
+        "version": "0.0.1"
+      },
+      {
+        "id": "@viz-engine/production-afterlight-assembly",
+        "version": "0.0.1"
+      }
+    ],
+    "selectedAudioWindow": {
+      "sourceStartSeconds": 60,
+      "durationSeconds": 12
+    }
+  }
+}

@@ -156,6 +156,32 @@ const replaceHistoryState = (history: VizSessionHistoryState) => {
   }));
 };
 
+const syncRecentAgentActivity = (
+  snapshot: ReturnType<typeof vizSessionHost.getSnapshot>,
+) => {
+  const latest = [...snapshot.session.actionHistory]
+    .reverse()
+    .find((entry) => entry.actor.kind === 'agent');
+  const recentAgentActivity = latest
+    ? {
+        transactionId: latest.transactionId,
+        ...(latest.actor.id === undefined ? {} : { actorId: latest.actor.id }),
+        timestamp: latest.timestamp,
+        actionTypes: [
+          ...new Set(
+            snapshot.session.actionHistory
+              .filter((entry) => entry.transactionId === latest.transactionId)
+              .map((entry) => entry.type),
+          ),
+        ],
+      }
+    : null;
+  replaceHistoryState({
+    ...getHistoryState(),
+    recentAgentActivity,
+  });
+};
+
 const replacePreviewState = (preview: VizSessionPreviewState) => {
   vizSessionStore.setState((state) => ({
     ...state,
@@ -223,7 +249,7 @@ const syncProjectSessionProject = () => {
 export const vizControl = createVizControl({
   host: vizSessionHost,
   actor: { kind: 'agent', id: 'viz-studio-live-control' },
-  onProjectChange: (_snapshot, reason) => {
+  onProjectChange: (snapshot, reason) => {
     if (reason === 'load') {
       const project = vizSessionHost.getWorkingProject();
       const audioSource = vizSessionHost.getSnapshot().audioSession.source;
@@ -248,11 +274,16 @@ export const vizControl = createVizControl({
         currentTrackUrl: audioSource?.uri ?? null,
         currentTrackIndex: -1,
       });
+      replaceHistoryState({
+        ...getHistoryState(),
+        recentAgentActivity: null,
+      });
       syncNetworkOpenState();
       return;
     }
 
     syncProjectSessionProject();
+    syncRecentAgentActivity(snapshot);
   },
 });
 
