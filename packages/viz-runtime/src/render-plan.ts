@@ -1,5 +1,8 @@
 import type {
+  VizComponentFrameContext,
+  VizComponentImplementation,
   VizFramePlanIssue,
+  VizLayerFrameSnapshot,
   VizLayerRenderPlanEntry,
   VizRenderPlan,
   VizRuntimeInputs,
@@ -28,7 +31,7 @@ export interface CreateVizRenderPlanOptions {
   graphInputValues?: VizRuntimeGraphInputValues;
   graphValues?: VizRuntimeGraphValues;
   runtimeInputs?: VizRuntimeInputs;
-  runtimeInputProvider?: (frame: number) => VizRuntimeInputs;
+  runtimeInputProvider?: (frame: number) => VizRuntimeInputs | undefined;
 }
 
 const createRenderIssue = (
@@ -72,6 +75,34 @@ const mergeUniqueIssues = (
   }
 };
 
+const createComponentFrameContext = ({
+  componentLayer,
+  frameLayer,
+  frameContext,
+  session,
+}: {
+  componentLayer: VizRuntimeLayerValues[string];
+  frameLayer: VizLayerFrameSnapshot;
+  frameContext: VizComponentFrameContext['frameContext'];
+  session: VizRuntimeSession;
+}): VizComponentFrameContext => {
+  const layerSettings = frameLayer.settings ?? componentLayer.settings;
+  return {
+    frameContext,
+    viewport: session.project.viewport,
+    layer:
+      layerSettings === undefined || layerSettings === componentLayer.settings
+        ? componentLayer
+        : { ...componentLayer, settings: layerSettings },
+    settings: resolveVizComponentSettings(
+      layerSettings,
+      frameLayer.resolvedInputs,
+    ),
+    resolvedInputs: frameLayer.resolvedInputs,
+    materializedAssets: session.getMaterializedAssetMap(),
+  };
+};
+
 export const createVizRenderPlan = ({
   session,
   frame,
@@ -84,6 +115,35 @@ export const createVizRenderPlan = ({
   runtimeInputs,
   runtimeInputProvider,
 }: CreateVizRenderPlanOptions): VizRenderPlan => {
+  const targetFrame = session.getFrameContext(frame).frame;
+  const usesRuntimeAudio =
+    (session.project.graphs?.length ?? 0) > 0 ||
+    session.project.layers.some((layer) =>
+      registry
+        .get(layer.componentId)
+        ?.inputs?.some((input) => input.runtimeBinding !== undefined),
+    );
+  const missingRuntimeInputFrames = new Set<number>();
+  if (runtimeInputs !== undefined) {
+    session.setRuntimeInputs(targetFrame, runtimeInputs);
+  }
+  const resolveRuntimeInputs = (
+    requestedFrame: number,
+  ): VizRuntimeInputs | undefined => {
+    const inputs =
+      runtimeInputProvider?.(requestedFrame) ??
+      (requestedFrame === targetFrame ? runtimeInputs : undefined) ??
+      session.getRuntimeInputs(requestedFrame);
+    if (
+      inputs === undefined &&
+      requestedFrame !== targetFrame &&
+      runtimeInputs?.audio?.provenance === 'live' &&
+      usesRuntimeAudio
+    ) {
+      missingRuntimeInputFrames.add(requestedFrame);
+    }
+    return inputs;
+  };
   const framePlanCache = new Map<
     number,
     ReturnType<typeof createVizFramePlan>
@@ -96,8 +156,7 @@ export const createVizRenderPlan = ({
       return cached;
     }
 
-    const requestedRuntimeInputs =
-      runtimeInputProvider?.(normalizedFrame) ?? runtimeInputs;
+    const requestedRuntimeInputs = resolveRuntimeInputs(normalizedFrame);
     const nextFramePlan = createVizFramePlan({
       session,
       frame: normalizedFrame,
@@ -110,6 +169,7 @@ export const createVizRenderPlan = ({
       ...(requestedRuntimeInputs === undefined
         ? {}
         : { runtimeInputs: requestedRuntimeInputs }),
+      runtimeInputProvider: resolveRuntimeInputs,
     });
     framePlanCache.set(normalizedFrame, nextFramePlan);
     return nextFramePlan;
@@ -123,6 +183,85 @@ export const createVizRenderPlan = ({
     ]),
   );
   const issues = [...framePlan.issues];
+  const canStoreTemporalCheckpoints =
+    Object.keys(layerValues ?? {}).length === 0 &&
+    Object.keys(graphValues ?? {}).length === 0 &&
+    graphInputValues === undefined;
+
+  const resolveTemporalState = ({
+    component,
+    projectLayer,
+  }: {
+    component: VizComponentImplementation;
+    projectLayer: VizRuntimeLayerValues[string];
+  }): unknown => {
+    if (!component.temporal) {
+      return undefined;
+    }
+
+    const targetFrame = framePlan.frameContext.frame;
+    const checkpointFrame = canStoreTemporalCheckpoints
+      ? targetFrame
+      : targetFrame - 1;
+    const checkpoint =
+      checkpointFrame < 0
+        ? undefined
+        : session.getComponentCheckpointBeforeOrAt(
+            projectLayer.id,
+            component.id,
+            component.implementationVersion,
+            checkpointFrame,
+          );
+    if (canStoreTemporalCheckpoints && checkpoint?.frame === targetFrame) {
+      return checkpoint.state;
+    }
+
+    let state = checkpoint?.state;
+    const firstFrame = checkpoint ? checkpoint.frame + 1 : 0;
+    const checkpointInterval = session.getComponentCheckpointIntervalFrames();
+
+    for (
+      let steppedFrame = firstFrame;
+      steppedFrame <= targetFrame;
+      steppedFrame += 1
+    ) {
+      const steppedPlan = getFramePlan(steppedFrame);
+      mergeUniqueIssues(issues, steppedPlan.issues);
+      const steppedLayer = steppedPlan.layers.find(
+        (candidate) => candidate.layerId === projectLayer.id,
+      );
+      if (!steppedLayer) {
+        throw new Error(
+          `Temporal component "${component.id}" could not resolve layer "${projectLayer.id}" at frame ${steppedFrame}.`,
+        );
+      }
+      const context = createComponentFrameContext({
+        componentLayer: projectLayer,
+        frameLayer: steppedLayer,
+        frameContext: steppedPlan.frameContext,
+        session,
+      });
+      state = component.temporal.step(context, state);
+
+      if (
+        canStoreTemporalCheckpoints &&
+        (steppedFrame === targetFrame ||
+          steppedFrame % checkpointInterval === 0)
+      ) {
+        session.setComponentCheckpoint({
+          layerId: projectLayer.id,
+          componentId: component.id,
+          ...(component.implementationVersion === undefined
+            ? {}
+            : { implementationVersion: component.implementationVersion }),
+          frame: steppedFrame,
+          state,
+        });
+      }
+    }
+
+    return state;
+  };
 
   const layers: VizLayerRenderPlanEntry[] = framePlan.layers.map(
     (frameLayer) => {
@@ -142,50 +281,24 @@ export const createVizRenderPlan = ({
       }
 
       try {
-        const layerSettings = frameLayer.settings ?? projectLayer.settings;
-        const settings = resolveVizComponentSettings(
-          layerSettings,
-          frameLayer.resolvedInputs,
-        );
-        const hasTemporalSettingInput = Object.values(
-          projectLayer.inputs ?? {},
-        ).some(
-          (source) =>
-            source.kind === 'artifact-feature' ||
-            (source.kind === 'graph-output' && nodeRegistry !== undefined),
-        );
-        const node = component.render({
+        const context = createComponentFrameContext({
+          componentLayer: projectLayer,
+          frameLayer,
           frameContext: framePlan.frameContext,
-          viewport: session.project.viewport,
-          layer:
-            layerSettings === undefined ||
-            layerSettings === projectLayer.settings
-              ? projectLayer
-              : { ...projectLayer, settings: layerSettings },
-          settings,
-          resolvedInputs: frameLayer.resolvedInputs,
-          materializedAssets: session.getMaterializedAssetMap(),
-          sampleSettings: (requestedFrame) => {
-            if (!hasTemporalSettingInput) {
-              return settings;
-            }
-
-            const sampledFramePlan = getFramePlan(requestedFrame);
-            mergeUniqueIssues(issues, sampledFramePlan.issues);
-            const sampledLayer = sampledFramePlan.layers.find(
-              (candidate) => candidate.layerId === projectLayer.id,
-            );
-
-            return resolveVizComponentSettings(
-              sampledLayer?.settings ?? projectLayer.settings,
-              sampledLayer?.resolvedInputs ?? {},
-            );
-          },
+          session,
+        });
+        const temporalState = resolveTemporalState({
+          component,
+          projectLayer,
+        });
+        const node = component.render({
+          ...context,
+          ...(component.temporal ? { temporalState } : {}),
         });
 
         return {
           ...frameLayer,
-          resolvedSettings: settings,
+          resolvedSettings: context.settings,
           node,
         };
       } catch (error) {
@@ -203,6 +316,19 @@ export const createVizRenderPlan = ({
       }
     },
   );
+
+  if (missingRuntimeInputFrames.size > 0) {
+    const missingFrames = [...missingRuntimeInputFrames].sort(
+      (left, right) => left - right,
+    );
+    issues.push(
+      createRenderIssue(
+        'temporal-input-unavailable',
+        '__runtime__',
+        `Live temporal input is unavailable for frames ${missingFrames[0]}-${missingFrames.at(-1)}; evaluation resumed from an explicit input discontinuity instead of fabricating historical audio.`,
+      ),
+    );
+  }
 
   return {
     frameContext: framePlan.frameContext,

@@ -205,7 +205,7 @@ export interface VizComponentDefinition {
   metadata?: Record<string, unknown>;
 }
 
-export interface VizComponentRenderContext {
+export interface VizComponentFrameContext {
   frameContext: VizFrameContext;
   viewport: VizViewport;
   layer: VizLayer;
@@ -216,15 +216,25 @@ export interface VizComponentRenderContext {
   settings: Readonly<Record<string, unknown>>;
   resolvedInputs: Record<string, VizResolvedInputValue>;
   materializedAssets: ReadonlyMap<string, VizMaterializedAsset>;
+}
+
+export interface VizComponentRenderContext extends VizComponentFrameContext {
+  temporalState?: unknown;
+}
+
+export interface VizComponentTemporalDefinition {
   /**
-   * Resolves the same component settings at an arbitrary canonical frame.
-   * Components with deterministic trails or other temporal views use this
-   * instead of retaining browser-owned render state.
+   * Advances serializable component state by exactly one canonical frame.
+   * Implementations must treat previousState as immutable.
    */
-  sampleSettings(frame: number): Readonly<Record<string, unknown>>;
+  step(
+    context: VizComponentFrameContext,
+    previousState: unknown | undefined,
+  ): unknown;
 }
 
 export interface VizComponentImplementation extends VizComponentDefinition {
+  temporal?: VizComponentTemporalDefinition;
   render(context: VizComponentRenderContext): VizRenderNode | null;
 }
 
@@ -249,6 +259,7 @@ export interface VizFramePlanIssue {
     | 'unsupported-source'
     | 'graph-evaluation-failed'
     | 'missing-component'
+    | 'temporal-input-unavailable'
     | 'component-render-failed';
   layerId: VizLayerId;
   inputKey: string;

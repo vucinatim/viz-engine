@@ -22,6 +22,10 @@ export interface EvaluateVizGraphsOptions {
   frame: number;
   registry?: VizNodeRegistry;
   inputValues?: VizRuntimeGraphInputValues;
+  inputValueProvider?: (
+    graphId: string,
+    frame: number,
+  ) => Readonly<Record<string, unknown>>;
   graphValues?: VizRuntimeGraphValues;
 }
 
@@ -31,6 +35,7 @@ export interface EvaluateSingleVizGraphOptions {
   frame: number;
   registry: VizNodeRegistry;
   inputValues?: Readonly<Record<string, unknown>>;
+  inputValueProvider?: (frame: number) => Readonly<Record<string, unknown>>;
   useSessionCheckpoints?: boolean;
 }
 
@@ -513,16 +518,20 @@ export const evaluateSingleVizGraph = ({
   frame,
   registry,
   inputValues,
+  inputValueProvider,
   useSessionCheckpoints = true,
 }: EvaluateSingleVizGraphOptions): VizGraphEvaluationResult => {
   const isTemporal = usesTemporalNode(graph, registry);
   if (!isTemporal) {
+    const frameInputValues = inputValueProvider?.(frame) ?? inputValues;
     const result = evaluateGraphAtFrame({
       graph,
       session,
       frame,
       registry,
-      ...(inputValues === undefined ? {} : { inputValues }),
+      ...(frameInputValues === undefined
+        ? {}
+        : { inputValues: frameInputValues }),
       previousNodeStates: new Map(),
     });
 
@@ -570,12 +579,15 @@ export const evaluateSingleVizGraph = ({
     steppedFrame <= targetFrame;
     steppedFrame += 1
   ) {
+    const frameInputValues = inputValueProvider?.(steppedFrame) ?? inputValues;
     const result = evaluateGraphAtFrame({
       graph,
       session,
       frame: steppedFrame,
       registry,
-      ...(inputValues === undefined ? {} : { inputValues }),
+      ...(frameInputValues === undefined
+        ? {}
+        : { inputValues: frameInputValues }),
       previousNodeStates: currentNodeStates,
     });
 
@@ -615,6 +627,7 @@ export const evaluateVizGraphs = ({
   frame,
   registry,
   inputValues,
+  inputValueProvider,
   graphValues = {},
 }: EvaluateVizGraphsOptions): Map<string, VizGraphEvaluationResult> => {
   const graphs = (session.project.graphs ?? []).map(
@@ -637,6 +650,12 @@ export const evaluateVizGraphs = ({
         ...(inputValues?.[graph.id] === undefined
           ? {}
           : { inputValues: inputValues[graph.id] }),
+        ...(inputValueProvider === undefined
+          ? {}
+          : {
+              inputValueProvider: (frame) =>
+                inputValueProvider(graph.id, frame),
+            }),
       }),
     ]),
   );

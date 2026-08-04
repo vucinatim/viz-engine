@@ -12,6 +12,8 @@ import {
   createVizRenderPlan,
   createVizRuntimeSession,
   resolveVizComponentRuntimeInputValues,
+  sampleProjectAudioFrameSnapshot,
+  type VizComponentRuntimeCheckpoint,
   type VizGraphRuntimeCheckpoint,
   type VizRuntimeFrameInputValues,
   type VizRuntimeGraphValues,
@@ -35,6 +37,7 @@ interface RuntimePreviewSessionCache {
   durationInFrames: number;
   project: VizProjectDocument;
   session: VizRuntimeSession;
+  lastFrame?: number;
 }
 
 interface CreateRuntimePreviewPlanOptions {
@@ -182,6 +185,65 @@ const collectReusableGraphCheckpoints = (
   });
 };
 
+const createComponentRuntimeIdentity = (
+  project: VizProjectDocument,
+  layer: VizProjectDocument['layers'][number],
+): string => {
+  const referencedGraphIds = new Set(
+    Object.values(layer.inputs ?? {}).flatMap((source) =>
+      source.kind === 'graph-output' ? [source.graphId] : [],
+    ),
+  );
+  return JSON.stringify({
+    componentId: layer.componentId,
+    enabled: layer.enabled,
+    settings: layer.settings,
+    inputs: layer.inputs,
+    graphs: (project.graphs ?? [])
+      .filter((graph) => referencedGraphIds.has(graph.id))
+      .map(createGraphRuntimeIdentity),
+  });
+};
+
+const collectReusableComponentCheckpoints = (
+  cached: RuntimePreviewSessionCache,
+  options: CreateRuntimePreviewPlanOptions,
+  mode: VizExecutionMode,
+): VizComponentRuntimeCheckpoint[] => {
+  if (
+    cached.resourceRevision !== (options.resourceRevision ?? 0) ||
+    cached.mode !== mode ||
+    cached.fps !== options.frame.fps ||
+    cached.viewportWidth !== options.viewport.width ||
+    cached.viewportHeight !== options.viewport.height
+  ) {
+    return [];
+  }
+
+  const previousLayers = new Map(
+    cached.project.layers.map((layer) => [layer.id, layer]),
+  );
+  return options.project.layers.flatMap((layer) => {
+    const component = componentRegistry.get(layer.componentId);
+    const previous = previousLayers.get(layer.id);
+    if (
+      !component?.temporal ||
+      !previous ||
+      createComponentRuntimeIdentity(cached.project, previous) !==
+        createComponentRuntimeIdentity(options.project, layer)
+    ) {
+      return [];
+    }
+    const checkpoint = cached.session.getComponentCheckpointBeforeOrAt(
+      layer.id,
+      component.id,
+      component.implementationVersion,
+      options.frame.currentFrame,
+    );
+    return checkpoint ? [checkpoint] : [];
+  });
+};
+
 const hasEquivalentRuntimeProject = (
   cached: RuntimePreviewSessionCache,
   project: VizProjectDocument,
@@ -218,9 +280,16 @@ const getRuntimeSession = (
 ): VizRuntimeSession => {
   const mode = toExecutionMode(options.frame.mode);
   const cached = sessionCache;
+  const hasLiveDiscontinuity =
+    cached !== null &&
+    (options.audioFrameData.provenance ?? 'live') === 'live' &&
+    cached.lastFrame !== undefined &&
+    options.frame.currentFrame !== cached.lastFrame &&
+    options.frame.currentFrame !== cached.lastFrame + 1;
 
   if (
     cached &&
+    !hasLiveDiscontinuity &&
     cached.revision === options.projectRevision &&
     cached.resourceRevision === (options.resourceRevision ?? 0) &&
     cached.mode === mode &&
@@ -234,6 +303,7 @@ const getRuntimeSession = (
 
   if (
     cached &&
+    !hasLiveDiscontinuity &&
     cached.resourceRevision === (options.resourceRevision ?? 0) &&
     cached.mode === mode &&
     cached.fps === options.frame.fps &&
@@ -266,7 +336,14 @@ const getRuntimeSession = (
     resolvedAssets: [...resolvedAssets.values()],
     resolvedArtifacts: options.resolvedArtifacts ?? [],
     initialGraphCheckpoints: cached
-      ? collectReusableGraphCheckpoints(cached, options, mode)
+      ? hasLiveDiscontinuity
+        ? []
+        : collectReusableGraphCheckpoints(cached, options, mode)
+      : [],
+    initialComponentCheckpoints: cached
+      ? hasLiveDiscontinuity
+        ? []
+        : collectReusableComponentCheckpoints(cached, options, mode)
       : [],
   });
   sessionCache = {
@@ -332,7 +409,7 @@ export const createVizSessionRuntimePreviewPlan = (
 ): VizRenderPlan => {
   const session = getRuntimeSession(options);
 
-  return createVizRenderPlan({
+  const plan = createVizRenderPlan({
     session,
     frame: options.frame.currentFrame,
     registry: componentRegistry,
@@ -343,7 +420,19 @@ export const createVizSessionRuntimePreviewPlan = (
     runtimeInputs: {
       audio: toRuntimeAudioSnapshot(options.audioFrameData),
     },
+    runtimeInputProvider: (requestedFrame) => {
+      const audio = sampleProjectAudioFrameSnapshot(
+        options.project,
+        options.resolvedArtifacts ?? [],
+        requestedFrame,
+      );
+      return audio === undefined ? undefined : { audio };
+    },
   });
+  if (sessionCache?.session === session) {
+    sessionCache.lastFrame = options.frame.currentFrame;
+  }
+  return plan;
 };
 
 export const resetVizSessionRuntimePreviewPlanCache = (): void => {

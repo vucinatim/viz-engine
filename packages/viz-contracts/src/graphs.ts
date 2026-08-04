@@ -119,6 +119,7 @@ export interface VizNodeEvaluateContext {
 
 export interface VizNodeStepContext extends VizNodeEvaluateContext {
   deltaTimeSeconds: number;
+  /** Implementations must treat checkpoint-owned previous state as immutable. */
   previousState: unknown | undefined;
 }
 

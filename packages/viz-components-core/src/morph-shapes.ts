@@ -92,55 +92,30 @@ const readRotation = (
   };
 };
 
-const resolveRotationQuaternion = ({
-  frame,
-  fps,
-  settings,
-  sampleSettings,
-}: {
-  frame: number;
-  fps: number;
-  settings: Readonly<Record<string, unknown>>;
-  sampleSettings: (frame: number) => Readonly<Record<string, unknown>>;
-}): [number, number, number, number] => {
-  const rotation = readRotation(settings);
-  if (frame <= 0) {
-    return [0, 0, 0, 1];
-  }
+interface MorphShapesTemporalState {
+  rotationQuaternion: [number, number, number, number];
+  morphHistory?: Array<[number, number, number]>;
+}
 
-  if (sampleSettings(frame - 1) === settings) {
-    return axisAngleQuaternion(rotation.axis, rotation.speed * (frame / fps));
+const readTemporalState = (value: unknown): MorphShapesTemporalState => {
+  if (!value || typeof value !== 'object') {
+    return { rotationQuaternion: [0, 0, 0, 1] };
   }
-
-  let result: [number, number, number, number] = [0, 0, 0, 1];
-  for (let sampledFrame = 1; sampledFrame <= frame; sampledFrame += 1) {
-    const sampledRotation = readRotation(sampleSettings(sampledFrame));
-    result = multiplyQuaternions(
-      result,
-      axisAngleQuaternion(sampledRotation.axis, sampledRotation.speed / fps),
-    );
-  }
-  return result;
-};
-
-const resolveMorphHistory = ({
-  frame,
-  settings,
-  sampleSettings,
-}: {
-  frame: number;
-  settings: Readonly<Record<string, unknown>>;
-  sampleSettings: (frame: number) => Readonly<Record<string, unknown>>;
-}): Array<[number, number, number]> | undefined => {
-  if (frame <= 0 || sampleSettings(Math.max(0, frame - 1)) === settings) {
-    return undefined;
-  }
-
-  const history: Array<[number, number, number]> = [];
-  for (let sampledFrame = 0; sampledFrame <= frame; sampledFrame += 1) {
-    history.push(readMorphSample(sampleSettings(sampledFrame)));
-  }
-  return history;
+  const state = value as Partial<MorphShapesTemporalState>;
+  const quaternion = state.rotationQuaternion;
+  return {
+    rotationQuaternion:
+      Array.isArray(quaternion) &&
+      quaternion.length === 4 &&
+      quaternion.every(
+        (entry) => typeof entry === 'number' && Number.isFinite(entry),
+      )
+        ? [...quaternion]
+        : [0, 0, 0, 1],
+    ...(Array.isArray(state.morphHistory)
+      ? { morphHistory: state.morphHistory.map((sample) => [...sample]) }
+      : {}),
+  };
 };
 
 export const morphShapesComponent: VizComponentImplementation = {
@@ -150,19 +125,48 @@ export const morphShapesComponent: VizComponentImplementation = {
   implementationVersion: '1.0.0',
   authoring: morphShapesAuthoring,
   description: 'Morph point clouds between procedural, model, and text shapes.',
+  temporal: {
+    step: ({ frameContext, layer, settings }, previousState) => {
+      const state = readTemporalState(previousState);
+      const rotation = readRotation(settings);
+      const rotationQuaternion =
+        frameContext.frame === 0
+          ? ([0, 0, 0, 1] as const)
+          : multiplyQuaternions(
+              state.rotationQuaternion,
+              axisAngleQuaternion(
+                rotation.axis,
+                rotation.speed / frameContext.fps,
+              ),
+            );
+      const hasTemporalInputs = Object.values(layer.inputs ?? {}).some(
+        (source) =>
+          source.kind === 'graph-output' || source.kind === 'artifact-feature',
+      );
+      return {
+        rotationQuaternion: [...rotationQuaternion],
+        ...(hasTemporalInputs
+          ? {
+              morphHistory: [
+                ...(state.morphHistory ?? []),
+                readMorphSample(settings),
+              ],
+            }
+          : {}),
+      } satisfies MorphShapesTemporalState;
+    },
+  },
   render: ({
     frameContext,
     layer,
     settings,
-    sampleSettings,
+    temporalState,
     materializedAssets,
   }) => {
+    const state = readTemporalState(temporalState);
     const morphSample = readMorphSample(settings);
-    const morphHistory = resolveMorphHistory({
-      frame: frameContext.frame,
-      settings,
-      sampleSettings,
-    });
+    const morphHistory =
+      frameContext.frame > 0 ? state.morphHistory : undefined;
     const shapeA = readShape(settings.shapeASettings, 'cube');
     const shapeB = readShape(settings.shapeBSettings, 'pyramid');
 
@@ -211,12 +215,7 @@ export const morphShapesComponent: VizComponentImplementation = {
         sphereSize: clamp(asNumber(settings.sphereSize, 0.15), 0.01, 1),
         additiveGlow: asBoolean(settings.additiveGlow, false),
         glowIntensity: clamp(asNumber(settings.glowIntensity, 1), 0.2, 5),
-        rotationQuaternion: resolveRotationQuaternion({
-          frame: frameContext.frame,
-          fps: frameContext.fps,
-          settings,
-          sampleSettings,
-        }),
+        rotationQuaternion: state.rotationQuaternion,
       },
     } satisfies VizRenderThreeProgramNode;
   },

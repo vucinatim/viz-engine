@@ -9,6 +9,7 @@ import type {
   VizProjectDocument,
   VizResolvedArtifact,
   VizResolvedAsset,
+  VizRuntimeInputs,
 } from '@viz-engine/contracts';
 import { createFrameContext } from './frame-context.js';
 import { materializeVizResolvedAssets } from './materialized-assets.js';
@@ -21,16 +22,29 @@ export interface CreateVizRuntimeSessionOptions {
   resolvedArtifacts?: VizResolvedArtifact[];
   seed?: string;
   graphCheckpointIntervalFrames?: number;
+  maxGraphCheckpointsPerGraph?: number;
   initialGraphCheckpoints?: VizGraphRuntimeCheckpoint[];
+  componentCheckpointIntervalFrames?: number;
+  maxComponentCheckpointsPerLayer?: number;
+  initialComponentCheckpoints?: VizComponentRuntimeCheckpoint[];
+  maxRuntimeInputFrames?: number;
 }
 
 export interface VizGraphRuntimeCheckpoint {
-  graphId: VizGraphId;
-  frame: number;
-  values: Record<string, unknown>;
-  nodes: VizGraphEvaluationResult['nodes'];
-  issues: VizGraphEvaluationIssue[];
-  nodeStates: Record<string, unknown>;
+  readonly graphId: VizGraphId;
+  readonly frame: number;
+  readonly values: Record<string, unknown>;
+  readonly nodes: VizGraphEvaluationResult['nodes'];
+  readonly issues: VizGraphEvaluationIssue[];
+  readonly nodeStates: Record<string, unknown>;
+}
+
+export interface VizComponentRuntimeCheckpoint {
+  readonly layerId: string;
+  readonly componentId: string;
+  readonly implementationVersion?: string;
+  readonly frame: number;
+  readonly state: unknown;
 }
 
 export interface VizRuntimeSession {
@@ -49,6 +63,17 @@ export interface VizRuntimeSession {
   ): VizGraphRuntimeCheckpoint | undefined;
   listGraphCheckpoints(graphId: VizGraphId): VizGraphRuntimeCheckpoint[];
   setGraphCheckpoint(checkpoint: VizGraphRuntimeCheckpoint): void;
+  getComponentCheckpointIntervalFrames(): number;
+  getComponentCheckpointBeforeOrAt(
+    layerId: string,
+    componentId: string,
+    implementationVersion: string | undefined,
+    frame: number,
+  ): VizComponentRuntimeCheckpoint | undefined;
+  listComponentCheckpoints(layerId: string): VizComponentRuntimeCheckpoint[];
+  setComponentCheckpoint(checkpoint: VizComponentRuntimeCheckpoint): void;
+  getRuntimeInputs(frame: number): VizRuntimeInputs | undefined;
+  setRuntimeInputs(frame: number, inputs: VizRuntimeInputs): void;
 }
 
 const cloneUnknown = <T>(value: T): T => {
@@ -67,6 +92,18 @@ const cloneGraphRuntimeCheckpoint = (
     nodeStates: cloneUnknown(checkpoint.nodeStates),
   };
 };
+
+const cloneComponentRuntimeCheckpoint = (
+  checkpoint: VizComponentRuntimeCheckpoint,
+): VizComponentRuntimeCheckpoint => ({
+  layerId: checkpoint.layerId,
+  componentId: checkpoint.componentId,
+  ...(checkpoint.implementationVersion === undefined
+    ? {}
+    : { implementationVersion: checkpoint.implementationVersion }),
+  frame: checkpoint.frame,
+  state: cloneUnknown(checkpoint.state),
+});
 
 export const orderProjectLayers = (
   project: VizProjectDocument,
@@ -96,7 +133,12 @@ export const createVizRuntimeSession = ({
   resolvedArtifacts = [],
   seed = 'viz-default-seed',
   graphCheckpointIntervalFrames = 30,
+  maxGraphCheckpointsPerGraph = 512,
   initialGraphCheckpoints = [],
+  componentCheckpointIntervalFrames = 30,
+  maxComponentCheckpointsPerLayer = 512,
+  initialComponentCheckpoints = [],
+  maxRuntimeInputFrames = 512,
 }: CreateVizRuntimeSessionOptions): VizRuntimeSession => {
   assertValidProjectDocument(project);
 
@@ -123,6 +165,34 @@ export const createVizRuntimeSession = ({
     1,
     Math.trunc(graphCheckpointIntervalFrames),
   );
+  const graphCheckpointLimit = Math.max(
+    1,
+    Math.trunc(maxGraphCheckpointsPerGraph),
+  );
+  const componentCheckpointStore = new Map<
+    string,
+    Map<number, VizComponentRuntimeCheckpoint>
+  >();
+  for (const checkpoint of initialComponentCheckpoints) {
+    const checkpoints =
+      componentCheckpointStore.get(checkpoint.layerId) ??
+      new Map<number, VizComponentRuntimeCheckpoint>();
+    checkpoints.set(
+      checkpoint.frame,
+      cloneComponentRuntimeCheckpoint(checkpoint),
+    );
+    componentCheckpointStore.set(checkpoint.layerId, checkpoints);
+  }
+  const componentCheckpointInterval = Math.max(
+    1,
+    Math.trunc(componentCheckpointIntervalFrames),
+  );
+  const componentCheckpointLimit = Math.max(
+    1,
+    Math.trunc(maxComponentCheckpointsPerLayer),
+  );
+  const runtimeInputStore = new Map<number, VizRuntimeInputs>();
+  const runtimeInputLimit = Math.max(1, Math.trunc(maxRuntimeInputFrames));
 
   return {
     project,
@@ -159,9 +229,7 @@ export const createVizRuntimeSession = ({
         bestCheckpoint = checkpoint;
       }
 
-      return bestCheckpoint
-        ? cloneGraphRuntimeCheckpoint(bestCheckpoint)
-        : undefined;
+      return bestCheckpoint;
     },
     listGraphCheckpoints: (graphId) => {
       const checkpoints = graphCheckpointStore.get(graphId);
@@ -178,8 +246,74 @@ export const createVizRuntimeSession = ({
       const existing =
         graphCheckpointStore.get(checkpoint.graphId) ??
         new Map<number, VizGraphRuntimeCheckpoint>();
-      existing.set(checkpoint.frame, cloneGraphRuntimeCheckpoint(checkpoint));
+      for (const storedFrame of existing.keys()) {
+        if (storedFrame % checkpointInterval !== 0) {
+          existing.delete(storedFrame);
+        }
+      }
+      existing.set(checkpoint.frame, checkpoint);
+      while (existing.size > graphCheckpointLimit) {
+        existing.delete(Math.min(...existing.keys()));
+      }
       graphCheckpointStore.set(checkpoint.graphId, existing);
+    },
+    getComponentCheckpointIntervalFrames: () => componentCheckpointInterval,
+    getComponentCheckpointBeforeOrAt: (
+      layerId,
+      componentId,
+      implementationVersion,
+      frame,
+    ) => {
+      const checkpoints = componentCheckpointStore.get(layerId);
+      if (!checkpoints) {
+        return undefined;
+      }
+
+      let bestFrame = -1;
+      let bestCheckpoint: VizComponentRuntimeCheckpoint | undefined;
+      for (const [checkpointFrame, checkpoint] of checkpoints) {
+        if (
+          checkpointFrame > frame ||
+          checkpointFrame < bestFrame ||
+          checkpoint.componentId !== componentId ||
+          checkpoint.implementationVersion !== implementationVersion
+        ) {
+          continue;
+        }
+        bestFrame = checkpointFrame;
+        bestCheckpoint = checkpoint;
+      }
+      return bestCheckpoint;
+    },
+    listComponentCheckpoints: (layerId) =>
+      [...(componentCheckpointStore.get(layerId)?.values() ?? [])]
+        .sort((left, right) => left.frame - right.frame)
+        .map(cloneComponentRuntimeCheckpoint),
+    setComponentCheckpoint: (checkpoint) => {
+      const checkpoints =
+        componentCheckpointStore.get(checkpoint.layerId) ??
+        new Map<number, VizComponentRuntimeCheckpoint>();
+      if (checkpoint.frame % componentCheckpointInterval === 0) {
+        cloneUnknown(checkpoint.state);
+      }
+      for (const storedFrame of checkpoints.keys()) {
+        if (storedFrame % componentCheckpointInterval !== 0) {
+          checkpoints.delete(storedFrame);
+        }
+      }
+      checkpoints.set(checkpoint.frame, checkpoint);
+      while (checkpoints.size > componentCheckpointLimit) {
+        const oldestFrame = Math.min(...checkpoints.keys());
+        checkpoints.delete(oldestFrame);
+      }
+      componentCheckpointStore.set(checkpoint.layerId, checkpoints);
+    },
+    getRuntimeInputs: (frame) => runtimeInputStore.get(frame),
+    setRuntimeInputs: (frame, inputs) => {
+      runtimeInputStore.set(frame, cloneUnknown(inputs));
+      while (runtimeInputStore.size > runtimeInputLimit) {
+        runtimeInputStore.delete(Math.min(...runtimeInputStore.keys()));
+      }
     },
   };
 };

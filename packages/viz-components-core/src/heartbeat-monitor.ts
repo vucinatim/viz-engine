@@ -24,24 +24,30 @@ export const heartbeatMonitorComponent: VizComponentImplementation = {
       supportedSources: ['graph-output', 'literal', 'artifact-feature'],
     },
   ],
-  render: ({ frameContext, viewport, layer, settings, sampleSettings }) => {
+  temporal: {
+    step: ({ viewport, settings }, previousState) => {
+      const history = Array.isArray(previousState)
+        ? previousState.filter(
+            (value): value is number =>
+              typeof value === 'number' && Number.isFinite(value),
+          )
+        : [];
+      history.push(asNumber(settings.yPosition, 0));
+      return history.slice(-Math.max(1, Math.floor(viewport.width)));
+    },
+  },
+  render: ({ viewport, layer, settings, temporalState }) => {
     const width = Math.max(1, Math.floor(viewport.width));
-    const firstFrame = Math.max(0, frameContext.frame - width + 1);
-    const points = Array.from(
-      { length: frameContext.frame - firstFrame + 1 },
-      (_, index) => {
-        const sampled = sampleSettings(firstFrame + index);
-        const value = asNumber(
-          sampled.yPosition,
-          asNumber(settings.yPosition, 0),
-        );
-
-        return {
-          x: index,
-          y: mapHeartbeatValueToY(value, viewport.height),
-        };
-      },
-    );
+    const values = Array.isArray(temporalState)
+      ? temporalState.filter(
+          (value): value is number =>
+            typeof value === 'number' && Number.isFinite(value),
+        )
+      : [asNumber(settings.yPosition, 0)];
+    const points = values.slice(-width).map((value, index) => ({
+      x: index,
+      y: mapHeartbeatValueToY(value, viewport.height),
+    }));
     const lineColor = asString(settings.lineColor, '#34d399');
     const lineWidth = Math.max(1, asNumber(settings.lineWidth, 2));
 

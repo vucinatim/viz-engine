@@ -26,62 +26,26 @@ const getWaveSettings = (
   settings: Readonly<Record<string, unknown>>,
 ): Readonly<Record<string, unknown>> => asRecord(settings.wave);
 
-const resolveActiveWaveAges = ({
-  frame,
-  fps,
-  settings,
-  sampleSettings,
-  tunnelDepth,
-  waveSpeed,
-  waveDuration,
-}: {
-  frame: number;
-  fps: number;
-  settings: Readonly<Record<string, unknown>>;
-  sampleSettings: (frame: number) => Readonly<Record<string, unknown>>;
-  tunnelDepth: number;
-  waveSpeed: number;
-  waveDuration: number;
-}): number[] => {
-  const maxAge = waveDuration + tunnelDepth / waveSpeed;
-  const currentWave = getWaveSettings(settings);
-  const staticTrigger = asBoolean(currentWave.triggerWave, false);
+interface LightTunnelTemporalState {
+  previousTrigger: boolean;
+  waveStartFrames: number[];
+}
 
-  if (frame <= 0 || sampleSettings(Math.max(0, frame - 1)) === settings) {
-    const age = frame / fps;
-    return staticTrigger && age <= maxAge ? [age] : [];
+const readTemporalState = (
+  value: unknown | undefined,
+): LightTunnelTemporalState => {
+  if (!value || typeof value !== 'object') {
+    return { previousTrigger: false, waveStartFrames: [] };
   }
-
-  const firstRelevantFrame = Math.max(0, frame - Math.ceil(maxAge * fps) - 1);
-  let previousTrigger =
-    firstRelevantFrame > 0
-      ? asBoolean(
-          getWaveSettings(sampleSettings(firstRelevantFrame - 1)).triggerWave,
-          false,
+  const candidate = value as Partial<LightTunnelTemporalState>;
+  return {
+    previousTrigger: candidate.previousTrigger === true,
+    waveStartFrames: Array.isArray(candidate.waveStartFrames)
+      ? candidate.waveStartFrames.filter(
+          (frame): frame is number => Number.isInteger(frame) && frame >= 0,
         )
-      : false;
-  const activeWaveAges: number[] = [];
-
-  for (
-    let sampledFrame = firstRelevantFrame;
-    sampledFrame <= frame;
-    sampledFrame += 1
-  ) {
-    const trigger = asBoolean(
-      getWaveSettings(sampleSettings(sampledFrame)).triggerWave,
-      false,
-    );
-
-    if (trigger && !previousTrigger) {
-      const age = (frame - sampledFrame) / fps;
-      if (age <= maxAge) {
-        activeWaveAges.push(age);
-      }
-    }
-    previousTrigger = trigger;
-  }
-
-  return activeWaveAges;
+      : [],
+  };
 };
 
 export const lightTunnelComponent: VizComponentImplementation = {
@@ -92,7 +56,32 @@ export const lightTunnelComponent: VizComponentImplementation = {
   authoring: lightTunnelAuthoring,
   description:
     'Infinite neon cube tunnel with waves, fog, bloom, and depth of field.',
-  render: ({ frameContext, layer, settings, sampleSettings }) => {
+  temporal: {
+    step: ({ frameContext, settings }, previousState) => {
+      const state = readTemporalState(previousState);
+      const structure = asRecord(settings.structure);
+      const wave = getWaveSettings(settings);
+      const tunnelDepth = Math.round(
+        clamp(asNumber(structure.tunnelDepth, 13), 10, 40),
+      );
+      const waveSpeed = clamp(asNumber(wave.waveSpeed, 8.5), 0.5, 10);
+      const waveDuration = clamp(asNumber(wave.waveDuration, 0.4), 0.2, 2);
+      const maximumAgeFrames =
+        (waveDuration + tunnelDepth / waveSpeed) * frameContext.fps;
+      const trigger = asBoolean(wave.triggerWave, false);
+      const waveStartFrames = state.waveStartFrames.filter(
+        (startFrame) => frameContext.frame - startFrame <= maximumAgeFrames,
+      );
+      if (trigger && !state.previousTrigger) {
+        waveStartFrames.push(frameContext.frame);
+      }
+      return {
+        previousTrigger: trigger,
+        waveStartFrames,
+      } satisfies LightTunnelTemporalState;
+    },
+  },
+  render: ({ frameContext, layer, settings, temporalState }) => {
     const structure = asRecord(settings.structure);
     const appearance = asRecord(settings.appearance);
     const edges = asRecord(settings.edges);
@@ -107,6 +96,7 @@ export const lightTunnelComponent: VizComponentImplementation = {
     );
     const waveSpeed = clamp(asNumber(wave.waveSpeed, 8.5), 0.5, 10);
     const waveDuration = clamp(asNumber(wave.waveDuration, 0.4), 0.2, 2);
+    const state = readTemporalState(temporalState);
 
     return {
       kind: 'three-program',
@@ -161,15 +151,9 @@ export const lightTunnelComponent: VizComponentImplementation = {
         ),
         tunnelSpeed: clamp(asNumber(animation.tunnelSpeed, 0.5), 0, 3),
         rotationSpeed: clamp(asNumber(animation.rotationSpeed, 0.05), 0, 2),
-        activeWaveAges: resolveActiveWaveAges({
-          frame: frameContext.frame,
-          fps: frameContext.fps,
-          settings,
-          sampleSettings,
-          tunnelDepth,
-          waveSpeed,
-          waveDuration,
-        }),
+        activeWaveAges: state.waveStartFrames.map(
+          (startFrame) => (frameContext.frame - startFrame) / frameContext.fps,
+        ),
         waveSpeed,
         waveAmplitude: clamp(asNumber(wave.waveAmplitude, 1), 0.5, 5),
         waveDuration,

@@ -94,22 +94,26 @@ export const createEditorComponentPreviewPlan = ({
     seed: `component-preview-${componentId}`,
     resolvedAssets: resolveBundledStageModelAssets(project.assetRefs ?? []),
   });
+  const runtimeInputs = {
+    audio: {
+      frequencyData: audioFrameData.frequencyData,
+      timeDomainData: audioFrameData.timeDomainData ?? new Uint8Array(),
+      sampleRate: audioFrameData.sampleRate,
+      fftSize: audioFrameData.fftSize,
+      minDecibels: -90,
+      maxDecibels: -10,
+      provenance: 'live' as const,
+    },
+  };
 
   return createVizRenderPlan({
     session,
     frame,
     registry: componentRegistry,
     nodeRegistry,
-    runtimeInputs: {
-      audio: {
-        frequencyData: audioFrameData.frequencyData,
-        timeDomainData: audioFrameData.timeDomainData ?? new Uint8Array(),
-        sampleRate: audioFrameData.sampleRate,
-        fftSize: audioFrameData.fftSize,
-        minDecibels: -90,
-        maxDecibels: -10,
-        provenance: 'live',
-      },
-    },
+    runtimeInputs,
+    // Catalog thumbnails intentionally preview one frozen input snapshot at
+    // every canonical frame; they are not transport-backed audio sessions.
+    runtimeInputProvider: () => runtimeInputs,
   });
 };

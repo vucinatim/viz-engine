@@ -38,6 +38,7 @@ export interface CreateVizFramePlanOptions {
   graphInputValues?: VizRuntimeGraphInputValues;
   graphValues?: VizRuntimeGraphValues;
   runtimeInputs?: VizRuntimeInputs;
+  runtimeInputProvider?: (frame: number) => VizRuntimeInputs | undefined;
 }
 
 export type VizRuntimeFrameInputValues = Readonly<
@@ -290,20 +291,22 @@ export const createVizFramePlan = ({
   graphInputValues,
   graphValues = {},
   runtimeInputs = {},
+  runtimeInputProvider,
 }: CreateVizFramePlanOptions): VizFramePlan => {
   const frameContext = session.getFrameContext(frame);
   const issues: VizFramePlanIssue[] = [];
-  const standardGraphInputValues = createVizStandardGraphRuntimeInputValues(
-    frameContext.timeInSeconds,
-    runtimeInputs,
-  );
+  const createGraphInputValues = (graphId: string, requestedFrame: number) => ({
+    ...createVizStandardGraphRuntimeInputValues(
+      session.getFrameContext(requestedFrame).timeInSeconds,
+      runtimeInputProvider?.(requestedFrame) ??
+        (requestedFrame === frameContext.frame ? runtimeInputs : {}),
+    ),
+    ...(graphInputValues?.[graphId] ?? {}),
+  });
   const mergedGraphInputValues = Object.fromEntries(
     (session.project.graphs ?? []).map((graph) => [
       graph.id,
-      {
-        ...standardGraphInputValues,
-        ...(graphInputValues?.[graph.id] ?? {}),
-      },
+      createGraphInputValues(graph.id, frameContext.frame),
     ]),
   );
   const graphResults = evaluateVizGraphs({
@@ -311,6 +314,7 @@ export const createVizFramePlan = ({
     frame: frameContext.frame,
     ...(nodeRegistry === undefined ? {} : { registry: nodeRegistry }),
     inputValues: mergedGraphInputValues,
+    inputValueProvider: createGraphInputValues,
     graphValues,
   });
 

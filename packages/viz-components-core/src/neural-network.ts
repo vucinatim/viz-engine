@@ -23,62 +23,37 @@ const readSignalSettings = (
   color: asString(settings.somaEmission, 'rgb(255, 138, 201)'),
 });
 
-const resolveTriggerEvents = ({
-  frame,
-  fps,
-  settings,
-  sampleSettings,
-}: {
-  frame: number;
-  fps: number;
-  settings: Readonly<Record<string, unknown>>;
-  sampleSettings: (frame: number) => Readonly<Record<string, unknown>>;
-}): Array<Record<string, VizRenderProgramValue>> => {
-  const currentSignal = readSignalSettings(settings);
-  const maximumAge = 32;
+interface NeuralSignalEvent {
+  startFrame: number;
+  speed: number;
+  size: number;
+  color: string;
+}
 
-  if (frame <= 0 || sampleSettings(Math.max(0, frame - 1)) === settings) {
-    if (!currentSignal.trigger) {
-      return [];
-    }
-    return [
-      {
-        age: frame / fps,
-        speed: currentSignal.speed,
-        size: currentSignal.size,
-        color: currentSignal.color,
-      },
-    ];
+interface NeuralNetworkTemporalState {
+  previousTrigger: boolean;
+  events: NeuralSignalEvent[];
+}
+
+const readTemporalState = (value: unknown): NeuralNetworkTemporalState => {
+  if (!value || typeof value !== 'object') {
+    return { previousTrigger: false, events: [] };
   }
-
-  const firstRelevantFrame = Math.max(
-    0,
-    frame - Math.ceil(maximumAge * fps) - 1,
-  );
-  let previousTrigger =
-    firstRelevantFrame > 0
-      ? readSignalSettings(sampleSettings(firstRelevantFrame - 1)).trigger
-      : false;
-  const events: Array<Record<string, VizRenderProgramValue>> = [];
-
-  for (
-    let sampledFrame = firstRelevantFrame;
-    sampledFrame <= frame;
-    sampledFrame += 1
-  ) {
-    const signal = readSignalSettings(sampleSettings(sampledFrame));
-    if (signal.trigger && !previousTrigger) {
-      events.push({
-        age: (frame - sampledFrame) / fps,
-        speed: signal.speed,
-        size: signal.size,
-        color: signal.color,
-      });
-    }
-    previousTrigger = signal.trigger;
-  }
-
-  return events;
+  const state = value as Partial<NeuralNetworkTemporalState>;
+  return {
+    previousTrigger: state.previousTrigger === true,
+    events: Array.isArray(state.events)
+      ? state.events.filter(
+          (event): event is NeuralSignalEvent =>
+            Boolean(event) &&
+            typeof event === 'object' &&
+            Number.isInteger((event as NeuralSignalEvent).startFrame) &&
+            typeof (event as NeuralSignalEvent).speed === 'number' &&
+            typeof (event as NeuralSignalEvent).size === 'number' &&
+            typeof (event as NeuralSignalEvent).color === 'string',
+        )
+      : [],
+  };
 };
 
 export const neuralNetworkComponent: VizComponentImplementation = {
@@ -89,8 +64,31 @@ export const neuralNetworkComponent: VizComponentImplementation = {
   authoring: neuralNetworkAuthoring,
   description:
     'Procedural neuron structures with traveling activation signals.',
-  render: ({ frameContext, layer, settings, sampleSettings }) => {
+  temporal: {
+    step: ({ frameContext, settings }, previousState) => {
+      const state = readTemporalState(previousState);
+      const signal = readSignalSettings(settings);
+      const events = state.events.filter(
+        (event) =>
+          frameContext.frame - event.startFrame <= 32 * frameContext.fps,
+      );
+      if (signal.trigger && !state.previousTrigger) {
+        events.push({
+          startFrame: frameContext.frame,
+          speed: signal.speed,
+          size: signal.size,
+          color: signal.color,
+        });
+      }
+      return {
+        previousTrigger: signal.trigger,
+        events,
+      } satisfies NeuralNetworkTemporalState;
+    },
+  },
+  render: ({ frameContext, layer, settings, temporalState }) => {
     const postProcessing = asRecord(settings.postProcessing);
+    const state = readTemporalState(temporalState);
 
     return {
       kind: 'three-program',
@@ -111,12 +109,14 @@ export const neuralNetworkComponent: VizComponentImplementation = {
         fresnelPower: clamp(asNumber(settings.fresnelPower, 3), 0.5, 8),
         growth: clamp(asNumber(settings.growth, 1), 0, 1),
         dendriteReach: clamp(asNumber(settings.dendriteReach, 20), 5, 40),
-        triggerEvents: resolveTriggerEvents({
-          frame: frameContext.frame,
-          fps: frameContext.fps,
-          settings,
-          sampleSettings,
-        }),
+        triggerEvents: state.events.map(
+          (event): Record<string, VizRenderProgramValue> => ({
+            age: (frameContext.frame - event.startFrame) / frameContext.fps,
+            speed: event.speed,
+            size: event.size,
+            color: event.color,
+          }),
+        ),
         activationDecay: clamp(asNumber(settings.activationDecay, 0.4), 0, 10),
         bloomEnabled: asBoolean(postProcessing.bloom, false),
         bloomStrength: clamp(asNumber(postProcessing.bloomStrength, 0.2), 0, 3),

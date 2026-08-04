@@ -34,40 +34,24 @@ const asNumberArray = (value: unknown): number[] => {
 const getTrigger = (settings: Readonly<Record<string, unknown>>): number =>
   asNumber(asRecord(settings.reactivity).shockwaveTrigger, 0);
 
-const resolveShockwaveAges = ({
-  frame,
-  fps,
-  settings,
-  sampleSettings,
-}: {
-  frame: number;
-  fps: number;
-  settings: Readonly<Record<string, unknown>>;
-  sampleSettings: (frame: number) => Readonly<Record<string, unknown>>;
-}): number[] => {
-  const lifetimeSeconds = 2.4;
-  const threshold = 0.48;
-  const firstFrame = Math.max(0, frame - Math.ceil(lifetimeSeconds * fps) - 1);
-  let previous =
-    firstFrame > 0 ? getTrigger(sampleSettings(firstFrame - 1)) : 0;
-  const ages: number[] = [];
+interface SignalCathedralTemporalState {
+  previousTrigger: number;
+  shockwaveStartFrames: number[];
+}
 
-  for (
-    let sampledFrame = firstFrame;
-    sampledFrame <= frame;
-    sampledFrame += 1
-  ) {
-    const current =
-      sampledFrame === frame
-        ? getTrigger(settings)
-        : getTrigger(sampleSettings(sampledFrame));
-    if (current >= threshold && previous < threshold) {
-      ages.push((frame - sampledFrame) / fps);
-    }
-    previous = current;
+const readTemporalState = (value: unknown): SignalCathedralTemporalState => {
+  if (!value || typeof value !== 'object') {
+    return { previousTrigger: 0, shockwaveStartFrames: [] };
   }
-
-  return ages.slice(-8);
+  const state = value as Partial<SignalCathedralTemporalState>;
+  return {
+    previousTrigger: asNumber(state.previousTrigger, 0),
+    shockwaveStartFrames: Array.isArray(state.shockwaveStartFrames)
+      ? state.shockwaveStartFrames.filter(
+          (frame): frame is number => Number.isInteger(frame) && frame >= 0,
+        )
+      : [],
+  };
 };
 
 export const signalCathedralComponent: VizComponentImplementation = {
@@ -111,12 +95,29 @@ export const signalCathedralComponent: VizComponentImplementation = {
       runtimeBinding: 'audio.frequency-data',
     },
   ],
+  temporal: {
+    step: ({ frameContext, settings }, previousState) => {
+      const state = readTemporalState(previousState);
+      const trigger = getTrigger(settings);
+      const shockwaveStartFrames = state.shockwaveStartFrames.filter(
+        (startFrame) =>
+          frameContext.frame - startFrame <= 2.4 * frameContext.fps,
+      );
+      if (trigger >= 0.48 && state.previousTrigger < 0.48) {
+        shockwaveStartFrames.push(frameContext.frame);
+      }
+      return {
+        previousTrigger: trigger,
+        shockwaveStartFrames: shockwaveStartFrames.slice(-8),
+      } satisfies SignalCathedralTemporalState;
+    },
+  },
   render: ({
     frameContext,
     layer,
     settings,
     resolvedInputs,
-    sampleSettings,
+    temporalState,
   }) => {
     const palette = asRecord(settings.palette);
     const structure = asRecord(settings.structure);
@@ -128,6 +129,7 @@ export const signalCathedralComponent: VizComponentImplementation = {
       0,
       2.5,
     );
+    const state = readTemporalState(temporalState);
 
     return {
       kind: 'three-program',
@@ -184,12 +186,9 @@ export const signalCathedralComponent: VizComponentImplementation = {
           clamp(asNumber(reactivity.fluxResponse, 1), 0, 2.5) *
           masterResponse,
         smoothing: clamp(asNumber(reactivity.smoothing, 0.35), 0, 1),
-        shockwaveAges: resolveShockwaveAges({
-          frame: frameContext.frame,
-          fps: frameContext.fps,
-          settings,
-          sampleSettings,
-        }),
+        shockwaveAges: state.shockwaveStartFrames.map(
+          (startFrame) => (frameContext.frame - startFrame) / frameContext.fps,
+        ),
         spectrum: asNumberArray(resolvedInputs.spectrum?.value),
         ambientLevel: clamp(asNumber(lighting.ambientLevel, 0.12), 0, 2),
         keyLightIntensity: clamp(
