@@ -23,6 +23,17 @@ already requirements of the active goal.
 
 ## Determinism And Baking
 
+- Replace component-level recursive `sampleSettings` history with explicit,
+  session-owned temporal component state and bounded checkpoints. Sequential
+  live playback should step once; random access should restore a valid
+  checkpoint and replay only the missing interval with correct per-frame input
+  provenance. Delete the old callback after Light Tunnel, Neural Network,
+  Instanced Supercube, Morph Shapes, Heartbeat Monitor, and Signal Cathedral
+  migrate.
+- Keep the exact graph-driven Light Tunnel project in the permanent planning
+  and headed performance suite. Broad graphless component benchmarks cannot
+  certify temporal representative-scene performance.
+
 - Define explicit phase-authoring inputs for motion-capable components before
   permitting graph-driven variable rates. The core deterministic `integrate`
   node now provides rate-to-phase computation; absolute-time `speed` settings

@@ -2510,3 +2510,28 @@
   - recorded the full diagnosis, semantics, assumptions, thresholds, media
     identities, and machine-readable proof in
     `docs/parity/evidence/2026-08-04-afterlight-assembly-motion-and-rig-polish.md`
+
+## 2026-08-04 — Goal Four activated: temporal runtime and playback performance
+
+- diagnosed the primary Light Tunnel V2 regression as recursive historical
+  frame replanning inside `sampleSettings`, rather than an unexplained GPU-only
+  slowdown
+- measured the exact bundled Light Tunnel project at 79.173 ms mean planning,
+  79.061 ms median, 140.807 ms p95, and 169.680 ms maximum on the fixed Apple
+  M1 Pro environment; the same graph workload without Light Tunnel historical
+  sampling measured 2.160 ms mean
+- traced the architectural mismatch to V2 reconstructing recent temporal
+  history by repeatedly resolving complete historical frame plans, while V1
+  retained and advanced explicit wave state incrementally
+- defined Goal Four around session-owned temporal state, bounded checkpoints,
+  deterministic seek replay, migration of all six historical-settings
+  consumers, deletion of `sampleSettings`, and exact-example performance
+  certification
+- separated that primary runtime fix from secondary compositor, layer-mirror,
+  and `preserveDrawingBuffer` isolation so optimization remains evidence-led
+- reopened `preview.live-rendering` and `performance.playback-smoothness` as
+  parity gaps because the approved representative-scene frame budget is not
+  currently met
+- recorded scope, contracts, stop rules, acceptance thresholds, and validation
+  phases in
+  `docs/plans/v2/temporal-runtime-and-playback-performance-certification.md`

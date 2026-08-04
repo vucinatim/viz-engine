@@ -426,11 +426,13 @@ The endurance and performance checkpoint is now also complete:
 See
 [Endurance And Performance Certification](./parity/evidence/2026-07-31-goal-three-endurance-and-performance-certification.md).
 
-The parity matrix contains 42 verified capabilities, with zero partial, gap, or
-unaudited rows. Goal Three is now complete: the calibrated live agent loop can
-inspect, mutate, open, render, diagnose, and retrieve output through canonical
-contracts, and Afterlight Assembly supplies the distinct second original
-production, editable public bundle, and final media proof.
+At Goal Three certification time, the parity matrix contained 42 verified
+capabilities, with zero partial, gap, or unaudited rows. Goal Four has since
+reopened two performance-sensitive rows after representative Light Tunnel
+measurements contradicted that certification. Goal Three's calibrated live
+agent loop can inspect, mutate, open, render, diagnose, and retrieve output
+through canonical contracts, and Afterlight Assembly supplies the distinct
+second original production, editable public bundle, and final media proof.
 
 The final complete gate passes clean architecture and static checks, 64
 deterministic test files / 293 tests, 16 active headed Chromium journeys with 2
@@ -443,6 +445,33 @@ See
 The later grounding, temporal-semantics, graph-layout, and final-media repair is
 certified in
 [Afterlight Assembly Motion And Rig Polish](./parity/evidence/2026-08-04-afterlight-assembly-motion-and-rig-polish.md).
+
+## Active Goal Four
+
+[Temporal Runtime And Playback Performance Certification](./plans/v2/temporal-runtime-and-playback-performance-certification.md)
+is active.
+
+Manual calibration of the preserved Light Tunnel example exposed a material
+performance regression that earlier representative benchmarks did not cover.
+The exact project currently spends 79.17 ms mean and 140.81 ms p95 constructing
+the runtime plan alone on the Apple M1 Pro development machine, before browser
+rendering. The same project and graphs measure 2.16 ms mean when Light Tunnel's
+historical graph-driven component path is removed for isolation.
+
+The primary confirmed cause is component-level recursive historical planning:
+Light Tunnel scans as many as 118 prior frames to reconstruct wave events, and
+each sampled frame reevaluates all nine project graphs. V1 maintained the same
+wave behavior incrementally during sequential playback and sustained 60 FPS.
+
+Goal Four will replace recursive `sampleSettings` history with explicit,
+session-owned temporal component state and bounded checkpoints; preserve cold,
+seek, sequential, and export determinism; then isolate compositor, mirror, and
+renderer costs. The exact Light Tunnel project becomes a permanent planning,
+headed-playback, and endurance fixture.
+
+The previously verified `preview.live-rendering` and
+`performance.playback-smoothness` parity rows are reopened until controlled
+V1/V2 evidence proves the full representative-scene performance contract.
 
 ## Known Deliberate Deferrals
 
@@ -464,6 +493,7 @@ consolidation.
 - [Completed consolidation plan](./plans/v2/core-consolidation-and-minimization-program.md)
 - [Completed minimization plan](./plans/v2/behavior-preserving-minimization-and-final-polish.md)
 - [Completed Goal Three](./plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
+- [Active Goal Four](./plans/v2/temporal-runtime-and-playback-performance-certification.md)
 - [Autonomous development contract](./plans/v2/autonomous-development-operating-contract.md)
 - [Parity matrix](./parity/README.md)
 - [Suggestions](./suggestions.md)
