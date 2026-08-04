@@ -25,10 +25,13 @@ const literal = (value: unknown): VizGraphNodeInputBinding => ({
   value,
 });
 
-const output = (nodeId: string): VizGraphNodeInputBinding => ({
+const output = (
+  nodeId: string,
+  outputKey = 'value',
+): VizGraphNodeInputBinding => ({
   kind: 'node-output',
   nodeId,
-  output: 'value',
+  output: outputKey,
 });
 
 const node = (
@@ -61,12 +64,14 @@ const createSourceLane = (
 const createScaledOutput = ({
   key,
   sourceId,
+  sourceOutput,
   factor,
   offset,
   y,
 }: {
   key: string;
   sourceId: string;
+  sourceOutput?: string;
   factor: number;
   offset: number;
   y: number;
@@ -76,11 +81,11 @@ const createScaledOutput = ({
   return {
     outputNodeId: addId,
     nodes: [
-      node(scaleId, 'multiply', 260, y, {
-        value: output(sourceId),
+      node(scaleId, 'multiply', 520, y, {
+        value: output(sourceId, sourceOutput),
         factor: literal(factor),
       }),
-      node(addId, 'add', 520, y, {
+      node(addId, 'add', 780, y, {
         a: output(scaleId),
         b: literal(offset),
       }),
@@ -88,12 +93,30 @@ const createScaledOutput = ({
   };
 };
 
+const createEnvelope = ({
+  key,
+  sourceId,
+  attackMs,
+  releaseMs,
+  y,
+}: {
+  key: string;
+  sourceId: string;
+  attackMs: number;
+  releaseMs: number;
+  y: number;
+}): VizNodeGraphNode =>
+  node(`${key}-envelope`, 'Envelope Follower', 260, y, {
+    value: output(sourceId),
+    attackMs: literal(attackMs),
+    releaseMs: literal(releaseMs),
+  });
+
 export const createAfterlightAssemblyReactivityGraph = (
   artifactId = AFTERLIGHT_ASSEMBLY_AUDIO_ARTIFACT_ID,
 ): VizNodeGraphDocument => {
   const sources = [
     ['bass', 'bass-energy'],
-    ['mids', 'mid-energy'],
     ['treble', 'treble-energy'],
     ['loudness', 'loudness'],
     ['onset', 'onset-strength'],
@@ -102,23 +125,50 @@ export const createAfterlightAssemblyReactivityGraph = (
   const lanes = Object.fromEntries(
     sources.map(([key], index) => [key, createSourceLane(key, index)]),
   ) as Record<(typeof sources)[number][0], ReturnType<typeof createSourceLane>>;
+  const envelopes = {
+    bass: createEnvelope({
+      key: 'bass',
+      sourceId: lanes.bass.input.id,
+      attackMs: 45,
+      releaseMs: 240,
+      y: lanes.bass.y,
+    }),
+    treble: createEnvelope({
+      key: 'treble',
+      sourceId: lanes.treble.input.id,
+      attackMs: 30,
+      releaseMs: 180,
+      y: lanes.treble.y,
+    }),
+    loudness: createEnvelope({
+      key: 'loudness',
+      sourceId: lanes.loudness.input.id,
+      attackMs: 80,
+      releaseMs: 360,
+      y: lanes.loudness.y,
+    }),
+    flux: createEnvelope({
+      key: 'flux',
+      sourceId: lanes.flux.input.id,
+      attackMs: 35,
+      releaseMs: 260,
+      y: lanes.flux.y,
+    }),
+  } as const;
   const targets = [
-    ['wallScale', 'bass', 1.15, 1.5, -55],
-    ['beamIntensity', 'bass', 1.4, 0.35, 0],
-    ['characterSpeed', 'bass', 1.2, 0.72, 55],
-    ['wallTravel', 'mids', 1.8, 0.5, 115],
-    ['wallRotation', 'treble', 2.35, 0.25, 285],
-    ['strobeRate', 'treble', 0.65, 0.03, 340],
-    ['movingIntensity', 'loudness', 7, 2, 455],
-    ['washIntensity', 'loudness', 10, 2, 510],
-    ['wallBrightness', 'flux', 1.1, 1, 795],
-    ['bloomStrength', 'flux', 0.5, 0.45, 850],
+    ['wallScale', 'bass', 0.7, 1.45, 0],
+    ['beamIntensity', 'treble', 0.8, 0.28, 0],
+    ['movingIntensity', 'loudness', 4, 1, -25],
+    ['washIntensity', 'loudness', 6, 1, 30],
+    ['wallBrightness', 'flux', 0.75, 1.1, -30],
+    ['bloomStrength', 'flux', 0.3, 0.35, 25],
   ] as const;
   const targetLanes = targets.map(([key, source, factor, offset, deltaY]) => ({
     key,
     lane: createScaledOutput({
       key,
-      sourceId: lanes[source].input.id,
+      sourceId: envelopes[source].id,
+      sourceOutput: 'env',
       factor,
       offset,
       y: lanes[source].y + deltaY,
@@ -147,6 +197,16 @@ export const createAfterlightAssemblyReactivityGraph = (
       factor: literal(45),
     },
   );
+  const strobeScale = node(
+    'strobe-intensity-scale',
+    'multiply',
+    1_040,
+    lanes.onset.y - 50,
+    {
+      value: output(onsetDecay.id),
+      factor: literal(180),
+    },
+  );
 
   return {
     id: AFTERLIGHT_ASSEMBLY_GRAPH_ID,
@@ -156,10 +216,12 @@ export const createAfterlightAssemblyReactivityGraph = (
     ),
     nodes: [
       ...sources.map(([key]) => lanes[key].input),
+      ...Object.values(envelopes),
       ...targetLanes.flatMap(({ lane }) => lane.nodes),
       onsetScale,
       onsetClamp,
       onsetDecay,
+      strobeScale,
       overheadScale,
     ],
     outputs: [
@@ -173,10 +235,10 @@ export const createAfterlightAssemblyReactivityGraph = (
         },
       })),
       {
-        key: 'blinderIntensity',
-        nodeId: onsetDecay.id,
+        key: 'strobeIntensity',
+        nodeId: strobeScale.id,
         output: 'value',
-        position: { x: 1_300, y: lanes.onset.y },
+        position: { x: 1_300, y: lanes.onset.y - 50 },
       },
       {
         key: 'overheadIntensity',
@@ -188,7 +250,7 @@ export const createAfterlightAssemblyReactivityGraph = (
     metadata: {
       production: 'afterlight-assembly',
       intent:
-        'Readable music-feature lanes controlling stage light, motion, camera atmosphere, and character energy.',
+        'Smoothed music-feature envelopes control visual amplitudes while authored rates preserve continuous motion phase.',
     },
   };
 };
@@ -225,17 +287,17 @@ export const afterlightAssemblyStageSettings = {
     ...(defaults.camera as Record<string, unknown>),
     cinematicMode: true,
     cinematicPath: 'Crowd Flyover',
-    cinematicDuration: 12,
+    cinematicDuration: 32,
     cinematicLookAt: { x: 0, y: 6, z: 0 },
-    cinematicLerpSpeed: 0.12,
+    cinematicLerpSpeed: 0.08,
   },
   shaderWall: {
     ...(defaults.shaderWall as Record<string, unknown>),
     enabled: true,
     scale: 1.5,
-    rotationSpeed: 0.25,
-    colorSpeed: 2.4,
-    travelSpeed: 0.5,
+    rotationSpeed: 0.18,
+    colorSpeed: 0.65,
+    travelSpeed: 0.28,
     brightness: 1.35,
   },
   lighting: {
@@ -262,7 +324,7 @@ export const afterlightAssemblyStageSettings = {
     enabled: true,
     colorMode: 'single',
     singleColor: '#7b61ff',
-    speed: 1.35,
+    speed: 0.68,
   },
   beams: {
     ...(defaults.beams as Record<string, unknown>),
@@ -278,8 +340,8 @@ export const afterlightAssemblyStageSettings = {
   strobes: {
     ...(defaults.strobes as Record<string, unknown>),
     enabled: true,
-    intensity: 300,
-    flashRate: 0.2,
+    intensity: 0,
+    flashRate: 0.09,
   },
   blinders: {
     ...(defaults.blinders as Record<string, unknown>),
@@ -297,7 +359,7 @@ export const afterlightAssemblyStageSettings = {
   characters: {
     ...(defaults.characters as Record<string, unknown>),
     showDj: true,
-    animationSpeed: 0.72,
+    animationSpeed: 0.78,
     crowdCount: 420,
   },
 };
@@ -343,17 +405,13 @@ export const createAfterlightAssemblyProject = ({
           ]),
         ),
         'shaderWall:scale': graphOutput('wallScale'),
-        'shaderWall:rotationSpeed': graphOutput('wallRotation'),
-        'shaderWall:travelSpeed': graphOutput('wallTravel'),
         'shaderWall:brightness': graphOutput('wallBrightness'),
         'beams:intensity': graphOutput('beamIntensity'),
         'movingLights:intensity': graphOutput('movingIntensity'),
         'stageWash:intensity': graphOutput('washIntensity'),
-        'strobes:flashRate': graphOutput('strobeRate'),
-        'blinders:intensity': graphOutput('blinderIntensity'),
+        'strobes:intensity': graphOutput('strobeIntensity'),
         'overheadBlinder:intensity': graphOutput('overheadIntensity'),
         'postProcessing:bloomStrength': graphOutput('bloomStrength'),
-        'characters:animationSpeed': graphOutput('characterSpeed'),
       },
       requiredAssetIds: [
         audioAssetRef.id,

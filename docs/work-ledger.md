@@ -2483,3 +2483,30 @@
   - recorded the architecture, creative review, bundle identities, media probe,
     assumptions, and machine-readable results in
     `docs/parity/evidence/2026-08-03-goal-three-agent-loop-and-afterlight-assembly-certification.md`
+- completed the Afterlight Assembly grounding, timing, and production-polish
+  repair:
+  - proved the crowd floor intersection came from destructive root-bone
+    normalization during animation-texture baking and preserved authored rig
+    transforms instead
+  - proved graph-driven absolute-time speeds caused deterministic forward and
+    backward phase jumps, then separated amplitude, rate, and phase semantics
+  - added a deterministic checkpoint-compatible `integrate` node and focused
+    seek-stability coverage
+  - rebuilt the production as a readable 26-node, eight-output smoothed
+    amplitude graph with no phase-sensitive speed bindings
+  - added a full 720-frame finite/bounded continuity test and a non-zero
+    bind-pose grounding fixture
+  - added a generic isolated-browser bundle-render command with deterministic
+    download capture and browser diagnostic failure
+  - regenerated the exact final still, seven-frame contact sheet, and
+    12-second H.264/AAC video; rerendered all three byte-identically from the
+    final graph layout
+  - independently verified 360 changing video frames with no black, freeze, or
+    silence intervals and visually confirmed grounded full-body crowd samples
+  - passed the complete foundation gate with 42 verified parity capabilities,
+    clean 18-package architecture, 64 files / 293 deterministic tests, 16
+    headed Chromium passes plus 2 intentional skips, all builds, and both
+    consumer smokes
+  - recorded the full diagnosis, semantics, assumptions, thresholds, media
+    identities, and machine-readable proof in
+    `docs/parity/evidence/2026-08-04-afterlight-assembly-motion-and-rig-polish.md`

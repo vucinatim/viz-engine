@@ -226,6 +226,51 @@ export const decayNode: VizNodeImplementation = {
   },
 };
 
+export const integrateNode: VizNodeImplementation = {
+  type: 'integrate',
+  name: 'Integrate',
+  category: 'temporal',
+  description:
+    'Accumulates a per-second rate into a continuous, deterministic value.',
+  inputs: [
+    {
+      key: 'rate',
+      label: 'Rate / s',
+      required: true,
+    },
+    {
+      key: 'initialValue',
+      label: 'Initial Value',
+      required: true,
+    },
+  ],
+  outputs: [
+    {
+      key: 'value',
+      label: 'Value',
+    },
+  ],
+  authoring: {
+    inputs: [
+      { key: 'rate', type: 'number', defaultValue: 0 },
+      { key: 'initialValue', type: 'number', defaultValue: 0 },
+    ],
+    outputs: [{ key: 'value', type: 'number' }],
+  },
+  step: ({ inputs, previousState, deltaTimeSeconds, frameContext }) => {
+    const initialValue = asNumber(inputs.initialValue, 0);
+    const previousValue = asNumber(previousState, initialValue);
+    const nextValue = frameContext.isFirstFrame
+      ? initialValue
+      : previousValue + asNumber(inputs.rate, 0) * deltaTimeSeconds;
+
+    return {
+      state: nextValue,
+      outputs: { value: nextValue },
+    };
+  },
+};
+
 const TEMPORAL_EDITOR_NODE_TYPES = new Set([
   'Spike',
   'Adaptive Normalize (Quantile)',
@@ -391,6 +436,7 @@ export const createCoreNodeRegistry = () => {
     clampNode,
     addNode,
     decayNode,
+    integrateNode,
     ...editorNodeImplementations,
   ];
   const nodeMap = new Map(nodes.map((node) => [node.type, node]));

@@ -5,6 +5,10 @@ Date: 2026-08-03
 Status: certified. The complete repository-wide gate passed from one clean,
 uncontended run.
 
+The public Afterlight bundle and media were later superseded by the certified
+[motion and rig polish](./2026-08-04-afterlight-assembly-motion-and-rig-polish.md).
+The identities below remain the historical 2026-08-03 calibration record.
+
 ## Outcome
 
 Goal Three now has its missing agent-workflow and second-production proof:

@@ -23,6 +23,10 @@ already requirements of the active goal.
 
 ## Determinism And Baking
 
+- Define explicit phase-authoring inputs for motion-capable components before
+  permitting graph-driven variable rates. The core deterministic `integrate`
+  node now provides rate-to-phase computation; absolute-time `speed` settings
+  must stay stable until components can consume phase directly.
 - Add artifact-backed checkpoints when simulations or dense event-heavy
   programs outgrow fixed-step replay.
 - Keep temporal replay direct and inspectable until measurements justify
@@ -33,6 +37,10 @@ already requirements of the active goal.
 
 ## Assets And 3D
 
+- Add explicit horizontal root-motion extraction and locomotion-placement
+  policy when non-in-place clips enter the model pipeline. Preserve authored
+  vertical rig transforms; never normalize an arbitrary skeleton root to fix
+  placement.
 - Introduce a shared material-resolver contract when server/render-time asset
   materialization becomes real; keep browser preview hydration explicit until
   then.

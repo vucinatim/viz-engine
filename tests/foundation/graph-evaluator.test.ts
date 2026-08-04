@@ -303,6 +303,62 @@ describe('Viz graph evaluation', () => {
     expect(frameTwo.values.decayedFlux).toBeCloseTo(0.9766666667, 6);
   });
 
+  it('integrates rates into a continuous seek-stable phase', () => {
+    const graph = {
+      id: 'graph-integrate-test',
+      name: 'Integrate Test',
+      nodes: [
+        {
+          id: 'node-integrate',
+          type: 'integrate',
+          inputs: {
+            rate: { kind: 'literal' as const, value: 2 },
+            initialValue: { kind: 'literal' as const, value: 0.25 },
+          },
+        },
+      ],
+      outputs: [
+        {
+          key: 'phase',
+          nodeId: 'node-integrate',
+          output: 'value',
+        },
+      ],
+    };
+    const createSession = () =>
+      createVizRuntimeSession({
+        project: createIsolatedGraphProject([graph]),
+        mode: 'render',
+        seed: 'graph-integrate-seed',
+      });
+    const registry = createCoreNodeRegistry();
+    const sequentialSession = createSession();
+
+    const first = evaluateSingleVizGraph({
+      graph,
+      session: sequentialSession,
+      frame: 0,
+      registry,
+    });
+    const frameThirty = evaluateSingleVizGraph({
+      graph,
+      session: sequentialSession,
+      frame: 30,
+      registry,
+    });
+    const direct = evaluateSingleVizGraph({
+      graph,
+      session: createSession(),
+      frame: 30,
+      registry,
+    });
+
+    expect(first.issues).toEqual([]);
+    expect(first.values.phase).toBe(0.25);
+    expect(frameThirty.values.phase).toBeCloseTo(2.25, 8);
+    expect(direct).toEqual(frameThirty);
+  });
+
   it('reuses temporal graph checkpoints on repeated evaluation within one runtime session', () => {
     let stepCalls = 0;
 

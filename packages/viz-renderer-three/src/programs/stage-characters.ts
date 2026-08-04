@@ -140,13 +140,8 @@ const bakeCrowdAnimationTexture = ({
       root.updateMatrixWorld(true);
     }
 
-    const rootBone = mesh.skeleton.bones[0];
-    if (rootBone) {
-      rootBone.position.set(0, 0, 0);
-      rootBone.quaternion.set(0, 0, 0, 1);
-      rootBone.scale.set(1, 1, 1);
-      rootBone.updateMatrixWorld(true);
-    }
+    // Bind inverses already remove the bind pose. Rewriting the animated root
+    // bone here offsets rigs whose hips are authored above the model origin.
     mesh.skeleton.update();
     boneData.set(mesh.skeleton.boneMatrices, frame * textureWidth * 4);
   }

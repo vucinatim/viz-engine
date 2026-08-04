@@ -4,7 +4,7 @@
   "project": {
     "projectId": "project-afterlight-assembly",
     "schemaVersion": "2.0.0-alpha.1",
-    "contentIdentity": "sha256:4da634764ba0424c174f97841b8d816af5edda584622ca0732b432bd2513d267"
+    "contentIdentity": "sha256:8315723a1ad2f0a8aa69af2a93c104ea79c2a84c60edd29e04ba313fdfc3bad8"
   },
   "runtime": {
     "packageId": "@viz-engine/runtime",
@@ -31,6 +31,7 @@
       "packageId": "@viz-engine/nodes-core",
       "version": "0.0.1",
       "nodeTypes": [
+        "Envelope Follower",
         "add",
         "clamp",
         "decay",

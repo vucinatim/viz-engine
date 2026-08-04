@@ -78,14 +78,14 @@ proves the complete loop:
 See
 [Signal Cathedral Production Certification](./parity/evidence/2026-07-30-signal-cathedral-production-certification.md).
 
-[Afterlight Assembly](./parity/evidence/2026-08-03-goal-three-agent-loop-and-afterlight-assembly-certification.md)
+[Afterlight Assembly](./parity/evidence/2026-08-04-afterlight-assembly-motion-and-rig-polish.md)
 proves the second-production and calibrated agent loop:
 
 - browser-resolved portable bundle open in the already-running editor
 - focused component/node and runtime/frame/render/debug inspection
 - visible canonical agent transaction activity
 - browser render-job output retrieval through the live control contract
-- one editable 30-node, 12-output Stage graph
+- one editable 26-node, eight-output Stage graph with smoothed amplitude lanes
 - four bundled FBX performers, a 420-character crowd, and cinematic camera
 - validated still, contact sheet, and 12-second H.264/AAC final video
 
@@ -433,12 +433,16 @@ contracts, and Afterlight Assembly supplies the distinct second original
 production, editable public bundle, and final media proof.
 
 The final complete gate passes clean architecture and static checks, 64
-deterministic test files / 291 tests, 16 active headed Chromium journeys with 2
+deterministic test files / 293 tests, 16 active headed Chromium journeys with 2
 intentional opt-in skips, all 18 package builds, the Studio production build,
 and both built-consumer smoke scenarios.
 
 See
 [Goal Three Agent Loop And Afterlight Assembly Certification](./parity/evidence/2026-08-03-goal-three-agent-loop-and-afterlight-assembly-certification.md).
+
+The later grounding, temporal-semantics, graph-layout, and final-media repair is
+certified in
+[Afterlight Assembly Motion And Rig Polish](./parity/evidence/2026-08-04-afterlight-assembly-motion-and-rig-polish.md).
 
 ## Known Deliberate Deferrals
 

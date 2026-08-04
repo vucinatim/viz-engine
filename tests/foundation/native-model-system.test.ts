@@ -16,6 +16,7 @@ import {
   Mesh,
   MeshBasicMaterial,
   NumberKeyframeTrack,
+  ShaderMaterial,
   Skeleton,
   SkinnedMesh,
   Uint16BufferAttribute,
@@ -76,14 +77,15 @@ const createSkinnedDecodedModel = () => {
   );
   const bone = new Bone();
   bone.name = 'Root';
+  bone.position.y = 3;
   const mesh = new SkinnedMesh(
     geometry,
     new MeshBasicMaterial({ color: '#ffffff' }),
   );
   mesh.name = 'Character';
   scene.add(bone, mesh);
-  mesh.bind(new Skeleton([bone]));
   scene.updateMatrixWorld(true);
+  mesh.bind(new Skeleton([bone]));
 
   return {
     scene,
@@ -101,6 +103,20 @@ const readCrowdMatrices = (root: Group): number[][] =>
     const mesh = group.children[0] as InstancedMesh;
     return Array.from(mesh.instanceMatrix.array.slice(0, mesh.count * 16));
   });
+
+const readCrowdRootBoneVerticalTranslations = (root: Group): number[] => {
+  const group = (root.userData.modelCrowd as Group[])[0]!;
+  const mesh = group.children[0] as InstancedMesh;
+  const material = mesh.material as ShaderMaterial;
+  const texture = material.uniforms.boneTexture!.value as {
+    image: { data: Float32Array; width: number; height: number };
+  };
+
+  return Array.from(
+    { length: texture.image.height },
+    (_, frame) => texture.image.data[frame * texture.image.width * 4 + 13]!,
+  );
+};
 
 describe('native model resources', () => {
   it('deduplicates by content identity and exposes a renderer-neutral manifest', async () => {
@@ -343,6 +359,9 @@ describe('Stage character realization', () => {
     expect(readCrowdMatrices(first.root)).toEqual(
       readCrowdMatrices(second.root),
     );
+    expect(
+      Math.min(...readCrowdRootBoneVerticalTranslations(first.root)),
+    ).toBeGreaterThan(-0.5);
 
     first.controller.update({
       time: 1.25,

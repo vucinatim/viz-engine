@@ -40,20 +40,20 @@
           "lookSpeed": 0.002,
           "cinematicMode": true,
           "cinematicPath": "Crowd Flyover",
-          "cinematicDuration": 12,
+          "cinematicDuration": 32,
           "cinematicLookAt": {
             "x": 0,
             "y": 6,
             "z": 0
           },
-          "cinematicLerpSpeed": 0.12
+          "cinematicLerpSpeed": 0.08
         },
         "shaderWall": {
           "enabled": true,
           "scale": 1.5,
-          "rotationSpeed": 0.25,
-          "colorSpeed": 2.4,
-          "travelSpeed": 0.5,
+          "rotationSpeed": 0.18,
+          "colorSpeed": 0.65,
+          "travelSpeed": 0.28,
           "brightness": 1.35
         },
         "lighting": {
@@ -80,7 +80,7 @@
           "colorMode": "single",
           "singleColor": "#7b61ff",
           "intensity": 5,
-          "speed": 1.35
+          "speed": 0.68
         },
         "beams": {
           "enabled": true,
@@ -99,8 +99,8 @@
         },
         "strobes": {
           "enabled": true,
-          "intensity": 300,
-          "flashRate": 0.2
+          "intensity": 0,
+          "flashRate": 0.09
         },
         "blinders": {
           "enabled": false,
@@ -119,7 +119,7 @@
         },
         "characters": {
           "showDj": true,
-          "animationSpeed": 0.72,
+          "animationSpeed": 0.78,
           "crowdCount": 420
         },
         "debug": {
@@ -148,16 +148,6 @@
           "graphId": "graph-afterlight-stage-reactivity",
           "output": "wallScale"
         },
-        "shaderWall:rotationSpeed": {
-          "kind": "graph-output",
-          "graphId": "graph-afterlight-stage-reactivity",
-          "output": "wallRotation"
-        },
-        "shaderWall:travelSpeed": {
-          "kind": "graph-output",
-          "graphId": "graph-afterlight-stage-reactivity",
-          "output": "wallTravel"
-        },
         "shaderWall:brightness": {
           "kind": "graph-output",
           "graphId": "graph-afterlight-stage-reactivity",
@@ -178,15 +168,10 @@
           "graphId": "graph-afterlight-stage-reactivity",
           "output": "washIntensity"
         },
-        "strobes:flashRate": {
+        "strobes:intensity": {
           "kind": "graph-output",
           "graphId": "graph-afterlight-stage-reactivity",
-          "output": "strobeRate"
-        },
-        "blinders:intensity": {
-          "kind": "graph-output",
-          "graphId": "graph-afterlight-stage-reactivity",
-          "output": "blinderIntensity"
+          "output": "strobeIntensity"
         },
         "overheadBlinder:intensity": {
           "kind": "graph-output",
@@ -197,11 +182,6 @@
           "kind": "graph-output",
           "graphId": "graph-afterlight-stage-reactivity",
           "output": "bloomStrength"
-        },
-        "characters:animationSpeed": {
-          "kind": "graph-output",
-          "graphId": "graph-afterlight-stage-reactivity",
-          "output": "characterSpeed"
         }
       },
       "requiredAssetIds": [
@@ -324,11 +304,6 @@
           "artifactId": "artifact-audio-features-9fd7cad5",
           "feature": "bass-energy"
         },
-        "mids": {
-          "kind": "artifact-feature",
-          "artifactId": "artifact-audio-features-9fd7cad5",
-          "feature": "mid-energy"
-        },
         "treble": {
           "kind": "artifact-feature",
           "artifactId": "artifact-audio-features-9fd7cad5",
@@ -366,25 +341,11 @@
           }
         },
         {
-          "id": "input-mids",
-          "type": "graph-input",
-          "position": {
-            "x": 0,
-            "y": 170
-          },
-          "inputs": {
-            "inputKey": {
-              "kind": "literal",
-              "value": "mids"
-            }
-          }
-        },
-        {
           "id": "input-treble",
           "type": "graph-input",
           "position": {
             "x": 0,
-            "y": 340
+            "y": 170
           },
           "inputs": {
             "inputKey": {
@@ -398,7 +359,7 @@
           "type": "graph-input",
           "position": {
             "x": 0,
-            "y": 510
+            "y": 340
           },
           "inputs": {
             "inputKey": {
@@ -412,7 +373,7 @@
           "type": "graph-input",
           "position": {
             "x": 0,
-            "y": 680
+            "y": 510
           },
           "inputs": {
             "inputKey": {
@@ -426,7 +387,7 @@
           "type": "graph-input",
           "position": {
             "x": 0,
-            "y": 850
+            "y": 680
           },
           "inputs": {
             "inputKey": {
@@ -436,11 +397,11 @@
           }
         },
         {
-          "id": "wallScale-scale",
-          "type": "multiply",
+          "id": "bass-envelope",
+          "type": "Envelope Follower",
           "position": {
             "x": 260,
-            "y": -55
+            "y": 0
           },
           "inputs": {
             "value": {
@@ -448,9 +409,101 @@
               "nodeId": "input-bass",
               "output": "value"
             },
+            "attackMs": {
+              "kind": "literal",
+              "value": 45
+            },
+            "releaseMs": {
+              "kind": "literal",
+              "value": 240
+            }
+          }
+        },
+        {
+          "id": "treble-envelope",
+          "type": "Envelope Follower",
+          "position": {
+            "x": 260,
+            "y": 170
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-treble",
+              "output": "value"
+            },
+            "attackMs": {
+              "kind": "literal",
+              "value": 30
+            },
+            "releaseMs": {
+              "kind": "literal",
+              "value": 180
+            }
+          }
+        },
+        {
+          "id": "loudness-envelope",
+          "type": "Envelope Follower",
+          "position": {
+            "x": 260,
+            "y": 340
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-loudness",
+              "output": "value"
+            },
+            "attackMs": {
+              "kind": "literal",
+              "value": 80
+            },
+            "releaseMs": {
+              "kind": "literal",
+              "value": 360
+            }
+          }
+        },
+        {
+          "id": "flux-envelope",
+          "type": "Envelope Follower",
+          "position": {
+            "x": 260,
+            "y": 680
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "input-flux",
+              "output": "value"
+            },
+            "attackMs": {
+              "kind": "literal",
+              "value": 35
+            },
+            "releaseMs": {
+              "kind": "literal",
+              "value": 260
+            }
+          }
+        },
+        {
+          "id": "wallScale-scale",
+          "type": "multiply",
+          "position": {
+            "x": 520,
+            "y": 0
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "bass-envelope",
+              "output": "env"
+            },
             "factor": {
               "kind": "literal",
-              "value": 1.15
+              "value": 0.7
             }
           }
         },
@@ -458,8 +511,8 @@
           "id": "wallScale-offset",
           "type": "add",
           "position": {
-            "x": 520,
-            "y": -55
+            "x": 780,
+            "y": 0
           },
           "inputs": {
             "a": {
@@ -469,7 +522,7 @@
             },
             "b": {
               "kind": "literal",
-              "value": 1.5
+              "value": 1.45
             }
           }
         },
@@ -477,18 +530,18 @@
           "id": "beamIntensity-scale",
           "type": "multiply",
           "position": {
-            "x": 260,
-            "y": 0
+            "x": 520,
+            "y": 170
           },
           "inputs": {
             "value": {
               "kind": "node-output",
-              "nodeId": "input-bass",
-              "output": "value"
+              "nodeId": "treble-envelope",
+              "output": "env"
             },
             "factor": {
               "kind": "literal",
-              "value": 1.4
+              "value": 0.8
             }
           }
         },
@@ -496,8 +549,8 @@
           "id": "beamIntensity-offset",
           "type": "add",
           "position": {
-            "x": 520,
-            "y": 0
+            "x": 780,
+            "y": 170
           },
           "inputs": {
             "a": {
@@ -507,159 +560,7 @@
             },
             "b": {
               "kind": "literal",
-              "value": 0.35
-            }
-          }
-        },
-        {
-          "id": "characterSpeed-scale",
-          "type": "multiply",
-          "position": {
-            "x": 260,
-            "y": 55
-          },
-          "inputs": {
-            "value": {
-              "kind": "node-output",
-              "nodeId": "input-bass",
-              "output": "value"
-            },
-            "factor": {
-              "kind": "literal",
-              "value": 1.2
-            }
-          }
-        },
-        {
-          "id": "characterSpeed-offset",
-          "type": "add",
-          "position": {
-            "x": 520,
-            "y": 55
-          },
-          "inputs": {
-            "a": {
-              "kind": "node-output",
-              "nodeId": "characterSpeed-scale",
-              "output": "value"
-            },
-            "b": {
-              "kind": "literal",
-              "value": 0.72
-            }
-          }
-        },
-        {
-          "id": "wallTravel-scale",
-          "type": "multiply",
-          "position": {
-            "x": 260,
-            "y": 285
-          },
-          "inputs": {
-            "value": {
-              "kind": "node-output",
-              "nodeId": "input-mids",
-              "output": "value"
-            },
-            "factor": {
-              "kind": "literal",
-              "value": 1.8
-            }
-          }
-        },
-        {
-          "id": "wallTravel-offset",
-          "type": "add",
-          "position": {
-            "x": 520,
-            "y": 285
-          },
-          "inputs": {
-            "a": {
-              "kind": "node-output",
-              "nodeId": "wallTravel-scale",
-              "output": "value"
-            },
-            "b": {
-              "kind": "literal",
-              "value": 0.5
-            }
-          }
-        },
-        {
-          "id": "wallRotation-scale",
-          "type": "multiply",
-          "position": {
-            "x": 260,
-            "y": 625
-          },
-          "inputs": {
-            "value": {
-              "kind": "node-output",
-              "nodeId": "input-treble",
-              "output": "value"
-            },
-            "factor": {
-              "kind": "literal",
-              "value": 2.35
-            }
-          }
-        },
-        {
-          "id": "wallRotation-offset",
-          "type": "add",
-          "position": {
-            "x": 520,
-            "y": 625
-          },
-          "inputs": {
-            "a": {
-              "kind": "node-output",
-              "nodeId": "wallRotation-scale",
-              "output": "value"
-            },
-            "b": {
-              "kind": "literal",
-              "value": 0.25
-            }
-          }
-        },
-        {
-          "id": "strobeRate-scale",
-          "type": "multiply",
-          "position": {
-            "x": 260,
-            "y": 680
-          },
-          "inputs": {
-            "value": {
-              "kind": "node-output",
-              "nodeId": "input-treble",
-              "output": "value"
-            },
-            "factor": {
-              "kind": "literal",
-              "value": 0.65
-            }
-          }
-        },
-        {
-          "id": "strobeRate-offset",
-          "type": "add",
-          "position": {
-            "x": 520,
-            "y": 680
-          },
-          "inputs": {
-            "a": {
-              "kind": "node-output",
-              "nodeId": "strobeRate-scale",
-              "output": "value"
-            },
-            "b": {
-              "kind": "literal",
-              "value": 0.03
+              "value": 0.28
             }
           }
         },
@@ -667,18 +568,18 @@
           "id": "movingIntensity-scale",
           "type": "multiply",
           "position": {
-            "x": 260,
-            "y": 965
+            "x": 520,
+            "y": 315
           },
           "inputs": {
             "value": {
               "kind": "node-output",
-              "nodeId": "input-loudness",
-              "output": "value"
+              "nodeId": "loudness-envelope",
+              "output": "env"
             },
             "factor": {
               "kind": "literal",
-              "value": 7
+              "value": 4
             }
           }
         },
@@ -686,8 +587,8 @@
           "id": "movingIntensity-offset",
           "type": "add",
           "position": {
-            "x": 520,
-            "y": 965
+            "x": 780,
+            "y": 315
           },
           "inputs": {
             "a": {
@@ -697,7 +598,7 @@
             },
             "b": {
               "kind": "literal",
-              "value": 2
+              "value": 1
             }
           }
         },
@@ -705,18 +606,18 @@
           "id": "washIntensity-scale",
           "type": "multiply",
           "position": {
-            "x": 260,
-            "y": 1020
+            "x": 520,
+            "y": 370
           },
           "inputs": {
             "value": {
               "kind": "node-output",
-              "nodeId": "input-loudness",
-              "output": "value"
+              "nodeId": "loudness-envelope",
+              "output": "env"
             },
             "factor": {
               "kind": "literal",
-              "value": 10
+              "value": 6
             }
           }
         },
@@ -724,8 +625,8 @@
           "id": "washIntensity-offset",
           "type": "add",
           "position": {
-            "x": 520,
-            "y": 1020
+            "x": 780,
+            "y": 370
           },
           "inputs": {
             "a": {
@@ -735,7 +636,7 @@
             },
             "b": {
               "kind": "literal",
-              "value": 2
+              "value": 1
             }
           }
         },
@@ -743,18 +644,18 @@
           "id": "wallBrightness-scale",
           "type": "multiply",
           "position": {
-            "x": 260,
-            "y": 1645
+            "x": 520,
+            "y": 650
           },
           "inputs": {
             "value": {
               "kind": "node-output",
-              "nodeId": "input-flux",
-              "output": "value"
+              "nodeId": "flux-envelope",
+              "output": "env"
             },
             "factor": {
               "kind": "literal",
-              "value": 1.1
+              "value": 0.75
             }
           }
         },
@@ -762,8 +663,8 @@
           "id": "wallBrightness-offset",
           "type": "add",
           "position": {
-            "x": 520,
-            "y": 1645
+            "x": 780,
+            "y": 650
           },
           "inputs": {
             "a": {
@@ -773,7 +674,7 @@
             },
             "b": {
               "kind": "literal",
-              "value": 1
+              "value": 1.1
             }
           }
         },
@@ -781,18 +682,18 @@
           "id": "bloomStrength-scale",
           "type": "multiply",
           "position": {
-            "x": 260,
-            "y": 1700
+            "x": 520,
+            "y": 705
           },
           "inputs": {
             "value": {
               "kind": "node-output",
-              "nodeId": "input-flux",
-              "output": "value"
+              "nodeId": "flux-envelope",
+              "output": "env"
             },
             "factor": {
               "kind": "literal",
-              "value": 0.5
+              "value": 0.3
             }
           }
         },
@@ -800,8 +701,8 @@
           "id": "bloomStrength-offset",
           "type": "add",
           "position": {
-            "x": 520,
-            "y": 1700
+            "x": 780,
+            "y": 705
           },
           "inputs": {
             "a": {
@@ -811,7 +712,7 @@
             },
             "b": {
               "kind": "literal",
-              "value": 0.45
+              "value": 0.35
             }
           }
         },
@@ -820,7 +721,7 @@
           "type": "multiply",
           "position": {
             "x": 260,
-            "y": 680
+            "y": 510
           },
           "inputs": {
             "value": {
@@ -839,7 +740,7 @@
           "type": "clamp",
           "position": {
             "x": 520,
-            "y": 680
+            "y": 510
           },
           "inputs": {
             "value": {
@@ -862,7 +763,7 @@
           "type": "decay",
           "position": {
             "x": 780,
-            "y": 680
+            "y": 510
           },
           "inputs": {
             "value": {
@@ -877,11 +778,30 @@
           }
         },
         {
+          "id": "strobe-intensity-scale",
+          "type": "multiply",
+          "position": {
+            "x": 1040,
+            "y": 460
+          },
+          "inputs": {
+            "value": {
+              "kind": "node-output",
+              "nodeId": "onset-decay",
+              "output": "value"
+            },
+            "factor": {
+              "kind": "literal",
+              "value": 180
+            }
+          }
+        },
+        {
           "id": "overhead-intensity-scale",
           "type": "multiply",
           "position": {
             "x": 1040,
-            "y": 730
+            "y": 560
           },
           "inputs": {
             "value": {
@@ -903,7 +823,7 @@
           "output": "value",
           "position": {
             "x": 1050,
-            "y": -55
+            "y": 0
           }
         },
         {
@@ -912,43 +832,7 @@
           "output": "value",
           "position": {
             "x": 1050,
-            "y": 0
-          }
-        },
-        {
-          "key": "characterSpeed",
-          "nodeId": "characterSpeed-offset",
-          "output": "value",
-          "position": {
-            "x": 1050,
-            "y": 55
-          }
-        },
-        {
-          "key": "wallTravel",
-          "nodeId": "wallTravel-offset",
-          "output": "value",
-          "position": {
-            "x": 1050,
-            "y": 285
-          }
-        },
-        {
-          "key": "wallRotation",
-          "nodeId": "wallRotation-offset",
-          "output": "value",
-          "position": {
-            "x": 1050,
-            "y": 625
-          }
-        },
-        {
-          "key": "strobeRate",
-          "nodeId": "strobeRate-offset",
-          "output": "value",
-          "position": {
-            "x": 1050,
-            "y": 680
+            "y": 170
           }
         },
         {
@@ -957,7 +841,7 @@
           "output": "value",
           "position": {
             "x": 1050,
-            "y": 965
+            "y": 315
           }
         },
         {
@@ -966,7 +850,7 @@
           "output": "value",
           "position": {
             "x": 1050,
-            "y": 1020
+            "y": 370
           }
         },
         {
@@ -975,7 +859,7 @@
           "output": "value",
           "position": {
             "x": 1050,
-            "y": 1645
+            "y": 650
           }
         },
         {
@@ -984,16 +868,16 @@
           "output": "value",
           "position": {
             "x": 1050,
-            "y": 1700
+            "y": 705
           }
         },
         {
-          "key": "blinderIntensity",
-          "nodeId": "onset-decay",
+          "key": "strobeIntensity",
+          "nodeId": "strobe-intensity-scale",
           "output": "value",
           "position": {
             "x": 1300,
-            "y": 680
+            "y": 460
           }
         },
         {
@@ -1002,13 +886,13 @@
           "output": "value",
           "position": {
             "x": 1300,
-            "y": 730
+            "y": 560
           }
         }
       ],
       "metadata": {
         "production": "afterlight-assembly",
-        "intent": "Readable music-feature lanes controlling stage light, motion, camera atmosphere, and character energy."
+        "intent": "Smoothed music-feature envelopes control visual amplitudes while authored rates preserve continuous motion phase."
       }
     }
   ],
