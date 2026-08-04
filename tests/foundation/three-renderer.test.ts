@@ -30,6 +30,7 @@ import {
   Mesh,
   MeshBasicMaterial,
   OrthographicCamera,
+  PointLight,
   Points,
   Scene,
   ShaderMaterial,
@@ -1999,8 +2000,17 @@ describe('Viz Three renderer proof', () => {
     const repeatedCrowd = repeated.root.userData.crowd as InstancedMesh;
     const beams = instance.root.userData.beams as Group;
     const lasers = instance.root.userData.lasers as Group;
+    const strobes = instance.root.userData.strobes as InstancedMesh;
+    const strobeFlashSurface = instance.root.userData
+      .strobeFlashSurface as Mesh;
+    const strobeFlashLight = instance.root.userData
+      .strobeFlashLight as PointLight;
     const crowdGeometry = crowd.geometry;
     const crowdMaterial = crowd.material;
+    const activeStrobeColor = new Color();
+    const idleStrobeColor = new Color();
+    strobes.getColorAt(0, activeStrobeColor);
+    strobes.getColorAt(1, idleStrobeColor);
     const initialMatrices = Array.from(
       crowd.instanceMatrix.array.slice(0, crowd.count * 16),
     );
@@ -2010,6 +2020,14 @@ describe('Viz Three renderer proof', () => {
     expect(instance.root.userData.crowdCount).toBe(50);
     expect(instance.root.userData.beamMode).toBe(0);
     expect(instance.root.userData.laserMode).toBe(0);
+    expect(instance.root.userData.activeStrobeIndex).toBe(0);
+    expect(activeStrobeColor.r).toBeCloseTo(Math.sqrt(500), 6);
+    expect(activeStrobeColor.g).toBeCloseTo(Math.sqrt(500), 6);
+    expect(activeStrobeColor.b).toBeCloseTo(Math.sqrt(500), 6);
+    expect(strobeFlashSurface.visible).toBe(true);
+    expect(strobeFlashLight.visible).toBe(true);
+    expect(strobeFlashLight.intensity).toBeCloseTo(Math.sqrt(500) * 750, 6);
+    expect(idleStrobeColor.toArray()).toEqual([1, 1, 1]);
     expect(initialMatrices).toEqual(
       Array.from(
         repeatedCrowd.instanceMatrix.array.slice(0, repeatedCrowd.count * 16),
@@ -2032,6 +2050,10 @@ describe('Viz Three renderer proof', () => {
     expect(instance.root.userData.crowdCount).toBe(120);
     expect(instance.root.userData.beamMode).toBe(6);
     expect(instance.root.userData.laserMode).toBe(4);
+    expect(instance.root.userData.activeStrobeIndex).toBe(-1);
+    expect(strobeFlashSurface.visible).toBe(false);
+    expect(strobeFlashLight.visible).toBe(false);
+    expect(strobeFlashLight.intensity).toBe(0);
     expect(
       Array.from(crowd.instanceMatrix.array.slice(0, 50 * 16)),
     ).not.toEqual(initialMatrices);

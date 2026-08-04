@@ -669,7 +669,6 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   const strobeFaceMaterial = trackMaterial(
     new MeshBasicMaterial({
       color: '#ffffff',
-      toneMapped: false,
       vertexColors: true,
     }),
   );
@@ -678,9 +677,22 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
     strobeFaceMaterial,
     STROBE_COUNT,
   );
+  const strobeFlashMaterial = trackMaterial(
+    new MeshBasicMaterial({
+      color: '#ffffff',
+      blending: AdditiveBlending,
+      depthTest: false,
+      depthWrite: false,
+      toneMapped: false,
+    }),
+  );
+  const strobeFlashSurface = new Mesh(strobeFaceGeometry, strobeFlashMaterial);
+  strobeFlashSurface.rotation.set(-Math.PI / 16, 0, 0);
+  strobeFlashSurface.renderOrder = 10;
+  strobeFlashSurface.visible = false;
   const strobeObject = new Object3D();
   for (let index = 0; index < STROBE_COUNT; index += 1) {
-    strobeObject.position.set((index - 4.5) * 11, 3.5, 0);
+    strobeObject.position.set((index - 4.5) * 11, 3.5, 10);
     strobeObject.rotation.set(-Math.PI / 16, 0, 0);
     strobeObject.updateMatrix();
     strobeBodies.setMatrixAt(index, strobeObject.matrix);
@@ -690,7 +702,8 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   }
   strobeBodies.instanceMatrix.needsUpdate = true;
   strobeFaces.instanceMatrix.needsUpdate = true;
-  root.add(strobeBodies, strobeFaces);
+  const strobeFlashLight = new PointLight('#ffffff', 0, 90, 2);
+  root.add(strobeBodies, strobeFaces, strobeFlashSurface, strobeFlashLight);
 
   const crowdGeometry = trackGeometry(new CapsuleGeometry(0.35, 1.2, 3, 6));
   const crowdMaterial = trackMaterial(
@@ -839,6 +852,8 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
   root.userData.lasers = lasersGroup;
   root.userData.movingLights = movingLightsGroup;
   root.userData.strobes = strobeFaces;
+  root.userData.strobeFlashSurface = strobeFlashSurface;
+  root.userData.strobeFlashLight = strobeFlashLight;
   root.userData.crowd = crowd;
   root.userData.dj = dj;
   root.userData.helpers = helpers;
@@ -1270,6 +1285,7 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
       Math.max(0, asNumber(parameters.strobeFlashRate, 0.3)),
     );
     const intensity = Math.max(0, asNumber(parameters.strobeIntensity, 500));
+    const flashStrength = Math.sqrt(intensity);
     const tick = Math.floor(time * 20);
     const active =
       rate > 0 && hash01(seed, tick * 31 + 17) > 1 - rate
@@ -1278,12 +1294,21 @@ export const createStageSceneProgram: VizThreeProgramFactory = ({
     strobeBodies.visible = enabled;
     strobeFaces.visible = enabled;
     for (let index = 0; index < STROBE_COUNT; index += 1) {
-      const brightness = index === active ? 1 + intensity / 50 : 0.3;
+      const brightness = index === active ? flashStrength : 1;
       crowdColor.setRGB(brightness, brightness, brightness);
       strobeFaces.setColorAt(index, crowdColor);
     }
     if (strobeFaces.instanceColor) {
       strobeFaces.instanceColor.needsUpdate = true;
+    }
+    strobeFlashSurface.visible = enabled && active >= 0;
+    strobeFlashLight.visible = enabled && active >= 0;
+    strobeFlashLight.intensity = active >= 0 ? flashStrength * 750 : 0;
+    if (active >= 0) {
+      strobeFlashSurface.position.set((active - 4.5) * 11, 3.5, 10);
+      strobeFlashSurface.translateZ(0.95);
+      strobeFlashSurface.scale.setScalar(1.5 + flashStrength * 0.05);
+      strobeFlashLight.position.set((active - 4.5) * 11, 5, 11);
     }
     root.userData.activeStrobeIndex = active;
   };
