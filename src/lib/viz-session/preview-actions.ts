@@ -139,6 +139,11 @@ export const createStudioPreviewActions = ({
         height: projectState.workingProject.viewport.height,
       };
       const resources = getResources();
+      const layerValues = host.getLiveLayerValues();
+      const graphValues = host.getLiveGraphValues();
+      const hasLiveOverrides =
+        Object.keys(layerValues).length > 0 ||
+        Object.keys(graphValues).length > 0;
       const planStartedAt = performance.now();
       const renderPlan = createVizSessionRuntimePreviewPlan({
         project: projectState.workingProject,
@@ -150,14 +155,15 @@ export const createStudioPreviewActions = ({
         resourceRevision: resources.resourceRevision,
         resolvedAssets: resources.resolvedAssets,
         resolvedArtifacts: resources.resolvedArtifacts,
-        layerValues: host.getLiveLayerValues(),
-        graphValues: host.getLiveGraphValues(),
+        layerValues,
+        graphValues,
       });
       const planCompletedAt = performance.now();
       const lastRenderedLayerIds = attachmentStore.renderRuntimePlan(
         frame,
         audioFrameData,
         renderPlan,
+        hasLiveOverrides,
       );
       const completedAt = performance.now();
       runtimeInspection.publishFrame(frame, renderPlan, lastRenderedLayerIds, {

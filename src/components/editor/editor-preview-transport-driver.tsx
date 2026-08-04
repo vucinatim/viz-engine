@@ -1,13 +1,10 @@
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import {
-  getVizSessionState,
   useVizSessionSelector,
   vizSessionActions,
   vizSessionHost,
 } from '@/lib/viz-session';
 import { useEffect } from 'react';
-
-const MAX_FRAME_DELTA_SECONDS = 0.25;
 
 const EditorPreviewTransportDriver = () => {
   const audioElementRef = useAudioEngineStore((state) => state.audioElementRef);
@@ -87,69 +84,6 @@ const EditorPreviewTransportDriver = () => {
       });
     }
   }, [audioElementRef, currentTrackUrl, fps, isPlaying, sourceKind]);
-
-  useEffect(() => {
-    if (!isPlaying) {
-      return;
-    }
-
-    let animationFrame = 0;
-    let previousTime = performance.now();
-
-    const tick = (now: number) => {
-      const state = getVizSessionState();
-      const transport = vizSessionHost.getSnapshot().transport;
-      if (!transport.isPlaying) {
-        return;
-      }
-
-      const audio = audioElementRef.current;
-      const source = state.audio.session.source;
-      const hasMediaClock =
-        (source?.kind === 'file' || source?.kind === 'media-element') &&
-        audio !== null;
-      const timelineDurationSeconds = transport.durationFrames / transport.fps;
-      const hasReachedMediaBoundary =
-        hasMediaClock &&
-        audio !== null &&
-        (audio.ended || audio.currentTime >= timelineDurationSeconds);
-
-      if (hasReachedMediaBoundary && audio) {
-        if (transport.loop) {
-          audio.currentTime = 0;
-          void audio.play().catch(() => {});
-          vizSessionActions.preview.syncCurrentFrame(0);
-        } else {
-          audio.pause();
-          vizSessionActions.preview.syncCurrentFrame(
-            transport.durationFrames - 1,
-          );
-          vizSessionActions.preview.pause();
-        }
-      } else if (
-        hasMediaClock &&
-        audio !== null &&
-        !audio.paused &&
-        Number.isFinite(audio.currentTime)
-      ) {
-        vizSessionActions.preview.syncCurrentFrame(
-          Math.floor(audio.currentTime * transport.fps),
-        );
-      } else {
-        const elapsedSeconds = Math.min(
-          MAX_FRAME_DELTA_SECONDS,
-          Math.max(0, (now - previousTime) / 1_000),
-        );
-        vizSessionActions.preview.advanceBySeconds(elapsedSeconds);
-      }
-
-      previousTime = now;
-      animationFrame = requestAnimationFrame(tick);
-    };
-
-    animationFrame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animationFrame);
-  }, [audioElementRef, isPlaying]);
 
   return null;
 };

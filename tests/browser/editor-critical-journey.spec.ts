@@ -337,6 +337,52 @@ const readTransportSynchronization = async (
     };
   });
 
+const readTransportSynchronizationAtRuntimeFrame = async (
+  page: Page,
+): Promise<TransportSynchronization> =>
+  page.evaluate(
+    () =>
+      new Promise<TransportSynchronization>((resolve, reject) => {
+        let unsubscribe = () => undefined;
+        const timeout = window.setTimeout(() => {
+          unsubscribe();
+          reject(new Error('Runtime preview did not publish a frame.'));
+        }, 3_000);
+        unsubscribe =
+          window.__vizEditorDebug?.editorControl.preview.subscribeRuntimePreview(
+            () => {
+              window.clearTimeout(timeout);
+              unsubscribe();
+              const debug = window.__vizEditorDebug;
+              const audio = document.querySelector('audio');
+              if (!debug || !audio) {
+                reject(
+                  new Error('Editor transport dependencies are not mounted.'),
+                );
+                return;
+              }
+              const state = debug.vizSessionStore.getState();
+              const transport = debug.vizSessionHost.getSnapshot().transport;
+              resolve({
+                layerIds: state.project.workingProject.layers.map(
+                  (layer) => layer.id,
+                ),
+                revision: state.project.revision,
+                currentFrame: transport.currentFrame,
+                durationFrames: transport.durationFrames,
+                fps: transport.fps,
+                isPlaying: transport.isPlaying,
+                audioCurrentTime: audio.currentTime,
+                audioPaused: audio.paused,
+                renderedFrame:
+                  debug.editorControl.preview.inspectRuntimePreview()
+                    .lastCompletedFrame?.currentFrame,
+              });
+            },
+          ) ?? unsubscribe;
+      }),
+  );
+
 test('preserves canonical editing, history, graph, and transport behavior', async ({
   page,
 }) => {
@@ -793,7 +839,7 @@ test('keeps scrubbing, playback, audio, rendering, and loop boundaries synchroni
   await expect
     .poll(async () => (await readTransportSynchronization(page)).currentFrame)
     .toBeGreaterThan(scrubbed.currentFrame + 5);
-  const playing = await readTransportSynchronization(page);
+  const playing = await readTransportSynchronizationAtRuntimeFrame(page);
   expect(
     Math.abs(playing.audioCurrentTime * playing.fps - playing.currentFrame),
   ).toBeLessThan(4);
@@ -807,7 +853,7 @@ test('keeps scrubbing, playback, audio, rendering, and loop boundaries synchroni
     steps: 8,
   });
   await page.mouse.up();
-  const playingSeek = await readTransportSynchronization(page);
+  const playingSeek = await readTransportSynchronizationAtRuntimeFrame(page);
   const expectedPlayingSeekFrame = Math.floor(playingSeek.durationFrames * 0.7);
   expect(playingSeek.currentFrame).toBeGreaterThanOrEqual(
     expectedPlayingSeekFrame - 3,

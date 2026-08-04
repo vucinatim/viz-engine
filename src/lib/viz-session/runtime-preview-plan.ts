@@ -21,6 +21,7 @@ import {
   type VizRuntimeSession,
 } from '@viz-engine/runtime';
 
+import { MAX_LIVE_PREVIEW_FRAME_GAP } from '@/lib/editor-runtime-preview-clock';
 import { studioComponentRegistry } from '@/lib/viz-capabilities';
 import type {
   VizSessionRuntimePreviewAudioFrameData,
@@ -38,6 +39,10 @@ interface RuntimePreviewSessionCache {
   project: VizProjectDocument;
   session: VizRuntimeSession;
   lastFrame?: number;
+  pendingLiveDiscontinuity?: {
+    fromFrame?: number;
+    toFrame: number;
+  };
 }
 
 interface CreateRuntimePreviewPlanOptions {
@@ -61,6 +66,16 @@ const componentRegistry = studioComponentRegistry;
 const nodeRegistry = createCoreNodeRegistry();
 const frozenAudioByLayerId = new Map<string, VizRuntimeAudioFrameSnapshot>();
 let sessionCache: RuntimePreviewSessionCache | null = null;
+
+const usesTemporalHistory = (project: VizProjectDocument): boolean =>
+  project.layers.some((layer) =>
+    Boolean(componentRegistry.get(layer.componentId)?.temporal),
+  ) ||
+  (project.graphs ?? []).some((graph) =>
+    graph.nodes.some(
+      (node) => nodeRegistry.get(node.type)?.category === 'temporal',
+    ),
+  );
 
 const toExecutionMode = (
   mode: VizSessionRuntimePreviewFrame['mode'],
@@ -280,16 +295,23 @@ const getRuntimeSession = (
 ): VizRuntimeSession => {
   const mode = toExecutionMode(options.frame.mode);
   const cached = sessionCache;
-  const hasLiveDiscontinuity =
+  const isLiveInput = (options.audioFrameData.provenance ?? 'live') === 'live';
+  const frameDelta =
+    cached?.lastFrame === undefined
+      ? undefined
+      : options.frame.currentFrame - cached.lastFrame;
+  const hasLiveContinuityBreak =
+    isLiveInput &&
+    usesTemporalHistory(options.project) &&
     cached !== null &&
-    (options.audioFrameData.provenance ?? 'live') === 'live' &&
-    cached.lastFrame !== undefined &&
-    options.frame.currentFrame !== cached.lastFrame &&
-    options.frame.currentFrame !== cached.lastFrame + 1;
+    cached.project.projectId === options.project.projectId &&
+    options.frame.currentFrame > 0 &&
+    frameDelta !== undefined &&
+    (frameDelta < 0 || frameDelta > MAX_LIVE_PREVIEW_FRAME_GAP);
 
   if (
     cached &&
-    !hasLiveDiscontinuity &&
+    !hasLiveContinuityBreak &&
     cached.revision === options.projectRevision &&
     cached.resourceRevision === (options.resourceRevision ?? 0) &&
     cached.mode === mode &&
@@ -303,7 +325,7 @@ const getRuntimeSession = (
 
   if (
     cached &&
-    !hasLiveDiscontinuity &&
+    !hasLiveContinuityBreak &&
     cached.resourceRevision === (options.resourceRevision ?? 0) &&
     cached.mode === mode &&
     cached.fps === options.frame.fps &&
@@ -329,22 +351,27 @@ const getRuntimeSession = (
   for (const asset of options.resolvedAssets ?? []) {
     resolvedAssets.set(asset.id, asset);
   }
+  const resetsUnavailableLiveHistory =
+    isLiveInput &&
+    usesTemporalHistory(options.project) &&
+    options.frame.currentFrame > 0;
   const session = createVizRuntimeSession({
     project: createSessionProject(options),
     mode,
     seed: 'editor-runtime-preview',
     resolvedAssets: [...resolvedAssets.values()],
     resolvedArtifacts: options.resolvedArtifacts ?? [],
-    initialGraphCheckpoints: cached
-      ? hasLiveDiscontinuity
-        ? []
-        : collectReusableGraphCheckpoints(cached, options, mode)
-      : [],
-    initialComponentCheckpoints: cached
-      ? hasLiveDiscontinuity
-        ? []
-        : collectReusableComponentCheckpoints(cached, options, mode)
-      : [],
+    evaluationStartFrame: resetsUnavailableLiveHistory
+      ? options.frame.currentFrame
+      : 0,
+    initialGraphCheckpoints:
+      cached && !resetsUnavailableLiveHistory
+        ? collectReusableGraphCheckpoints(cached, options, mode)
+        : [],
+    initialComponentCheckpoints:
+      cached && !resetsUnavailableLiveHistory
+        ? collectReusableComponentCheckpoints(cached, options, mode)
+        : [],
   });
   sessionCache = {
     revision: options.projectRevision,
@@ -356,6 +383,17 @@ const getRuntimeSession = (
     durationInFrames: session.project.timeline.durationInFrames,
     project: options.project,
     session,
+    ...(resetsUnavailableLiveHistory
+      ? {
+          pendingLiveDiscontinuity: {
+            ...(cached?.project.projectId !== options.project.projectId ||
+            cached.lastFrame === undefined
+              ? {}
+              : { fromFrame: cached.lastFrame }),
+            toFrame: options.frame.currentFrame,
+          },
+        }
+      : {}),
   };
   frozenAudioByLayerId.clear();
   return session;
@@ -432,7 +470,27 @@ export const createVizSessionRuntimePreviewPlan = (
   if (sessionCache?.session === session) {
     sessionCache.lastFrame = options.frame.currentFrame;
   }
-  return plan;
+  const cache = sessionCache;
+  const discontinuity = cache?.pendingLiveDiscontinuity;
+  if (!discontinuity) {
+    return plan;
+  }
+  delete cache.pendingLiveDiscontinuity;
+  return {
+    ...plan,
+    issues: [
+      ...plan.issues,
+      {
+        code: 'temporal-input-unavailable',
+        layerId: '__runtime__',
+        inputKey: '__render__',
+        message:
+          discontinuity.fromFrame === undefined
+            ? `Live temporal input before frame ${discontinuity.toFrame} is unavailable; evaluation started from an explicit input discontinuity.`
+            : `Live temporal continuity from frame ${discontinuity.fromFrame} to ${discontinuity.toFrame} cannot be reconstructed; evaluation restarted at the target frame instead of fabricating historical audio.`,
+      },
+    ],
+  };
 };
 
 export const resetVizSessionRuntimePreviewPlanCache = (): void => {

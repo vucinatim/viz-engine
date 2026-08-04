@@ -217,7 +217,9 @@ export const createVizRenderPlan = ({
     }
 
     let state = checkpoint?.state;
-    const firstFrame = checkpoint ? checkpoint.frame + 1 : 0;
+    const firstFrame = checkpoint
+      ? checkpoint.frame + 1
+      : session.getEvaluationStartFrame();
     const checkpointInterval = session.getComponentCheckpointIntervalFrames();
 
     for (
@@ -325,7 +327,7 @@ export const createVizRenderPlan = ({
       createRenderIssue(
         'temporal-input-unavailable',
         '__runtime__',
-        `Live temporal input is unavailable for frames ${missingFrames[0]}-${missingFrames.at(-1)}; evaluation resumed from an explicit input discontinuity instead of fabricating historical audio.`,
+        `Live temporal input is unavailable for frames ${missingFrames[0]}-${missingFrames.at(-1)}; evaluation kept an explicit missing-input discontinuity instead of fabricating historical audio.`,
       ),
     );
   }

@@ -18,6 +18,8 @@ import {
 } from '@viz-engine/renderer-three';
 import * as THREE from 'three';
 
+const PLAYBACK_MIRROR_INTERVAL_FRAMES = 3;
+
 export interface EditorRuntimePreviewAttachment {
   getViewport: () => {
     width: number;
@@ -28,6 +30,7 @@ export interface EditorRuntimePreviewAttachment {
     frame: VizSessionRuntimePreviewFrame;
     audioFrameData: VizSessionRuntimePreviewAudioFrameData;
     renderPlan: VizRenderPlan;
+    hasLiveOverrides: boolean;
   }) => LayerRuntimePreviewRenderResult;
   updateLayers: (layers: LayerData[]) => void;
   invokeLayerAction: (layerId: string, actionId: string) => boolean;
@@ -47,6 +50,10 @@ interface CreateEditorRuntimePreviewAttachmentOptions {
   getCompositeMirrorCanvases: () => HTMLCanvasElement[];
   programRegistry: VizThreeProgramRegistry;
 }
+
+type MirrorTarget =
+  | { kind: 'composite'; canvases: HTMLCanvasElement[] }
+  | { kind: 'layer'; layerId: string; canvases: HTMLCanvasElement[] };
 
 const applyCanvasResolution = (
   canvas: HTMLCanvasElement,
@@ -68,6 +75,10 @@ export const createEditorRuntimePreviewAttachment = ({
 }: CreateEditorRuntimePreviewAttachmentOptions): EditorRuntimePreviewAttachment => {
   let currentLayers = new Map(layers.map((layer) => [layer.id, layer]));
   let runtimePreviewController: VizThreePreviewController | null = null;
+  let mirrorCursor = 0;
+  let playbackRenderCount = 0;
+  let staticMirrorFrame: number | null = null;
+  let staticMirrorGeneration = 0;
   let flyCameraPose: VizThreePreviewCameraPose | null = null;
   let flyCameraLayerId: string | null = null;
   let flyCameraActive = false;
@@ -78,6 +89,49 @@ export const createEditorRuntimePreviewAttachment = ({
     ]),
   );
   const flyKeys = new Set<string>();
+
+  const cancelStaticMirrorSweep = () => {
+    staticMirrorGeneration += 1;
+    if (staticMirrorFrame !== null) {
+      cancelAnimationFrame(staticMirrorFrame);
+      staticMirrorFrame = null;
+    }
+  };
+
+  const presentMirror = (mirrorTarget: MirrorTarget) => {
+    if (mirrorTarget.kind === 'composite') {
+      void mirrorToCanvases(canvas, mirrorTarget.canvases);
+      return;
+    }
+    if (runtimePreviewController?.presentLayer(mirrorTarget.layerId)) {
+      void mirrorToCanvases(canvas, mirrorTarget.canvases);
+      runtimePreviewController.presentComposite();
+    }
+  };
+
+  const scheduleStaticMirrorSweep = (mirrorTargets: MirrorTarget[]) => {
+    cancelStaticMirrorSweep();
+    const generation = staticMirrorGeneration;
+    let index = 0;
+    const presentNext = () => {
+      staticMirrorFrame = null;
+      if (generation !== staticMirrorGeneration) {
+        return;
+      }
+      const mirrorTarget = mirrorTargets[index];
+      if (!mirrorTarget) {
+        return;
+      }
+      presentMirror(mirrorTarget);
+      index += 1;
+      if (index < mirrorTargets.length) {
+        staticMirrorFrame = requestAnimationFrame(presentNext);
+      }
+    };
+    if (mirrorTargets.length > 0) {
+      staticMirrorFrame = requestAnimationFrame(presentNext);
+    }
+  };
 
   const removeFlyListeners = () => {
     document.removeEventListener('keydown', onFlyKeyDown);
@@ -296,7 +350,7 @@ export const createEditorRuntimePreviewAttachment = ({
       runtimePreviewController?.resize(canvas.width, canvas.height);
       invalidateEditorRuntimePreview();
     },
-    render: ({ frame, renderPlan }) => {
+    render: ({ frame, renderPlan, hasLiveOverrides }) => {
       for (const layerPlan of renderPlan.layers) {
         lastConfigValuesByLayerId.set(
           layerPlan.layerId,
@@ -319,22 +373,38 @@ export const createEditorRuntimePreviewAttachment = ({
         });
       }
 
-      mirrorToCanvases(canvas, getCompositeMirrorCanvases());
+      const compositeMirrorCanvases = getCompositeMirrorCanvases();
       const mirrorCanvasesByLayerId = getMirrorCanvasesByLayerId();
-      let presentedMirror = false;
-      for (const [layerId, mirrorCanvases] of Object.entries(
-        mirrorCanvasesByLayerId,
-      )) {
+      const mirrorTargets: MirrorTarget[] = [
+        ...(compositeMirrorCanvases.length > 0
+          ? [
+              {
+                kind: 'composite' as const,
+                canvases: compositeMirrorCanvases,
+              },
+            ]
+          : []),
+        ...Object.entries(mirrorCanvasesByLayerId).flatMap(
+          ([layerId, canvases]) =>
+            canvases.length > 0
+              ? [{ kind: 'layer' as const, layerId, canvases }]
+              : [],
+        ),
+      ];
+      if (hasLiveOverrides) {
+        cancelStaticMirrorSweep();
+      } else if (frame.dt === 0) {
+        scheduleStaticMirrorSweep(mirrorTargets);
+      } else {
+        cancelStaticMirrorSweep();
+        playbackRenderCount += 1;
         if (
-          mirrorCanvases.length > 0 &&
-          runtimePreviewController.presentLayer(layerId)
+          playbackRenderCount % PLAYBACK_MIRROR_INTERVAL_FRAMES === 0 &&
+          mirrorTargets.length > 0
         ) {
-          mirrorToCanvases(canvas, mirrorCanvases);
-          presentedMirror = true;
+          presentMirror(mirrorTargets[mirrorCursor % mirrorTargets.length]!);
+          mirrorCursor += 1;
         }
-      }
-      if (presentedMirror) {
-        runtimePreviewController.presentComposite();
       }
 
       return {
@@ -378,6 +448,7 @@ export const createEditorRuntimePreviewAttachment = ({
     destroy: () => {
       deactivateFlyCamera();
       removeFlyListeners();
+      cancelStaticMirrorSweep();
       runtimePreviewController?.dispose();
       runtimePreviewController = null;
     },

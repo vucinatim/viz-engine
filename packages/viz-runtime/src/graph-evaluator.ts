@@ -572,7 +572,9 @@ export const evaluateSingleVizGraph = ({
     ? structuredClone(checkpoint.issues)
     : [];
   const checkpointInterval = session.getGraphCheckpointIntervalFrames();
-  const startFrame = checkpoint ? checkpoint.frame + 1 : 0;
+  const startFrame = checkpoint
+    ? checkpoint.frame + 1
+    : session.getEvaluationStartFrame();
 
   for (
     let steppedFrame = startFrame;

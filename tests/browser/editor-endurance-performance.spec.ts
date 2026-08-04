@@ -133,6 +133,33 @@ const importSignalCathedral = async (page: Page) => {
     .toBe(1);
 };
 
+const loadLightTunnel = async (page: Page) => {
+  await page.evaluate(async () => {
+    await window.__vizEditorDebug?.editorControl.persistence.loadProjectFromUrl(
+      '/projects/light-tunnel.vizengine.json',
+    );
+  });
+  await expect(page.getByTestId('layer-card')).toHaveCount(2);
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const debug = window.__vizEditorDebug;
+        const runtime = debug?.editorControl.preview.inspectRuntimePreview();
+        return {
+          projectId:
+            debug?.vizSessionStore.getState().project.workingProject.projectId,
+          renderedLayers: runtime?.lastRenderedLayerIds.length,
+          graphResults: runtime?.lastGraphResults.length,
+        };
+      }),
+    )
+    .toEqual({
+      projectId: 'light-tunnel',
+      renderedLayers: 2,
+      graphResults: 9,
+    });
+};
+
 const readCanvasFingerprint = (page: Page) =>
   page.evaluate(() => {
     const canvas = document.querySelector<HTMLCanvasElement>(
@@ -375,6 +402,29 @@ const runCycle = async (page: Page) => {
     },
     { milliseconds: PLAYBACK_MILLISECONDS },
   );
+  await loadLightTunnel(page);
+  await page.evaluate(() => {
+    const control = window.__vizEditorDebug?.editorControl;
+    control?.nodeEditor.openNetwork(
+      'layer-Light Tunnel-1760643746953:wave:triggerWave',
+    );
+    control?.nodeEditor.focus();
+  });
+  await expect(page.getByTestId('node-network')).toBeVisible();
+  await page.evaluate(
+    ({ milliseconds }) => {
+      window.__vizEditorDebug?.editorControl.preview.play();
+      return new Promise<void>((resolve) =>
+        setTimeout(() => {
+          const control = window.__vizEditorDebug?.editorControl;
+          control?.preview.pause();
+          control?.nodeEditor.closeNetwork();
+          resolve();
+        }, milliseconds),
+      );
+    },
+    { milliseconds: PLAYBACK_MILLISECONDS },
+  );
   await loadSimpleProject(page);
 };
 
@@ -441,6 +491,7 @@ test('keeps playback, editing, audio, panels, graphs, models, and responsiveness
         'simple-example',
         'stage-scene-with-bundled-models',
         'signal-cathedral-with-live-graph',
+        'light-tunnel-with-live-graph',
       ],
       operations: [
         'bundled-audio-next-previous',
@@ -449,6 +500,7 @@ test('keeps playback, editing, audio, panels, graphs, models, and responsiveness
         'profiler-open-close',
         'stage-model-load-play-delete',
         'signal-cathedral-import-graph-play-close',
+        'light-tunnel-load-graph-play-close',
         'simple-project-reopen',
       ],
     },

@@ -72,12 +72,18 @@ describe('Editor runtime preview attachment store', () => {
 
     const renderPlan = createRenderPlan('layer-a');
     expect(
-      attachmentStore.renderRuntimePlan(frame, audioFrameData, renderPlan),
+      attachmentStore.renderRuntimePlan(
+        frame,
+        audioFrameData,
+        renderPlan,
+        false,
+      ),
     ).toEqual(['layer-a']);
     expect(renderLayerA).toHaveBeenCalledWith({
       frame,
       audioFrameData,
       renderPlan,
+      hasLiveOverrides: false,
     });
     expect(attachmentStore.getPreviewViewport()).toEqual({
       width: 640,
@@ -142,15 +148,15 @@ describe('Editor runtime preview attachment store', () => {
     });
     const renderPlan = createRenderPlan('layer-a', 'layer-b');
 
-    expect(store.renderRuntimePlan(frame, audioFrameData, renderPlan)).toEqual([
-      'layer-a',
-      'layer-b',
-    ]);
+    expect(
+      store.renderRuntimePlan(frame, audioFrameData, renderPlan, false),
+    ).toEqual(['layer-a', 'layer-b']);
     expect(render).toHaveBeenCalledOnce();
     expect(render).toHaveBeenCalledWith({
       frame,
       audioFrameData,
       renderPlan,
+      hasLiveOverrides: false,
     });
     expect(renderDebug).toHaveBeenCalledWith({
       frame,

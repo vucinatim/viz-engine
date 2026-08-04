@@ -197,4 +197,21 @@ describe('Temporal component runtime', () => {
     expect(inputFrames).toEqual([0, 1, 2, 3]);
     expect(result.values.value).toBe(10);
   });
+
+  it('can declare a bounded evaluation origin for unavailable live history', () => {
+    const session = createVizRuntimeSession({
+      project,
+      mode: 'live',
+      evaluationStartFrame: 90,
+    });
+    const plan = createVizRenderPlan({
+      session,
+      frame: 90,
+      registry: componentRegistry,
+      nodeRegistry,
+    });
+
+    expect(session.getEvaluationStartFrame()).toBe(90);
+    expect(readHistory(plan)).toEqual([90]);
+  });
 });

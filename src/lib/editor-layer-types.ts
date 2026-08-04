@@ -28,6 +28,7 @@ export interface LayerRuntimePreviewAttachment {
     frame: VizSessionRuntimePreviewFrame;
     audioFrameData: VizSessionRuntimePreviewAudioFrameData;
     renderPlan: VizRenderPlan;
+    hasLiveOverrides: boolean;
   }) => LayerRuntimePreviewRenderResult | void;
   invokeLayerAction?: (layerId: string, actionId: string) => boolean;
   requiresContinuousRendering?: () => boolean;

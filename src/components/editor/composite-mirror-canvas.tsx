@@ -19,7 +19,13 @@ const CompositeMirrorCanvas = () => {
     return () => unregister(canvas);
   }, [register, unregister]);
 
-  return <canvas ref={canvasRef} className="absolute h-full w-full" />;
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute h-full w-full"
+      data-composite-mirror
+    />
+  );
 };
 
 export default CompositeMirrorCanvas;

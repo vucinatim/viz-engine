@@ -46,6 +46,7 @@ interface EditorRuntimePreviewAttachmentStore {
     frame: VizSessionRuntimePreviewFrame,
     audioFrameData: VizSessionRuntimePreviewAudioFrameData,
     renderPlan: VizRenderPlan,
+    hasLiveOverrides: boolean,
   ) => string[];
   requiresContinuousRendering: () => boolean;
   whenRuntimeResourcesReady: () => Promise<void>;
@@ -183,12 +184,18 @@ const useEditorRuntimePreviewAttachmentStore =
         get().previewAttachment?.invokeLayerAction?.(layerId, actionId) ?? false
       );
     },
-    renderRuntimePlan: (frame, audioFrameData, renderPlan) => {
+    renderRuntimePlan: (
+      frame,
+      audioFrameData,
+      renderPlan,
+      hasLiveOverrides,
+    ) => {
       const state = get();
       const result = state.previewAttachment?.render({
         frame,
         audioFrameData,
         renderPlan,
+        hasLiveOverrides,
       });
       for (const layerPlan of renderPlan.layers) {
         state.debugAttachments.get(layerPlan.layerId)?.render({

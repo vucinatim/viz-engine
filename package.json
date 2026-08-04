@@ -33,6 +33,7 @@
     "render:browser-bundle": "tsx tools/foundation/render-browser-bundle.ts",
     "benchmark:runtime-preview": "tsx tools/foundation/runtime-preview-plan-benchmark.ts",
     "benchmark:light-tunnel": "tsx tools/foundation/light-tunnel-runtime-benchmark.ts",
+    "benchmark:light-tunnel-headed": "VIZ_LIGHT_TUNNEL_PERFORMANCE=1 VIZ_LIGHT_TUNNEL_HEADED_REPORT=.artifacts/performance/v2-light-tunnel-headed.json playwright test --config playwright.performance.config.ts",
     "benchmark:editor-interaction": "VIZ_PERFORMANCE=1 VIZ_PERFORMANCE_REPORT=.artifacts/performance/v2-simple-example.json playwright test --config playwright.performance.config.ts",
     "benchmark:node-editor": "VIZ_PERFORMANCE=1 VIZ_GRAPH_PERFORMANCE_WORKLOAD=signal-cathedral VIZ_PERFORMANCE_REPORT=.artifacts/performance/v2-signal-cathedral-node-editor.json playwright test --config playwright.performance.config.ts",
     "benchmark:endurance": "VIZ_ENDURANCE=1 VIZ_ENDURANCE_REPORT=.artifacts/performance/v2-editor-endurance.json playwright test --config playwright.performance.config.ts",

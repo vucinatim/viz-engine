@@ -28,6 +28,7 @@ export interface CreateVizRuntimeSessionOptions {
   maxComponentCheckpointsPerLayer?: number;
   initialComponentCheckpoints?: VizComponentRuntimeCheckpoint[];
   maxRuntimeInputFrames?: number;
+  evaluationStartFrame?: number;
 }
 
 export interface VizGraphRuntimeCheckpoint {
@@ -51,6 +52,7 @@ export interface VizRuntimeSession {
   readonly project: VizProjectDocument;
   readonly mode: VizExecutionMode;
   readonly seed: string;
+  getEvaluationStartFrame(): number;
   getFrameContext(frame: number): VizFrameContext;
   getOrderedLayers(): VizProjectDocument['layers'];
   getResolvedAssetMap(): ReadonlyMap<string, VizResolvedAsset>;
@@ -139,6 +141,7 @@ export const createVizRuntimeSession = ({
   maxComponentCheckpointsPerLayer = 512,
   initialComponentCheckpoints = [],
   maxRuntimeInputFrames = 512,
+  evaluationStartFrame = 0,
 }: CreateVizRuntimeSessionOptions): VizRuntimeSession => {
   assertValidProjectDocument(project);
 
@@ -193,11 +196,18 @@ export const createVizRuntimeSession = ({
   );
   const runtimeInputStore = new Map<number, VizRuntimeInputs>();
   const runtimeInputLimit = Math.max(1, Math.trunc(maxRuntimeInputFrames));
+  const normalizedEvaluationStartFrame = createFrameContext({
+    frame: evaluationStartFrame,
+    timeline: project.timeline,
+    mode,
+    seed,
+  }).frame;
 
   return {
     project,
     mode,
     seed,
+    getEvaluationStartFrame: () => normalizedEvaluationStartFrame,
     getFrameContext: (frame) =>
       createFrameContext({
         frame,
@@ -293,9 +303,6 @@ export const createVizRuntimeSession = ({
       const checkpoints =
         componentCheckpointStore.get(checkpoint.layerId) ??
         new Map<number, VizComponentRuntimeCheckpoint>();
-      if (checkpoint.frame % componentCheckpointInterval === 0) {
-        cloneUnknown(checkpoint.state);
-      }
       for (const storedFrame of checkpoints.keys()) {
         if (storedFrame % componentCheckpointInterval !== 0) {
           checkpoints.delete(storedFrame);

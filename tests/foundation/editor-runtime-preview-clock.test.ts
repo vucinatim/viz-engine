@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   advanceEditorPreviewFrameDeadline,
   isEditorPreviewFrameDue,
+  resolveMediaSynchronizedPreviewFrame,
 } from '@/lib/editor-runtime-preview-clock';
 
 describe('editor runtime preview clock', () => {
@@ -39,5 +40,12 @@ describe('editor runtime preview clock', () => {
 
   it('skips missed deadlines instead of requesting catch-up bursts', () => {
     expect(advanceEditorPreviewFrameDeadline(75, 16, 16)).toBe(80);
+  });
+
+  it('keeps live media playback sequential through normal clock jitter', () => {
+    expect(resolveMediaSynchronizedPreviewFrame(100, 102)).toBe(101);
+    expect(resolveMediaSynchronizedPreviewFrame(101, 101)).toBe(102);
+    expect(resolveMediaSynchronizedPreviewFrame(102, 101)).toBe(102);
+    expect(resolveMediaSynchronizedPreviewFrame(102, 120)).toBe(120);
   });
 });

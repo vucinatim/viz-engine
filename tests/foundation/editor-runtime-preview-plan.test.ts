@@ -26,6 +26,7 @@ import { createTestProject } from './viz-session-test-utils';
 
 const FullscreenShader = CompDefinitionMap.get('Fullscreen Shader')!;
 const StageScene = CompDefinitionMap.get('Stage Scene')!;
+const LightTunnel = CompDefinitionMap.get('Light Tunnel')!;
 
 const audioFrameData = {
   frequencyData: Uint8Array.from({ length: 128 }, (_, index) =>
@@ -269,6 +270,43 @@ describe('Editor runtime preview planning', () => {
         Array.from(layer.resolvedInputs.spectrum?.value as Uint8Array),
       ).toEqual(Array.from(pausedAudio.frequencyData));
     }
+  });
+
+  it('bounds large live temporal discontinuities without inventing history', () => {
+    resetVizSessionRuntimePreviewPlanCache();
+    const project = {
+      ...createTestProject(LightTunnel, 'light-tunnel-live-gap'),
+      timeline: { fps: 60, durationInFrames: 120 },
+    };
+    const createPlan = (currentFrame: number) =>
+      createVizSessionRuntimePreviewPlan({
+        project,
+        projectRevision: 1,
+        frame: createVizSessionRuntimePreviewFrame({
+          currentFrame,
+          time: currentFrame / 60,
+          dt: 1 / 60,
+          fps: 60,
+          mode: 'live',
+        }),
+        viewport: { width: 640, height: 360 },
+        audioFrameData,
+        isPlaying: true,
+      });
+
+    expect(createPlan(0).issues).toEqual([]);
+    expect(createPlan(2).issues).toEqual([]);
+    expect(createPlan(20).issues).toContainEqual(
+      expect.objectContaining({ code: 'temporal-input-unavailable' }),
+    );
+    expect(createPlan(10).issues).toContainEqual(
+      expect.objectContaining({ code: 'temporal-input-unavailable' }),
+    );
+
+    resetVizSessionRuntimePreviewPlanCache();
+    expect(createPlan(20).issues).toContainEqual(
+      expect.objectContaining({ code: 'temporal-input-unavailable' }),
+    );
   });
 
   it('omits disabled layers from the canonical preview plan', () => {
