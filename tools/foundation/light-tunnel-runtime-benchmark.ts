@@ -2,6 +2,7 @@ import type {
   VizProjectDocument,
   VizRuntimeAudioFrameSnapshot,
 } from '@viz-engine/contracts';
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -105,6 +106,10 @@ resetVizSessionRuntimePreviewPlanCache();
 
 const report = {
   schemaVersion: 1,
+  revision: execFileSync('git', ['rev-parse', 'HEAD'], {
+    cwd: repositoryRoot,
+    encoding: 'utf8',
+  }).trim(),
   environment: {
     runtime: `Node ${process.version}`,
     platform: process.platform,

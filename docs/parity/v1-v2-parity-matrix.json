@@ -325,11 +325,11 @@
       "importance": "critical",
       "parityDimensions": ["visual", "functional", "performance"],
       "referenceEvidence": ["src/components/editor/renderer.tsx", "src/components/editor/layer-renderer.tsx"],
-      "v2Evidence": ["packages/viz-renderer-three/src/preview-controller.ts", "src/components/editor/editor-runtime-preview-driver.tsx", "src/lib/editor-runtime-preview-attachment.ts", "src/lib/viz-session/runtime-preview-plan.ts", "src/lib/stores/editor-runtime-preview-attachment-store.ts", "src/lib/viz-session/store.ts", "tests/browser/editor-endurance-performance.spec.ts"],
-      "status": "gap",
+      "v2Evidence": ["packages/viz-renderer-three/src/preview-controller.ts", "src/components/editor/editor-runtime-preview-driver.tsx", "src/lib/editor-runtime-preview-attachment.ts", "src/lib/viz-session/runtime-preview-plan.ts", "src/lib/stores/editor-runtime-preview-attachment-store.ts", "src/lib/viz-session/store.ts", "tests/browser/editor-endurance-performance.spec.ts", "tests/browser/light-tunnel-playback-performance.spec.ts"],
+      "status": "verified",
       "acceptance": ["The preview image is produced from the canonical project and runtime inputs.", "Project changes update without stale adapters or duplicate ownership.", "Representative scenes meet the approved interactive frame budget."],
       "validationMethods": ["browser", "visual", "integration", "benchmark"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-viz-session-runtime-preview-ownership.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-canonical-preview-compositor.md", "docs/parity/evidence/2026-07-31-goal-three-endurance-and-performance-certification.md", "docs/plans/v2/temporal-runtime-and-playback-performance-certification.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-viz-session-runtime-preview-ownership.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-29-runtime-rendering-cutover-acceptance-audit.md", "docs/parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md", "docs/parity/evidence/2026-07-31-goal-three-canonical-preview-compositor.md", "docs/parity/evidence/2026-07-31-goal-three-endurance-and-performance-certification.md", "docs/parity/evidence/2026-08-04-temporal-runtime-and-light-tunnel-performance.md"]
     },
     {
       "id": "preview.multi-layer-compositing",
@@ -520,11 +520,11 @@
       "importance": "critical",
       "parityDimensions": ["performance", "visual", "functional"],
       "referenceEvidence": ["src/components/editor/layer-renderer.tsx", "src/components/editor/profiler-panel.tsx"],
-      "v2Evidence": ["tools/foundation/runtime-preview-plan-benchmark.ts", "tools/foundation/compare-performance-recordings.ts", "tests/browser/editor-interaction-performance.spec.ts", "tests/browser/editor-endurance-performance.spec.ts", "artifacts/2026-07-29-v2-runtime-performance-summary.json"],
-      "status": "gap",
+      "v2Evidence": ["tools/foundation/runtime-preview-plan-benchmark.ts", "tools/foundation/light-tunnel-runtime-benchmark.ts", "tools/foundation/compare-performance-recordings.ts", "tests/browser/editor-interaction-performance.spec.ts", "tests/browser/editor-endurance-performance.spec.ts", "tests/browser/light-tunnel-playback-performance.spec.ts", "artifacts/2026-07-29-v2-runtime-performance-summary.json"],
+      "status": "verified",
       "acceptance": ["A fixed device, viewport, scene, audio source, and observation window define the benchmark.", "V2 frame pacing and interaction latency meet the approved baseline-relative budget.", "The benchmark records warm-up, median, tail behavior, and visible correctness."],
       "validationMethods": ["benchmark", "browser", "visual"],
-      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-31-goal-three-audio-and-transport-reactivity.md", "docs/parity/evidence/2026-07-31-goal-three-endurance-and-performance-certification.md", "docs/plans/v2/temporal-runtime-and-playback-performance-certification.md"]
+      "validationEvidence": ["docs/parity/evidence/2026-07-29-runtime-rendering-cutover-slice-14.md", "docs/parity/evidence/2026-07-29-pinned-v1-runtime-performance-baseline.md", "docs/parity/evidence/2026-07-29-v2-performance-and-video-certification.md", "docs/parity/evidence/2026-07-31-goal-three-audio-and-transport-reactivity.md", "docs/parity/evidence/2026-07-31-goal-three-endurance-and-performance-certification.md", "docs/parity/evidence/2026-08-04-temporal-runtime-and-light-tunnel-performance.md"]
     },
     {
       "id": "performance.editor-responsiveness",

@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-08-04",
+  "status": "certified",
+  "implementationRevision": "e22bb574ed89d0fbf9e485df50de2c15d9292e80",
+  "fixture": {
+    "projectId": "light-tunnel",
+    "layers": 2,
+    "graphs": 9,
+    "nodes": 57,
+    "fps": 60,
+    "quality": 2
+  },
+  "planning": {
+    "baseline": {
+      "meanMs": 79.173,
+      "medianMs": 79.061,
+      "p95Ms": 140.807,
+      "maximumMs": 169.68
+    },
+    "final": {
+      "warmupFrames": 30,
+      "measuredFrames": 210,
+      "meanMs": 1.775,
+      "medianMs": 1.724,
+      "p95Ms": 2.609,
+      "maximumMs": 3.098
+    },
+    "warmedScaling": {
+      "warmupFrames": 300,
+      "measuredFrames": 300,
+      "meanMs": 2.419,
+      "medianMs": 2.308,
+      "p95Ms": 3.069,
+      "maximumMs": 3.681,
+      "firstBucketMeanMs": 2.449,
+      "lastBucketMeanMs": 2.344
+    }
+  },
+  "headedV2": {
+    "environment": {
+      "browser": "Chromium 151.0.7922.34",
+      "platform": "darwin 25.5.0 arm64",
+      "cpu": "Apple M1 Pro",
+      "viewport": [1600, 1000],
+      "devicePixelRatio": 1
+    },
+    "closed": {
+      "runtimeCadenceFps": 60.2,
+      "displayP95Ms": 9.2,
+      "planningP95Ms": 1,
+      "totalP95Ms": 1.5,
+      "over33Ms": 0,
+      "longTasks": 0,
+      "issueFrames": 0
+    },
+    "graphOpen": {
+      "runtimeCadenceFps": 60.333,
+      "displayP95Ms": 9,
+      "planningP95Ms": 1.6,
+      "totalP95Ms": 2,
+      "over33Ms": 0,
+      "longTasks": 0,
+      "issueFrames": 0
+    },
+    "liveControl": {
+      "samples": 12,
+      "inputToTransientP95Ms": 0.4,
+      "inputToRuntimeP95Ms": 18.9,
+      "inputToVisibleP95Ms": 21.6,
+      "inputToVisibleMaximumMs": 27,
+      "pointerRevisionDelta": 0,
+      "releaseRevisionDelta": 1
+    },
+    "visible": {
+      "mainCanvasChanged": true,
+      "layerMirrors": 2,
+      "changingMirrorCount": 1,
+      "graphStateSignaturesClosed": 192,
+      "graphStateSignaturesOpen": 181,
+      "diagnostics": 0
+    }
+  },
+  "pinnedV1": {
+    "revision": "e806fbc10980615588b52ff574bc923c6f00f35e",
+    "mode": "production",
+    "browser": "Chromium 151.0.7922.34",
+    "viewport": [1600, 1000],
+    "devicePixelRatio": 1,
+    "quality": 2,
+    "warmupMilliseconds": 3000,
+    "sampleMilliseconds": 5000,
+    "display": {
+      "count": 269,
+      "meanMs": 18.633,
+      "medianMs": 11.9,
+      "p95Ms": 41.7,
+      "p99Ms": 50.8,
+      "maximumMs": 275,
+      "over33Ms": 28
+    },
+    "canvasChanged": true,
+    "diagnosticCaveat": "The immutable V1 production emitted its persisted-node-store fallback, three missing-resource responses, and bundled-audio decode failure. The result is retained as a conservative pinned comparison rather than presented as a pristine V1 ceiling."
+  },
+  "endurance": {
+    "cycles": 6,
+    "workloads": [
+      "simple-example",
+      "stage-scene-with-bundled-models",
+      "signal-cathedral-with-live-graph",
+      "light-tunnel-with-live-graph"
+    ],
+    "heapGrowthBytes": 5858548,
+    "beforeDisplayP95Ms": 9.7,
+    "afterDisplayP95Ms": 9.8,
+    "over25MsBefore": 0,
+    "over25MsAfter": 0,
+    "diagnostics": 0
+  },
+  "finalGate": {
+    "command": "pnpm check:foundation",
+    "parityCapabilities": 42,
+    "architecturePackages": 18,
+    "foundationTestFiles": 65,
+    "foundationTests": 299,
+    "browserTestsDiscovered": 19,
+    "browserTestsPassed": 16,
+    "browserTestsSkipped": 3,
+    "packageBuilds": 18,
+    "studioBuild": true,
+    "builtConsumerSmoke": true,
+    "builtCreativeLoopSmoke": true
+  }
+}

@@ -20,19 +20,12 @@ already requirements of the active goal.
 - Keep Remotion behind the renderer-adapter boundary.
 - Treat the FFmpeg WASM core as a large lazy production asset with immutable
   caching and deployment compression.
+- Replace paced synchronous layer-mirror capture only when a browser/GPU-native
+  path can prove exact isolated-layer snapshots under rapid switching. An
+  unfenced `createImageBitmap` attempt could publish stale layer content and
+  was correctly rejected.
 
 ## Determinism And Baking
-
-- Replace component-level recursive `sampleSettings` history with explicit,
-  session-owned temporal component state and bounded checkpoints. Sequential
-  live playback should step once; random access should restore a valid
-  checkpoint and replay only the missing interval with correct per-frame input
-  provenance. Delete the old callback after Light Tunnel, Neural Network,
-  Instanced Supercube, Morph Shapes, Heartbeat Monitor, and Signal Cathedral
-  migrate.
-- Keep the exact graph-driven Light Tunnel project in the permanent planning
-  and headed performance suite. Broad graphless component benchmarks cannot
-  certify temporal representative-scene performance.
 
 - Define explicit phase-authoring inputs for motion-capable components before
   permitting graph-driven variable rates. The core deterministic `integrate`
@@ -45,6 +38,10 @@ already requirements of the active goal.
 - Move bounded event histories such as Neural Network signal waves into
   explicit bake/checkpoint artifacts if future productions require dense
   long-lived triggering.
+- Compact Morph Shapes' response history into fixed-size temporal state or an
+  artifact if production measurements show checkpoint payload growth on long,
+  densely modulated timelines. Keep the current inspectable history until that
+  workload exists; checkpoint count is already bounded.
 
 ## Assets And 3D
 

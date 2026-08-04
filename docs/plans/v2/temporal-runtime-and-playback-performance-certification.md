@@ -1,8 +1,10 @@
 # Goal Four: Temporal Runtime And Playback Performance Certification
 
-Status: active
+Status: complete
 
 Activated: 2026-08-04
+
+Completed: 2026-08-04
 
 Branch: `codex/viz-engine-v2`
 
@@ -605,6 +607,46 @@ This goal is complete only when:
 - docs, evidence, current state, suggestions, parity, and work ledger agree
 - the final diff contains no obsolete bridge, duplicate temporal truth, or
   unrelated changes
+
+## Completion Result
+
+Goal Four completed at implementation revision
+`e22bb574ed89d0fbf9e485df50de2c15d9292e80`.
+
+- `sampleSettings` and recursive component historical planning are deleted.
+- All six historical components use the explicit temporal-step contract.
+- Runtime sessions own sparse graph/component checkpoints, bounded input
+  history, and explicit live-input discontinuity origins.
+- One preview loop owns transport synchronization and frame publication.
+- Normal media playback advances authored frames sequentially and reports zero
+  missing-input frames in the exact headed fixture.
+- Live authoring overrides receive edit-only forced presentation frames without
+  advancing time or writing pointer-rate history.
+- Mirror readback is paced during playback, distributed while paused, and
+  deferred during live gestures.
+- The exact planning benchmark measures 1.775 ms mean, 2.609 ms p95, and 3.098
+  ms maximum after 30 warm-up frames.
+- The warmed scaling run finishes slightly faster than it begins, proving
+  bounded playhead cost.
+- Headed quality-2 playback measures 60.20 FPS closed and 60.33 FPS graph-open,
+  with 9.20 / 9.00 ms display p95, 1.50 / 2.00 ms total runtime CPU p95, zero
+  long tasks, zero intervals above 33 ms, and zero issue frames.
+- Graph-open continuous editing measures 21.60 ms pointer-to-visible p95, zero
+  revisions during pointer movement, and one revision on release.
+- Six-cycle endurance includes Light Tunnel and finishes with 5.86 MB heap
+  growth, stable before/after frame pacing, bounded resources, and no
+  diagnostics.
+- The pinned V1 production comparison is recorded with its observed diagnostic
+  caveats; final V2 is materially faster and independently meets the absolute
+  60 FPS contract.
+- Manual quality-2 review confirms the approved neon tunnel, composition,
+  bloom/fog, graph overlay, waveform, and layer-thumbnail experience remains
+  intact and visibly moving.
+- `preview.live-rendering` and `performance.playback-smoothness` are verified
+  again, and the complete foundation gate passes.
+
+Full evidence:
+[Temporal Runtime And Light Tunnel Performance Certification](../../parity/evidence/2026-08-04-temporal-runtime-and-light-tunnel-performance.md).
 
 ## Likely Direction After Completion
 

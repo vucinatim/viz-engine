@@ -46,6 +46,7 @@ Browser comparison records live in [evidence](./evidence/). Start with:
 - [2026-07-31 Goal Three audio and transport reactivity](./evidence/2026-07-31-goal-three-audio-and-transport-reactivity.md)
 - [2026-08-03 Goal Three agent loop and Afterlight Assembly certification](./evidence/2026-08-03-goal-three-agent-loop-and-afterlight-assembly-certification.md)
 - [2026-08-04 Afterlight Assembly motion and rig polish](./evidence/2026-08-04-afterlight-assembly-motion-and-rig-polish.md)
+- [2026-08-04 temporal runtime and Light Tunnel performance](./evidence/2026-08-04-temporal-runtime-and-light-tunnel-performance.md)
 
 ## Pinned Reference
 

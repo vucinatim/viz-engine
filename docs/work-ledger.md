@@ -2535,3 +2535,44 @@
 - recorded scope, contracts, stop rules, acceptance thresholds, and validation
   phases in
   `docs/plans/v2/temporal-runtime-and-playback-performance-certification.md`
+
+## 2026-08-04 — Goal Four complete: temporal runtime and Light Tunnel performance
+
+- deleted recursive `sampleSettings` history reconstruction and migrated all
+  six historical components onto one explicit temporal-step contract
+- made `VizRuntimeSession` the owner of sparse bounded graph/component
+  checkpoints, bounded runtime-input history, and explicit live-input reset
+  origins
+- consolidated transport synchronization and runtime publication into one
+  preview loop, with sequential media-clock advancement and deterministic seek
+  replay
+- made continuous authoring use edit-only forced presentation frames, no
+  pointer-rate project revisions, one release commit, and deferred secondary
+  mirror work
+- isolated synchronous layer-mirror capture as the remaining display cost and
+  retained exact snapshots behind paced, round-robin refresh instead of
+  removing the feature or accepting stale asynchronous copies
+- reduced exact Light Tunnel planning from 79.173 ms mean / 140.807 ms p95 to
+  1.775 ms mean / 2.609 ms p95, with no cost growth across a warmed 300-frame
+  run
+- certified fixed-device quality-2 playback at 60.20 FPS graph-closed and
+  60.33 FPS graph-open, with 9.20 / 9.00 ms display p95, zero long tasks, zero
+  intervals above 33 ms, zero temporal issue frames, and clean diagnostics
+- certified 12-sample graph-open live editing at 0.40 ms pointer-to-transient
+  and 21.60 ms pointer-to-visible p95, with zero revisions during movement and
+  exactly one on release
+- added Light Tunnel to permanent planning, headed-browser, and six-cycle
+  endurance coverage; endurance finished with 5.86 MB forced-GC heap growth
+  and unchanged 9.7 / 9.8 ms before/after display p95
+- retained the immutable V1 production measurement with its persisted-store,
+  missing-resource, and audio-decode caveats rather than presenting it as a
+  pristine ceiling; final V2 independently satisfies the absolute 60 FPS
+  contract
+- manually reviewed the live quality-2 editor and confirmed the neon tunnel,
+  fog, bloom, Noise composition, graph overlay, waveform, and layer mirrors
+  remain intact and visibly animate
+- returned `preview.live-rendering` and
+  `performance.playback-smoothness` to verified and recorded the complete
+  architecture, assumptions, metrics, comparison, and machine-readable proof
+  in
+  `docs/parity/evidence/2026-08-04-temporal-runtime-and-light-tunnel-performance.md`

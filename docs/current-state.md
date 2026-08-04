@@ -1,6 +1,6 @@
 # Current State
 
-Last reconciled: 2026-08-03
+Last reconciled: 2026-08-04
 
 ## Product Direction
 
@@ -426,16 +426,17 @@ The endurance and performance checkpoint is now also complete:
 See
 [Endurance And Performance Certification](./parity/evidence/2026-07-31-goal-three-endurance-and-performance-certification.md).
 
-At Goal Three certification time, the parity matrix contained 42 verified
-capabilities, with zero partial, gap, or unaudited rows. Goal Four has since
-reopened two performance-sensitive rows after representative Light Tunnel
-measurements contradicted that certification. Goal Three's calibrated live
-agent loop can inspect, mutate, open, render, diagnose, and retrieve output
-through canonical contracts, and Afterlight Assembly supplies the distinct
-second original production, editable public bundle, and final media proof.
+The parity matrix contains 42 verified capabilities, with zero partial, gap,
+or unaudited rows. Goal Four temporarily reopened two performance-sensitive
+rows after representative Light Tunnel measurements contradicted their earlier
+certification, then recertified them against the exact fixed-device workload.
+Goal Three's calibrated live agent loop can inspect, mutate, open, render,
+diagnose, and retrieve output through canonical contracts, and Afterlight
+Assembly supplies the distinct second original production, editable public
+bundle, and final media proof.
 
-The final complete gate passes clean architecture and static checks, 64
-deterministic test files / 293 tests, 16 active headed Chromium journeys with 2
+The final complete gate passes clean architecture and static checks, 65
+deterministic test files / 299 tests, 16 active headed Chromium journeys with 3
 intentional opt-in skips, all 18 package builds, the Studio production build,
 and both built-consumer smoke scenarios.
 
@@ -446,32 +447,41 @@ The later grounding, temporal-semantics, graph-layout, and final-media repair is
 certified in
 [Afterlight Assembly Motion And Rig Polish](./parity/evidence/2026-08-04-afterlight-assembly-motion-and-rig-polish.md).
 
-## Active Goal Four
+## Completed Goal Four
 
 [Temporal Runtime And Playback Performance Certification](./plans/v2/temporal-runtime-and-playback-performance-certification.md)
-is active.
+is complete.
 
 Manual calibration of the preserved Light Tunnel example exposed a material
 performance regression that earlier representative benchmarks did not cover.
-The exact project currently spends 79.17 ms mean and 140.81 ms p95 constructing
-the runtime plan alone on the Apple M1 Pro development machine, before browser
-rendering. The same project and graphs measure 2.16 ms mean when Light Tunnel's
-historical graph-driven component path is removed for isolation.
+The exact project spent 79.17 ms mean and 140.81 ms p95 constructing the runtime
+plan alone before browser rendering.
 
-The primary confirmed cause is component-level recursive historical planning:
-Light Tunnel scans as many as 118 prior frames to reconstruct wave events, and
-each sampled frame reevaluates all nine project graphs. V1 maintained the same
-wave behavior incrementally during sequential playback and sustained 60 FPS.
+The recursive `sampleSettings` model is deleted. `VizRuntimeSession` now owns
+explicit graph/component temporal checkpoints, bounded runtime-input history,
+and explicit unavailable-live-history origins. Light Tunnel, Neural Network,
+Instanced Supercube, Morph Shapes, Heartbeat Monitor, and Signal Cathedral all
+use the same deterministic temporal step contract.
 
-Goal Four will replace recursive `sampleSettings` history with explicit,
-session-owned temporal component state and bounded checkpoints; preserve cold,
-seek, sequential, and export determinism; then isolate compositor, mirror, and
-renderer costs. The exact Light Tunnel project becomes a permanent planning,
-headed-playback, and endurance fixture.
+The editor uses one transport/render loop. Live overrides force an edit-only
+presentation without advancing authored time, create no pointer-rate project
+revisions, and commit once on release. Layer-mirror readback is paced and
+deferred during continuous gestures instead of blocking the primary scene.
 
-The previously verified `preview.live-rendering` and
-`performance.playback-smoothness` parity rows are reopened until controlled
-V1/V2 evidence proves the full representative-scene performance contract.
+Final exact-project planning measures 1.78 ms mean / 2.61 ms p95. Headed
+quality-2 playback measures 60.20 FPS with the graph closed and 60.33 FPS with
+it open, 9.20 / 9.00 ms display p95, 1.50 / 2.00 ms total runtime CPU p95, no
+long tasks, no display intervals above 33 ms, no temporal issue frames, and
+clean diagnostics. Graph-open continuous edits measure 0.40 ms pointer to
+transient state and 21.60 ms pointer to visible frame at p95.
+
+The six-cycle endurance workload includes Light Tunnel and finishes with 5.86
+MB forced-GC heap growth and unchanged 9.7 / 9.8 ms before/after display p95.
+`preview.live-rendering` and `performance.playback-smoothness` are verified
+again.
+
+See
+[Temporal Runtime And Light Tunnel Performance Certification](./parity/evidence/2026-08-04-temporal-runtime-and-light-tunnel-performance.md).
 
 ## Known Deliberate Deferrals
 
@@ -493,7 +503,7 @@ consolidation.
 - [Completed consolidation plan](./plans/v2/core-consolidation-and-minimization-program.md)
 - [Completed minimization plan](./plans/v2/behavior-preserving-minimization-and-final-polish.md)
 - [Completed Goal Three](./plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
-- [Active Goal Four](./plans/v2/temporal-runtime-and-playback-performance-certification.md)
+- [Completed Goal Four](./plans/v2/temporal-runtime-and-playback-performance-certification.md)
 - [Autonomous development contract](./plans/v2/autonomous-development-operating-contract.md)
 - [Parity matrix](./parity/README.md)
 - [Suggestions](./suggestions.md)
