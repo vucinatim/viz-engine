@@ -212,4 +212,43 @@ describe('VizSession history', () => {
       [createdId, duplicateId],
     );
   });
+
+  it('creates a layer and all default graphs in one canonical revision', () => {
+    const comp = CompDefinitionMap.get('Stage Scene');
+    if (!comp) {
+      throw new Error('Stage Scene component definition not found');
+    }
+
+    vizSessionActions.project.importWorkingProject(createTestProject());
+    const beforeRevision = vizSessionStore.getState().project.revision;
+
+    vizSessionActions.project.addLayer(comp);
+
+    const created = vizSessionActions.project.exportWorkingProject();
+    expect(vizSessionStore.getState().project.revision).toBe(
+      beforeRevision + 1,
+    );
+    expect(created.layers).toHaveLength(1);
+    expect(created.graphs).toHaveLength(
+      Object.keys(comp.defaultNetworks ?? {}).length,
+    );
+    expect(
+      Object.values(created.layers[0]?.inputs ?? {}).filter(
+        (input) => input.kind === 'graph-output',
+      ),
+    ).toHaveLength(Object.keys(comp.defaultNetworks ?? {}).length);
+
+    vizSessionActions.history.undo();
+    expect(vizSessionActions.project.exportWorkingProject()).toMatchObject({
+      layers: [],
+      layerOrder: [],
+      graphs: [],
+    });
+
+    vizSessionActions.history.redo();
+    expect(vizSessionActions.project.exportWorkingProject()).toMatchObject({
+      layers: [{ id: created.layers[0]?.id }],
+      graphs: created.graphs,
+    });
+  });
 });

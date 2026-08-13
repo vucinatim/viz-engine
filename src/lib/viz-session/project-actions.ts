@@ -1,9 +1,13 @@
 import { listComponentParameterIds } from '@/components/config/config';
 import type { Comp } from '@/components/config/create-component';
 import type { LayerSettings } from '@/components/editor/layer-settings';
-import { getPresetById } from '@/components/node-network/presets';
+import {
+  getPresetById,
+  instantiateCanonicalPreset,
+} from '@/components/node-network/presets';
 import { generateLayerId } from '@/lib/id-utils';
 import useEditorStore from '@/lib/stores/editor-store';
+import { applyVizProjectActions } from '@viz-engine/actions';
 import {
   VIZ_PROJECT_SCHEMA_VERSION,
   type VizComponentRegistry,
@@ -21,7 +25,10 @@ import type {
   BrowserAssetSelection,
   StudioBrowserAssetAttachment,
 } from './browser-asset-attachment';
-import type { StudioGraphAuthoringActions } from './graph-authoring-actions';
+import {
+  createGraphDocumentActions,
+  type StudioGraphAuthoringActions,
+} from './graph-authoring-actions';
 import {
   applyEditorLayerSettings,
   createVizLayerFromComp,
@@ -115,19 +122,39 @@ export const createStudioProjectActions = ({
     }
   };
 
-  const createDefaultNetworks = (layer: VizLayer) => {
+  const createDefaultNetworkActions = (
+    project: VizProjectDocument,
+    layer: VizLayer,
+  ): VizProjectAction[] => {
     const comp = resolveEditorComp(layer);
     if (!comp?.defaultNetworks) {
-      return;
+      return [];
     }
 
-    for (const [path, presetOrId] of Object.entries(comp.defaultNetworks)) {
-      const option = resolveEditorOptionByPath(comp, layer.id, path);
-      const preset =
-        typeof presetOrId === 'string' ? getPresetById(presetOrId) : presetOrId;
-      if (option && preset) {
-        graphActions.applyPresetDefinition(option.id, preset, option.type);
-      }
+    return Object.entries(comp.defaultNetworks).flatMap(
+      ([path, presetOrId]) => {
+        const option = resolveEditorOptionByPath(comp, layer.id, path);
+        const preset =
+          typeof presetOrId === 'string'
+            ? getPresetById(presetOrId)
+            : presetOrId;
+        return option && preset
+          ? createGraphDocumentActions(
+              project,
+              instantiateCanonicalPreset(preset, option.id, option.type),
+            )
+          : [];
+      },
+    );
+  };
+
+  const createDefaultNetworks = (layer: VizLayer) => {
+    const actions = createDefaultNetworkActions(
+      getState().workingProject,
+      layer,
+    );
+    if (actions.length > 0) {
+      applyActions(actions);
     }
   };
 
@@ -261,16 +288,25 @@ export const createStudioProjectActions = ({
     addLayer(comp: Comp) {
       ensureInitialized();
       const layer = createVizLayerFromComp(comp, generateLayerId(comp.name));
+      const layerAction: VizProjectAction = {
+        type: 'layer.create',
+        payload: { layerId: layer.id, layer },
+      };
+      const layerResult = applyVizProjectActions(getState().workingProject, [
+        layerAction,
+      ]);
+      if (!layerResult.ok) {
+        throw new Error(
+          layerResult.errors.map((error) => error.message).join('; ') ||
+            `Could not create layer "${layer.id}".`,
+        );
+      }
+      const defaultNetworkActions = createDefaultNetworkActions(
+        layerResult.project,
+        layer,
+      );
       useEditorStore.getState().setLayerExpanded(layer.id, true);
-      runHistoryGroup(() => {
-        applyActions([
-          {
-            type: 'layer.create',
-            payload: { layerId: layer.id, layer },
-          },
-        ]);
-        createDefaultNetworks(layer);
-      });
+      applyActions([layerAction, ...defaultNetworkActions]);
     },
     removeLayer(layerId: string) {
       ensureInitialized();

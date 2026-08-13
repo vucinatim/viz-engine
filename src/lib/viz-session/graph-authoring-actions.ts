@@ -87,7 +87,7 @@ const createLayerBindingAction = (
   };
 };
 
-const createGraphDocumentActions = (
+export const createGraphDocumentActions = (
   project: VizProjectDocument,
   graph: VizNodeGraphDocument,
 ): VizProjectAction[] => {
