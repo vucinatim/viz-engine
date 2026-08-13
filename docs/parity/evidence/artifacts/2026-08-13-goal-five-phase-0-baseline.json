@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "goalId": "goal-five-flagship",
+  "activationCommit": "62322d30292974e15b29f87b833a78f9b30210c9",
+  "planningBaseline": "b2b23b577feda29ef7eca9dcbf35a4e8c1162781",
+  "sourceMetrics": {
+    "production": { "files": 366, "lines": 74216 },
+    "tools": { "files": 17, "lines": 3002 },
+    "tests": { "files": 72, "lines": 20698 },
+    "playground": { "files": 22, "lines": 3139 },
+    "allCode": { "files": 482, "lines": 101286 }
+  },
+  "captureEnvironment": {
+    "machine": "Apple M1 Pro",
+    "os": "macOS 26.5.2 (25F84)",
+    "node": "22.22.0",
+    "pnpm": "9.9.0",
+    "playwright": "1.62.1",
+    "chromium": "151.0.7922.34",
+    "functionalViewport": "1440x900",
+    "performanceViewport": "1600x1000",
+    "dpr": 1,
+    "quality": 2,
+    "browserWorkers": 1
+  },
+  "baselineGate": {
+    "status": "not-green",
+    "foundationTests": { "files": 65, "tests": 299, "status": "passed" },
+    "browser": {
+      "passed": 15,
+      "skipped": 3,
+      "failed": 1,
+      "failure": "Complete-authoring journey timed out while Stage Scene published thirteen default graphs as separate transactions."
+    }
+  },
+  "repair": {
+    "commit": "82c1cd7958fbb99f71b4f7f41519691f81db95bc",
+    "evidence": "docs/parity/evidence/2026-08-13-goal-five-phase-0-layer-authoring-baseline-repair.md"
+  },
+  "reproduction": {
+    "sourceMetrics": "pnpm metrics:source -- --commit 62322d30292974e15b29f87b833a78f9b30210c9",
+    "criteria": "pnpm goal5:criteria:validate",
+    "completeGate": "VIZ_BROWSER_PORT=<unique-port> pnpm check:foundation"
+  }
+}

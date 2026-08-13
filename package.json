@@ -43,6 +43,7 @@
     "benchmark:artifact-container": "tsx tools/foundation/measure-audio-artifact-container.ts",
     "compare:runtime-performance": "tsx tools/foundation/compare-performance-recordings-cli.ts",
     "parity:validate": "node tools/foundation/validate-v1-v2-parity-matrix.mjs",
+    "goal5:criteria:validate": "node tools/foundation/validate-goal-five-certification.mjs",
     "architecture:validate": "node tools/foundation/validate-workspace-dependencies.mjs",
     "metrics:source": "node tools/foundation/report-source-metrics.mjs",
     "typecheck:tools": "tsc --noEmit --target ES2022 --module ESNext --moduleResolution Bundler --types node tools/foundation/compare-performance-recordings.ts tools/foundation/compare-performance-recordings-cli.ts tools/foundation/render-browser-bundle.ts",
@@ -50,7 +51,7 @@
     "build:foundation": "pnpm build:packages && pnpm studio:build",
     "test:foundation": "vitest run",
     "test:browser": "playwright test",
-    "check:foundation": "pnpm parity:validate && pnpm architecture:validate && pnpm format:check && pnpm lint && pnpm typecheck:foundation && pnpm test:foundation && pnpm test:browser && pnpm build:packages && pnpm studio:build && pnpm smoke:consumer:built && pnpm smoke:creative-loop:built",
+    "check:foundation": "pnpm parity:validate && pnpm goal5:criteria:validate && pnpm architecture:validate && pnpm format:check && pnpm lint && pnpm typecheck:foundation && pnpm test:foundation && pnpm test:browser && pnpm build:packages && pnpm studio:build && pnpm smoke:consumer:built && pnpm smoke:creative-loop:built",
     "fixtures:update": "pnpm build:packages && tsx tools/foundation/generate-validation-golden-fixtures.ts"
   },
   "dependencies": {

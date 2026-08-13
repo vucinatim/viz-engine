@@ -1,6 +1,6 @@
 # Goal Five: Flagship Autonomous Production And Creative-System Maturation
 
-Status: paused by the user after a bounded Phase 0 baseline repair.
+Status: active; Gate 0 approved; Phase 0 certification freeze in progress.
 
 Planned: 2026-08-13.
 
@@ -16,13 +16,13 @@ and evidence before editing after a compaction or new task.
 ```text
 Baseline commit: b2b23b577feda29ef7eca9dcbf35a4e8c1162781
 Current phase: Phase 0 — activation, immutable baseline, and executable criteria
-Current checkpoint: paused before the uncontended complete gate and frozen criteria matrix
+Current checkpoint: freeze the executable criteria/environment contract and run the uncontended complete gate
 Last completed checkpoint: atomic layer/default-graph authoring baseline repair
 Last certified commit: 82c1cd7958fbb99f71b4f7f41519691f81db95bc
 Last full green gate: Goal Four certification at d787e20
-Next safe checkpoint: agree on the autonomous loop, then run the complete uncontended repository gate and create the executable criteria matrix
-Awaiting human gate: autonomous loop operating-model decision
-Known blockers: Goal Five is paused; the full wrapper remains sensitive to a contended host environment
+Next safe checkpoint: complete and certify Phase 0, then begin the bounded capability/asset/music audit
+Awaiting human gate: none until Gate 1 treatment approval
+Known blockers: none; avoid claiming an environment-sensitive isolated rerun as the complete gate
 Relevant evidence: docs/parity/evidence/2026-08-13-goal-five-phase-0-layer-authoring-baseline-repair.md
 ```
 
@@ -39,6 +39,8 @@ Every agent and every resumed run must also use:
 - [Autonomous Development Operating Contract](./autonomous-development-operating-contract.md)
 - the smallest set of specifications governing the active checkpoint
 - affected rows in the [V1/V2 Parity Matrix](../../parity/v1-v2-parity-matrix.json)
+- the [Goal Five Certification Contract](../../parity/goal-five-certification.md)
+  and [machine-readable matrix](../../parity/goal-five-certification-matrix.json)
 - the latest Goal Five evidence and actual Git state
 
 The compounding vision is the constitution for the work. This goal is the

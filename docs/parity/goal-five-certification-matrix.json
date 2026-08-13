@@ -1,0 +1,1126 @@
+{
+  "schemaVersion": 1,
+  "goalId": "goal-five-flagship",
+  "status": "active-phase-0",
+  "identity": {
+    "planningBaseline": "b2b23b577feda29ef7eca9dcbf35a4e8c1162781",
+    "activationCommit": "62322d30292974e15b29f87b833a78f9b30210c9",
+    "phase0RepairCommit": "82c1cd7958fbb99f71b4f7f41519691f81db95bc",
+    "candidateCommit": null,
+    "evidenceCommit": null
+  },
+  "references": [
+    "docs/visions/viz-engine-compounding-vision.md",
+    "docs/plans/v2/flagship-autonomous-production-and-creative-system-maturation.md",
+    "docs/parity/v1-v2-parity-matrix.json"
+  ],
+  "environments": [
+    {
+      "id": "static-node",
+      "machine": "Any repository-supported Node.js 20+ host",
+      "os": "Not pinned; record exact host in result",
+      "browser": "Not applicable",
+      "viewport": "Not applicable",
+      "dpr": "Not applicable",
+      "quality": "Not applicable",
+      "executionMode": "validation",
+      "isolation": "Clean worktree at the declared source revision"
+    },
+    {
+      "id": "deterministic-m1",
+      "machine": "Apple M1 Pro",
+      "os": "macOS 26.5.2 (25F84)",
+      "browser": "Not applicable",
+      "viewport": "1920x1080",
+      "dpr": 1,
+      "quality": 2,
+      "executionMode": "deterministic-render",
+      "isolation": "Fresh task-specific artifact root; fixed seed and pinned execution manifest"
+    },
+    {
+      "id": "browser-functional-m1",
+      "machine": "Apple M1 Pro",
+      "os": "macOS 26.5.2 (25F84)",
+      "browser": "Playwright Chromium 151.0.7922.34",
+      "viewport": "1440x900",
+      "dpr": 1,
+      "quality": 2,
+      "executionMode": "headless-live",
+      "isolation": "Single worker, unique port, muted output, no reused server"
+    },
+    {
+      "id": "browser-performance-m1",
+      "machine": "Apple M1 Pro",
+      "os": "macOS 26.5.2 (25F84)",
+      "browser": "Playwright Chromium 151.0.7922.34",
+      "viewport": "1600x1000",
+      "dpr": 1,
+      "quality": 2,
+      "executionMode": "headed-live",
+      "isolation": "Single worker; coordinated uncontended run; three-second warm-up; muted system output"
+    },
+    {
+      "id": "portable-reopen-m1",
+      "machine": "Apple M1 Pro",
+      "os": "macOS 26.5.2 (25F84)",
+      "browser": "Playwright Chromium 151.0.7922.34",
+      "viewport": "1440x900",
+      "dpr": 1,
+      "quality": 2,
+      "executionMode": "headless-live-and-render",
+      "isolation": "Fresh browser profile and empty task-specific cache/artifact roots; network disabled; bundle plus approved built-ins only"
+    },
+    {
+      "id": "final-media-m1",
+      "machine": "Apple M1 Pro",
+      "os": "macOS 26.5.2 (25F84)",
+      "browser": "Playwright Chromium 151.0.7922.34 with repository-pinned FFmpeg WASM",
+      "viewport": "1920x1080",
+      "dpr": 1,
+      "quality": 2,
+      "executionMode": "deterministic-render",
+      "isolation": "Candidate build, pinned manifest, fixed 60 fps, intended audio, fresh output root"
+    },
+    {
+      "id": "human-review",
+      "machine": "Apple M1 Pro review workstation",
+      "os": "macOS 26.5.2 (25F84)",
+      "browser": "Candidate Chromium editor plus native playback of final H.264/AAC media",
+      "viewport": "1920x1080 source viewed at native or fit-preserving scale",
+      "dpr": 1,
+      "quality": 2,
+      "executionMode": "interactive-review",
+      "isolation": "Intended audio enabled; exact candidate artifacts; reviewer decision recorded verbatim"
+    }
+  ],
+  "evaluators": [
+    {
+      "id": "automated-validator",
+      "kind": "automated",
+      "owner": "Goal Five lead"
+    },
+    {
+      "id": "playwright",
+      "kind": "automated-browser",
+      "owner": "Goal Five lead"
+    },
+    {
+      "id": "media-verifier",
+      "kind": "automated-media",
+      "owner": "Goal Five lead"
+    },
+    {
+      "id": "architecture-review",
+      "kind": "human-technical",
+      "owner": "Goal Five lead"
+    },
+    {
+      "id": "human-creative-director",
+      "kind": "human-creative",
+      "owner": "Product owner"
+    }
+  ],
+  "observations": [
+    {
+      "id": "repository-complete-gate",
+      "definition": "One uninterrupted pnpm check:foundation run from a clean candidate worktree; no isolated rerun substitutes for this observation."
+    },
+    {
+      "id": "whole-production-structure",
+      "definition": "The complete contiguous 45-60 second selected window at 60 fps, all acts, every transition, restrained passage, build, peak, and resolution. Exact ranges are materialized in the Gate 1 treatment."
+    },
+    {
+      "id": "review-frame-set",
+      "definition": "Start and final frame, one representative midpoint per act, pre/mid/post frames for every transition, restrained passage, build, and primary peak. Exact frames are frozen in the Gate 1 treatment before deep implementation."
+    },
+    {
+      "id": "determinism-frame-set",
+      "definition": "Every review-frame-set frame plus one frame immediately before and after each cue and act boundary; three repeated evaluations per path."
+    },
+    {
+      "id": "flagship-playback-samples",
+      "definition": "Three-second warm-up followed by one complete graph-closed production pass and one complete graph-open production pass; record every displayed interval and runtime sample."
+    },
+    {
+      "id": "interaction-samples",
+      "definition": "Twelve sustained pointer samples against one graph-bound continuous control while the full flagship plays graph-open, followed by one release, undo, and redo."
+    },
+    {
+      "id": "seek-boundary-samples",
+      "definition": "Three cold and three warm seeks to every determinism-frame-set frame, including all act and transition boundaries."
+    },
+    {
+      "id": "six-cycle-endurance",
+      "definition": "Six complete cycles covering playback, graph-open edit, seek, model load, still render, project close/reopen, and disposal, with forced GC before the first and after the final sample."
+    },
+    {
+      "id": "final-media-full-duration",
+      "definition": "The complete 1920x1080 60 fps H.264/AAC output, decoded video frames, decoded audio stream, and all treatment-declared intentional hold/black/white/silence intervals."
+    },
+    {
+      "id": "portable-clean-room",
+      "definition": "One bundle validate/open/edit/save/reopen/rerender workflow in a fresh network-disabled profile with empty task-specific caches."
+    },
+    {
+      "id": "human-gates",
+      "definition": "Gate 1 treatment, Gate 2 provisional language, Gate 3 structure, Gate 4 motion/visual lock, and Gate 5 final video plus editable-project review."
+    }
+  ],
+  "decisionRules": [
+    {
+      "id": "exact-structure",
+      "definition": "All declared counts, ranges, identities, bindings, active intervals, consumers, and required roles are present; count-only, invisible, duplicate, disabled, or unused structures fail."
+    },
+    {
+      "id": "semantic-equivalence",
+      "definition": "Discrete values and issue sets are exact; finite numeric values use absolute 0.000001 and relative 0.000001 tolerance; project, revision, execution manifest, cue, layer, graph-output, resolved-parameter, readiness, and issue identities must agree."
+    },
+    {
+      "id": "decoded-media-equivalence",
+      "definition": "Pinned-device repeated decoded frames require SSIM >= 0.995 and normalized mean absolute error <= 0.006; audio stream identity is exact and A/V start/duration drift is <= one 60 fps frame (16.667 ms). Encoded bytes need not match."
+    },
+    {
+      "id": "media-sanity",
+      "definition": "Flag black or clipped-white runs >= 0.5 s, perceptual freeze runs >= 1.0 s, silence below -60 dBFS >= 1.0 s, discontinuities, clipping, z-fighting, popping, or missing resources. A flag passes only when its exact interval and intent were approved in the Gate 1 treatment."
+    },
+    {
+      "id": "flagship-performance",
+      "definition": "Displayed FPS >= 58; interval p95 <= 20 ms; intervals > 33.33 ms <= 1%; intervals > 100 ms = 0; runtime planning p95 <= 5 ms; total runtime CPU p95 <= 12 ms; graph-open FPS no worse than 10% below graph-closed; graph/layer/compositor/renderer costs are recorded where truthfully available; full content and quality 2 remain enabled."
+    },
+    {
+      "id": "interaction-performance",
+      "definition": "Pointer-to-transient p95 <= 1.0 ms; pointer-to-visible p95 <= 32 ms; movement revisions = 0; release revisions = 1; undo and redo each restore the exact expected state."
+    },
+    {
+      "id": "seek-performance",
+      "definition": "Every seek reaches the semantic-equivalent target frame; seek-to-visible p95 <= 100 ms, maximum <= 250 ms, and no target has more than one sample > 100 ms across its six repetitions."
+    },
+    {
+      "id": "final-render-performance",
+      "definition": "The complete 1920x1080 quality-2 60 fps render sustains at least 5 encoded output frames per wall-clock second and completes in no more than 12 times the selected media duration, with no disabled content."
+    },
+    {
+      "id": "lifecycle-stability",
+      "definition": "Six cycles show no monotonic renderer object, texture, target, program, model lease, subscription, canvas, or audio-resource growth; forced-GC heap growth < 16 MiB; final display p95 <= 110% of initial p95."
+    },
+    {
+      "id": "light-tunnel-floor",
+      "definition": "Existing Light Tunnel budgets remain: FPS >= 59, display p95 <= 20 ms, planning p95 <= 5 ms, total runtime CPU p95 <= 12 ms, intervals >33.33 ms = 0, long tasks = 0, temporal issues = 0."
+    },
+    {
+      "id": "clean-diagnostics",
+      "definition": "No unexpected browser console error/warning, page error, runtime issue, missing/unready resource, invalid graph, unresolved binding, or failed job remains during the declared workflow."
+    },
+    {
+      "id": "green-command",
+      "definition": "The exact command exits 0 without retries, weakened tests, threshold overrides, suppressed warnings, disabled content, or unexplained skips."
+    },
+    {
+      "id": "human-approval",
+      "definition": "The named human reviewer explicitly approves the exact artifact and records requested changes or approval; silence, inference, or an automated aesthetic score fails."
+    },
+    {
+      "id": "architecture-invariants",
+      "definition": "Review finds one project/session/runtime/compositor meaning, no flagship identity or timestamp in generic core, no agent shadow semantics, no React frame-rate truth, no long-lived bridge, and no unproven abstraction."
+    },
+    {
+      "id": "immutable-candidate-evidence",
+      "definition": "Candidate C is a clean immutable commit containing all behavior; evidence E is a later documentation-only commit identifying C, artifacts, results, and approvals; any behavioral change after C invalidates C."
+    }
+  ],
+  "criteria": [
+    {
+      "id": "production.duration-acts-transitions",
+      "category": "flagship-production",
+      "obligation": "mandatory",
+      "requirement": "The contiguous production is 45-60 seconds at 60 fps with 4-6 perceptibly distinct acts, at least 3 transitions, a restrained passage, build, primary peak, and resolved ending anchored to the musical map.",
+      "environment": "deterministic-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "whole-production-structure",
+      "decisionRule": "exact-structure",
+      "evaluation": {
+        "kind": "command",
+        "harness": "planned",
+        "command": "pnpm goal5:production:validate -- --criterion production.duration-acts-transitions",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [
+        ".artifacts/goal-five/certification/production.duration-acts-transitions.json"
+      ],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "production.honest-breadth",
+      "category": "flagship-production",
+      "obligation": "mandatory",
+      "requirement": "The editable project honestly uses approximately 8-12 meaningful enabled layers, at least 4 component families, several simultaneous peak layers, and multiple responsibility-separated graphs; every counted item has a nonredundant role, active interval, and visible or inspectable contribution.",
+      "environment": "deterministic-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "whole-production-structure",
+      "decisionRule": "exact-structure",
+      "evaluation": {
+        "kind": "command",
+        "harness": "planned",
+        "command": "pnpm goal5:production:validate -- --criterion production.honest-breadth",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [
+        ".artifacts/goal-five/certification/production.honest-breadth.json"
+      ],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "production.model-backed-authored-animation",
+      "category": "flagship-production",
+      "obligation": "gate1-excludable",
+      "requirement": "Model-backed 3D and authored animation make a visible, deterministic, grounded contribution with declared clip and asset identities.",
+      "environment": "human-review",
+      "sourceRevision": "candidateCommit",
+      "observation": "review-frame-set",
+      "decisionRule": "human-approval",
+      "evaluation": {
+        "kind": "human-review",
+        "harness": "human",
+        "workflow": "Review model-backed passages, direct seeks, and transition clips at Gates 2-5; inspect grounding, animation readability, identity, and continuity.",
+        "evaluator": "human-creative-director"
+      },
+      "artifacts": [".artifacts/goal-five/review/model-backed-review.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "production.procedural-spatial-3d",
+      "category": "flagship-production",
+      "obligation": "gate1-excludable",
+      "requirement": "A procedural or spatial 3D system has a distinct visible responsibility and deterministic runtime behavior.",
+      "environment": "human-review",
+      "sourceRevision": "candidateCommit",
+      "observation": "review-frame-set",
+      "decisionRule": "human-approval",
+      "evaluation": {
+        "kind": "human-review",
+        "harness": "human",
+        "workflow": "Review declared procedural/spatial passages and isolated contribution evidence at Gates 2-5.",
+        "evaluator": "human-creative-director"
+      },
+      "artifacts": [
+        ".artifacts/goal-five/review/procedural-spatial-review.json"
+      ],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "production.shader-particle-instancing",
+      "category": "flagship-production",
+      "obligation": "gate1-excludable",
+      "requirement": "Shader-driven and bounded particle or instanced contributions are visible, deterministic, resource-bounded, and creatively nonredundant.",
+      "environment": "human-review",
+      "sourceRevision": "candidateCommit",
+      "observation": "review-frame-set",
+      "decisionRule": "human-approval",
+      "evaluation": {
+        "kind": "human-review",
+        "harness": "human",
+        "workflow": "Review isolated and composited shader/particle passages plus lifecycle evidence at Gates 2-5.",
+        "evaluator": "human-creative-director"
+      },
+      "artifacts": [".artifacts/goal-five/review/shader-particle-review.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "production.complementary-media",
+      "category": "flagship-production",
+      "obligation": "gate1-excludable",
+      "requirement": "A complementary 2D, SVG, image, video, graphic, or typography contribution has a meaningful compositional role.",
+      "environment": "human-review",
+      "sourceRevision": "candidateCommit",
+      "observation": "review-frame-set",
+      "decisionRule": "human-approval",
+      "evaluation": {
+        "kind": "human-review",
+        "harness": "human",
+        "workflow": "Review the declared complementary-media role in representative stills and motion at Gates 2-5.",
+        "evaluator": "human-creative-director"
+      },
+      "artifacts": [
+        ".artifacts/goal-five/review/complementary-media-review.json"
+      ],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "production.compositor-camera-hierarchy",
+      "category": "flagship-production",
+      "obligation": "mandatory",
+      "requirement": "Compositor ordering, opacity, transforms, blends, directed camera behavior, foreground/mid/background hierarchy, density, negative space, and transitions form one legible composition.",
+      "environment": "human-review",
+      "sourceRevision": "candidateCommit",
+      "observation": "human-gates",
+      "decisionRule": "human-approval",
+      "evaluation": {
+        "kind": "human-review",
+        "harness": "human",
+        "workflow": "Inspect one frame per act, every transition clip, camera trajectory, and full motion proxy at Gates 2-5.",
+        "evaluator": "human-creative-director"
+      },
+      "artifacts": [
+        ".artifacts/goal-five/review/compositor-camera-hierarchy.json"
+      ],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "production.macro-phrase-detail-reactivity",
+      "category": "flagship-production",
+      "obligation": "mandatory",
+      "requirement": "Macro, phrase, and detail reactivity are intentionally authored; each major graph output names its musical/directorial intent and rate/phase semantics remain distinct.",
+      "environment": "human-review",
+      "sourceRevision": "candidateCommit",
+      "observation": "whole-production-structure",
+      "decisionRule": "human-approval",
+      "evaluation": {
+        "kind": "human-review",
+        "harness": "human",
+        "workflow": "Review musical map, graph-output intent report, full proxy, and peak/transition clips at Gates 1-5.",
+        "evaluator": "human-creative-director"
+      },
+      "artifacts": [".artifacts/goal-five/review/reactivity-timescales.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "production.visual-audio-sanity",
+      "category": "flagship-production",
+      "obligation": "mandatory",
+      "requirement": "No unresolved asset, rig, grounding, clipping, z-fighting, popping, freeze, black, clipped-white, silence, or motion-discontinuity defect remains outside approved treatment intervals.",
+      "environment": "final-media-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "final-media-full-duration",
+      "decisionRule": "media-sanity",
+      "evaluation": {
+        "kind": "command",
+        "harness": "planned",
+        "command": "pnpm goal5:media:validate -- --full-sanity",
+        "evaluator": "media-verifier"
+      },
+      "artifacts": [".artifacts/goal-five/media/full-sanity.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "production.final-creative-coherence",
+      "category": "flagship-production",
+      "obligation": "mandatory",
+      "requirement": "The exact final video is explicitly approved as one coherent, polished work with a recognizable identity distinct from Signal Cathedral and Afterlight Assembly.",
+      "environment": "human-review",
+      "sourceRevision": "candidateCommit",
+      "observation": "human-gates",
+      "decisionRule": "human-approval",
+      "evaluation": {
+        "kind": "human-review",
+        "harness": "human",
+        "workflow": "Watch the complete exact candidate video with intended audio and inspect the reopened editable project at Gate 5.",
+        "evaluator": "human-creative-director"
+      },
+      "artifacts": ["docs/parity/evidence/goal-five-final-certification.md"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "workflow.headless-canonical-operations",
+      "category": "canonical-workflow",
+      "obligation": "mandatory",
+      "requirement": "Headless inspection, revision-safe mutation, seek, checkpoint, bake, render, diagnosis, and refinement use canonical project/session/job/inspection contracts.",
+      "environment": "static-node",
+      "sourceRevision": "candidateCommit",
+      "observation": "whole-production-structure",
+      "decisionRule": "green-command",
+      "evaluation": {
+        "kind": "command",
+        "harness": "planned",
+        "command": "pnpm goal5:workflow:validate -- --headless",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [".artifacts/goal-five/workflow/headless-canonical.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "workflow.shared-editor-session",
+      "category": "canonical-workflow",
+      "obligation": "mandatory",
+      "requirement": "The same canonical project and live session operated by the agent are visible and editable in the preserved editor without polling or shadow state.",
+      "environment": "browser-functional-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "whole-production-structure",
+      "decisionRule": "clean-diagnostics",
+      "evaluation": {
+        "kind": "browser",
+        "harness": "planned",
+        "command": "pnpm goal5:workflow:validate -- --shared-editor-session",
+        "evaluator": "playwright"
+      },
+      "artifacts": [".artifacts/goal-five/workflow/shared-editor-session.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "workflow.agent-history-attribution",
+      "category": "canonical-workflow",
+      "obligation": "mandatory",
+      "requirement": "Agent changes appear once in canonical history with actor attribution and participate in conflict handling, undo, and redo.",
+      "environment": "browser-functional-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "interaction-samples",
+      "decisionRule": "exact-structure",
+      "evaluation": {
+        "kind": "browser",
+        "harness": "planned",
+        "command": "pnpm goal5:workflow:validate -- --agent-history",
+        "evaluator": "playwright"
+      },
+      "artifacts": [".artifacts/goal-five/workflow/agent-history.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "workflow.continuous-human-edit",
+      "category": "canonical-workflow",
+      "obligation": "mandatory",
+      "requirement": "Continuous human editing has immediate transient and visible response, zero movement revisions, exactly one release commit, undo, redo, save, close, and reopen.",
+      "environment": "browser-performance-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "interaction-samples",
+      "decisionRule": "interaction-performance",
+      "evaluation": {
+        "kind": "benchmark",
+        "harness": "planned",
+        "command": "pnpm goal5:performance:interaction",
+        "evaluator": "playwright"
+      },
+      "artifacts": [".artifacts/goal-five/performance/interaction.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "workflow.no-agent-shadow-semantics",
+      "category": "canonical-workflow",
+      "obligation": "mandatory",
+      "requirement": "No agent-only project, mutation, renderer, output, graph, transport, audio, history, or runtime semantics exist.",
+      "environment": "static-node",
+      "sourceRevision": "candidateCommit",
+      "observation": "repository-complete-gate",
+      "decisionRule": "architecture-invariants",
+      "evaluation": {
+        "kind": "architecture-review",
+        "harness": "human",
+        "workflow": "Review package dependencies, public control operations, production package imports, and full candidate diff.",
+        "evaluator": "architecture-review"
+      },
+      "artifacts": ["docs/parity/evidence/goal-five-final-certification.md"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "determinism.evaluation-paths",
+      "category": "determinism-portability",
+      "obligation": "mandatory",
+      "requirement": "Sequential, cold, direct-seek, checkpoint-replay, and repeated evaluation agree at every declared act and transition frame.",
+      "environment": "deterministic-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "determinism-frame-set",
+      "decisionRule": "semantic-equivalence",
+      "evaluation": {
+        "kind": "command",
+        "harness": "planned",
+        "command": "pnpm goal5:determinism:validate -- --evaluation-paths",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [".artifacts/goal-five/determinism/evaluation-paths.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "determinism.preview-still-video-adapter",
+      "category": "determinism-portability",
+      "obligation": "mandatory",
+      "requirement": "Preview, still, video, and render-adapter paths assign the same semantic meaning at every declared frame.",
+      "environment": "final-media-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "determinism-frame-set",
+      "decisionRule": "semantic-equivalence",
+      "evaluation": {
+        "kind": "command",
+        "harness": "planned",
+        "command": "pnpm goal5:determinism:validate -- --output-paths",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [".artifacts/goal-five/determinism/output-paths.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "determinism.repeated-decoded-media",
+      "category": "determinism-portability",
+      "obligation": "mandatory",
+      "requirement": "Repeated pinned renders meet decoded-frame equivalence and exact stream/audio synchronization rules; encoded byte identity is not claimed.",
+      "environment": "final-media-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "final-media-full-duration",
+      "decisionRule": "decoded-media-equivalence",
+      "evaluation": {
+        "kind": "command",
+        "harness": "planned",
+        "command": "pnpm goal5:media:validate -- --repeat-and-compare",
+        "evaluator": "media-verifier"
+      },
+      "artifacts": [
+        ".artifacts/goal-five/media/repeated-render-comparison.json"
+      ],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "portability.clean-bundle-roundtrip",
+      "category": "determinism-portability",
+      "obligation": "mandatory",
+      "requirement": "A clean network-disabled environment validates, resolves, opens, edits, saves, reopens, and rerenders the portable bundle without absolute workstation paths or undeclared caches.",
+      "environment": "portable-reopen-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "portable-clean-room",
+      "decisionRule": "green-command",
+      "evaluation": {
+        "kind": "browser",
+        "harness": "planned",
+        "command": "pnpm goal5:portability:validate -- --clean-room",
+        "evaluator": "playwright"
+      },
+      "artifacts": [".artifacts/goal-five/portability/clean-room.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "identity.complete-execution-manifest",
+      "category": "determinism-portability",
+      "obligation": "mandatory",
+      "requirement": "Project, runtime, capability pack, component, node, renderer, asset, artifact, source, and output identities and hashes are pinned in the execution and certification manifests.",
+      "environment": "static-node",
+      "sourceRevision": "candidateCommit",
+      "observation": "repository-complete-gate",
+      "decisionRule": "exact-structure",
+      "evaluation": {
+        "kind": "command",
+        "harness": "planned",
+        "command": "pnpm goal5:identity:validate",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [".artifacts/goal-five/identity/execution-manifest.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "editor.complete-flagship-workflows",
+      "category": "editor-product",
+      "obligation": "mandatory",
+      "requirement": "The exact flagship passes playback, pause, seek, loop, graph inspection, parameter editing, history, persistence, Jobs, Rhythm Lab, diagnostics, profiler, still, and video workflows.",
+      "environment": "browser-functional-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "whole-production-structure",
+      "decisionRule": "clean-diagnostics",
+      "evaluation": {
+        "kind": "browser",
+        "harness": "planned",
+        "command": "pnpm goal5:editor:validate -- --complete-workflows",
+        "evaluator": "playwright"
+      },
+      "artifacts": [".artifacts/goal-five/editor/complete-workflows.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "editor.live-values-and-diagnostics",
+      "category": "editor-product",
+      "obligation": "mandatory",
+      "requirement": "Graphs and runtime debug values animate during playback without React as the signal bus, and ordinary-use console/runtime diagnostics remain clean.",
+      "environment": "browser-functional-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "flagship-playback-samples",
+      "decisionRule": "clean-diagnostics",
+      "evaluation": {
+        "kind": "browser",
+        "harness": "planned",
+        "command": "pnpm goal5:editor:validate -- --live-values",
+        "evaluator": "playwright"
+      },
+      "artifacts": [".artifacts/goal-five/editor/live-values-diagnostics.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "editor.project-legibility",
+      "category": "editor-product",
+      "obligation": "mandatory",
+      "requirement": "Layer, graph, output, asset, artifact, and component responsibilities are understandable in the editor without source archaeology.",
+      "environment": "human-review",
+      "sourceRevision": "candidateCommit",
+      "observation": "human-gates",
+      "decisionRule": "human-approval",
+      "evaluation": {
+        "kind": "human-review",
+        "harness": "human",
+        "workflow": "Inspect the complete reopened project structure at Gates 3 and 5 without consulting source code.",
+        "evaluator": "human-creative-director"
+      },
+      "artifacts": [".artifacts/goal-five/review/project-legibility.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "editor.parity-floor",
+      "category": "editor-product",
+      "obligation": "mandatory",
+      "requirement": "All 42 V1 parity capabilities remain verified or have an explicit human-approved change with current evidence.",
+      "environment": "static-node",
+      "sourceRevision": "candidateCommit",
+      "observation": "repository-complete-gate",
+      "decisionRule": "green-command",
+      "evaluation": {
+        "kind": "command",
+        "harness": "ready",
+        "command": "pnpm parity:validate",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [".artifacts/goal-five/certification/parity.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "performance.full-flagship-playback",
+      "category": "performance-lifecycle",
+      "obligation": "mandatory",
+      "requirement": "The exact full flagship meets graph-closed and graph-open display cadence budgets with full Gate 3 content enabled at quality 2.",
+      "environment": "browser-performance-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "flagship-playback-samples",
+      "decisionRule": "flagship-performance",
+      "evaluation": {
+        "kind": "benchmark",
+        "harness": "planned",
+        "command": "pnpm goal5:performance:playback",
+        "evaluator": "playwright"
+      },
+      "artifacts": [".artifacts/goal-five/performance/playback.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "performance.graph-open-interaction",
+      "category": "performance-lifecycle",
+      "obligation": "mandatory",
+      "requirement": "Graph-open continuous editing meets transient, visible, revision, undo, and redo budgets under the full flagship load.",
+      "environment": "browser-performance-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "interaction-samples",
+      "decisionRule": "interaction-performance",
+      "evaluation": {
+        "kind": "benchmark",
+        "harness": "planned",
+        "command": "pnpm goal5:performance:interaction",
+        "evaluator": "playwright"
+      },
+      "artifacts": [".artifacts/goal-five/performance/interaction.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "performance.seek-and-act-boundaries",
+      "category": "performance-lifecycle",
+      "obligation": "mandatory",
+      "requirement": "Cold and warm seeks across every act and transition boundary are correct, measured, and free of recurring stalls.",
+      "environment": "browser-performance-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "seek-boundary-samples",
+      "decisionRule": "seek-performance",
+      "evaluation": {
+        "kind": "benchmark",
+        "harness": "planned",
+        "command": "pnpm goal5:performance:seek",
+        "evaluator": "playwright"
+      },
+      "artifacts": [".artifacts/goal-five/performance/seek.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "performance.six-cycle-endurance",
+      "category": "performance-lifecycle",
+      "obligation": "mandatory",
+      "requirement": "Six full edit/playback/model/render/reopen cycles have stable cadence, heap, subscriptions, and renderer resources.",
+      "environment": "browser-performance-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "six-cycle-endurance",
+      "decisionRule": "lifecycle-stability",
+      "evaluation": {
+        "kind": "benchmark",
+        "harness": "planned",
+        "command": "pnpm goal5:performance:endurance",
+        "evaluator": "playwright"
+      },
+      "artifacts": [".artifacts/goal-five/performance/endurance.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "performance.retained-resource-lifecycle",
+      "category": "performance-lifecycle",
+      "obligation": "mandatory",
+      "requirement": "Every new retained program proves bounded allocation, lease ownership, disposal, and return to steady state.",
+      "environment": "browser-performance-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "six-cycle-endurance",
+      "decisionRule": "lifecycle-stability",
+      "evaluation": {
+        "kind": "command",
+        "harness": "planned",
+        "command": "pnpm goal5:performance:resources",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [".artifacts/goal-five/performance/resources.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "performance.final-render-throughput",
+      "category": "performance-lifecycle",
+      "obligation": "mandatory",
+      "requirement": "The exact full-duration 1920x1080 quality-2 H.264/AAC render meets the frozen minimum throughput without content or quality reduction.",
+      "environment": "final-media-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "final-media-full-duration",
+      "decisionRule": "final-render-performance",
+      "evaluation": {
+        "kind": "benchmark",
+        "harness": "planned",
+        "command": "pnpm goal5:performance:render",
+        "evaluator": "media-verifier"
+      },
+      "artifacts": [".artifacts/goal-five/performance/final-render.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "performance.light-tunnel-regression",
+      "category": "performance-lifecycle",
+      "obligation": "mandatory",
+      "requirement": "The exact previously certified Light Tunnel project retains its stronger planning, playback, graph-open, interaction, and temporal-issue floor.",
+      "environment": "browser-performance-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "flagship-playback-samples",
+      "decisionRule": "light-tunnel-floor",
+      "evaluation": {
+        "kind": "benchmark",
+        "harness": "ready",
+        "command": "pnpm benchmark:light-tunnel-headed",
+        "evaluator": "playwright"
+      },
+      "artifacts": [".artifacts/performance/v2-light-tunnel-headed.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "reusable.promotion-evidence",
+      "category": "reusable-system",
+      "obligation": "mandatory",
+      "requirement": "Every promoted capability names its governing package/spec and proves two different consumers or the documented stable-boundary exception with an independent fixture.",
+      "environment": "static-node",
+      "sourceRevision": "candidateCommit",
+      "observation": "repository-complete-gate",
+      "decisionRule": "architecture-invariants",
+      "evaluation": {
+        "kind": "architecture-review",
+        "harness": "human",
+        "workflow": "Review the promotion report, dependency graph, consumers, fixtures, and governing contracts for every promoted capability.",
+        "evaluator": "architecture-review"
+      },
+      "artifacts": [".artifacts/goal-five/reports/reusable-promotion.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "reusable.production-core-boundary",
+      "category": "reusable-system",
+      "obligation": "mandatory",
+      "requirement": "Production score, palette, choreography, assets, graphs, and timestamps remain outside generic engine core; generic packages never import or recognize the flagship.",
+      "environment": "static-node",
+      "sourceRevision": "candidateCommit",
+      "observation": "repository-complete-gate",
+      "decisionRule": "architecture-invariants",
+      "evaluation": {
+        "kind": "command",
+        "harness": "ready",
+        "command": "pnpm architecture:validate",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [".artifacts/goal-five/certification/architecture.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "reusable.canonical-authoring-and-feedback",
+      "category": "reusable-system",
+      "obligation": "mandatory",
+      "requirement": "New authoring, inspection, comparison, and feedback surfaces wrap the same canonical operations used by editor, CLI, and hosts, with source and built-package agreement.",
+      "environment": "static-node",
+      "sourceRevision": "candidateCommit",
+      "observation": "whole-production-structure",
+      "decisionRule": "green-command",
+      "evaluation": {
+        "kind": "command",
+        "harness": "planned",
+        "command": "pnpm goal5:workflow:validate -- --source-built-parity",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [".artifacts/goal-five/workflow/source-built-parity.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "reusable.cleanup-and-deletion",
+      "category": "reusable-system",
+      "obligation": "mandatory",
+      "requirement": "Temporary scaffolding, duplicate paths, bridges, unused configuration, debug artifacts, dead source, and production-only canonical-tool duplicates are removed.",
+      "environment": "static-node",
+      "sourceRevision": "candidateCommit",
+      "observation": "repository-complete-gate",
+      "decisionRule": "architecture-invariants",
+      "evaluation": {
+        "kind": "architecture-review",
+        "harness": "human",
+        "workflow": "Review the complete candidate diff, source tree, package boundaries, generated artifacts, comments, and deletion opportunities.",
+        "evaluator": "architecture-review"
+      },
+      "artifacts": [".artifacts/goal-five/reports/candidate-diff-review.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "repository.previous-productions",
+      "category": "repository-evidence",
+      "obligation": "mandatory",
+      "requirement": "Signal Cathedral and Afterlight Assembly project, deterministic runtime, bundle, and production suites remain green.",
+      "environment": "static-node",
+      "sourceRevision": "candidateCommit",
+      "observation": "repository-complete-gate",
+      "decisionRule": "green-command",
+      "evaluation": {
+        "kind": "command",
+        "harness": "ready",
+        "command": "pnpm exec vitest run tests/foundation/signal-cathedral-production.test.ts tests/foundation/afterlight-assembly-production.test.ts",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [
+        ".artifacts/goal-five/certification/previous-productions.json"
+      ],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "repository.focused-and-failure-tests",
+      "category": "repository-evidence",
+      "obligation": "mandatory",
+      "requirement": "Every new semantic and reusable capability has focused correctness, invalid-input, cancellation, missing-resource, and lifecycle coverage appropriate to its contract.",
+      "environment": "static-node",
+      "sourceRevision": "candidateCommit",
+      "observation": "repository-complete-gate",
+      "decisionRule": "green-command",
+      "evaluation": {
+        "kind": "command",
+        "harness": "planned",
+        "command": "pnpm goal5:test",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [".artifacts/goal-five/certification/focused-tests.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "repository.uninterrupted-complete-gate",
+      "category": "repository-evidence",
+      "obligation": "mandatory",
+      "requirement": "Parity, architecture, format, lint, types, all deterministic tests, all active browser journeys, all packages, Studio, and consumer smokes pass in one uninterrupted run.",
+      "environment": "browser-functional-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "repository-complete-gate",
+      "decisionRule": "green-command",
+      "evaluation": {
+        "kind": "command",
+        "harness": "ready",
+        "command": "pnpm check:foundation",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [".artifacts/goal-five/certification/foundation-gate.log"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "repository.browser-classification",
+      "category": "repository-evidence",
+      "obligation": "mandatory",
+      "requirement": "Every active mandatory browser journey passes; every opt-in/environment-limited journey has an explicit reason, command, environment, and required run record rather than an unexplained skip.",
+      "environment": "browser-functional-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "repository-complete-gate",
+      "decisionRule": "exact-structure",
+      "evaluation": {
+        "kind": "command",
+        "harness": "planned",
+        "command": "pnpm goal5:browser:classify",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [
+        ".artifacts/goal-five/certification/browser-classification.json"
+      ],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "evidence.treatment-and-musical-map",
+      "category": "artifact-evidence",
+      "obligation": "mandatory",
+      "requirement": "The approved treatment records track/window provenance, frame-exact sections, phrases, events, energy, contrast, camera/composition cues, 4-6 act arc, visual language, roles, review frames, targets, risks, exclusions, and non-goals.",
+      "environment": "human-review",
+      "sourceRevision": "candidateCommit",
+      "observation": "human-gates",
+      "decisionRule": "human-approval",
+      "evaluation": {
+        "kind": "human-review",
+        "harness": "human",
+        "workflow": "Review and explicitly approve the complete treatment and musical map at Gate 1.",
+        "evaluator": "human-creative-director"
+      },
+      "artifacts": ["docs/plans/v2/goal-five-flagship-production-treatment.md"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "evidence.assets-artifacts-bundle-manifest",
+      "category": "artifact-evidence",
+      "obligation": "mandatory",
+      "requirement": "Source/derived asset provenance, deterministic audio artifacts, canonical project, portable bundle, trusted capability manifest, and pinned execution manifest exist with immutable hashes and reproduction commands.",
+      "environment": "static-node",
+      "sourceRevision": "candidateCommit",
+      "observation": "portable-clean-room",
+      "decisionRule": "exact-structure",
+      "evaluation": {
+        "kind": "command",
+        "harness": "planned",
+        "command": "pnpm goal5:identity:validate -- --all-inputs",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [".artifacts/goal-five/identity/all-inputs.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "evidence.visual-review-packet",
+      "category": "artifact-evidence",
+      "obligation": "mandatory",
+      "requirement": "Review evidence contains representative stills for every act, a 12-16-frame whole-production contact sheet, and focused clips for every transition and the primary peak.",
+      "environment": "final-media-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "review-frame-set",
+      "decisionRule": "exact-structure",
+      "evaluation": {
+        "kind": "command",
+        "harness": "planned",
+        "command": "pnpm goal5:review:validate",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [".artifacts/goal-five/review/review-packet.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "evidence.final-video-and-probe",
+      "category": "artifact-evidence",
+      "obligation": "mandatory",
+      "requirement": "The exact candidate output is 1920x1080, 60 fps, H.264/AAC with intended audio, correct duration and synchronization, plus a media probe and automated visual/audio sanity report.",
+      "environment": "final-media-m1",
+      "sourceRevision": "candidateCommit",
+      "observation": "final-media-full-duration",
+      "decisionRule": "media-sanity",
+      "evaluation": {
+        "kind": "command",
+        "harness": "planned",
+        "command": "pnpm goal5:media:validate -- --final",
+        "evaluator": "media-verifier"
+      },
+      "artifacts": [".artifacts/goal-five/media/final-media.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "evidence.system-reports",
+      "category": "artifact-evidence",
+      "obligation": "mandatory",
+      "requirement": "Determinism/reopen/rerender, performance/endurance, graph/compositor/model/runtime inspection, agent activity/friction, and reusable-promotion reports exist and map findings to immutable identities.",
+      "environment": "static-node",
+      "sourceRevision": "candidateCommit",
+      "observation": "repository-complete-gate",
+      "decisionRule": "exact-structure",
+      "evaluation": {
+        "kind": "command",
+        "harness": "planned",
+        "command": "pnpm goal5:reports:validate",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [".artifacts/goal-five/reports/index.json"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "evidence.human-calibration-decisions",
+      "category": "artifact-evidence",
+      "obligation": "mandatory",
+      "requirement": "Gate 1 through Gate 5 decisions identify exact reviewed artifacts, approval or requested changes, reviewer, date, and resulting candidate identity where applicable.",
+      "environment": "human-review",
+      "sourceRevision": "candidateCommit",
+      "observation": "human-gates",
+      "decisionRule": "human-approval",
+      "evaluation": {
+        "kind": "human-review",
+        "harness": "human",
+        "workflow": "Record each explicit human calibration decision against immutable artifact identities in the final certification evidence.",
+        "evaluator": "human-creative-director"
+      },
+      "artifacts": ["docs/parity/evidence/goal-five-final-certification.md"],
+      "status": "pending",
+      "evidence": []
+    },
+    {
+      "id": "evidence.candidate-and-evidence-commits",
+      "category": "artifact-evidence",
+      "obligation": "mandatory",
+      "requirement": "A clean independently reproducible candidate commit C passes every behavioral criterion, and a later documentation-only evidence commit E records C, artifacts, results, and explicit Gate 5 approval.",
+      "environment": "static-node",
+      "sourceRevision": "candidateCommit",
+      "observation": "repository-complete-gate",
+      "decisionRule": "immutable-candidate-evidence",
+      "evaluation": {
+        "kind": "command",
+        "harness": "ready",
+        "command": "pnpm goal5:criteria:validate -- --final",
+        "evaluator": "automated-validator"
+      },
+      "artifacts": [
+        "docs/parity/evidence/goal-five-final-certification.md",
+        ".artifacts/goal-five/certification/final.json"
+      ],
+      "status": "pending",
+      "evidence": []
+    }
+  ]
+}

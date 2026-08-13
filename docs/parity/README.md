@@ -17,6 +17,15 @@ pnpm parity:validate
 
 The validator is part of `pnpm check:foundation`.
 
+Goal Five has a separate terminal-proof contract:
+
+- [Goal Five certification contract](./goal-five-certification.md)
+- [Goal Five machine-readable matrix](./goal-five-certification-matrix.json)
+
+Its planning validator also runs through `pnpm check:foundation`. Final mode is
+deliberately stricter and remains red until every flagship criterion, harness,
+artifact, candidate identity, and human gate is genuinely complete.
+
 Browser comparison records live in [evidence](./evidence/). Start with:
 
 - [2026-07-29 calibration](./evidence/2026-07-29-calibration.md)

@@ -27,6 +27,27 @@ const createWaveFile = () => {
   return bytes;
 };
 
+const waitForPlayableAudioSource = async (page: Page, expectedUri?: string) => {
+  await expect
+    .poll(async () =>
+      page.evaluate((uri) => {
+        const audio = document.querySelector('audio');
+        if (
+          !audio ||
+          audio.readyState < HTMLMediaElement.HAVE_FUTURE_DATA ||
+          !Number.isFinite(audio.duration) ||
+          audio.duration <= 1
+        ) {
+          return false;
+        }
+        return uri === undefined
+          ? true
+          : decodeURIComponent(new URL(audio.currentSrc).pathname) === uri;
+      }, expectedUri),
+    )
+    .toBe(true);
+};
+
 const waitForAudioEditor = async (page: Page) => {
   await page.addInitScript(() => {
     localStorage.setItem('vizengine-has-seen-tutorial', 'true');
@@ -61,14 +82,7 @@ const waitForAudioEditor = async (page: Page) => {
       ),
     )
     .toBe('media-element');
-  await expect
-    .poll(async () =>
-      page.evaluate(() => {
-        const audio = document.querySelector('audio');
-        return Boolean(audio && Number.isFinite(audio.duration));
-      }),
-    )
-    .toBe(true);
+  await waitForPlayableAudioSource(page);
 };
 
 test('keeps audio transport, loading, capture, and volume responsive', async ({
@@ -125,6 +139,7 @@ test('keeps audio transport, loading, capture, and volume responsive', async ({
       ),
     )
     .toBe(initialBundledSource);
+  await waitForPlayableAudioSource(page, initialBundledSource);
 
   await page.getByLabel('Play/Pause').click();
   await expect
@@ -134,26 +149,58 @@ test('keeps audio transport, loading, capture, and volume responsive', async ({
     .toBe(true);
   const playback = await page.evaluate(
     () =>
-      new Promise<{ frameDelta: number; sessionUpdates: number }>((resolve) => {
+      new Promise<{
+        frameDelta: number;
+        audioTimeDelta: number;
+        animationFrames: number;
+        isPlaying: boolean;
+        audioPaused: boolean;
+        sessionUpdates: number;
+      }>((resolve) => {
         const debug = window.__vizEditorDebug!;
+        const audio = document.querySelector('audio')!;
         const startFrame =
           debug.vizSessionHost.getSnapshot().transport.currentFrame;
+        const startAudioTime = audio.currentTime;
         let sessionUpdates = 0;
+        let animationFrames = 0;
+        let animationFrame = 0;
+        const countAnimationFrames = () => {
+          animationFrames += 1;
+          animationFrame = requestAnimationFrame(countAnimationFrames);
+        };
+        animationFrame = requestAnimationFrame(countAnimationFrames);
         const unsubscribe = debug.vizSessionStore.subscribe(() => {
           sessionUpdates += 1;
         });
         window.setTimeout(() => {
-          const frameDelta =
-            debug.vizSessionHost.getSnapshot().transport.currentFrame -
-            startFrame;
+          cancelAnimationFrame(animationFrame);
+          const transport = debug.vizSessionHost.getSnapshot().transport;
+          const frameDelta = transport.currentFrame - startFrame;
           unsubscribe();
           debug.editorControl.preview.pause();
-          resolve({ frameDelta, sessionUpdates });
+          resolve({
+            frameDelta,
+            audioTimeDelta: audio.currentTime - startAudioTime,
+            animationFrames,
+            isPlaying: transport.isPlaying,
+            audioPaused: audio.paused,
+            sessionUpdates,
+          });
         }, 700);
       }),
   );
+  expect(playback).toMatchObject({
+    frameDelta: expect.any(Number),
+    audioTimeDelta: expect.any(Number),
+    animationFrames: expect.any(Number),
+    isPlaying: true,
+    audioPaused: false,
+    sessionUpdates: 0,
+  });
+  expect(playback.audioTimeDelta).toBeGreaterThan(0.25);
+  expect(playback.animationFrames).toBeGreaterThan(15);
   expect(playback.frameDelta).toBeGreaterThan(15);
-  expect(playback.sessionUpdates).toBe(0);
 
   const revisionBeforeVolume = await page.evaluate(
     () => window.__vizEditorDebug!.vizSessionStore.getState().project.revision,

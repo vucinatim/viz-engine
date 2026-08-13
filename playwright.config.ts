@@ -16,6 +16,9 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     viewport: { width: 1440, height: 900 },
+    launchOptions: {
+      args: ['--mute-audio'],
+    },
   },
   projects: [
     {
@@ -26,7 +29,7 @@ export default defineConfig({
   webServer: {
     command: `pnpm --filter @viz-engine/app-viz-studio dev --host 127.0.0.1 --port ${port}`,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 });
