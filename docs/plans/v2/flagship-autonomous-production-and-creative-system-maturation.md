@@ -1,6 +1,7 @@
 # Goal Five: Flagship Autonomous Production And Creative-System Maturation
 
-Status: active; Gate 0 approved; Phase 0 certification freeze in progress.
+Status: paused at the completed Phase 0 boundary pending the autonomous-loop
+operating-model discussion before Phase 1.
 
 Planned: 2026-08-13.
 
@@ -16,14 +17,14 @@ and evidence before editing after a compaction or new task.
 ```text
 Baseline commit: b2b23b577feda29ef7eca9dcbf35a4e8c1162781
 Current phase: Phase 0 — activation, immutable baseline, and executable criteria
-Current checkpoint: freeze the executable criteria/environment contract and run the uncontended complete gate
-Last completed checkpoint: atomic layer/default-graph authoring baseline repair
-Last certified commit: 82c1cd7958fbb99f71b4f7f41519691f81db95bc
-Last full green gate: Goal Four certification at d787e20
-Next safe checkpoint: complete and certify Phase 0, then begin the bounded capability/asset/music audit
-Awaiting human gate: none until Gate 1 treatment approval
-Known blockers: none; avoid claiming an environment-sensitive isolated rerun as the complete gate
-Relevant evidence: docs/parity/evidence/2026-08-13-goal-five-phase-0-layer-authoring-baseline-repair.md
+Current checkpoint: Phase 0 complete; paused before the Phase 1 capability/asset/music audit
+Last completed checkpoint: executable Goal Five criteria/environment freeze and uncontended complete gate
+Last certified commit: 043f8dbae5f15828c5cba6c0b74f32cadb359946
+Last full green gate: Goal Five Phase 0 at 043f8db
+Next safe checkpoint: agree on the autonomous loop, then run the bounded Phase 1 capability/asset/music audit
+Awaiting human gate: autonomous-loop operating-model discussion; Gate 1 treatment approval follows Phase 1
+Known blockers: none; Goal Five is deliberately paused at the user-requested discussion boundary
+Relevant evidence: docs/parity/evidence/2026-08-14-goal-five-phase-0-certification-freeze.md
 ```
 
 ## Governing Authority

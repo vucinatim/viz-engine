@@ -2667,3 +2667,25 @@
   `82c1cd7958fbb99f71b4f7f41519691f81db95bc`, recorded full evidence in
   `docs/parity/evidence/2026-08-13-goal-five-phase-0-layer-authoring-baseline-repair.md`,
   and left Goal Five paused for an explicit autonomous-loop decision
+
+## 2026-08-14 — Goal Five Phase 0 certification contract frozen
+
+- froze seven execution environments, eleven observation protocols, fifteen
+  decision rules, five evaluator classes, and forty-six stable criteria before
+  flagship implementation can tune itself to favorable tests
+- added planning and strict final validation, including immutable candidate
+  `C`, documentation-only evidence commit `E`, real artifact evidence, bounded
+  exclusions, and honest planned/human harness enforcement
+- captured immutable activation source metrics and made historical reporting
+  read one Git tree and one batched object stream
+- repaired the audio acceptance observation to wait for genuinely playable
+  selected media and independently measure media, animation, transport, and
+  durable-store activity without extending its 700 ms window or weakening its
+  frame threshold
+- passed five consecutive fresh-browser audio repetitions and one uninterrupted
+  complete gate: 67 Vitest files / 304 tests, 16 active Chromium journeys, 18
+  package builds, Studio build, and both built-consumer smokes
+- certified behavioral checkpoint
+  `043f8dbae5f15828c5cba6c0b74f32cadb359946`, recorded the complete evidence in
+  `docs/parity/evidence/2026-08-14-goal-five-phase-0-certification-freeze.md`,
+  and paused before Phase 1 for the autonomous-loop operating-model discussion

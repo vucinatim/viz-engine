@@ -1,6 +1,6 @@
 # Current State
 
-Last reconciled: 2026-08-13.
+Last reconciled: 2026-08-14.
 
 ## Product Direction
 
@@ -26,10 +26,10 @@ preservation target.
 Goals One through Four are complete and certified.
 
 [Goal Five: Flagship Autonomous Production And Creative-System Maturation](./plans/v2/flagship-autonomous-production-and-creative-system-maturation.md)
-is active again after one bounded Phase 0 baseline repair. Gate 0 approved its
-assumptions, repository input audit, provisional performance envelope, human
-gates, local checkpoint commits, and external-action boundaries. Its immutable
-planning baseline is
+is paused at the completed Phase 0 boundary so its autonomous loop operating
+model can be agreed before Phase 1. Gate 0 approved its assumptions, repository
+input audit, provisional performance envelope, human gates, local checkpoint
+commits, and external-action boundaries. Its immutable planning baseline is
 `b2b23b577feda29ef7eca9dcbf35a4e8c1162781`.
 
 Goal Five uses one 45–60 second, multi-act, multi-layer, multi-component, and
@@ -37,13 +37,14 @@ multi-graph flagship as a forcing function for reusable creative-system
 maturation. It is intentionally large enough for many days of bounded
 checkpoints while retaining one verifiable completion condition.
 
-The active phase is Phase 0: capture the exact environment and clean baseline,
-run the complete uncontended repository gate, and freeze the executable Goal
-Five criteria matrix before implementation expands. The atomic
-layer/default-graph authoring repair is certified at
-`82c1cd7958fbb99f71b4f7f41519691f81db95bc`; its
-[evidence](./parity/evidence/2026-08-13-goal-five-phase-0-layer-authoring-baseline-repair.md)
-keeps the still-contended wrapper result explicit.
+Phase 0 is complete at behavioral checkpoint
+`043f8dbae5f15828c5cba6c0b74f32cadb359946`: the exact environment and
+activation metrics are captured, the 46-criterion terminal-proof contract is
+executable, and the uncontended complete repository gate is green. Its
+[certification evidence](./parity/evidence/2026-08-14-goal-five-phase-0-certification-freeze.md)
+keeps the original non-green activation run and repaired audio observation
+explicit. The next implementation phase is the bounded capability, authorized
+asset, and music-window audit for Gate 1 treatment approval.
 
 ## Canonical Architecture
 
@@ -172,10 +173,10 @@ The immutable V1 reference is
 The parity matrix currently contains 42 verified capabilities with zero gap,
 partial, or unaudited rows.
 
-The latest complete gate reported:
+The latest complete gate at Goal Five Phase 0 reported:
 
 - clean architecture, formatting, lint, and types
-- 65 deterministic test files / 299 tests
+- 67 deterministic test files / 304 tests
 - 16 active headed Chromium journeys with 3 intentional opt-in skips
 - all 18 package builds and the Studio production build
 - both built-consumer smoke scenarios

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "goalId": "goal-five-flagship",
-  "status": "active-phase-0",
+  "status": "paused-phase-0-complete",
   "identity": {
     "planningBaseline": "b2b23b577feda29ef7eca9dcbf35a4e8c1162781",
     "activationCommit": "62322d30292974e15b29f87b833a78f9b30210c9",
