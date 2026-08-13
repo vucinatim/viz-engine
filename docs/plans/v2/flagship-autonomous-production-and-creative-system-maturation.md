@@ -1,6 +1,6 @@
 # Goal Five: Flagship Autonomous Production And Creative-System Maturation
 
-Status: active; Gate 0 approved; Phase 0 in progress.
+Status: paused by the user after a bounded Phase 0 baseline repair.
 
 Planned: 2026-08-13.
 
@@ -16,14 +16,14 @@ and evidence before editing after a compaction or new task.
 ```text
 Baseline commit: b2b23b577feda29ef7eca9dcbf35a4e8c1162781
 Current phase: Phase 0 — activation, immutable baseline, and executable criteria
-Current checkpoint: capture environment, run the uncontended complete gate, and freeze the criteria matrix
-Last completed checkpoint: Gate 0 activation authority and planning-baseline commit
-Last certified commit: d787e20ff98bfdb252eded56a070b61b74b7ca1f
+Current checkpoint: paused before the uncontended complete gate and frozen criteria matrix
+Last completed checkpoint: atomic layer/default-graph authoring baseline repair
+Last certified commit: 82c1cd7958fbb99f71b4f7f41519691f81db95bc
 Last full green gate: Goal Four certification at d787e20
-Next safe checkpoint: run the complete uncontended repository gate and create the executable criteria matrix
-Awaiting human gate: none
-Known blockers: none
-Relevant evidence: docs/parity/evidence/2026-08-04-temporal-runtime-and-light-tunnel-performance.md
+Next safe checkpoint: agree on the autonomous loop, then run the complete uncontended repository gate and create the executable criteria matrix
+Awaiting human gate: autonomous loop operating-model decision
+Known blockers: Goal Five is paused; the full wrapper remains sensitive to a contended host environment
+Relevant evidence: docs/parity/evidence/2026-08-13-goal-five-phase-0-layer-authoring-baseline-repair.md
 ```
 
 ## Governing Authority

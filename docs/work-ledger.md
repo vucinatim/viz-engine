@@ -2645,3 +2645,25 @@
 - retained the persistent goal as the sole mutation owner; scheduled workers
   remain read-only until an atomic handoff and integration policy is manually
   proven
+
+## 2026-08-13 — Goal Five Phase 0 layer-authoring baseline repaired and paused
+
+- traced the complete-authoring baseline timeout to Stage Scene publishing its
+  thirteen default graphs through thirteen separate canonical transactions
+  after the layer transaction
+- replaced that sequence with one canonical layer-plus-graphs transaction,
+  one revision, and one native undo unit without introducing a second preset
+  conversion path
+- added a regression proving all default graphs and bindings, exact revision
+  behavior, undo, and redo
+- validated formatting, lint, types, 65 foundation files / 300 tests, 42 parity
+  rows, 18 package boundaries and builds, Studio build, both consumer smokes,
+  the focused authoring journey, and the complete standalone browser aggregate
+  with all 16 active journeys green
+- preserved the non-green uninterrupted wrapper result honestly: under a host
+  load average near 36, the known 700 ms audio sample and 90 second authoring
+  budget failed despite the unchanged standalone browser aggregate passing
+- certified implementation commit
+  `82c1cd7958fbb99f71b4f7f41519691f81db95bc`, recorded full evidence in
+  `docs/parity/evidence/2026-08-13-goal-five-phase-0-layer-authoring-baseline-repair.md`,
+  and left Goal Five paused for an explicit autonomous-loop decision
