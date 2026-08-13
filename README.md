@@ -149,11 +149,10 @@ canonical V2 substrate, behavior-preserving consolidation and minimization,
 42/42 verified parity capabilities, a calibrated live agent loop, two original
 productions, and exact Light Tunnel 60 FPS performance certification.
 
-There is currently no active implementation goal.
 [Goal Five](docs/plans/v2/flagship-autonomous-production-and-creative-system-maturation.md)
-is planned as an ambitious multi-act, multi-layer flagship production and
-creative-system maturation program. It remains pending Gate 0 activation
-authority.
+is active as an ambitious multi-act, multi-layer flagship production and
+creative-system maturation program. Gate 0 is approved and the immutable
+planning baseline is `b2b23b577feda29ef7eca9dcbf35a4e8c1162781`.
 
 See [current state](docs/current-state.md) for implementation truth,
 [the documentation map](docs/docs-index.md) for authority, and

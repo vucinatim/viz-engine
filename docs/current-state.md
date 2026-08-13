@@ -25,17 +25,20 @@ preservation target.
 
 Goals One through Four are complete and certified.
 
-There is currently no active implementation goal.
-
 [Goal Five: Flagship Autonomous Production And Creative-System Maturation](./plans/v2/flagship-autonomous-production-and-creative-system-maturation.md)
-is planned and ready for Gate 0 activation authority. It is not active
-execution scope until its assumptions, input-audit authority, provisional
-performance envelope, human gates, and baseline are approved and committed.
+is the active implementation goal. Gate 0 approved its assumptions, repository
+input audit, provisional performance envelope, human gates, local checkpoint
+commits, and external-action boundaries. Its immutable planning baseline is
+`b2b23b577feda29ef7eca9dcbf35a4e8c1162781`.
 
 Goal Five uses one 45–60 second, multi-act, multi-layer, multi-component, and
 multi-graph flagship as a forcing function for reusable creative-system
 maturation. It is intentionally large enough for many days of bounded
 checkpoints while retaining one verifiable completion condition.
+
+The active phase is Phase 0: capture the exact environment and clean baseline,
+run the complete uncontended repository gate, and freeze the executable Goal
+Five criteria matrix before implementation expands.
 
 ## Canonical Architecture
 

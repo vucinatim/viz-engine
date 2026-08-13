@@ -29,15 +29,14 @@ If it names no active goal, completed plans must not be treated as active scope.
 
 ### 3. Active goal
 
-There is currently no active implementation goal.
-
-The planned next contract is:
+The active implementation contract is:
 
 - [Goal Five: Flagship Autonomous Production And Creative-System Maturation](./plans/v2/flagship-autonomous-production-and-creative-system-maturation.md)
 
-It remains pending Gate 0 activation authority. Its complete vision-governed
-campaign, recovery marker, human calibrations, validation tiers, and terminal
-certification matrix are already documented.
+Gate 0 is approved at planning baseline
+`b2b23b577feda29ef7eca9dcbf35a4e8c1162781`. Recover its current phase,
+checkpoint, human calibrations, validation tiers, and terminal certification
+matrix from that document before acting.
 
 ### 4. Governing specifications
 

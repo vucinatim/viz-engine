@@ -1,6 +1,6 @@
 # Goal Five: Flagship Autonomous Production And Creative-System Maturation
 
-Status: planned contract, pending Gate 0 activation authority.
+Status: active; Gate 0 approved; Phase 0 in progress.
 
 Planned: 2026-08-13.
 
@@ -14,14 +14,14 @@ Update this block at every completed checkpoint and reconcile it against Git
 and evidence before editing after a compaction or new task.
 
 ```text
-Baseline commit: pending activation
-Current phase: pre-activation
-Current checkpoint: none
-Last completed checkpoint: vision consolidation
+Baseline commit: b2b23b577feda29ef7eca9dcbf35a4e8c1162781
+Current phase: Phase 0 — activation, immutable baseline, and executable criteria
+Current checkpoint: capture environment, run the uncontended complete gate, and freeze the criteria matrix
+Last completed checkpoint: Gate 0 activation authority and planning-baseline commit
 Last certified commit: d787e20ff98bfdb252eded56a070b61b74b7ca1f
 Last full green gate: Goal Four certification at d787e20
-Next safe checkpoint: commit the approved Goal Five contract and capture activation baseline
-Awaiting human gate: Gate 0 activation authority
+Next safe checkpoint: run the complete uncontended repository gate and create the executable criteria matrix
+Awaiting human gate: none
 Known blockers: none
 Relevant evidence: docs/parity/evidence/2026-08-04-temporal-runtime-and-light-tunnel-performance.md
 ```

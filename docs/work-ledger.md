@@ -2632,3 +2632,16 @@
 - left the program pending Gate 0 activation authority, a committed clean
   baseline, and explicit activation rather than silently starting
   implementation
+
+## 2026-08-13 — Goal Five activated at Gate 0
+
+- received explicit Gate 0 approval for the documented assumptions, repository
+  input audit, provisional fixed-device performance envelope, human calibration
+  gates, local checkpoint commits, and external-action boundaries
+- committed the consolidated vision and Goal Five contract as immutable
+  planning baseline `b2b23b577feda29ef7eca9dcbf35a4e8c1162781`
+- activated Phase 0 with the complete uncontended repository gate and executable
+  certification-criteria matrix as the first bounded checkpoint
+- retained the persistent goal as the sole mutation owner; scheduled workers
+  remain read-only until an atomic handoff and integration policy is manually
+  proven
