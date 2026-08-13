@@ -2,7 +2,9 @@
 
 ## Status
 
-This is an active alignment record for VizEngine V2.
+This is a supporting alignment and decision record for VizEngine V2. The
+canonical product north star is
+[VizEngine Compounding Vision](./viz-engine-compounding-vision.md).
 
 It captures:
 
@@ -184,22 +186,22 @@ Performance acceptance should include:
 
 The desired architecture can be understood as the following mapping.
 
-| Concept | Responsibility |
-| --- | --- |
-| `VizProjectDocument` | Durable and portable scene description |
-| `VizSession` | Mutable working environment for editing and preview |
-| Project actions | Stable language for changing scene content |
-| Session commands | Live operational control that does not change scene content |
-| Runtime | Deterministic evaluator of scene meaning |
-| Bake system | Precomputation stage for expensive reusable work |
-| Render plan | Evaluated frame representation passed toward rendering |
-| Renderer backends | Concrete drawing implementations |
-| Scene compositor | Owner of final layer combination semantics |
-| Editor | Professional human cockpit over the session |
-| Agent and tools | Machine clients of the same session contracts |
-| Remotion | Production render host |
-| Viz Cloud | Optional hosted storage, collaboration, jobs, and operations |
-| Magnify | Workflow consumer of versioned Viz scenes and artifacts |
+| Concept              | Responsibility                                               |
+| -------------------- | ------------------------------------------------------------ |
+| `VizProjectDocument` | Durable and portable scene description                       |
+| `VizSession`         | Mutable working environment for editing and preview          |
+| Project actions      | Stable language for changing scene content                   |
+| Session commands     | Live operational control that does not change scene content  |
+| Runtime              | Deterministic evaluator of scene meaning                     |
+| Bake system          | Precomputation stage for expensive reusable work             |
+| Render plan          | Evaluated frame representation passed toward rendering       |
+| Renderer backends    | Concrete drawing implementations                             |
+| Scene compositor     | Owner of final layer combination semantics                   |
+| Editor               | Professional human cockpit over the session                  |
+| Agent and tools      | Machine clients of the same session contracts                |
+| Remotion             | Production render host                                       |
+| Viz Cloud            | Optional hosted storage, collaboration, jobs, and operations |
+| Magnify              | Workflow consumer of versioned Viz scenes and artifacts      |
 
 The clean relationship is:
 

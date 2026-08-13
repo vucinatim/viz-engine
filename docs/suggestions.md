@@ -3,6 +3,16 @@
 This file tracks durable, high-impact follow-up improvements that are not
 already requirements of the active goal.
 
+## Documentation And Operating System
+
+- Add a lightweight documentation validator if status drift recurs. It should
+  check local links, require `docs/current-state.md` to name the only active
+  goal, and reject completed plans presented as active entrypoints without
+  turning historical prose into a rigid schema.
+- Consider adding a generated chronological index over `docs/work-ledger.md`
+  rather than rewriting or reordering historical evidence. Recovery should
+  continue to use current state and the active goal, not ledger order.
+
 ## Runtime And Rendering
 
 - Add a native browser-free clip/video executor behind the existing render-job

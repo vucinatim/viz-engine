@@ -2576,3 +2576,59 @@
   architecture, assumptions, metrics, comparison, and machine-readable proof
   in
   `docs/parity/evidence/2026-08-04-temporal-runtime-and-light-tunnel-performance.md`
+
+## 2026-08-13 — Compounding vision and documentation authority consolidated
+
+- audited the complete vision, architecture/spec, plan, parity, and historical
+  documentation corpus through three parallel focused reviews plus direct
+  canonical-document reconciliation
+- established `docs/visions/viz-engine-compounding-vision.md` as the canonical
+  product north star connecting the professional live editor, deterministic
+  runtime, agent co-creation loop, portable scene language, reusable creative
+  capabilities, native model assets, open-core product, Viz Cloud, and Magnify
+- made assumptions and open decisions explicit, including the music-first
+  product center, bounded parity certification, human aesthetic calibration,
+  renderer strategy, capability security, cloud/provider replaceability, and
+  model-backed visual-quality floor
+- added `docs/autonomous-development-compass.md` as the compact recovery,
+  priority, architecture, creative-quality, and escalation filter for future
+  long-running work
+- rewrote the docs index around North Star → Current Strategy → Active Goal →
+  Governing Specs → Evidence/History and recorded that no implementation goal
+  is currently active
+- reduced `docs/current-state.md` from milestone history to concise current
+  implementation truth, honest certification scope, known boundaries, and the
+  unactivated flagship-dogfood candidate direction
+- corrected stale Goal Two/Three active statuses, updated all primary recovery
+  entrypoints, and clarified the asset versus baked-artifact taxonomy
+- repaired the README's stale goal status and thesis path and recorded the
+  absence of a repository license file rather than assuming licensing authority
+- validated every local link across the changed documentation, the 42-row
+  parity matrix, workspace architecture, formatting scope, and diff whitespace
+
+## 2026-08-13 — Goal Five flagship program planned
+
+- used three bounded planning agents to independently design the flagship
+  creative program, engine/product workstreams, and multi-day autonomous
+  execution and validation contract
+- made the complete compounding vision mandatory governing context while
+  keeping the execution objective finite and independently certifiable
+- defined Goal Five around one 45–60 second, four-to-six-act, multi-layer,
+  multi-component, multi-graph flagship production rather than an unrelated
+  implementation backlog
+- required honest model-backed, procedural, shader/particle, compositor, and
+  complementary media breadth while preserving creative coherence over
+  checklist feature use
+- defined production treatment, macro direction, compositor modulation,
+  multi-graph scale, native model, agent feedback, editor parity, performance,
+  portability, and reusable-promotion workstreams
+- defined eleven execution phases, six human calibration gates, specialist
+  agent roles, a compaction resume marker, validation tiers, quiet scheduled
+  execution rules, anti-rabbit-hole controls, failure recovery, and a complete
+  terminal certification matrix
+- recorded the concise `/goal` activation prompt and supplementary isolated
+  scheduled-checkpoint prompt in
+  `docs/plans/v2/flagship-autonomous-production-and-creative-system-maturation.md`
+- left the program pending Gate 0 activation authority, a committed clean
+  baseline, and explicit activation rather than silently starting
+  implementation

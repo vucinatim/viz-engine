@@ -271,10 +271,28 @@ Preview and final render should not drift into separate semantic models.
 
 ## Documentation Rules
 
-When the V2 architecture changes materially, update:
+Use this authority hierarchy:
+
+1. [the compounding vision](./visions/viz-engine-compounding-vision.md) for the
+   durable product north star
+2. [current state](./current-state.md) for implementation truth and active scope
+3. the active goal for bounded execution
+4. domain specs for governing technical contracts
+5. parity evidence and the ledger for completed proof and history
+
+When product direction changes materially, update:
+
+- [visions/viz-engine-compounding-vision.md](./visions/viz-engine-compounding-vision.md)
+- [autonomous-development-compass.md](./autonomous-development-compass.md)
+- affected working agreements and specs
+
+When implementation changes materially, update:
 
 - [current-state.md](./current-state.md)
-- [visions/viz-engine-v2-vision.md](./visions/viz-engine-v2-vision.md)
+- the governing specification
 - [suggestions.md](./suggestions.md)
+
+Completed plans and evidence may explain rationale but must not be treated as
+active direction unless `current-state.md` explicitly names them active.
 
 Use docs as the source of truth, not chat memory.

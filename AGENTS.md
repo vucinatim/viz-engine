@@ -6,7 +6,9 @@ Start here:
 
 - [README.md](./README.md)
 - [docs/docs-index.md](./docs/docs-index.md)
+- [docs/visions/viz-engine-compounding-vision.md](./docs/visions/viz-engine-compounding-vision.md)
 - [docs/current-state.md](./docs/current-state.md)
+- [docs/autonomous-development-compass.md](./docs/autonomous-development-compass.md)
 - [docs/working-agreements.md](./docs/working-agreements.md)
 - [docs/visions/viz-engine-v2-vision.md](./docs/visions/viz-engine-v2-vision.md)
 - [docs/visions/v2-product-architecture-and-parity-alignment.md](./docs/visions/v2-product-architecture-and-parity-alignment.md)
@@ -17,7 +19,9 @@ Start here:
 
 ## Mission
 
-Build VizEngine V2 as:
+Build VizEngine V2 as the open-core, music-driven visual scene language,
+professional live editor, deterministic production runtime, and agent-native
+creative system defined by the compounding vision:
 
 - a deterministic visual runtime
 - a browser-based editor for that runtime

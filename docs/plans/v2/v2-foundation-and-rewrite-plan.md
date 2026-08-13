@@ -1,5 +1,9 @@
 # VizEngine V2 Foundation And Rewrite Plan
 
+Status: foundational program complete. This document preserves the original
+rewrite sequence and rationale; current direction lives in the compounding
+vision and current-state documents.
+
 ## Why This Plan Exists
 
 VizEngine has crossed the point where incremental cleanup is no longer enough.

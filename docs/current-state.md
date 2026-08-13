@@ -1,510 +1,208 @@
 # Current State
 
-Last reconciled: 2026-08-04
+Last reconciled: 2026-08-13.
 
 ## Product Direction
 
-VizEngine V2 is a full replacement architecture beneath the preserved editor
-experience.
+The canonical product direction is the
+[VizEngine Compounding Vision](./visions/viz-engine-compounding-vision.md).
 
-The destination is:
+VizEngine V2 is a full replacement architecture beneath the preserved
+professional editor experience:
 
-- one deterministic visual runtime
-- one browser editor for that runtime
-- one AI-native project and action model
-- reusable render, audio, bake, asset, and control packages
-- clean host integration without editor-owned runtime semantics
+- one portable `VizProjectDocument`
+- one canonical live `VizSession`
+- one deterministic runtime meaning
+- one shared human, agent, CLI, and host control surface
+- explicit render, bake, asset, artifact, and execution identity
+- local-first open-core use with future Viz Cloud and Magnify integration
 
-The original editor remains the UX and capability parity reference. Its hidden
-store, render-loop, and compatibility architecture is not a preservation
-target.
+V1 remains the UX, capability, and performance reference. V1's hidden store,
+render-loop, browser-attachment, and compatibility architecture is not a
+preservation target.
+
+## Planning State
+
+Goals One through Four are complete and certified.
+
+There is currently no active implementation goal.
+
+[Goal Five: Flagship Autonomous Production And Creative-System Maturation](./plans/v2/flagship-autonomous-production-and-creative-system-maturation.md)
+is planned and ready for Gate 0 activation authority. It is not active
+execution scope until its assumptions, input-audit authority, provisional
+performance envelope, human gates, and baseline are approved and committed.
+
+Goal Five uses one 45–60 second, multi-act, multi-layer, multi-component, and
+multi-graph flagship as a forcing function for reusable creative-system
+maturation. It is intentionally large enough for many days of bounded
+checkpoints while retaining one verifiable completion condition.
 
 ## Canonical Architecture
 
-`VizProjectDocument` is the portable scene truth.
+`VizProjectDocument` is durable portable scene truth.
 
-`VizSession` is the only live project/session/history truth. It owns:
+`VizSession` is the mutable live authority over the working document and owns:
 
 - working project and revision
-- typed project and graph actions
-- undo/redo and continuous gestures
-- preview transport
-- audio-session state
+- typed project and graph transactions
+- history and continuous gestures
+- preview transport and audio-session state
 - resolved assets and artifacts
-- runtime inspection
+- runtime inputs, checkpoints, and inspection
 
-The React editor owns presentation state and browser attachments. It subscribes
-to the session; it does not redefine scene or runtime meaning.
+The React editor owns presentation and browser attachments. It subscribes to
+the session and does not define scene or runtime meaning.
 
 Frame evaluation is deterministic and shared by live preview, inspection,
-Remotion, still jobs, and video jobs. Remotion remains an adapter.
+still jobs, video jobs, and render adapters. Remotion remains an adapter.
 
-## Implemented V2 Substrate
+## Implemented Product And Runtime
 
-- package contracts for projects, components, nodes, assets, artifacts, jobs,
-  execution manifests, and control
-- strict component, capability-pack, node, and Three-program registries
-- direct canonical graph authoring and runtime graph evaluation
-- typed action transactions with revision conflicts and dry runs
+- strict project, component, node, asset, artifact, job, execution, and control
+  contracts
+- capability-pack, component, node, and retained Three-program registries
+- direct canonical graph authoring and deterministic temporal evaluation
+- revision-safe transactions, dry runs, history, and continuous gestures
 - browser and Node audio decode/bake paths
-- deterministic audio-feature artifacts and runtime sampling
-- versioned binary audio-artifact containers with legacy JSON reads
-- portable local/external asset references and browser byte ownership
-- SVG rendering and a retained, isolated-layer Three compositor
-- explicit Three object, texture, model, program, render-target, and preview
+- versioned compact audio-feature artifacts and runtime sampling
+- portable local and external asset references
+- SVG and retained Three.js rendering with explicit compositor ownership
+- explicit renderer object, texture, target, model, program, and preview
   lifecycles
-- generic model assets, deterministic clip sampling, real Stage characters,
-  and scalable crowds
+- generic model assets, deterministic animation sampling, real Stage
+  performers, and scalable animated crowds
 - observable bake and render jobs with progress, cancellation, output identity,
   media probing, and feedback
-- local project bundles with exact content and execution identity
-- preserved Vite/React studio wired to canonical session truth
-- live HTTP/SSE control mounted over the same session as the editor
+- local portable bundles with content and execution identity
+- preserved Vite/React Studio with playback, graphs, history, persistence,
+  import/export, diagnostics, profiler, Jobs, and Rhythm Lab
+- live HTTP/SSE control over the same session as the editor
 - source-mode and built-package CLI paths
+
+## Realtime Interaction And Performance
+
+React is not the pointer-rate project bus or frame-rate signal bus.
+
+Continuous controls publish revision-bound transient values directly to the
+runtime and visible control, then commit one canonical history transaction at
+gesture end. Graph animation, runtime debug values, audio meters, waveform
+presentation, and preview work use focused imperative or external-store paths.
+
+The exact Light Tunnel workload is the current strongest runtime performance
+proof on the fixed Apple M1 Pro / Chromium environment:
+
+- planning reduced from 79.173 ms mean / 140.807 ms p95 to 1.775 / 2.609 ms
+- quality-2 playback measured 60.20 FPS graph-closed and 60.33 FPS graph-open
+- display p95 measured 9.20 / 9.00 ms
+- graph-open continuous edits measured 0.40 ms pointer-to-transient and
+  21.60 ms pointer-to-visible at p95
+- movement created zero project revisions and release created exactly one
+- six-cycle endurance ended with 5.86 MB forced-GC heap growth and stable
+  display p95
+
+See
+[Temporal Runtime And Light Tunnel Performance](./parity/evidence/2026-08-04-temporal-runtime-and-light-tunnel-performance.md).
 
 ## Certified Productions
 
-[Signal Cathedral](./plans/v2/first-agent-authored-production-signal-cathedral.md)
-proves the complete loop:
+### Signal Cathedral
 
-- project-local component capability and Three program
-- canonical editable graph
+[Signal Cathedral](./plans/v2/first-agent-authored-production-signal-cathedral.md)
+proved the first complete agent-authored production loop:
+
+- project-local trusted capability and retained Three program
+- one editable 18-node graph with five outputs
 - portable audio and baked analysis
 - live editor control and history
-- deterministic preview and render
-- stills, contact sheet, H.264/AAC clip, media probes, and performance evidence
+- deterministic preview, stills, contact sheet, and H.264/AAC clip
 - portable reopen with pinned execution identity
 
-See
-[Signal Cathedral Production Certification](./parity/evidence/2026-07-30-signal-cathedral-production-certification.md).
+See its
+[production certification](./parity/evidence/2026-07-30-signal-cathedral-production-certification.md).
+
+### Afterlight Assembly
 
 [Afterlight Assembly](./parity/evidence/2026-08-04-afterlight-assembly-motion-and-rig-polish.md)
-proves the second-production and calibrated agent loop:
-
-- browser-resolved portable bundle open in the already-running editor
-- focused component/node and runtime/frame/render/debug inspection
-- visible canonical agent transaction activity
-- browser render-job output retrieval through the live control contract
-- one editable 26-node, eight-output Stage graph with smoothed amplitude lanes
-- four bundled FBX performers, a 420-character crowd, and cinematic camera
-- validated still, contact sheet, and 12-second H.264/AAC final video
-
-## Certified Consolidation Baseline
-
-Goal One of the
-[Core Consolidation And Behavior-Preserving Minimization Program](./plans/v2/core-consolidation-and-minimization-program.md)
-is complete.
-
-- baseline and source/dependency tooling
-- real formatting, ESLint, type, and streamlined gate configuration
-- seven checked real-browser editor journeys
-- neutral `@viz-engine/project-bundle` dependency direction
-- app-local session decomposition into focused composition modules
-- direct canonical graph authoring, presets, and clipboard
-- portable asset attachment, persistence, and restoration
-- retained Three renderer decomposition and resource hardening
-- registry-composed execution identity
-- compact versioned audio-artifact storage
-- thin CLI entrypoint, command registry, shared argument parsing, and
-  source-mode execution
-
-The certification passes 42 parity capabilities, 222 deterministic tests,
-seven browser journeys, 17 package builds, the studio build, packed-consumer
-smoke, and the built creative loop. Production source is 146 physical lines
-smaller than the reviewed Goal One baseline while tests and mechanical
-guardrails are stronger.
-
-See
-[Core Consolidation And Quality Hardening Certification](./parity/evidence/2026-07-30-core-consolidation-and-quality-hardening.md).
-
-## Completed Minimization
-
-Goal Two is complete:
-[Behavior-Preserving Minimization And Final Polish](./plans/v2/behavior-preserving-minimization-and-final-polish.md).
-
-Its immutable baseline is commit `6f4529b`, which is committed and pushed to
-`origin/codex/viz-engine-v2`.
-
-Production now contains 349 files and 67,645 physical lines: 22 fewer files
-and 7,879 fewer lines than the immutable baseline. Combined maintained code is
-7,632 lines smaller while deterministic tests increased from 222 to 232.
-
-The result stopped at the honest simplification frontier rather than
-compressing domain algorithms or weakening types, diagnostics, visual
-behavior, tests, or performance to force the 10,000-line serious target.
-
-Every certified editor interaction, graph capability, deterministic output,
-portable asset workflow, Signal Cathedral result, model/character path,
-renderer lifecycle, diagnostic, test, type, parity row, and performance budget
-remains protected. See the
-[Goal Two certification](./parity/evidence/2026-07-31-behavior-preserving-minimization-and-final-polish.md).
-
-## Completed Goal Three
-
-[Product Parity, Performance, And Agentic Creative Calibration](./plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
-is complete as Goal Three.
-
-Its immutable execution baseline is
-`cfe627949227eaf5a1ebd2c94e2a7b77529bbc6b`, committed and pushed to
-`origin/codex/viz-engine-v2`.
-
-The goal turns the current architecture and production confidence into complete
-product confidence by:
-
-- auditing all 42 parity capabilities against the pinned V1 product
-- fixing every real visual, interaction, functional, and performance gap
-- establishing fixed-device editor and runtime performance evidence
-- improving agent perception, inspection, feedback, checkpoint, and live
-  capability-development workflows
-- producing a distinct second original music-reactive production through only
-  reusable public contracts
-- delivering both a polished final video and a portable, fully editable
-  project
-
-The first direct manual calibration has already confirmed 11 affected parity
-rows as real gaps, including static playback, broken transparency, laggy
-continuous controls and node editing, missing graph/debug live values, Curve
-Spectrum visual failure, catalog-preview crashes, modal-motion and typography
-drift, and console warning floods. See
-[Pre-Goal Three Manual Product Calibration Findings](./parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md).
-
-Two implementation checkpoints have repaired the underlying playback and
-interaction architecture:
-
-- preview playback, audio time, transparency, composed program registries, and
-  preview failure containment now follow the canonical session/runtime path
-- one revision-guarded transient authoring overlay gives layer values,
-  properties, graph inputs, colors, vectors, and ranges immediate runtime
-  feedback while committing one canonical history transaction at gesture end
-- React is no longer the pointer-rate project bus; controls keep only narrow
-  local presentation state and preview work is explicitly invalidated
-- graph animation, resolved debug values, Curve Spectrum geometry, parameter
-  typography, centered dialog motion, and debug-canvas attachment are repaired
-- the complete deterministic gate passes 55 files and 242 tests, all seven
-  browser journeys pass, and package, studio, and consumer builds pass
-
-See the
-[runtime and live-edit repair](./parity/evidence/2026-07-31-goal-three-runtime-and-live-edit-repair.md)
-and
-[interaction and visible-parity repair](./parity/evidence/2026-07-31-goal-three-interaction-and-visible-parity-repair.md)
-evidence.
-
-The first repeatable fixed-device V2 performance baseline is also complete:
-
-- the headed 1600 × 1000 harness records display/runtime pacing and full
-  pointer-to-visible and release-to-settle distributions
-- session and host change notifications no longer construct unused full
-  snapshots
-- the editor reads one immutable canonical project view and preserves
-  unchanged layer projections
-- React Flow owns pointer-rate node movement and commits one canonical
-  position at drag end
-- temporal checkpoint carryover and runtime-semantic cache reuse removed the
-  measured 46–52 ms post-commit plan rebuild
-- on the measured Apple M1 Pro, slider movement reached the transient overlay
-  in 0.31 ms mean, runtime in 2.00 ms, and a visible frame in 8.87 ms
-- playback produced zero display or runtime frames over 25 ms in the
-  five-second sample
-
-See
-[Fixed-Device Interaction Performance](./parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md).
-
-The transport, discovery, and bundled-sample checkpoint is now also complete:
-
-- the editor-session transport is the only live frame/seek/loop owner
-- file audio acts as the browser clock while no-audio and captured-input modes
-  advance the same canonical transport from elapsed time
-- Remotion Player and its browser attachment backchannel were removed from the
-  live editor
-- the waveform no longer rewrites playback time or owns a competing loop
-- preview scrubbing is immediate, pointer-captured, accessible, and outside
-  project history
-- human-readable component search and all bundled sample loads pass headed
-  browser proof
-
-See
-[Transport, Discovery, And Sample Repair](./parity/evidence/2026-07-31-goal-three-transport-discovery-and-sample-repair.md).
-
-The two remaining explicit parity gaps are now also closed:
-
-- controlled V1/V2 shell captures verify the recognizable layout, density,
-  typography, controls, expanded settings, and waveform language
-- creator-facing component descriptions replace architecture jargon in the
-  primary catalog and layer cards
-- the layer debug overlay visibly follows graph-resolved runtime values without
-  changing project revision, scene pixels, or exported project state
-
-See
-[Shell And Layer Diagnostics Parity](./parity/evidence/2026-07-31-goal-three-shell-and-layer-diagnostics-parity.md).
-
-The profiler and performance-stat checkpoint is now also complete:
-
-- visible diagnostics distinguish browser display cadence from canonical
-  runtime cadence and runtime work boundaries
-- browser Long Task API share replaces the false V1 `Frame Budget`/CPU label
-- layer work is explicitly CPU-submit time, while unsupported per-graph and
-  GPU execution timing is never fabricated as zero
-- high-frequency observations are accumulated locally and published as compact
-  telemetry twice per second
-- closing Performance disables collection, reset preserves static capability
-  facts, and foreground clocks ignore background-tab gaps
-- the recorder, report, CSV, and chart vocabulary matches the live cards
-- measured runtime cadence remained within 3.05% of the profiler-disabled
-  sample on the fixed Apple M1 Pro workload
-- the complete gate passes 56 deterministic-test files / 258 tests, all 12
-  active headed browser journeys, all package and studio builds, and both
-  built-consumer smoke paths
-
-See
-[Profiler And Performance Statistics](./parity/evidence/2026-07-31-goal-three-profiler-and-performance-statistics.md).
-
-The authoring-workspace checkpoint is now also complete:
-
-- versioned local panel layouts resize continuously, enforce their minimums,
-  preserve the preview, and restore after reload; GPU/canvas backing work
-  coalesces once at release rather than reallocating on every divider pixel
-- one focus-safe shortcut dispatcher owns playback, history, Save As,
-  fullscreen, and graph clipboard commands without stealing text input
-- layer add, duplicate, reorder, remove, preset, and reset commands use the
-  canonical project/history path
-- reset restores component defaults and declared default graphs without stale
-  bindings; partial presets complete from component defaults
-- nested list controls use the same transient/commit live-value protocol as
-  top-level continuous controls
-- history feedback truthfully describes one chronological project history
-  while reporting whether layer or graph editing is focused
-- a headed 11.7-second authoring journey and manual 1600 × 1000 calibration
-  pass with clean diagnostics
-
-See
-[Authoring Workspace](./parity/evidence/2026-07-31-goal-three-authoring-workspace.md).
-
-The node-editor and live-graph checkpoint is now also complete:
-
-- one overlay-scoped display scheduler replaces independent perpetual graph
-  animation loops and stops live presentation work while the graph is hidden
-- React Flow owns pointer-rate spatial state while node release creates one
-  canonical position commit; pan, zoom, and selection stay outside history
-- search, create, move, connect, replace, cycle feedback, clipboard, grouped
-  deletion, presets, undo/redo, reload, and live values pass a real headed
-  pointer journey with clean diagnostics
-- fixed-device Signal Cathedral results measured 9.70 ms median / 11.60 ms
-  p95 node movement, 1.10 ms / 2.00 ms pan, and 10.90 ms / 12.30 ms zoom
-- twenty pan and zoom samples created zero project revisions, while node and
-  slider releases each produced one revision
-- the complete gate passes 59 deterministic-test files / 268 tests, all 13
-  active headed Chromium journeys, every package and studio build, and both
-  consumer smokes
-
-See
-[Node Editor And Live Graph](./parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md).
-
-The audio and transport-reactivity checkpoint is now also complete:
-
-- the session host remains the sole transport owner while narrow imperative
-  clocks drive frame-rate DOM, canvas, and runtime presentation
-- playing frames no longer invalidate the React session store; a measured
-  42-frame sample produced zero React-session updates
-- local and bundled audio selection is transactional, visibly reports failure,
-  preserves the prior valid source, and owns object-URL cleanup
-- volume updates the Web Audio gain directly during pointer movement and
-  commits one durable presentation value on release
-- capture denial and successful start/stop preserve editor function, stop all
-  tracks, and restore the original media-element source
-- waveform and overview seeking now have accessible pointer and keyboard
-  behavior; full-track zoom/scroll certification remains open
-- measured 20 pointer-rate volume changes at 8.40 ms median and 15.10 ms p95,
-  with zero project revisions and clean browser diagnostics
-
-See
-[Audio And Transport Reactivity](./parity/evidence/2026-07-31-goal-three-audio-and-transport-reactivity.md).
-
-The waveform-navigation and Rhythm Lab checkpoint is now also complete:
-
-- pointer, wheel, and keyboard window navigation update waveform and Rhythm
-  Lab presentation live without pointer-rate editor-store writes
-- pointer release, a settled wheel burst, and a discrete keyboard command each
-  create one durable editor-UI update and zero project revisions
-- Rhythm Lab preserves its five-stage V1 workspace while frame-rate Onset and
-  Grid presentation bypass React state
-- worker results publish atomically with exact source-buffer identity; stale
-  cross-track results clear before paint and replacement analysis completes
-- deterministic rhythm-core replay and a headed source/workspace journey pass
-- 24 pointer samples measured 8.10 ms median and 9.20 ms p95 visible update
-  intervals with clean diagnostics
-
-See
-[Waveform And Rhythm Lab](./parity/evidence/2026-07-31-goal-three-waveform-and-rhythm-lab.md).
-
-The canonical project-lifecycle and still-output checkpoint is now also
-complete:
-
-- file envelope, version, document, UI metadata, and embedded assets validate
-  before canonical session import or UI projection
-- malformed, unsupported, and wrong-type imports explain failure without
-  console noise or active-project damage
-- save/reset/reopen preserves authored layer compositing semantics, graphs,
-  UI, and local asset bytes
-- controlled PNG export preserves exact size, color, alpha, frame, and
-  project/transport state
-- all 17 supported compositor blend modes and nested alpha remain pixel-tested
-
-See
-[Project Lifecycle And Still Output](./parity/evidence/2026-07-31-goal-three-project-lifecycle-and-still-output.md).
-
-The preview-semantics and focused-layer-mirror checkpoint is now also
-complete:
-
-- layer previews remain read-only presentations of one retained runtime, one
-  WebGL context, and one visible runtime canvas
-- mirror backing buffers now match displayed dimensions and editor quality,
-  eliminating the browser-default aspect distortion
-- layer opacity is applied exactly once by the compositor presentation path
-- visible keyboard controls hide and restore layers through the canonical
-  project path while mirror registration and render-plan membership clean up
-- deterministic tests define paused-live freeze opt-in and prove export always
-  consumes canonical frame audio
-- 20 fixed-device slider gestures measured 0.25 ms mean transient publication,
-  2.08 ms runtime publication, and 7.73 ms visible response
-- the current playback tail remains explicitly open rather than being hidden
-  behind the favorable interaction numbers
-
-See
-[Preview Semantics And Layer Mirrors](./parity/evidence/2026-07-31-goal-three-preview-semantics-and-layer-mirrors.md).
-
-The authoring-schema and live-control checkpoint is now also complete:
-
-- all eight portable value kinds plus actions render through one generic
-  schema-driven editor, including conditional, grouped, list, vector, and file
-  cases
-- text, numeric typing, sliders, vectors, colors, and nested continuous values
-  share the session-host live-overlay and one-commit gesture contract
-- missing editor values resolve from schema defaults and malformed authoring
-  defaults, bounds, steps, options, extensions, vectors, and list items fail at
-  the component registry boundary
-- headed Chromium proves text and vector preview changes before commit, zero
-  pointer-rate project revisions, exactly one release revision, complete field
-  visibility, and clean diagnostics
-- 20 fixed-device slider gestures measured 0.26 ms mean transient publication,
-  1.42 ms runtime publication, and 7.93 ms visible response
-
-See
-[Authoring Schema And Live Controls](./parity/evidence/2026-07-31-goal-three-authoring-schema-and-live-controls.md).
-
-The graph-validation and deterministic-evaluation checkpoint is now also
-complete:
-
-- malformed graph containers, bindings, value sources, references, outputs,
-  and cycles fail at the portable document boundary
-- visible malformed-file import explains the exact problem while preserving
-  the complete active project
-- equivalent sessions produce deeply equal frame-72 outputs regardless of
-  evaluation history, while temporal replay follows fixed frame time
-- transient graph values remain isolated from canonical temporal checkpoints
-- headed Chromium proves continuously changing graph values and visible output
-  without using React as the runtime signal clock
-- the 18-node Signal Cathedral graph recorded 15.40 ms median / 23.30 ms p95
-  canonical runtime cadence on the fixed device
-
-See
-[Graph Validation And Deterministic Evaluation](./parity/evidence/2026-07-31-goal-three-graph-validation-and-deterministic-evaluation.md).
-
-The endurance and performance checkpoint is now also complete:
-
-- one warm-up plus six measured cycles exercise audio switching, layer edits,
-  Rhythm Lab, profiler, Stage models, Signal Cathedral graphs, playback, and
-  project reopen
-- renderer geometries, textures, programs, targets, model caches/leases,
-  audio topology, singleton subscribers, and DOM attachments return to the
-  exact warmed steady state after every cycle
-- forced-GC heap growth measured 11.34 MB against a 32 MB budget
-- end-of-run playback measured 13.90 ms median / 21.50 ms p95 with nonblank,
-  changing pixels and clean diagnostics
-- fixed-device parameter, node, graph, waveform, volume, and workspace-resize
-  evidence covers every primary continuous interaction family
-
-See
-[Endurance And Performance Certification](./parity/evidence/2026-07-31-goal-three-endurance-and-performance-certification.md).
-
-The parity matrix contains 42 verified capabilities, with zero partial, gap,
-or unaudited rows. Goal Four temporarily reopened two performance-sensitive
-rows after representative Light Tunnel measurements contradicted their earlier
-certification, then recertified them against the exact fixed-device workload.
-Goal Three's calibrated live agent loop can inspect, mutate, open, render,
-diagnose, and retrieve output through canonical contracts, and Afterlight
-Assembly supplies the distinct second original production, editable public
-bundle, and final media proof.
-
-The final complete gate passes clean architecture and static checks, 65
-deterministic test files / 299 tests, 16 active headed Chromium journeys with 3
-intentional opt-in skips, all 18 package builds, the Studio production build,
-and both built-consumer smoke scenarios.
-
-See
-[Goal Three Agent Loop And Afterlight Assembly Certification](./parity/evidence/2026-08-03-goal-three-agent-loop-and-afterlight-assembly-certification.md).
-
-The later grounding, temporal-semantics, graph-layout, and final-media repair is
-certified in
-[Afterlight Assembly Motion And Rig Polish](./parity/evidence/2026-08-04-afterlight-assembly-motion-and-rig-polish.md).
-
-## Completed Goal Four
-
-[Temporal Runtime And Playback Performance Certification](./plans/v2/temporal-runtime-and-playback-performance-certification.md)
-is complete.
-
-Manual calibration of the preserved Light Tunnel example exposed a material
-performance regression that earlier representative benchmarks did not cover.
-The exact project spent 79.17 ms mean and 140.81 ms p95 constructing the runtime
-plan alone before browser rendering.
-
-The recursive `sampleSettings` model is deleted. `VizRuntimeSession` now owns
-explicit graph/component temporal checkpoints, bounded runtime-input history,
-and explicit unavailable-live-history origins. Light Tunnel, Neural Network,
-Instanced Supercube, Morph Shapes, Heartbeat Monitor, and Signal Cathedral all
-use the same deterministic temporal step contract.
-
-The editor uses one transport/render loop. Live overrides force an edit-only
-presentation without advancing authored time, create no pointer-rate project
-revisions, and commit once on release. Layer-mirror readback is paced and
-deferred during continuous gestures instead of blocking the primary scene.
-
-Final exact-project planning measures 1.78 ms mean / 2.61 ms p95. Headed
-quality-2 playback measures 60.20 FPS with the graph closed and 60.33 FPS with
-it open, 9.20 / 9.00 ms display p95, 1.50 / 2.00 ms total runtime CPU p95, no
-long tasks, no display intervals above 33 ms, no temporal issue frames, and
-clean diagnostics. Graph-open continuous edits measure 0.40 ms pointer to
-transient state and 21.60 ms pointer to visible frame at p95.
-
-The six-cycle endurance workload includes Light Tunnel and finishes with 5.86
-MB forced-GC heap growth and unchanged 9.7 / 9.8 ms before/after display p95.
-`preview.live-rendering` and `performance.playback-smoothness` are verified
-again.
-
-See
-[Temporal Runtime And Light Tunnel Performance Certification](./parity/evidence/2026-08-04-temporal-runtime-and-light-tunnel-performance.md).
-
-## Known Deliberate Deferrals
-
-- a native browser-free video executor, until a real deployment requires it
-- generalized masks/effect graphs
-- prepared GLB derivatives and generic `Model3D` product authoring
-- speech/singing/facial performance semantics
-- hosted Viz Cloud and auth orchestration
-
-These are future product work, not excuses to add parallel architecture during
-consolidation.
+proved a distinct model-backed Stage path:
+
+- four bundled FBX performers and a 420-character animated crowd
+- cinematic camera and model-backed visual quality
+- one editable 26-node graph with eight smoothed outputs
+- canonical live inspection, mutation, rendering, and output retrieval
+- grounded rig transforms and deterministic amplitude/rate/phase semantics
+- a validated 12-second 1280 × 720 H.264/AAC final video
+
+Both productions are real proofs, but both are 12 seconds, one visual layer,
+and one graph. They do not yet prove a full-spectrum, multi-act, multi-layer,
+multi-graph flagship production.
+
+## Completed Programs
+
+- [Core Consolidation And Quality Hardening](./parity/evidence/2026-07-30-core-consolidation-and-quality-hardening.md)
+  consolidated package direction, session ownership, graph authoring, assets,
+  renderer lifecycle, execution identity, CLI structure, and checked browser
+  acceptance.
+- [Behavior-Preserving Minimization](./parity/evidence/2026-07-31-behavior-preserving-minimization-and-final-polish.md)
+  removed 7,879 production lines and 22 files from its immutable baseline while
+  increasing the proof surface and stopping at the honest simplification
+  frontier.
+- [Product Parity, Performance, And Agentic Creative Calibration](./plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
+  repaired real manual-calibration gaps, certified the complete matrix, built
+  the live agent loop, and produced Afterlight Assembly.
+- [Temporal Runtime And Playback Performance](./plans/v2/temporal-runtime-and-playback-performance-certification.md)
+  replaced recursive historical replanning with explicit temporal state and
+  certified the exact Light Tunnel workload.
+
+Detailed chronology belongs in [the work ledger](./work-ledger.md) and
+[parity evidence](./parity/evidence/), not in this current-state document.
+
+## Certified Product Floor
+
+The immutable V1 reference is
+`e806fbc10980615588b52ff574bc923c6f00f35e`.
+
+The parity matrix currently contains 42 verified capabilities with zero gap,
+partial, or unaudited rows.
+
+The latest complete gate reported:
+
+- clean architecture, formatting, lint, and types
+- 65 deterministic test files / 299 tests
+- 16 active headed Chromium journeys with 3 intentional opt-in skips
+- all 18 package builds and the Studio production build
+- both built-consumer smoke scenarios
+
+This certifies the declared matrix and fixed-device Chromium evidence. It does
+not imply equivalent Firefox, WebKit, accessibility, heterogeneous-device,
+dependency-security, or deployed-scale certification.
+
+## Known Boundaries And Deliberate Deferrals
+
+- no single full-spectrum flagship production yet
+- no equivalent cross-browser or broad device performance matrix
+- browser-backed video execution rather than a native browser-free executor
+- directory-backed bundles rather than a mature archive and large-media policy
+- trusted capability packs rather than arbitrary untrusted plugin loading
+- no generic `Model3D` product authoring or prepared derivative pipeline yet
+- no generalized masks, compositor passes, or effect graphs yet
+- no root-motion, retargeting, facial, speech, or singing product semantics yet
+- no GPU or per-graph execution timing; unavailable metrics are not fabricated
+- layer mirrors retain paced synchronous capture until an exact safe GPU-native
+  replacement is proven
+- no hosted Viz Cloud, collaboration, auth, billing, or Magnify production
+  integration yet
+
+These are future product opportunities, not permission to create parallel
+architecture during unrelated work.
 
 ## Recovery Pointers
 
-- [Docs index](./docs-index.md)
-- [Working agreements](./working-agreements.md)
-- [V2 vision](./visions/viz-engine-v2-vision.md)
-- [Product architecture and parity alignment](./visions/v2-product-architecture-and-parity-alignment.md)
-- [Completed consolidation plan](./plans/v2/core-consolidation-and-minimization-program.md)
-- [Completed minimization plan](./plans/v2/behavior-preserving-minimization-and-final-polish.md)
-- [Completed Goal Three](./plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
-- [Completed Goal Four](./plans/v2/temporal-runtime-and-playback-performance-certification.md)
-- [Autonomous development contract](./plans/v2/autonomous-development-operating-contract.md)
-- [Parity matrix](./parity/README.md)
-- [Suggestions](./suggestions.md)
-- [Work ledger](./work-ledger.md)
+1. [Compounding Vision](./visions/viz-engine-compounding-vision.md)
+2. [Autonomous Development Compass](./autonomous-development-compass.md)
+3. [Working Agreements](./working-agreements.md)
+4. [Documentation Map](./docs-index.md)
+5. [Parity Program](./parity/README.md)
+6. [Suggestions](./suggestions.md)
+7. [Work Ledger](./work-ledger.md)
+
+The active goal, when one exists, must be named in this document.

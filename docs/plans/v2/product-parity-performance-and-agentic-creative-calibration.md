@@ -1,6 +1,7 @@
 # Product Parity, Performance, And Agentic Creative Calibration
 
-Status: active.
+Status: complete and certified. This is the historical Goal Three execution
+contract, not active scope.
 
 Planning reference:
 `039e73707a27527b5abdb111028c8c210dbce5da` on

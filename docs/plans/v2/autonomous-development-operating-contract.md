@@ -8,6 +8,8 @@ experience.
 
 It complements:
 
+- [the compounding vision](../../visions/viz-engine-compounding-vision.md)
+- [the autonomous development compass](../../autonomous-development-compass.md)
 - [the V2 vision](../../visions/viz-engine-v2-vision.md)
 - [the product, architecture, and parity alignment](../../visions/v2-product-architecture-and-parity-alignment.md)
 - [the V2 foundation plan](./v2-foundation-and-rewrite-plan.md)
@@ -29,16 +31,15 @@ At the start of a goal, after compaction, or when resuming in a new task, read
 the following in order:
 
 1. `AGENTS.md`
-2. `README.md`
-3. `docs/docs-index.md`
-4. `docs/current-state.md`
-5. `docs/working-agreements.md`
-6. `docs/visions/viz-engine-v2-vision.md`
-7. `docs/visions/v2-product-architecture-and-parity-alignment.md`
-8. the active V2 plan or spec named by `docs/current-state.md`
-9. `docs/parity/v1-v2-parity-matrix.json`
-10. `docs/suggestions.md` and the latest `docs/work-ledger.md` entry
-11. the actual Git status, diff, tests, and running product
+2. `docs/visions/viz-engine-compounding-vision.md`
+3. `docs/current-state.md`
+4. the active goal named by `docs/current-state.md`, if one exists
+5. `docs/autonomous-development-compass.md`
+6. `docs/working-agreements.md`
+7. the technical specs directly governing the active slice
+8. `docs/parity/README.md` and affected parity rows
+9. `docs/suggestions.md` and the latest relevant ledger/evidence entries
+10. the actual Git status, diff, tests, and running product
 
 Chat memory may help explain intent, but it does not override current repository
 evidence.

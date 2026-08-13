@@ -1,211 +1,162 @@
-# Docs Index
+# VizEngine Documentation Map
 
-This is the entrypoint for VizEngine documentation during the V2 rewrite.
+This is the canonical entrypoint for VizEngine documentation.
 
-## Start Here
+The repository contains extensive design history. Use the authority hierarchy
+below so completed plans and historical evidence inform work without becoming
+accidental current direction.
 
-- [README.md](./README.md)
-- [current-state.md](./current-state.md)
-- [working-agreements.md](./working-agreements.md)
-- [visions/viz-engine-v2-vision.md](./visions/viz-engine-v2-vision.md)
-- [visions/v2-product-architecture-and-parity-alignment.md](./visions/v2-product-architecture-and-parity-alignment.md)
-- [plans/v2/v2-foundation-and-rewrite-plan.md](./plans/v2/v2-foundation-and-rewrite-plan.md)
-- [plans/v2/autonomous-development-operating-contract.md](./plans/v2/autonomous-development-operating-contract.md)
-- [plans/v2/core-consolidation-and-minimization-program.md](./plans/v2/core-consolidation-and-minimization-program.md)
-- [plans/v2/behavior-preserving-minimization-and-final-polish.md](./plans/v2/behavior-preserving-minimization-and-final-polish.md)
-- [plans/v2/product-parity-performance-and-agentic-creative-calibration.md](./plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
-- [plans/v2/temporal-runtime-and-playback-performance-certification.md](./plans/v2/temporal-runtime-and-playback-performance-certification.md)
-- [parity/README.md](./parity/README.md)
-- [parity/evidence/2026-07-30-signal-cathedral-production-certification.md](./parity/evidence/2026-07-30-signal-cathedral-production-certification.md)
-- [parity/evidence/2026-07-30-core-consolidation-and-quality-hardening.md](./parity/evidence/2026-07-30-core-consolidation-and-quality-hardening.md)
-- [parity/evidence/2026-07-31-behavior-preserving-minimization-and-final-polish.md](./parity/evidence/2026-07-31-behavior-preserving-minimization-and-final-polish.md)
-- [parity/evidence/2026-08-03-goal-three-agent-loop-and-afterlight-assembly-certification.md](./parity/evidence/2026-08-03-goal-three-agent-loop-and-afterlight-assembly-certification.md)
-- [parity/evidence/2026-08-04-afterlight-assembly-motion-and-rig-polish.md](./parity/evidence/2026-08-04-afterlight-assembly-motion-and-rig-polish.md)
-- [parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md](./parity/evidence/2026-07-31-pre-goal-three-manual-calibration-findings.md)
-- [parity/evidence/2026-07-31-goal-three-runtime-and-live-edit-repair.md](./parity/evidence/2026-07-31-goal-three-runtime-and-live-edit-repair.md)
-- [parity/evidence/2026-07-31-goal-three-interaction-and-visible-parity-repair.md](./parity/evidence/2026-07-31-goal-three-interaction-and-visible-parity-repair.md)
-- [parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md](./parity/evidence/2026-07-31-goal-three-fixed-device-interaction-performance.md)
-- [profiler-measurement-contract.md](./profiler-measurement-contract.md)
-- [parity/evidence/2026-07-31-goal-three-profiler-and-performance-statistics.md](./parity/evidence/2026-07-31-goal-three-profiler-and-performance-statistics.md)
-- [parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md](./parity/evidence/2026-07-31-goal-three-node-editor-and-live-graph.md)
-- [parity/evidence/artifacts/2026-07-31-goal-three-baseline.json](./parity/evidence/artifacts/2026-07-31-goal-three-baseline.json)
-- [parity/evidence/artifacts/2026-08-03-goal-three-final-certification.json](./parity/evidence/artifacts/2026-08-03-goal-three-final-certification.json)
-- [parity/evidence/artifacts/2026-08-04-afterlight-assembly-motion-and-rig-polish.json](./parity/evidence/artifacts/2026-08-04-afterlight-assembly-motion-and-rig-polish.json)
+## Authority Hierarchy
 
-## Active Direction
+### 1. North star
 
-- [visions/viz-engine-v2-vision.md](./visions/viz-engine-v2-vision.md)
-- [visions/v2-product-architecture-and-parity-alignment.md](./visions/v2-product-architecture-and-parity-alignment.md)
-- [visions/viz-cloud-and-integration-vision.md](./visions/viz-cloud-and-integration-vision.md)
-- [visions/agent-operated-live-editor-vision.md](./visions/agent-operated-live-editor-vision.md)
-- [visions/multi-renderer-and-backend-capability-vision.md](./visions/multi-renderer-and-backend-capability-vision.md)
-- [visions/rendering-performance-and-deployment-strategy.md](./visions/rendering-performance-and-deployment-strategy.md)
-- [visions/specialized-ai-runner-vision.md](./visions/specialized-ai-runner-vision.md)
-- [plans/v2/v2-foundation-and-rewrite-plan.md](./plans/v2/v2-foundation-and-rewrite-plan.md)
-- [plans/v2/v2-system-design.md](./plans/v2/v2-system-design.md)
-- [plans/v2/core-consolidation-and-minimization-program.md](./plans/v2/core-consolidation-and-minimization-program.md)
-- [plans/v2/behavior-preserving-minimization-and-final-polish.md](./plans/v2/behavior-preserving-minimization-and-final-polish.md)
-- [plans/v2/product-parity-performance-and-agentic-creative-calibration.md](./plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
-- [plans/v2/temporal-runtime-and-playback-performance-certification.md](./plans/v2/temporal-runtime-and-playback-performance-certification.md)
+- [VizEngine Compounding Vision](./visions/viz-engine-compounding-vision.md)
 
-This is the current source of truth for where VizEngine is heading:
+This defines the durable product identity, creative ambition, architecture
+invariants, compounding model, parity floor, ecosystem boundaries, assumptions,
+and autonomous decision limits.
 
-- deterministic runtime
-- one canonical in-memory `VizSession`
-- measured UI, UX, capability, and performance parity with the established
-  pre-V2 editor
-- live editor plus headless render runtime
-- AI-native project model and action surface
-- agent-operated live editor collaboration
-- clean integration path into Magnify Core
-- open-core product plus optional hosted Viz Cloud
+### 2. Current strategy and state
 
-## V2 Specs
+- [Current State](./current-state.md)
+- [Working Agreements](./working-agreements.md)
+- [Autonomous Development Compass](./autonomous-development-compass.md)
+- [Autonomous Development Operating Contract](./plans/v2/autonomous-development-operating-contract.md)
+- [Suggestions](./suggestions.md)
 
-- [specs/v2/agent-authored-production-loop-architecture.md](./specs/v2/agent-authored-production-loop-architecture.md)
-- [specs/v2/viz-project-document.md](./specs/v2/viz-project-document.md)
-- [specs/v2/viz-session.md](./specs/v2/viz-session.md)
-- [specs/v2/component-contract.md](./specs/v2/component-contract.md)
-- [specs/v2/node-contract.md](./specs/v2/node-contract.md)
-- [specs/v2/bake-artifact-contract.md](./specs/v2/bake-artifact-contract.md)
-- [specs/v2/runtime-package-split-plan.md](./specs/v2/runtime-package-split-plan.md)
-- [specs/v2/runtime-api-spec.md](./specs/v2/runtime-api-spec.md)
-- [specs/v2/ai-action-schema-spec.md](./specs/v2/ai-action-schema-spec.md)
-- [specs/v2/ai-native-command-and-control-surface.md](./specs/v2/ai-native-command-and-control-surface.md)
-- [specs/v2/future-mcp-tool-surface-inventory.md](./specs/v2/future-mcp-tool-surface-inventory.md)
-- [specs/v2/viz-cloud-workspace-data-model.md](./specs/v2/viz-cloud-workspace-data-model.md)
-- [specs/v2/viz-to-magnify-integration-api-spec.md](./specs/v2/viz-to-magnify-integration-api-spec.md)
-- [specs/v2/project-version-publication-workflow.md](./specs/v2/project-version-publication-workflow.md)
-- [specs/v2/viz-cloud-orchestration-with-inngest.md](./specs/v2/viz-cloud-orchestration-with-inngest.md)
-- [specs/v2/render-job-ownership-and-lifecycle-model.md](./specs/v2/render-job-ownership-and-lifecycle-model.md)
-- [specs/v2/bake-job-ownership-and-lifecycle-model.md](./specs/v2/bake-job-ownership-and-lifecycle-model.md)
-- [specs/v2/auth-and-identity-federation-model.md](./specs/v2/auth-and-identity-federation-model.md)
-- [specs/v2/linked-account-and-sso-flow-design.md](./specs/v2/linked-account-and-sso-flow-design.md)
-- [specs/v2/draft-autosave-and-working-head-storage-model.md](./specs/v2/draft-autosave-and-working-head-storage-model.md)
-- [specs/v2/local-persistence-and-import-export-model.md](./specs/v2/local-persistence-and-import-export-model.md)
-- [specs/v2/asset-resolver-and-storage-abstraction-spec.md](./specs/v2/asset-resolver-and-storage-abstraction-spec.md)
-- [specs/v2/asset-lifecycle-and-derivation-job-model.md](./specs/v2/asset-lifecycle-and-derivation-job-model.md)
-- [specs/v2/native-3d-model-character-and-performance-system.md](./specs/v2/native-3d-model-character-and-performance-system.md)
-- [specs/v2/audio-feature-timeline-spec.md](./specs/v2/audio-feature-timeline-spec.md)
-- [specs/v2/package-build-publication-and-versioning-strategy.md](./specs/v2/package-build-publication-and-versioning-strategy.md)
-- [specs/v2/runtime-package-consumption-and-local-tarball-integration-plan.md](./specs/v2/runtime-package-consumption-and-local-tarball-integration-plan.md)
-- [specs/v2/local-first-cli-and-developer-ergonomics-plan.md](./specs/v2/local-first-cli-and-developer-ergonomics-plan.md)
+`current-state.md` names what exists, what remains open, and the active goal.
+If it names no active goal, completed plans must not be treated as active scope.
 
-## Deep Design
+### 3. Active goal
 
-- [plans/v2/v2-system-design.md](./plans/v2/v2-system-design.md)
-- [plans/v2/first-real-implementation-slicing-plan.md](./plans/v2/first-real-implementation-slicing-plan.md)
-- [plans/v2/foundation-implementation-progress.md](./plans/v2/foundation-implementation-progress.md)
-- [plans/v2/first-visual-runtime-proof-plan.md](./plans/v2/first-visual-runtime-proof-plan.md)
-- [plans/v2/first-three-compositor-proof-plan.md](./plans/v2/first-three-compositor-proof-plan.md)
-- [plans/v2/media-backed-render-node-proof-plan.md](./plans/v2/media-backed-render-node-proof-plan.md)
-- [plans/v2/shared-asset-materialization-implementation-plan.md](./plans/v2/shared-asset-materialization-implementation-plan.md)
-- [plans/v2/three-renderer-compositor-semantics-cleanup-plan.md](./plans/v2/three-renderer-compositor-semantics-cleanup-plan.md)
-- [plans/v2/local-bundle-fixture-validation-plan.md](./plans/v2/local-bundle-fixture-validation-plan.md)
-- [plans/v2/first-graph-execution-slice-plan.md](./plans/v2/first-graph-execution-slice-plan.md)
-- [plans/v2/portable-bundle-roundtrip-implementation-plan.md](./plans/v2/portable-bundle-roundtrip-implementation-plan.md)
-- [plans/v2/explicit-three-layer-compositor-implementation-plan.md](./plans/v2/explicit-three-layer-compositor-implementation-plan.md)
-- [plans/v2/first-action-surface-implementation-plan.md](./plans/v2/first-action-surface-implementation-plan.md)
-- [plans/v2/first-temporal-graph-execution-plan.md](./plans/v2/first-temporal-graph-execution-plan.md)
-- [plans/v2/agent-operated-live-editor-roadmap.md](./plans/v2/agent-operated-live-editor-roadmap.md)
-- [plans/v2/v1-editor-ux-preservation-and-v2-rebuild-map.md](./plans/v2/v1-editor-ux-preservation-and-v2-rebuild-map.md)
-- [plans/v2/real-editor-v2-rewire-execution-plan.md](./plans/v2/real-editor-v2-rewire-execution-plan.md)
-- [plans/v2/viz-session-transition-plan.md](./plans/v2/viz-session-transition-plan.md)
-- [plans/v2/autonomous-development-operating-contract.md](./plans/v2/autonomous-development-operating-contract.md)
-- [plans/v2/current-uncommitted-worktree-audit.md](./plans/v2/current-uncommitted-worktree-audit.md)
-- [plans/v2/editor-ownership-audit-and-phase-0-map.md](./plans/v2/editor-ownership-audit-and-phase-0-map.md)
-- [plans/v2/phase-1-layer-working-project-implementation.md](./plans/v2/phase-1-layer-working-project-implementation.md)
-- [plans/v2/phase-2-preview-transport-implementation.md](./plans/v2/phase-2-preview-transport-implementation.md)
-- [plans/v2/phase-3-audio-session-truth-implementation.md](./plans/v2/phase-3-audio-session-truth-implementation.md)
-- [plans/v2/phase-4-graph-truth-implementation.md](./plans/v2/phase-4-graph-truth-implementation.md)
-- [plans/v2/phase-5-canonical-history-cleanup.md](./plans/v2/phase-5-canonical-history-cleanup.md)
-- [plans/v2/phase-6-adapter-burn-down.md](./plans/v2/phase-6-adapter-burn-down.md)
-- [plans/v2/phase-7-layer-projection-burn-down.md](./plans/v2/phase-7-layer-projection-burn-down.md)
-- [plans/v2/phase-8-canonical-project-persistence-closeout.md](./plans/v2/phase-8-canonical-project-persistence-closeout.md)
-- [plans/v2/phase-9-bootstrap-and-history-cleanup.md](./plans/v2/phase-9-bootstrap-and-history-cleanup.md)
-- [plans/v2/phase-10-editor-control-plane-and-build-hygiene.md](./plans/v2/phase-10-editor-control-plane-and-build-hygiene.md)
-- [plans/v2/phase-11-runtime-driven-editor-rendering.md](./plans/v2/phase-11-runtime-driven-editor-rendering.md)
-- [plans/v2/phase-11-runtime-preview-store-cutover.md](./plans/v2/phase-11-runtime-preview-store-cutover.md)
-- [plans/v2/phase-12-canonical-viz-project-document-cutover.md](./plans/v2/phase-12-canonical-viz-project-document-cutover.md)
-- [plans/v2/phase-13-viz-session-runtime-preview-ownership.md](./plans/v2/phase-13-viz-session-runtime-preview-ownership.md)
-- [plans/v2/runtime-backed-rendering-cutover.md](./plans/v2/runtime-backed-rendering-cutover.md)
-- [plans/v2/viz-session-convergence-and-editor-control-cutover.md](./plans/v2/viz-session-convergence-and-editor-control-cutover.md)
-- [plans/v2/canonical-component-authoring-and-capability-composition.md](./plans/v2/canonical-component-authoring-and-capability-composition.md)
-- [plans/v2/live-session-host-and-control-target.md](./plans/v2/live-session-host-and-control-target.md)
-- [plans/v2/canonical-audio-bake-and-runtime-inputs.md](./plans/v2/canonical-audio-bake-and-runtime-inputs.md)
-- [plans/v2/canonical-render-and-feedback-jobs.md](./plans/v2/canonical-render-and-feedback-jobs.md)
-- [plans/v2/first-agent-authored-production-signal-cathedral.md](./plans/v2/first-agent-authored-production-signal-cathedral.md)
-- [plans/v2/core-consolidation-and-minimization-program.md](./plans/v2/core-consolidation-and-minimization-program.md)
-- [plans/v2/behavior-preserving-minimization-and-final-polish.md](./plans/v2/behavior-preserving-minimization-and-final-polish.md)
-- [plans/v2/product-parity-performance-and-agentic-creative-calibration.md](./plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
-- [plans/v2/temporal-runtime-and-playback-performance-certification.md](./plans/v2/temporal-runtime-and-playback-performance-certification.md)
-- [plans/v2/editor-session-foundation-implementation-plan.md](./plans/v2/editor-session-foundation-implementation-plan.md)
-- [plans/v2/live-preview-and-audio-session-foundation-plan.md](./plans/v2/live-preview-and-audio-session-foundation-plan.md)
-- [plans/v2/local-agent-control-surface-implementation-plan.md](./plans/v2/local-agent-control-surface-implementation-plan.md)
-- [plans/v2/component-authoring-foundation-implementation-plan.md](./plans/v2/component-authoring-foundation-implementation-plan.md)
-- [plans/v2/rich-scene-authoring-and-debugging-implementation-plan.md](./plans/v2/rich-scene-authoring-and-debugging-implementation-plan.md)
-- [plans/v2/agent-native-creative-loop-proof-plan.md](./plans/v2/agent-native-creative-loop-proof-plan.md)
-- [plans/v2/live-editor-transport-and-audio-hardening-plan.md](./plans/v2/live-editor-transport-and-audio-hardening-plan.md)
-- [plans/v2/editor-component-catalog-inspection-plan.md](./plans/v2/editor-component-catalog-inspection-plan.md)
-- [plans/v2/validation-hardening-and-golden-output-plan.md](./plans/v2/validation-hardening-and-golden-output-plan.md)
-- [plans/v2/package-consumer-readiness-proof-plan.md](./plans/v2/package-consumer-readiness-proof-plan.md)
+There is currently no active implementation goal.
 
-## Product Vision
+The planned next contract is:
 
-- [visions/viz-cloud-and-integration-vision.md](./visions/viz-cloud-and-integration-vision.md)
-- [visions/agent-operated-live-editor-vision.md](./visions/agent-operated-live-editor-vision.md)
-- [visions/deployment-and-app-shell-posture.md](./visions/deployment-and-app-shell-posture.md)
-- [visions/multi-renderer-and-backend-capability-vision.md](./visions/multi-renderer-and-backend-capability-vision.md)
-- [visions/rendering-performance-and-deployment-strategy.md](./visions/rendering-performance-and-deployment-strategy.md)
-- [visions/specialized-ai-runner-vision.md](./visions/specialized-ai-runner-vision.md)
+- [Goal Five: Flagship Autonomous Production And Creative-System Maturation](./plans/v2/flagship-autonomous-production-and-creative-system-maturation.md)
 
-## Repo Operating System
+It remains pending Gate 0 activation authority. Its complete vision-governed
+campaign, recovery marker, human calibrations, validation tiers, and terminal
+certification matrix are already documented.
 
-- [current-state.md](./current-state.md)
-- [working-agreements.md](./working-agreements.md)
-- [architecture.md](./architecture.md)
-- [monorepo-operating-system.md](./monorepo-operating-system.md)
-- [structural-doctrine.md](./structural-doctrine.md)
-- [parity/README.md](./parity/README.md)
-- [parity/v1-v2-parity-matrix.json](./parity/v1-v2-parity-matrix.json)
-- [profiler-measurement-contract.md](./profiler-measurement-contract.md)
-- [plans/v2/autonomous-development-operating-contract.md](./plans/v2/autonomous-development-operating-contract.md)
-- [plans/v2/current-uncommitted-worktree-audit.md](./plans/v2/current-uncommitted-worktree-audit.md)
-- [suggestions.md](./suggestions.md)
-- [work-ledger.md](./work-ledger.md)
+### 4. Governing specifications
 
-Use these docs this way:
+Use the smallest set of specs directly relevant to the active slice:
 
+- [Viz Project Document](./specs/v2/viz-project-document.md)
+- [VizSession](./specs/v2/viz-session.md)
+- [Agent-Authored Production Loop Architecture](./specs/v2/agent-authored-production-loop-architecture.md)
+- [Component Contract](./specs/v2/component-contract.md)
+- [Node Contract](./specs/v2/node-contract.md)
+- [Runtime API](./specs/v2/runtime-api-spec.md)
+- [Audio Feature Timeline](./specs/v2/audio-feature-timeline-spec.md)
+- [Bake Artifact Contract](./specs/v2/bake-artifact-contract.md)
+- [Asset Resolver And Storage Abstraction](./specs/v2/asset-resolver-and-storage-abstraction-spec.md)
+- [Asset Lifecycle And Derivation Jobs](./specs/v2/asset-lifecycle-and-derivation-job-model.md)
+- [Native 3D Model, Character, And Performance System](./specs/v2/native-3d-model-character-and-performance-system.md)
+- [Render Job Ownership](./specs/v2/render-job-ownership-and-lifecycle-model.md)
+- [Bake Job Ownership](./specs/v2/bake-job-ownership-and-lifecycle-model.md)
+- [Local Persistence And Import/Export](./specs/v2/local-persistence-and-import-export-model.md)
+
+Specs govern their domain contracts. Older conceptual method names or open
+questions do not override newer implemented contracts and certification.
+
+### 5. Executable product evidence
+
+- [Parity Program](./parity/README.md)
+- [Parity Matrix](./parity/v1-v2-parity-matrix.json)
+- [Profiler Measurement Contract](./profiler-measurement-contract.md)
+- [Parity Evidence](./parity/evidence/)
+- [Work Ledger](./work-ledger.md)
+
+The matrix and evidence define what has actually been certified. Evidence is
+proof of a bounded claim, not a general product roadmap.
+
+## Supporting Vision And Rationale
+
+The canonical compounding vision synthesizes these detailed records:
+
+- [VizEngine V2 Vision](./visions/viz-engine-v2-vision.md)
+- [V2 Product, Architecture, And Parity Alignment](./visions/v2-product-architecture-and-parity-alignment.md)
+- [Agent-Operated Live Editor Vision](./visions/agent-operated-live-editor-vision.md)
+- [Multi-Renderer And Backend Capability Vision](./visions/multi-renderer-and-backend-capability-vision.md)
+- [Rendering Performance And Deployment Strategy](./visions/rendering-performance-and-deployment-strategy.md)
+- [Viz Cloud And Integration Vision](./visions/viz-cloud-and-integration-vision.md)
+- [Deployment And App Shell Posture](./visions/deployment-and-app-shell-posture.md)
+- [Specialized AI Runner Vision](./visions/specialized-ai-runner-vision.md)
+
+These remain useful for detailed rationale and provisional strategy. When they
+sound prospective about capabilities that now exist, use `current-state.md`
+for implementation truth.
+
+## Completed Programs And Historical Plans
+
+The following major programs are complete and remain as rationale,
+acceptance precedent, and implementation history:
+
+- [V2 Foundation And Rewrite Plan](./plans/v2/v2-foundation-and-rewrite-plan.md)
+- [Core Consolidation And Minimization](./plans/v2/core-consolidation-and-minimization-program.md)
+- [Behavior-Preserving Minimization And Final Polish](./plans/v2/behavior-preserving-minimization-and-final-polish.md)
+- [Product Parity, Performance, And Agentic Creative Calibration](./plans/v2/product-parity-performance-and-agentic-creative-calibration.md)
+- [Temporal Runtime And Playback Performance Certification](./plans/v2/temporal-runtime-and-playback-performance-certification.md)
+- [First Agent-Authored Production: Signal Cathedral](./plans/v2/first-agent-authored-production-signal-cathedral.md)
+
+The remaining documents under `docs/plans/v2/` record completed phases,
+cutovers, audits, proofs, and narrow implementation slices. They must not be
+resumed merely because they use future tense or retain stale status language.
+
+## Historical And Reference Material
+
+The following material preserves valuable product lessons but is not current
+V2 architecture:
+
+- the thesis and V1 system architecture
+- legacy export and video-export notes
+- historical Stage implementation notes
+- historical node-flow and node-output-cache descriptions
+- old profiler, history-context, and shortcut implementation notes
+
+Useful ideas may be salvaged selectively. Store ownership, browser-delta time,
+editor-owned URLs, multi-canvas DOM composition, and other V1-specific
+architecture are not preservation targets.
+
+## Document Roles
+
+- `visions/`
+  Durable direction and detailed product rationale.
+- `specs/v2/`
+  Domain contracts and explicit system boundaries.
+- `plans/v2/`
+  Bounded execution sequences. Only a plan named active by current state is
+  active.
+- `parity/`
+  Executable product expectations and bounded evidence.
 - `current-state.md`
-  Current truth, active focus, and what should not be assumed.
-- `working-agreements.md`
-  Architecture and collaboration guardrails for V2 work.
-- `architecture.md`
-  Target package and system boundary direction.
-- `monorepo-operating-system.md`
-  Repo workflow and doc role definitions.
-- `structural-doctrine.md`
-  Explicit rewrite and purge posture.
-- `parity/v1-v2-parity-matrix.json`
-  Executable capability, UI/UX, and performance parity backlog against the
-  immutable pre-V2 reference.
-- `profiler-measurement-contract.md`
-  Canonical meanings, sources, publication rules, and browser boundaries for
-  live and recorded performance telemetry.
-- `plans/v2/autonomous-development-operating-contract.md`
-  Durable authority, recovery, quality-gate, and long-running goal protocol.
-- `plans/v2/current-uncommitted-worktree-audit.md`
-  Preservation risks and safe stabilization order for the current dirty
-  migration.
+  Concise implementation truth and active frontier.
 - `suggestions.md`
-  Durable high-impact follow-up ideas that should not get lost during the
-  rewrite.
+  Durable opportunities, not automatically authorized scope.
 - `work-ledger.md`
-  Meaningful progress milestones.
+  Historical milestones, not recovery order or current priority.
 
-## Reference Material
+## Updating Documentation
 
-The rest of the `docs/` folder contains implementation notes and historical
-architecture writeups from the current engine, including export, profiling,
-node-flow, and system architecture notes. Those docs remain valuable as
-reference input, but V2 decisions should be driven from the active docs above.
+When product direction changes:
+
+1. update the compounding vision and name the changed assumption or decision
+2. reconcile working agreements and affected specs
+3. update current state
+
+When implementation changes materially:
+
+1. update the governing spec if its contract changed
+2. update current state
+3. record evidence and a meaningful ledger entry
+4. update suggestions only for durable future work
+
+When a goal completes:
+
+1. mark the plan complete
+2. remove it as active scope in current state and this index
+3. preserve its certification as evidence
+
+Docs are repository memory. Chat history is supporting context only.

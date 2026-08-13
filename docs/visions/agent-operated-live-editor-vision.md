@@ -1,5 +1,10 @@
 # Agent-Operated Live Editor Vision
 
+Status: supporting long-term vision. Its later current-state assessment is
+historical; implementation truth lives in
+[Current State](../current-state.md), and the canonical north star lives in
+[VizEngine Compounding Vision](./viz-engine-compounding-vision.md).
+
 ## Purpose
 
 This document defines the concrete collaborative operating model we want from

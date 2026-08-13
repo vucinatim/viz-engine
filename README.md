@@ -17,12 +17,11 @@ deliberate improvement replaces them.
 
 ## Start Here
 
+- [Compounding product vision](docs/visions/viz-engine-compounding-vision.md)
 - [Documentation index](docs/docs-index.md)
 - [Current state](docs/current-state.md)
+- [Autonomous development compass](docs/autonomous-development-compass.md)
 - [Working agreements](docs/working-agreements.md)
-- [V2 vision](docs/visions/viz-engine-v2-vision.md)
-- [Product architecture and parity alignment](docs/visions/v2-product-architecture-and-parity-alignment.md)
-- [Core consolidation program](docs/plans/v2/core-consolidation-and-minimization-program.md)
 - [Parity status](docs/parity/README.md)
 
 ## What Exists
@@ -41,8 +40,10 @@ deliberate improvement replaces them.
   import/export, and runtime inspection
 - local CLI and live-control surfaces for agents and developers
 
-The first complete agent-authored production is
-[Signal Cathedral](docs/plans/v2/first-agent-authored-production-signal-cathedral.md).
+The two certified agent-authored productions are
+[Signal Cathedral](docs/plans/v2/first-agent-authored-production-signal-cathedral.md)
+and
+[Afterlight Assembly](docs/parity/evidence/2026-08-04-afterlight-assembly-motion-and-rig-polish.md).
 
 ## Quick Start
 
@@ -143,37 +144,26 @@ before adding engine-level capabilities.
 
 ## Rewrite Status
 
-Goal One of the
-[Core Consolidation And Behavior-Preserving Minimization Program](docs/plans/v2/core-consolidation-and-minimization-program.md)
-is complete and
-[certified](docs/parity/evidence/2026-07-30-core-consolidation-and-quality-hardening.md).
-It consolidated the V2 substrate, automated preserved-editor acceptance,
-removed obsolete seams, and established the fresh baseline for the separate
-net-negative Goal Two minimization pass.
+Goals One through Four are complete and certified. The repository now has the
+canonical V2 substrate, behavior-preserving consolidation and minimization,
+42/42 verified parity capabilities, a calibrated live agent loop, two original
+productions, and exact Light Tunnel 60 FPS performance certification.
 
-Goal Two is complete under the
-[Behavior-Preserving Minimization And Final Polish](docs/plans/v2/behavior-preserving-minimization-and-final-polish.md)
-contract. Against immutable commit `6f4529b`, production is 7,879 lines and
-22 files smaller, combined maintained code is 7,632 lines smaller, and the
-proof surface is stronger. The
-[final certification](docs/parity/evidence/2026-07-31-behavior-preserving-minimization-and-final-polish.md)
-records the architecture, behavior, browser, performance, and deterministic
-production evidence.
+There is currently no active implementation goal.
+[Goal Five](docs/plans/v2/flagship-autonomous-production-and-creative-system-maturation.md)
+is planned as an ambitious multi-act, multi-layer flagship production and
+creative-system maturation program. It remains pending Gate 0 activation
+authority.
 
-The active Goal Three direction is
-[Product Parity, Performance, And Agentic Creative Calibration](docs/plans/v2/product-parity-performance-and-agentic-creative-calibration.md).
-It is closing the complete V1/V2 product-parity matrix, establishing controlled
-editor-performance evidence, improving the agent's creative perception and
-feedback loop, and certifying a distinct second original production as both
-final media and a portable editable project.
+See [current state](docs/current-state.md) for implementation truth,
+[the documentation map](docs/docs-index.md) for authority, and
+[parity evidence](docs/parity/evidence/) for completed proof.
 
-Historical milestones and decisions belong in
-[the work ledger](docs/work-ledger.md) and
-[parity evidence](docs/parity/evidence/).
-
-## License
-
-VizEngine is licensed under the [MIT License](LICENSE).
+## Project Origin
 
 The project originated as a Master’s thesis at the University of Ljubljana.
-The thesis remains available at [docs/viz-engine-thesis.pdf](docs/viz-engine-thesis.pdf).
+The thesis remains available at
+[docs/thesis/viz-engine-thesis.pdf](docs/thesis/viz-engine-thesis.pdf).
+
+The repository does not currently contain a license file. Final open-core
+licensing is an explicit product decision rather than an assumption.

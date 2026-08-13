@@ -1,5 +1,8 @@
 # VizEngine V2 Vision
 
+Status: supporting vision and rationale. The canonical product north star is
+[VizEngine Compounding Vision](./viz-engine-compounding-vision.md).
+
 ## Why V2 Exists
 
 VizEngine V1 proved the core creative idea:

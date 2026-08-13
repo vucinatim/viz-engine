@@ -31,7 +31,7 @@ Canonical package shape:
 
 ```ts
 type VizProjectDocument = {
-  schemaVersion: "2.0.0-alpha.1";
+  schemaVersion: '2.0.0-alpha.1';
   projectId: string;
   name: string;
   timeline: VizTimeline;
@@ -82,12 +82,14 @@ Preferred categories:
 - shader
 - text
 - timed_text
-- feature_timeline
-- simulation_cache
 
 Each asset should support stable ids and transportable references.
 
 ## Baked Artifacts
+
+Feature timelines, simulation caches, and other reusable computational support
+data are baked artifacts rather than source or derived displayable assets.
+This keeps asset materialization separate from deterministic precomputation.
 
 Baked artifacts should be first-class references, not implied cache files.
 

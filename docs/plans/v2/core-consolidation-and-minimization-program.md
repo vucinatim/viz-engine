@@ -1,7 +1,7 @@
 # Core Consolidation And Behavior-Preserving Minimization Program
 
-Status: Goal One complete and certified; Goal Two active from immutable commit
-`6f4529b`.
+Status: complete. Goal One and Goal Two are both certified. This document is a
+historical program and rationale record, not active execution scope.
 
 Baseline reviewed: `bda5b2a` on `codex/viz-engine-v2`, 2026-07-30.
 
