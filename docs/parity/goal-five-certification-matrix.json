@@ -689,7 +689,7 @@
       "decisionRule": "green-command",
       "evaluation": {
         "kind": "command",
-        "harness": "ready",
+        "harness": "planned",
         "command": "pnpm parity:validate",
         "evaluator": "automated-validator"
       },
@@ -860,7 +860,7 @@
       "decisionRule": "architecture-invariants",
       "evaluation": {
         "kind": "command",
-        "harness": "ready",
+        "harness": "planned",
         "command": "pnpm architecture:validate",
         "evaluator": "automated-validator"
       },
@@ -917,7 +917,7 @@
       "decisionRule": "green-command",
       "evaluation": {
         "kind": "command",
-        "harness": "ready",
+        "harness": "planned",
         "command": "pnpm exec vitest run tests/foundation/signal-cathedral-production.test.ts tests/foundation/afterlight-assembly-production.test.ts",
         "evaluator": "automated-validator"
       },
@@ -957,7 +957,7 @@
       "decisionRule": "green-command",
       "evaluation": {
         "kind": "command",
-        "harness": "ready",
+        "harness": "planned",
         "command": "pnpm check:foundation",
         "evaluator": "automated-validator"
       },
@@ -1111,7 +1111,7 @@
       "decisionRule": "immutable-candidate-evidence",
       "evaluation": {
         "kind": "command",
-        "harness": "ready",
+        "harness": "planned",
         "command": "pnpm goal5:criteria:validate -- --final",
         "evaluator": "automated-validator"
       },

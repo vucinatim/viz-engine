@@ -44,6 +44,25 @@ scheduled-run, and human-review model under Goal Five. Its bounded readiness
 implementation is active, but recurring execution and Goal Five Phase 1 remain
 disabled until the activation acceptance is proven.
 
+The readiness substrate now has a tracked active-program pointer, immutable
+target-branch execution definitions, program/branch-scoped Git-common lifecycle
+and human-validation state, one cross-worktree writer lease,
+per-claim recovery markers, crash-journaled multi-file transitions,
+content-addressed historical evidence, canonical staged checks, a 46-criterion
+sensory map, append-only human decisions, read-only specialist role contracts,
+and identity-bound review packets. It is still in bootstrap validation: the
+quiet end-to-end rehearsal, three supervised calibration runs, and explicit
+human activation decision remain outstanding, so no recurring automation exists.
+
+The canonical machine entrypoint for that readiness work is:
+
+```bash
+pnpm run repo -- --help
+pnpm --silent run repo -- run preflight --json
+pnpm --silent run repo -- program status --json
+pnpm --silent run repo -- program next --json
+```
+
 Phase 0 is complete at behavioral checkpoint
 `043f8dbae5f15828c5cba6c0b74f32cadb359946`: the exact environment and
 activation metrics are captured, the 46-criterion terminal-proof contract is

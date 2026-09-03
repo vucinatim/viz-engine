@@ -115,15 +115,20 @@ Every autonomous milestone follows this loop:
    - avoid new bridge layers unless they have an explicit deletion condition
    - preserve selective subscriptions and imperative frame-driven work
 4. **Validate locally**
-   - run focused type checks and tests during development
+   - run `pnpm check:focused` during development
    - add regression coverage for corrected ownership or behavior
 5. **Validate as a product**
    - exercise affected workflows in the browser
    - compare against the pinned V1 reference for parity-sensitive behavior
    - inspect console errors and visible failure states
    - measure performance when a parity row includes the performance dimension
-6. **Run the repository gate**
-   - run `pnpm check:foundation`
+6. **Run the proportionate repository gate**
+   - run `pnpm canonicalize` and obtain semantic canonicalizer review
+   - run `pnpm check:checkpoint` before a coherent local commit
+   - run `pnpm check:integration` after cross-package integration and every four
+     to six checkpoints
+   - reserve `pnpm check:certification` for declared phase, activation, and
+     candidate gates
    - do not weaken or bypass a gate to obtain green output
 7. **Review the complete diff**
    - check for accidental scope, dead code, duplicate truth, debug artifacts,
@@ -161,7 +166,8 @@ A milestone is complete only when every applicable gate passes.
 ### Correctness Gate
 
 - Focused regression tests cover the changed behavior.
-- `pnpm check:foundation` passes from the repository root.
+- The check stage required by the milestone breadth passes from the repository
+  root; a cheaper stage is never cited for a broader gate.
 - Invalid input and failure paths are handled without corrupting canonical
   state.
 
@@ -293,6 +299,25 @@ Do not run overlapping autonomous edit loops against the same worktree.
 Scheduled or recurring loops are useful for read-only monitoring, but they are
 not the primary development memory system and should not mutate the same branch
 in parallel.
+
+When an approved recurring program has proven the repository-wide writer lease,
+scheduled mutation may proceed only through that lease and its canonical machine
+execution state. The schedule wakes the loop; it does not own direction or
+completion meaning.
+
+For Goal Five, the exact operational recovery order and future scheduled prompt
+are frozen in the
+[Autonomous Checkpoint Runbook](./autonomous-checkpoint-runbook.md). The tracked
+program is immutable definition; mutable branch state and content-addressed
+evidence live under the Git-common operational directory. Multi-file mutations
+are journaled behind one operational mutex. A later wake waits on a live owner,
+recovers only a proven-dead exact owner, and rolls back an interrupted
+transition before reading program state.
+
+Human-decision provenance is auditable but not cryptographic. An autonomous run
+must never execute `human resolve` without a contemporaneous explicit user
+instruction naming that decision, and recurrence remains forbidden until its
+declared human activation item is resolved.
 
 The best next goal is a bounded architectural milestone, not “finish the whole
 product.” Examples:

@@ -46,8 +46,10 @@ Authority remains deliberately separated:
    owns the bounded campaign, phases, human gates, and completion condition.
 3. The [Goal Five certification matrix](../../parity/goal-five-certification-matrix.json)
    owns terminal proof requirements.
-4. A proposed machine execution program owns dependency-ready checkpoint state,
-   ownership, estimates, blockers, and typed evidence references.
+4. The tracked machine execution definition owns immutable work-item identity,
+   dependencies, estimates, acceptance, authority, and evidence requirements.
+   Branch-scoped Git-common operational state owns lifecycle status, claims,
+   blockers, and admitted evidence references.
 5. [Current state](../../current-state.md) owns the concise human snapshot.
 6. [The work ledger](../../work-ledger.md) owns historical milestones.
 7. [Suggestions](../../suggestions.md) owns durable work outside the active goal.
@@ -431,17 +433,27 @@ flagship or create a second runtime path.
 Goal Five should gain one small machine-readable execution program subordinate
 to the existing prose plan and certification matrix.
 
-Each work item should contain:
+Each tracked work-item definition contains:
 
 - stable id, phase, lane, priority, title, and acceptance
 - dependencies
-- authority: autonomous, human checkpoint, or external approval
-- status: pending, in progress, blocked, or complete
-- exact owner while active
+- exact target branch and canonical certification-criteria contract
+- authority: autonomous or human checkpoint; external actions remain separately
+  prohibited unless the user explicitly authorizes them
 - minimum and maximum agent-hour estimate
 - affected certification criteria and parity rows
-- required evidence lanes and typed evidence references
-- blocker type and recovery condition when blocked
+- required evidence lanes and typed evidence requirements
+
+Its branch-scoped operational state contains status, exact active owner,
+blocker and recovery identity, terminal Git identity, and admitted typed evidence
+references. A tracked definition is frozen once operational state exists. A
+materially changed execution program receives a new program identity; active
+state is never silently migrated or reinterpreted.
+
+`tools/repo/programs/active-program.json` is the one tracked selection point.
+Every immutable definition declares its exact target branch. Human queues and
+append-only decisions are program-scoped, so activating a successor Goal Five
+program cannot reinterpret or collide with readiness decisions.
 
 `ready` should be derived rather than stored. One pending autonomous item is
 ready only when all dependencies are complete and no ownership or environment
@@ -452,26 +464,28 @@ Completion must fail closed without the required evidence.
 
 ### CLI boundary
 
-Repository-program operations belong in a small maintainer CLI, proposed as:
+Repository-program operations belong in the implemented small maintainer CLI:
 
 ```text
-pnpm repo -- program status
-pnpm repo -- program next
-pnpm repo -- program inspect <item>
-pnpm repo -- program claim <item>
-pnpm repo -- program complete <item> --evidence <reference>
-pnpm repo -- program block <item> --type <type> --reason <reason>
-pnpm repo -- program validate
+pnpm run repo -- program status
+pnpm run repo -- program next
+pnpm run repo -- program inspect <item>
+pnpm run repo -- program claim <item>
+pnpm run repo -- program complete <item> --evidence <reference>
+pnpm run repo -- program block <item> --type <type> --reason <reason>
+pnpm run repo -- program validate
+pnpm run repo -- run preflight
+pnpm run repo -- state status
 ```
 
 This is intentionally separate from `pnpm viz`, which remains the product and
 developer surface over canonical Viz projects, sessions, bundles, bakes, and
 renders.
 
-Do not create the CLI until its schema and first real work items are reviewed.
-Do not build a generic project-management platform; implement only the compact
-state machine needed for this repository and make it reusable for future Viz
-goals.
+This is not a generic project-management platform. The implemented CLI is
+intentionally scoped to the autonomous-readiness program and Goal Five. Its
+small lifecycle, evidence, and locking primitives may support later Viz
+programs only after those programs make the reuse concrete.
 
 ## Sole-Writer And Lease Contract
 
@@ -487,8 +501,15 @@ repository lease with:
 - explicit release
 - stale-owner recovery that never discards a diff
 
-The lease should live in Git-common repository operational state rather than in
-portable project data or product packages.
+The lease, immutable per-claim resume markers plus a latest-claim pointer,
+program lifecycle state, human-decision
+records, immutable evidence objects, and cross-file transition journal live in
+Git-common repository operational state rather than portable project data or
+product packages. A separate atomic operational mutex serializes transitions
+that touch more than one of those files. Process death leaves the journal in
+place; a later wake first recovers the exact proven-dead mutex and then rolls
+back the exact transition. A live or remote/unprovable owner produces a clean
+stop, never automatic takeover.
 
 A run must become read-only or exit when:
 
@@ -502,9 +523,16 @@ A run must become read-only or exit when:
 The first mutating scheduled run must be invoked manually, inspected completely,
 and reviewed before recurrence is enabled.
 
+New check evidence is admitted only when its full canonical command plan,
+claim, lease, program definition, changed bytes, and terminal commit agree.
+Admitted records are copied into a content-addressed Git-common store. Historical
+validation checks the immutable recorded plan and terminal identity rather than
+reinterpreting old proof through a future check planner.
+
 ## Checkpoint Run Contract
 
-Every scheduled or resumed run:
+Every scheduled or resumed run follows the
+[exact checkpoint runbook](./autonomous-checkpoint-runbook.md):
 
 1. reads canonical recovery documents and Git state
 2. verifies or acquires the sole-writer lease
@@ -522,8 +550,7 @@ Every scheduled or resumed run:
 13. commits one coherent local checkpoint only when Tier 2 acceptance passes
 14. updates the resume marker at meaningful checkpoints
 15. releases the lease and stops all scoped children
-16. continues only when the remaining session budget safely permits another
-    complete checkpoint
+16. exits; a later wake recovers afresh before selecting another checkpoint
 
 A timer may stop new work from starting. It may not turn an incomplete change
 into a completed checkpoint.
@@ -611,6 +638,13 @@ Examples include:
 The existence of human judgment is not a tooling failure. Pretending it is
 automatable would be one.
 
+Human resolutions are append-only operational decision records. The CLI records
+provenance but cannot cryptographically distinguish a human from a local
+process. Therefore unattended prompts and agent rules explicitly prohibit
+`human resolve` without a contemporaneous user instruction naming the decision.
+This is an authority boundary like push/deploy authority, not a claim of
+technical identity attestation.
+
 ## Multi-Week Program
 
 Calendar estimates assume up to twelve hours of night-centered capacity on most
@@ -619,8 +653,7 @@ never proves completion.
 
 ### Bootstrap: two to four days
 
-- reconcile status documentation and push the completed Phase 0 checkpoint when
-  authorized
+- reconcile status documentation; no push is part of this supporting program
 - define the machine execution schema and initial Goal Five dependency graph
 - implement the minimal repo-program status/next/inspect/transition commands
 - implement and fault-test the sole-writer lease
@@ -726,14 +759,26 @@ items:
 6. `OS-06` — manually rehearse the exact scheduled prompt, dirty-worktree
    refusal, stale-lease recovery, quiet browser profile, validation, commit, and
    cleanup behavior
-7. `P1-01` — inventory authorized source assets and provenance
-8. `P1-02` — analyze and compare candidate music windows
-9. `P1-03` — inventory capability and observation friction
-10. `P1-04` — produce the treatment, musical map, ownership map, exact review
-    frames/windows, and Gate 1 packet
+7. `CAL-01` — supervised rehearsal of the exact future scheduled prompt
+8. `CAL-02` — second fresh-wake supervised rehearsal, including recovery and
+   cleanup review
+9. `CAL-03` — final supervised rehearsal and activation recommendation
+10. `ACT-01` — human-only approval to authorize recurring autonomous execution;
+    rejection or requested changes leave the item pending and recurrence
+    disabled
 
-Later work items are materialized only when the preceding human gate and real
-production evidence make their acceptance precise.
+Goal Five production work (`P1-*` onward) belongs to a new frozen program
+definition created only after `ACT-01` approval and selected through the tracked
+active-program pointer. Its work items are materialized when the preceding gate
+and real production evidence make acceptance precise.
+
+The pointer cutover and `ACT-01` completion form one explicit handoff. The
+activation claim, its pre-commit checks, post-commit completion, review packet,
+and lease release continue to name the readiness program with `--program`. The
+same commit creates the immutable successor definition and changes the tracked
+pointer. A default preflight may select the successor only after the readiness
+lease is released; any crash recovery during the handoff uses the exact recorded
+readiness-program identity rather than the new default pointer.
 
 ## Anti-Rabbit-Hole Rules
 
@@ -786,8 +831,11 @@ Approved defaults are:
 6. **Notifications:** report completed checkpoints, failures that invalidate the
    baseline, and human decisions; suppress routine no-op noise.
 
-Implement and manually run `OS-01` through `OS-06` before creating the recurring
-schedule. Nothing in this contract authorizes a production deployment, public
+Implement and manually run `OS-01` through `OS-06`, then complete the three
+supervised calibration runs, before creating the recurring schedule. The exact
+prompt and recovery action table live in the
+[checkpoint runbook](./autonomous-checkpoint-runbook.md). Nothing in this
+contract authorizes a production deployment, public
 release, push, publication, or other external mutation; all work remains on the
 VizEngine V2 development branch unless the human grants separate authority.
 

@@ -1,0 +1,407 @@
+{
+  "schemaVersion": 2,
+  "id": "goal-five-autonomous-readiness",
+  "title": "Goal Five Autonomous Development Readiness",
+  "targetBranch": "codex/viz-engine-v2",
+  "parentGoal": "docs/plans/v2/flagship-autonomous-production-and-creative-system-maturation.md",
+  "executionPlan": "docs/plans/v2/goal-five-autonomous-sensory-feedback-operating-system.md",
+  "criteriaContract": "docs/parity/goal-five-certification-matrix.json",
+  "gates": [
+    {
+      "id": "contract",
+      "title": "Authority, schema, and staged validation contract",
+      "wave": 0
+    },
+    {
+      "id": "control",
+      "title": "Ownership, recovery, and failure-safe transitions",
+      "wave": 1
+    },
+    {
+      "id": "observation",
+      "title": "Sensory coverage, evidence, and human review",
+      "wave": 2
+    },
+    {
+      "id": "rehearsal",
+      "title": "Quiet realistic rehearsal and fault proof",
+      "wave": 3
+    },
+    {
+      "id": "calibration",
+      "title": "Three calibration runs and activation decision",
+      "wave": 4
+    }
+  ],
+  "workItems": [
+    {
+      "id": "OS-01",
+      "gate": "contract",
+      "lane": "operating-contract",
+      "priority": 1,
+      "title": "Freeze the execution, evidence, staged-check, and authority contracts",
+      "authority": "autonomous",
+      "dependsOn": [],
+      "estimate": { "agentHoursMin": 2, "agentHoursMax": 5 },
+      "acceptance": [
+        "One subordinate machine program validates and derives ready work without becoming a product roadmap.",
+        "Repository, product CLI, evidence lanes, check stages, and external-action boundaries have one documented owner.",
+        "AGENTS.md and CLAUDE.md point every agent at the same recovery and command surfaces."
+      ],
+      "evidenceLanes": ["project-semantic", "code-architecture"],
+      "affectedCriteria": ["reusable.canonical-authoring-and-feedback"],
+      "evidenceRequirements": [
+        {
+          "id": "approved-contract",
+          "kind": "document",
+          "description": "Content-addressed approved operating contract"
+        },
+        {
+          "id": "manifest-validation",
+          "kind": "command",
+          "checkStage": "checkpoint",
+          "description": "Passing repository check record that validates the execution definition"
+        },
+        {
+          "id": "rules-review",
+          "kind": "document",
+          "description": "Content-addressed repository agent rules"
+        }
+      ]
+    },
+    {
+      "id": "OS-02",
+      "gate": "contract",
+      "lane": "repo-cli",
+      "priority": 2,
+      "title": "Implement discoverable read-only program and staged-check surfaces",
+      "authority": "autonomous",
+      "dependsOn": ["OS-01"],
+      "estimate": { "agentHoursMin": 2, "agentHoursMax": 5 },
+      "acceptance": [
+        "pnpm repo help exposes program, checks, canonicalization, sensory, human, lease, and review commands.",
+        "Program status, next, inspect, and validation emit stable JSON.",
+        "Fast, focused, checkpoint, integration, and certification stages are ordered by cost and evidence scope."
+      ],
+      "evidenceLanes": ["code-architecture"],
+      "affectedCriteria": ["repository.focused-and-failure-tests"],
+      "evidenceRequirements": [
+        {
+          "id": "cli-contract-tests",
+          "kind": "command",
+          "checkStage": "checkpoint",
+          "description": "Passing check record containing the repository CLI contract tests"
+        },
+        {
+          "id": "staged-check-plan",
+          "kind": "artifact",
+          "description": "Content-addressed staged-check plan artifact"
+        }
+      ]
+    },
+    {
+      "id": "OS-03",
+      "gate": "control",
+      "lane": "ownership-recovery",
+      "priority": 3,
+      "title": "Prove atomic ownership, recovery markers, and failure-safe transitions",
+      "authority": "autonomous",
+      "dependsOn": ["OS-02"],
+      "estimate": { "agentHoursMin": 4, "agentHoursMax": 8 },
+      "acceptance": [
+        "Only one repository writer lease can exist across linked worktrees.",
+        "Claim, checkpoint, complete, block, unblock, heartbeat, release, and explicit stale recovery preserve ownership invariants.",
+        "Dirty unknown state, live leases, wrong identities, missing evidence, and failed validation fail closed without discarding work."
+      ],
+      "evidenceLanes": ["project-semantic", "code-architecture"],
+      "affectedCriteria": ["repository.focused-and-failure-tests"],
+      "evidenceRequirements": [
+        {
+          "id": "transition-fault-tests",
+          "kind": "command",
+          "checkStage": "checkpoint",
+          "description": "Passing check record containing ownership and transition fault tests"
+        },
+        {
+          "id": "recovery-rehearsal",
+          "kind": "artifact",
+          "description": "Content-addressed restart and stale-lease recovery rehearsal"
+        }
+      ]
+    },
+    {
+      "id": "OS-04",
+      "gate": "observation",
+      "lane": "sensory-inventory",
+      "priority": 4,
+      "title": "Map every Goal Five criterion to canonical or human evidence",
+      "authority": "autonomous",
+      "dependsOn": ["OS-02"],
+      "estimate": { "agentHoursMin": 2, "agentHoursMax": 4 },
+      "acceptance": [
+        "All 46 criteria derive a named evidence lane, canonical observation, decision rule, environment, artifact, and ready/planned/human status.",
+        "The sensory map adds no duplicate criterion or runtime truth.",
+        "Known failure calibration is explicit and planned tools are not misreported as ready."
+      ],
+      "evidenceLanes": [
+        "project-semantic",
+        "runtime-temporal",
+        "audio-musical-intent",
+        "visual-composition",
+        "motion-continuity",
+        "editor-parity",
+        "performance-lifecycle",
+        "portability-reproducibility",
+        "code-architecture",
+        "creative-human"
+      ],
+      "affectedCriteria": [
+        "production.duration-acts-transitions",
+        "production.honest-breadth",
+        "production.model-backed-authored-animation",
+        "production.procedural-spatial-3d",
+        "production.shader-particle-instancing",
+        "production.complementary-media",
+        "production.compositor-camera-hierarchy",
+        "production.macro-phrase-detail-reactivity",
+        "production.visual-audio-sanity",
+        "production.final-creative-coherence",
+        "workflow.headless-canonical-operations",
+        "workflow.shared-editor-session",
+        "workflow.agent-history-attribution",
+        "workflow.continuous-human-edit",
+        "workflow.no-agent-shadow-semantics",
+        "determinism.evaluation-paths",
+        "determinism.preview-still-video-adapter",
+        "determinism.repeated-decoded-media",
+        "portability.clean-bundle-roundtrip",
+        "identity.complete-execution-manifest",
+        "editor.complete-flagship-workflows",
+        "editor.live-values-and-diagnostics",
+        "editor.project-legibility",
+        "editor.parity-floor",
+        "performance.full-flagship-playback",
+        "performance.graph-open-interaction",
+        "performance.seek-and-act-boundaries",
+        "performance.six-cycle-endurance",
+        "performance.retained-resource-lifecycle",
+        "performance.final-render-throughput",
+        "performance.light-tunnel-regression",
+        "reusable.promotion-evidence",
+        "reusable.production-core-boundary",
+        "reusable.canonical-authoring-and-feedback",
+        "reusable.cleanup-and-deletion",
+        "repository.previous-productions",
+        "repository.focused-and-failure-tests",
+        "repository.uninterrupted-complete-gate",
+        "repository.browser-classification",
+        "evidence.treatment-and-musical-map",
+        "evidence.assets-artifacts-bundle-manifest",
+        "evidence.visual-review-packet",
+        "evidence.final-video-and-probe",
+        "evidence.system-reports",
+        "evidence.human-calibration-decisions",
+        "evidence.candidate-and-evidence-commits"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "sensory-validation",
+          "kind": "command",
+          "checkStage": "checkpoint",
+          "description": "Passing check record validating all 46 criterion mappings"
+        },
+        {
+          "id": "mapping-review",
+          "kind": "document",
+          "description": "Content-addressed sensory map review"
+        }
+      ]
+    },
+    {
+      "id": "OS-05",
+      "gate": "observation",
+      "lane": "review-evidence",
+      "priority": 5,
+      "title": "Implement identity-bound evidence, review packets, and human queue",
+      "authority": "autonomous",
+      "dependsOn": ["OS-03", "OS-04"],
+      "estimate": { "agentHoursMin": 3, "agentHoursMax": 6 },
+      "acceptance": [
+        "Every check run records stage, result, duration, exact Git identity, changed files, and contract identities.",
+        "Review packets assemble rather than redefine program, sensory, operational, check, diff, and human-decision facts.",
+        "Human questions retain exact artifacts, recommendations, alternatives, safe work, and prohibited work."
+      ],
+      "evidenceLanes": ["code-architecture", "creative-human"],
+      "affectedCriteria": [
+        "evidence.visual-review-packet",
+        "evidence.system-reports",
+        "evidence.human-calibration-decisions"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "evidence-contract-tests",
+          "kind": "command",
+          "checkStage": "checkpoint",
+          "description": "Passing check record containing evidence, review, and human queue tests"
+        },
+        {
+          "id": "sample-review-packet",
+          "kind": "artifact",
+          "description": "Content-addressed sample review packet"
+        }
+      ]
+    },
+    {
+      "id": "OS-06",
+      "gate": "rehearsal",
+      "lane": "quiet-rehearsal",
+      "priority": 6,
+      "title": "Rehearse one complete quiet checkpoint and every critical failure path",
+      "authority": "autonomous",
+      "dependsOn": ["OS-05"],
+      "estimate": { "agentHoursMin": 4, "agentHoursMax": 8 },
+      "acceptance": [
+        "A real repository checkpoint follows recover, claim, sensory gate, implement, canonicalize, staged checks, review, evidence, commit, and release.",
+        "No visible browser, audible media, reused server, overlapping heavy process, leaked child, or external mutation occurs.",
+        "Restart, compaction-equivalent recovery, dirty refusal, overlap refusal, validation failure, blocking, and empty-ready behavior retain truthful state."
+      ],
+      "evidenceLanes": [
+        "project-semantic",
+        "editor-parity",
+        "performance-lifecycle",
+        "code-architecture"
+      ],
+      "affectedCriteria": [
+        "repository.focused-and-failure-tests",
+        "repository.uninterrupted-complete-gate",
+        "repository.browser-classification"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "quiet-rehearsal",
+          "kind": "artifact",
+          "description": "Content-addressed quiet end-to-end rehearsal evidence"
+        },
+        {
+          "id": "failure-matrix",
+          "kind": "artifact",
+          "description": "Content-addressed critical failure-path matrix"
+        },
+        {
+          "id": "cleanup-attestation",
+          "kind": "artifact",
+          "description": "Content-addressed resource and worktree cleanup attestation"
+        }
+      ]
+    },
+    {
+      "id": "CAL-01",
+      "gate": "calibration",
+      "lane": "calibration-run",
+      "priority": 7,
+      "title": "Complete calibration run one",
+      "authority": "autonomous",
+      "dependsOn": ["OS-06"],
+      "estimate": { "agentHoursMin": 1, "agentHoursMax": 3 },
+      "acceptance": [
+        "The exact future scheduled prompt completes one bounded checkpoint or clean truthful stop.",
+        "Scope choice, evidence, cleanup, and resume state are independently reviewed."
+      ],
+      "evidenceLanes": ["code-architecture", "creative-human"],
+      "affectedCriteria": ["reusable.canonical-authoring-and-feedback"],
+      "evidenceRequirements": [
+        {
+          "id": "calibration-packet",
+          "kind": "artifact",
+          "description": "Content-addressed calibration run packet"
+        },
+        {
+          "id": "independent-review",
+          "kind": "document",
+          "description": "Content-addressed independent review"
+        }
+      ]
+    },
+    {
+      "id": "CAL-02",
+      "gate": "calibration",
+      "lane": "calibration-run",
+      "priority": 8,
+      "title": "Complete calibration run two",
+      "authority": "autonomous",
+      "dependsOn": ["CAL-01"],
+      "estimate": { "agentHoursMin": 1, "agentHoursMax": 3 },
+      "acceptance": [
+        "A second fresh recovery proves the previous result is not a one-off.",
+        "Observed friction produces only justified operating-contract improvements."
+      ],
+      "evidenceLanes": ["code-architecture", "creative-human"],
+      "affectedCriteria": ["reusable.canonical-authoring-and-feedback"],
+      "evidenceRequirements": [
+        {
+          "id": "calibration-packet",
+          "kind": "artifact",
+          "description": "Content-addressed second calibration run packet"
+        },
+        {
+          "id": "friction-review",
+          "kind": "document",
+          "description": "Content-addressed friction review"
+        }
+      ]
+    },
+    {
+      "id": "CAL-03",
+      "gate": "calibration",
+      "lane": "calibration-run",
+      "priority": 9,
+      "title": "Complete calibration run three and activation audit",
+      "authority": "autonomous",
+      "dependsOn": ["CAL-02"],
+      "estimate": { "agentHoursMin": 2, "agentHoursMax": 4 },
+      "acceptance": [
+        "Three consecutive runs preserve ownership, direction, staged validation, evidence, and cleanup invariants.",
+        "Every activation condition is audited against authoritative evidence.",
+        "The proposed night schedule remains disabled pending the explicit human activation decision."
+      ],
+      "evidenceLanes": ["code-architecture", "creative-human"],
+      "affectedCriteria": ["reusable.canonical-authoring-and-feedback"],
+      "evidenceRequirements": [
+        {
+          "id": "calibration-packet",
+          "kind": "artifact",
+          "description": "Content-addressed third calibration run packet"
+        },
+        {
+          "id": "activation-audit",
+          "kind": "document",
+          "description": "Content-addressed activation audit"
+        }
+      ]
+    },
+    {
+      "id": "ACT-01",
+      "gate": "calibration",
+      "lane": "human-activation",
+      "priority": 10,
+      "title": "Authorize recurring autonomous execution",
+      "authority": "human_checkpoint",
+      "dependsOn": ["CAL-03"],
+      "estimate": { "agentHoursMin": 1, "agentHoursMax": 1 },
+      "acceptance": [
+        "The product owner reviews the exact calibration evidence and explicitly approves recurring execution.",
+        "No schedule exists before approval."
+      ],
+      "evidenceLanes": ["creative-human"],
+      "affectedCriteria": ["evidence.human-calibration-decisions"],
+      "externalApproval": "Explicit product-owner activation decision in the Codex task",
+      "evidenceRequirements": [
+        {
+          "id": "activation-decision",
+          "kind": "decision",
+          "description": "Explicit human activation decision"
+        }
+      ]
+    }
+  ]
+}

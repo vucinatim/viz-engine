@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "goalId": "goal-five-flagship",
+  "certificationMatrix": "docs/parity/goal-five-certification-matrix.json",
+  "evidenceLanes": [
+    {
+      "id": "project-semantic",
+      "owner": "VizProjectDocument, VizSession, actions, and inspection contracts"
+    },
+    {
+      "id": "runtime-temporal",
+      "owner": "deterministic runtime, graph evaluation, temporal state, and output adapters"
+    },
+    {
+      "id": "audio-musical-intent",
+      "owner": "audio decode, feature bake, musical map, and graph-output intent"
+    },
+    {
+      "id": "visual-composition",
+      "owner": "renderer output, review frames, layer contribution, and decoded-image comparison"
+    },
+    {
+      "id": "motion-continuity",
+      "owner": "decoded-frame motion, transitions, animation phase, camera, and continuity probes"
+    },
+    {
+      "id": "editor-parity",
+      "owner": "editor journeys, interaction instrumentation, diagnostics, and V1 parity evidence"
+    },
+    {
+      "id": "performance-lifecycle",
+      "owner": "runtime/display benchmarks, resource accounting, and endurance harnesses"
+    },
+    {
+      "id": "portability-reproducibility",
+      "owner": "bundle identity, clean-room reopen, render manifests, and exact execution inputs"
+    },
+    {
+      "id": "code-architecture",
+      "owner": "package direction, types, focused tests, complete diff, and canonicalization review"
+    },
+    {
+      "id": "creative-human",
+      "owner": "treatment-bound self-critique and explicit immutable human decisions"
+    }
+  ],
+  "categoryMappings": {
+    "flagship-production": [
+      "project-semantic",
+      "audio-musical-intent",
+      "visual-composition",
+      "motion-continuity",
+      "creative-human"
+    ],
+    "canonical-workflow": ["project-semantic", "editor-parity"],
+    "determinism-portability": [
+      "runtime-temporal",
+      "portability-reproducibility"
+    ],
+    "editor-product": ["project-semantic", "editor-parity", "creative-human"],
+    "performance-lifecycle": ["performance-lifecycle"],
+    "reusable-system": ["code-architecture", "project-semantic"],
+    "repository-evidence": ["code-architecture"],
+    "artifact-evidence": [
+      "portability-reproducibility",
+      "visual-composition",
+      "creative-human"
+    ]
+  },
+  "calibrationFailures": [
+    "invalid graph or unresolved binding",
+    "missing asset or artifact",
+    "blank or clipped frame",
+    "frozen output",
+    "intentional versus accidental silence",
+    "audio/video drift",
+    "temporal discontinuity",
+    "renderer resource leak",
+    "pointer-rate durable revisions",
+    "stale server or wrong project identity"
+  ]
+}

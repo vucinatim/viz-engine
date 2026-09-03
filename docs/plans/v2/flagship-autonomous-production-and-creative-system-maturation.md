@@ -1341,36 +1341,12 @@ enormous slash-command prompt.
 
 ## Scheduled-Run Prompt
 
-Once Goal Five is active, the primary mutation loop has yielded, and the
-manually proven sole-writer handoff requirements are satisfied, an isolated
-checkpoint worker may use:
+The single exact scheduled prompt, recovery action table, authority boundary,
+one-checkpoint limit, and calibration sequence live in the
+[Autonomous Checkpoint Runbook](./autonomous-checkpoint-runbook.md). Do not copy
+or independently evolve another prompt here.
 
-```text
-Advance the active VizEngine Goal Five program by exactly one bounded,
-high-leverage checkpoint. Recover from AGENTS.md, the compounding vision,
-current state, the active goal, the autonomous compass, governing specs,
-affected parity rows, latest evidence, and actual Git state. Work only from the
-latest integrated Goal Five checkpoint and do not compete with another mutation
-loop.
-
-Use one primary change axis; preserve canonical project/session/runtime and V1
-product quality; reject production-specific engine exceptions. Validate the
-real product, review and simplify the complete diff, update the resume marker
-and evidence. Create one coherent local checkpoint commit only when the result
-is a complete validated Tier 2 checkpoint; otherwise leave no commit, preserve
-diagnostic evidence, and report the incomplete finding. Leave the worktree
-clean unless a declared recovery record intentionally preserves a diff, and
-stop all child processes.
-
-Remain operationally quiet: no visible applications, focus theft, or audio;
-headless muted Chromium only; one heavy process at a time; no routine
-full-resolution video. Do not push, merge, publish, deploy, or change external
-systems. At declared human gates or architecture/product decisions, make no
-mutation, report the awaited decision, and exit cleanly. Report the checkpoint,
-evidence, next checkpoint, and any blocker.
-```
-
-The persistent `/goal` is the primary multi-day development engine. Scheduled
-isolated runs are read-only by default and become supplementary checkpoint
-writers only when commit continuity and atomic sole-writer discipline are
-proven.
+Scheduled execution remains disabled until the readiness program completes
+three supervised calibration runs and the product owner explicitly approves
+its human activation item. The schedule only wakes the repository-controlled
+loop; it never owns direction, state, or permission.

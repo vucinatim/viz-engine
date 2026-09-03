@@ -5,6 +5,18 @@ already requirements of the active goal.
 
 ## Documentation And Operating System
 
+- If unattended decision capture ever needs stronger identity than the current
+  explicit user-authority contract, add a Codex-app-signed or UI-issued human
+  decision receipt. Do not pretend a CLI provenance string is cryptographic
+  human attestation.
+- Define retention and garbage collection for Git-common immutable evidence,
+  recovered mutex owners, transaction journals, and lease archives after real
+  multi-week volume exists. Retention must preserve every object reachable from
+  active or completed program state.
+- Reject unknown maintainer-CLI flags once the command surface stabilizes so a
+  typo cannot silently degrade an intended operation.
+- Separate non-creating operational path resolution from initialization if
+  read-only tooling later needs a strict zero-filesystem-side-effect contract.
 - Add a lightweight documentation validator if status drift recurs. It should
   check local links, require `docs/current-state.md` to name the only active
   goal, and reject completed plans presented as active entrypoints without

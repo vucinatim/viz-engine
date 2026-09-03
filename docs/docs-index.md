@@ -22,6 +22,7 @@ and autonomous decision limits.
 - [Working Agreements](./working-agreements.md)
 - [Autonomous Development Compass](./autonomous-development-compass.md)
 - [Autonomous Development Operating Contract](./plans/v2/autonomous-development-operating-contract.md)
+- [Autonomous Checkpoint Runbook](./plans/v2/autonomous-checkpoint-runbook.md)
 - [Suggestions](./suggestions.md)
 
 `current-state.md` names what exists, what remains open, and the active goal.
