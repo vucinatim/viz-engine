@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "kind": "viz-engine-staged-check-plan-proof",
+  "workItemId": "OS-02",
+  "baselineCommit": "ca49105d444c0142b10d4a9736a1bcf30c982c3e",
+  "entrypoint": "pnpm repo",
+  "readOnlyCommands": [
+    "program status",
+    "program next",
+    "program inspect",
+    "program validate",
+    "checks plan",
+    "senses validate",
+    "human list",
+    "review create",
+    "run preflight"
+  ],
+  "stages": [
+    {
+      "id": "fast",
+      "purpose": "cheap invariant and contract feedback during editing",
+      "mayBeTerminalEvidence": false
+    },
+    {
+      "id": "focused",
+      "purpose": "diff-selected formatting, lint, and related tests",
+      "mayBeTerminalEvidence": false
+    },
+    {
+      "id": "checkpoint",
+      "purpose": "complete type and deterministic foundation proof for a commit",
+      "mayBeTerminalEvidence": true
+    },
+    {
+      "id": "integration",
+      "purpose": "full build, browser, consumer, and creative-loop integration",
+      "mayBeTerminalEvidence": true
+    },
+    {
+      "id": "certification",
+      "purpose": "declared phase, candidate, or activation certification only",
+      "mayBeTerminalEvidence": true
+    }
+  ],
+  "orderingInvariant": "fast < focused < checkpoint < integration < certification",
+  "observations": {
+    "stableJson": true,
+    "discoverableHelp": true,
+    "diffSelected": true,
+    "quietEnvironmentBound": true,
+    "canonicalImplementation": "tools/repo/lib/check-contract.ts"
+  }
+}
