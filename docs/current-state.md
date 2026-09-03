@@ -37,6 +37,13 @@ multi-graph flagship as a forcing function for reusable creative-system
 maturation. It is intentionally large enough for many days of bounded
 checkpoints while retaining one verifiable completion condition.
 
+A now-approved
+[Autonomous Sensory Feedback Operating System](./plans/v2/goal-five-autonomous-sensory-feedback-operating-system.md)
+now defines the multi-week execution, observation, evidence, sole-writer,
+scheduled-run, and human-review model under Goal Five. Its bounded readiness
+implementation is active, but recurring execution and Goal Five Phase 1 remain
+disabled until the activation acceptance is proven.
+
 Phase 0 is complete at behavioral checkpoint
 `043f8dbae5f15828c5cba6c0b74f32cadb359946`: the exact environment and
 activation metrics are captured, the 46-criterion terminal-proof contract is

@@ -150,9 +150,12 @@ canonical V2 substrate, behavior-preserving consolidation and minimization,
 productions, and exact Light Tunnel 60 FPS performance certification.
 
 [Goal Five](docs/plans/v2/flagship-autonomous-production-and-creative-system-maturation.md)
-is active as an ambitious multi-act, multi-layer flagship production and
-creative-system maturation program. Gate 0 is approved and the immutable
-planning baseline is `b2b23b577feda29ef7eca9dcbf35a4e8c1162781`.
+is paused at its completed Phase 0 boundary while its approved autonomous
+operating model is implemented and proven. It remains the sole planned
+implementation program: an ambitious
+multi-act, multi-layer flagship production and creative-system maturation
+campaign. Gate 0 is approved and the immutable planning baseline is
+`b2b23b577feda29ef7eca9dcbf35a4e8c1162781`.
 
 See [current state](docs/current-state.md) for implementation truth,
 [the documentation map](docs/docs-index.md) for authority, and
