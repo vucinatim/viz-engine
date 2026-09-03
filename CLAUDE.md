@@ -35,7 +35,15 @@ unprovable owner. Never read or repair a half-transitioned snapshot manually.
   canonicalization, sensory coverage, review packets, and human questions.
 - Keep editor and agent mutations on the same product contracts.
 - Do not add agent-only scene semantics or a generic sensor framework.
-- Do not push, publish, deploy, or mutate production. Current work is V2-local.
+- Use ordinary tools such as `git`, `gh`, browsers, and package commands freely
+  within the granted authority. Repository CLIs own repository-specific state;
+  they are not mandatory wrappers around general-purpose capabilities.
+- After completing and verifying a checkpoint, fast-forward push only its exact
+  terminal commit to the same-named `origin` branch matching the active
+  program's declared non-`main`/non-`master` target. The tool used is not part of
+  the contract. Never force-push, merge, open or merge a PR, tag, publish,
+  deploy to or mutate production systems, rebase divergence, or push another
+  branch.
 - Never call `human resolve` without an explicit contemporaneous human
   instruction naming that decision; an unresolved human checkpoint is a clean
   stop.

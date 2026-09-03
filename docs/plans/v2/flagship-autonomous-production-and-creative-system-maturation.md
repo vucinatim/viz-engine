@@ -22,7 +22,7 @@ Last certified commit: f9c32f9dbb3be3391eb23a35540c3c01d9173dce
 Last full green gate: autonomous readiness CAL-03 at f9c32f9
 Next safe checkpoint: P1-01 inventory of every repository-authorized production input
 Awaiting human gate: Gate 1 treatment approval after P1-06 assembles and queues the review packet
-Known blockers: none; all work remains local to VizEngine V2 with no push, deployment, publication, purchase, or external mutation authority
+Known blockers: none; work remains on VizEngine V2 with only exact verified fast-forward push authority to its same-named origin branch and no merge, PR, deployment, publication, purchase, production-system access, or other external mutation authority
 Relevant evidence: docs/parity/evidence/2026-09-04-autonomous-readiness-cal-03-activation-audit.md
 ```
 
@@ -163,9 +163,11 @@ Gate 0 must confirm or amend these assumptions before implementation begins:
 8. The human will be available for the declared creative calibrations.
 9. Final media is at least 1920 × 1080 H.264/AAC at a deliberately selected
    cadence.
-10. Local commits are allowed when coherent and safe; push, merge, PR,
-    publication, deployment, cloud mutation, or other external action requires
-    explicit authority.
+10. Local commits are allowed when coherent and safe. The exact verified
+    terminal commit may be fast-forward pushed to the same-named `origin` V2
+    target branch after completion and review; force push, merge, PR, tag,
+    publication, deployment, cloud mutation, or other external action remains
+    forbidden.
 11. Goal Five may improve any canonical local product layer directly required
     by the flagship, but may not silently absorb the whole future roadmap.
 
@@ -1087,9 +1089,11 @@ checkpoint.
 
 Before recurrence is enabled, run one scheduled prompt manually, inspect its
 diff and process cleanup, and review its validation artifacts. Keep network
-mutation disabled by default, use the narrowest available filesystem scope,
-expire stale worktrees and artifacts by a documented policy, and never enable
-push, merge, publication, deployment, or external-system mutation.
+mutation disabled except for the exact runbook-governed post-completion
+fast-forward push, use the narrowest available filesystem scope, expire stale
+worktrees and artifacts by a documented policy, and never enable force push,
+merge, PR, tag, publication, deployment, production access, or other
+external-system mutation.
 
 ## Anti-Rabbit-Hole Rules
 

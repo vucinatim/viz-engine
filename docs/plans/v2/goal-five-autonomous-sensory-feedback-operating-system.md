@@ -67,10 +67,12 @@ This proposal assumes:
 
 1. Goal Five remains the only implementation program.
 2. One scheduled writer operates at a time.
-3. Work remains local and reversible by default.
-4. Local coherent commits are allowed; push, merge, publication, deployment,
-   cloud mutation, purchases, and external-system changes remain forbidden
-   without explicit authority.
+3. Work remains on the declared VizEngine V2 development branch and reversible
+   by default.
+4. Local coherent commits and fast-forward pushes of their exact verified
+   terminal commits to the same-named `origin` V2 branch are allowed. Force
+   push, merge, PR creation or merge, tags, releases, deployment, cloud mutation,
+   purchases, and other external-system changes remain forbidden.
 5. Only repository-authorized music, models, animations, and media are available
    until the human explicitly expands asset authority.
 6. The pinned V1 product experience remains the visible and performance floor.
@@ -658,7 +660,8 @@ never proves completion.
 
 ### Bootstrap: two to four days
 
-- reconcile status documentation; no push is part of this supporting program
+- reconcile status documentation; no push occurred during this supporting
+  readiness program
 - define the machine execution schema and initial Goal Five dependency graph
 - implement the minimal repo-program status/next/inspect/transition commands
 - implement and fault-test the sole-writer lease
@@ -831,8 +834,11 @@ Approved defaults are:
    automatically at human gates.
 3. **Days:** begin on weekdays for the first three calibration runs, then allow
    weekends only after cleanup and resource behavior are proven.
-4. **External authority:** local files, tests, browser checks, renders, and local
-   commits only; no push or external mutation.
+4. **External authority:** local files, tests, browser checks, renders, local
+   commits, and a post-completion fast-forward push of the exact reviewed
+   terminal commit to the same-named `origin` V2 target branch. No force push,
+   merge, PR, tag, release, deployment, production access, purchase, or other
+   external mutation.
 5. **Asset authority:** repository-authorized inputs only until Gate 1 requests a
    specific expansion.
 6. **Notifications:** report completed checkpoints, failures that invalidate the
@@ -841,10 +847,11 @@ Approved defaults are:
 Implement and manually run `OS-01` through `OS-06`, then complete the three
 supervised calibration runs, before creating the recurring schedule. The exact
 prompt and recovery action table live in the
-[checkpoint runbook](./autonomous-checkpoint-runbook.md). Nothing in this
-contract authorizes a production deployment, public
-release, push, publication, or other external mutation; all work remains on the
-VizEngine V2 development branch unless the human grants separate authority.
+[checkpoint runbook](./autonomous-checkpoint-runbook.md). This contract
+authorizes only the runbook's exact post-completion fast-forward push to the
+same-named `origin` V2 target branch. It does not authorize a force push, merge,
+PR, tag, release, deployment, production access, purchase, package/media/release
+publication, or any other external mutation.
 
 ## Completion Of This Supporting Program
 

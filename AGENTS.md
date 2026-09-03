@@ -119,9 +119,19 @@ distinguish a human from a local process. Autonomous agents must never invoke it
 without a contemporaneous user instruction naming the decision. At a human
 checkpoint, prepare evidence and stop.
 
-No autonomous workflow may push, merge, publish, deploy, change production, or
-mutate an external system unless the user grants that authority explicitly.
-Current readiness and Goal Five work is V2-local only.
+Autonomous agents may use ordinary development tools, including `git`, `gh`,
+browsers, and repository CLIs, within the authority granted here. Repository
+tools are canonical where they own VizEngine product or execution state; they
+do not replace general-purpose tools merely to constrain how work is performed.
+
+After a Goal Five checkpoint is complete and verified, its exact terminal
+commit may be fast-forward pushed to the same-named `origin` branch when that
+branch is the active program's declared non-`main`/non-`master` target. The
+constraint is on the resulting effect, not which ordinary Git-capable tool
+performs it. Never force-push, merge, open or merge a PR, tag, publish, deploy to
+or modify production systems, or mutate another external system. Remote
+divergence or push failure is a truthful stop, never authority to merge, rebase,
+or rewrite history.
 
 ## Sensory Adequacy Rule
 

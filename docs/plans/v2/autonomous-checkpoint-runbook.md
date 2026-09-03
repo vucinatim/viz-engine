@@ -1,6 +1,6 @@
 # Autonomous Checkpoint Runbook
 
-Status: activated for local VizEngine V2 development after supervised
+Status: activated for VizEngine V2 branch development after supervised
 calibration and explicit `ACT-01` approval.
 
 This runbook is the exact operational entrypoint for every unattended VizEngine
@@ -15,10 +15,27 @@ reviewed local handoff commit after their exact human gate approves them.
 
 ## Authority Boundary
 
-The run may read and mutate local repository state only after the maintainer
-CLI grants an exact claim. It may create one coherent local commit. It may not
-push, merge, deploy, publish, purchase, modify external systems, open visible
-applications, or play audio.
+The run may read and mutate repository state only after the maintainer CLI
+grants an exact claim. It may create one coherent commit and, once that
+checkpoint is complete and verified, fast-forward push its exact terminal
+commit to the same-named `origin` branch when the branch matches the active
+program's declared target and is neither `main` nor `master`.
+
+This is an effect boundary, not a tool restriction. The agent may use `git`,
+`gh`, repository CLIs, browsers, package commands, and other ordinary
+development tools within this authority. Repository-specific tools remain
+canonical only for the product and execution state they actually own.
+
+Push safety comes from rechecking the exact terminal identity, pushing that
+literal commit without force, and Git's atomic fast-forward update. If another
+actor advances the remote between fetch and push, the server rejects the stale
+update. VizEngine must not duplicate this behavior with a bespoke Git wrapper
+or extend its local execution mutex across a network operation.
+
+The run may never force-push, merge, open or merge a PR, tag, deploy, publish,
+purchase, modify a production system or another external system, open visible
+applications, or play audio. Remote divergence or push failure is a truthful
+stop; it never authorizes merge, rebase, retry by force, or another checkpoint.
 
 `human resolve` is an audit-recording command, not a cryptographic proof of
 who invoked it. An autonomous run must never call it from its own judgment or
@@ -37,6 +54,11 @@ pnpm --silent run repo -- run preflight --json
 
 The preflight takes a coherent state snapshot behind the Git-common
 operational mutex. Follow exactly one reported action:
+
+Its `externalMutationAllowed: false` quiet-environment value governs the claimed
+implementation phase. The narrow branch push authority begins only after the
+item has completed, ownership has been released, and the terminal identity has
+been reverified.
 
 - `wait-operational-lock`: another live run owns a state transition; exit
   without mutation.
@@ -93,7 +115,13 @@ unblocking. An approved decision must be supplied as exact program-scoped
     not met, block truthfully with its exact recovery condition.
 11. Create a review packet, verify the lease is released, and stop every scoped
     server, browser, encoder, and child process.
-12. Start no second item in the same scheduled wake. A later wake must recover
+12. Re-read the terminal identity and clean state, fetch `origin`, and confirm
+    that the destination is the same-named active target branch, is not
+    `main` or `master`, and can advance by fast-forward. Use an ordinary
+    non-force Git push of the literal terminal commit and verify the remote ref
+    afterward. On divergence or failure, stop without merge, rebase, force, or
+    history rewriting.
+13. Start no second item in the same scheduled wake. A later wake must recover
     from repository truth afresh.
 
 Completion accepts exactly one commit descended directly from the claim's
@@ -120,19 +148,26 @@ editing, keep one primary conceptual axis, preserve the V1 UX/performance floor
 and canonical V2 project/session/runtime boundaries, and build only
 end-state-compatible code.
 
-Remain quiet and local: no visible applications, no audio, no reused server,
-one heavy process at a time, no push/merge/deploy/publish/purchase/external
-mutation. Never invoke `human resolve` without an explicit contemporaneous
-human instruction naming that decision. At a human gate, unsafe state, live
-owner, empty ready queue, or unresolved product ambiguity, make no speculative
-mutation and exit truthfully.
+Remain quiet: no visible applications, no audio, no reused server, and one
+heavy process at a time. Use normal development tools freely within this
+authority; repository CLIs are canonical only for the state they own. Never
+merge, open or merge a PR, force-push, tag, deploy, publish, purchase, touch
+production systems, or mutate another external system. Never invoke `human
+resolve` without an explicit contemporaneous human instruction naming that
+decision. At a human gate, unsafe state, live owner, empty ready queue, or
+unresolved product ambiguity, make no speculative mutation and exit truthfully.
 
 Use the sensory adequacy gate, focused feedback, diff-scoped canonicalization,
 independent read-only review, and the required staged check. Complete only with
 all typed evidence and exactly one coherent local commit; otherwise block with
-an exact recovery condition. Create a review packet, release ownership, stop
-all scoped children, and report the checkpoint, evidence, remaining uncertainty,
-and next dependency-ready item. Do not start a second item in this wake.
+an exact recovery condition. Create a review packet, release ownership, and stop
+all scoped children. Only then, re-read repository state and use an ordinary
+non-force Git push to advance the same-named `origin` branch to the literal
+verified terminal commit when it matches the active program's declared non-main
+target; verify the remote ref. On divergence or failure, never merge, rebase,
+force, or rewrite history. Report the checkpoint, evidence, push result,
+remaining uncertainty, and next dependency-ready item. Do not start a second
+item in this wake.
 ```
 
 ## Calibration And Activation

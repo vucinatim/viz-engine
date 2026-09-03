@@ -2726,3 +2726,20 @@
   refusal, staged validation, quiet execution, and human-owned creative gates
 - authorized the runbook-owned night cadence; Codex remains the authority for
   actual schedule state, which repository files do not infer
+
+## 2026-09-04 — Verified V2 branch push authority granted
+
+- recorded the product owner's explicit instruction that autonomous work should
+  commit and push its verified checkpoints while never deploying or merging to
+  `main`
+- constrained that authority to one normal fast-forward push of the exact
+  completed and reviewed terminal commit to the same-named `origin` branch
+  declared by the active program
+- kept force push, merge, PR, tag, release, deployment, production access,
+  purchase, asset acquisition, and every other external mutation forbidden
+- made divergence, ambiguous upstream, failed verification, live ownership, or
+  dirty state a truthful stop rather than permission to repair history
+- kept tool choice open: ordinary `git`, `gh`, browser, package, and repository
+  tooling remain available within their authority, with no bespoke Git wrapper
+- kept preflight focused on repository ownership and mutation admission; the
+  narrow push authority begins only after terminal completion and verification

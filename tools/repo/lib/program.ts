@@ -347,6 +347,11 @@ export const validateExecutionProgramDefinition = (
   assertNonEmptyString(definition.id, 'program.id');
   assertNonEmptyString(definition.title, 'program.title');
   assertNonEmptyString(definition.targetBranch, 'program.targetBranch');
+  if (['main', 'master'].includes(definition.targetBranch)) {
+    throw new Error(
+      `Execution programs cannot target reserved branch ${definition.targetBranch}.`,
+    );
+  }
   const currentBranch = readRepositoryIdentity(root).branch;
   if (currentBranch !== definition.targetBranch) {
     throw new Error(

@@ -42,9 +42,12 @@ A now-approved
 now defines the multi-week execution, observation, evidence, sole-writer,
 scheduled-run, and human-review model under Goal Five. Its bounded readiness
 implementation and three supervised exact-prompt calibration runs are complete.
-The product owner approved `ACT-01` for local V2 development only. Push, merge,
-deployment, publication, purchase, production-system access, and other external
-mutation remain unauthorized.
+The product owner approved `ACT-01` for V2 development and subsequently granted
+one narrow remote-branch synchronization authority: an autonomous checkpoint
+may fast-forward push its exact completed, reviewed terminal commit to the
+same-named `origin` branch matching the active program's non-main target. Force
+push, merge, PR, tag, deployment, package/media/release publication, purchase,
+production-system access, and other external mutation remain unauthorized.
 
 The readiness substrate now has a tracked active-program pointer, immutable
 target-branch execution definitions, program/branch-scoped Git-common lifecycle

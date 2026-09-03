@@ -193,6 +193,14 @@ describe('repository execution program', () => {
     expect(() => validateExecutionProgramDefinition(cyclic, root)).toThrow(
       /dependency cycle/u,
     );
+
+    for (const branch of ['main', 'master']) {
+      const reservedTarget = structuredClone(program);
+      reservedTarget.targetBranch = branch;
+      expect(() =>
+        validateExecutionProgramDefinition(reservedTarget, root),
+      ).toThrow(`Execution programs cannot target reserved branch ${branch}.`);
+    }
   });
 
   it('keeps lifecycle state outside the worktree and binds evidence to a requirement', () => {
