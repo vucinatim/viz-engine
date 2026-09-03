@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "kind": "viz-engine-ownership-recovery-proof",
+  "workItemId": "OS-03",
+  "baselineCommit": "bc97f026fde7b0a5917194fc4bdc1c8070aeef51",
+  "canonicalTests": [
+    "tests/foundation/repo-lease.test.ts",
+    "tests/foundation/repo-operational-lock.test.ts",
+    "tests/foundation/repo-program.test.ts"
+  ],
+  "provedCases": [
+    {
+      "case": "cross-worktree sole writer",
+      "expected": "a linked worktree cannot claim or recover another checkout's live lease",
+      "result": "passed"
+    },
+    {
+      "case": "exact continuation identity",
+      "expected": "only all four recorded lease, owner, work-item, and claim values continue an active run",
+      "result": "passed"
+    },
+    {
+      "case": "unknown dirty state",
+      "expected": "fresh claims fail closed without changing or discarding the diff",
+      "result": "passed"
+    },
+    {
+      "case": "expired dirty recovery",
+      "expected": "the exact stale owner resumes the preserved diff through the immutable claim marker",
+      "result": "passed"
+    },
+    {
+      "case": "committed checkpoint recovery",
+      "expected": "terminal recovery requires the exact pre-commit check evidence and keeps the lease identity",
+      "result": "passed"
+    },
+    {
+      "case": "process death during state transition",
+      "expected": "the crash journal rolls back the complete managed snapshot before exact recovery",
+      "result": "passed"
+    },
+    {
+      "case": "human stop",
+      "expected": "claim, checkpoint, completion, and fresh preflight remain blocked until an exact approved decision",
+      "result": "passed"
+    },
+    {
+      "case": "repository or lease drift during validation",
+      "expected": "the check fails and preserves a valid evidence artifact even when every command passed",
+      "result": "passed"
+    }
+  ],
+  "stateLocation": "Git common directory/viz-engine-autonomy",
+  "destructiveRecovery": false,
+  "limitations": [
+    "OS-03 proves the transition machinery in isolated repositories; OS-06 separately rehearses the complete real-repository protocol.",
+    "No external system, browser, audio device, deployment, or remote Git operation was used."
+  ]
+}
