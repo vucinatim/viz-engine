@@ -1,0 +1,230 @@
+{
+  "schemaVersion": 1,
+  "kind": "viz-engine-autonomous-calibration-run",
+  "calibrationRun": 1,
+  "workItem": {
+    "programId": "goal-five-autonomous-readiness",
+    "programDefinitionHash": "2691c5b854b8f5262f969fc893f8f448901464b46b5d1adcdc8f518675fe640c",
+    "id": "CAL-01",
+    "claimId": "ebb1fb7f-8c1a-4ddd-af57-0af63fd1608a",
+    "leaseId": "7ac5139e-76e7-49ef-9f29-51b7a2c63fba",
+    "owner": "codex/root",
+    "startingCommit": "3faf4b0e3d714de1963b0d4c0da6dd8e55ae7ac6",
+    "branch": "codex/viz-engine-v2"
+  },
+  "invocation": {
+    "id": "cal-01/ebb1fb7f-8c1a-4ddd-af57-0af63fd1608a",
+    "mode": "supervised-fresh-start-calibration",
+    "prompt": {
+      "canonicalSource": "docs/plans/v2/autonomous-checkpoint-runbook.md",
+      "section": "Exact Scheduled Prompt",
+      "lineSpanAtStartingCommit": "107-129",
+      "utf8BytesIncludingFinalNewline": 1479,
+      "sha256": "3b1a7fea7d435c10ec9c356ea83ca8e0ef6c4a05fcffda229af18e1722be531d",
+      "firstLine": "Advance VizEngine by at most one dependency-ready autonomous checkpoint using",
+      "lastLine": "and next dependency-ready item. Do not start a second item in this wake."
+    },
+    "previousWakeTerminal": {
+      "workItemId": "OS-06",
+      "terminalCommit": "3faf4b0e3d714de1963b0d4c0da6dd8e55ae7ac6",
+      "completedAt": "2026-09-03T21:37:22.421Z",
+      "reviewCreatedAt": "2026-09-03T21:37:31.030Z",
+      "reviewPacketSha256": "8f8b30700081a40bd1b41c1cc5fca3e513c95a6720ae9cbac29af4c891b51234",
+      "repositoryClean": true,
+      "activeLease": null,
+      "nextReadyItem": "CAL-01"
+    },
+    "freshWakeBoundary": {
+      "machineObservable": false,
+      "startedAt": null,
+      "supervisedAttestation": "The product-owner-supervised task resumed after the OS-06 terminal review and invoked the canonical prompt as a distinct CAL-01 fresh start before claiming or editing.",
+      "limitation": "Codex Desktop does not expose a cryptographically verifiable task-turn identifier or start timestamp to the repository. Fresh-wake separation is therefore a supervised attestation anchored between the prior terminal review and this claim, not machine proof.",
+      "firstMachineTimestamp": "2026-09-03T21:40:03.267Z",
+      "firstMachineTimestampMeaning": "CAL-01 claim acquisition; the preceding stop and claim preflights did not write timestamps."
+    }
+  },
+  "contractRecovery": {
+    "source": "repository",
+    "chatMemoryTreatedAsAuthority": false,
+    "inputs": [
+      {
+        "path": "AGENTS.md",
+        "sha256": "66b94604ffeec5f874448ac198440c20b8e3fad02d4b2bb20a61ea40707e6db2"
+      },
+      {
+        "path": "docs/plans/v2/autonomous-checkpoint-runbook.md",
+        "sha256": "4d314c1c26210905e86677829924407db92e75004d8eb0f7149259e7bb408033"
+      },
+      {
+        "path": "docs/visions/viz-engine-compounding-vision.md",
+        "sha256": "d6b579c03963e55261854850b840a096eac6c864ac8c4e8198e387927444f6cc"
+      },
+      {
+        "path": "docs/current-state.md",
+        "sha256": "5ec31ea88efb164bb9a7fee615ff8dee7d514a31c8a4cd8e1b6505cfff86ecfb"
+      },
+      {
+        "path": "docs/plans/v2/flagship-autonomous-production-and-creative-system-maturation.md",
+        "sha256": "e1bcb1f71fc532cadb662b3f65f18fe1721f5b9af9894ef8f822f586e7d84d52"
+      },
+      {
+        "path": "docs/plans/v2/goal-five-autonomous-sensory-feedback-operating-system.md",
+        "sha256": "a22c713a9f9bfcb0acb337861010e1c9701beaacaf1b148e6d757d0f01ebeb17"
+      },
+      {
+        "path": "tools/repo/programs/autonomous-readiness.json",
+        "sha256": "de4e2b2340fe8839e5b2c1132ba5da28cf4e01a261904939fdae814c262c4f61"
+      }
+    ]
+  },
+  "freshStartAdmission": [
+    {
+      "attempt": 1,
+      "capture": "embedded normalized snapshot of the supervised task command output",
+      "capturedAt": null,
+      "repository": {
+        "branch": "codex/viz-engine-v2",
+        "head": "3faf4b0e3d714de1963b0d4c0da6dd8e55ae7ac6",
+        "clean": true,
+        "statusHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "load": {
+        "oneMinutePerCpu": 2.1327,
+        "heavyValidationAllowed": false
+      },
+      "mutationAllowed": false,
+      "requiredAction": "stop",
+      "lease": null,
+      "candidateSummary": [
+        {
+          "id": "CAL-01",
+          "claimable": false
+        }
+      ],
+      "result": "The run stopped without a claim or repository mutation under host contention."
+    },
+    {
+      "attempt": 2,
+      "capture": "embedded normalized snapshot of the supervised task command output",
+      "capturedAt": null,
+      "repository": {
+        "branch": "codex/viz-engine-v2",
+        "head": "3faf4b0e3d714de1963b0d4c0da6dd8e55ae7ac6",
+        "clean": true,
+        "statusHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "load": {
+        "oneMinutePerCpu": 0.86597,
+        "heavyValidationAllowed": true
+      },
+      "mutationAllowed": true,
+      "requiredAction": "claim",
+      "lease": null,
+      "candidateSummary": [
+        {
+          "id": "CAL-01",
+          "claimable": true
+        }
+      ],
+      "result": "The run selected CAL-01 as the only dependency-ready autonomous item."
+    }
+  ],
+  "ownership": {
+    "claimAcquiredAt": "2026-09-03T21:40:03.267Z",
+    "cleanStatusHashAtClaim": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "freshWakeWhileOwned": {
+      "mutationAllowed": false,
+      "requiredAction": "wait-writer-lease"
+    },
+    "exactContinuation": {
+      "mutationAllowed": true,
+      "requiredAction": "continue",
+      "matchedIdentityFields": ["leaseId", "owner", "workItemId", "claimId"],
+      "hostLoadOneMinutePerCpu": 0.8489990234375,
+      "heavyValidationAllowed": true
+    }
+  },
+  "selectedCheckpoint": {
+    "observableOutcome": "Produce the immutable evidence and independent review required to prove one exact-prompt supervised wake without resuming Goal Five feature production.",
+    "canonicalOwner": "The repository maintainer program owns selection, admission, evidence admission, and release; product plans and package APIs remain authoritative for product direction and behavior.",
+    "forbiddenOwners": [
+      "chat memory",
+      "a second roadmap",
+      "the browser UI as an authoring dependency",
+      "an untracked scheduler",
+      "a parallel writer"
+    ],
+    "assumptions": [
+      "A documentation-and-evidence checkpoint is the complete intended CAL-01 product scope.",
+      "Code architecture evidence is sufficient because no product runtime, editor behavior, media, or performance behavior changes.",
+      "Creative-human authority is preserved by retaining ACT-01 as an unresolved human checkpoint."
+    ],
+    "evidenceLanes": ["code-architecture", "creative-human"],
+    "plausibleFalsePass": "A run could look successful while borrowing another run's lease, skipping a high-load stop, starting feature work, accepting mutable evidence, leaving dirty state or children behind, or implicitly treating prior human enthusiasm as activation approval.",
+    "acceptance": [
+      "Exactly one dependency-ready item is claimed and exactly one coherent local commit is produced.",
+      "Admission and continuation use the canonical preflight with exact identities.",
+      "Required validation is identity-bound and passing.",
+      "The packet and independent review become immutable evidence.",
+      "The lease is released, the worktree is clean, scoped children are absent, and no second item starts.",
+      "No recurring schedule exists and ACT-01 remains explicitly human-owned."
+    ],
+    "irreduciblyHumanJudgment": "Whether to activate recurring execution after all three calibration runs remains the product owner's ACT-01 decision."
+  },
+  "scope": {
+    "primaryConceptualAxis": "supervised autonomous operating-contract calibration",
+    "goalFiveFeatureProductionResumed": false,
+    "productCodeChanged": false,
+    "browserRequired": false,
+    "audioRequired": false,
+    "encoderRequired": false,
+    "externalMutationRequired": false,
+    "localCommitAuthorized": true,
+    "pushAuthorized": false,
+    "recurringScheduleAuthorized": false
+  },
+  "lifecycle": [
+    {
+      "step": "recover",
+      "result": "Recovered direction, state, branch, program, and readiness from tracked repository truth."
+    },
+    {
+      "step": "admit",
+      "result": "One high-load fresh attempt stopped without mutation; a later low-load fresh attempt admitted CAL-01."
+    },
+    {
+      "step": "claim",
+      "result": "CAL-01 acquired the sole writer lease from a clean starting commit."
+    },
+    {
+      "step": "resume",
+      "result": "A fresh preflight refused the live writer and the owning run continued only with all four exact identities."
+    },
+    {
+      "step": "sensory gate",
+      "result": "The calibration changes evidence only; repository validation and independent semantic review are required, while browser, audio, media, and runtime sensors would not observe the changed behavior."
+    },
+    {
+      "step": "implement",
+      "result": "Prepared only the content-addressable calibration packet and independent review surface."
+    },
+    {
+      "step": "validate",
+      "status": "pending-terminal-checkpoint",
+      "expected": "Canonicalization and the repository checkpoint stage pass against this exact claim and diff."
+    },
+    {
+      "step": "commit-release-stop",
+      "status": "pending-terminal-transition",
+      "expected": "One commit is admitted, CAL-01 is completed with immutable evidence, ownership is released, cleanup is verified, and no second item starts in this wake."
+    }
+  ],
+  "priorRehearsalEvidence": {
+    "os06Commit": "3faf4b0e3d714de1963b0d4c0da6dd8e55ae7ac6",
+    "quietRehearsal": "artifact:sha256:10240c02b14e26278c1f0d56d63ad2df5db0992fc9c2cd6128920cf0ead49f5e",
+    "failureMatrix": "artifact:sha256:1f0cda4be2f274bdc6f2608867498a34dadf207f0c53ae9398feb8e66894d59d",
+    "cleanup": "artifact:sha256:3cc8d740df97ff5646b769aeb5fb2d4dbf5f83afcc4d2ae534fbd7ab418e947c",
+    "reviewPacketSha256": "8f8b30700081a40bd1b41c1cc5fca3e513c95a6720ae9cbac29af4c891b51234",
+    "checkpointSha256": "2c102a558309b4508dd234e512e072a968685ef52c6836ae672dcdadd5f0d44b"
+  }
+}
