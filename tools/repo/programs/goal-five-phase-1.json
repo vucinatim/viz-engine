@@ -1,0 +1,338 @@
+{
+  "schemaVersion": 2,
+  "id": "goal-five-phase-1-treatment",
+  "title": "Goal Five Phase 1 Capability, Asset, And Music Audit",
+  "targetBranch": "codex/viz-engine-v2",
+  "parentGoal": "docs/plans/v2/flagship-autonomous-production-and-creative-system-maturation.md",
+  "executionPlan": "docs/plans/v2/flagship-autonomous-production-and-creative-system-maturation.md",
+  "criteriaContract": "docs/parity/goal-five-certification-matrix.json",
+  "gates": [
+    {
+      "id": "inputs",
+      "title": "Authorized inputs and existing capability truth",
+      "wave": 0
+    },
+    {
+      "id": "music",
+      "title": "Music-window analysis and frame-exact map",
+      "wave": 1
+    },
+    {
+      "id": "treatment",
+      "title": "Production treatment and review evidence",
+      "wave": 2
+    },
+    {
+      "id": "gate-1",
+      "title": "Human treatment approval and Phase 2 handoff",
+      "wave": 3
+    }
+  ],
+  "workItems": [
+    {
+      "id": "P1-01",
+      "gate": "inputs",
+      "lane": "authorized-input-audit",
+      "priority": 1,
+      "title": "Inventory every repository-authorized production input",
+      "authority": "autonomous",
+      "dependsOn": [],
+      "estimate": { "agentHoursMin": 2, "agentHoursMax": 4 },
+      "acceptance": [
+        "Every repository-authorized audio, model, animation, texture, image, video, shader, production pack, and derived input relevant to Goal Five has a stable identity, provenance, usage boundary, and availability result.",
+        "Missing authority, licensing ambiguity, broken references, duplicate assets, and materialization requirements are explicit rather than inferred away.",
+        "No external asset is downloaded, purchased, generated through an external service, or added to the approved input set."
+      ],
+      "evidenceLanes": [
+        "project-semantic",
+        "portability-reproducibility",
+        "code-architecture"
+      ],
+      "affectedCriteria": [
+        "production.honest-breadth",
+        "production.model-backed-authored-animation",
+        "production.complementary-media",
+        "evidence.assets-artifacts-bundle-manifest"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "authorized-input-inventory",
+          "kind": "artifact",
+          "description": "Content-addressed machine inventory of every audited authorized production input"
+        },
+        {
+          "id": "input-provenance-review",
+          "kind": "document",
+          "description": "Content-addressed human-readable provenance, authority, and availability review"
+        },
+        {
+          "id": "input-audit-check",
+          "kind": "command",
+          "checkStage": "checkpoint",
+          "description": "Passing checkpoint record bound to the input-audit checkpoint"
+        }
+      ]
+    },
+    {
+      "id": "P1-02",
+      "gate": "inputs",
+      "lane": "capability-surface-audit",
+      "priority": 2,
+      "title": "Audit the complete reusable capability and authoring surface",
+      "authority": "autonomous",
+      "dependsOn": ["P1-01"],
+      "estimate": { "agentHoursMin": 3, "agentHoursMax": 5 },
+      "acceptance": [
+        "Canonical registries, schemas, actions, CLI operations, runtime/render support, editor surfaces, examples, and existing production packs are inventoried from implementation truth.",
+        "The audit distinguishes ready capability, composition-only work, real reusable gaps, production-local direction, and forbidden duplicate ownership.",
+        "Likely gaps are prioritized by treatment value and criterion coverage without implementing speculative features."
+      ],
+      "evidenceLanes": [
+        "project-semantic",
+        "editor-parity",
+        "code-architecture"
+      ],
+      "affectedCriteria": [
+        "workflow.headless-canonical-operations",
+        "workflow.no-agent-shadow-semantics",
+        "editor.complete-flagship-workflows",
+        "reusable.production-core-boundary",
+        "reusable.canonical-authoring-and-feedback"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "capability-catalog",
+          "kind": "artifact",
+          "description": "Content-addressed machine-readable capability and authoring-surface catalog"
+        },
+        {
+          "id": "capability-boundary-review",
+          "kind": "document",
+          "description": "Content-addressed architectural review of ready capabilities, gaps, and canonical owners"
+        },
+        {
+          "id": "capability-audit-check",
+          "kind": "command",
+          "checkStage": "checkpoint",
+          "description": "Passing checkpoint record bound to the complete capability audit"
+        }
+      ]
+    },
+    {
+      "id": "P1-03",
+      "gate": "music",
+      "lane": "music-window-audit",
+      "priority": 3,
+      "title": "Analyze and compare authorized 45–60 second music windows",
+      "authority": "autonomous",
+      "dependsOn": ["P1-01"],
+      "estimate": { "agentHoursMin": 3, "agentHoursMax": 5 },
+      "acceptance": [
+        "Every viable authorized track yields deterministic identity, decode, duration, analysis, and bounded 45–60 second candidate windows.",
+        "Candidate comparison covers energy arc, sections, phrases, beats, transients, spectral character, silence, and suitability for a coherent multi-act flagship.",
+        "The recommended window and alternatives retain exact source and frame/time coordinates; intended-audio preference remains a Gate 1 human judgment."
+      ],
+      "evidenceLanes": [
+        "audio-musical-intent",
+        "runtime-temporal",
+        "portability-reproducibility",
+        "creative-human"
+      ],
+      "affectedCriteria": [
+        "production.duration-acts-transitions",
+        "production.macro-phrase-detail-reactivity",
+        "production.visual-audio-sanity",
+        "evidence.treatment-and-musical-map"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "music-window-analysis",
+          "kind": "artifact",
+          "description": "Content-addressed deterministic analysis for every viable authorized candidate window"
+        },
+        {
+          "id": "music-window-comparison",
+          "kind": "document",
+          "description": "Content-addressed comparison and recommendation with exact source and window identities"
+        },
+        {
+          "id": "music-analysis-check",
+          "kind": "command",
+          "checkStage": "checkpoint",
+          "description": "Passing checkpoint record bound to deterministic music-window analysis"
+        }
+      ]
+    },
+    {
+      "id": "P1-04",
+      "gate": "music",
+      "lane": "musical-map",
+      "priority": 4,
+      "title": "Author the frame-exact musical and act map",
+      "authority": "autonomous",
+      "dependsOn": ["P1-03"],
+      "estimate": { "agentHoursMin": 3, "agentHoursMax": 5 },
+      "acceptance": [
+        "The recommended window has frame-exact acts, transitions, phrases, beats, peaks, rests, and confidence/provenance for every landmark.",
+        "Macro, phrase, and detail response opportunities are expressed as production intent rather than hidden engine behavior.",
+        "The map is machine-readable, human-reviewable, deterministic, and suitable as the timing authority for treatment and later authoring."
+      ],
+      "evidenceLanes": [
+        "audio-musical-intent",
+        "runtime-temporal",
+        "project-semantic"
+      ],
+      "affectedCriteria": [
+        "production.duration-acts-transitions",
+        "production.macro-phrase-detail-reactivity",
+        "determinism.evaluation-paths",
+        "evidence.treatment-and-musical-map"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "musical-map",
+          "kind": "artifact",
+          "description": "Content-addressed frame-exact machine-readable musical and act map"
+        },
+        {
+          "id": "musical-map-review",
+          "kind": "document",
+          "description": "Content-addressed human-readable map, provenance, assumptions, and uncertainty review"
+        },
+        {
+          "id": "musical-map-check",
+          "kind": "command",
+          "checkStage": "checkpoint",
+          "description": "Passing checkpoint record bound to the frame-exact musical map"
+        }
+      ]
+    },
+    {
+      "id": "P1-05",
+      "gate": "treatment",
+      "lane": "production-treatment",
+      "priority": 5,
+      "title": "Write the evidence-bound flagship production treatment",
+      "authority": "autonomous",
+      "dependsOn": ["P1-02", "P1-04"],
+      "estimate": { "agentHoursMin": 4, "agentHoursMax": 7 },
+      "acceptance": [
+        "The treatment selects one exact music window and defines emotional arc, act structure, visual hierarchy, palette, material, lighting, camera, transitions, density, and three-timescale reactivity.",
+        "Every proposed layer, component, graph, model, asset, media, compositor, and artifact role maps to an existing capability or the smallest justified reusable gap with a canonical owner.",
+        "Procedural, model-backed, shader/particle/instancing, complementary media, camera, graph, and compositor breadth are included or receive an explicit evidence-based exclusion for Gate 1.",
+        "Alternatives, risks, representative review targets, performance posture, and forbidden production-specific engine leakage are explicit; no deep aesthetic implementation begins."
+      ],
+      "evidenceLanes": [
+        "project-semantic",
+        "visual-composition",
+        "motion-continuity",
+        "code-architecture",
+        "creative-human"
+      ],
+      "affectedCriteria": [
+        "production.honest-breadth",
+        "production.procedural-spatial-3d",
+        "production.shader-particle-instancing",
+        "production.compositor-camera-hierarchy",
+        "production.final-creative-coherence",
+        "reusable.production-core-boundary",
+        "evidence.treatment-and-musical-map"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "production-treatment",
+          "kind": "document",
+          "description": "Content-addressed complete treatment and alternative analysis"
+        },
+        {
+          "id": "treatment-manifest",
+          "kind": "artifact",
+          "description": "Content-addressed machine summary of selected identities, roles, gaps, exclusions, and review targets"
+        },
+        {
+          "id": "treatment-check",
+          "kind": "command",
+          "checkStage": "checkpoint",
+          "description": "Passing checkpoint record bound to the treatment and its canonical ownership map"
+        }
+      ]
+    },
+    {
+      "id": "P1-06",
+      "gate": "treatment",
+      "lane": "gate-one-review",
+      "priority": 6,
+      "title": "Assemble and enqueue the Gate 1 treatment review",
+      "authority": "autonomous",
+      "dependsOn": ["P1-05"],
+      "estimate": { "agentHoursMin": 2, "agentHoursMax": 4 },
+      "acceptance": [
+        "One compact review packet binds the authorized-input inventory, capability audit, exact music analysis, musical map, treatment, alternatives, assumptions, and unresolved human judgments by content identity.",
+        "The packet includes representative existing-capability frames or bounded visual references sufficient to judge direction without pretending a Phase 2 prototype exists.",
+        "A program-scoped human-validation question blocks G1-01, recommends one treatment, presents viable alternatives, and prohibits deep aesthetic expansion while waiting."
+      ],
+      "evidenceLanes": [
+        "visual-composition",
+        "portability-reproducibility",
+        "code-architecture",
+        "creative-human"
+      ],
+      "affectedCriteria": [
+        "evidence.treatment-and-musical-map",
+        "evidence.assets-artifacts-bundle-manifest",
+        "evidence.visual-review-packet",
+        "evidence.human-calibration-decisions"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "gate-one-review-packet",
+          "kind": "artifact",
+          "description": "Content-addressed Gate 1 review packet and representative visual references"
+        },
+        {
+          "id": "gate-one-request",
+          "kind": "document",
+          "description": "Content-addressed exact Gate 1 decision request and safe-work boundary"
+        },
+        {
+          "id": "gate-one-review-check",
+          "kind": "command",
+          "checkStage": "integration",
+          "description": "Passing integration check record bound to the Gate 1 packet and human-validation request"
+        }
+      ]
+    },
+    {
+      "id": "G1-01",
+      "gate": "gate-1",
+      "lane": "human-treatment-approval",
+      "priority": 7,
+      "title": "Approve the treatment outcome and authorize its successor",
+      "authority": "human_checkpoint",
+      "dependsOn": ["P1-06"],
+      "estimate": { "agentHoursMin": 1, "agentHoursMax": 1 },
+      "acceptance": [
+        "The product owner records one approved Gate 1 decision that names exactly one successor outcome: accept the exact treatment and authorize Phase 2, or authorize a bounded Phase 1 revision with the requested changes stated exactly.",
+        "The claimed G1-01 checkpoint creates and selects the immutable successor named by that approved decision: a Phase 2 program derived from accepted evidence, or a replacement Phase 1 program derived from the clean terminal P1-06 commit and bounded revision request.",
+        "The single Gate 1 validation remains pending through discussion or requested treatment changes and is resolved approved only when the product owner authorizes one executable successor outcome; resolving it rejected or changes_requested is a terminal safe stop that requires a separately designed and reviewed authority mechanism before any continuation.",
+        "All old-program completion and review operations remain explicitly scoped until its lease is released, and default preflight may select the successor only after this Gate 1 program is terminal, reviewed, clean, and unowned."
+      ],
+      "evidenceLanes": ["creative-human"],
+      "affectedCriteria": ["evidence.human-calibration-decisions"],
+      "externalApproval": "Explicit approved product-owner Gate 1 successor decision in the Codex task",
+      "evidenceRequirements": [
+        {
+          "id": "treatment-decision",
+          "kind": "decision",
+          "description": "Explicit approved human Gate 1 decision naming either the accepted Phase 2 treatment or an exact bounded Phase 1 revision"
+        },
+        {
+          "id": "successor-handoff-check",
+          "kind": "command",
+          "checkStage": "checkpoint",
+          "description": "Passing checkpoint record bound to the approved successor program and pointer handoff"
+        }
+      ]
+    }
+  ]
+}

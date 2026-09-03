@@ -30,16 +30,6 @@ describe('repository CLI discoverability', () => {
   });
 
   it('declares all custom reviewer agents read-only with complete instructions', () => {
-    const activeProgram = JSON.parse(
-      readFileSync(
-        resolve(root, 'tools/repo/programs/active-program.json'),
-        'utf8',
-      ),
-    ) as { schemaVersion: number; program: string };
-    expect(activeProgram).toEqual({
-      schemaVersion: 1,
-      program: 'tools/repo/programs/autonomous-readiness.json',
-    });
     const config = readFileSync(resolve(root, '.codex/config.toml'), 'utf8');
     expect(config).toMatch(/max_concurrent_threads_per_session\s*=\s*3/u);
     for (const name of [

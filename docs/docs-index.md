@@ -36,7 +36,8 @@ The active implementation contract is:
 - [Goal Five Autonomous Sensory Feedback Operating System](./plans/v2/goal-five-autonomous-sensory-feedback-operating-system.md)
   is the approved subordinate readiness and execution contract; it is not a
   second product goal. Its implementation and three supervised calibrations are
-  complete; recurrence remains disabled pending explicit `ACT-01` approval.
+  complete, `ACT-01` is approved for local V2 development only, and the tracked
+  active program now owns bounded Phase 1 execution.
 
 Gate 0 is approved at planning baseline
 `b2b23b577feda29ef7eca9dcbf35a4e8c1162781`. Recover its current phase,

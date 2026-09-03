@@ -2711,3 +2711,18 @@
 - retained Goal Five Phase 1, recurrence, push, deployment, production changes,
   and external mutation as unauthorized; the exact night-window proposal remains
   disabled pending the product owner's `ACT-01` decision
+
+## 2026-09-04 — Goal Five autonomous execution authorized
+
+- recorded the product owner's explicit `ACT-01` approval while preserving a
+  strict local VizEngine V2 boundary: no push, merge, deployment, publication,
+  purchase, production-system access, or external mutation
+- selected the immutable `goal-five-phase-1-treatment` program through the one
+  tracked active-program pointer
+- bounded the first production wave to authorized-input inventory, capability
+  audit, music-window analysis, a frame-exact musical map, production treatment,
+  and a Gate 1 review packet before any deep aesthetic expansion
+- retained one checkpoint and one local commit per wake, exact sole-writer
+  refusal, staged validation, quiet execution, and human-owned creative gates
+- authorized the runbook-owned night cadence; Codex remains the authority for
+  actual schedule state, which repository files do not infer

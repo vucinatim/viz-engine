@@ -13,6 +13,7 @@ import { describe, expect, it } from 'vitest';
 
 import { canonicalCheckPlan } from '../../tools/repo/lib/check-contract';
 import { resolveOperationalDirectory } from '../../tools/repo/lib/paths';
+import { readExecutionProgram } from '../../tools/repo/lib/program';
 import { readRepositoryIdentity } from '../../tools/repo/lib/repository-state';
 import {
   classifyAdmittedCheckEvidence,
@@ -23,6 +24,7 @@ import { passingCheckEvidenceFixture } from './repo-check-evidence-fixture';
 
 describe('repository review packets', () => {
   it('assembles a coherent packet from the canonical repository snapshot', () => {
+    const activeProgram = readExecutionProgram();
     const created = createReviewPacket();
     try {
       const packet = JSON.parse(
@@ -42,7 +44,7 @@ describe('repository review packets', () => {
         branch: identity.branch,
         statusHash: identity.statusHash,
       });
-      expect(packet.program.id).toBe('goal-five-autonomous-readiness');
+      expect(packet.program.id).toBe(activeProgram.id);
       expect(
         packet.checks.every(({ classification }) =>
           ['current', 'stale', 'invalid'].includes(classification),

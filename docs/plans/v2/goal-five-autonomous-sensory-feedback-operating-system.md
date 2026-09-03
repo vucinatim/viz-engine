@@ -1,8 +1,8 @@
 # Goal Five Autonomous Sensory Feedback Operating System
 
-Status: approved supporting execution contract; readiness implementation and
-supervised calibration complete, recurring execution pending explicit `ACT-01`
-approval.
+Status: activated supporting execution contract; readiness implementation,
+supervised calibration, and explicit `ACT-01` approval complete for local
+VizEngine V2 development.
 
 Proposed: 2026-09-03.
 
@@ -559,10 +559,10 @@ into a completed checkpoint.
 
 ## Operational Cadence
 
-Recommended initial cadence after one manual rehearsal:
+Authorized initial cadence after the completed readiness rehearsals:
 
-- four nominal night-centered wake windows per day, with the exact disabled
-  cadence proposal owned by the checkpoint runbook
+- four nominal night-centered wake windows per day, with the exact authorized
+  cadence owned by the checkpoint runbook and its host-side activation state
 - approximately three hours of capacity per window, targeting twelve hours of
   daily autonomous capacity rather than mandatory activity
 - an explicit cleanup buffer between windows; a later wake exits harmlessly if

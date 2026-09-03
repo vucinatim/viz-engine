@@ -1,17 +1,17 @@
 # Autonomous Checkpoint Runbook
 
-Status: implemented and supervised calibration complete; recurring schedule
-disabled pending explicit `ACT-01` approval.
+Status: activated for local VizEngine V2 development after supervised
+calibration and explicit `ACT-01` approval.
 
-This runbook is the exact operational entrypoint for a future unattended
-VizEngine checkpoint. It is subordinate to the
+This runbook is the exact operational entrypoint for every unattended VizEngine
+checkpoint. It is subordinate to the
 [Goal Five program](./flagship-autonomous-production-and-creative-system-maturation.md),
 the
 [autonomous sensory feedback operating system](./goal-five-autonomous-sensory-feedback-operating-system.md),
 and the tracked active-program pointer at
-`tools/repo/programs/active-program.json`. The pointer currently selects
-`tools/repo/programs/autonomous-readiness.json`; a later Goal Five production
-program must be selected there in a reviewed local commit.
+`tools/repo/programs/active-program.json`. The pointer selects the immutable
+Phase 1 Goal Five program. Later gate-bounded successors are selected only in a
+reviewed local handoff commit after their exact human gate approves them.
 
 ## Authority Boundary
 
@@ -172,11 +172,10 @@ No default-program mutation may run between the pointer-switch commit and the
 old lease's completion. Recovery in that interval must use the exact recorded
 readiness-program identity; it must never infer ownership from the new pointer.
 
-After approval, the intended capacity is four nominal night-centered wakes with
+The authorized capacity is four nominal night-centered wakes with
 planned cleanup gaps, at most one checkpoint per wake, and approximately twelve
 hours of available daily capacity. The reviewed proposal starts wakes at 20:00,
 23:15, 02:30, and 05:45 in `Europe/Ljubljana`; each nominally has three hours of
-capacity followed by a 15-minute buffer. It remains disabled until `ACT-01`.
-These are capacity windows, not hard runtime cutoffs or work quotas: no ready
-work means a clean no-op exit, and a later wake refuses mutation if an overrun
-still owns the lease.
+capacity followed by a 15-minute buffer. These are capacity windows, not hard
+runtime cutoffs or work quotas: no ready work means a clean no-op exit, and a
+later wake refuses mutation if an overrun still owns the lease.

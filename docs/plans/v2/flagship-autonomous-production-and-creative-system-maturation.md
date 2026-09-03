@@ -1,7 +1,6 @@
 # Goal Five: Flagship Autonomous Production And Creative-System Maturation
 
-Status: paused at the completed Phase 0 boundary pending the autonomous-loop
-operating-model discussion before Phase 1.
+Status: active in Phase 1 under the approved autonomous operating contract.
 
 Planned: 2026-08-13.
 
@@ -16,15 +15,15 @@ and evidence before editing after a compaction or new task.
 
 ```text
 Baseline commit: b2b23b577feda29ef7eca9dcbf35a4e8c1162781
-Current phase: Phase 0 — activation, immutable baseline, and executable criteria
-Current checkpoint: Phase 0 complete; paused before the Phase 1 capability/asset/music audit
-Last completed checkpoint: executable Goal Five criteria/environment freeze and uncontended complete gate
-Last certified commit: 043f8dbae5f15828c5cba6c0b74f32cadb359946
-Last full green gate: Goal Five Phase 0 at 043f8db
-Next safe checkpoint: agree on the autonomous loop, then run the bounded Phase 1 capability/asset/music audit
-Awaiting human gate: autonomous-loop operating-model discussion; Gate 1 treatment approval follows Phase 1
-Known blockers: none; Goal Five is deliberately paused at the user-requested discussion boundary
-Relevant evidence: docs/parity/evidence/2026-08-14-goal-five-phase-0-certification-freeze.md
+Current phase: Phase 1 — capability, authorized-input, music-window, and treatment audit
+Current checkpoint: ACT-01 approved; goal-five-phase-1-treatment selected; P1-01 ready
+Last completed checkpoint: autonomous readiness certification and human activation handoff
+Last certified commit: f9c32f9dbb3be3391eb23a35540c3c01d9173dce
+Last full green gate: autonomous readiness CAL-03 at f9c32f9
+Next safe checkpoint: P1-01 inventory of every repository-authorized production input
+Awaiting human gate: Gate 1 treatment approval after P1-06 assembles and queues the review packet
+Known blockers: none; all work remains local to VizEngine V2 with no push, deployment, publication, purchase, or external mutation authority
+Relevant evidence: docs/parity/evidence/2026-09-04-autonomous-readiness-cal-03-activation-audit.md
 ```
 
 ## Governing Authority
@@ -1346,7 +1345,8 @@ one-checkpoint limit, and calibration sequence live in the
 [Autonomous Checkpoint Runbook](./autonomous-checkpoint-runbook.md). Do not copy
 or independently evolve another prompt here.
 
-Scheduled execution remains disabled until the readiness program completes
-three supervised calibration runs and the product owner explicitly approves
-its human activation item. The schedule only wakes the repository-controlled
-loop; it never owns direction, state, or permission.
+Scheduled execution was disabled until the readiness program completed three
+supervised calibration runs and the product owner explicitly approved its human
+activation item. Its current host-side activation state is owned by Codex
+Scheduled and must be verified there. The schedule only wakes the
+repository-controlled loop; it never owns direction, state, or permission.
