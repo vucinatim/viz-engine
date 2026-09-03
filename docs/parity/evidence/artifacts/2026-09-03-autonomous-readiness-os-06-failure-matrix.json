@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "kind": "viz-engine-autonomous-critical-failure-matrix",
+  "workItemId": "OS-06",
+  "cases": [
+    {
+      "id": "direct-claim-preflight-bypass",
+      "exercise": "live rehearsal plus repository program contract test",
+      "expected": "A direct autonomous claim must fail unless preflight returns claim and names the item as claimable.",
+      "observed": "The first live claim bypassed host-load stop and was immediately blocked. Claim and blocked-resume now evaluate the shared readiness policy inside their canonical atomic transitions, with real high-load refusal and nominal claim mutation tests.",
+      "result": "fixed-and-proven"
+    },
+    {
+      "id": "load-stop-precedence",
+      "exercise": "injected high-load blocked-item test",
+      "expected": "Host contention remains a non-mutating stop and cannot become resume-blocked.",
+      "observed": "The live rehearsal exposed the precedence defect; an injected 2.0 load-per-CPU fixture now proves stop remains authoritative.",
+      "result": "fixed-and-proven"
+    },
+    {
+      "id": "volatile-host-load-in-tests",
+      "exercise": "real failed checkpoint plus nominal-load contract fixtures",
+      "expected": "Tests of human, lease, and empty-ready semantics must not depend on the developer machine's instantaneous load.",
+      "observed": "The local diagnostic record .artifacts/autonomy/checks/2026-09-03T20-51-20.576Z-checkpoint.json (SHA-256 d04526de6fec01125a005e06588d626172f5230261cf584f0704c15d5536fca2) captured the false test failure before explicit nominal-load injection corrected the fixture boundary; it is not claimed as admitted durable evidence.",
+      "result": "fixed-and-proven"
+    },
+    {
+      "id": "fresh-overlap",
+      "exercise": "live fresh preflight and repository program test",
+      "expected": "A fresh wake seeing a live writer exits without mutation.",
+      "observed": "requiredAction=wait-writer-lease and mutationAllowed=false for the active OS-06 lease.",
+      "result": "passed"
+    },
+    {
+      "id": "exact-continuation",
+      "exercise": "live continuation preflight and repository program test",
+      "expected": "Only the exact lease, owner, work-item, and claim identity may continue.",
+      "observed": "The exact OS-06 identity continued; partial and mismatched identities are rejected by tests.",
+      "result": "passed"
+    },
+    {
+      "id": "unknown-dirty-state",
+      "exercise": "repository lease and program tests",
+      "expected": "An unowned dirty tree fails closed without discarding bytes.",
+      "observed": "Claim is refused and exact stale recovery preserves the dirty content.",
+      "result": "passed"
+    },
+    {
+      "id": "restart-and-compaction-recovery",
+      "exercise": "live blocked-state recovery plus repository recovery tests",
+      "expected": "A later context reconstructs state from tracked contracts and exact Git-common recovery markers.",
+      "observed": "OS-06 resumed from lease da1fff4b-0ccc-47f9-b470-4291e8c55deb as lease 21512176-698d-4378-94ed-d8d387854d4e without chat-only state or discarded work.",
+      "result": "passed"
+    },
+    {
+      "id": "process-death-transition",
+      "exercise": "repository operational-lock tests",
+      "expected": "A proven-dead transition owner is rolled back from its complete journal before recovery.",
+      "observed": "Managed state and dirty Git identity are restored; live owners tell overlapping wakes to exit.",
+      "result": "passed"
+    },
+    {
+      "id": "validation-failure",
+      "exercise": "four real checkpoint failures and check-evidence tests",
+      "expected": "Failure remains valid, hash-verifiable local diagnostic evidence and does not admit completion.",
+      "observed": "The earlier OS-04 failure record has SHA-256 3f82de40c75a3bd299c9804f6023025d420e9f0b4aec866e6e43450e45626dcb. OS-06 records captured the volatile-load fixture failure as d04526de6fec01125a005e06588d626172f5230261cf584f0704c15d5536fca2, a parallel repository-contract worker-reporting timeout as 6a7df95f8b3aa1b6fc4732038b3781c3046dfdea8f81a264f80adf4670306842, and the same parallel-worker defect in the otherwise-passing full 349-assertion foundation run as cb9431a427c0136a1433f04d6c7dbc85e3be308cf70818aeb899c773ed35211a. Repository contracts and the full foundation script now run files serially. All failure records retained exact repository and lease identity without being admitted as completion evidence; the durable facts are summarized in this tracked matrix.",
+      "result": "passed"
+    },
+    {
+      "id": "block-and-recovery",
+      "exercise": "live unsafe-state block/unblock plus repository program tests",
+      "expected": "A block releases the lease, preserves a precise reason and recovery condition, and resumes only with exact evidence.",
+      "observed": "The unsafe direct claim was not hidden; its recovery artifact hash is recorded in OS-06 lifecycle state.",
+      "result": "passed"
+    },
+    {
+      "id": "human-stop-and-rejection",
+      "exercise": "repository human-validation and program tests",
+      "expected": "Autonomous mutation remains forbidden until an exact approved human decision; rejection does not masquerade as approval.",
+      "observed": "Claim, checkpoint, completion, unblock, and queue mutation boundaries reject missing or non-approved authority; exact expired-lease recovery remains permitted only to preserve state and record the required block.",
+      "result": "passed"
+    },
+    {
+      "id": "repository-or-lease-drift",
+      "exercise": "repository check-evidence tests",
+      "expected": "Otherwise-passing commands cannot produce passing evidence after repository or lease identity changes.",
+      "observed": "Both drift modes produce valid failed artifacts with explicit reasons.",
+      "result": "passed"
+    },
+    {
+      "id": "linked-worktree-ownership",
+      "exercise": "repository lease tests",
+      "expected": "Another linked worktree cannot claim or recover the current checkout's writer lease.",
+      "observed": "Cross-worktree recovery and mismatched branch identity fail closed.",
+      "result": "passed"
+    },
+    {
+      "id": "empty-ready-terminal",
+      "exercise": "repository program contract test",
+      "expected": "A completed program reports a clean non-mutating stop rather than inventing work.",
+      "observed": "requiredAction=stop, mutationAllowed=false, candidates=[], reason=Program is complete.",
+      "result": "passed"
+    }
+  ],
+  "canonicalTests": [
+    "tests/foundation/repo-program.test.ts",
+    "tests/foundation/repo-lease.test.ts",
+    "tests/foundation/repo-operational-lock.test.ts",
+    "tests/foundation/repo-checks.test.ts",
+    "tests/foundation/repo-human-validation.test.ts",
+    "tests/foundation/repo-evidence.test.ts",
+    "tests/foundation/repo-review.test.ts"
+  ]
+}

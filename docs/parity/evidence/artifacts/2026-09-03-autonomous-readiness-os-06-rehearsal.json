@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "kind": "viz-engine-quiet-autonomous-rehearsal",
+  "workItemId": "OS-06",
+  "repository": {
+    "root": "/Users/timvucina/Desktop/MyProjects/viz-engine",
+    "branch": "codex/viz-engine-v2",
+    "startingCommit": "59932e0fac78febfb2c88199a99a7036bad5bc42",
+    "programId": "goal-five-autonomous-readiness",
+    "programDefinitionHash": "2691c5b854b8f5262f969fc893f8f448901464b46b5d1adcdc8f518675fe640c"
+  },
+  "recovery": {
+    "unsafeClaimWasPreserved": true,
+    "blockedClaimId": "3cc08402-79c1-4aff-82f0-e75fa6f30676",
+    "blockedLeaseId": "da1fff4b-0ccc-47f9-b470-4291e8c55deb",
+    "recoveryArtifact": "artifact:sha256:510bdc40d3d02cdf76260f70b6bc93c786a1b2db6fb99b4f51aac7f354677f3e",
+    "recoveredClaimId": "0dada54a-2d67-46d4-a860-240833ffe9ea",
+    "recoveredLeaseId": "21512176-698d-4378-94ed-d8d387854d4e",
+    "result": "The exact blocked state was resumed only to repair the admission defects; no work was discarded or silently relabeled."
+  },
+  "lifecycle": [
+    {
+      "step": "recover",
+      "result": "Canonical rules, active program, Git identity, external lifecycle state, and exact resume identity were recovered."
+    },
+    {
+      "step": "claim",
+      "result": "The rehearsal exposed that direct autonomous claims could bypass preflight. The claim was immediately blocked and later recovered with content-addressed evidence."
+    },
+    {
+      "step": "sensory gate",
+      "result": "The affected Goal Five lanes were code architecture, editor parity, performance lifecycle, and project semantics; no browser or media observation was required for repository-control code."
+    },
+    {
+      "step": "implement",
+      "result": "Atomic autonomous claim and blocked-resume transitions now require the same canonical preflight action; host-load stop has precedence over blocked-item discovery; deterministic tests inject host load explicitly."
+    },
+    {
+      "step": "canonicalize",
+      "result": "Only the bounded changed files were formatted and diff whitespace validation passed."
+    },
+    {
+      "step": "staged checks",
+      "result": "Focused contract tests passed. A full checkpoint correctly retained a real failure record when a test sampled volatile host load; the test boundary was corrected and the terminal checkpoint remains a required post-artifact lifecycle action."
+    },
+    {
+      "step": "review",
+      "result": "The complete diff was reviewed for fail-open state transitions, load precedence, deterministic fixtures, hidden alternate truth, and accidental product scope."
+    },
+    {
+      "step": "evidence",
+      "result": "This rehearsal, the failure matrix, and cleanup attestation are prepared as the three tracked inputs to the terminal lifecycle transition."
+    },
+    {
+      "step": "commit and release",
+      "status": "pending-terminal-transition",
+      "expected": "The canonical terminal program transition must bind these artifacts to the exact coherent local commit and release the writer lease; no push or external mutation is authorized."
+    }
+  ],
+  "liveWakeObservations": {
+    "freshWake": {
+      "requiredAction": "wait-writer-lease",
+      "mutationAllowed": false,
+      "reason": "A fresh wake observed the live OS-06 writer and exited without mutation."
+    },
+    "exactContinuation": {
+      "requiredAction": "continue",
+      "mutationAllowed": true,
+      "reason": "All four lease, owner, work-item, and claim values matched."
+    },
+    "highLoad": {
+      "observedOneMinutePerCpuApprox": 1.659,
+      "requiredAction": "stop",
+      "mutationAllowed": false,
+      "reason": "The initial fresh preflight correctly rejected a new checkpoint under host contention."
+    }
+  },
+  "scope": {
+    "goalFiveFeatureProductionResumed": false,
+    "browserRequired": false,
+    "audioRequired": false,
+    "externalMutationRequired": false,
+    "localCommitAuthorized": true,
+    "pushAuthorized": false
+  }
+}

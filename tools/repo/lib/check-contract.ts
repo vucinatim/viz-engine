@@ -118,6 +118,7 @@ export const canonicalCheckPlan = (
             'exec',
             'vitest',
             'run',
+            '--no-file-parallelism',
             'tests/foundation/repo-program.test.ts',
             'tests/foundation/repo-lease.test.ts',
             'tests/foundation/repo-checks.test.ts',

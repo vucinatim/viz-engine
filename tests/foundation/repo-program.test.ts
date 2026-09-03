@@ -18,7 +18,7 @@ import {
   addHumanValidation,
   resolveHumanValidation,
 } from '../../tools/repo/lib/human-validation';
-import { readLease } from '../../tools/repo/lib/lease';
+import { readLease, readResumeMarker } from '../../tools/repo/lib/lease';
 import { resolveOperationalDirectory } from '../../tools/repo/lib/paths';
 import { assessAutonomousReadiness } from '../../tools/repo/lib/preflight';
 import {
@@ -40,6 +40,18 @@ import {
 import { passingCheckEvidenceFixture } from './repo-check-evidence-fixture';
 
 const temporaryDirectories: string[] = [];
+const nominalLoad = { oneMinute: 0, cpuCount: 8 };
+const assessReadiness = (
+  options: NonNullable<Parameters<typeof assessAutonomousReadiness>[0]>,
+) =>
+  assessAutonomousReadiness({
+    ...options,
+    load: options.load ?? nominalLoad,
+  });
+const claim = (options: Parameters<typeof claimWorkItem>[0]) =>
+  claimWorkItem({ ...options, load: options.load ?? nominalLoad });
+const unblock = (options: Parameters<typeof unblockWorkItem>[0]) =>
+  unblockWorkItem({ ...options, load: options.load ?? nominalLoad });
 const git = (root: string, ...arguments_: string[]) =>
   execFileSync('git', arguments_, { cwd: root, encoding: 'utf8' }).trim();
 
@@ -137,6 +149,33 @@ afterEach(() => {
 });
 
 describe('repository execution program', () => {
+  it('enforces autonomous admission at the atomic claim boundary', () => {
+    const root = createGitRepository();
+    const path = writeProgram(root);
+    expect(() =>
+      claimWorkItem({
+        itemId: 'A-01',
+        owner: '/root/test',
+        root,
+        path,
+        load: { oneMinute: 16, cpuCount: 8 },
+      }),
+    ).toThrow(/Autonomous claim refused by preflight.*Host load/u);
+    expect(readLease(root)).toBeNull();
+    expect(readExecutionProgram(path, root).workItems[0].status).toBe(
+      'pending',
+    );
+
+    const claimed = claim({
+      itemId: 'A-01',
+      owner: '/root/test',
+      root,
+      path,
+    });
+    expect(claimed.item.status).toBe('in_progress');
+    expect(readLease(root)?.id).toBe(claimed.lease.id);
+  }, 15_000);
+
   it('derives ready work and rejects dependency cycles', () => {
     const root = createGitRepository();
     const program = createProgram();
@@ -159,7 +198,7 @@ describe('repository execution program', () => {
   it('keeps lifecycle state outside the worktree and binds evidence to a requirement', () => {
     const root = createGitRepository();
     const path = writeProgram(root);
-    const claimed = claimWorkItem({
+    const claimed = claim({
       itemId: 'A-01',
       owner: '/root/test',
       root,
@@ -243,7 +282,7 @@ describe('repository execution program', () => {
       priority: 3,
     });
     const path = writeProgram(root, program);
-    const claimed = claimWorkItem({
+    const claimed = claim({
       itemId: 'A-01',
       owner: '/root/test',
       root,
@@ -274,7 +313,7 @@ describe('repository execution program', () => {
     expect(
       getReadyWorkItems(readExecutionProgram(path, root)).map(({ id }) => id),
     ).toEqual(['B-01']);
-    const independent = claimWorkItem({
+    const independent = claim({
       itemId: 'B-01',
       owner: '/root/test',
       root,
@@ -286,7 +325,7 @@ describe('repository execution program', () => {
   it('rediscovers a clean blocked item when no independent work is ready', () => {
     const root = createGitRepository();
     const path = writeProgram(root);
-    const claimed = claimWorkItem({
+    const claimed = claim({
       itemId: 'A-01',
       owner: '/root/test',
       root,
@@ -302,7 +341,7 @@ describe('repository execution program', () => {
       root,
       path,
     });
-    const readiness = assessAutonomousReadiness({ root, path });
+    const readiness = assessReadiness({ root, path });
     expect(readiness.requiredAction).toBe('resume-blocked');
     expect(readiness.mutationAllowed).toBe(true);
     const stateDirectory = resolve(
@@ -320,6 +359,154 @@ describe('repository execution program', () => {
     );
   }, 15_000);
 
+  it('binds blocked admission to the selected per-claim resume marker', () => {
+    const root = createGitRepository();
+    const definition = createProgram();
+    definition.workItems.push({
+      ...structuredClone(definition.workItems[0]),
+      id: 'B-01',
+      title: 'Independent item',
+      priority: 3,
+    });
+    const path = writeProgram(root, definition);
+    const first = claim({
+      itemId: 'A-01',
+      owner: '/root/test',
+      root,
+      path,
+    });
+    blockWorkItem({
+      itemId: 'A-01',
+      owner: '/root/test',
+      claimId: first.lease.claimId,
+      type: 'technical',
+      reason: 'First bounded block.',
+      recovery: 'Resume with first evidence.',
+      root,
+      path,
+    });
+    const second = claim({
+      itemId: 'B-01',
+      owner: '/root/test',
+      root,
+      path,
+    });
+    blockWorkItem({
+      itemId: 'B-01',
+      owner: '/root/test',
+      claimId: second.lease.claimId,
+      type: 'technical',
+      reason: 'Second bounded block.',
+      recovery: 'Resume with second evidence.',
+      root,
+      path,
+    });
+
+    const readiness = assessReadiness({ root, path });
+    expect(readiness.requiredAction).toBe('resume-blocked');
+    expect(readiness.blockedResume?.workItemId).toBe('A-01');
+    expect(readResumeMarker(root)?.workItemId).toBe('B-01');
+    const artifact = `document:evidence.md#sha256=${createHash('sha256')
+      .update('evidence\n')
+      .digest('hex')}`;
+    const resumed = unblock({
+      itemId: 'A-01',
+      owner: '/root/test',
+      recoveryEvidence: [artifact],
+      note: 'Resume the specifically admitted older item.',
+      root,
+      path,
+    });
+    expect(resumed.item.status).toBe('in_progress');
+    expect(resumed.lease.recoveredFrom).toBe(first.lease.id);
+  }, 20_000);
+
+  it('keeps a high-load stop authoritative over blocked-item discovery', () => {
+    const root = createGitRepository();
+    const path = writeProgram(root);
+    const claimed = claim({
+      itemId: 'A-01',
+      owner: '/root/test',
+      root,
+      path,
+    });
+    blockWorkItem({
+      itemId: 'A-01',
+      owner: '/root/test',
+      claimId: claimed.lease.claimId,
+      type: 'unsafe_state',
+      reason: 'Host contention requires a stop.',
+      recovery: 'Resume only when load permits.',
+      root,
+      path,
+    });
+    const readiness = assessReadiness({
+      root,
+      path,
+      load: { oneMinute: 16, cpuCount: 8 },
+    });
+    expect(readiness.requiredAction).toBe('stop');
+    expect(readiness.mutationAllowed).toBe(false);
+    expect(readiness.reasons).toContain(
+      'Host load is too high for another autonomous checkpoint.',
+    );
+    const artifact = `document:evidence.md#sha256=${createHash('sha256')
+      .update('evidence\n')
+      .digest('hex')}`;
+    expect(() =>
+      unblockWorkItem({
+        itemId: 'A-01',
+        owner: '/root/test',
+        recoveryEvidence: [artifact],
+        note: 'Unsafe high-load resume.',
+        root,
+        path,
+        load: { oneMinute: 16, cpuCount: 8 },
+      }),
+    ).toThrow(/Autonomous resume refused by preflight.*Host load/u);
+    expect(readLease(root)).toBeNull();
+    expect(readExecutionProgram(path, root).workItems[0].status).toBe(
+      'blocked',
+    );
+  }, 15_000);
+
+  it('reports a completed program as a clean terminal stop', () => {
+    const root = createGitRepository();
+    const definition = createProgram();
+    definition.workItems = [definition.workItems[0]];
+    const path = writeProgram(root, definition);
+    const claimed = claim({
+      itemId: 'A-01',
+      owner: '/root/test',
+      root,
+      path,
+    });
+    writeFileSync(resolve(root, 'checkpoint.md'), 'terminal checkpoint\n');
+    git(root, 'add', 'checkpoint.md');
+    git(root, 'commit', '-m', 'complete program');
+    const digest = createHash('sha256').update('evidence\n').digest('hex');
+    completeWorkItem({
+      itemId: 'A-01',
+      owner: '/root/test',
+      claimId: claimed.lease.claimId,
+      evidence: [
+        {
+          requirementId: 'durable-proof',
+          reference: `document:evidence.md#sha256=${digest}`,
+        },
+      ],
+      note: 'Program is complete.',
+      root,
+      path,
+    });
+
+    const readiness = assessReadiness({ root, path });
+    expect(readiness.requiredAction).toBe('stop');
+    expect(readiness.mutationAllowed).toBe(false);
+    expect(readiness.candidates).toEqual([]);
+    expect(readiness.reasons).toContain('Program is complete.');
+  }, 15_000);
+
   it('enforces pending human stops at preflight and mutation boundaries', () => {
     const root = createGitRepository();
     const definition = createProgram();
@@ -330,7 +517,7 @@ describe('repository execution program', () => {
       priority: 3,
     });
     const path = writeProgram(root, definition);
-    const claimed = claimWorkItem({
+    const claimed = claim({
       itemId: 'A-01',
       owner: '/root/test',
       root,
@@ -359,7 +546,7 @@ describe('repository execution program', () => {
       programId: 'test-program',
       validWorkItemIds: new Set(['A-01', 'A-02', 'B-01']),
     });
-    const activeStop = assessAutonomousReadiness({
+    const activeStop = assessReadiness({
       root,
       path,
       continuation: {
@@ -404,20 +591,22 @@ describe('repository execution program', () => {
       path,
     });
 
-    const readiness = assessAutonomousReadiness({ root, path });
+    const readiness = assessReadiness({ root, path });
     expect(readiness.requiredAction).toBe('human-checkpoint');
     expect(readiness.mutationAllowed).toBe(false);
     expect(readiness.reasons.join(' ')).toContain(question.id);
     expect(() =>
-      claimWorkItem({
+      claim({
         itemId: 'B-01',
         owner: '/root/test',
         root,
         path,
       }),
-    ).toThrow(/blocked by pending human validation/u);
+    ).toThrow(
+      /Autonomous claim refused by preflight.*awaits human validation/u,
+    );
     expect(() =>
-      unblockWorkItem({
+      unblock({
         itemId: 'A-01',
         owner: '/root/test',
         recoveryEvidence: [artifact],
@@ -435,11 +624,11 @@ describe('repository execution program', () => {
       programId: 'test-program',
       validWorkItemIds: new Set(['A-01', 'A-02', 'B-01']),
     });
-    const rejected = assessAutonomousReadiness({ root, path });
+    const rejected = assessReadiness({ root, path });
     expect(rejected.requiredAction).toBe('stop');
     expect(rejected.reasons.join(' ')).toMatch(/lacks an approved/u);
     expect(() =>
-      unblockWorkItem({
+      unblock({
         itemId: 'A-01',
         owner: '/root/test',
         recoveryEvidence: [`decision:test-program/${question.id}`],
@@ -453,7 +642,7 @@ describe('repository execution program', () => {
   it('resumes a human block only with its exact approved decision evidence', () => {
     const root = createGitRepository();
     const path = writeProgram(root);
-    const claimed = claimWorkItem({
+    const claimed = claim({
       itemId: 'A-01',
       owner: '/root/test',
       root,
@@ -502,7 +691,7 @@ describe('repository execution program', () => {
       validWorkItemIds: new Set(['A-01', 'A-02']),
     });
     expect(() =>
-      unblockWorkItem({
+      unblock({
         itemId: 'A-01',
         owner: '/root/test',
         recoveryEvidence: [artifact],
@@ -511,7 +700,7 @@ describe('repository execution program', () => {
         path,
       }),
     ).toThrow(/requires recovery evidence decision:/u);
-    const resumed = unblockWorkItem({
+    const resumed = unblock({
       itemId: 'A-01',
       owner: '/root/test',
       recoveryEvidence: [`decision:test-program/${question.id}`],
@@ -528,17 +717,17 @@ describe('repository execution program', () => {
   it('rejects overlapping wakes unless they present the exact continuation identity', () => {
     const root = createGitRepository();
     const path = writeProgram(root);
-    const claimed = claimWorkItem({
+    const claimed = claim({
       itemId: 'A-01',
       owner: '/root/test',
       root,
       path,
     });
-    const freshWake = assessAutonomousReadiness({ root, path });
+    const freshWake = assessReadiness({ root, path });
     expect(freshWake.requiredAction).toBe('wait-writer-lease');
     expect(freshWake.mutationAllowed).toBe(false);
 
-    const continuation = assessAutonomousReadiness({
+    const continuation = assessReadiness({
       root,
       path,
       continuation: {
@@ -554,7 +743,7 @@ describe('repository execution program', () => {
     const other = `${root}-other`;
     temporaryDirectories.push(other);
     git(root, 'worktree', 'add', '-b', 'codex/other', other);
-    const otherWake = assessAutonomousReadiness({
+    const otherWake = assessReadiness({
       root: other,
       path: resolve(other, 'program.json'),
     });
@@ -574,7 +763,7 @@ describe('repository execution program', () => {
       },
     ];
     const path = writeProgram(root, definition);
-    const claimed = claimWorkItem({
+    const claimed = claim({
       itemId: 'A-01',
       owner: '/root/test',
       root,
@@ -634,7 +823,7 @@ describe('repository execution program', () => {
       },
     ];
     const path = writeProgram(root, definition);
-    const claimed = claimWorkItem({
+    const claimed = claim({
       itemId: 'A-01',
       owner: '/root/test',
       root,
@@ -725,7 +914,7 @@ describe('repository execution program', () => {
     });
     const path = writeProgram(root, definition);
     expect(() =>
-      claimWorkItem({
+      claim({
         itemId: 'H-01',
         owner: '/root/test',
         root,
@@ -733,7 +922,7 @@ describe('repository execution program', () => {
       }),
     ).toThrow(/explicit human confirmation/u);
 
-    const builder = claimWorkItem({
+    const builder = claim({
       itemId: 'A-01',
       owner: '/root/test',
       root,
@@ -772,7 +961,7 @@ describe('repository execution program', () => {
       validWorkItemIds: new Set(['A-01', 'A-02', 'H-01']),
     });
     expect(() =>
-      claimWorkItem({
+      claim({
         itemId: 'H-01',
         owner: '/root/test',
         humanDecisionId: decisionRequest.id,
@@ -819,7 +1008,7 @@ describe('repository execution program', () => {
       root,
       path,
     });
-    const claimedGate = claimWorkItem({
+    const claimedGate = claim({
       itemId: 'H-01',
       owner: '/root/test',
       humanDecisionId: approval.id,

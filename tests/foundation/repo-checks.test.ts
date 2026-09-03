@@ -155,6 +155,18 @@ describe('staged repository checks', () => {
       'goal-five-contract',
     ]);
     expect(focused.commands.map(({ id }) => id)).toContain('related-tests');
+    expect(
+      focused.commands.find(({ id }) => id === 'repo-contract-tests')
+        ?.arguments,
+    ).toContain('--no-file-parallelism');
+    const packageScripts = (
+      JSON.parse(
+        readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'),
+      ) as { scripts: Record<string, string> }
+    ).scripts;
+    expect(packageScripts['test:foundation']).toContain(
+      '--no-file-parallelism',
+    );
     expect(checkpoint.commands.map(({ id }) => id)).toContain(
       'typecheck-foundation',
     );

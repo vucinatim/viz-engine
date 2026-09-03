@@ -30,9 +30,14 @@ type RequiredAction =
   | 'recover-transition'
   | 'stop';
 
-const hostLoad = () => {
-  const oneMinute = loadavg()[0];
-  const cpuCount = cpus().length;
+export interface HostLoadInput {
+  oneMinute: number;
+  cpuCount: number;
+}
+
+const hostLoad = (input?: HostLoadInput) => {
+  const oneMinute = input?.oneMinute ?? loadavg()[0];
+  const cpuCount = input?.cpuCount ?? cpus().length;
   return {
     oneMinute,
     cpuCount,
@@ -51,9 +56,33 @@ const quietEnvironment = {
   externalMutationAllowed: false,
 };
 
-const lockedResult = (root: string, owner: OperationalLockOwner) => {
+const assertClaimCandidate = (
+  readiness: {
+    mutationAllowed: boolean;
+    requiredAction: RequiredAction;
+    reasons: string[];
+    candidates: Array<{ id: string; claimable: boolean }>;
+  },
+  itemId: string,
+) => {
+  const candidate = readiness.candidates.find(({ id }) => id === itemId);
+  if (
+    readiness.requiredAction !== 'claim' ||
+    !readiness.mutationAllowed ||
+    !candidate?.claimable
+  ) {
+    const reason = readiness.reasons.join(' ') || 'Item is not claimable.';
+    throw new Error(`Autonomous claim refused by preflight: ${reason}`);
+  }
+};
+
+const lockedResult = (
+  root: string,
+  owner: OperationalLockOwner,
+  loadInput?: HostLoadInput,
+) => {
   const repository = readRepositoryIdentity(root);
-  const load = hostLoad();
+  const load = hostLoad(loadInput);
   const local = owner.host === hostname();
   const alive = local && processIsAlive(owner.pid);
   const requiredAction: RequiredAction = alive
@@ -88,11 +117,16 @@ const lockedResult = (root: string, owner: OperationalLockOwner) => {
     operationalLock: owner,
     interruptedTransition: null,
     resume: null,
+    blockedResume: null,
     pendingHumanQuestions: [],
   };
 };
 
-const invalidProgramResult = (root: string, error: unknown) => {
+const invalidProgramResult = (
+  root: string,
+  error: unknown,
+  loadInput?: HostLoadInput,
+) => {
   const repository = readRepositoryIdentity(root);
   return {
     schemaVersion: 1,
@@ -109,7 +143,7 @@ const invalidProgramResult = (root: string, error: unknown) => {
       clean: repository.clean,
       statusHash: repository.statusHash,
     },
-    load: hostLoad(),
+    load: hostLoad(loadInput),
     quietEnvironment,
     candidates: [],
     readyItems: [],
@@ -117,6 +151,7 @@ const invalidProgramResult = (root: string, error: unknown) => {
     operationalLock: null,
     interruptedTransition: null,
     resume: null,
+    blockedResume: null,
     pendingHumanQuestions: [],
   };
 };
@@ -125,10 +160,14 @@ const assessLockedSnapshot = (
   root: string,
   path: string,
   continuation?: LeaseIdentity,
+  loadInput?: HostLoadInput,
+  ignoreActiveTransition = false,
 ) => {
   const repository = readRepositoryIdentity(root);
-  const load = hostLoad();
-  const interruptedTransition = readOperationalTransaction(root);
+  const load = hostLoad(loadInput);
+  const interruptedTransition = ignoreActiveTransition
+    ? null
+    : readOperationalTransaction(root);
   if (interruptedTransition) {
     return {
       schemaVersion: 1,
@@ -153,6 +192,7 @@ const assessLockedSnapshot = (
       operationalLock: null,
       interruptedTransition,
       resume: null,
+      blockedResume: null,
       pendingHumanQuestions: [],
     };
   }
@@ -170,6 +210,7 @@ const assessLockedSnapshot = (
   const structuralReady = getReadyWorkItems(program);
   const reasons: string[] = [];
   let requiredAction: RequiredAction = 'claim';
+  let blockedResume: ReturnType<typeof readResumeMarker> = null;
 
   if (program.status !== 'active') {
     reasons.push('Program is complete.');
@@ -240,21 +281,31 @@ const assessLockedSnapshot = (
       reasons.push('Operational state has in-progress work without a lease.');
       requiredAction = 'stop';
     } else {
-      const blocked = program.workItems.find((item) => {
-        const blockedResume = item.blocker?.previousClaimId
-          ? readResumeMarker(root, item.blocker.previousClaimId)
-          : null;
-        return (
-          item.status === 'blocked' &&
-          blockedResume?.lastAction === 'blocked' &&
-          blockedResume.workItemId === item.id &&
-          blockedResume.branch === repository.branch &&
-          blockedResume.worktreeRoot === repository.root &&
-          blockedResume.currentHead === repository.head &&
-          blockedResume.statusHash === repository.statusHash
-        );
-      });
-      if (blocked && (!repository.clean || structuralReady.length === 0)) {
+      const blockedCandidate = program.workItems
+        .map((item) => {
+          const marker = item.blocker?.previousClaimId
+            ? readResumeMarker(root, item.blocker.previousClaimId)
+            : null;
+          return { item, marker };
+        })
+        .find(({ item, marker }) => {
+          return (
+            item.status === 'blocked' &&
+            marker?.lastAction === 'blocked' &&
+            marker.workItemId === item.id &&
+            marker.branch === repository.branch &&
+            marker.worktreeRoot === repository.root &&
+            marker.currentHead === repository.head &&
+            marker.statusHash === repository.statusHash
+          );
+        });
+      const blocked = blockedCandidate?.item;
+      if (blockedCandidate) blockedResume = blockedCandidate.marker;
+      if (
+        requiredAction !== 'stop' &&
+        blocked &&
+        (!repository.clean || structuralReady.length === 0)
+      ) {
         const scopedQuestions = human.items.filter((question) =>
           question.blockedWorkItemIds.includes(blocked.id),
         );
@@ -284,7 +335,7 @@ const assessLockedSnapshot = (
           );
           requiredAction = 'resume-blocked';
         }
-      } else if (!repository.clean) {
+      } else if (requiredAction !== 'stop' && !repository.clean) {
         reasons.push(
           'Dirty worktree is not owned by an exact blocked resume marker.',
         );
@@ -366,26 +417,57 @@ const assessLockedSnapshot = (
     operationalLock: null,
     interruptedTransition: null,
     resume,
+    blockedResume,
     pendingHumanQuestions: pendingHuman.map(({ id }) => id),
   };
+};
+
+export const assertAutonomousWorkAdmission = (options: {
+  action: 'claim' | 'resume-blocked';
+  itemId: string;
+  root: string;
+  path: string;
+  load?: HostLoadInput;
+}) => {
+  const readiness = assessLockedSnapshot(
+    options.root,
+    options.path,
+    undefined,
+    options.load,
+    true,
+  );
+  if (options.action === 'claim') {
+    assertClaimCandidate(readiness, options.itemId);
+    return;
+  }
+  if (
+    readiness.requiredAction !== 'resume-blocked' ||
+    !readiness.mutationAllowed ||
+    readiness.blockedResume?.workItemId !== options.itemId ||
+    readiness.blockedResume.lastAction !== 'blocked'
+  ) {
+    const reason = readiness.reasons.join(' ') || 'Item is not resumable.';
+    throw new Error(`Autonomous resume refused by preflight: ${reason}`);
+  }
 };
 
 export const assessAutonomousReadiness = (options?: {
   root?: string;
   path?: string;
   continuation?: LeaseIdentity;
+  load?: HostLoadInput;
 }) => {
   const root = options?.root ?? repositoryRoot;
   const path = options?.path ?? defaultProgramPath;
   const existingOwner = readOperationalLock(root);
-  if (existingOwner) return lockedResult(root, existingOwner);
+  if (existingOwner) return lockedResult(root, existingOwner, options?.load);
   try {
     return withOperationalLock(root, () =>
-      assessLockedSnapshot(root, path, options?.continuation),
+      assessLockedSnapshot(root, path, options?.continuation, options?.load),
     );
   } catch (error) {
     const racedOwner = readOperationalLock(root);
-    if (racedOwner) return lockedResult(root, racedOwner);
-    return invalidProgramResult(root, error);
+    if (racedOwner) return lockedResult(root, racedOwner, options?.load);
+    return invalidProgramResult(root, error, options?.load);
   }
 };

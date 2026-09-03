@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "kind": "viz-engine-autonomous-cleanup-attestation",
+  "workItemId": "OS-06",
+  "quietEnvironment": {
+    "CI": "1",
+    "FORCE_COLOR": "0",
+    "PLAYWRIGHT_HTML_OPEN": "never",
+    "VIZ_AUDIO_MUTED": "1",
+    "visibleBrowserAllowed": false,
+    "audibleMediaAllowed": false,
+    "externalMutationAllowed": false
+  },
+  "processPolicy": {
+    "commandExecution": "synchronous child processes with inherited quiet environment",
+    "visibleBrowserStarted": false,
+    "audioPlaybackStarted": false,
+    "developmentServerStartedOrReused": false,
+    "encoderStarted": false,
+    "externalServiceCalled": false,
+    "remoteGitMutation": false
+  },
+  "processInventory": {
+    "repositoryOwnedVite": 0,
+    "repositoryOwnedPlaywright": 0,
+    "repositoryOwnedChromium": 0,
+    "repositoryOwnedFfmpeg": 0,
+    "repositoryOwnedMaintainerCli": 0,
+    "note": "Two unrelated Vite processes were observed in other project roots and were neither reused nor modified."
+  },
+  "cleanup": {
+    "temporaryTestRepositories": "registered and removed by test cleanup",
+    "operationalMutexAfterCommands": "absent",
+    "interruptedTransitionAfterCommands": "absent",
+    "untrackedRuntimeArtifacts": "confined to ignored .artifacts and Git-common operational state",
+    "trackedWorktreePolicy": "only the coherent OS-06 repair and proof files may be committed",
+    "leasePolicy": "the OS-06 writer lease is released only by its exact terminal transition"
+  },
+  "externalEffects": []
+}

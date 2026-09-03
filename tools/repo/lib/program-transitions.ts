@@ -15,6 +15,7 @@ import {
 } from './lease';
 import { withOperationalTransaction } from './operational-lock';
 import { defaultProgramPath, repositoryRoot } from './paths';
+import { HostLoadInput, assertAutonomousWorkAdmission } from './preflight';
 import {
   EvidenceReference,
   ExecutionProgram,
@@ -77,6 +78,7 @@ const claimWorkItemImpl = (options: {
   owner: string;
   ttlMinutes?: number;
   humanDecisionId?: string;
+  load?: HostLoadInput;
   path?: string;
   root?: string;
 }) => {
@@ -84,6 +86,15 @@ const claimWorkItemImpl = (options: {
   const root = options.root ?? repositoryRoot;
   const program = readExecutionProgram(path, root);
   const item = findItem(program, options.itemId);
+  if (item.authority === 'autonomous') {
+    assertAutonomousWorkAdmission({
+      action: 'claim',
+      itemId: item.id,
+      root,
+      path,
+      load: options.load,
+    });
+  }
   assertNoPendingHumanBlocker(program, item.id, root);
   if (!getReadyWorkItems(program).some((ready) => ready.id === item.id)) {
     throw new Error(`Work item ${item.id} is not dependency-ready.`);
@@ -592,6 +603,7 @@ const unblockWorkItemImpl = (options: {
   recoveryEvidence: string[];
   note: string;
   ttlMinutes?: number;
+  load?: HostLoadInput;
   path?: string;
   root?: string;
 }) => {
@@ -631,6 +643,15 @@ const unblockWorkItemImpl = (options: {
         `Unblocking ${item.id} requires recovery evidence ${requiredReference}.`,
       );
     }
+  }
+  if (item.authority === 'autonomous') {
+    assertAutonomousWorkAdmission({
+      action: 'resume-blocked',
+      itemId: item.id,
+      root,
+      path,
+      load: options.load,
+    });
   }
   const recoveryEvidence = options.recoveryEvidence.map((reference) =>
     snapshotEvidenceReference(reference, root),
