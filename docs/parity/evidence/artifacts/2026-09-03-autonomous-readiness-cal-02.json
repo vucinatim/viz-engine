@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "kind": "viz-engine-autonomous-calibration-run",
+  "calibrationRun": 2,
+  "workItem": {
+    "programId": "goal-five-autonomous-readiness",
+    "programDefinitionHash": "2691c5b854b8f5262f969fc893f8f448901464b46b5d1adcdc8f518675fe640c",
+    "id": "CAL-02",
+    "claimId": "7a3a5b79-6616-4d10-9b58-c0d25543169d",
+    "leaseId": "ee7d587e-6814-471e-bb7e-d7416175c61c",
+    "owner": "codex/root",
+    "startingCommit": "5407ffee613570b26ef3a0deb7e78d0ecbc8b4b3",
+    "branch": "codex/viz-engine-v2"
+  },
+  "invocation": {
+    "id": "cal-02/7a3a5b79-6616-4d10-9b58-c0d25543169d",
+    "mode": "supervised-fresh-start-calibration",
+    "prompt": {
+      "canonicalSource": "docs/plans/v2/autonomous-checkpoint-runbook.md",
+      "sourceSha256AtStartingCommit": "4d314c1c26210905e86677829924407db92e75004d8eb0f7149259e7bb408033",
+      "section": "Exact Scheduled Prompt",
+      "lineSpanAtStartingCommit": "107-129",
+      "utf8BytesIncludingFinalNewline": 1479,
+      "sha256": "3b1a7fea7d435c10ec9c356ea83ca8e0ef6c4a05fcffda229af18e1722be531d",
+      "firstLine": "Advance VizEngine by at most one dependency-ready autonomous checkpoint using",
+      "lastLine": "and next dependency-ready item. Do not start a second item in this wake."
+    },
+    "previousWakeTerminal": {
+      "workItemId": "CAL-01",
+      "terminalCommit": "5407ffee613570b26ef3a0deb7e78d0ecbc8b4b3",
+      "completedAt": "2026-09-03T21:50:55.993Z",
+      "reviewCreatedAt": "2026-09-03T21:50:57.154Z",
+      "reviewPacketSha256": "c82afdfcd3d9a8044b97f672dc80e5d3854f895a95545d086c8d5bd9a0da6007",
+      "repositoryClean": true,
+      "activeLease": null,
+      "nextReadyItem": "CAL-02"
+    },
+    "freshWakeBoundary": {
+      "machineObservable": false,
+      "startedAt": null,
+      "supervisedAttestation": "This task turn began after CAL-01's terminal report and recovered the clean repository without presenting CAL-01 continuation identity.",
+      "limitation": "The repository does not receive a cryptographic Codex Desktop turn identity. The boundary is supervised; surrounding Git, program, lease, check, evidence, and review facts remain machine-verifiable.",
+      "firstMachineTimestamp": "2026-09-03T21:52:01.235Z",
+      "firstMachineTimestampMeaning": "CAL-02 claim acquisition; the preceding fresh preflight was read-only and did not persist a timestamp."
+    }
+  },
+  "freshStartAdmission": {
+    "capture": "embedded normalized snapshot of this supervised task command output",
+    "capturedAt": null,
+    "repository": {
+      "branch": "codex/viz-engine-v2",
+      "head": "5407ffee613570b26ef3a0deb7e78d0ecbc8b4b3",
+      "clean": true,
+      "statusHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "load": {
+      "oneMinute": 5.0517578125,
+      "cpuCount": 8,
+      "oneMinutePerCpu": 0.6314697265625,
+      "heavyValidationAllowed": true
+    },
+    "mutationAllowed": true,
+    "requiredAction": "claim",
+    "lease": null,
+    "operationalLock": null,
+    "interruptedTransition": null,
+    "readyItems": ["CAL-02"],
+    "candidateSummary": [
+      {
+        "id": "CAL-02",
+        "authority": "autonomous",
+        "claimable": true,
+        "blockingHumanQuestions": []
+      }
+    ]
+  },
+  "ownership": {
+    "claimAcquiredAt": "2026-09-03T21:52:01.235Z",
+    "cleanStatusHashAtClaim": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "exactContinuation": {
+      "mutationAllowed": true,
+      "requiredAction": "continue",
+      "matchedIdentityFields": ["leaseId", "owner", "workItemId", "claimId"],
+      "repositoryHead": "5407ffee613570b26ef3a0deb7e78d0ecbc8b4b3",
+      "hostLoadOneMinutePerCpu": 0.476318359375,
+      "heavyValidationAllowed": true
+    }
+  },
+  "selectedCheckpoint": {
+    "observableOutcome": "Prove a second independent fresh recovery and absorb only the provenance requirement justified by CAL-01's real review friction.",
+    "canonicalOwner": "The repository runbook owns autonomous checkpoint procedure; Codex Desktop owns task-turn identity; the maintainer program owns claim and evidence state; product packages remain untouched.",
+    "forbiddenOwners": [
+      "chat memory",
+      "a repository-invented host task identity",
+      "a parallel activity log",
+      "the product runtime or editor",
+      "an enabled scheduler"
+    ],
+    "assumptions": [
+      "The CAL-01 provenance rejection is the only observed operating-contract friction that warrants a durable CAL-02 change.",
+      "Explicit packet requirements are sufficient because host-only task identity cannot truthfully be manufactured inside the repository.",
+      "A preflight that reports mutationAllowed false may use the transient operational mutex for a coherent snapshot but must leave no durable program, lease, worktree, or external mutation."
+    ],
+    "evidenceLanes": ["code-architecture", "creative-human"],
+    "plausibleFalsePass": "A second packet could copy CAL-01 structure while failing to begin from its clean terminal commit, borrowing its ownership, obscuring a new friction point, or adding an unjustified logging architecture merely to claim stronger provenance.",
+    "acceptance": [
+      "CAL-02 is the sole item selected by a fresh preflight after CAL-01 completed and released ownership.",
+      "The exact scheduled prompt is byte-identical to the CAL-01 prompt.",
+      "The runbook explicitly requires honest calibration provenance at the strongest available authority boundary.",
+      "No parallel logger, synthetic app identity, product change, production deployment, push, or schedule is introduced.",
+      "Independent review accepts the friction classification and bounded change.",
+      "Required validation passes, exactly one local commit is admitted, ownership is released, cleanup is verified, and no second item starts."
+    ],
+    "irreduciblyHumanJudgment": "The supervised task-turn attestation and eventual ACT-01 activation decision remain human-owned."
+  },
+  "frictionDisposition": {
+    "observed": [
+      {
+        "finding": "CAL-01's first packet contained an incorrect copied OS-06 review hash.",
+        "detection": "Local content-hash verification caught it before independent review completed.",
+        "classification": "evidence assembly error",
+        "disposition": "Explicit local hash verification and independent semantic review corrected the nested claim. Typed terminal evidence freezes and validates the final packet bytes and reference; it does not semantically validate nested fields."
+      },
+      {
+        "finding": "The first CAL-01 draft did not distinguish the exact prompt and fresh task boundary from an ordinary continuation.",
+        "detection": "The independent checker rejected the draft.",
+        "classification": "operating-contract documentation gap",
+        "disposition": "The runbook now defines required calibration provenance and explicitly separates supervised host attestation from machine-verifiable repository facts."
+      }
+    ],
+    "rejectedChanges": [
+      {
+        "proposal": "Invent or infer a repository-owned Codex Desktop turn identifier.",
+        "reason": "That would move authority across a boundary the repository cannot observe and create false assurance."
+      },
+      {
+        "proposal": "Write a persistent receipt during every read-only preflight, including denied admission.",
+        "reason": "A stop result promises no durable program, lease, worktree, or external mutation; persistent logging inside that path would weaken the fail-closed contract and create cleanup/retention concerns."
+      },
+      {
+        "proposal": "Build a second event-log or telemetry subsystem for calibration.",
+        "reason": "Existing program, lease, check, evidence, and review records already own machine-verifiable lifecycle facts."
+      }
+    ],
+    "justifiedChange": {
+      "path": "docs/plans/v2/autonomous-checkpoint-runbook.md",
+      "startingSha256": "4d314c1c26210905e86677829924407db92e75004d8eb0f7149259e7bb408033",
+      "terminalCandidateSha256": "ab8141394e2817972df6ca8f5dbf13c4f87c415f3bee14d4ae39b83fed7297ed",
+      "semanticEffect": "Future calibration packets must bind exact prompt provenance, the prior terminal boundary, fresh preflight outcome, claim identity, and the limit of host-only attestations.",
+      "exactPromptBytesChanged": false
+    }
+  },
+  "scope": {
+    "primaryConceptualAxis": "repeatable fresh recovery and calibration provenance",
+    "changedFilesPlanned": [
+      "docs/plans/v2/autonomous-checkpoint-runbook.md",
+      "docs/parity/evidence/artifacts/2026-09-03-autonomous-readiness-cal-02.json",
+      "docs/parity/evidence/2026-09-03-autonomous-readiness-cal-02-friction-review.md"
+    ],
+    "goalFiveFeatureProductionResumed": false,
+    "productCodeChanged": false,
+    "browserRequired": false,
+    "audioRequired": false,
+    "encoderRequired": false,
+    "externalMutationRequired": false,
+    "localCommitAuthorized": true,
+    "pushAuthorized": false,
+    "productionDeploymentAuthorized": false,
+    "recurringScheduleAuthorized": false
+  },
+  "lifecycle": [
+    {
+      "step": "recover-admit-claim",
+      "result": "Recovered CAL-01's clean terminal state, freshly selected only CAL-02, and acquired a new exact sole-writer claim."
+    },
+    {
+      "step": "sensory gate",
+      "result": "This documentation/control-plane evidence change requires semantic review and repository validation; browser, audio, media, and runtime sensors are out of scope."
+    },
+    {
+      "step": "implement",
+      "result": "Added only the durable provenance requirement and CAL-02 evidence; no new subsystem or product behavior."
+    },
+    {
+      "step": "validate",
+      "status": "pending-terminal-checkpoint"
+    },
+    {
+      "step": "commit-release-stop",
+      "status": "pending-terminal-transition"
+    }
+  ],
+  "cal01Evidence": {
+    "terminalCommit": "5407ffee613570b26ef3a0deb7e78d0ecbc8b4b3",
+    "packet": "artifact:sha256:17fb3be285daad24f279212df3a358a62a49a78eb47dfbdb9d537583a57b7bb4",
+    "independentReview": "document:sha256:bd6dc27fa06a459a6ea3009a81386c9a17182882e28b6ce01b24e46be43fc0a4",
+    "postcommitReviewPacketSha256": "c82afdfcd3d9a8044b97f672dc80e5d3854f895a95545d086c8d5bd9a0da6007"
+  }
+}

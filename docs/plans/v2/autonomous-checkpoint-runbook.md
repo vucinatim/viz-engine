@@ -138,6 +138,18 @@ those runs. Only the product owner's explicit `ACT-01` decision may authorize
 creation of the schedule. A rejected or changes-requested decision leaves
 `ACT-01` pending and recurrence disabled; it is not a terminal program result.
 
+Each calibration packet must make its invocation boundary as reconstructable as
+the available authority permits. Record the exact prompt source and digest, the
+prior wake's terminal commit and review packet, the fresh preflight outcome, and
+the resulting claim and lease identities. Retain raw preflight output when the
+host exposes it durably; otherwise embed a normalized snapshot and label it as
+supervised evidence. The repository must not invent a cryptographic task or
+turn identity that belongs to the host application. Any host-only boundary or
+timestamp, copied observation, or process and external-effect cleanup claim is
+an explicit supervised attestation unless a canonical artifact proves it. Git,
+program, lease, check, commit, evidence, and cleanup facts backed by canonical
+repository records remain machine-verifiable.
+
 The active-program cutover is one reviewed `ACT-01` commit with an exact
 handoff:
 
