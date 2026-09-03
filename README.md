@@ -150,8 +150,10 @@ canonical V2 substrate, behavior-preserving consolidation and minimization,
 productions, and exact Light Tunnel 60 FPS performance certification.
 
 [Goal Five](docs/plans/v2/flagship-autonomous-production-and-creative-system-maturation.md)
-is paused at its completed Phase 0 boundary while its approved autonomous
-operating model is implemented and proven. It remains the sole planned
+is paused at its completed Phase 0 boundary. Its autonomous operating model,
+sole-writer control plane, sensory map, failure rehearsal, and three supervised
+calibration runs are complete; recurring execution remains disabled pending the
+explicit human `ACT-01` decision. Goal Five remains the sole planned
 implementation program: an ambitious
 multi-act, multi-layer flagship production and creative-system maturation
 campaign. Gate 0 is approved and the immutable planning baseline is

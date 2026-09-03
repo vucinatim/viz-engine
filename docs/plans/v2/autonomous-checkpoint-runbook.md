@@ -1,6 +1,7 @@
 # Autonomous Checkpoint Runbook
 
-Status: implemented for supervised calibration; recurring schedule disabled.
+Status: implemented and supervised calibration complete; recurring schedule
+disabled pending explicit `ACT-01` approval.
 
 This runbook is the exact operational entrypoint for a future unattended
 VizEngine checkpoint. It is subordinate to the
@@ -101,6 +102,11 @@ claim, lease, program definition, changed bytes, and terminal commit. Once
 admitted, its immutable content-addressed copy is validated by its recorded
 historical plan rather than reinterpreted by future tooling.
 
+In the exact prompt below, “release ownership” names the terminal invariant,
+not a later release command. After the commit, `program complete` admits the
+typed evidence and atomically releases the lease; the run then creates its
+review packet and verifies that release before stopping.
+
 ## Exact Scheduled Prompt
 
 ```text
@@ -157,16 +163,20 @@ handoff:
 2. create the immutable successor program and switch the tracked pointer in
    that same commit
 3. run every pre-commit command against the readiness program explicitly
-4. after the commit, complete `ACT-01`, create its review packet, and release
-   its lease using that same explicit readiness-program path
-5. only then allow a fresh default preflight to select the successor
+4. after the commit, complete `ACT-01` using that same explicit readiness-program
+   path; completion atomically releases its lease
+5. create and verify the old-program post-commit review
+6. only then allow a fresh default preflight to select the successor
 
 No default-program mutation may run between the pointer-switch commit and the
 old lease's completion. Recovery in that interval must use the exact recorded
 readiness-program identity; it must never infer ownership from the new pointer.
 
-After approval, the intended capacity is four non-overlapping night-centered
-wakes with cleanup gaps, at most one checkpoint per wake, and approximately
-twelve hours of available daily capacity. Exact local times are selected only
-from observed calibration duration and host contention. Capacity is not a work
-quota: no ready work means a clean no-op exit.
+After approval, the intended capacity is four nominal night-centered wakes with
+planned cleanup gaps, at most one checkpoint per wake, and approximately twelve
+hours of available daily capacity. The reviewed proposal starts wakes at 20:00,
+23:15, 02:30, and 05:45 in `Europe/Ljubljana`; each nominally has three hours of
+capacity followed by a 15-minute buffer. It remains disabled until `ACT-01`.
+These are capacity windows, not hard runtime cutoffs or work quotas: no ready
+work means a clean no-op exit, and a later wake refuses mutation if an overrun
+still owns the lease.

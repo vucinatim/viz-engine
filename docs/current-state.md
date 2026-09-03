@@ -1,6 +1,6 @@
 # Current State
 
-Last reconciled: 2026-08-14.
+Last reconciled: 2026-09-04.
 
 ## Product Direction
 
@@ -26,11 +26,11 @@ preservation target.
 Goals One through Four are complete and certified.
 
 [Goal Five: Flagship Autonomous Production And Creative-System Maturation](./plans/v2/flagship-autonomous-production-and-creative-system-maturation.md)
-is paused at the completed Phase 0 boundary so its autonomous loop operating
-model can be agreed before Phase 1. Gate 0 approved its assumptions, repository
-input audit, provisional performance envelope, human gates, local checkpoint
-commits, and external-action boundaries. Its immutable planning baseline is
-`b2b23b577feda29ef7eca9dcbf35a4e8c1162781`.
+is paused at the completed Phase 0 boundary pending the explicit `ACT-01`
+decision and active-program handoff before Phase 1. Gate 0 approved its
+assumptions, repository input audit, provisional performance envelope, human
+gates, local checkpoint commits, and external-action boundaries. Its immutable
+planning baseline is `b2b23b577feda29ef7eca9dcbf35a4e8c1162781`.
 
 Goal Five uses one 45–60 second, multi-act, multi-layer, multi-component, and
 multi-graph flagship as a forcing function for reusable creative-system
@@ -41,8 +41,9 @@ A now-approved
 [Autonomous Sensory Feedback Operating System](./plans/v2/goal-five-autonomous-sensory-feedback-operating-system.md)
 now defines the multi-week execution, observation, evidence, sole-writer,
 scheduled-run, and human-review model under Goal Five. Its bounded readiness
-implementation is active, but recurring execution and Goal Five Phase 1 remain
-disabled until the activation acceptance is proven.
+implementation and three supervised exact-prompt calibration runs are complete.
+Recurring execution and Goal Five Phase 1 remain disabled until the product
+owner explicitly approves `ACT-01`.
 
 The readiness substrate now has a tracked active-program pointer, immutable
 target-branch execution definitions, program/branch-scoped Git-common lifecycle
@@ -50,9 +51,15 @@ and human-validation state, one cross-worktree writer lease,
 per-claim recovery markers, crash-journaled multi-file transitions,
 content-addressed historical evidence, canonical staged checks, a 46-criterion
 sensory map, append-only human decisions, read-only specialist role contracts,
-and identity-bound review packets. It is still in bootstrap validation: the
-quiet end-to-end rehearsal, three supervised calibration runs, and explicit
-human activation decision remain outstanding, so no recurring automation exists.
+and identity-bound review packets. `OS-01` through `OS-06` and `CAL-01` through
+`CAL-03` are complete with immutable evidence, independent review, staged
+validation, clean terminal commits, and released ownership. The activation
+decision remains outstanding, so no recurring automation exists.
+
+The exact disabled cadence proposal is owned by the
+[checkpoint runbook](./plans/v2/autonomous-checkpoint-runbook.md): four
+night-centered capacity windows, at most one checkpoint per wake, planned
+cleanup gaps, and exact sole-writer refusal on overrun.
 
 The canonical machine entrypoint for that readiness work is:
 
@@ -69,8 +76,9 @@ activation metrics are captured, the 46-criterion terminal-proof contract is
 executable, and the uncontended complete repository gate is green. Its
 [certification evidence](./parity/evidence/2026-08-14-goal-five-phase-0-certification-freeze.md)
 keeps the original non-green activation run and repaired audio observation
-explicit. The next implementation phase is the bounded capability, authorized
-asset, and music-window audit for Gate 1 treatment approval.
+explicit. After `ACT-01` approval and the reviewed active-program handoff, the
+next implementation phase is the bounded capability, authorized asset, and
+music-window audit for Gate 1 treatment approval.
 
 ## Canonical Architecture
 

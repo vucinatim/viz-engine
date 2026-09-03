@@ -1,7 +1,8 @@
 # Goal Five Autonomous Sensory Feedback Operating System
 
-Status: approved supporting execution contract; readiness implementation active,
-recurring execution not yet activated.
+Status: approved supporting execution contract; readiness implementation and
+supervised calibration complete, recurring execution pending explicit `ACT-01`
+approval.
 
 Proposed: 2026-09-03.
 
@@ -546,10 +547,11 @@ Every scheduled or resumed run follows the
 9. validates focused behavior and the real product surface
 10. compares before and after evidence
 11. reviews architecture, complete diff, deletion, and simplification
-12. records evidence and atomically updates machine state
-13. commits one coherent local checkpoint only when Tier 2 acceptance passes
-14. updates the resume marker at meaningful checkpoints
-15. releases the lease and stops all scoped children
+12. commits one coherent local checkpoint only when Tier 2 acceptance passes
+13. completes the item with typed evidence, atomically updates machine state,
+    and releases the lease
+14. creates the review packet and verifies the released ownership state
+15. stops all scoped children
 16. exits; a later wake recovers afresh before selecting another checkpoint
 
 A timer may stop new work from starting. It may not turn an incomplete change
@@ -559,7 +561,8 @@ into a completed checkpoint.
 
 Recommended initial cadence after one manual rehearsal:
 
-- four nonoverlapping night-centered wake windows per day
+- four nominal night-centered wake windows per day, with the exact disabled
+  cadence proposal owned by the checkpoint runbook
 - approximately three hours of capacity per window, targeting twelve hours of
   daily autonomous capacity rather than mandatory activity
 - an explicit cleanup buffer between windows; a later wake exits harmlessly if
@@ -570,9 +573,11 @@ Recommended initial cadence after one manual rehearsal:
   time
 - one consolidated human review packet every 48–72 hours
 
-The first three recurring runs are calibration runs. Review their scope choice,
-diffs, evidence, cleanup, and machine-state transitions before allowing the
-schedule to continue unattended for a full week.
+The three exact-prompt runs before activation are supervised calibration runs.
+Review their scope choice, diffs, evidence, cleanup, and machine-state
+transitions before creating the recurring schedule. After activation, treat the
+first unattended week as a monitored rollout rather than assuming calibration
+eliminated every production-workload risk.
 
 The desktop app and machine must remain running and awake for local scheduled
 work. The schedule should be paused while the human is performing overlapping
@@ -773,12 +778,13 @@ active-program pointer. Its work items are materialized when the preceding gate
 and real production evidence make acceptance precise.
 
 The pointer cutover and `ACT-01` completion form one explicit handoff. The
-activation claim, its pre-commit checks, post-commit completion, review packet,
-and lease release continue to name the readiness program with `--program`. The
-same commit creates the immutable successor definition and changes the tracked
-pointer. A default preflight may select the successor only after the readiness
-lease is released; any crash recovery during the handoff uses the exact recorded
-readiness-program identity rather than the new default pointer.
+activation claim, its pre-commit checks, and atomic post-commit completion and
+lease release continue to name the readiness program with `--program`. The same
+commit creates the immutable successor definition and changes the tracked
+pointer. Create and verify the old-program post-commit review after completion.
+A default preflight may select the successor only after that review confirms the
+readiness lease was released; any crash recovery during the handoff uses the
+exact recorded readiness-program identity rather than the new default pointer.
 
 ## Anti-Rabbit-Hole Rules
 
@@ -810,7 +816,8 @@ Mutating recurrence may be enabled only when:
    observation, or an explicit human decision
 8. one manual scheduled-prompt rehearsal leaves a coherent result, reviewable
    evidence, a clean worktree, no child processes, and no external mutation
-9. the first three recurring runs are explicitly treated as calibration
+9. three pre-activation exact-prompt runs are explicitly treated as supervised
+   calibration
 10. a pause mechanism and human-review cadence are agreed
 
 ## Decisions Required Before Activation

@@ -1,0 +1,236 @@
+{
+  "schemaVersion": 1,
+  "kind": "viz-engine-autonomous-calibration-run",
+  "calibrationRun": 3,
+  "workItem": {
+    "programId": "goal-five-autonomous-readiness",
+    "programDefinitionHash": "2691c5b854b8f5262f969fc893f8f448901464b46b5d1adcdc8f518675fe640c",
+    "id": "CAL-03",
+    "claimId": "cbf50100-01b0-4107-9cae-a9a9a76f13f6",
+    "leaseId": "7d2523e9-f94d-47d5-b992-798ea82905e8",
+    "owner": "codex/root",
+    "startingCommit": "90a909a675366c61980e3e9748a8888bfef7b61d",
+    "branch": "codex/viz-engine-v2"
+  },
+  "invocation": {
+    "id": "cal-03/cbf50100-01b0-4107-9cae-a9a9a76f13f6",
+    "mode": "supervised-fresh-start-calibration",
+    "prompt": {
+      "canonicalSource": "docs/plans/v2/autonomous-checkpoint-runbook.md",
+      "sourceSha256AtStartingCommit": "ab8141394e2817972df6ca8f5dbf13c4f87c415f3bee14d4ae39b83fed7297ed",
+      "section": "Exact Scheduled Prompt",
+      "lineSpanAtStartingCommit": "107-129",
+      "utf8BytesIncludingFinalNewline": 1479,
+      "sha256": "3b1a7fea7d435c10ec9c356ea83ca8e0ef6c4a05fcffda229af18e1722be531d",
+      "firstLine": "Advance VizEngine by at most one dependency-ready autonomous checkpoint using",
+      "lastLine": "and next dependency-ready item. Do not start a second item in this wake."
+    },
+    "previousWakeTerminal": {
+      "workItemId": "CAL-02",
+      "terminalCommit": "90a909a675366c61980e3e9748a8888bfef7b61d",
+      "completedAt": "2026-09-03T22:00:45.502Z",
+      "reviewCreatedAt": "2026-09-03T22:00:46.737Z",
+      "reviewPacketSha256": "a112bf75dd0cd783cd4f6b354f912712414fc76f88124fb49e3b701427fb7830",
+      "repositoryClean": true,
+      "activeLease": null,
+      "nextReadyItem": "CAL-03"
+    },
+    "freshWakeBoundary": {
+      "machineObservable": false,
+      "startedAt": null,
+      "supervisedAttestation": "This task turn began after CAL-02's terminal report and recovered its clean repository state without presenting CAL-02 continuation identity.",
+      "limitation": "The repository does not receive a cryptographic Codex Desktop turn identity. The boundary is supervised; surrounding Git, program, lease, check, evidence, and review facts remain machine-verifiable.",
+      "firstMachineTimestamp": "2026-09-03T22:01:34.066Z",
+      "firstMachineTimestampMeaning": "CAL-03 claim acquisition; the preceding fresh preflight was read-only and did not persist a timestamp."
+    }
+  },
+  "freshStartAdmission": {
+    "capture": "embedded normalized snapshot of this supervised task command output",
+    "capturedAt": null,
+    "repository": {
+      "branch": "codex/viz-engine-v2",
+      "head": "90a909a675366c61980e3e9748a8888bfef7b61d",
+      "clean": true,
+      "statusHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "load": {
+      "oneMinute": 5.81591796875,
+      "cpuCount": 8,
+      "oneMinutePerCpu": 0.72698974609375,
+      "heavyValidationAllowed": true
+    },
+    "mutationAllowed": true,
+    "requiredAction": "claim",
+    "lease": null,
+    "operationalLock": null,
+    "interruptedTransition": null,
+    "readyItems": ["CAL-03"],
+    "candidateSummary": [
+      {
+        "id": "CAL-03",
+        "authority": "autonomous",
+        "claimable": true,
+        "blockingHumanQuestions": []
+      }
+    ]
+  },
+  "ownership": {
+    "claimAcquiredAt": "2026-09-03T22:01:34.066Z",
+    "cleanStatusHashAtClaim": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "exactContinuation": {
+      "capture": "embedded normalized snapshot of a supervised task command output during CAL-03 implementation",
+      "capturedAt": null,
+      "supervisedAttestation": "The command supplied all four recorded continuation identities. Its mutable dirty-tree and load fields describe that observation only, not the later candidate diff.",
+      "mutationAllowed": true,
+      "requiredAction": "continue",
+      "matchedIdentityFields": ["leaseId", "owner", "workItemId", "claimId"],
+      "repositoryHead": "90a909a675366c61980e3e9748a8888bfef7b61d",
+      "dirtyStatusHash": "09c711509845e71c96ade7c566f535e63ffbad59ce793ea6352c9ae9b8068729",
+      "hostLoadOneMinutePerCpu": 0.5469970703125,
+      "heavyValidationAllowed": true
+    }
+  },
+  "selectedCheckpoint": {
+    "observableOutcome": "Complete the third exact-prompt supervised recovery, audit every activation condition, freeze one exact disabled schedule proposal, and present the human-owned ACT-01 decision without activating recurrence.",
+    "canonicalOwner": "Repository plans own direction and execution semantics; the maintainer program owns work and evidence state; Codex Desktop owns scheduling; the product owner alone owns ACT-01.",
+    "forbiddenOwners": [
+      "chat memory",
+      "a scheduler-created permission",
+      "an inferred prior human preference",
+      "the product runtime or editor",
+      "an autonomous human.resolve invocation"
+    ],
+    "assumptions": [
+      "The approved local-only, reserved-checkout operating model remains desired unless ACT-01 changes it.",
+      "Four wake starts at 20:00, 23:15, 02:30, and 05:45 Europe/Ljubljana best express twelve hours of night-centered capacity while preserving 15-minute cleanup gaps.",
+      "Capacity is not a quota, and an empty queue, human gate, unsafe state, live writer, or high resource load must end as a no-op.",
+      "The exact active-program handoff must be implemented only after contemporaneous ACT-01 approval and in one reviewed local commit."
+    ],
+    "evidenceLanes": ["code-architecture", "creative-human"],
+    "plausibleFalsePass": "The repository could appear automation-ready while status documents disagree, the three runs are not fresh, future sensors are described as present, schedule creation races the old program lease, or an inferred preference is substituted for explicit activation.",
+    "acceptance": [
+      "Three consecutive supervised exact-prompt runs preserve direction, sole-writer ownership, staged validation, typed evidence, one-commit scope, cleanup, and truthful stopping.",
+      "All ten activation conditions point to authoritative evidence and residual uncertainty is explicit.",
+      "The exact schedule and handoff are documented but no recurring automation is created or modified.",
+      "ACT-01 is queued as an explicit human decision and remains unresolved.",
+      "Independent checker and canonicalizer review accept the architecture and truthfulness.",
+      "The certification stage passes, exactly one local commit is admitted, ownership is released, terminal review is created, and no second item starts."
+    ],
+    "irreduciblyHumanJudgment": "Only the product owner can approve ACT-01, the operating cadence, subjective creative quality, intended-audio listening, or future human gates."
+  },
+  "activationAudit": {
+    "conditionCount": 10,
+    "passCandidateCount": 10,
+    "terminalCondition": "Condition 9 becomes final only after CAL-03's commit, typed evidence admission, completion, review packet, lease release, and clean-state verification.",
+    "phaseZeroCommitsVerified": [
+      "b2b23b577feda29ef7eca9dcbf35a4e8c1162781",
+      "82c1cd7958fbb99f71b4f7f41519691f81db95bc",
+      "043f8dbae5f15828c5cba6c0b74f32cadb359946"
+    ],
+    "sensoryCriteria": {
+      "total": 46,
+      "ready": 1,
+      "planned": 32,
+      "human": 13,
+      "validationPassed": true
+    },
+    "scheduledAutomationMatchesAtStart": 0,
+    "proposedSchedule": {
+      "enabled": false,
+      "timezone": "Europe/Ljubljana",
+      "wakeStarts": ["20:00", "23:15", "02:30", "05:45"],
+      "capacityHoursPerWakeApproximate": 3,
+      "dailyCapacityHoursApproximate": 12,
+      "cleanupGapMinutes": 15,
+      "workQuota": false,
+      "reviewCadenceHours": "48-72"
+    },
+    "humanDecision": {
+      "workItemId": "ACT-01",
+      "humanValidationId": "human-1fc48707-e047-49ff-9b7f-c8015ef4ee51",
+      "status": "pending",
+      "autonomousResolutionAuthorized": false
+    }
+  },
+  "calibrationChain": [
+    {
+      "id": "CAL-01",
+      "terminalCommit": "5407ffee613570b26ef3a0deb7e78d0ecbc8b4b3",
+      "packetSha256": "17fb3be285daad24f279212df3a358a62a49a78eb47dfbdb9d537583a57b7bb4",
+      "independentReviewSha256": "bd6dc27fa06a459a6ea3009a81386c9a17182882e28b6ce01b24e46be43fc0a4",
+      "postcommitReviewPacketSha256": "c82afdfcd3d9a8044b97f672dc80e5d3854f895a95545d086c8d5bd9a0da6007"
+    },
+    {
+      "id": "CAL-02",
+      "terminalCommit": "90a909a675366c61980e3e9748a8888bfef7b61d",
+      "packetSha256": "3c5705bc200017442feed304ab9e568e4368d16a4868e15c8be1b9dcd2802c23",
+      "independentReviewSha256": "6827268cb1caff540c089288951ea05cea714fa4311d2b0d20140a7809b54219",
+      "postcommitReviewPacketSha256": "a112bf75dd0cd783cd4f6b354f912712414fc76f88124fb49e3b701427fb7830"
+    },
+    {
+      "id": "CAL-03",
+      "terminalCommit": null,
+      "packetSha256": null,
+      "activationAuditSha256": null,
+      "postcommitReviewPacketSha256": null,
+      "terminalFieldsOwnedBy": "program completion and post-commit review; not self-asserted in the pre-terminal packet"
+    }
+  ],
+  "contractInputsAtCandidate": {
+    "README.md": "48d48d76258bcfbb087b8a620cca78107e0133421e183b87ea9ba4f57477f3d5",
+    "docs/current-state.md": "0884fc285aecbf8a306c4c6f294c756c5da485eab6beeb3b447a120ad841d388",
+    "docs/docs-index.md": "bee853679195fc983c48de7f52c377f011a4a15306737cb3a6117192181fc8ca",
+    "docs/plans/v2/autonomous-checkpoint-runbook.md": "3f0997a2f7dddecef03dabb2c104865c1a64f55fa89309798a4af159c6dd6584",
+    "docs/plans/v2/goal-five-autonomous-sensory-feedback-operating-system.md": "955b7612adcaca64e620873c7e902e9d23ea1402289fdd7c7c018eb04da80ee4",
+    "docs/work-ledger.md": "38388aae97c7f60ac5e40128631c9c35cc3f38374cce6dee91b69a6a391631bf",
+    "tools/repo/programs/autonomous-readiness.json": "de4e2b2340fe8839e5b2c1132ba5da28cf4e01a261904939fdae814c262c4f61",
+    "tools/repo/programs/active-program.json": "c3620797436b918cf14cdc3ee990dcc9e6ce963b22e13c393188d27b57a5df1d",
+    "docs/parity/goal-five-sensory-map.json": "4b47e50dbb27198a81d2e9ed3c195c7244d0c5233b1dd3fe7f255e5e8820b130",
+    "docs/parity/goal-five-certification-matrix.json": "4d8be35ee3014fd6ded348d2aad06f5b15e7218feb4e675fca8210d18e723acb"
+  },
+  "scope": {
+    "primaryConceptualAxis": "activation-readiness audit and exact disabled cadence",
+    "changedFilesPlanned": [
+      "README.md",
+      "docs/current-state.md",
+      "docs/docs-index.md",
+      "docs/plans/v2/autonomous-checkpoint-runbook.md",
+      "docs/plans/v2/goal-five-autonomous-sensory-feedback-operating-system.md",
+      "docs/work-ledger.md",
+      "docs/parity/evidence/2026-09-04-autonomous-readiness-cal-03-activation-audit.md",
+      "docs/parity/evidence/artifacts/2026-09-04-autonomous-readiness-cal-03.json"
+    ],
+    "goalFiveFeatureProductionResumed": false,
+    "productCodeChanged": false,
+    "browserRequired": false,
+    "audioRequired": false,
+    "encoderRequired": false,
+    "externalMutationRequired": false,
+    "localCommitAuthorized": true,
+    "pushAuthorized": false,
+    "productionDeploymentAuthorized": false,
+    "recurringScheduleAuthorized": false
+  },
+  "lifecycle": [
+    {
+      "step": "recover-admit-claim",
+      "result": "Recovered CAL-02's clean terminal state, freshly selected only CAL-03, and acquired a new exact sole-writer claim."
+    },
+    {
+      "step": "sensory gate",
+      "result": "This documentation/control-plane audit requires semantic review and repository certification; browser, audio, media, renderer, and runtime sensors are out of scope."
+    },
+    {
+      "step": "implement",
+      "result": "Reconciled canonical status, corrected the calibration wording, froze the exact disabled schedule proposal, and assembled the activation audit without changing product code or host automation."
+    },
+    {
+      "step": "validate",
+      "status": "pending-terminal-certification"
+    },
+    {
+      "step": "commit-release-stop",
+      "status": "pending-terminal-transition"
+    }
+  ]
+}

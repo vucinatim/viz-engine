@@ -2689,3 +2689,25 @@
   `043f8dbae5f15828c5cba6c0b74f32cadb359946`, recorded the complete evidence in
   `docs/parity/evidence/2026-08-14-goal-five-phase-0-certification-freeze.md`,
   and paused before Phase 1 for the autonomous-loop operating-model discussion
+
+## 2026-09-04 — Autonomous readiness implemented and calibrated
+
+- froze one repository-owned execution program beneath Goal Five, with exact
+  work-item authority, dependencies, acceptance, typed evidence requirements,
+  and an immutable active-program pointer
+- implemented a Git-common sole-writer lease, exact compaction and restart
+  recovery, crash-journaled transitions, dirty-state preservation, human
+  validation queue, content-addressed evidence, and identity-bound review
+  packets
+- added staged fast, focused, checkpoint, integration, and certification plans
+  so inner-loop work remains selective while broad claims require broad proof
+- mapped all 46 Goal Five criteria to ready, planned, or human-owned observation
+  contracts without pretending future product harnesses already exist
+- added shared builder, checker, canonicalizer, and sensory-auditor contracts for
+  Codex and Claude without creating agent-only product semantics
+- completed the quiet failure rehearsal and three supervised fresh-start
+  calibrations; independent review findings corrected real claim-admission,
+  evidence-provenance, and documentation-truth gaps before activation
+- retained Goal Five Phase 1, recurrence, push, deployment, production changes,
+  and external mutation as unauthorized; the exact night-window proposal remains
+  disabled pending the product owner's `ACT-01` decision

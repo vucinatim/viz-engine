@@ -35,8 +35,8 @@ The active implementation contract is:
 - [Goal Five: Flagship Autonomous Production And Creative-System Maturation](./plans/v2/flagship-autonomous-production-and-creative-system-maturation.md)
 - [Goal Five Autonomous Sensory Feedback Operating System](./plans/v2/goal-five-autonomous-sensory-feedback-operating-system.md)
   is the approved subordinate readiness and execution contract; it is not a
-  second product goal, and recurrence remains disabled until its activation
-  acceptance passes.
+  second product goal. Its implementation and three supervised calibrations are
+  complete; recurrence remains disabled pending explicit `ACT-01` approval.
 
 Gate 0 is approved at planning baseline
 `b2b23b577feda29ef7eca9dcbf35a4e8c1162781`. Recover its current phase,
