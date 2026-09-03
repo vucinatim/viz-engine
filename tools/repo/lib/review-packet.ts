@@ -2,14 +2,23 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 
+import { CheckStage } from './check-contract';
 import { readAndValidateCheckEvidence } from './check-evidence';
 import { getChangedFiles } from './checks';
 import { readHumanValidationQueue } from './human-validation';
 import { writeJsonFileAtomic } from './json-file';
 import { readLease, readResumeMarker } from './lease';
 import { withOperationalSnapshot } from './operational-lock';
-import { defaultProgramPath, repositoryRoot } from './paths';
-import { readExecutionProgram, summarizeExecutionProgram } from './program';
+import {
+  defaultProgramPath,
+  repositoryRoot,
+  resolveOperationalDirectory,
+} from './paths';
+import {
+  ExecutionProgram,
+  readExecutionProgram,
+  summarizeExecutionProgram,
+} from './program';
 import { readRepositoryIdentity } from './repository-state';
 import { readAndValidateSensoryMap } from './sensory-map';
 
@@ -62,6 +71,102 @@ export const classifyCheckEvidence = (
     };
   }
 };
+
+export const classifyAdmittedCheckEvidence = (options: {
+  reference: string;
+  workItemId: string;
+  requirementId: string;
+  checkStage: CheckStage | undefined;
+  programDefinitionHash: string;
+  terminalIdentity: NonNullable<
+    ExecutionProgram['workItems'][number]['terminalIdentity']
+  >;
+  root?: string;
+}) => {
+  const root = options.root ?? repositoryRoot;
+  const hash = options.reference.match(/^command:sha256:([0-9a-f]{64})$/u)?.[1];
+  const identity = {
+    workItemId: options.workItemId,
+    requirementId: options.requirementId,
+    reference: options.reference,
+    terminalHead: options.terminalIdentity.head,
+  };
+  if (!hash) {
+    return {
+      ...identity,
+      classification: 'invalid' as const,
+      error: 'Admitted command evidence reference is malformed.',
+    };
+  }
+  const path = resolve(resolveOperationalDirectory(root), 'evidence', hash);
+  if (!existsSync(path)) {
+    return {
+      ...identity,
+      classification: 'invalid' as const,
+      error: 'Admitted command evidence object is missing.',
+    };
+  }
+  try {
+    const record = readAndValidateCheckEvidence(
+      path,
+      `review packet ${options.workItemId}.${options.requirementId}`,
+      root,
+      {
+        checkStage: options.checkStage,
+        programDefinitionHash: options.programDefinitionHash,
+        claimId: options.terminalIdentity.claimId,
+        leaseId: options.terminalIdentity.leaseId,
+        startingHead: options.terminalIdentity.startingHead,
+        terminalHead: options.terminalIdentity.head,
+        // Completion already admitted the canonical plan. Historical evidence
+        // is revalidated against its recorded plan and terminal bytes rather
+        // than reinterpreted through a later tool version or active diff.
+        enforceCanonicalPlan: false,
+        requirePassing: true,
+      },
+    );
+    return {
+      ...identity,
+      sha256: hash,
+      classification: 'admitted' as const,
+      stage: record.stage,
+      status: record.status,
+      finishedAt: record.finishedAt,
+      durationMs: record.durationMs,
+      recordedIdentity: record.repository.final,
+    };
+  } catch (error) {
+    return {
+      ...identity,
+      sha256: hash,
+      classification: 'invalid' as const,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+};
+
+const admittedCheckEvidence = (program: ExecutionProgram) =>
+  program.workItems.flatMap((item) => {
+    if (item.status !== 'complete' || !item.terminalIdentity) return [];
+    const requirements = new Map(
+      item.evidenceRequirements.map((requirement) => [
+        requirement.id,
+        requirement,
+      ]),
+    );
+    return item.evidence
+      .filter(({ reference }) => reference.startsWith('command:'))
+      .map(({ requirementId, reference }) =>
+        classifyAdmittedCheckEvidence({
+          reference,
+          workItemId: item.id,
+          requirementId,
+          checkStage: requirements.get(requirementId)?.checkStage,
+          programDefinitionHash: program.definitionHash,
+          terminalIdentity: item.terminalIdentity!,
+        }),
+      );
+  });
 const latestCheckEvidence = (
   identity: { head: string; branch: string; statusHash: string },
   programDefinitionHash: string,
@@ -106,6 +211,7 @@ const createReviewPacketImpl = (programPath: string) => {
   );
   const changedFiles = getChangedFiles();
   const checks = latestCheckEvidence(startingIdentity, program.definitionHash);
+  const admittedChecks = admittedCheckEvidence(program);
   const finalIdentity = readRepositoryIdentity();
   if (
     startingIdentity.head !== finalIdentity.head ||
@@ -115,7 +221,7 @@ const createReviewPacketImpl = (programPath: string) => {
     throw new Error('Repository changed while assembling the review packet.');
   }
   const packet = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     kind: 'viz-engine-autonomous-review-packet',
     createdAt: createdAt.toISOString(),
     identity: {
@@ -136,6 +242,7 @@ const createReviewPacketImpl = (programPath: string) => {
         .length,
     },
     checks,
+    admittedChecks,
     currentPassingCheckStages: checks
       .filter(
         (check) =>
