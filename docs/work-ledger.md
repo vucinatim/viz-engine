@@ -2743,3 +2743,21 @@
   tooling remain available within their authority, with no bespoke Git wrapper
 - kept preflight focused on repository ownership and mutation admission; the
   narrow push authority begins only after terminal completion and verification
+
+## 2026-09-04 — Goal Five authorized production inputs pinned
+
+- completed `P1-01` against the exact post-activation revision
+  `9fdc0712c0e1e67ef7ebbaf5ed4e1c192e005a9c`
+- classified and content-addressed 82 repository inputs or plausible false
+  positives rather than treating every media-looking file as creative content
+- established 14 source-music candidates, four unique model/animation sources,
+  ten code-defined shader sources, six prior derivatives, and explicit
+  reference, technical, product, evidence, and test-only boundaries
+- validated both prior production bundles with zero missing declarations or
+  content-identity mismatches and collapsed four portable FBX copies into their
+  canonical source identities
+- recorded the missing standalone image/video/texture source, missing prepared
+  model derivatives, `male-cheer.fbx` normal-map warning, and absent source
+  license evidence without acquiring or inventing anything externally
+- added a narrow pinned-revision validator to keep the audit deterministic and
+  integrated it into the Goal Five contract check

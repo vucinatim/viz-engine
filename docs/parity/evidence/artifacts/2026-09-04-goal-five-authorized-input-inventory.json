@@ -1,0 +1,1472 @@
+{
+  "schemaVersion": 1,
+  "kind": "viz-engine.goal-five-authorized-input-inventory.v1",
+  "auditRevision": "9fdc0712c0e1e67ef7ebbaf5ed4e1c192e005a9c",
+  "authority": {
+    "decision": "Existing repository music, models, animations, and media are authorized for the local Goal Five flagship proof with recorded provenance.",
+    "externalAcquisitionAllowed": false,
+    "publicationOrRedistributionRightsInferred": false
+  },
+  "scope": {
+    "included": "All media under public, prior production packs and derivatives, repository shader implementations, example bundles, test media fixtures, and media-valued parity evidence at the audit revision.",
+    "classificationRule": "Presence grants no role by itself; each entry declares candidate, reference, technical, or non-input use."
+  },
+  "summary": {
+    "entries": 82,
+    "repositoryLicenseFiles": [],
+    "byKind": {
+      "audio": 19,
+      "baked-artifact": 2,
+      "example-project": 3,
+      "image-or-video": 18,
+      "model-with-embedded-textures-and-animation": 8,
+      "production-pack": 6,
+      "render-output": 6,
+      "shader-source": 10,
+      "test-fixture": 10
+    },
+    "byGoalFiveUse": {
+      "candidate": 18,
+      "candidate-capability": 10,
+      "not-production-input": 28,
+      "reference-derived": 6,
+      "reference-only": 17,
+      "technical-only": 3
+    },
+    "duplicateGroups": 4,
+    "externalAssetReferences": 0,
+    "invalidProductionBundles": 0
+  },
+  "entries": [
+    {
+      "path": "docs/parity/evidence/artifacts/2026-07-31-goal-three-authoring-workspace-1600x1000.png",
+      "contentIdentity": "sha256:5e92ac92bdfb4372be3a43cb77009c17be9239b7b7c21ab4d4be637f9ad24162",
+      "byteLength": 206840,
+      "format": "png",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "certification-evidence",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": [
+          "docs/parity/evidence/artifacts/2026-07-31-goal-three-authoring-workspace-1600x1000.png"
+        ]
+      }
+    },
+    {
+      "path": "docs/parity/evidence/artifacts/2026-07-31-goal-three-v1-expanded-settings-1600x1000.png",
+      "contentIdentity": "sha256:ed324fc468b0d6f0a80f31d5fd20b284cb8e2b394ec1e07adf73093b10440e32",
+      "byteLength": 210403,
+      "format": "png",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "certification-evidence",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": [
+          "docs/parity/evidence/artifacts/2026-07-31-goal-three-v1-expanded-settings-1600x1000.png"
+        ]
+      }
+    },
+    {
+      "path": "docs/parity/evidence/artifacts/2026-07-31-goal-three-v1-profiler-1600x1000.png",
+      "contentIdentity": "sha256:4ea1f26409a4319e8492b9419a72be555e09810520caca47410ce3269e6302dd",
+      "byteLength": 315721,
+      "format": "png",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "certification-evidence",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": [
+          "docs/parity/evidence/artifacts/2026-07-31-goal-three-v1-profiler-1600x1000.png"
+        ]
+      }
+    },
+    {
+      "path": "docs/parity/evidence/artifacts/2026-07-31-goal-three-v1-simple-shell-1600x1000.png",
+      "contentIdentity": "sha256:86b99292b521674d27773a4c044e2c26a51111527555ef13c6a22ca7adec8f7a",
+      "byteLength": 205207,
+      "format": "png",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "certification-evidence",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": [
+          "docs/parity/evidence/artifacts/2026-07-31-goal-three-v1-simple-shell-1600x1000.png"
+        ]
+      }
+    },
+    {
+      "path": "docs/parity/evidence/artifacts/2026-07-31-goal-three-v2-expanded-settings-1600x1000.png",
+      "contentIdentity": "sha256:4c9f4f32f009ee16d7b4fe0f88e62872bce2e68c387118976c0d4ac2d3fafc9e",
+      "byteLength": 199877,
+      "format": "png",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "certification-evidence",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": [
+          "docs/parity/evidence/artifacts/2026-07-31-goal-three-v2-expanded-settings-1600x1000.png"
+        ]
+      }
+    },
+    {
+      "path": "docs/parity/evidence/artifacts/2026-07-31-goal-three-v2-profiler-1600x1000.png",
+      "contentIdentity": "sha256:e10a2892b92f1be251fc5a5c698f302554b3a6dadd515dc4eedb8786f843b052",
+      "byteLength": 341370,
+      "format": "png",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "certification-evidence",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": [
+          "docs/parity/evidence/artifacts/2026-07-31-goal-three-v2-profiler-1600x1000.png"
+        ]
+      }
+    },
+    {
+      "path": "docs/parity/evidence/artifacts/2026-07-31-goal-three-v2-simple-shell-1600x1000.png",
+      "contentIdentity": "sha256:eedd921010ebd8088d8c4ca72e6629b628f201e34d452ed54ef1d676ee05f1e2",
+      "byteLength": 206627,
+      "format": "png",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "certification-evidence",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": [
+          "docs/parity/evidence/artifacts/2026-07-31-goal-three-v2-simple-shell-1600x1000.png"
+        ]
+      }
+    },
+    {
+      "path": "docs/parity/evidence/artifacts/2026-07-31-goal-three-waveform-rhythm-workspace.png",
+      "contentIdentity": "sha256:d1965eaceb3a381f1c5c4c09adec42f9db1104fc215bc40ee10f0634522b4e1a",
+      "byteLength": 156792,
+      "format": "png",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "certification-evidence",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": [
+          "docs/parity/evidence/artifacts/2026-07-31-goal-three-waveform-rhythm-workspace.png"
+        ]
+      }
+    },
+    {
+      "path": "packages/viz-components-core/src/fullscreen-shader.ts",
+      "contentIdentity": "sha256:404786d327ecbeabf854a5be8d1bbf00bcf4aefcddb723cfb5419022b4926139",
+      "byteLength": 16981,
+      "format": "ts",
+      "availability": "present-at-audit-revision",
+      "kind": "shader-source",
+      "role": "code-defined-render-capability",
+      "goalFiveUse": "candidate-capability",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "repository-code-open-core-license-undecided",
+      "provenance": {
+        "kind": "repository-code",
+        "sourcePaths": ["packages/viz-components-core/src/fullscreen-shader.ts"]
+      }
+    },
+    {
+      "path": "packages/viz-components-core/src/noise-shader.ts",
+      "contentIdentity": "sha256:3f10386fa274abca8346b8031cdfd4262194d94cbba10248e3d2ccbb00e38915",
+      "byteLength": 12218,
+      "format": "ts",
+      "availability": "present-at-audit-revision",
+      "kind": "shader-source",
+      "role": "code-defined-render-capability",
+      "goalFiveUse": "candidate-capability",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "repository-code-open-core-license-undecided",
+      "provenance": {
+        "kind": "repository-code",
+        "sourcePaths": ["packages/viz-components-core/src/noise-shader.ts"]
+      }
+    },
+    {
+      "path": "packages/viz-components-core/src/strobe-light.ts",
+      "contentIdentity": "sha256:d7e3cb15c61cbca7017c4c1ee240a046adeab249db6c4aff2acb262c269a1a67",
+      "byteLength": 3051,
+      "format": "ts",
+      "availability": "present-at-audit-revision",
+      "kind": "shader-source",
+      "role": "code-defined-render-capability",
+      "goalFiveUse": "candidate-capability",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "repository-code-open-core-license-undecided",
+      "provenance": {
+        "kind": "repository-code",
+        "sourcePaths": ["packages/viz-components-core/src/strobe-light.ts"]
+      }
+    },
+    {
+      "path": "packages/viz-example-projects/fixtures/example-reactive-bars-bundle/assets/example-cover.svg",
+      "contentIdentity": "sha256:c605f0faac6981cbd64b03e4f9cf0605afe51baf541e46efaceeaf3934c5de23",
+      "byteLength": 1270,
+      "format": "svg",
+      "availability": "present-at-audit-revision",
+      "kind": "test-fixture",
+      "role": "automated-test-only",
+      "goalFiveUse": "not-production-input",
+      "authority": "test-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-test-fixture",
+        "sourcePaths": [
+          "packages/viz-example-projects/fixtures/example-reactive-bars-bundle/assets/example-cover.svg"
+        ]
+      }
+    },
+    {
+      "path": "packages/viz-example-projects/fixtures/example-reactive-bars-bundle/assets/main-song-placeholder.mp3",
+      "contentIdentity": "sha256:fea120005ddc9948e77d9b09a8158bfd58a31f19c32fd8e8df10d6f3c5b611d0",
+      "byteLength": 46,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "test-fixture",
+      "role": "automated-test-only",
+      "goalFiveUse": "not-production-input",
+      "authority": "test-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-test-fixture",
+        "sourcePaths": [
+          "packages/viz-example-projects/fixtures/example-reactive-bars-bundle/assets/main-song-placeholder.mp3"
+        ]
+      }
+    },
+    {
+      "path": "packages/viz-example-projects/fixtures/example-reactive-bars-bundle/baked/audio-standard-main.json",
+      "contentIdentity": "sha256:4cabbe2fb3467d3232760a5145f62b8480dc018f8a56bc8c12afafd3f0661e2b",
+      "byteLength": 9373,
+      "format": "json",
+      "availability": "present-at-audit-revision",
+      "kind": "test-fixture",
+      "role": "automated-test-only",
+      "goalFiveUse": "not-production-input",
+      "authority": "test-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-test-fixture",
+        "sourcePaths": [
+          "packages/viz-example-projects/fixtures/example-reactive-bars-bundle/baked/audio-standard-main.json"
+        ]
+      }
+    },
+    {
+      "path": "packages/viz-example-projects/fixtures/example-reactive-bars-bundle/bundle-manifest.json",
+      "contentIdentity": "sha256:2489d1c74ee4fe3943973038a8c004937780c3dc5e7a758a1342e8b7edea6f53",
+      "byteLength": 808,
+      "format": "json",
+      "availability": "present-at-audit-revision",
+      "kind": "test-fixture",
+      "role": "automated-test-only",
+      "goalFiveUse": "not-production-input",
+      "authority": "test-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-test-fixture",
+        "sourcePaths": [
+          "packages/viz-example-projects/fixtures/example-reactive-bars-bundle/bundle-manifest.json"
+        ]
+      }
+    },
+    {
+      "path": "packages/viz-example-projects/fixtures/example-reactive-bars-bundle/project.json",
+      "contentIdentity": "sha256:837bfda57b235447792bbba3d64b134b95a07de102bf787b0773722f6ce178df",
+      "byteLength": 7838,
+      "format": "json",
+      "availability": "present-at-audit-revision",
+      "kind": "test-fixture",
+      "role": "automated-test-only",
+      "goalFiveUse": "not-production-input",
+      "authority": "test-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-test-fixture",
+        "sourcePaths": [
+          "packages/viz-example-projects/fixtures/example-reactive-bars-bundle/project.json"
+        ]
+      }
+    },
+    {
+      "path": "packages/viz-renderer-three/src/blend-compositor.ts",
+      "contentIdentity": "sha256:6596f3f57b53c194a97cfe2be77dd48db39facdf82e8d361cd1823542c080e23",
+      "byteLength": 9753,
+      "format": "ts",
+      "availability": "present-at-audit-revision",
+      "kind": "shader-source",
+      "role": "code-defined-render-capability",
+      "goalFiveUse": "candidate-capability",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "repository-code-open-core-license-undecided",
+      "provenance": {
+        "kind": "repository-code",
+        "sourcePaths": ["packages/viz-renderer-three/src/blend-compositor.ts"]
+      }
+    },
+    {
+      "path": "packages/viz-renderer-three/src/portable-nodes.ts",
+      "contentIdentity": "sha256:5b963c56f4b2c2253f7acee036451e335035d8afa12d4630cb68eed988a32453",
+      "byteLength": 48262,
+      "format": "ts",
+      "availability": "present-at-audit-revision",
+      "kind": "shader-source",
+      "role": "code-defined-render-capability",
+      "goalFiveUse": "candidate-capability",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "repository-code-open-core-license-undecided",
+      "provenance": {
+        "kind": "repository-code",
+        "sourcePaths": ["packages/viz-renderer-three/src/portable-nodes.ts"]
+      }
+    },
+    {
+      "path": "packages/viz-renderer-three/src/programs/neural-network.ts",
+      "contentIdentity": "sha256:e72709459553c8313471e2805211b37bdf9b9b79a59dffa9434f66c3aeb74dc9",
+      "byteLength": 24610,
+      "format": "ts",
+      "availability": "present-at-audit-revision",
+      "kind": "shader-source",
+      "role": "code-defined-render-capability",
+      "goalFiveUse": "candidate-capability",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "repository-code-open-core-license-undecided",
+      "provenance": {
+        "kind": "repository-code",
+        "sourcePaths": [
+          "packages/viz-renderer-three/src/programs/neural-network.ts"
+        ]
+      }
+    },
+    {
+      "path": "packages/viz-renderer-three/src/programs/particle-system.ts",
+      "contentIdentity": "sha256:255b115c8269531fc379c447bf1154d779dd700a55164475922cc19f0d3c22ef",
+      "byteLength": 7170,
+      "format": "ts",
+      "availability": "present-at-audit-revision",
+      "kind": "shader-source",
+      "role": "code-defined-render-capability",
+      "goalFiveUse": "candidate-capability",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "repository-code-open-core-license-undecided",
+      "provenance": {
+        "kind": "repository-code",
+        "sourcePaths": [
+          "packages/viz-renderer-three/src/programs/particle-system.ts"
+        ]
+      }
+    },
+    {
+      "path": "packages/viz-renderer-three/src/programs/post-processing.ts",
+      "contentIdentity": "sha256:bdc37e7ffdfb2c3dfe10f01945a37a7eb689bcb570862592e7f01621e2c16553",
+      "byteLength": 5180,
+      "format": "ts",
+      "availability": "present-at-audit-revision",
+      "kind": "shader-source",
+      "role": "code-defined-render-capability",
+      "goalFiveUse": "candidate-capability",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "repository-code-open-core-license-undecided",
+      "provenance": {
+        "kind": "repository-code",
+        "sourcePaths": [
+          "packages/viz-renderer-three/src/programs/post-processing.ts"
+        ]
+      }
+    },
+    {
+      "path": "packages/viz-renderer-three/src/programs/stage-characters.ts",
+      "contentIdentity": "sha256:d0fc4a81b803e0f91ef9b7e01ed759c7bfc66bc0a819ead8022dfe5a398306ef",
+      "byteLength": 20580,
+      "format": "ts",
+      "availability": "present-at-audit-revision",
+      "kind": "shader-source",
+      "role": "code-defined-render-capability",
+      "goalFiveUse": "candidate-capability",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "repository-code-open-core-license-undecided",
+      "provenance": {
+        "kind": "repository-code",
+        "sourcePaths": [
+          "packages/viz-renderer-three/src/programs/stage-characters.ts"
+        ]
+      }
+    },
+    {
+      "path": "packages/viz-renderer-three/src/programs/stage-scene.ts",
+      "contentIdentity": "sha256:868380455cacbb0d476b2393eb2f2f5ea9bd8848ef2e8c3f202eeaaa0047d76b",
+      "byteLength": 47038,
+      "format": "ts",
+      "availability": "present-at-audit-revision",
+      "kind": "shader-source",
+      "role": "code-defined-render-capability",
+      "goalFiveUse": "candidate-capability",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "repository-code-open-core-license-undecided",
+      "provenance": {
+        "kind": "repository-code",
+        "sourcePaths": [
+          "packages/viz-renderer-three/src/programs/stage-scene.ts"
+        ]
+      }
+    },
+    {
+      "path": "public/favicon.ico",
+      "contentIdentity": "sha256:9ca74ba0fd6fc19d7da4fc31ba95c9b23ba6053a537c4e83ff4efde94ab4caf5",
+      "byteLength": 15406,
+      "format": "ico",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "product-branding-or-shell",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": ["public/favicon.ico"]
+      }
+    },
+    {
+      "path": "public/gifs/demo.gif",
+      "contentIdentity": "sha256:d6c9a428d48896ceadd6041f66c94f33a47f584edae724a45152e58ec9305bc2",
+      "byteLength": 36951064,
+      "format": "gif",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "product-demo",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": ["public/gifs/demo.gif"]
+      }
+    },
+    {
+      "path": "public/logo.png",
+      "contentIdentity": "sha256:b96724b1bce9ba8f21e8432379a727d5149be3155753ad5790425c9e606fef52",
+      "byteLength": 618563,
+      "format": "png",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "product-branding-or-shell",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": ["public/logo.png"]
+      }
+    },
+    {
+      "path": "public/models/stage/female-dancer.fbx",
+      "contentIdentity": "sha256:fd6847858a95d9de88e64d0c070b44e95b3c822bf3231ff347f2832dc9396479",
+      "byteLength": 3143948,
+      "format": "fbx",
+      "availability": "present-at-audit-revision",
+      "kind": "model-with-embedded-textures-and-animation",
+      "role": "source-stage-model",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/models/stage/female-dancer.fbx"]
+      }
+    },
+    {
+      "path": "public/models/stage/female-dj.fbx",
+      "contentIdentity": "sha256:87c7b85a746330c4423bf0598ae0356a9289299316030d46cf067f7fc9cd9c16",
+      "byteLength": 22091584,
+      "format": "fbx",
+      "availability": "present-at-audit-revision",
+      "kind": "model-with-embedded-textures-and-animation",
+      "role": "source-stage-model",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/models/stage/female-dj.fbx"]
+      }
+    },
+    {
+      "path": "public/models/stage/male-cheer.fbx",
+      "contentIdentity": "sha256:354aab94cf2a971baf58f4007ab0eecfa379126f1a11d421a56dd8f68ee3959b",
+      "byteLength": 1189100,
+      "format": "fbx",
+      "availability": "present-at-audit-revision",
+      "kind": "model-with-embedded-textures-and-animation",
+      "role": "source-stage-model",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/models/stage/male-cheer.fbx"]
+      },
+      "issues": [
+        "References an unavailable external normal map; certified browser loading retains the mesh, rig, authored clip, and base material with a non-fatal warning."
+      ]
+    },
+    {
+      "path": "public/models/stage/male-dancer.fbx",
+      "contentIdentity": "sha256:c9cf2a023a282b391534e8a10a91092438def435d786e9d12309ef367eb43582",
+      "byteLength": 2611308,
+      "format": "fbx",
+      "availability": "present-at-audit-revision",
+      "kind": "model-with-embedded-textures-and-animation",
+      "role": "source-stage-model",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/models/stage/male-dancer.fbx"]
+      }
+    },
+    {
+      "path": "public/music/Outsiders (feat. Charlotte Haining).mp3",
+      "contentIdentity": "sha256:2f7d846d2df1a8e210a56c88f328687e471d6345d57b8c174e3f850b23e3f184",
+      "byteLength": 4670355,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "source-music",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/music/Outsiders (feat. Charlotte Haining).mp3"]
+      }
+    },
+    {
+      "path": "public/music/[Acoustic] Guitar + Vocal.mp3",
+      "contentIdentity": "sha256:21ea49751186c99414c6e9ab15b70642d4175f6a17ca094cc0579a86ac7590b5",
+      "byteLength": 3206743,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "source-music",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/music/[Acoustic] Guitar + Vocal.mp3"]
+      }
+    },
+    {
+      "path": "public/music/[Bass] Future Bass.mp3",
+      "contentIdentity": "sha256:a9324064970cbd6c9c79fd00adad97babd8a477343e1b9f29e7fd11f978851a4",
+      "byteLength": 3693286,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "source-music",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/music/[Bass] Future Bass.mp3"]
+      }
+    },
+    {
+      "path": "public/music/[Breakbeat] Funky Breakbeat.mp3",
+      "contentIdentity": "sha256:3eff519ee8d94fca7f878ee0fc894d01fd0e9f946d2483e3ed17c79831846e34",
+      "byteLength": 5914588,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "source-music",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/music/[Breakbeat] Funky Breakbeat.mp3"]
+      }
+    },
+    {
+      "path": "public/music/[DnB] Dancefloor DnB.mp3",
+      "contentIdentity": "sha256:d8a4c0727ab57a6d55d43d3bf5b6a9b15b31bbcdae2617e67cb83a841dc879e6",
+      "byteLength": 4204721,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "source-music",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/music/[DnB] Dancefloor DnB.mp3"]
+      }
+    },
+    {
+      "path": "public/music/[DnB] Electric DnB.mp3",
+      "contentIdentity": "sha256:68f2532d3750e8e2088f4e218a64d2418e57c688b3479bee2319f9e7a2dc798c",
+      "byteLength": 7205699,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "source-music",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/music/[DnB] Electric DnB.mp3"]
+      }
+    },
+    {
+      "path": "public/music/[DnB] Rap DnB.mp3",
+      "contentIdentity": "sha256:dbb076797f0f370cb2e4e0915baae6baaedb99c6e7f3a68e8292d012ee2f5076",
+      "byteLength": 4626944,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "source-music",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/music/[DnB] Rap DnB.mp3"]
+      }
+    },
+    {
+      "path": "public/music/[HipHop] 808 Rap.mp3",
+      "contentIdentity": "sha256:f3c72436ec15e5e5c4fafb11be8f0085dd2b64f58c848b349085a7de7931341d",
+      "byteLength": 3532989,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "source-music",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/music/[HipHop] 808 Rap.mp3"]
+      }
+    },
+    {
+      "path": "public/music/[HipHop] LoFi HipHop.mp3",
+      "contentIdentity": "sha256:7542b5c58dc51c98d2fa80293ce78f1c8e46ea42e944974e26bdedab9a7eae4b",
+      "byteLength": 2474198,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "source-music",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/music/[HipHop] LoFi HipHop.mp3"]
+      }
+    },
+    {
+      "path": "public/music/[House] Progressive House.mp3",
+      "contentIdentity": "sha256:88891b74f58331d5465f3cdf41735674f9fb394464ecca4ba478a5fca64d2bb4",
+      "byteLength": 3480268,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "source-music",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/music/[House] Progressive House.mp3"]
+      }
+    },
+    {
+      "path": "public/music/[Jazz] Jazz Fusion.mp3",
+      "contentIdentity": "sha256:1c13492650f44e54712f5712817b9f72817c1132a64a241c578c1d57b8b65b53",
+      "byteLength": 4236001,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "source-music",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/music/[Jazz] Jazz Fusion.mp3"]
+      }
+    },
+    {
+      "path": "public/music/[Rock] Electronic Rock.mp3",
+      "contentIdentity": "sha256:5ff18ac070e9a9abab5383ae0d53b36a6b7bcf61c2c77156c77b6aac558d4dc6",
+      "byteLength": 5069309,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "source-music",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/music/[Rock] Electronic Rock.mp3"]
+      }
+    },
+    {
+      "path": "public/music/[Rock] Indie Rock.mp3",
+      "contentIdentity": "sha256:f7ab8eedcb78b6559cdf989d55711e4535d9987fa661163991d0e45c2ee360a5",
+      "byteLength": 3418603,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "source-music",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/music/[Rock] Indie Rock.mp3"]
+      }
+    },
+    {
+      "path": "public/music/[Synthwave] Retro Synthwave.mp3",
+      "contentIdentity": "sha256:9e16add5966f6bc664abeaec1ebf4b09fffca8283c642b240c742dd5d35166f8",
+      "byteLength": 2407027,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "source-music",
+      "goalFiveUse": "candidate",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/music/[Synthwave] Retro Synthwave.mp3"]
+      }
+    },
+    {
+      "path": "public/music/[Test] C-major Piano.mp3",
+      "contentIdentity": "sha256:5ef2d08d21672175c2dafdfd685d81f3649c2940bd38835ab8add0ce6da8700b",
+      "byteLength": 320782,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "technical-audio-fixture",
+      "goalFiveUse": "technical-only",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/music/[Test] C-major Piano.mp3"]
+      }
+    },
+    {
+      "path": "public/music/[Test] Heartbeat.mp3",
+      "contentIdentity": "sha256:ce76442e372656f16b144465651931cdb47a2e33bb12aface53f915a55dfd8a3",
+      "byteLength": 128301,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "technical-audio-fixture",
+      "goalFiveUse": "technical-only",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/music/[Test] Heartbeat.mp3"]
+      }
+    },
+    {
+      "path": "public/music/[Test] Sine Sweep.mp3",
+      "contentIdentity": "sha256:5ba8d7a7db92929209b0a4b2d97a50857c67007741c7cd3ea55630aec99f691a",
+      "byteLength": 573357,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "technical-audio-fixture",
+      "goalFiveUse": "technical-only",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "unverified-no-repository-record",
+      "provenance": {
+        "kind": "repository-source",
+        "sourcePaths": ["public/music/[Test] Sine Sweep.mp3"]
+      }
+    },
+    {
+      "path": "public/next.svg",
+      "contentIdentity": "sha256:55995dfad6ecb4945a1e856ddca03c5e16aa5bf13fd21b4df6a74ae79357bcfc",
+      "byteLength": 1375,
+      "format": "svg",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "product-branding-or-shell",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": ["public/next.svg"]
+      }
+    },
+    {
+      "path": "public/og-image.png",
+      "contentIdentity": "sha256:9e981a1a2c5aff88076194b5b7dad46b0a39f6bb300f15ad89c52e03ae4a95c0",
+      "byteLength": 449047,
+      "format": "png",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "product-branding-or-shell",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": ["public/og-image.png"]
+      }
+    },
+    {
+      "path": "public/productions/afterlight-assembly/assets/asset-afterlight-dancefloor-dnb.mp3",
+      "contentIdentity": "sha256:8ed6942b63378b0ebd1597f9ead5987126d6d0a0c6a60987e05c844d013af923",
+      "byteLength": 289196,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "derived-production-window",
+      "goalFiveUse": "reference-derived",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "inherits-unverified-source",
+      "provenance": {
+        "kind": "declared-ffmpeg-derivation",
+        "sourcePaths": ["public/music/[DnB] Dancefloor DnB.mp3"]
+      }
+    },
+    {
+      "path": "public/productions/afterlight-assembly/assets/viz-builtin-stage-female-dancer.fbx",
+      "contentIdentity": "sha256:fd6847858a95d9de88e64d0c070b44e95b3c822bf3231ff347f2832dc9396479",
+      "byteLength": 3143948,
+      "format": "fbx",
+      "availability": "present-at-audit-revision",
+      "kind": "model-with-embedded-textures-and-animation",
+      "role": "portable-bundle-model-copy",
+      "goalFiveUse": "reference-derived",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "inherits-unverified-source",
+      "provenance": {
+        "kind": "exact-copy",
+        "sourcePaths": ["public/models/stage/female-dancer.fbx"]
+      }
+    },
+    {
+      "path": "public/productions/afterlight-assembly/assets/viz-builtin-stage-female-dj.fbx",
+      "contentIdentity": "sha256:87c7b85a746330c4423bf0598ae0356a9289299316030d46cf067f7fc9cd9c16",
+      "byteLength": 22091584,
+      "format": "fbx",
+      "availability": "present-at-audit-revision",
+      "kind": "model-with-embedded-textures-and-animation",
+      "role": "portable-bundle-model-copy",
+      "goalFiveUse": "reference-derived",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "inherits-unverified-source",
+      "provenance": {
+        "kind": "exact-copy",
+        "sourcePaths": ["public/models/stage/female-dj.fbx"]
+      }
+    },
+    {
+      "path": "public/productions/afterlight-assembly/assets/viz-builtin-stage-male-cheer.fbx",
+      "contentIdentity": "sha256:354aab94cf2a971baf58f4007ab0eecfa379126f1a11d421a56dd8f68ee3959b",
+      "byteLength": 1189100,
+      "format": "fbx",
+      "availability": "present-at-audit-revision",
+      "kind": "model-with-embedded-textures-and-animation",
+      "role": "portable-bundle-model-copy",
+      "goalFiveUse": "reference-derived",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "inherits-unverified-source",
+      "provenance": {
+        "kind": "exact-copy",
+        "sourcePaths": ["public/models/stage/male-cheer.fbx"]
+      },
+      "issues": [
+        "Carries the source male-cheer model external-normal-map warning."
+      ]
+    },
+    {
+      "path": "public/productions/afterlight-assembly/assets/viz-builtin-stage-male-dancer.fbx",
+      "contentIdentity": "sha256:c9cf2a023a282b391534e8a10a91092438def435d786e9d12309ef367eb43582",
+      "byteLength": 2611308,
+      "format": "fbx",
+      "availability": "present-at-audit-revision",
+      "kind": "model-with-embedded-textures-and-animation",
+      "role": "portable-bundle-model-copy",
+      "goalFiveUse": "reference-derived",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "inherits-unverified-source",
+      "provenance": {
+        "kind": "exact-copy",
+        "sourcePaths": ["public/models/stage/male-dancer.fbx"]
+      }
+    },
+    {
+      "path": "public/productions/afterlight-assembly/baked/artifact-audio-features-9fd7cad5.vizaudio",
+      "contentIdentity": "sha256:62d4b342614af0e040e4d037414595f8c2e4698a9ff990b391af3a1430beadfa",
+      "byteLength": 2337485,
+      "format": "vizaudio",
+      "availability": "present-at-audit-revision",
+      "kind": "baked-artifact",
+      "role": "prior-production-audio-analysis",
+      "goalFiveUse": "reference-only",
+      "authority": "authorized-local-reference",
+      "licenseStatus": "not-a-display-asset",
+      "provenance": {
+        "kind": "declared-production-bake",
+        "sourcePaths": [
+          "public/productions/afterlight-assembly/bundle-manifest.json"
+        ]
+      }
+    },
+    {
+      "path": "public/productions/afterlight-assembly/bundle-manifest.json",
+      "contentIdentity": "sha256:82508d4857c44b916078ad55c261e36d133b5f31eb2645b1df71b7fcdc9d1949",
+      "byteLength": 2835,
+      "format": "json",
+      "availability": "present-at-audit-revision",
+      "kind": "production-pack",
+      "role": "bundle-manifest",
+      "goalFiveUse": "reference-only",
+      "authority": "authorized-local-reference",
+      "licenseStatus": "repository-project-data",
+      "provenance": {
+        "kind": "repository-production-pack",
+        "sourcePaths": [
+          "public/productions/afterlight-assembly/bundle-manifest.json"
+        ]
+      }
+    },
+    {
+      "path": "public/productions/afterlight-assembly/execution-manifest.json",
+      "contentIdentity": "sha256:a4c4b7e64a3e2ccf3bd3e20f3e3e97c49e78138593a3089b6906fbcd5aeaf217",
+      "byteLength": 4289,
+      "format": "json",
+      "availability": "present-at-audit-revision",
+      "kind": "production-pack",
+      "role": "execution-manifest",
+      "goalFiveUse": "reference-only",
+      "authority": "authorized-local-reference",
+      "licenseStatus": "repository-project-data",
+      "provenance": {
+        "kind": "repository-production-pack",
+        "sourcePaths": [
+          "public/productions/afterlight-assembly/execution-manifest.json"
+        ]
+      }
+    },
+    {
+      "path": "public/productions/afterlight-assembly/project.json",
+      "contentIdentity": "sha256:8315723a1ad2f0a8aa69af2a93c104ea79c2a84c60edd29e04ba313fdfc3bad8",
+      "byteLength": 23362,
+      "format": "json",
+      "availability": "present-at-audit-revision",
+      "kind": "production-pack",
+      "role": "project",
+      "goalFiveUse": "reference-only",
+      "authority": "authorized-local-reference",
+      "licenseStatus": "repository-project-data",
+      "provenance": {
+        "kind": "repository-production-pack",
+        "sourcePaths": ["public/productions/afterlight-assembly/project.json"]
+      }
+    },
+    {
+      "path": "public/productions/afterlight-assembly/renders/afterlight-assembly-contact-sheet.jpeg",
+      "contentIdentity": "sha256:fad1dc12d81894b6b39d34c75d5b9e95f00c12a8361289255fcc80cae7a1fcce",
+      "byteLength": 304418,
+      "format": "jpeg",
+      "availability": "present-at-audit-revision",
+      "kind": "render-output",
+      "role": "prior-production-review-output",
+      "goalFiveUse": "reference-only",
+      "authority": "authorized-local-reference",
+      "licenseStatus": "not-evaluated-as-new-input",
+      "provenance": {
+        "kind": "declared-production-output",
+        "sourcePaths": ["public/productions/afterlight-assembly/project.json"]
+      }
+    },
+    {
+      "path": "public/productions/afterlight-assembly/renders/afterlight-assembly-drop-still.png",
+      "contentIdentity": "sha256:02170ba1abf345963ea9575c00c32c0f0b140606eb66d7e3f36427e39f85e6e3",
+      "byteLength": 579812,
+      "format": "png",
+      "availability": "present-at-audit-revision",
+      "kind": "render-output",
+      "role": "prior-production-review-output",
+      "goalFiveUse": "reference-only",
+      "authority": "authorized-local-reference",
+      "licenseStatus": "not-evaluated-as-new-input",
+      "provenance": {
+        "kind": "declared-production-output",
+        "sourcePaths": ["public/productions/afterlight-assembly/project.json"]
+      }
+    },
+    {
+      "path": "public/productions/afterlight-assembly/renders/afterlight-assembly-final.mp4",
+      "contentIdentity": "sha256:d611d794ef73684fa742f6707e68a6ede20b4a3d12fe5f5ab73a578512e41b2f",
+      "byteLength": 11983573,
+      "format": "mp4",
+      "availability": "present-at-audit-revision",
+      "kind": "render-output",
+      "role": "prior-production-review-output",
+      "goalFiveUse": "reference-only",
+      "authority": "authorized-local-reference",
+      "licenseStatus": "not-evaluated-as-new-input",
+      "provenance": {
+        "kind": "declared-production-output",
+        "sourcePaths": ["public/productions/afterlight-assembly/project.json"]
+      }
+    },
+    {
+      "path": "public/productions/signal-cathedral/assets/asset-signal-cathedral-progressive-house.mp3",
+      "contentIdentity": "sha256:d13f1a0f9fe2af8cb088d08320f24822a8ecafddde4801143a52972fc4bc9dcd",
+      "byteLength": 289196,
+      "format": "mp3",
+      "availability": "present-at-audit-revision",
+      "kind": "audio",
+      "role": "derived-production-window",
+      "goalFiveUse": "reference-derived",
+      "authority": "authorized-local-flagship-proof",
+      "licenseStatus": "inherits-unverified-source",
+      "provenance": {
+        "kind": "declared-ffmpeg-derivation",
+        "sourcePaths": ["public/music/[House] Progressive House.mp3"]
+      }
+    },
+    {
+      "path": "public/productions/signal-cathedral/baked/artifact-audio-features-a10777ef.json",
+      "contentIdentity": "sha256:2f5f8dc41a8e2d49a499c91a4caeba711cbe8eb6f46863e1ad35428a49554f79",
+      "byteLength": 3133447,
+      "format": "json",
+      "availability": "present-at-audit-revision",
+      "kind": "baked-artifact",
+      "role": "prior-production-audio-analysis",
+      "goalFiveUse": "reference-only",
+      "authority": "authorized-local-reference",
+      "licenseStatus": "not-a-display-asset",
+      "provenance": {
+        "kind": "declared-production-bake",
+        "sourcePaths": [
+          "public/productions/signal-cathedral/bundle-manifest.json"
+        ]
+      }
+    },
+    {
+      "path": "public/productions/signal-cathedral/bundle-manifest.json",
+      "contentIdentity": "sha256:6c4a4c27ac7e6003a1f88e09395e9dd3332dbea21ece6d05a1cfe5c76e209e9c",
+      "byteLength": 1253,
+      "format": "json",
+      "availability": "present-at-audit-revision",
+      "kind": "production-pack",
+      "role": "bundle-manifest",
+      "goalFiveUse": "reference-only",
+      "authority": "authorized-local-reference",
+      "licenseStatus": "repository-project-data",
+      "provenance": {
+        "kind": "repository-production-pack",
+        "sourcePaths": [
+          "public/productions/signal-cathedral/bundle-manifest.json"
+        ]
+      }
+    },
+    {
+      "path": "public/productions/signal-cathedral/execution-manifest.json",
+      "contentIdentity": "sha256:17370aedb0674dfeeaa68a9f3c1811d5c8ad796dfce3f8220058711c2d3b0d65",
+      "byteLength": 2174,
+      "format": "json",
+      "availability": "present-at-audit-revision",
+      "kind": "production-pack",
+      "role": "execution-manifest",
+      "goalFiveUse": "reference-only",
+      "authority": "authorized-local-reference",
+      "licenseStatus": "repository-project-data",
+      "provenance": {
+        "kind": "repository-production-pack",
+        "sourcePaths": [
+          "public/productions/signal-cathedral/execution-manifest.json"
+        ]
+      }
+    },
+    {
+      "path": "public/productions/signal-cathedral/project.json",
+      "contentIdentity": "sha256:c0085922cb268a69b8306898b167a1e2386675fdcf96778a832c258e75bf9223",
+      "byteLength": 12964,
+      "format": "json",
+      "availability": "present-at-audit-revision",
+      "kind": "production-pack",
+      "role": "project",
+      "goalFiveUse": "reference-only",
+      "authority": "authorized-local-reference",
+      "licenseStatus": "repository-project-data",
+      "provenance": {
+        "kind": "repository-production-pack",
+        "sourcePaths": ["public/productions/signal-cathedral/project.json"]
+      }
+    },
+    {
+      "path": "public/productions/signal-cathedral/renders/signal-cathedral-final-1280x720-60fps.mp4",
+      "contentIdentity": "sha256:a835883cafa005dc38851ea6cbb2e5adbf0abfd10137fa59bc6583383b2fcfb2",
+      "byteLength": 4215523,
+      "format": "mp4",
+      "availability": "present-at-audit-revision",
+      "kind": "render-output",
+      "role": "prior-production-review-output",
+      "goalFiveUse": "reference-only",
+      "authority": "authorized-local-reference",
+      "licenseStatus": "not-evaluated-as-new-input",
+      "provenance": {
+        "kind": "declared-production-output",
+        "sourcePaths": ["public/productions/signal-cathedral/project.json"]
+      }
+    },
+    {
+      "path": "public/productions/signal-cathedral/renders/signal-cathedral-final-contact-sheet.jpg",
+      "contentIdentity": "sha256:852419d591a4139b31f5e43071f3512d3b1dee028932b23701d389cb4c5ff372",
+      "byteLength": 69023,
+      "format": "jpg",
+      "availability": "present-at-audit-revision",
+      "kind": "render-output",
+      "role": "prior-production-review-output",
+      "goalFiveUse": "reference-only",
+      "authority": "authorized-local-reference",
+      "licenseStatus": "not-evaluated-as-new-input",
+      "provenance": {
+        "kind": "declared-production-output",
+        "sourcePaths": ["public/productions/signal-cathedral/project.json"]
+      }
+    },
+    {
+      "path": "public/productions/signal-cathedral/renders/signal-cathedral-preview-640x360.mp4",
+      "contentIdentity": "sha256:f805c8bf3287dfa85bf2f8503a8813fd9cdd06a36e495e72692ac1b47f042028",
+      "byteLength": 184093,
+      "format": "mp4",
+      "availability": "present-at-audit-revision",
+      "kind": "render-output",
+      "role": "prior-production-review-output",
+      "goalFiveUse": "reference-only",
+      "authority": "authorized-local-reference",
+      "licenseStatus": "not-evaluated-as-new-input",
+      "provenance": {
+        "kind": "declared-production-output",
+        "sourcePaths": ["public/productions/signal-cathedral/project.json"]
+      }
+    },
+    {
+      "path": "public/projects/layer-blending-showcase.vizengine.json",
+      "contentIdentity": "sha256:d2b6d9d2b7fb8f0bc1a847d73de8cb787e1e01dd0be512733df5812c2de79c0b",
+      "byteLength": 40482,
+      "format": "json",
+      "availability": "present-at-audit-revision",
+      "kind": "example-project",
+      "role": "editor-example",
+      "goalFiveUse": "reference-only",
+      "authority": "authorized-local-reference",
+      "licenseStatus": "repository-project-data",
+      "provenance": {
+        "kind": "repository-example",
+        "sourcePaths": [
+          "public/projects/layer-blending-showcase.vizengine.json"
+        ]
+      }
+    },
+    {
+      "path": "public/projects/light-tunnel.vizengine.json",
+      "contentIdentity": "sha256:93358560e59f8a1905da1099be2ab7297656490ab20e623288aee6583acebc4f",
+      "byteLength": 54103,
+      "format": "json",
+      "availability": "present-at-audit-revision",
+      "kind": "example-project",
+      "role": "editor-example",
+      "goalFiveUse": "reference-only",
+      "authority": "authorized-local-reference",
+      "licenseStatus": "repository-project-data",
+      "provenance": {
+        "kind": "repository-example",
+        "sourcePaths": ["public/projects/light-tunnel.vizengine.json"]
+      }
+    },
+    {
+      "path": "public/projects/simple-example.vizengine.json",
+      "contentIdentity": "sha256:aef2f61175fb5beae0ea0045de312ec8518219289433c01ade5324d646aa281f",
+      "byteLength": 19442,
+      "format": "json",
+      "availability": "present-at-audit-revision",
+      "kind": "example-project",
+      "role": "editor-example",
+      "goalFiveUse": "reference-only",
+      "authority": "authorized-local-reference",
+      "licenseStatus": "repository-project-data",
+      "provenance": {
+        "kind": "repository-example",
+        "sourcePaths": ["public/projects/simple-example.vizengine.json"]
+      }
+    },
+    {
+      "path": "public/tutorials/blending-modes.png",
+      "contentIdentity": "sha256:fb978183d2b92a5354dbb28610a8a808abcd23573a40380bc8e5c5aa0db086e6",
+      "byteLength": 108267,
+      "format": "png",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "product-documentation",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": ["public/tutorials/blending-modes.png"]
+      }
+    },
+    {
+      "path": "public/tutorials/export.png",
+      "contentIdentity": "sha256:d648761e2cb924ddc226c011495c4c74b40e8e0a9539ee6bde879c7e5560e346",
+      "byteLength": 670531,
+      "format": "png",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "product-documentation",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": ["public/tutorials/export.png"]
+      }
+    },
+    {
+      "path": "public/tutorials/quality-settings.png",
+      "contentIdentity": "sha256:3be07e5a305384d2caeb47afd47528e1a0b389e931d0e01cd647ef0b85e9879c",
+      "byteLength": 28112,
+      "format": "png",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "product-documentation",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": ["public/tutorials/quality-settings.png"]
+      }
+    },
+    {
+      "path": "public/tutorials/save-load.png",
+      "contentIdentity": "sha256:62c5095e178a1748ccb118e0e1dc23bb40cd1163c583c96fd101a425d50eba50",
+      "byteLength": 663875,
+      "format": "png",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "product-documentation",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": ["public/tutorials/save-load.png"]
+      }
+    },
+    {
+      "path": "public/vercel.svg",
+      "contentIdentity": "sha256:3fa5cd757b418e18afc68ddebad55f443206e410327921ddb2bf1be731658880",
+      "byteLength": 629,
+      "format": "svg",
+      "availability": "present-at-audit-revision",
+      "kind": "image-or-video",
+      "role": "product-branding-or-shell",
+      "goalFiveUse": "not-production-input",
+      "authority": "product-or-evidence-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-product-media",
+        "sourcePaths": ["public/vercel.svg"]
+      }
+    },
+    {
+      "path": "tests/foundation/fixtures/example-exported-bundle-manifest.json",
+      "contentIdentity": "sha256:aa6b3f4ac9fe3440faa76933299bd633740e492acbf2a8e81e9181361a463ac2",
+      "byteLength": 690,
+      "format": "json",
+      "availability": "present-at-audit-revision",
+      "kind": "test-fixture",
+      "role": "automated-test-only",
+      "goalFiveUse": "not-production-input",
+      "authority": "test-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-test-fixture",
+        "sourcePaths": [
+          "tests/foundation/fixtures/example-exported-bundle-manifest.json"
+        ]
+      }
+    },
+    {
+      "path": "tests/foundation/fixtures/example-frame-plan-frame-0.json",
+      "contentIdentity": "sha256:14de27cd34dbc36b2882ff6c03acdbefa2ebd90b8d6b2a73ea08aab83d7a2140",
+      "byteLength": 2742,
+      "format": "json",
+      "availability": "present-at-audit-revision",
+      "kind": "test-fixture",
+      "role": "automated-test-only",
+      "goalFiveUse": "not-production-input",
+      "authority": "test-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-test-fixture",
+        "sourcePaths": [
+          "tests/foundation/fixtures/example-frame-plan-frame-0.json"
+        ]
+      }
+    },
+    {
+      "path": "tests/foundation/fixtures/example-frame-plan-frame-36.json",
+      "contentIdentity": "sha256:1e3268660d6772df52f5601a48cc732d3f41cebb3d138b7cecfb59b5531ea280",
+      "byteLength": 2749,
+      "format": "json",
+      "availability": "present-at-audit-revision",
+      "kind": "test-fixture",
+      "role": "automated-test-only",
+      "goalFiveUse": "not-production-input",
+      "authority": "test-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-test-fixture",
+        "sourcePaths": [
+          "tests/foundation/fixtures/example-frame-plan-frame-36.json"
+        ]
+      }
+    },
+    {
+      "path": "tests/foundation/fixtures/example-render-frame-36.svg",
+      "contentIdentity": "sha256:e8e23598da9a5bb913c32ca57bbf0b4e97068ffd91caa5e50019eef55576c4de",
+      "byteLength": 8040,
+      "format": "svg",
+      "availability": "present-at-audit-revision",
+      "kind": "test-fixture",
+      "role": "automated-test-only",
+      "goalFiveUse": "not-production-input",
+      "authority": "test-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-test-fixture",
+        "sourcePaths": ["tests/foundation/fixtures/example-render-frame-36.svg"]
+      }
+    },
+    {
+      "path": "tests/foundation/fixtures/example-render-plan-frame-36.json",
+      "contentIdentity": "sha256:2afd0f7f28ffa777881a00a24dc4635a3c94fc3caf195d2ab1247124881df0c0",
+      "byteLength": 16493,
+      "format": "json",
+      "availability": "present-at-audit-revision",
+      "kind": "test-fixture",
+      "role": "automated-test-only",
+      "goalFiveUse": "not-production-input",
+      "authority": "test-only",
+      "licenseStatus": "not-evaluated-as-production-input",
+      "provenance": {
+        "kind": "repository-test-fixture",
+        "sourcePaths": [
+          "tests/foundation/fixtures/example-render-plan-frame-36.json"
+        ]
+      }
+    }
+  ],
+  "duplicateGroups": [
+    {
+      "contentIdentity": "sha256:354aab94cf2a971baf58f4007ab0eecfa379126f1a11d421a56dd8f68ee3959b",
+      "paths": [
+        "public/models/stage/male-cheer.fbx",
+        "public/productions/afterlight-assembly/assets/viz-builtin-stage-male-cheer.fbx"
+      ]
+    },
+    {
+      "contentIdentity": "sha256:87c7b85a746330c4423bf0598ae0356a9289299316030d46cf067f7fc9cd9c16",
+      "paths": [
+        "public/models/stage/female-dj.fbx",
+        "public/productions/afterlight-assembly/assets/viz-builtin-stage-female-dj.fbx"
+      ]
+    },
+    {
+      "contentIdentity": "sha256:c9cf2a023a282b391534e8a10a91092438def435d786e9d12309ef367eb43582",
+      "paths": [
+        "public/models/stage/male-dancer.fbx",
+        "public/productions/afterlight-assembly/assets/viz-builtin-stage-male-dancer.fbx"
+      ]
+    },
+    {
+      "contentIdentity": "sha256:fd6847858a95d9de88e64d0c070b44e95b3c822bf3231ff347f2832dc9396479",
+      "paths": [
+        "public/models/stage/female-dancer.fbx",
+        "public/productions/afterlight-assembly/assets/viz-builtin-stage-female-dancer.fbx"
+      ]
+    }
+  ],
+  "productionBundles": [
+    {
+      "manifestPath": "public/productions/afterlight-assembly/bundle-manifest.json",
+      "status": "available",
+      "declaredAssetCount": 5,
+      "declaredArtifactCount": 1,
+      "issues": []
+    },
+    {
+      "manifestPath": "public/productions/signal-cathedral/bundle-manifest.json",
+      "status": "available",
+      "declaredAssetCount": 1,
+      "declaredArtifactCount": 1,
+      "issues": []
+    }
+  ],
+  "externalAssetReferences": [],
+  "gaps": [
+    "No repository license file or per-source audio/model license record proves publication or redistribution rights.",
+    "No standalone image, video, or texture source is authorized as new flagship creative content; existing examples, UI media, renders, and evidence remain reference-only or non-input.",
+    "No standalone shader asset exists; reusable shader implementations are repository code and require capability-level audit in P1-02.",
+    "The four FBX files have embedded model, texture, rig, and authored-animation content but no prepared model derivatives or committed capability manifests.",
+    "male-cheer.fbx retains a certified non-fatal missing external normal-map dependency."
+  ]
+}

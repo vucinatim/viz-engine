@@ -84,7 +84,14 @@ executable, and the uncontended complete repository gate is green. Its
 [certification evidence](./parity/evidence/2026-08-14-goal-five-phase-0-certification-freeze.md)
 keeps the original non-green activation run and repaired audio observation
 explicit. The active implementation phase is the bounded capability, authorized
-asset, and music-window audit ending at Gate 1 treatment approval.
+asset, and music-window audit ending at Gate 1 treatment approval. `P1-01` has
+pinned and classified all 82 relevant or plausibly confusable repository inputs
+at `9fdc0712c0e1e67ef7ebbaf5ed4e1c192e005a9c`: 14 source-music candidates,
+four source Stage models, ten shader capability sources, prior production
+derivatives, and explicit non-input/reference groups. The audit found no valid
+new standalone image/video/texture source and no repository evidence of source
+audio/model redistribution rights. `P1-02` and `P1-03` are the next
+dependency-ready capability and music-analysis checkpoints.
 
 ## Canonical Architecture
 

@@ -16,14 +16,14 @@ and evidence before editing after a compaction or new task.
 ```text
 Baseline commit: b2b23b577feda29ef7eca9dcbf35a4e8c1162781
 Current phase: Phase 1 — capability, authorized-input, music-window, and treatment audit
-Current checkpoint: ACT-01 approved; goal-five-phase-1-treatment selected; P1-01 ready
-Last completed checkpoint: autonomous readiness certification and human activation handoff
+Current checkpoint: recover the exact item from `program status`; P1-01 audits the pinned input tree at 9fdc0712c0e1e67ef7ebbaf5ed4e1c192e005a9c
+Last completed checkpoint: canonical program state owns the latest terminal item and evidence identities
 Last certified commit: f9c32f9dbb3be3391eb23a35540c3c01d9173dce
 Last full green gate: autonomous readiness CAL-03 at f9c32f9
-Next safe checkpoint: P1-01 inventory of every repository-authorized production input
+Next safe checkpoint: resolve through `program next`; P1-02 and P1-03 follow terminal P1-01 closure
 Awaiting human gate: Gate 1 treatment approval after P1-06 assembles and queues the review packet
 Known blockers: none; work remains on VizEngine V2 with only exact verified fast-forward push authority to its same-named origin branch and no merge, PR, deployment, publication, purchase, production-system access, or other external mutation authority
-Relevant evidence: docs/parity/evidence/2026-09-04-autonomous-readiness-cal-03-activation-audit.md
+Relevant evidence: docs/parity/evidence/2026-09-04-goal-five-authorized-input-audit.md
 ```
 
 ## Governing Authority
