@@ -90,8 +90,20 @@ at `9fdc0712c0e1e67ef7ebbaf5ed4e1c192e005a9c`: 14 source-music candidates,
 four source Stage models, ten shader capability sources, prior production
 derivatives, and explicit non-input/reference groups. The audit found no valid
 new standalone image/video/texture source and no repository evidence of source
-audio/model redistribution rights. `P1-02` and `P1-03` are the next
-dependency-ready capability and music-analysis checkpoints.
+audio/model redistribution rights. `P1-02` has also pinned the complete
+implementation-owned capability surface: 18 packages, 21 Studio components (15
+authorable core, five runtime-only core, one production-local), 34 graph nodes,
+26 node-network presets, nine Three programs, 14 contract schema surfaces, 22
+durable actions, 24 wire operations, four CLI scopes, 17 existing inspection,
+comparison, performance, and agent-feedback commands, five exercised projects,
+and all 42 verified editor-parity rows. It
+distinguishes Afterlight's composition-only proof from Signal Cathedral's
+production-local pack. The existing browser-bundle harness already supplies
+full-fidelity autonomous Studio-path proof; canonical standalone product-CLI
+host composition, treatment-defined macro direction, and compositor modulation
+are the leading real gaps, recorded without speculative implementation. `P1-03`
+is the next
+dependency-ready music-analysis checkpoint.
 
 ## Canonical Architecture
 

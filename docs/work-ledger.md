@@ -2761,3 +2761,37 @@
   license evidence without acquiring or inventing anything externally
 - added a narrow pinned-revision validator to keep the audit deterministic and
   integrated it into the Goal Five contract check
+
+## 2026-09-04 — Goal Five capability surface pinned
+
+- completed `P1-02` against the exact post-input-audit revision
+  `e1d78a1ef256bf91caf01b510d0ca856eafdd27a`
+- interrogated and content-addressed 18 workspace packages, 21 Studio
+  components, 34 core graph nodes, 26 node-network presets, nine Studio Three
+  programs, 22 durable project actions, 24 transport protocol operations, four
+  CLI scopes, five exercised projects, and all 42 verified editor-parity rows
+- retained complete data-only component settings, presets, default networks,
+  node ports and authoring metadata, renderer requirements, 14 named contract
+  schema surfaces, and all editor parity dimensions rather than count-only
+  summaries
+- separated 15 authorable core components from five runtime-only primitives and
+  one trusted production-local component instead of treating registration as
+  creative readiness
+- classified Afterlight Assembly as composition-only and Signal Cathedral as a
+  production-local pack with one explicit Studio composition root
+- recorded canonical standalone product-CLI host composition,
+  treatment-defined macro direction, compositor modulation, runtime-only
+  primitive disposition,
+  multi-graph cost/usage inspection, and conditional media/model authoring as
+  bounded treatment-dependent gaps
+- kept the portable document, session, actions, runtime, capability packs,
+  renderer, Studio, VizControl, product CLI, and maintainer CLI ownership lines
+  explicit and rejected duplicate UI, adapter, production, and shader-source
+  semantics
+- inventoried 17 existing inspection, creative-loop, full-fidelity render,
+  runtime/browser/audio/artifact performance, comparison, contract, source, and
+  browser-regression tools with explicit observations and limitations, so the
+  product-CLI composition gap cannot be mistaken for missing autonomous proof
+- added a narrow historical validator that rebuilds from executable registries
+  only on an exact source match and otherwise proves the immutable audit through
+  pinned Git object identities plus a digest of the complete catalog
