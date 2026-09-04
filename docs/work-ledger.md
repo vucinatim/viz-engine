@@ -2795,3 +2795,33 @@
 - added a narrow historical validator that rebuilds from executable registries
   only on an exact source match and otherwise proves the immutable audit through
   pinned Git object identities plus a digest of the complete catalog
+
+## 2026-09-04 — Goal Five music windows analyzed
+
+- completed `P1-03` from the exact 14 P1-01 source-music identities without
+  glob discovery, technical fixtures, prior derivatives, new assets, or audible
+  playback
+- decoded every complete source sequentially through the canonical Node audio
+  decoder and recorded source, FFprobe, decoded-sample, canonical interleaved
+  PCM, FFmpeg, Node, platform, and algorithm identities
+- computed one full-track normalized standard feature timeline per source so
+  spectral-flux and onset observations remain comparable across sliced windows
+- retained exact one-second energy/spectral bins and deterministic section,
+  beat-grid, eight-beat phrase, and transient hypotheses without presenting
+  them as musicological truth
+- exhaustively evaluated the declared 48/52/56/60-second anchor policy over
+  every complete track, recorded every disposition, and retained three diverse
+  sample/time/60-fps windows per source
+- recommended the 48-second `HipHop — 808 Rap` window at 2.25–50.25 seconds as
+  the transparent automated leader, with Acoustic, Synthwave, Outsiders, and
+  Jazz alternatives for Gate 1 listening and treatment judgment
+- kept intended audio, emotional and lyrical fit, perceived musical structure,
+  licensing beyond local proof, and final treatment approval human-owned
+- added deterministic PCM, source-set, structural/transient, score, tie,
+  diversity, portable historical/source validation, and an explicit exact
+  full-recompute evidence command
+- removed the repository evidence reader's implicit one-megabyte terminal-blob
+  limit so content-addressed checkpoint admission handles this 2.3 MB artifact
+  and other valid committed evidence by exact blob size
+- recorded the complete analysis and comparison in
+  `docs/parity/evidence/2026-09-04-goal-five-music-window-comparison.md`

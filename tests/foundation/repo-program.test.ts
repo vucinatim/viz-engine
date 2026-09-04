@@ -777,7 +777,10 @@ describe('repository execution program', () => {
       root,
       path,
     });
-    writeFileSync(resolve(root, 'checkpoint.md'), 'checked checkpoint\n');
+    writeFileSync(
+      resolve(root, 'checkpoint.md'),
+      `checked checkpoint\n${'x'.repeat(1_100_000)}`,
+    );
     const plan = canonicalCheckPlan('fast', ['checkpoint.md']);
     const leaseIdentity = {
       id: claimed.lease.id,

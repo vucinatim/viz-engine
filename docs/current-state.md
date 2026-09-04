@@ -102,8 +102,15 @@ production-local pack. The existing browser-bundle harness already supplies
 full-fidelity autonomous Studio-path proof; canonical standalone product-CLI
 host composition, treatment-defined macro direction, and compositor modulation
 are the leading real gaps, recorded without speculative implementation. `P1-03`
-is the next
-dependency-ready music-analysis checkpoint.
+has now deterministically decoded and content-addressed the PCM for all 14
+authorized source tracks, analyzed each complete source once, evaluated 45–60
+second production windows across the full tracks, and retained three diverse
+exact candidates per source. Its provisional recommendation is the 48-second
+`HipHop — 808 Rap` window at 2.25–50.25 seconds, with exact sample and 60 fps
+frame coordinates, transparent score components, and explicit
+section/phrase/beat uncertainty. Intended audio, emotional fit, musical
+correction, and treatment approval remain human-owned at Gate 1. `P1-04` is the
+next dependency-ready frame-exact musical-map checkpoint after P1-03 closes.
 
 ## Canonical Architecture
 

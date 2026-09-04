@@ -375,7 +375,19 @@ const validateTerminalBinding = (
     }
     let committed: Buffer;
     try {
-      committed = execFileSync('git', ['show', commitPath], { cwd: root });
+      const byteLength = Number(
+        execFileSync('git', ['cat-file', '-s', commitPath], {
+          cwd: root,
+          encoding: 'utf8',
+        }).trim(),
+      );
+      if (!Number.isSafeInteger(byteLength) || byteLength < 0) {
+        throw new Error(`Invalid committed byte length for ${file.path}.`);
+      }
+      committed = execFileSync('git', ['show', commitPath], {
+        cwd: root,
+        maxBuffer: byteLength + 64 * 1024,
+      });
     } catch {
       throw new Error(`${label} terminal commit lacks ${file.path}.`);
     }
