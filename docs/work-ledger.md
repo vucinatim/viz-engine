@@ -2825,3 +2825,27 @@
   and other valid committed evidence by exact blob size
 - recorded the complete analysis and comparison in
   `docs/parity/evidence/2026-09-04-goal-five-music-window-comparison.md`
+
+## 2026-09-05 — Goal Five proposed musical map authored
+
+- completed `P1-04` from the exact P1-03 analysis identity and provisional
+  `hiphop-808-rap-f135-d2880` window without adding project, session, runtime,
+  graph, transport, editor, or production-component semantics
+- authored five gapless inclusive-start/exclusive-end acts over local frames
+  `[0,2880)`, four bounded transition spans, and exact source/local frame and
+  sample coordinates at 60 fps / 48 kHz
+- retained the complete exact landmark sets: five in-window section hypotheses
+  including the explicit one-second near-edge exclusion, 82 beat hypotheses,
+  ten inherited-confidence phrase hypotheses, and 69 transient hypotheses
+- preserved detector source samples separately from nearest scheduling frames
+  with the truthful half-frame/400-sample quantization bound
+- clipped first/last energy-bin coverage while retaining the upstream
+  measurement limitation; derived deterministic peaks and lower-energy
+  opportunities with stable tie-breaking and made no false silence claim
+- linked macro, phrase, and detail production opportunities to named evidence
+  while keeping every authored intention `human-required` and pending Gate 1
+- added deterministic artifact/review regeneration, upstream and current-output
+  drift detection, exact-set substitution rejection, temporal coverage,
+  quantization, edge, tie, silence, reference, and tamper tests
+- recorded the human-readable review in
+  `docs/parity/evidence/2026-09-05-goal-five-frame-exact-musical-map-review.md`

@@ -109,8 +109,17 @@ exact candidates per source. Its provisional recommendation is the 48-second
 `HipHop — 808 Rap` window at 2.25–50.25 seconds, with exact sample and 60 fps
 frame coordinates, transparent score components, and explicit
 section/phrase/beat uncertainty. Intended audio, emotional fit, musical
-correction, and treatment approval remain human-owned at Gate 1. `P1-04` is the
-next dependency-ready frame-exact musical-map checkpoint after P1-03 closes.
+correction, and treatment approval remain human-owned at Gate 1. `P1-04` has
+now transformed that exact recommended interval into one content-addressed,
+deterministic proposed timing map: five gapless acts, four bounded transitions,
+all five section hypotheses including the explicit near-edge exclusion, all 82
+beats, ten phrases, 69 transients, inherited energy observations, deterministic
+peak and lower-energy opportunities, and linked macro/phrase/detail production
+intent. It preserves detector observation samples separately from nearest 60
+fps scheduling frames, labels clipped edge bins, and makes no false silence or
+musicological claims. The map remains proposed evidence—not approved direction—
+until Gate 1. `P1-05` is the next dependency-ready treatment checkpoint after
+P1-04 closes.
 
 ## Canonical Architecture
 

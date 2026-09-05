@@ -16,14 +16,14 @@ and evidence before editing after a compaction or new task.
 ```text
 Baseline commit: b2b23b577feda29ef7eca9dcbf35a4e8c1162781
 Current phase: Phase 1 — capability, authorized-input, music-window, and treatment audit
-Current checkpoint: recover the exact item from `program status`; P1-03 compares exact authorized music windows at bd43c717600d9385ef6858ee502587d55e05686f
+Current checkpoint: recover the exact item from `program status`; P1-04 authors the proposed frame-exact musical map at a611bbde9533a6047cd576f78f9e8e36f991aca6
 Last completed checkpoint: canonical program state owns the latest terminal item and evidence identities
 Last certified commit: f9c32f9dbb3be3391eb23a35540c3c01d9173dce
 Last full green gate: autonomous readiness CAL-03 at f9c32f9
-Next safe checkpoint: resolve through `program next`; P1-04 authors the frame-exact musical and act map after terminal P1-03 closure
+Next safe checkpoint: resolve through `program next`; P1-05 writes the evidence-bound flagship production treatment after terminal P1-04 closure
 Awaiting human gate: Gate 1 treatment approval after P1-06 assembles and queues the review packet
 Known blockers: none; work remains on VizEngine V2 with only exact verified fast-forward push authority to its same-named origin branch and no merge, PR, deployment, publication, purchase, production-system access, or other external mutation authority
-Relevant evidence: docs/parity/evidence/2026-09-04-goal-five-authorized-input-audit.md; docs/parity/evidence/2026-09-04-goal-five-capability-boundary-review.md; docs/parity/evidence/2026-09-04-goal-five-music-window-comparison.md
+Relevant evidence: docs/parity/evidence/2026-09-04-goal-five-authorized-input-audit.md; docs/parity/evidence/2026-09-04-goal-five-capability-boundary-review.md; docs/parity/evidence/2026-09-04-goal-five-music-window-comparison.md; docs/parity/evidence/2026-09-05-goal-five-frame-exact-musical-map-review.md
 ```
 
 ## Governing Authority

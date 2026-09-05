@@ -6,6 +6,7 @@
   },
   "include": [
     "analyze-goal-five-music-windows.ts",
+    "author-goal-five-musical-map.ts",
     "compare-performance-recordings.ts",
     "compare-performance-recordings-cli.ts",
     "render-browser-bundle.ts"

@@ -1,0 +1,4435 @@
+{
+  "schemaVersion": 1,
+  "kind": "viz-engine-goal-five-proposed-frame-exact-musical-map",
+  "status": "proposed-pending-gate-1",
+  "identityScope": {
+    "implementationBaseline": "a611bbde9533a6047cd576f78f9e8e36f991aca6",
+    "generatorPath": "tools/foundation/author-goal-five-musical-map.ts",
+    "generatorContentIdentity": "sha256:b58d5e26aff53432a064cb2d12dd2d7abcbd2ccbf585c70bd7ec7e9432804288",
+    "upstreamAnalysisPath": "docs/parity/evidence/artifacts/2026-09-04-goal-five-music-window-analysis.json",
+    "upstreamAnalysisContentIdentity": "sha256:e94ef2932f0ddd28f730711111e14d6d35ff952bc3328905f1e89dd6bb6657cc",
+    "upstreamAnalysisVersion": "viz-engine.goal-five-music-window-analysis.v1",
+    "upstreamAlgorithmIdentities": [
+      "viz-engine.goal-five-music-window-analysis.v1",
+      "rhythm-core.standard-audio-frame-analysis.v1",
+      "rhythm-core.tempo.autocorrelation",
+      "rhythm-core.beat-track.phase-optimized"
+    ],
+    "trackId": "hiphop-808-rap",
+    "windowId": "hiphop-808-rap-f135-d2880",
+    "sourcePath": "public/music/[HipHop] 808 Rap.mp3",
+    "sourceContentIdentity": "sha256:f3c72436ec15e5e5c4fafb11be8f0085dd2b64f58c848b349085a7de7931341d",
+    "decodedPcmContentIdentity": "sha256:d6f3d8415fa600a6a189838c0d61b800c326f7aa03a2a2d678191f2436e10fbb"
+  },
+  "ownership": {
+    "owner": "tools/foundation/author-goal-five-musical-map.ts",
+    "role": "Derived review evidence and proposed production timing authority after Gate 1 approval only.",
+    "canonicalInputs": [
+      "docs/parity/evidence/artifacts/2026-09-04-goal-five-music-window-analysis.json"
+    ],
+    "forbiddenOwners": [
+      "VizProjectDocument",
+      "VizSession",
+      "runtime graph semantics",
+      "transport state",
+      "React editor state",
+      "production component implementations"
+    ]
+  },
+  "coordinateContract": {
+    "timelineFps": 60,
+    "decodedSampleRate": 48000,
+    "samplesPerTimelineFrame": 800,
+    "intervalConvention": "inclusive-start-exclusive-end",
+    "source": {
+      "frameStart": 135,
+      "frameEndExclusive": 3015,
+      "sampleStart": 108000,
+      "sampleEndExclusive": 2412000
+    },
+    "local": {
+      "frameStart": 0,
+      "frameEndExclusive": 2880,
+      "sampleStart": 0,
+      "sampleEndExclusive": 2304000
+    },
+    "precision": "Window endpoints and source/local offsets are exact. Detector sourceSample is observation time; localFrame is the nearest scheduling frame and may differ by at most 400 samples (half a 60 fps frame)."
+  },
+  "provenanceContract": {
+    "section": "detector hypothesis plus measured normalized novelty strength",
+    "beat": "beat hypothesis with inherited track confidence 0.092826",
+    "phrase": "deterministically derived from every eighth hypothesized beat; inherits beat confidence",
+    "transient": "20 fps detector-bin-center hypothesis with measured strength and nearest 60 fps scheduling frame",
+    "energyOpportunity": "deterministic local extremum over inherited one-second loudness bins; ranked by loudness then earliest frame; equal-valued alternatives exposed",
+    "intent": "authored proposed production intent; confidence is human-required, never numeric"
+  },
+  "landmarks": {
+    "sections": [
+      {
+        "id": "section-01",
+        "sourceFrame": 180,
+        "sourceSample": 144000,
+        "sourceSeconds": 3,
+        "localFrame": 45,
+        "localSample": 36000,
+        "localSeconds": 0.75,
+        "scheduledLocalSample": 36000,
+        "schedulingQuantizationSamples": 0,
+        "strength": 0.329894,
+        "disposition": "excluded-near-window-edge",
+        "governingRule": "Exclude section hypotheses outside the upstream half-open inset [60, windowFrameCount - 60).",
+        "provenance": {
+          "class": "section-detector-hypothesis",
+          "method": "one-second standardized feature-vector novelty; 3-second bilateral context; p60 local maxima; 6-second suppression",
+          "confidenceMetric": "normalized novelty strength"
+        }
+      },
+      {
+        "id": "section-02",
+        "sourceFrame": 540,
+        "sourceSample": 432000,
+        "sourceSeconds": 9,
+        "localFrame": 405,
+        "localSample": 324000,
+        "localSeconds": 6.75,
+        "scheduledLocalSample": 324000,
+        "schedulingQuantizationSamples": 0,
+        "strength": 1,
+        "disposition": "proposed-act-boundary",
+        "governingRule": "Retain section hypotheses in the upstream half-open inset [60, windowFrameCount - 60).",
+        "provenance": {
+          "class": "section-detector-hypothesis",
+          "method": "one-second standardized feature-vector novelty; 3-second bilateral context; p60 local maxima; 6-second suppression",
+          "confidenceMetric": "normalized novelty strength"
+        }
+      },
+      {
+        "id": "section-03",
+        "sourceFrame": 1260,
+        "sourceSample": 1008000,
+        "sourceSeconds": 21,
+        "localFrame": 1125,
+        "localSample": 900000,
+        "localSeconds": 18.75,
+        "scheduledLocalSample": 900000,
+        "schedulingQuantizationSamples": 0,
+        "strength": 0.387766,
+        "disposition": "proposed-act-boundary",
+        "governingRule": "Retain section hypotheses in the upstream half-open inset [60, windowFrameCount - 60).",
+        "provenance": {
+          "class": "section-detector-hypothesis",
+          "method": "one-second standardized feature-vector novelty; 3-second bilateral context; p60 local maxima; 6-second suppression",
+          "confidenceMetric": "normalized novelty strength"
+        }
+      },
+      {
+        "id": "section-04",
+        "sourceFrame": 1740,
+        "sourceSample": 1392000,
+        "sourceSeconds": 29,
+        "localFrame": 1605,
+        "localSample": 1284000,
+        "localSeconds": 26.75,
+        "scheduledLocalSample": 1284000,
+        "schedulingQuantizationSamples": 0,
+        "strength": 0.210071,
+        "disposition": "proposed-act-boundary",
+        "governingRule": "Retain section hypotheses in the upstream half-open inset [60, windowFrameCount - 60).",
+        "provenance": {
+          "class": "section-detector-hypothesis",
+          "method": "one-second standardized feature-vector novelty; 3-second bilateral context; p60 local maxima; 6-second suppression",
+          "confidenceMetric": "normalized novelty strength"
+        }
+      },
+      {
+        "id": "section-05",
+        "sourceFrame": 2340,
+        "sourceSample": 1872000,
+        "sourceSeconds": 39,
+        "localFrame": 2205,
+        "localSample": 1764000,
+        "localSeconds": 36.75,
+        "scheduledLocalSample": 1764000,
+        "schedulingQuantizationSamples": 0,
+        "strength": 0.422213,
+        "disposition": "proposed-act-boundary",
+        "governingRule": "Retain section hypotheses in the upstream half-open inset [60, windowFrameCount - 60).",
+        "provenance": {
+          "class": "section-detector-hypothesis",
+          "method": "one-second standardized feature-vector novelty; 3-second bilateral context; p60 local maxima; 6-second suppression",
+          "confidenceMetric": "normalized novelty strength"
+        }
+      }
+    ],
+    "beats": [
+      {
+        "id": "beat-001",
+        "sourceFrame": 153,
+        "sourceSample": 122400,
+        "sourceSeconds": 2.55,
+        "localFrame": 18,
+        "localSample": 14400,
+        "localSeconds": 0.3,
+        "scheduledLocalSample": 14400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-002",
+        "sourceFrame": 189,
+        "sourceSample": 151200,
+        "sourceSeconds": 3.15,
+        "localFrame": 54,
+        "localSample": 43200,
+        "localSeconds": 0.9,
+        "scheduledLocalSample": 43200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-003",
+        "sourceFrame": 222,
+        "sourceSample": 177600,
+        "sourceSeconds": 3.7,
+        "localFrame": 87,
+        "localSample": 69600,
+        "localSeconds": 1.45,
+        "scheduledLocalSample": 69600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-004",
+        "sourceFrame": 258,
+        "sourceSample": 206400,
+        "sourceSeconds": 4.3,
+        "localFrame": 123,
+        "localSample": 98400,
+        "localSeconds": 2.05,
+        "scheduledLocalSample": 98400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-005",
+        "sourceFrame": 294,
+        "sourceSample": 235200,
+        "sourceSeconds": 4.9,
+        "localFrame": 159,
+        "localSample": 127200,
+        "localSeconds": 2.65,
+        "scheduledLocalSample": 127200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-006",
+        "sourceFrame": 327,
+        "sourceSample": 261600,
+        "sourceSeconds": 5.45,
+        "localFrame": 192,
+        "localSample": 153600,
+        "localSeconds": 3.2,
+        "scheduledLocalSample": 153600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-007",
+        "sourceFrame": 363,
+        "sourceSample": 290400,
+        "sourceSeconds": 6.05,
+        "localFrame": 228,
+        "localSample": 182400,
+        "localSeconds": 3.8,
+        "scheduledLocalSample": 182400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-008",
+        "sourceFrame": 399,
+        "sourceSample": 319200,
+        "sourceSeconds": 6.65,
+        "localFrame": 264,
+        "localSample": 211200,
+        "localSeconds": 4.4,
+        "scheduledLocalSample": 211200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-009",
+        "sourceFrame": 432,
+        "sourceSample": 345600,
+        "sourceSeconds": 7.2,
+        "localFrame": 297,
+        "localSample": 237600,
+        "localSeconds": 4.95,
+        "scheduledLocalSample": 237600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-010",
+        "sourceFrame": 468,
+        "sourceSample": 374400,
+        "sourceSeconds": 7.8,
+        "localFrame": 333,
+        "localSample": 266400,
+        "localSeconds": 5.55,
+        "scheduledLocalSample": 266400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-011",
+        "sourceFrame": 504,
+        "sourceSample": 403200,
+        "sourceSeconds": 8.4,
+        "localFrame": 369,
+        "localSample": 295200,
+        "localSeconds": 6.15,
+        "scheduledLocalSample": 295200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-012",
+        "sourceFrame": 540,
+        "sourceSample": 432000,
+        "sourceSeconds": 9,
+        "localFrame": 405,
+        "localSample": 324000,
+        "localSeconds": 6.75,
+        "scheduledLocalSample": 324000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-013",
+        "sourceFrame": 573,
+        "sourceSample": 458400,
+        "sourceSeconds": 9.55,
+        "localFrame": 438,
+        "localSample": 350400,
+        "localSeconds": 7.3,
+        "scheduledLocalSample": 350400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-014",
+        "sourceFrame": 609,
+        "sourceSample": 487200,
+        "sourceSeconds": 10.15,
+        "localFrame": 474,
+        "localSample": 379200,
+        "localSeconds": 7.9,
+        "scheduledLocalSample": 379200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-015",
+        "sourceFrame": 645,
+        "sourceSample": 516000,
+        "sourceSeconds": 10.75,
+        "localFrame": 510,
+        "localSample": 408000,
+        "localSeconds": 8.5,
+        "scheduledLocalSample": 408000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-016",
+        "sourceFrame": 678,
+        "sourceSample": 542400,
+        "sourceSeconds": 11.3,
+        "localFrame": 543,
+        "localSample": 434400,
+        "localSeconds": 9.05,
+        "scheduledLocalSample": 434400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-017",
+        "sourceFrame": 714,
+        "sourceSample": 571200,
+        "sourceSeconds": 11.9,
+        "localFrame": 579,
+        "localSample": 463200,
+        "localSeconds": 9.65,
+        "scheduledLocalSample": 463200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-018",
+        "sourceFrame": 750,
+        "sourceSample": 600000,
+        "sourceSeconds": 12.5,
+        "localFrame": 615,
+        "localSample": 492000,
+        "localSeconds": 10.25,
+        "scheduledLocalSample": 492000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-019",
+        "sourceFrame": 786,
+        "sourceSample": 628800,
+        "sourceSeconds": 13.1,
+        "localFrame": 651,
+        "localSample": 520800,
+        "localSeconds": 10.85,
+        "scheduledLocalSample": 520800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-020",
+        "sourceFrame": 819,
+        "sourceSample": 655200,
+        "sourceSeconds": 13.65,
+        "localFrame": 684,
+        "localSample": 547200,
+        "localSeconds": 11.4,
+        "scheduledLocalSample": 547200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-021",
+        "sourceFrame": 855,
+        "sourceSample": 684000,
+        "sourceSeconds": 14.25,
+        "localFrame": 720,
+        "localSample": 576000,
+        "localSeconds": 12,
+        "scheduledLocalSample": 576000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-022",
+        "sourceFrame": 891,
+        "sourceSample": 712800,
+        "sourceSeconds": 14.85,
+        "localFrame": 756,
+        "localSample": 604800,
+        "localSeconds": 12.6,
+        "scheduledLocalSample": 604800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-023",
+        "sourceFrame": 924,
+        "sourceSample": 739200,
+        "sourceSeconds": 15.4,
+        "localFrame": 789,
+        "localSample": 631200,
+        "localSeconds": 13.15,
+        "scheduledLocalSample": 631200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-024",
+        "sourceFrame": 960,
+        "sourceSample": 768000,
+        "sourceSeconds": 16,
+        "localFrame": 825,
+        "localSample": 660000,
+        "localSeconds": 13.75,
+        "scheduledLocalSample": 660000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-025",
+        "sourceFrame": 996,
+        "sourceSample": 796800,
+        "sourceSeconds": 16.6,
+        "localFrame": 861,
+        "localSample": 688800,
+        "localSeconds": 14.35,
+        "scheduledLocalSample": 688800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-026",
+        "sourceFrame": 1032,
+        "sourceSample": 825600,
+        "sourceSeconds": 17.200001,
+        "localFrame": 897,
+        "localSample": 717600,
+        "localSeconds": 14.95,
+        "scheduledLocalSample": 717600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-027",
+        "sourceFrame": 1065,
+        "sourceSample": 852000,
+        "sourceSeconds": 17.75,
+        "localFrame": 930,
+        "localSample": 744000,
+        "localSeconds": 15.5,
+        "scheduledLocalSample": 744000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-028",
+        "sourceFrame": 1101,
+        "sourceSample": 880800,
+        "sourceSeconds": 18.35,
+        "localFrame": 966,
+        "localSample": 772800,
+        "localSeconds": 16.1,
+        "scheduledLocalSample": 772800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-029",
+        "sourceFrame": 1137,
+        "sourceSample": 909600,
+        "sourceSeconds": 18.950001,
+        "localFrame": 1002,
+        "localSample": 801600,
+        "localSeconds": 16.7,
+        "scheduledLocalSample": 801600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-030",
+        "sourceFrame": 1170,
+        "sourceSample": 936000,
+        "sourceSeconds": 19.5,
+        "localFrame": 1035,
+        "localSample": 828000,
+        "localSeconds": 17.25,
+        "scheduledLocalSample": 828000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-031",
+        "sourceFrame": 1206,
+        "sourceSample": 964800,
+        "sourceSeconds": 20.1,
+        "localFrame": 1071,
+        "localSample": 856800,
+        "localSeconds": 17.85,
+        "scheduledLocalSample": 856800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-032",
+        "sourceFrame": 1242,
+        "sourceSample": 993600,
+        "sourceSeconds": 20.700001,
+        "localFrame": 1107,
+        "localSample": 885600,
+        "localSeconds": 18.45,
+        "scheduledLocalSample": 885600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-033",
+        "sourceFrame": 1275,
+        "sourceSample": 1020000,
+        "sourceSeconds": 21.25,
+        "localFrame": 1140,
+        "localSample": 912000,
+        "localSeconds": 19,
+        "scheduledLocalSample": 912000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-034",
+        "sourceFrame": 1311,
+        "sourceSample": 1048800,
+        "sourceSeconds": 21.85,
+        "localFrame": 1176,
+        "localSample": 940800,
+        "localSeconds": 19.6,
+        "scheduledLocalSample": 940800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-035",
+        "sourceFrame": 1347,
+        "sourceSample": 1077600,
+        "sourceSeconds": 22.450001,
+        "localFrame": 1212,
+        "localSample": 969600,
+        "localSeconds": 20.2,
+        "scheduledLocalSample": 969600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-036",
+        "sourceFrame": 1383,
+        "sourceSample": 1106400,
+        "sourceSeconds": 23.049999,
+        "localFrame": 1248,
+        "localSample": 998400,
+        "localSeconds": 20.8,
+        "scheduledLocalSample": 998400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-037",
+        "sourceFrame": 1416,
+        "sourceSample": 1132800,
+        "sourceSeconds": 23.6,
+        "localFrame": 1281,
+        "localSample": 1024800,
+        "localSeconds": 21.35,
+        "scheduledLocalSample": 1024800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-038",
+        "sourceFrame": 1452,
+        "sourceSample": 1161600,
+        "sourceSeconds": 24.200001,
+        "localFrame": 1317,
+        "localSample": 1053600,
+        "localSeconds": 21.95,
+        "scheduledLocalSample": 1053600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-039",
+        "sourceFrame": 1488,
+        "sourceSample": 1190400,
+        "sourceSeconds": 24.799999,
+        "localFrame": 1353,
+        "localSample": 1082400,
+        "localSeconds": 22.55,
+        "scheduledLocalSample": 1082400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-040",
+        "sourceFrame": 1521,
+        "sourceSample": 1216800,
+        "sourceSeconds": 25.35,
+        "localFrame": 1386,
+        "localSample": 1108800,
+        "localSeconds": 23.1,
+        "scheduledLocalSample": 1108800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-041",
+        "sourceFrame": 1557,
+        "sourceSample": 1245600,
+        "sourceSeconds": 25.950001,
+        "localFrame": 1422,
+        "localSample": 1137600,
+        "localSeconds": 23.7,
+        "scheduledLocalSample": 1137600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-042",
+        "sourceFrame": 1593,
+        "sourceSample": 1274400,
+        "sourceSeconds": 26.549999,
+        "localFrame": 1458,
+        "localSample": 1166400,
+        "localSeconds": 24.3,
+        "scheduledLocalSample": 1166400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-043",
+        "sourceFrame": 1629,
+        "sourceSample": 1303200,
+        "sourceSeconds": 27.15,
+        "localFrame": 1494,
+        "localSample": 1195200,
+        "localSeconds": 24.9,
+        "scheduledLocalSample": 1195200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-044",
+        "sourceFrame": 1662,
+        "sourceSample": 1329600,
+        "sourceSeconds": 27.700001,
+        "localFrame": 1527,
+        "localSample": 1221600,
+        "localSeconds": 25.45,
+        "scheduledLocalSample": 1221600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-045",
+        "sourceFrame": 1698,
+        "sourceSample": 1358400,
+        "sourceSeconds": 28.299999,
+        "localFrame": 1563,
+        "localSample": 1250400,
+        "localSeconds": 26.05,
+        "scheduledLocalSample": 1250400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-046",
+        "sourceFrame": 1734,
+        "sourceSample": 1387200,
+        "sourceSeconds": 28.9,
+        "localFrame": 1599,
+        "localSample": 1279200,
+        "localSeconds": 26.65,
+        "scheduledLocalSample": 1279200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-047",
+        "sourceFrame": 1767,
+        "sourceSample": 1413600,
+        "sourceSeconds": 29.450001,
+        "localFrame": 1632,
+        "localSample": 1305600,
+        "localSeconds": 27.2,
+        "scheduledLocalSample": 1305600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-048",
+        "sourceFrame": 1803,
+        "sourceSample": 1442400,
+        "sourceSeconds": 30.049999,
+        "localFrame": 1668,
+        "localSample": 1334400,
+        "localSeconds": 27.8,
+        "scheduledLocalSample": 1334400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-049",
+        "sourceFrame": 1839,
+        "sourceSample": 1471200,
+        "sourceSeconds": 30.65,
+        "localFrame": 1704,
+        "localSample": 1363200,
+        "localSeconds": 28.4,
+        "scheduledLocalSample": 1363200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-050",
+        "sourceFrame": 1872,
+        "sourceSample": 1497600,
+        "sourceSeconds": 31.200001,
+        "localFrame": 1737,
+        "localSample": 1389600,
+        "localSeconds": 28.95,
+        "scheduledLocalSample": 1389600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-051",
+        "sourceFrame": 1908,
+        "sourceSample": 1526400,
+        "sourceSeconds": 31.799999,
+        "localFrame": 1773,
+        "localSample": 1418400,
+        "localSeconds": 29.55,
+        "scheduledLocalSample": 1418400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-052",
+        "sourceFrame": 1944,
+        "sourceSample": 1555200,
+        "sourceSeconds": 32.400002,
+        "localFrame": 1809,
+        "localSample": 1447200,
+        "localSeconds": 30.15,
+        "scheduledLocalSample": 1447200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-053",
+        "sourceFrame": 1980,
+        "sourceSample": 1584000,
+        "sourceSeconds": 33,
+        "localFrame": 1845,
+        "localSample": 1476000,
+        "localSeconds": 30.75,
+        "scheduledLocalSample": 1476000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-054",
+        "sourceFrame": 2013,
+        "sourceSample": 1610400,
+        "sourceSeconds": 33.549999,
+        "localFrame": 1878,
+        "localSample": 1502400,
+        "localSeconds": 31.3,
+        "scheduledLocalSample": 1502400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-055",
+        "sourceFrame": 2049,
+        "sourceSample": 1639200,
+        "sourceSeconds": 34.150002,
+        "localFrame": 1914,
+        "localSample": 1531200,
+        "localSeconds": 31.9,
+        "scheduledLocalSample": 1531200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-056",
+        "sourceFrame": 2085,
+        "sourceSample": 1668000,
+        "sourceSeconds": 34.75,
+        "localFrame": 1950,
+        "localSample": 1560000,
+        "localSeconds": 32.5,
+        "scheduledLocalSample": 1560000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-057",
+        "sourceFrame": 2118,
+        "sourceSample": 1694400,
+        "sourceSeconds": 35.299999,
+        "localFrame": 1983,
+        "localSample": 1586400,
+        "localSeconds": 33.05,
+        "scheduledLocalSample": 1586400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-058",
+        "sourceFrame": 2154,
+        "sourceSample": 1723200,
+        "sourceSeconds": 35.900002,
+        "localFrame": 2019,
+        "localSample": 1615200,
+        "localSeconds": 33.65,
+        "scheduledLocalSample": 1615200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-059",
+        "sourceFrame": 2190,
+        "sourceSample": 1752000,
+        "sourceSeconds": 36.5,
+        "localFrame": 2055,
+        "localSample": 1644000,
+        "localSeconds": 34.25,
+        "scheduledLocalSample": 1644000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-060",
+        "sourceFrame": 2226,
+        "sourceSample": 1780800,
+        "sourceSeconds": 37.099998,
+        "localFrame": 2091,
+        "localSample": 1672800,
+        "localSeconds": 34.85,
+        "scheduledLocalSample": 1672800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-061",
+        "sourceFrame": 2259,
+        "sourceSample": 1807200,
+        "sourceSeconds": 37.650002,
+        "localFrame": 2124,
+        "localSample": 1699200,
+        "localSeconds": 35.4,
+        "scheduledLocalSample": 1699200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-062",
+        "sourceFrame": 2295,
+        "sourceSample": 1836000,
+        "sourceSeconds": 38.25,
+        "localFrame": 2160,
+        "localSample": 1728000,
+        "localSeconds": 36,
+        "scheduledLocalSample": 1728000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-063",
+        "sourceFrame": 2331,
+        "sourceSample": 1864800,
+        "sourceSeconds": 38.849998,
+        "localFrame": 2196,
+        "localSample": 1756800,
+        "localSeconds": 36.6,
+        "scheduledLocalSample": 1756800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-064",
+        "sourceFrame": 2364,
+        "sourceSample": 1891200,
+        "sourceSeconds": 39.400002,
+        "localFrame": 2229,
+        "localSample": 1783200,
+        "localSeconds": 37.15,
+        "scheduledLocalSample": 1783200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-065",
+        "sourceFrame": 2400,
+        "sourceSample": 1920000,
+        "sourceSeconds": 40,
+        "localFrame": 2265,
+        "localSample": 1812000,
+        "localSeconds": 37.75,
+        "scheduledLocalSample": 1812000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-066",
+        "sourceFrame": 2436,
+        "sourceSample": 1948800,
+        "sourceSeconds": 40.599998,
+        "localFrame": 2301,
+        "localSample": 1840800,
+        "localSeconds": 38.35,
+        "scheduledLocalSample": 1840800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-067",
+        "sourceFrame": 2472,
+        "sourceSample": 1977600,
+        "sourceSeconds": 41.200001,
+        "localFrame": 2337,
+        "localSample": 1869600,
+        "localSeconds": 38.95,
+        "scheduledLocalSample": 1869600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-068",
+        "sourceFrame": 2505,
+        "sourceSample": 2004000,
+        "sourceSeconds": 41.75,
+        "localFrame": 2370,
+        "localSample": 1896000,
+        "localSeconds": 39.5,
+        "scheduledLocalSample": 1896000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-069",
+        "sourceFrame": 2541,
+        "sourceSample": 2032800,
+        "sourceSeconds": 42.349998,
+        "localFrame": 2406,
+        "localSample": 1924800,
+        "localSeconds": 40.1,
+        "scheduledLocalSample": 1924800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-070",
+        "sourceFrame": 2577,
+        "sourceSample": 2061600,
+        "sourceSeconds": 42.950001,
+        "localFrame": 2442,
+        "localSample": 1953600,
+        "localSeconds": 40.7,
+        "scheduledLocalSample": 1953600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-071",
+        "sourceFrame": 2610,
+        "sourceSample": 2088000,
+        "sourceSeconds": 43.5,
+        "localFrame": 2475,
+        "localSample": 1980000,
+        "localSeconds": 41.25,
+        "scheduledLocalSample": 1980000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-072",
+        "sourceFrame": 2646,
+        "sourceSample": 2116800,
+        "sourceSeconds": 44.099998,
+        "localFrame": 2511,
+        "localSample": 2008800,
+        "localSeconds": 41.85,
+        "scheduledLocalSample": 2008800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-073",
+        "sourceFrame": 2682,
+        "sourceSample": 2145600,
+        "sourceSeconds": 44.700001,
+        "localFrame": 2547,
+        "localSample": 2037600,
+        "localSeconds": 42.45,
+        "scheduledLocalSample": 2037600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-074",
+        "sourceFrame": 2715,
+        "sourceSample": 2172000,
+        "sourceSeconds": 45.25,
+        "localFrame": 2580,
+        "localSample": 2064000,
+        "localSeconds": 43,
+        "scheduledLocalSample": 2064000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-075",
+        "sourceFrame": 2751,
+        "sourceSample": 2200800,
+        "sourceSeconds": 45.849998,
+        "localFrame": 2616,
+        "localSample": 2092800,
+        "localSeconds": 43.6,
+        "scheduledLocalSample": 2092800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-076",
+        "sourceFrame": 2787,
+        "sourceSample": 2229600,
+        "sourceSeconds": 46.450001,
+        "localFrame": 2652,
+        "localSample": 2121600,
+        "localSeconds": 44.2,
+        "scheduledLocalSample": 2121600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-077",
+        "sourceFrame": 2823,
+        "sourceSample": 2258400,
+        "sourceSeconds": 47.049999,
+        "localFrame": 2688,
+        "localSample": 2150400,
+        "localSeconds": 44.8,
+        "scheduledLocalSample": 2150400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-078",
+        "sourceFrame": 2856,
+        "sourceSample": 2284800,
+        "sourceSeconds": 47.599998,
+        "localFrame": 2721,
+        "localSample": 2176800,
+        "localSeconds": 45.35,
+        "scheduledLocalSample": 2176800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-079",
+        "sourceFrame": 2892,
+        "sourceSample": 2313600,
+        "sourceSeconds": 48.200001,
+        "localFrame": 2757,
+        "localSample": 2205600,
+        "localSeconds": 45.95,
+        "scheduledLocalSample": 2205600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-080",
+        "sourceFrame": 2928,
+        "sourceSample": 2342400,
+        "sourceSeconds": 48.799999,
+        "localFrame": 2793,
+        "localSample": 2234400,
+        "localSeconds": 46.55,
+        "scheduledLocalSample": 2234400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-081",
+        "sourceFrame": 2961,
+        "sourceSample": 2368800,
+        "sourceSeconds": 49.349998,
+        "localFrame": 2826,
+        "localSample": 2260800,
+        "localSeconds": 47.1,
+        "scheduledLocalSample": 2260800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      },
+      {
+        "id": "beat-082",
+        "sourceFrame": 2997,
+        "sourceSample": 2397600,
+        "sourceSeconds": 49.950001,
+        "localFrame": 2862,
+        "localSample": 2289600,
+        "localSeconds": 47.7,
+        "scheduledLocalSample": 2289600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "beat-hypothesis",
+          "algorithm": "rhythm-core.beat-track.phase-optimized",
+          "confidence": 0.092826,
+          "interpretation": "Provisional pulse position; perceived beat and downbeat require human review."
+        }
+      }
+    ],
+    "phrases": [
+      {
+        "id": "phrase-01",
+        "sourceFrame": 294,
+        "sourceSample": 235200,
+        "sourceSeconds": 4.9,
+        "localFrame": 159,
+        "localSample": 127200,
+        "localSeconds": 2.65,
+        "scheduledLocalSample": 127200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "derived-phrase-hypothesis",
+          "method": "every eighth beat from the upstream beat hypothesis",
+          "inheritedBeatConfidence": 0.092826,
+          "interpretation": "Provisional phrase boundary; phrase and downbeat require human review."
+        }
+      },
+      {
+        "id": "phrase-02",
+        "sourceFrame": 573,
+        "sourceSample": 458400,
+        "sourceSeconds": 9.55,
+        "localFrame": 438,
+        "localSample": 350400,
+        "localSeconds": 7.3,
+        "scheduledLocalSample": 350400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "derived-phrase-hypothesis",
+          "method": "every eighth beat from the upstream beat hypothesis",
+          "inheritedBeatConfidence": 0.092826,
+          "interpretation": "Provisional phrase boundary; phrase and downbeat require human review."
+        }
+      },
+      {
+        "id": "phrase-03",
+        "sourceFrame": 855,
+        "sourceSample": 684000,
+        "sourceSeconds": 14.25,
+        "localFrame": 720,
+        "localSample": 576000,
+        "localSeconds": 12,
+        "scheduledLocalSample": 576000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "derived-phrase-hypothesis",
+          "method": "every eighth beat from the upstream beat hypothesis",
+          "inheritedBeatConfidence": 0.092826,
+          "interpretation": "Provisional phrase boundary; phrase and downbeat require human review."
+        }
+      },
+      {
+        "id": "phrase-04",
+        "sourceFrame": 1137,
+        "sourceSample": 909600,
+        "sourceSeconds": 18.950001,
+        "localFrame": 1002,
+        "localSample": 801600,
+        "localSeconds": 16.7,
+        "scheduledLocalSample": 801600,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "derived-phrase-hypothesis",
+          "method": "every eighth beat from the upstream beat hypothesis",
+          "inheritedBeatConfidence": 0.092826,
+          "interpretation": "Provisional phrase boundary; phrase and downbeat require human review."
+        }
+      },
+      {
+        "id": "phrase-05",
+        "sourceFrame": 1416,
+        "sourceSample": 1132800,
+        "sourceSeconds": 23.6,
+        "localFrame": 1281,
+        "localSample": 1024800,
+        "localSeconds": 21.35,
+        "scheduledLocalSample": 1024800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "derived-phrase-hypothesis",
+          "method": "every eighth beat from the upstream beat hypothesis",
+          "inheritedBeatConfidence": 0.092826,
+          "interpretation": "Provisional phrase boundary; phrase and downbeat require human review."
+        }
+      },
+      {
+        "id": "phrase-06",
+        "sourceFrame": 1698,
+        "sourceSample": 1358400,
+        "sourceSeconds": 28.299999,
+        "localFrame": 1563,
+        "localSample": 1250400,
+        "localSeconds": 26.05,
+        "scheduledLocalSample": 1250400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "derived-phrase-hypothesis",
+          "method": "every eighth beat from the upstream beat hypothesis",
+          "inheritedBeatConfidence": 0.092826,
+          "interpretation": "Provisional phrase boundary; phrase and downbeat require human review."
+        }
+      },
+      {
+        "id": "phrase-07",
+        "sourceFrame": 1980,
+        "sourceSample": 1584000,
+        "sourceSeconds": 33,
+        "localFrame": 1845,
+        "localSample": 1476000,
+        "localSeconds": 30.75,
+        "scheduledLocalSample": 1476000,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "derived-phrase-hypothesis",
+          "method": "every eighth beat from the upstream beat hypothesis",
+          "inheritedBeatConfidence": 0.092826,
+          "interpretation": "Provisional phrase boundary; phrase and downbeat require human review."
+        }
+      },
+      {
+        "id": "phrase-08",
+        "sourceFrame": 2259,
+        "sourceSample": 1807200,
+        "sourceSeconds": 37.650002,
+        "localFrame": 2124,
+        "localSample": 1699200,
+        "localSeconds": 35.4,
+        "scheduledLocalSample": 1699200,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "derived-phrase-hypothesis",
+          "method": "every eighth beat from the upstream beat hypothesis",
+          "inheritedBeatConfidence": 0.092826,
+          "interpretation": "Provisional phrase boundary; phrase and downbeat require human review."
+        }
+      },
+      {
+        "id": "phrase-09",
+        "sourceFrame": 2541,
+        "sourceSample": 2032800,
+        "sourceSeconds": 42.349998,
+        "localFrame": 2406,
+        "localSample": 1924800,
+        "localSeconds": 40.1,
+        "scheduledLocalSample": 1924800,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "derived-phrase-hypothesis",
+          "method": "every eighth beat from the upstream beat hypothesis",
+          "inheritedBeatConfidence": 0.092826,
+          "interpretation": "Provisional phrase boundary; phrase and downbeat require human review."
+        }
+      },
+      {
+        "id": "phrase-10",
+        "sourceFrame": 2823,
+        "sourceSample": 2258400,
+        "sourceSeconds": 47.049999,
+        "localFrame": 2688,
+        "localSample": 2150400,
+        "localSeconds": 44.8,
+        "scheduledLocalSample": 2150400,
+        "schedulingQuantizationSamples": 0,
+        "provenance": {
+          "class": "derived-phrase-hypothesis",
+          "method": "every eighth beat from the upstream beat hypothesis",
+          "inheritedBeatConfidence": 0.092826,
+          "interpretation": "Provisional phrase boundary; phrase and downbeat require human review."
+        }
+      }
+    ],
+    "transients": [
+      {
+        "id": "transient-01",
+        "sourceFrame": 578,
+        "sourceSample": 462000,
+        "sourceSeconds": 9.625,
+        "localFrame": 443,
+        "localSample": 354000,
+        "localSeconds": 7.375,
+        "scheduledLocalSample": 354400,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.507656,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-02",
+        "sourceFrame": 596,
+        "sourceSample": 476400,
+        "sourceSeconds": 9.925,
+        "localFrame": 461,
+        "localSample": 368400,
+        "localSeconds": 7.675,
+        "scheduledLocalSample": 368800,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.366995,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-03",
+        "sourceFrame": 614,
+        "sourceSample": 490800,
+        "sourceSeconds": 10.225,
+        "localFrame": 479,
+        "localSample": 382800,
+        "localSeconds": 7.975,
+        "scheduledLocalSample": 383200,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.87565,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-04",
+        "sourceFrame": 632,
+        "sourceSample": 505200,
+        "sourceSeconds": 10.525,
+        "localFrame": 497,
+        "localSample": 397200,
+        "localSeconds": 8.275,
+        "scheduledLocalSample": 397600,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.577788,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-05",
+        "sourceFrame": 650,
+        "sourceSample": 519600,
+        "sourceSeconds": 10.825,
+        "localFrame": 515,
+        "localSample": 411600,
+        "localSeconds": 8.575,
+        "scheduledLocalSample": 412000,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.375179,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-06",
+        "sourceFrame": 668,
+        "sourceSample": 534000,
+        "sourceSeconds": 11.125,
+        "localFrame": 533,
+        "localSample": 426000,
+        "localSeconds": 8.875,
+        "scheduledLocalSample": 426400,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.459534,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-07",
+        "sourceFrame": 686,
+        "sourceSample": 548400,
+        "sourceSeconds": 11.425,
+        "localFrame": 551,
+        "localSample": 440400,
+        "localSeconds": 9.175,
+        "scheduledLocalSample": 440800,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.613012,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-08",
+        "sourceFrame": 722,
+        "sourceSample": 577200,
+        "sourceSeconds": 12.025,
+        "localFrame": 587,
+        "localSample": 469200,
+        "localSeconds": 9.775,
+        "scheduledLocalSample": 469600,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.557769,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-09",
+        "sourceFrame": 758,
+        "sourceSample": 606000,
+        "sourceSeconds": 12.625,
+        "localFrame": 623,
+        "localSample": 498000,
+        "localSeconds": 10.375,
+        "scheduledLocalSample": 498400,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.876795,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-10",
+        "sourceFrame": 776,
+        "sourceSample": 620400,
+        "sourceSeconds": 12.925,
+        "localFrame": 641,
+        "localSample": 512400,
+        "localSeconds": 10.675,
+        "scheduledLocalSample": 512800,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.561855,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-11",
+        "sourceFrame": 794,
+        "sourceSample": 634800,
+        "sourceSeconds": 13.225,
+        "localFrame": 659,
+        "localSample": 526800,
+        "localSeconds": 10.975,
+        "scheduledLocalSample": 527200,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.382072,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-12",
+        "sourceFrame": 812,
+        "sourceSample": 649200,
+        "sourceSeconds": 13.525,
+        "localFrame": 677,
+        "localSample": 541200,
+        "localSeconds": 11.275,
+        "scheduledLocalSample": 541600,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.472809,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-13",
+        "sourceFrame": 830,
+        "sourceSample": 663600,
+        "sourceSeconds": 13.825,
+        "localFrame": 695,
+        "localSample": 555600,
+        "localSeconds": 11.575,
+        "scheduledLocalSample": 556000,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.706299,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-14",
+        "sourceFrame": 866,
+        "sourceSample": 692400,
+        "sourceSeconds": 14.425,
+        "localFrame": 731,
+        "localSample": 584400,
+        "localSeconds": 12.175,
+        "scheduledLocalSample": 584800,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.538221,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-15",
+        "sourceFrame": 902,
+        "sourceSample": 721200,
+        "sourceSeconds": 15.025,
+        "localFrame": 767,
+        "localSample": 613200,
+        "localSeconds": 12.775,
+        "scheduledLocalSample": 613600,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.922377,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-16",
+        "sourceFrame": 920,
+        "sourceSample": 735600,
+        "sourceSeconds": 15.325,
+        "localFrame": 785,
+        "localSample": 627600,
+        "localSeconds": 13.075,
+        "scheduledLocalSample": 628000,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.476032,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-17",
+        "sourceFrame": 938,
+        "sourceSample": 750000,
+        "sourceSeconds": 15.625,
+        "localFrame": 803,
+        "localSample": 642000,
+        "localSeconds": 13.375,
+        "scheduledLocalSample": 642400,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.43424,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-18",
+        "sourceFrame": 956,
+        "sourceSample": 764400,
+        "sourceSeconds": 15.925,
+        "localFrame": 821,
+        "localSample": 656400,
+        "localSeconds": 13.675,
+        "scheduledLocalSample": 656800,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.541762,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-19",
+        "sourceFrame": 974,
+        "sourceSample": 778800,
+        "sourceSeconds": 16.225,
+        "localFrame": 839,
+        "localSample": 670800,
+        "localSeconds": 13.975,
+        "scheduledLocalSample": 671200,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.868474,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-20",
+        "sourceFrame": 1010,
+        "sourceSample": 807600,
+        "sourceSeconds": 16.825,
+        "localFrame": 875,
+        "localSample": 699600,
+        "localSeconds": 14.575,
+        "scheduledLocalSample": 700000,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.631765,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-21",
+        "sourceFrame": 1046,
+        "sourceSample": 836400,
+        "sourceSeconds": 17.425,
+        "localFrame": 911,
+        "localSample": 728400,
+        "localSeconds": 15.175,
+        "scheduledLocalSample": 728800,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.818476,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-22",
+        "sourceFrame": 1064,
+        "sourceSample": 850800,
+        "sourceSeconds": 17.725,
+        "localFrame": 929,
+        "localSample": 742800,
+        "localSeconds": 15.475,
+        "scheduledLocalSample": 743200,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.389398,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-23",
+        "sourceFrame": 1082,
+        "sourceSample": 865200,
+        "sourceSeconds": 18.025,
+        "localFrame": 947,
+        "localSample": 757200,
+        "localSeconds": 15.775,
+        "scheduledLocalSample": 757600,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.487619,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-24",
+        "sourceFrame": 1118,
+        "sourceSample": 894000,
+        "sourceSeconds": 18.625,
+        "localFrame": 983,
+        "localSample": 786000,
+        "localSeconds": 16.375,
+        "scheduledLocalSample": 786400,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.705574,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-25",
+        "sourceFrame": 1154,
+        "sourceSample": 922800,
+        "sourceSeconds": 19.225,
+        "localFrame": 1019,
+        "localSample": 814800,
+        "localSeconds": 16.975,
+        "scheduledLocalSample": 815200,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.563807,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-26",
+        "sourceFrame": 1190,
+        "sourceSample": 951600,
+        "sourceSeconds": 19.825,
+        "localFrame": 1055,
+        "localSample": 843600,
+        "localSeconds": 17.575,
+        "scheduledLocalSample": 844000,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.820506,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-27",
+        "sourceFrame": 1208,
+        "sourceSample": 966000,
+        "sourceSeconds": 20.125,
+        "localFrame": 1073,
+        "localSample": 858000,
+        "localSeconds": 17.875,
+        "scheduledLocalSample": 858400,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.569834,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-28",
+        "sourceFrame": 1244,
+        "sourceSample": 994800,
+        "sourceSeconds": 20.725,
+        "localFrame": 1109,
+        "localSample": 886800,
+        "localSeconds": 18.475,
+        "scheduledLocalSample": 887200,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.517332,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-29",
+        "sourceFrame": 1262,
+        "sourceSample": 1009200,
+        "sourceSeconds": 21.025,
+        "localFrame": 1127,
+        "localSample": 901200,
+        "localSeconds": 18.775,
+        "scheduledLocalSample": 901600,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.85931,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-30",
+        "sourceFrame": 1442,
+        "sourceSample": 1153200,
+        "sourceSeconds": 24.025,
+        "localFrame": 1307,
+        "localSample": 1045200,
+        "localSeconds": 21.775,
+        "scheduledLocalSample": 1045600,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.638674,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-31",
+        "sourceFrame": 1478,
+        "sourceSample": 1182000,
+        "sourceSeconds": 24.625,
+        "localFrame": 1343,
+        "localSample": 1074000,
+        "localSeconds": 22.375,
+        "scheduledLocalSample": 1074400,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.647444,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-32",
+        "sourceFrame": 1496,
+        "sourceSample": 1196400,
+        "sourceSeconds": 24.925,
+        "localFrame": 1361,
+        "localSample": 1088400,
+        "localSeconds": 22.675,
+        "scheduledLocalSample": 1088800,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.562625,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-33",
+        "sourceFrame": 1532,
+        "sourceSample": 1225200,
+        "sourceSeconds": 25.525,
+        "localFrame": 1397,
+        "localSample": 1117200,
+        "localSeconds": 23.275,
+        "scheduledLocalSample": 1117600,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.535918,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-34",
+        "sourceFrame": 1550,
+        "sourceSample": 1239600,
+        "sourceSeconds": 25.825,
+        "localFrame": 1415,
+        "localSample": 1131600,
+        "localSeconds": 23.575,
+        "scheduledLocalSample": 1132000,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.886963,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-35",
+        "sourceFrame": 1586,
+        "sourceSample": 1268400,
+        "sourceSeconds": 26.425,
+        "localFrame": 1451,
+        "localSample": 1160400,
+        "localSeconds": 24.175,
+        "scheduledLocalSample": 1160800,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.616532,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-36",
+        "sourceFrame": 1622,
+        "sourceSample": 1297200,
+        "sourceSeconds": 27.025,
+        "localFrame": 1487,
+        "localSample": 1189200,
+        "localSeconds": 24.775,
+        "scheduledLocalSample": 1189600,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.773341,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-37",
+        "sourceFrame": 1658,
+        "sourceSample": 1326000,
+        "sourceSeconds": 27.625,
+        "localFrame": 1523,
+        "localSample": 1218000,
+        "localSeconds": 25.375,
+        "scheduledLocalSample": 1218400,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.572949,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-38",
+        "sourceFrame": 1694,
+        "sourceSample": 1354800,
+        "sourceSeconds": 28.225,
+        "localFrame": 1559,
+        "localSample": 1246800,
+        "localSeconds": 25.975,
+        "scheduledLocalSample": 1247200,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.637586,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-39",
+        "sourceFrame": 1838,
+        "sourceSample": 1470000,
+        "sourceSeconds": 30.625,
+        "localFrame": 1703,
+        "localSample": 1362000,
+        "localSeconds": 28.375,
+        "scheduledLocalSample": 1362400,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.400471,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-40",
+        "sourceFrame": 1910,
+        "sourceSample": 1527600,
+        "sourceSeconds": 31.825,
+        "localFrame": 1775,
+        "localSample": 1419600,
+        "localSeconds": 29.575,
+        "scheduledLocalSample": 1420000,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.424038,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-41",
+        "sourceFrame": 2306,
+        "sourceSample": 1844400,
+        "sourceSeconds": 38.425,
+        "localFrame": 2171,
+        "localSample": 1736400,
+        "localSeconds": 36.175,
+        "scheduledLocalSample": 1736800,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.565377,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-42",
+        "sourceFrame": 2342,
+        "sourceSample": 1873200,
+        "sourceSeconds": 39.025,
+        "localFrame": 2207,
+        "localSample": 1765200,
+        "localSeconds": 36.775,
+        "scheduledLocalSample": 1765600,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.763948,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-43",
+        "sourceFrame": 2360,
+        "sourceSample": 1887600,
+        "sourceSeconds": 39.325,
+        "localFrame": 2225,
+        "localSample": 1779600,
+        "localSeconds": 37.075,
+        "scheduledLocalSample": 1780000,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.466208,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-44",
+        "sourceFrame": 2378,
+        "sourceSample": 1902000,
+        "sourceSeconds": 39.625,
+        "localFrame": 2243,
+        "localSample": 1794000,
+        "localSeconds": 37.375,
+        "scheduledLocalSample": 1794400,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.413163,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-45",
+        "sourceFrame": 2396,
+        "sourceSample": 1916400,
+        "sourceSeconds": 39.925,
+        "localFrame": 2261,
+        "localSample": 1808400,
+        "localSeconds": 37.675,
+        "scheduledLocalSample": 1808800,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.579722,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-46",
+        "sourceFrame": 2414,
+        "sourceSample": 1930800,
+        "sourceSeconds": 40.225,
+        "localFrame": 2279,
+        "localSample": 1822800,
+        "localSeconds": 37.975,
+        "scheduledLocalSample": 1823200,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.813245,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-47",
+        "sourceFrame": 2450,
+        "sourceSample": 1959600,
+        "sourceSeconds": 40.825,
+        "localFrame": 2315,
+        "localSample": 1851600,
+        "localSeconds": 38.575,
+        "scheduledLocalSample": 1852000,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.544016,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-48",
+        "sourceFrame": 2486,
+        "sourceSample": 1988400,
+        "sourceSeconds": 41.425,
+        "localFrame": 2351,
+        "localSample": 1880400,
+        "localSeconds": 39.175,
+        "scheduledLocalSample": 1880800,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.773706,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-49",
+        "sourceFrame": 2504,
+        "sourceSample": 2002800,
+        "sourceSeconds": 41.725,
+        "localFrame": 2369,
+        "localSample": 1894800,
+        "localSeconds": 39.475,
+        "scheduledLocalSample": 1895200,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.617613,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-50",
+        "sourceFrame": 2522,
+        "sourceSample": 2017200,
+        "sourceSeconds": 42.025,
+        "localFrame": 2387,
+        "localSample": 1909200,
+        "localSeconds": 39.775,
+        "scheduledLocalSample": 1909600,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.420957,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-51",
+        "sourceFrame": 2540,
+        "sourceSample": 2031600,
+        "sourceSeconds": 42.325,
+        "localFrame": 2405,
+        "localSample": 1923600,
+        "localSeconds": 40.075,
+        "scheduledLocalSample": 1924000,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.626775,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-52",
+        "sourceFrame": 2558,
+        "sourceSample": 2046000,
+        "sourceSeconds": 42.625,
+        "localFrame": 2423,
+        "localSample": 1938000,
+        "localSeconds": 40.375,
+        "scheduledLocalSample": 1938400,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.747568,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-53",
+        "sourceFrame": 2594,
+        "sourceSample": 2074800,
+        "sourceSeconds": 43.225,
+        "localFrame": 2459,
+        "localSample": 1966800,
+        "localSeconds": 40.975,
+        "scheduledLocalSample": 1967200,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.392882,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-54",
+        "sourceFrame": 2612,
+        "sourceSample": 2089200,
+        "sourceSeconds": 43.525,
+        "localFrame": 2477,
+        "localSample": 1981200,
+        "localSeconds": 41.275,
+        "scheduledLocalSample": 1981600,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.378453,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-55",
+        "sourceFrame": 2630,
+        "sourceSample": 2103600,
+        "sourceSeconds": 43.825,
+        "localFrame": 2495,
+        "localSample": 1995600,
+        "localSeconds": 41.575,
+        "scheduledLocalSample": 1996000,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.78309,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-56",
+        "sourceFrame": 2648,
+        "sourceSample": 2118000,
+        "sourceSeconds": 44.125,
+        "localFrame": 2513,
+        "localSample": 2010000,
+        "localSeconds": 41.875,
+        "scheduledLocalSample": 2010400,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.484995,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-57",
+        "sourceFrame": 2666,
+        "sourceSample": 2132400,
+        "sourceSeconds": 44.425,
+        "localFrame": 2531,
+        "localSample": 2024400,
+        "localSeconds": 42.175,
+        "scheduledLocalSample": 2024800,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.395426,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-58",
+        "sourceFrame": 2684,
+        "sourceSample": 2146800,
+        "sourceSeconds": 44.725,
+        "localFrame": 2549,
+        "localSample": 2038800,
+        "localSeconds": 42.475,
+        "scheduledLocalSample": 2039200,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.595391,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-59",
+        "sourceFrame": 2702,
+        "sourceSample": 2161200,
+        "sourceSeconds": 45.025,
+        "localFrame": 2567,
+        "localSample": 2053200,
+        "localSeconds": 42.775,
+        "scheduledLocalSample": 2053600,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.648341,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-60",
+        "sourceFrame": 2738,
+        "sourceSample": 2190000,
+        "sourceSeconds": 45.625,
+        "localFrame": 2603,
+        "localSample": 2082000,
+        "localSeconds": 43.375,
+        "scheduledLocalSample": 2082400,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.598709,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-61",
+        "sourceFrame": 2774,
+        "sourceSample": 2218800,
+        "sourceSeconds": 46.225,
+        "localFrame": 2639,
+        "localSample": 2110800,
+        "localSeconds": 43.975,
+        "scheduledLocalSample": 2111200,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.685941,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-62",
+        "sourceFrame": 2810,
+        "sourceSample": 2247600,
+        "sourceSeconds": 46.825,
+        "localFrame": 2675,
+        "localSample": 2139600,
+        "localSeconds": 44.575,
+        "scheduledLocalSample": 2140000,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.508152,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-63",
+        "sourceFrame": 2846,
+        "sourceSample": 2276400,
+        "sourceSeconds": 47.425,
+        "localFrame": 2711,
+        "localSample": 2168400,
+        "localSeconds": 45.175,
+        "scheduledLocalSample": 2168800,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.769099,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-64",
+        "sourceFrame": 2882,
+        "sourceSample": 2305200,
+        "sourceSeconds": 48.025,
+        "localFrame": 2747,
+        "localSample": 2197200,
+        "localSeconds": 45.775,
+        "scheduledLocalSample": 2197600,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.407721,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-65",
+        "sourceFrame": 2918,
+        "sourceSample": 2334000,
+        "sourceSeconds": 48.625,
+        "localFrame": 2783,
+        "localSample": 2226000,
+        "localSeconds": 46.375,
+        "scheduledLocalSample": 2226400,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.799004,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-66",
+        "sourceFrame": 2936,
+        "sourceSample": 2348400,
+        "sourceSeconds": 48.925,
+        "localFrame": 2801,
+        "localSample": 2240400,
+        "localSeconds": 46.675,
+        "scheduledLocalSample": 2240800,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.491517,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-67",
+        "sourceFrame": 2954,
+        "sourceSample": 2362800,
+        "sourceSeconds": 49.225,
+        "localFrame": 2819,
+        "localSample": 2254800,
+        "localSeconds": 46.975,
+        "scheduledLocalSample": 2255200,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.387375,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-68",
+        "sourceFrame": 2972,
+        "sourceSample": 2377200,
+        "sourceSeconds": 49.525,
+        "localFrame": 2837,
+        "localSample": 2269200,
+        "localSeconds": 47.275,
+        "scheduledLocalSample": 2269600,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.569364,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      },
+      {
+        "id": "transient-69",
+        "sourceFrame": 2990,
+        "sourceSample": 2391600,
+        "sourceSeconds": 49.825,
+        "localFrame": 2855,
+        "localSample": 2283600,
+        "localSeconds": 47.575,
+        "scheduledLocalSample": 2284000,
+        "schedulingQuantizationSamples": 400,
+        "strength": 0.87844,
+        "provenance": {
+          "class": "transient-detector-hypothesis",
+          "algorithm": "viz-engine.goal-five-music-window-analysis.v1",
+          "analysisFps": 20,
+          "threshold": 0.362929,
+          "interpretation": "Observed at a 20 fps bin center; localFrame is the nearest 60 fps scheduling frame."
+        }
+      }
+    ]
+  },
+  "energy": {
+    "bins": [
+      {
+        "id": "energy-bin-01",
+        "localFrameStart": 0,
+        "localFrameEndExclusive": 45,
+        "sourceFrameStart": 135,
+        "sourceFrameEndExclusive": 180,
+        "upstreamMeasurementFrameStart": 120,
+        "upstreamMeasurementFrameEndExclusive": 180,
+        "coverage": "partial-window-overlap-of-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.417377,
+        "bassEnergy": 0.169383,
+        "midEnergy": 0.182435,
+        "trebleEnergy": 0.09414,
+        "onsetStrength": 0.015927
+      },
+      {
+        "id": "energy-bin-02",
+        "localFrameStart": 45,
+        "localFrameEndExclusive": 105,
+        "sourceFrameStart": 180,
+        "sourceFrameEndExclusive": 240,
+        "upstreamMeasurementFrameStart": 180,
+        "upstreamMeasurementFrameEndExclusive": 240,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.636876,
+        "bassEnergy": 0.392121,
+        "midEnergy": 0.40628,
+        "trebleEnergy": 0.277905,
+        "onsetStrength": 0.057503
+      },
+      {
+        "id": "energy-bin-03",
+        "localFrameStart": 105,
+        "localFrameEndExclusive": 165,
+        "sourceFrameStart": 240,
+        "sourceFrameEndExclusive": 300,
+        "upstreamMeasurementFrameStart": 240,
+        "upstreamMeasurementFrameEndExclusive": 300,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.627785,
+        "bassEnergy": 0.312904,
+        "midEnergy": 0.400826,
+        "trebleEnergy": 0.149275,
+        "onsetStrength": 0.021604
+      },
+      {
+        "id": "energy-bin-04",
+        "localFrameStart": 165,
+        "localFrameEndExclusive": 225,
+        "sourceFrameStart": 300,
+        "sourceFrameEndExclusive": 360,
+        "upstreamMeasurementFrameStart": 300,
+        "upstreamMeasurementFrameEndExclusive": 360,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.554201,
+        "bassEnergy": 0.326217,
+        "midEnergy": 0.327741,
+        "trebleEnergy": 0.155011,
+        "onsetStrength": 0.035586
+      },
+      {
+        "id": "energy-bin-05",
+        "localFrameStart": 225,
+        "localFrameEndExclusive": 285,
+        "sourceFrameStart": 360,
+        "sourceFrameEndExclusive": 420,
+        "upstreamMeasurementFrameStart": 360,
+        "upstreamMeasurementFrameEndExclusive": 420,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.39415,
+        "bassEnergy": 0.168797,
+        "midEnergy": 0.20769,
+        "trebleEnergy": 0.072536,
+        "onsetStrength": 0.020931
+      },
+      {
+        "id": "energy-bin-06",
+        "localFrameStart": 285,
+        "localFrameEndExclusive": 345,
+        "sourceFrameStart": 420,
+        "sourceFrameEndExclusive": 480,
+        "upstreamMeasurementFrameStart": 420,
+        "upstreamMeasurementFrameEndExclusive": 480,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.403973,
+        "bassEnergy": 0.014412,
+        "midEnergy": 0.229105,
+        "trebleEnergy": 0.061757,
+        "onsetStrength": 0.007146
+      },
+      {
+        "id": "energy-bin-07",
+        "localFrameStart": 345,
+        "localFrameEndExclusive": 405,
+        "sourceFrameStart": 480,
+        "sourceFrameEndExclusive": 540,
+        "upstreamMeasurementFrameStart": 480,
+        "upstreamMeasurementFrameEndExclusive": 540,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.494506,
+        "bassEnergy": 0.13604,
+        "midEnergy": 0.284853,
+        "trebleEnergy": 0.095461,
+        "onsetStrength": 0.024758
+      },
+      {
+        "id": "energy-bin-08",
+        "localFrameStart": 405,
+        "localFrameEndExclusive": 465,
+        "sourceFrameStart": 540,
+        "sourceFrameEndExclusive": 600,
+        "upstreamMeasurementFrameStart": 540,
+        "upstreamMeasurementFrameEndExclusive": 600,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.734711,
+        "bassEnergy": 0.536257,
+        "midEnergy": 0.492057,
+        "trebleEnergy": 0.298108,
+        "onsetStrength": 0.136288
+      },
+      {
+        "id": "energy-bin-09",
+        "localFrameStart": 465,
+        "localFrameEndExclusive": 525,
+        "sourceFrameStart": 600,
+        "sourceFrameEndExclusive": 660,
+        "upstreamMeasurementFrameStart": 600,
+        "upstreamMeasurementFrameEndExclusive": 660,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.778639,
+        "bassEnergy": 0.649183,
+        "midEnergy": 0.520825,
+        "trebleEnergy": 0.280809,
+        "onsetStrength": 0.141118
+      },
+      {
+        "id": "energy-bin-10",
+        "localFrameStart": 525,
+        "localFrameEndExclusive": 585,
+        "sourceFrameStart": 660,
+        "sourceFrameEndExclusive": 720,
+        "upstreamMeasurementFrameStart": 660,
+        "upstreamMeasurementFrameEndExclusive": 720,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.755334,
+        "bassEnergy": 0.494707,
+        "midEnergy": 0.520313,
+        "trebleEnergy": 0.300691,
+        "onsetStrength": 0.12944
+      },
+      {
+        "id": "energy-bin-11",
+        "localFrameStart": 585,
+        "localFrameEndExclusive": 645,
+        "sourceFrameStart": 720,
+        "sourceFrameEndExclusive": 780,
+        "upstreamMeasurementFrameStart": 720,
+        "upstreamMeasurementFrameEndExclusive": 780,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.800362,
+        "bassEnergy": 0.689595,
+        "midEnergy": 0.517581,
+        "trebleEnergy": 0.301061,
+        "onsetStrength": 0.170223
+      },
+      {
+        "id": "energy-bin-12",
+        "localFrameStart": 645,
+        "localFrameEndExclusive": 705,
+        "sourceFrameStart": 780,
+        "sourceFrameEndExclusive": 840,
+        "upstreamMeasurementFrameStart": 780,
+        "upstreamMeasurementFrameEndExclusive": 840,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.813363,
+        "bassEnergy": 0.744017,
+        "midEnergy": 0.512922,
+        "trebleEnergy": 0.258458,
+        "onsetStrength": 0.122116
+      },
+      {
+        "id": "energy-bin-13",
+        "localFrameStart": 705,
+        "localFrameEndExclusive": 765,
+        "sourceFrameStart": 840,
+        "sourceFrameEndExclusive": 900,
+        "upstreamMeasurementFrameStart": 840,
+        "upstreamMeasurementFrameEndExclusive": 900,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.783652,
+        "bassEnergy": 0.707227,
+        "midEnergy": 0.4863,
+        "trebleEnergy": 0.293451,
+        "onsetStrength": 0.103153
+      },
+      {
+        "id": "energy-bin-14",
+        "localFrameStart": 765,
+        "localFrameEndExclusive": 825,
+        "sourceFrameStart": 900,
+        "sourceFrameEndExclusive": 960,
+        "upstreamMeasurementFrameStart": 900,
+        "upstreamMeasurementFrameEndExclusive": 960,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.805069,
+        "bassEnergy": 0.687391,
+        "midEnergy": 0.551822,
+        "trebleEnergy": 0.339658,
+        "onsetStrength": 0.183933
+      },
+      {
+        "id": "energy-bin-15",
+        "localFrameStart": 825,
+        "localFrameEndExclusive": 885,
+        "sourceFrameStart": 960,
+        "sourceFrameEndExclusive": 1020,
+        "upstreamMeasurementFrameStart": 960,
+        "upstreamMeasurementFrameEndExclusive": 1020,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.749325,
+        "bassEnergy": 0.496862,
+        "midEnergy": 0.506984,
+        "trebleEnergy": 0.308925,
+        "onsetStrength": 0.132689
+      },
+      {
+        "id": "energy-bin-16",
+        "localFrameStart": 885,
+        "localFrameEndExclusive": 945,
+        "sourceFrameStart": 1020,
+        "sourceFrameEndExclusive": 1080,
+        "upstreamMeasurementFrameStart": 1020,
+        "upstreamMeasurementFrameEndExclusive": 1080,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.780165,
+        "bassEnergy": 0.690976,
+        "midEnergy": 0.500196,
+        "trebleEnergy": 0.311005,
+        "onsetStrength": 0.127956
+      },
+      {
+        "id": "energy-bin-17",
+        "localFrameStart": 945,
+        "localFrameEndExclusive": 1005,
+        "sourceFrameStart": 1080,
+        "sourceFrameEndExclusive": 1140,
+        "upstreamMeasurementFrameStart": 1080,
+        "upstreamMeasurementFrameEndExclusive": 1140,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.818334,
+        "bassEnergy": 0.748241,
+        "midEnergy": 0.522838,
+        "trebleEnergy": 0.350059,
+        "onsetStrength": 0.139358
+      },
+      {
+        "id": "energy-bin-18",
+        "localFrameStart": 1005,
+        "localFrameEndExclusive": 1065,
+        "sourceFrameStart": 1140,
+        "sourceFrameEndExclusive": 1200,
+        "upstreamMeasurementFrameStart": 1140,
+        "upstreamMeasurementFrameEndExclusive": 1200,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.786715,
+        "bassEnergy": 0.689231,
+        "midEnergy": 0.516468,
+        "trebleEnergy": 0.350271,
+        "onsetStrength": 0.135628
+      },
+      {
+        "id": "energy-bin-19",
+        "localFrameStart": 1065,
+        "localFrameEndExclusive": 1125,
+        "sourceFrameStart": 1200,
+        "sourceFrameEndExclusive": 1260,
+        "upstreamMeasurementFrameStart": 1200,
+        "upstreamMeasurementFrameEndExclusive": 1260,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.789526,
+        "bassEnergy": 0.70181,
+        "midEnergy": 0.50724,
+        "trebleEnergy": 0.327492,
+        "onsetStrength": 0.138495
+      },
+      {
+        "id": "energy-bin-20",
+        "localFrameStart": 1125,
+        "localFrameEndExclusive": 1185,
+        "sourceFrameStart": 1260,
+        "sourceFrameEndExclusive": 1320,
+        "upstreamMeasurementFrameStart": 1260,
+        "upstreamMeasurementFrameEndExclusive": 1320,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.715524,
+        "bassEnergy": 0.447795,
+        "midEnergy": 0.508879,
+        "trebleEnergy": 0.273453,
+        "onsetStrength": 0.095579
+      },
+      {
+        "id": "energy-bin-21",
+        "localFrameStart": 1185,
+        "localFrameEndExclusive": 1245,
+        "sourceFrameStart": 1320,
+        "sourceFrameEndExclusive": 1380,
+        "upstreamMeasurementFrameStart": 1320,
+        "upstreamMeasurementFrameEndExclusive": 1380,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.68581,
+        "bassEnergy": 0.47991,
+        "midEnergy": 0.432974,
+        "trebleEnergy": 0.260186,
+        "onsetStrength": 0.079371
+      },
+      {
+        "id": "energy-bin-22",
+        "localFrameStart": 1245,
+        "localFrameEndExclusive": 1305,
+        "sourceFrameStart": 1380,
+        "sourceFrameEndExclusive": 1440,
+        "upstreamMeasurementFrameStart": 1380,
+        "upstreamMeasurementFrameEndExclusive": 1440,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.685263,
+        "bassEnergy": 0.521225,
+        "midEnergy": 0.450563,
+        "trebleEnergy": 0.300979,
+        "onsetStrength": 0.065212
+      },
+      {
+        "id": "energy-bin-23",
+        "localFrameStart": 1305,
+        "localFrameEndExclusive": 1365,
+        "sourceFrameStart": 1440,
+        "sourceFrameEndExclusive": 1500,
+        "upstreamMeasurementFrameStart": 1440,
+        "upstreamMeasurementFrameEndExclusive": 1500,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.807489,
+        "bassEnergy": 0.703369,
+        "midEnergy": 0.510117,
+        "trebleEnergy": 0.373845,
+        "onsetStrength": 0.175129
+      },
+      {
+        "id": "energy-bin-24",
+        "localFrameStart": 1365,
+        "localFrameEndExclusive": 1425,
+        "sourceFrameStart": 1500,
+        "sourceFrameEndExclusive": 1560,
+        "upstreamMeasurementFrameStart": 1500,
+        "upstreamMeasurementFrameEndExclusive": 1560,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.779573,
+        "bassEnergy": 0.633087,
+        "midEnergy": 0.524846,
+        "trebleEnergy": 0.316306,
+        "onsetStrength": 0.148204
+      },
+      {
+        "id": "energy-bin-25",
+        "localFrameStart": 1425,
+        "localFrameEndExclusive": 1485,
+        "sourceFrameStart": 1560,
+        "sourceFrameEndExclusive": 1620,
+        "upstreamMeasurementFrameStart": 1560,
+        "upstreamMeasurementFrameEndExclusive": 1620,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.784357,
+        "bassEnergy": 0.570783,
+        "midEnergy": 0.531576,
+        "trebleEnergy": 0.257262,
+        "onsetStrength": 0.112497
+      },
+      {
+        "id": "energy-bin-26",
+        "localFrameStart": 1485,
+        "localFrameEndExclusive": 1545,
+        "sourceFrameStart": 1620,
+        "sourceFrameEndExclusive": 1680,
+        "upstreamMeasurementFrameStart": 1620,
+        "upstreamMeasurementFrameEndExclusive": 1680,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.806066,
+        "bassEnergy": 0.722161,
+        "midEnergy": 0.518042,
+        "trebleEnergy": 0.344435,
+        "onsetStrength": 0.163072
+      },
+      {
+        "id": "energy-bin-27",
+        "localFrameStart": 1545,
+        "localFrameEndExclusive": 1605,
+        "sourceFrameStart": 1680,
+        "sourceFrameEndExclusive": 1740,
+        "upstreamMeasurementFrameStart": 1680,
+        "upstreamMeasurementFrameEndExclusive": 1740,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.77227,
+        "bassEnergy": 0.655449,
+        "midEnergy": 0.524158,
+        "trebleEnergy": 0.26355,
+        "onsetStrength": 0.086527
+      },
+      {
+        "id": "energy-bin-28",
+        "localFrameStart": 1605,
+        "localFrameEndExclusive": 1665,
+        "sourceFrameStart": 1740,
+        "sourceFrameEndExclusive": 1800,
+        "upstreamMeasurementFrameStart": 1740,
+        "upstreamMeasurementFrameEndExclusive": 1800,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.737817,
+        "bassEnergy": 0.445349,
+        "midEnergy": 0.527596,
+        "trebleEnergy": 0.253545,
+        "onsetStrength": 0.081494
+      },
+      {
+        "id": "energy-bin-29",
+        "localFrameStart": 1665,
+        "localFrameEndExclusive": 1725,
+        "sourceFrameStart": 1800,
+        "sourceFrameEndExclusive": 1860,
+        "upstreamMeasurementFrameStart": 1800,
+        "upstreamMeasurementFrameEndExclusive": 1860,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.776308,
+        "bassEnergy": 0.535332,
+        "midEnergy": 0.575225,
+        "trebleEnergy": 0.31177,
+        "onsetStrength": 0.087659
+      },
+      {
+        "id": "energy-bin-30",
+        "localFrameStart": 1725,
+        "localFrameEndExclusive": 1785,
+        "sourceFrameStart": 1860,
+        "sourceFrameEndExclusive": 1920,
+        "upstreamMeasurementFrameStart": 1860,
+        "upstreamMeasurementFrameEndExclusive": 1920,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.768834,
+        "bassEnergy": 0.471059,
+        "midEnergy": 0.571868,
+        "trebleEnergy": 0.213126,
+        "onsetStrength": 0.062917
+      },
+      {
+        "id": "energy-bin-31",
+        "localFrameStart": 1785,
+        "localFrameEndExclusive": 1845,
+        "sourceFrameStart": 1920,
+        "sourceFrameEndExclusive": 1980,
+        "upstreamMeasurementFrameStart": 1920,
+        "upstreamMeasurementFrameEndExclusive": 1980,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.763312,
+        "bassEnergy": 0.537488,
+        "midEnergy": 0.563219,
+        "trebleEnergy": 0.296409,
+        "onsetStrength": 0.067716
+      },
+      {
+        "id": "energy-bin-32",
+        "localFrameStart": 1845,
+        "localFrameEndExclusive": 1905,
+        "sourceFrameStart": 1980,
+        "sourceFrameEndExclusive": 2040,
+        "upstreamMeasurementFrameStart": 1980,
+        "upstreamMeasurementFrameEndExclusive": 2040,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.787751,
+        "bassEnergy": 0.462168,
+        "midEnergy": 0.592492,
+        "trebleEnergy": 0.288029,
+        "onsetStrength": 0.085945
+      },
+      {
+        "id": "energy-bin-33",
+        "localFrameStart": 1905,
+        "localFrameEndExclusive": 1965,
+        "sourceFrameStart": 2040,
+        "sourceFrameEndExclusive": 2100,
+        "upstreamMeasurementFrameStart": 2040,
+        "upstreamMeasurementFrameEndExclusive": 2100,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.751693,
+        "bassEnergy": 0.521225,
+        "midEnergy": 0.535068,
+        "trebleEnergy": 0.326478,
+        "onsetStrength": 0.090622
+      },
+      {
+        "id": "energy-bin-34",
+        "localFrameStart": 1965,
+        "localFrameEndExclusive": 2025,
+        "sourceFrameStart": 2100,
+        "sourceFrameEndExclusive": 2160,
+        "upstreamMeasurementFrameStart": 2100,
+        "upstreamMeasurementFrameEndExclusive": 2160,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.768464,
+        "bassEnergy": 0.531301,
+        "midEnergy": 0.561196,
+        "trebleEnergy": 0.258492,
+        "onsetStrength": 0.073948
+      },
+      {
+        "id": "energy-bin-35",
+        "localFrameStart": 2025,
+        "localFrameEndExclusive": 2085,
+        "sourceFrameStart": 2160,
+        "sourceFrameEndExclusive": 2220,
+        "upstreamMeasurementFrameStart": 2160,
+        "upstreamMeasurementFrameEndExclusive": 2220,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.698732,
+        "bassEnergy": 0.418315,
+        "midEnergy": 0.465671,
+        "trebleEnergy": 0.308644,
+        "onsetStrength": 0.090332
+      },
+      {
+        "id": "energy-bin-36",
+        "localFrameStart": 2085,
+        "localFrameEndExclusive": 2145,
+        "sourceFrameStart": 2220,
+        "sourceFrameEndExclusive": 2280,
+        "upstreamMeasurementFrameStart": 2220,
+        "upstreamMeasurementFrameEndExclusive": 2280,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.669587,
+        "bassEnergy": 0.439884,
+        "midEnergy": 0.462593,
+        "trebleEnergy": 0.2754,
+        "onsetStrength": 0.080185
+      },
+      {
+        "id": "energy-bin-37",
+        "localFrameStart": 2145,
+        "localFrameEndExclusive": 2205,
+        "sourceFrameStart": 2280,
+        "sourceFrameEndExclusive": 2340,
+        "upstreamMeasurementFrameStart": 2280,
+        "upstreamMeasurementFrameEndExclusive": 2340,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.801817,
+        "bassEnergy": 0.652685,
+        "midEnergy": 0.476155,
+        "trebleEnergy": 0.353363,
+        "onsetStrength": 0.103391
+      },
+      {
+        "id": "energy-bin-38",
+        "localFrameStart": 2205,
+        "localFrameEndExclusive": 2265,
+        "sourceFrameStart": 2340,
+        "sourceFrameEndExclusive": 2400,
+        "upstreamMeasurementFrameStart": 2340,
+        "upstreamMeasurementFrameEndExclusive": 2400,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.835312,
+        "bassEnergy": 0.760809,
+        "midEnergy": 0.542889,
+        "trebleEnergy": 0.339989,
+        "onsetStrength": 0.176932
+      },
+      {
+        "id": "energy-bin-39",
+        "localFrameStart": 2265,
+        "localFrameEndExclusive": 2325,
+        "sourceFrameStart": 2400,
+        "sourceFrameEndExclusive": 2460,
+        "upstreamMeasurementFrameStart": 2400,
+        "upstreamMeasurementFrameEndExclusive": 2460,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.806433,
+        "bassEnergy": 0.703933,
+        "midEnergy": 0.544017,
+        "trebleEnergy": 0.301956,
+        "onsetStrength": 0.126856
+      },
+      {
+        "id": "energy-bin-40",
+        "localFrameStart": 2325,
+        "localFrameEndExclusive": 2385,
+        "sourceFrameStart": 2460,
+        "sourceFrameEndExclusive": 2520,
+        "upstreamMeasurementFrameStart": 2460,
+        "upstreamMeasurementFrameEndExclusive": 2520,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.826639,
+        "bassEnergy": 0.756042,
+        "midEnergy": 0.500011,
+        "trebleEnergy": 0.280336,
+        "onsetStrength": 0.132765
+      },
+      {
+        "id": "energy-bin-41",
+        "localFrameStart": 2385,
+        "localFrameEndExclusive": 2445,
+        "sourceFrameStart": 2520,
+        "sourceFrameEndExclusive": 2580,
+        "upstreamMeasurementFrameStart": 2520,
+        "upstreamMeasurementFrameEndExclusive": 2580,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.83215,
+        "bassEnergy": 0.7632,
+        "midEnergy": 0.521052,
+        "trebleEnergy": 0.355207,
+        "onsetStrength": 0.17312
+      },
+      {
+        "id": "energy-bin-42",
+        "localFrameStart": 2445,
+        "localFrameEndExclusive": 2505,
+        "sourceFrameStart": 2580,
+        "sourceFrameEndExclusive": 2640,
+        "upstreamMeasurementFrameStart": 2580,
+        "upstreamMeasurementFrameEndExclusive": 2640,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.827841,
+        "bassEnergy": 0.748121,
+        "midEnergy": 0.524674,
+        "trebleEnergy": 0.336901,
+        "onsetStrength": 0.128759
+      },
+      {
+        "id": "energy-bin-43",
+        "localFrameStart": 2505,
+        "localFrameEndExclusive": 2565,
+        "sourceFrameStart": 2640,
+        "sourceFrameEndExclusive": 2700,
+        "upstreamMeasurementFrameStart": 2640,
+        "upstreamMeasurementFrameEndExclusive": 2700,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.828039,
+        "bassEnergy": 0.761777,
+        "midEnergy": 0.519899,
+        "trebleEnergy": 0.291922,
+        "onsetStrength": 0.12889
+      },
+      {
+        "id": "energy-bin-44",
+        "localFrameStart": 2565,
+        "localFrameEndExclusive": 2625,
+        "sourceFrameStart": 2700,
+        "sourceFrameEndExclusive": 2760,
+        "upstreamMeasurementFrameStart": 2700,
+        "upstreamMeasurementFrameEndExclusive": 2760,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.81743,
+        "bassEnergy": 0.720402,
+        "midEnergy": 0.562872,
+        "trebleEnergy": 0.31959,
+        "onsetStrength": 0.149057
+      },
+      {
+        "id": "energy-bin-45",
+        "localFrameStart": 2625,
+        "localFrameEndExclusive": 2685,
+        "sourceFrameStart": 2760,
+        "sourceFrameEndExclusive": 2820,
+        "upstreamMeasurementFrameStart": 2760,
+        "upstreamMeasurementFrameEndExclusive": 2820,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.837235,
+        "bassEnergy": 0.760982,
+        "midEnergy": 0.573763,
+        "trebleEnergy": 0.318705,
+        "onsetStrength": 0.130042
+      },
+      {
+        "id": "energy-bin-46",
+        "localFrameStart": 2685,
+        "localFrameEndExclusive": 2745,
+        "sourceFrameStart": 2820,
+        "sourceFrameEndExclusive": 2880,
+        "upstreamMeasurementFrameStart": 2820,
+        "upstreamMeasurementFrameEndExclusive": 2880,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.812313,
+        "bassEnergy": 0.738632,
+        "midEnergy": 0.52145,
+        "trebleEnergy": 0.353084,
+        "onsetStrength": 0.127742
+      },
+      {
+        "id": "energy-bin-47",
+        "localFrameStart": 2745,
+        "localFrameEndExclusive": 2805,
+        "sourceFrameStart": 2880,
+        "sourceFrameEndExclusive": 2940,
+        "upstreamMeasurementFrameStart": 2880,
+        "upstreamMeasurementFrameEndExclusive": 2940,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.832518,
+        "bassEnergy": 0.756941,
+        "midEnergy": 0.522225,
+        "trebleEnergy": 0.354478,
+        "onsetStrength": 0.165007
+      },
+      {
+        "id": "energy-bin-48",
+        "localFrameStart": 2805,
+        "localFrameEndExclusive": 2865,
+        "sourceFrameStart": 2940,
+        "sourceFrameEndExclusive": 3000,
+        "upstreamMeasurementFrameStart": 2940,
+        "upstreamMeasurementFrameEndExclusive": 3000,
+        "coverage": "complete-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.819121,
+        "bassEnergy": 0.743874,
+        "midEnergy": 0.514915,
+        "trebleEnergy": 0.309027,
+        "onsetStrength": 0.145642
+      },
+      {
+        "id": "energy-bin-49",
+        "localFrameStart": 2865,
+        "localFrameEndExclusive": 2880,
+        "sourceFrameStart": 3000,
+        "sourceFrameEndExclusive": 3015,
+        "upstreamMeasurementFrameStart": 3000,
+        "upstreamMeasurementFrameEndExclusive": 3060,
+        "coverage": "partial-window-overlap-of-upstream-bin",
+        "measurementLimitation": "Metrics describe the complete upstream one-second bin; clipped bounds describe only its overlap with this window.",
+        "loudness": 0.705807,
+        "bassEnergy": 0.452751,
+        "midEnergy": 0.483521,
+        "trebleEnergy": 0.217199,
+        "onsetStrength": 0.065324
+      }
+    ],
+    "selectionPolicy": {
+      "metric": "upstream one-second-bin loudness",
+      "candidateRule": "strict interior local extrema; equality qualifies",
+      "rankRule": "peaks descending, lower-energy opportunities ascending, then earliest local frame",
+      "limitPerClass": 3,
+      "silenceRule": "No qualifying silence interval exists in the selected window; lower-energy opportunities are never silence claims."
+    },
+    "upstreamQualifyingSilenceIntervalCount": 0,
+    "peakOpportunities": [
+      {
+        "id": "energy-bin-45",
+        "localFrameStart": 2625,
+        "localFrameEndExclusive": 2685,
+        "loudness": 0.837235,
+        "rank": 1,
+        "classification": "energy-peak-opportunity",
+        "silenceClaim": false,
+        "tiedAlternativeIds": []
+      },
+      {
+        "id": "energy-bin-38",
+        "localFrameStart": 2205,
+        "localFrameEndExclusive": 2265,
+        "loudness": 0.835312,
+        "rank": 2,
+        "classification": "energy-peak-opportunity",
+        "silenceClaim": false,
+        "tiedAlternativeIds": []
+      },
+      {
+        "id": "energy-bin-47",
+        "localFrameStart": 2745,
+        "localFrameEndExclusive": 2805,
+        "loudness": 0.832518,
+        "rank": 3,
+        "classification": "energy-peak-opportunity",
+        "silenceClaim": false,
+        "tiedAlternativeIds": []
+      }
+    ],
+    "restOpportunities": [
+      {
+        "id": "energy-bin-05",
+        "localFrameStart": 225,
+        "localFrameEndExclusive": 285,
+        "loudness": 0.39415,
+        "rank": 1,
+        "classification": "lower-energy-rest-opportunity",
+        "silenceClaim": false,
+        "tiedAlternativeIds": []
+      },
+      {
+        "id": "energy-bin-36",
+        "localFrameStart": 2085,
+        "localFrameEndExclusive": 2145,
+        "loudness": 0.669587,
+        "rank": 2,
+        "classification": "lower-energy-rest-opportunity",
+        "silenceClaim": false,
+        "tiedAlternativeIds": []
+      },
+      {
+        "id": "energy-bin-22",
+        "localFrameStart": 1245,
+        "localFrameEndExclusive": 1305,
+        "loudness": 0.685263,
+        "rank": 3,
+        "classification": "lower-energy-rest-opportunity",
+        "silenceClaim": false,
+        "tiedAlternativeIds": []
+      }
+    ]
+  },
+  "acts": [
+    {
+      "id": "act-1-threshold-and-restraint",
+      "title": "Threshold and restraint",
+      "range": {
+        "localFrameStart": 0,
+        "localFrameEndExclusive": 405,
+        "sourceFrameStart": 135,
+        "sourceFrameEndExclusive": 540,
+        "localSampleStart": 0,
+        "localSampleEndExclusive": 324000,
+        "sourceSampleStart": 108000,
+        "sourceSampleEndExclusive": 432000
+      },
+      "productionIntent": "Establish a sparse visual identity, preserve negative space, and contract toward the first decisive change.",
+      "judgment": {
+        "class": "authored-production-intent",
+        "confidence": "human-required",
+        "status": "proposed-pending-gate-1"
+      }
+    },
+    {
+      "id": "act-2-first-full-statement",
+      "title": "First full statement",
+      "range": {
+        "localFrameStart": 405,
+        "localFrameEndExclusive": 1125,
+        "sourceFrameStart": 540,
+        "sourceFrameEndExclusive": 1260,
+        "localSampleStart": 324000,
+        "localSampleEndExclusive": 900000,
+        "sourceSampleStart": 432000,
+        "sourceSampleEndExclusive": 1008000
+      },
+      "productionIntent": "Reveal the primary rhythmic system and stabilize it without spending the production peak.",
+      "judgment": {
+        "class": "authored-production-intent",
+        "confidence": "human-required",
+        "status": "proposed-pending-gate-1"
+      }
+    },
+    {
+      "id": "act-3-contrast-and-rebuild",
+      "title": "Contrast and rebuild",
+      "range": {
+        "localFrameStart": 1125,
+        "localFrameEndExclusive": 1605,
+        "sourceFrameStart": 1260,
+        "sourceFrameEndExclusive": 1740,
+        "localSampleStart": 900000,
+        "localSampleEndExclusive": 1284000,
+        "sourceSampleStart": 1008000,
+        "sourceSampleEndExclusive": 1392000
+      },
+      "productionIntent": "Pull density and brightness back, then rebuild motion and scale into the next structural turn.",
+      "judgment": {
+        "class": "authored-production-intent",
+        "confidence": "human-required",
+        "status": "proposed-pending-gate-1"
+      }
+    },
+    {
+      "id": "act-4-suspended-evolution",
+      "title": "Suspended evolution",
+      "range": {
+        "localFrameStart": 1605,
+        "localFrameEndExclusive": 2205,
+        "sourceFrameStart": 1740,
+        "sourceFrameEndExclusive": 2340,
+        "localSampleStart": 1284000,
+        "localSampleEndExclusive": 1764000,
+        "sourceSampleStart": 1392000,
+        "sourceSampleEndExclusive": 1872000
+      },
+      "productionIntent": "Evolve composition and camera language across sustained energy while retaining final-act headroom.",
+      "judgment": {
+        "class": "authored-production-intent",
+        "confidence": "human-required",
+        "status": "proposed-pending-gate-1"
+      }
+    },
+    {
+      "id": "act-5-final-statement-and-release",
+      "title": "Final statement and release",
+      "range": {
+        "localFrameStart": 2205,
+        "localFrameEndExclusive": 2880,
+        "sourceFrameStart": 2340,
+        "sourceFrameEndExclusive": 3015,
+        "localSampleStart": 1764000,
+        "localSampleEndExclusive": 2304000,
+        "sourceSampleStart": 1872000,
+        "sourceSampleEndExclusive": 2412000
+      },
+      "productionIntent": "Accumulate the clearest production peak, then make the ending feel authored through a concise release.",
+      "judgment": {
+        "class": "authored-production-intent",
+        "confidence": "human-required",
+        "status": "proposed-pending-gate-1"
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "id": "transition-1",
+      "fromActId": "act-1-threshold-and-restraint",
+      "toActId": "act-2-first-full-statement",
+      "centerLocalFrame": 405,
+      "localFrameStart": 360,
+      "localFrameEndExclusive": 450,
+      "reviewFrames": {
+        "pre": 375,
+        "midpoint": 405,
+        "post": 435
+      },
+      "evidenceRef": "section-02",
+      "productionIntent": "Make the first full-system reveal legible across the boundary.",
+      "judgment": {
+        "class": "authored-production-intent",
+        "confidence": "human-required",
+        "status": "proposed-pending-gate-1"
+      }
+    },
+    {
+      "id": "transition-2",
+      "fromActId": "act-2-first-full-statement",
+      "toActId": "act-3-contrast-and-rebuild",
+      "centerLocalFrame": 1125,
+      "localFrameStart": 1080,
+      "localFrameEndExclusive": 1170,
+      "reviewFrames": {
+        "pre": 1095,
+        "midpoint": 1125,
+        "post": 1155
+      },
+      "evidenceRef": "section-03",
+      "productionIntent": "Change compositional emphasis while maintaining rhythmic continuity.",
+      "judgment": {
+        "class": "authored-production-intent",
+        "confidence": "human-required",
+        "status": "proposed-pending-gate-1"
+      }
+    },
+    {
+      "id": "transition-3",
+      "fromActId": "act-3-contrast-and-rebuild",
+      "toActId": "act-4-suspended-evolution",
+      "centerLocalFrame": 1605,
+      "localFrameStart": 1560,
+      "localFrameEndExclusive": 1650,
+      "reviewFrames": {
+        "pre": 1575,
+        "midpoint": 1605,
+        "post": 1635
+      },
+      "evidenceRef": "section-04",
+      "productionIntent": "Change compositional emphasis while maintaining rhythmic continuity.",
+      "judgment": {
+        "class": "authored-production-intent",
+        "confidence": "human-required",
+        "status": "proposed-pending-gate-1"
+      }
+    },
+    {
+      "id": "transition-4",
+      "fromActId": "act-4-suspended-evolution",
+      "toActId": "act-5-final-statement-and-release",
+      "centerLocalFrame": 2205,
+      "localFrameStart": 2160,
+      "localFrameEndExclusive": 2250,
+      "reviewFrames": {
+        "pre": 2175,
+        "midpoint": 2205,
+        "post": 2235
+      },
+      "evidenceRef": "section-05",
+      "productionIntent": "Turn sustained energy into an unmistakable final-act escalation.",
+      "judgment": {
+        "class": "authored-production-intent",
+        "confidence": "human-required",
+        "status": "proposed-pending-gate-1"
+      }
+    }
+  ],
+  "responsePlan": {
+    "interpretation": "Reusable production intent for later treatment and authoring; this map does not define hidden engine behavior or runtime bindings.",
+    "macro": [
+      {
+        "id": "macro-act-1-threshold-and-restraint",
+        "timescale": "macro",
+        "rangeRef": "act-1-threshold-and-restraint",
+        "evidenceRefs": ["section-01"],
+        "productionIntent": "Establish a sparse visual identity, preserve negative space, and contract toward the first decisive change.",
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "macro-act-2-first-full-statement",
+        "timescale": "macro",
+        "rangeRef": "act-2-first-full-statement",
+        "evidenceRefs": ["section-02"],
+        "productionIntent": "Reveal the primary rhythmic system and stabilize it without spending the production peak.",
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "macro-act-3-contrast-and-rebuild",
+        "timescale": "macro",
+        "rangeRef": "act-3-contrast-and-rebuild",
+        "evidenceRefs": ["section-03"],
+        "productionIntent": "Pull density and brightness back, then rebuild motion and scale into the next structural turn.",
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "macro-act-4-suspended-evolution",
+        "timescale": "macro",
+        "rangeRef": "act-4-suspended-evolution",
+        "evidenceRefs": ["section-04"],
+        "productionIntent": "Evolve composition and camera language across sustained energy while retaining final-act headroom.",
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "macro-act-5-final-statement-and-release",
+        "timescale": "macro",
+        "rangeRef": "act-5-final-statement-and-release",
+        "evidenceRefs": ["section-05"],
+        "productionIntent": "Accumulate the clearest production peak, then make the ending feel authored through a concise release.",
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      }
+    ],
+    "phrase": [
+      {
+        "id": "response-phrase-01",
+        "timescale": "phrase",
+        "rangeRef": "phrase-01",
+        "evidenceRefs": ["phrase-01"],
+        "productionIntent": "Clarify the current motif through a restrained compositional change.",
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "response-phrase-02",
+        "timescale": "phrase",
+        "rangeRef": "phrase-02",
+        "evidenceRefs": ["phrase-02"],
+        "productionIntent": "Advance camera or spatial phrasing without resetting the act identity.",
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "response-phrase-03",
+        "timescale": "phrase",
+        "rangeRef": "phrase-03",
+        "evidenceRefs": ["phrase-03"],
+        "productionIntent": "Vary density and color hierarchy while preserving continuity.",
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "response-phrase-04",
+        "timescale": "phrase",
+        "rangeRef": "phrase-04",
+        "evidenceRefs": ["phrase-04"],
+        "productionIntent": "Clarify the current motif through a restrained compositional change.",
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "response-phrase-05",
+        "timescale": "phrase",
+        "rangeRef": "phrase-05",
+        "evidenceRefs": ["phrase-05"],
+        "productionIntent": "Advance camera or spatial phrasing without resetting the act identity.",
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "response-phrase-06",
+        "timescale": "phrase",
+        "rangeRef": "phrase-06",
+        "evidenceRefs": ["phrase-06"],
+        "productionIntent": "Vary density and color hierarchy while preserving continuity.",
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "response-phrase-07",
+        "timescale": "phrase",
+        "rangeRef": "phrase-07",
+        "evidenceRefs": ["phrase-07"],
+        "productionIntent": "Clarify the current motif through a restrained compositional change.",
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "response-phrase-08",
+        "timescale": "phrase",
+        "rangeRef": "phrase-08",
+        "evidenceRefs": ["phrase-08"],
+        "productionIntent": "Advance camera or spatial phrasing without resetting the act identity.",
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "response-phrase-09",
+        "timescale": "phrase",
+        "rangeRef": "phrase-09",
+        "evidenceRefs": ["phrase-09"],
+        "productionIntent": "Vary density and color hierarchy while preserving continuity.",
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "response-phrase-10",
+        "timescale": "phrase",
+        "rangeRef": "phrase-10",
+        "evidenceRefs": ["phrase-10"],
+        "productionIntent": "Clarify the current motif through a restrained compositional change.",
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      }
+    ],
+    "detail": [
+      {
+        "id": "detail-act-2-first-full-statement-1",
+        "timescale": "detail",
+        "rangeRef": "transient-15",
+        "evidenceRefs": ["transient-15"],
+        "productionIntent": "Reserve a short, bounded accent opportunity for a component-level response; exact consumer and magnitude remain treatment decisions.",
+        "candidateConsumers": [
+          "camera",
+          "lighting",
+          "particles",
+          "material modulation"
+        ],
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "detail-act-2-first-full-statement-2",
+        "timescale": "detail",
+        "rangeRef": "transient-09",
+        "evidenceRefs": ["transient-09"],
+        "productionIntent": "Reserve a short, bounded accent opportunity for a component-level response; exact consumer and magnitude remain treatment decisions.",
+        "candidateConsumers": [
+          "camera",
+          "lighting",
+          "particles",
+          "material modulation"
+        ],
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "detail-act-3-contrast-and-rebuild-1",
+        "timescale": "detail",
+        "rangeRef": "transient-34",
+        "evidenceRefs": ["transient-34"],
+        "productionIntent": "Reserve a short, bounded accent opportunity for a component-level response; exact consumer and magnitude remain treatment decisions.",
+        "candidateConsumers": [
+          "camera",
+          "lighting",
+          "particles",
+          "material modulation"
+        ],
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "detail-act-3-contrast-and-rebuild-2",
+        "timescale": "detail",
+        "rangeRef": "transient-29",
+        "evidenceRefs": ["transient-29"],
+        "productionIntent": "Reserve a short, bounded accent opportunity for a component-level response; exact consumer and magnitude remain treatment decisions.",
+        "candidateConsumers": [
+          "camera",
+          "lighting",
+          "particles",
+          "material modulation"
+        ],
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "detail-act-4-suspended-evolution-1",
+        "timescale": "detail",
+        "rangeRef": "transient-41",
+        "evidenceRefs": ["transient-41"],
+        "productionIntent": "Reserve a short, bounded accent opportunity for a component-level response; exact consumer and magnitude remain treatment decisions.",
+        "candidateConsumers": [
+          "camera",
+          "lighting",
+          "particles",
+          "material modulation"
+        ],
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "detail-act-4-suspended-evolution-2",
+        "timescale": "detail",
+        "rangeRef": "transient-40",
+        "evidenceRefs": ["transient-40"],
+        "productionIntent": "Reserve a short, bounded accent opportunity for a component-level response; exact consumer and magnitude remain treatment decisions.",
+        "candidateConsumers": [
+          "camera",
+          "lighting",
+          "particles",
+          "material modulation"
+        ],
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "detail-act-5-final-statement-and-release-1",
+        "timescale": "detail",
+        "rangeRef": "transient-69",
+        "evidenceRefs": ["transient-69"],
+        "productionIntent": "Reserve a short, bounded accent opportunity for a component-level response; exact consumer and magnitude remain treatment decisions.",
+        "candidateConsumers": [
+          "camera",
+          "lighting",
+          "particles",
+          "material modulation"
+        ],
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      },
+      {
+        "id": "detail-act-5-final-statement-and-release-2",
+        "timescale": "detail",
+        "rangeRef": "transient-46",
+        "evidenceRefs": ["transient-46"],
+        "productionIntent": "Reserve a short, bounded accent opportunity for a component-level response; exact consumer and magnitude remain treatment decisions.",
+        "candidateConsumers": [
+          "camera",
+          "lighting",
+          "particles",
+          "material modulation"
+        ],
+        "judgment": {
+          "class": "authored-production-intent",
+          "confidence": "human-required",
+          "status": "proposed-pending-gate-1"
+        }
+      }
+    ]
+  },
+  "humanBoundary": {
+    "gate": "Gate 1",
+    "requiredJudgments": [
+      "intended track and source window",
+      "section, downbeat, and phrase corrections",
+      "peak and lower-energy-opportunity salience",
+      "five-act viability and transition placement",
+      "emotional and aesthetic intent",
+      "visual treatment direction"
+    ],
+    "authority": "This proposed map becomes production timing authority only after the named human gate approves or corrects it."
+  }
+}
