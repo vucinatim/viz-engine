@@ -1,0 +1,1424 @@
+{
+  "schemaVersion": 1,
+  "kind": "viz-engine-goal-five-flagship-production-treatment",
+  "status": "proposed-pending-gate-1",
+  "title": "Human Signal",
+  "logline": "A 48-second club performance begins as intimate human presence, grows into a projected signal architecture, fractures into abstraction, and returns as a collective full-stage peak and release.",
+  "distinctness": "Unlike Signal Cathedral this is not a single custom procedural world; unlike Afterlight Assembly it is not a single Stage layer. Existing reusable components form a human-led, multi-layer compositor score.",
+  "identityScope": {
+    "generatorPath": "tools/foundation/author-goal-five-production-treatment.ts",
+    "generatorContentIdentity": "sha256:f79bb06b32421b44d5ae3afb2cf59e1a44c1a26acb6c8499f055bdd474e9df48",
+    "outputManifestPath": "docs/parity/evidence/artifacts/2026-09-05-goal-five-production-treatment-manifest.json",
+    "outputDocumentPath": "docs/plans/v2/goal-five-flagship-production-treatment.md",
+    "upstream": [
+      {
+        "path": "docs/parity/evidence/artifacts/2026-09-04-goal-five-authorized-input-inventory.json",
+        "contentIdentity": "sha256:d16b54aafac465326d867e2931647f49c90c07b9785c8d692642d69dd22c705d"
+      },
+      {
+        "path": "docs/parity/evidence/artifacts/2026-09-04-goal-five-capability-catalog.json",
+        "contentIdentity": "sha256:b1fcf990b8d45f4524f4051e16a5823dd46744f87db7b9c8b0f35b31606bff1e"
+      },
+      {
+        "path": "docs/parity/evidence/artifacts/2026-09-04-goal-five-music-window-analysis.json",
+        "contentIdentity": "sha256:e94ef2932f0ddd28f730711111e14d6d35ff952bc3328905f1e89dd6bb6657cc"
+      },
+      {
+        "path": "docs/parity/evidence/artifacts/2026-09-05-goal-five-frame-exact-musical-map.json",
+        "contentIdentity": "sha256:164395d23891a091d9374c48d3462c9b30ee8ac4aac4ac4c6dfe68f700568a55"
+      }
+    ]
+  },
+  "ownership": {
+    "owner": "tools/foundation/author-goal-five-production-treatment.ts",
+    "generatedOutputs": [
+      "docs/parity/evidence/artifacts/2026-09-05-goal-five-production-treatment-manifest.json",
+      "docs/plans/v2/goal-five-flagship-production-treatment.md"
+    ],
+    "forbiddenDuplicateOwners": [
+      "project defaults",
+      "runtime/component implementations",
+      "production-local magic",
+      "React state",
+      "independently maintained prose or JSON"
+    ],
+    "boundary": "This owns proposed production direction and evidence only. It adds no runtime, project, graph, compositor, transport, UI, or component semantics."
+  },
+  "music": {
+    "trackId": "hiphop-808-rap",
+    "windowId": "hiphop-808-rap-f135-d2880",
+    "sourcePath": "public/music/[HipHop] 808 Rap.mp3",
+    "sourceContentIdentity": "sha256:f3c72436ec15e5e5c4fafb11be8f0085dd2b64f58c848b349085a7de7931341d",
+    "decodedPcmContentIdentity": "sha256:d6f3d8415fa600a6a189838c0d61b800c326f7aa03a2a2d678191f2436e10fbb",
+    "durationSeconds": 48,
+    "timelineFps": 60,
+    "sampleRate": 48000,
+    "local": {
+      "frameStart": 0,
+      "frameEndExclusive": 2880,
+      "sampleStart": 0,
+      "sampleEndExclusive": 2304000
+    },
+    "source": {
+      "frameStart": 135,
+      "frameEndExclusive": 3015,
+      "sampleStart": 108000,
+      "sampleEndExclusive": 2412000
+    },
+    "futureMaterialization": {
+      "status": "planned-not-created",
+      "derivedAudio": "Create a content-pinned 48-second production audio asset through existing asset/action owners after Gate 1.",
+      "bake": "Create the standard audio-feature artifact through the existing bake/session owners after Gate 1."
+    }
+  },
+  "creativeDirection": {
+    "emotionalArc": [
+      "anticipation and intimacy",
+      "arrival and confidence",
+      "fracture and rebuild",
+      "suspended transformation",
+      "collective peak and release"
+    ],
+    "visualHierarchy": [
+      "human Stage subject",
+      "signal architecture",
+      "atmosphere and impacts",
+      "2D music horizon",
+      "bounded exposure punctuation"
+    ],
+    "palette": [
+      {
+        "name": "void charcoal",
+        "hex": "#05060B",
+        "role": "negative space"
+      },
+      {
+        "name": "ultraviolet",
+        "hex": "#6D4AFF",
+        "role": "architecture"
+      },
+      {
+        "name": "electric cyan",
+        "hex": "#32E6FF",
+        "role": "signal clarity"
+      },
+      {
+        "name": "signal magenta",
+        "hex": "#FF3FB4",
+        "role": "impact and contrast"
+      },
+      {
+        "name": "human sodium amber",
+        "hex": "#FF9E3D",
+        "role": "performer warmth"
+      },
+      {
+        "name": "peak white",
+        "hex": "#F4F7FF",
+        "role": "strictly bounded accents"
+      }
+    ],
+    "materialLanguage": "Glossy black venue surfaces, emissive wire/signal structures, translucent particle haze, grounded authored models, and one thin graphic spectrum line.",
+    "lighting": "Amber/cyan human keying leads; magenta is impact contrast; internal Stage strobes and blinders remain disabled; dedicated white accents are exact and short.",
+    "camera": "Stage Scene alone owns the primary Panoramic Sweep at fixed 48-second duration. Light Tunnel, Morph Shapes, and Particle System retain independent cameras and are compositor-joined projections, never represented as one shared world or shared occlusion space.",
+    "transitionLanguage": "Each exact P1-04 boundary changes hierarchy through bounded reveal/dissolve, color handoff, and one optional flash; no variable-speed time jump or arbitrary cut.",
+    "density": "Acts intentionally move sparse → stable → fractured → suspended → dense/released. Maximum intended simultaneous load is eight layers near frame 1605 and seven near frame 2655; this is a stress target, not a measured pass.",
+    "timescales": {
+      "macro": "Named acts, transitions, peak, and release control hierarchy and layer choreography.",
+      "phrase": "Phrase changes alter palette emphasis, framing weight, density, and form mix without resetting the act.",
+      "detail": "Smoothed energy and refractory transients modulate amplitude, intensity, color, and bounded triggers."
+    },
+    "temporalSafety": "Absolute-time speed/rate settings stay fixed. No graph output targets animation speed, camera cadence, shader travel/rotation speed, light motion speed, or particle integration rate unless a future consumer owns phase-continuous integration.",
+    "judgment": {
+      "status": "proposed-pending-gate-1",
+      "confidence": "human-required"
+    }
+  },
+  "acts": [
+    {
+      "id": "act-1-threshold-and-restraint",
+      "title": "Threshold and restraint",
+      "range": {
+        "localFrameStart": 0,
+        "localFrameEndExclusive": 405
+      },
+      "emotionalIntent": "intimacy and anticipation",
+      "densityIntent": "sparse",
+      "evidenceRef": "musical-map:act-1-threshold-and-restraint"
+    },
+    {
+      "id": "act-2-first-full-statement",
+      "title": "First full statement",
+      "range": {
+        "localFrameStart": 405,
+        "localFrameEndExclusive": 1125
+      },
+      "emotionalIntent": "arrival and confidence",
+      "densityIntent": "stable-medium",
+      "evidenceRef": "musical-map:act-2-first-full-statement"
+    },
+    {
+      "id": "act-3-contrast-and-rebuild",
+      "title": "Contrast and rebuild",
+      "range": {
+        "localFrameStart": 1125,
+        "localFrameEndExclusive": 1605
+      },
+      "emotionalIntent": "fracture and rebuild",
+      "densityIntent": "contracted-then-rising",
+      "evidenceRef": "musical-map:act-3-contrast-and-rebuild"
+    },
+    {
+      "id": "act-4-suspended-evolution",
+      "title": "Suspended evolution",
+      "range": {
+        "localFrameStart": 1605,
+        "localFrameEndExclusive": 2205
+      },
+      "emotionalIntent": "suspended transformation",
+      "densityIntent": "layered-but-reserved",
+      "evidenceRef": "musical-map:act-4-suspended-evolution"
+    },
+    {
+      "id": "act-5-final-statement-and-release",
+      "title": "Final statement and release",
+      "range": {
+        "localFrameStart": 2205,
+        "localFrameEndExclusive": 2880
+      },
+      "emotionalIntent": "collective peak and release",
+      "densityIntent": "dense-then-released",
+      "evidenceRef": "musical-map:act-5-final-statement-and-release"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "transition-1",
+      "range": {
+        "localFrameStart": 360,
+        "localFrameEndExclusive": 450
+      },
+      "centerLocalFrame": 405,
+      "reviewFrames": {
+        "pre": 375,
+        "midpoint": 405,
+        "post": 435
+      },
+      "evidenceRef": "musical-map:section-02"
+    },
+    {
+      "id": "transition-2",
+      "range": {
+        "localFrameStart": 1080,
+        "localFrameEndExclusive": 1170
+      },
+      "centerLocalFrame": 1125,
+      "reviewFrames": {
+        "pre": 1095,
+        "midpoint": 1125,
+        "post": 1155
+      },
+      "evidenceRef": "musical-map:section-03"
+    },
+    {
+      "id": "transition-3",
+      "range": {
+        "localFrameStart": 1560,
+        "localFrameEndExclusive": 1650
+      },
+      "centerLocalFrame": 1605,
+      "reviewFrames": {
+        "pre": 1575,
+        "midpoint": 1605,
+        "post": 1635
+      },
+      "evidenceRef": "musical-map:section-04"
+    },
+    {
+      "id": "transition-4",
+      "range": {
+        "localFrameStart": 2160,
+        "localFrameEndExclusive": 2250
+      },
+      "centerLocalFrame": 2205,
+      "reviewFrames": {
+        "pre": 2175,
+        "midpoint": 2205,
+        "post": 2235
+      },
+      "evidenceRef": "musical-map:section-05"
+    }
+  ],
+  "energyTargets": {
+    "primaryRestraint": {
+      "range": {
+        "localFrameStart": 225,
+        "localFrameEndExclusive": 285
+      },
+      "reviewFrame": 255,
+      "loudness": 0.39415
+    },
+    "primaryPeak": {
+      "range": {
+        "localFrameStart": 2625,
+        "localFrameEndExclusive": 2685
+      },
+      "motionContext": {
+        "localFrameStart": 2580,
+        "localFrameEndExclusive": 2730
+      },
+      "reviewFrame": 2655,
+      "loudness": 0.837235
+    },
+    "release": {
+      "range": {
+        "localFrameStart": 2745,
+        "localFrameEndExclusive": 2880
+      },
+      "reviewFrame": 2835
+    }
+  },
+  "layers": [
+    {
+      "id": "layer-void-field",
+      "component": {
+        "id": "fullscreen-shader",
+        "implementationVersion": "1.0.0",
+        "classification": "authorable-core-capability",
+        "hostAvailability": {
+          "coreRegistry": true,
+          "studioRegistry": true,
+          "studioFullFidelityRender": true,
+          "localCliPlanInspection": true,
+          "localCliRenderedWithoutOmission": false
+        }
+      },
+      "role": "Persistent void and perspective-grid foundation; never competes with the performers.",
+      "compositor": {
+        "order": 0,
+        "blendMode": "normal",
+        "baselineOpacity": 0.72,
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotationDegrees": 0,
+          "anchorX": 0.5,
+          "anchorY": 0.5
+        }
+      },
+      "activeRanges": [
+        {
+          "localFrameStart": 0,
+          "localFrameEndExclusive": 2880
+        }
+      ],
+      "reviewFrames": [60, 780, 1395, 1905, 2655],
+      "visibleContribution": "A charcoal Cyber Grid with ultraviolet/cyan horizon structure remains readable in negative space.",
+      "baselineSettings": {
+        "shader": "Cyber Grid",
+        "color": "#6D4AFF",
+        "speed": 0.32,
+        "scale": 0.62,
+        "intensity": 0.7
+      },
+      "authoringPresetId": null,
+      "judgment": {
+        "status": "proposed-pending-gate-1",
+        "confidence": "human-required"
+      }
+    },
+    {
+      "id": "layer-grain-veil",
+      "component": {
+        "id": "noise-shader",
+        "implementationVersion": "1.0.0",
+        "classification": "authorable-core-capability",
+        "hostAvailability": {
+          "coreRegistry": true,
+          "studioRegistry": true,
+          "studioFullFidelityRender": true,
+          "localCliPlanInspection": true,
+          "localCliRenderedWithoutOmission": false
+        }
+      },
+      "role": "Low-opacity texture that binds otherwise independent compositor worlds.",
+      "compositor": {
+        "order": 1,
+        "blendMode": "soft-light",
+        "baselineOpacity": 0.16,
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotationDegrees": 0,
+          "anchorX": 0.5,
+          "anchorY": 0.5
+        }
+      },
+      "activeRanges": [
+        {
+          "localFrameStart": 0,
+          "localFrameEndExclusive": 2880
+        }
+      ],
+      "reviewFrames": [255, 1155, 2175, 2835],
+      "visibleContribution": "Fine dark grain prevents pristine CG separation without hiding silhouettes.",
+      "baselineSettings": {},
+      "authoringPresetId": null,
+      "judgment": {
+        "status": "proposed-pending-gate-1",
+        "confidence": "human-required"
+      }
+    },
+    {
+      "id": "layer-human-stage",
+      "component": {
+        "id": "stage-scene",
+        "implementationVersion": "1.0.0",
+        "classification": "authorable-core-capability",
+        "hostAvailability": {
+          "coreRegistry": true,
+          "studioRegistry": true,
+          "studioFullFidelityRender": true,
+          "localCliPlanInspection": true,
+          "localCliRenderedWithoutOmission": false
+        }
+      },
+      "role": "Primary human narrative, venue, lighting, and sole 48-second camera arc.",
+      "compositor": {
+        "order": 2,
+        "blendMode": "normal",
+        "baselineOpacity": 1,
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotationDegrees": 0,
+          "anchorX": 0.5,
+          "anchorY": 0.5
+        }
+      },
+      "activeRanges": [
+        {
+          "localFrameStart": 0,
+          "localFrameEndExclusive": 2880
+        }
+      ],
+      "reviewFrames": [
+        60, 375, 435, 780, 1095, 1155, 1575, 1635, 2175, 2235, 2655, 2835
+      ],
+      "visibleContribution": "Grounded DJ and crowd remain the visual subject while lighting and framing reveal scale over five acts.",
+      "baselineSettings": {
+        "camera": {
+          "cinematicMode": true,
+          "cinematicPath": "Panoramic Sweep",
+          "cinematicDuration": 48
+        },
+        "characters": {
+          "showDj": true,
+          "animationSpeed": 1,
+          "crowdCount": 420
+        },
+        "shaderWall": {
+          "enabled": true,
+          "rotationSpeed": 0.4,
+          "colorSpeed": 0.5,
+          "travelSpeed": 0.45
+        },
+        "strobes": {
+          "enabled": false
+        },
+        "blinders": {
+          "enabled": false
+        }
+      },
+      "authoringPresetId": null,
+      "judgment": {
+        "status": "proposed-pending-gate-1",
+        "confidence": "human-required"
+      }
+    },
+    {
+      "id": "layer-signal-tunnel",
+      "component": {
+        "id": "light-tunnel",
+        "implementationVersion": "1.0.0",
+        "classification": "authorable-core-capability",
+        "hostAvailability": {
+          "coreRegistry": true,
+          "studioRegistry": true,
+          "studioFullFidelityRender": true,
+          "localCliPlanInspection": true,
+          "localCliRenderedWithoutOmission": false
+        }
+      },
+      "role": "Temporary procedural spatial architecture for the fracture and rebuild.",
+      "compositor": {
+        "order": 3,
+        "blendMode": "screen",
+        "baselineOpacity": 0.54,
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotationDegrees": 0,
+          "anchorX": 0.5,
+          "anchorY": 0.5
+        }
+      },
+      "activeRanges": [
+        {
+          "localFrameStart": 1080,
+          "localFrameEndExclusive": 1650
+        }
+      ],
+      "reviewFrames": [1095, 1155, 1395, 1575, 1635],
+      "visibleContribution": "A cyan/magenta tunnel briefly encloses the stage image, then dissolves before the suspended act settles.",
+      "baselineSettings": {
+        "appearance": {
+          "renderMode": "Hollow",
+          "colorMode": "Alternating",
+          "colorPalette": ["#32E6FF", "#FF3FB4"]
+        }
+      },
+      "authoringPresetId": null,
+      "judgment": {
+        "status": "proposed-pending-gate-1",
+        "confidence": "human-required"
+      }
+    },
+    {
+      "id": "layer-signal-idol",
+      "component": {
+        "id": "morph-shapes",
+        "implementationVersion": "1.0.0",
+        "classification": "authorable-core-capability",
+        "hostAvailability": {
+          "coreRegistry": true,
+          "studioRegistry": true,
+          "studioFullFidelityRender": true,
+          "localCliPlanInspection": true,
+          "localCliRenderedWithoutOmission": false
+        }
+      },
+      "role": "Singular procedural totem that carries the suspended evolution.",
+      "compositor": {
+        "order": 4,
+        "blendMode": "lighten",
+        "baselineOpacity": 0.62,
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotationDegrees": 0,
+          "anchorX": 0.5,
+          "anchorY": 0.5
+        }
+      },
+      "activeRanges": [
+        {
+          "localFrameStart": 1560,
+          "localFrameEndExclusive": 2250
+        }
+      ],
+      "reviewFrames": [1575, 1635, 1905, 2175, 2235],
+      "visibleContribution": "One ultraviolet-to-amber morphing form occupies negative space without replacing the human anchor.",
+      "baselineSettings": {
+        "animationSpeed": 0.08,
+        "glowIntensity": 1.2,
+        "morphT": 0.35
+      },
+      "authoringPresetId": null,
+      "judgment": {
+        "status": "proposed-pending-gate-1",
+        "confidence": "human-required"
+      }
+    },
+    {
+      "id": "layer-atmospheric-haze",
+      "component": {
+        "id": "particle-system",
+        "implementationVersion": "1.0.0",
+        "classification": "authorable-core-capability",
+        "hostAvailability": {
+          "coreRegistry": true,
+          "studioRegistry": true,
+          "studioFullFidelityRender": true,
+          "localCliPlanInspection": true,
+          "localCliRenderedWithoutOmission": false
+        }
+      },
+      "role": "Slow continuous depth and atmosphere, deliberately absent during the heaviest middle transition.",
+      "compositor": {
+        "order": 5,
+        "blendMode": "screen",
+        "baselineOpacity": 0.3,
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotationDegrees": 0,
+          "anchorX": 0.5,
+          "anchorY": 0.5
+        }
+      },
+      "activeRanges": [
+        {
+          "localFrameStart": 0,
+          "localFrameEndExclusive": 1125
+        },
+        {
+          "localFrameStart": 1650,
+          "localFrameEndExclusive": 2880
+        }
+      ],
+      "reviewFrames": [255, 780, 1905, 2655, 2835],
+      "visibleContribution": "Sparse cyan/amber motes drift slowly enough to establish depth rather than read as impacts.",
+      "baselineSettings": {
+        "appearance": {
+          "particleSize": 4.5
+        },
+        "physics": {
+          "emissionRate": 18,
+          "lifetime": 5,
+          "useGravity": false,
+          "initialSpeed": 0.15,
+          "spread": 0.8
+        }
+      },
+      "authoringPresetId": null,
+      "judgment": {
+        "status": "proposed-pending-gate-1",
+        "confidence": "human-required"
+      }
+    },
+    {
+      "id": "layer-impact-sparks",
+      "component": {
+        "id": "particle-system",
+        "implementationVersion": "1.0.0",
+        "classification": "authorable-core-capability",
+        "hostAvailability": {
+          "coreRegistry": true,
+          "studioRegistry": true,
+          "studioFullFidelityRender": true,
+          "localCliPlanInspection": true,
+          "localCliRenderedWithoutOmission": false
+        }
+      },
+      "role": "Short-lived, high-velocity transient punctuation distinct from atmospheric haze.",
+      "compositor": {
+        "order": 6,
+        "blendMode": "add",
+        "baselineOpacity": 0.72,
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotationDegrees": 0,
+          "anchorX": 0.5,
+          "anchorY": 0.5
+        }
+      },
+      "activeRanges": [
+        {
+          "localFrameStart": 390,
+          "localFrameEndExclusive": 420
+        },
+        {
+          "localFrameStart": 1110,
+          "localFrameEndExclusive": 1140
+        },
+        {
+          "localFrameStart": 1590,
+          "localFrameEndExclusive": 1620
+        },
+        {
+          "localFrameStart": 2190,
+          "localFrameEndExclusive": 2220
+        },
+        {
+          "localFrameStart": 2625,
+          "localFrameEndExclusive": 2685
+        }
+      ],
+      "reviewFrames": [405, 1125, 1605, 2205, 2655],
+      "visibleContribution": "Brief magenta/cyan spark bursts expose selected impacts without creating a permanent particle field.",
+      "baselineSettings": {
+        "appearance": {
+          "particleSize": 2
+        },
+        "physics": {
+          "emissionRate": 180,
+          "lifetime": 0.55,
+          "useGravity": false,
+          "initialSpeed": 4.5,
+          "spread": 1
+        }
+      },
+      "authoringPresetId": null,
+      "judgment": {
+        "status": "proposed-pending-gate-1",
+        "confidence": "human-required"
+      }
+    },
+    {
+      "id": "layer-signal-horizon",
+      "component": {
+        "id": "curve-spectrum",
+        "implementationVersion": "1.0.0",
+        "classification": "authorable-core-capability",
+        "hostAvailability": {
+          "coreRegistry": true,
+          "studioRegistry": true,
+          "studioFullFidelityRender": true,
+          "localCliPlanInspection": true,
+          "localCliRenderedWithoutOmission": true
+        }
+      },
+      "role": "Complementary two-dimensional music trace and horizon line.",
+      "compositor": {
+        "order": 7,
+        "blendMode": "screen",
+        "baselineOpacity": 0.42,
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotationDegrees": 0,
+          "anchorX": 0.5,
+          "anchorY": 0.5
+        }
+      },
+      "activeRanges": [
+        {
+          "localFrameStart": 0,
+          "localFrameEndExclusive": 2880
+        }
+      ],
+      "reviewFrames": [60, 255, 780, 1395, 1905, 2655, 2835],
+      "visibleContribution": "A thin cyan/magenta curve sits low in frame, proving readable 2D graphic language beside Three scenes.",
+      "baselineSettings": {
+        "appearance": {
+          "scaleY": 0.55
+        },
+        "line": {
+          "color": "#32E6FF",
+          "thickness": 2
+        }
+      },
+      "authoringPresetId": "neon",
+      "judgment": {
+        "status": "proposed-pending-gate-1",
+        "confidence": "human-required"
+      }
+    },
+    {
+      "id": "layer-peak-flash",
+      "component": {
+        "id": "strobe-light",
+        "implementationVersion": "1.0.0",
+        "classification": "authorable-core-capability",
+        "hostAvailability": {
+          "coreRegistry": true,
+          "studioRegistry": true,
+          "studioFullFidelityRender": true,
+          "localCliPlanInspection": true,
+          "localCliRenderedWithoutOmission": false
+        }
+      },
+      "role": "Bounded exposure punctuation only at authored transitions and the primary energy peak.",
+      "compositor": {
+        "order": 8,
+        "blendMode": "add",
+        "baselineOpacity": 1,
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotationDegrees": 0,
+          "anchorX": 0.5,
+          "anchorY": 0.5
+        }
+      },
+      "activeRanges": [
+        {
+          "localFrameStart": 390,
+          "localFrameEndExclusive": 420
+        },
+        {
+          "localFrameStart": 1110,
+          "localFrameEndExclusive": 1140
+        },
+        {
+          "localFrameStart": 1590,
+          "localFrameEndExclusive": 1620
+        },
+        {
+          "localFrameStart": 2190,
+          "localFrameEndExclusive": 2220
+        },
+        {
+          "localFrameStart": 2625,
+          "localFrameEndExclusive": 2685
+        }
+      ],
+      "reviewFrames": [405, 1125, 1605, 2205, 2655],
+      "visibleContribution": "Sub-frame-feeling white accents remain short, noncontinuous, and never replace stage lighting.",
+      "baselineSettings": {
+        "mode": "Manual",
+        "color": "#F4F7FF",
+        "strength": 0
+      },
+      "authoringPresetId": null,
+      "judgment": {
+        "status": "proposed-pending-gate-1",
+        "confidence": "human-required"
+      }
+    }
+  ],
+  "models": [
+    {
+      "path": "public/models/stage/female-dj.fbx",
+      "contentIdentity": "sha256:87c7b85a746330c4423bf0598ae0356a9289299316030d46cf067f7fc9cd9c16",
+      "authority": "authorized-local-flagship-proof",
+      "usage": "Loaded by the single Stage Scene layer through its existing model pipeline.",
+      "risk": null
+    },
+    {
+      "path": "public/models/stage/female-dancer.fbx",
+      "contentIdentity": "sha256:fd6847858a95d9de88e64d0c070b44e95b3c822bf3231ff347f2832dc9396479",
+      "authority": "authorized-local-flagship-proof",
+      "usage": "Loaded by the single Stage Scene layer through its existing model pipeline.",
+      "risk": null
+    },
+    {
+      "path": "public/models/stage/male-dancer.fbx",
+      "contentIdentity": "sha256:c9cf2a023a282b391534e8a10a91092438def435d786e9d12309ef367eb43582",
+      "authority": "authorized-local-flagship-proof",
+      "usage": "Loaded by the single Stage Scene layer through its existing model pipeline.",
+      "risk": null
+    },
+    {
+      "path": "public/models/stage/male-cheer.fbx",
+      "contentIdentity": "sha256:354aab94cf2a971baf58f4007ab0eecfa379126f1a11d421a56dd8f68ee3959b",
+      "authority": "authorized-local-flagship-proof",
+      "usage": "Loaded by the single Stage Scene layer through its existing model pipeline.",
+      "risk": "References an unavailable external normal map; certified browser loading retains the mesh, rig, authored clip, and base material with a non-fatal warning."
+    }
+  ],
+  "graphs": [
+    {
+      "id": "graph-stage-performance",
+      "responsibility": "Detail lighting energy inside the human anchor while all absolute-time rates stay fixed.",
+      "timescales": ["detail", "phrase"],
+      "outputs": [
+        {
+          "name": "beamIntensity",
+          "type": "number",
+          "consumer": "layer-human-stage:beams.intensity",
+          "intent": "Smoothed bass/kick amplitude."
+        },
+        {
+          "name": "wallBrightness",
+          "type": "number",
+          "consumer": "layer-human-stage:shaderWall.brightness",
+          "intent": "Bounded kick exposure."
+        },
+        {
+          "name": "stageLightColor",
+          "type": "color",
+          "consumer": "layer-human-stage:stageLights.color",
+          "intent": "Slow spectral hue family."
+        }
+      ],
+      "presetRefs": [
+        "kick-bass-smooth-intensity",
+        "shader-wall-kick-flash",
+        "spectral-centroid-hue"
+      ],
+      "nodeTypeRefs": [
+        "Input",
+        "Multi-Band Analysis",
+        "Envelope Follower",
+        "HSL Color",
+        "Output"
+      ]
+    },
+    {
+      "id": "graph-world-field",
+      "responsibility": "Detail/phrase amplitude for the persistent shader field without modulating speed.",
+      "timescales": ["detail", "phrase"],
+      "outputs": [
+        {
+          "name": "fieldIntensity",
+          "type": "number",
+          "consumer": "layer-void-field:intensity",
+          "intent": "Restrained loudness envelope."
+        },
+        {
+          "name": "fieldScale",
+          "type": "number",
+          "consumer": "layer-void-field:scale",
+          "intent": "Phrase-scale breathing."
+        }
+      ],
+      "presetRefs": ["bass-adaptive"],
+      "nodeTypeRefs": [
+        "Input",
+        "Average Volume",
+        "Adaptive Normalize (Quantile)",
+        "multiply",
+        "add",
+        "Output"
+      ]
+    },
+    {
+      "id": "graph-signal-architecture",
+      "responsibility": "Transient and phrase response for tunnel/idol amplitude, form, and color.",
+      "timescales": ["detail", "phrase"],
+      "outputs": [
+        {
+          "name": "tunnelImpact",
+          "type": "boolean",
+          "consumer": "layer-signal-tunnel:wave.triggerWave",
+          "intent": "Refractory kick trigger."
+        },
+        {
+          "name": "idolEmissive",
+          "type": "number",
+          "consumer": "layer-signal-idol:glowIntensity",
+          "intent": "Smoothed spectral energy."
+        }
+      ],
+      "presetRefs": ["neural-fire-on-kick", "bass-adaptive"],
+      "nodeTypeRefs": [
+        "Input",
+        "Spectral Flux",
+        "Refractory Gate",
+        "Envelope Follower",
+        "Output"
+      ]
+    },
+    {
+      "id": "graph-atmosphere",
+      "responsibility": "Separate slow haze breathing from short impact spark bursts.",
+      "timescales": ["detail", "phrase"],
+      "outputs": [
+        {
+          "name": "hazeSize",
+          "type": "number",
+          "consumer": "layer-atmospheric-haze:appearance.particleSize",
+          "intent": "Low-range sustained magnitude; emission, lifetime, velocity, and integration remain fixed."
+        },
+        {
+          "name": "sparkSize",
+          "type": "number",
+          "consumer": "layer-impact-sparks:appearance.particleSize",
+          "intent": "Bounded transient magnitude inside exact active ranges; particle integration remains fixed."
+        }
+      ],
+      "presetRefs": ["bass-adaptive", "kick-bass-smooth-intensity"],
+      "nodeTypeRefs": [
+        "Input",
+        "Multi-Band Analysis",
+        "Adaptive Normalize (Quantile)",
+        "Refractory Gate",
+        "decay",
+        "Output"
+      ]
+    },
+    {
+      "id": "graph-signal-horizon",
+      "responsibility": "Readable 2D trace scale and color response.",
+      "timescales": ["detail"],
+      "outputs": [
+        {
+          "name": "horizonScale",
+          "type": "number",
+          "consumer": "layer-signal-horizon:appearance.scaleY",
+          "intent": "Audio magnitude."
+        },
+        {
+          "name": "horizonColor",
+          "type": "color",
+          "consumer": "layer-signal-horizon:line.color",
+          "intent": "Spectral cyan/magenta shift."
+        }
+      ],
+      "presetRefs": ["bass-adaptive", "spectral-centroid-hue"],
+      "nodeTypeRefs": [
+        "Input",
+        "Multi-Band Analysis",
+        "Spectral Centroid",
+        "HSL Color",
+        "Output"
+      ]
+    },
+    {
+      "id": "graph-score-direction",
+      "responsibility": "Macro act/transition/peak/release direction from exact treatment cues.",
+      "timescales": ["macro", "phrase"],
+      "outputs": [
+        {
+          "name": "actProgress",
+          "type": "number",
+          "consumer": "gap:GAP-01",
+          "intent": "Named range-local progress."
+        },
+        {
+          "name": "transitionPulse",
+          "type": "number",
+          "consumer": "gap:GAP-01",
+          "intent": "Deterministic authored transition envelope."
+        },
+        {
+          "name": "peakFlashStrength",
+          "type": "number",
+          "consumer": "layer-peak-flash:strength",
+          "intent": "GAP-01-gated 0..1 envelope inside the layer active ranges; zero elsewhere."
+        }
+      ],
+      "presetRefs": [],
+      "nodeTypeRefs": ["graph-input", "clamp", "Output"]
+    },
+    {
+      "id": "graph-compositor-choreography",
+      "responsibility": "Macro opacity/transform choreography from direction outputs.",
+      "timescales": ["macro", "phrase"],
+      "outputs": [
+        {
+          "name": "layerOpacity",
+          "type": "number",
+          "consumer": "gap:GAP-02",
+          "intent": "Frame-exact layer reveals and dissolves."
+        },
+        {
+          "name": "layerScale",
+          "type": "number",
+          "consumer": "gap:GAP-02",
+          "intent": "Bounded compositor-scale transitions."
+        }
+      ],
+      "presetRefs": [],
+      "nodeTypeRefs": ["graph-input", "multiply", "add", "clamp", "Output"]
+    }
+  ],
+  "breadth": {
+    "included": [
+      {
+        "family": "model-backed",
+        "refs": [
+          "layer-human-stage",
+          "public/models/stage/female-dj.fbx",
+          "public/models/stage/female-dancer.fbx",
+          "public/models/stage/male-dancer.fbx",
+          "public/models/stage/male-cheer.fbx"
+        ]
+      },
+      {
+        "family": "procedural-spatial-3d",
+        "refs": ["layer-signal-tunnel", "layer-signal-idol"]
+      },
+      {
+        "family": "shader",
+        "refs": ["layer-void-field", "layer-grain-veil"]
+      },
+      {
+        "family": "particle-instancing",
+        "refs": ["layer-atmospheric-haze", "layer-impact-sparks"]
+      },
+      {
+        "family": "complementary-2d",
+        "refs": ["layer-signal-horizon"]
+      },
+      {
+        "family": "camera",
+        "refs": ["layer-human-stage"]
+      },
+      {
+        "family": "graph",
+        "refs": [
+          "graph-stage-performance",
+          "graph-world-field",
+          "graph-signal-architecture",
+          "graph-atmosphere",
+          "graph-signal-horizon",
+          "graph-score-direction",
+          "graph-compositor-choreography"
+        ]
+      },
+      {
+        "family": "compositor",
+        "refs": [
+          "layer-void-field",
+          "layer-grain-veil",
+          "layer-human-stage",
+          "layer-signal-tunnel",
+          "layer-signal-idol",
+          "layer-atmospheric-haze",
+          "layer-impact-sparks",
+          "layer-signal-horizon",
+          "layer-peak-flash"
+        ]
+      }
+    ],
+    "exclusions": [
+      {
+        "family": "standalone-raster-image-video",
+        "reason": "P1-01 found no authorized standalone creative raster, image, texture, or video source.",
+        "evidenceRef": "docs/parity/evidence/artifacts/2026-09-04-goal-five-authorized-input-inventory.json#summary",
+        "gate": "Gate 1 must approve this evidence-based exclusion or explicitly authorize acquisition later."
+      },
+      {
+        "family": "shared-spatial-occlusion",
+        "reason": "The selected Three components are independent programs and the treatment intentionally uses compositor-space projection.",
+        "evidenceRef": "docs/parity/evidence/artifacts/2026-09-04-goal-five-capability-catalog.json#threePrograms",
+        "gate": "A later shared-world request is a new reusable gap, not a hidden treatment assumption."
+      }
+    ]
+  },
+  "gaps": [
+    {
+      "id": "GAP-01",
+      "title": "Portable macro direction and named cue contract",
+      "currentEvidence": "P1-02 records no reusable treatment direction contract; P1-04 provides evidence ranges but no project/runtime input.",
+      "smallestReusableChange": "Add portable named frame ranges, range-local progress, and cue values to contracts/actions/runtime/editor/CLI inspection; consume them as ordinary graph inputs.",
+      "canonicalOwners": [
+        "@viz-engine/contracts",
+        "@viz-engine/actions",
+        "@viz-engine/runtime",
+        "@viz-engine/editor-session",
+        "@viz-engine/dev-cli",
+        "Studio composition root"
+      ],
+      "forbiddenOwners": [
+        "production components",
+        "React-only state",
+        "transport side channels",
+        "hard-coded flagship frame checks"
+      ],
+      "unlocks": [
+        "graph-score-direction",
+        "graph-compositor-choreography",
+        "scalable act/transition authoring"
+      ],
+      "acceptance": "Direct playback, sequential playback, and arbitrary seek resolve the same named range/progress/cue values at the same frame.",
+      "withoutGap": "Phase 2 may build a fixed-setting whole-window skeleton, but cannot claim scalable authored macro direction."
+    },
+    {
+      "id": "GAP-02",
+      "title": "Graph-driven compositor opacity and transform modulation",
+      "currentEvidence": "P1-02 records static layer opacity/transform with no graph-owned resolved compositor values.",
+      "smallestReusableChange": "Resolve graph-driven opacity and transform values in the canonical compositor plan with actions, editor authoring, session inspection, and render parity.",
+      "canonicalOwners": [
+        "@viz-engine/contracts",
+        "@viz-engine/runtime",
+        "@viz-engine/renderer-three",
+        "@viz-engine/actions",
+        "@viz-engine/editor-session"
+      ],
+      "forbiddenOwners": [
+        "component settings",
+        "production pack magic",
+        "React animation state",
+        "renderer-specific hidden interpolation"
+      ],
+      "unlocks": [
+        "graph-compositor-choreography",
+        "authored cross-layer reveals and transitions"
+      ],
+      "acceptance": "Preview, still, browser bundle, and final render expose identical resolved layer opacity/transform at every inspected frame.",
+      "withoutGap": "Phase 2 may hard-cut or use static layer ranges, but cannot approve the intended transition language."
+    },
+    {
+      "id": "GAP-03",
+      "title": "Canonical full-fidelity product CLI host composition",
+      "currentEvidence": "P1-02 proves Studio/browser full fidelity while local product-CLI rendering omits the selected advanced Three components.",
+      "smallestReusableChange": "Extract one explicit capability/renderer composition root shared by Studio and product CLI so advanced Three components are never silently omitted.",
+      "canonicalOwners": [
+        "@viz-engine/components-core",
+        "renderer attachments",
+        "Studio composition root",
+        "@viz-engine/renderer-three",
+        "@viz-engine/dev-cli"
+      ],
+      "forbiddenOwners": [
+        "maintainer CLI",
+        "test-only registry copies",
+        "production-specific CLI branches"
+      ],
+      "unlocks": ["canonical headless full-fidelity authoring and rendering"],
+      "acceptance": "The same document produces the same capability availability and full-fidelity render plan in Studio and product CLI.",
+      "withoutGap": "The browser-bundle harness remains valid evidence, but standalone product-CLI full-fidelity parity is blocked."
+    }
+  ],
+  "conditionalObservation": "Only if the real seven-graph workload makes current runtime attribution insufficient, open a separate named multi-graph usage/cost sensor gap; do not build a speculative sensor framework in advance.",
+  "alternatives": [
+    {
+      "id": "alternative-stage-only",
+      "disposition": "rejected",
+      "reason": "Preserves model quality but repeats Afterlight and cannot prove multi-layer/compositor breadth."
+    },
+    {
+      "id": "alternative-procedural-monolith",
+      "disposition": "rejected",
+      "reason": "Could look coherent but repeats Signal Cathedral and creates production-local component leakage."
+    },
+    {
+      "id": "alternative-shared-three-world",
+      "disposition": "rejected",
+      "reason": "Falsely assumes existing independent Three programs share a camera, depth, and occlusion contract."
+    },
+    {
+      "id": "alternative-human-signal",
+      "disposition": "preferred-pending-gate-1",
+      "reason": "Uses existing reusable breadth while keeping human performers primary and gaps small and canonical."
+    }
+  ],
+  "review": {
+    "stillFrames": [
+      {
+        "localFrame": 60,
+        "purpose": "Opening identity and human silhouette"
+      },
+      {
+        "localFrame": 255,
+        "purpose": "Primary lower-energy restraint opportunity"
+      },
+      {
+        "localFrame": 375,
+        "purpose": "Transition 1 pre"
+      },
+      {
+        "localFrame": 435,
+        "purpose": "Transition 1 post / full-system arrival"
+      },
+      {
+        "localFrame": 780,
+        "purpose": "Act 2 stable statement"
+      },
+      {
+        "localFrame": 1095,
+        "purpose": "Transition 2 pre"
+      },
+      {
+        "localFrame": 1155,
+        "purpose": "Transition 2 post / tunnel fracture"
+      },
+      {
+        "localFrame": 1395,
+        "purpose": "Act 3 rebuild"
+      },
+      {
+        "localFrame": 1575,
+        "purpose": "Transition 3 pre"
+      },
+      {
+        "localFrame": 1635,
+        "purpose": "Transition 3 post / idol handoff"
+      },
+      {
+        "localFrame": 1905,
+        "purpose": "Act 4 suspended evolution"
+      },
+      {
+        "localFrame": 2175,
+        "purpose": "Transition 4 pre"
+      },
+      {
+        "localFrame": 2235,
+        "purpose": "Transition 4 post / final statement"
+      },
+      {
+        "localFrame": 2655,
+        "purpose": "Primary energy peak and maximum intended layer stress"
+      },
+      {
+        "localFrame": 2835,
+        "purpose": "Authored release and ending legibility"
+      }
+    ],
+    "motionWindows": [
+      {
+        "id": "transition-1",
+        "range": {
+          "localFrameStart": 360,
+          "localFrameEndExclusive": 450
+        }
+      },
+      {
+        "id": "transition-2",
+        "range": {
+          "localFrameStart": 1080,
+          "localFrameEndExclusive": 1170
+        }
+      },
+      {
+        "id": "transition-3",
+        "range": {
+          "localFrameStart": 1560,
+          "localFrameEndExclusive": 1650
+        }
+      },
+      {
+        "id": "transition-4",
+        "range": {
+          "localFrameStart": 2160,
+          "localFrameEndExclusive": 2250
+        }
+      },
+      {
+        "id": "primary-peak-context",
+        "range": {
+          "localFrameStart": 2580,
+          "localFrameEndExclusive": 2730
+        }
+      },
+      {
+        "id": "release",
+        "range": {
+          "localFrameStart": 2745,
+          "localFrameEndExclusive": 2880
+        }
+      }
+    ],
+    "phaseTwoStrategy": "First materialize a low-detail full-window skeleton; then raise Act 5 [2205,2880) as the 11.25-second representative-quality prototype because it contains transition 4, the primary peak, and release.",
+    "humanQuestions": [
+      "Is this the intended track and exact window?",
+      "Does the five-act emotional arc feel musically true?",
+      "Is Human Signal distinct and aesthetically coherent rather than a capability sampler?",
+      "Are palette, material language, fixed Panoramic Sweep, and layer hierarchy right?",
+      "Are all four performers worth retaining and visually grounded?",
+      "Is the raster/image/video exclusion acceptable?",
+      "Are GAP-01 through GAP-03 worth implementing as defined?"
+    ]
+  },
+  "performance": {
+    "status": "targets-not-measured-passes",
+    "preview": {
+      "displayedFpsMin": 58,
+      "displayIntervalP95MsMax": 20,
+      "framesOver33_33MsPercentMax": 1,
+      "framesOver100MsMax": 0,
+      "runtimePlanningP95MsMax": 5,
+      "runtimeCpuP95MsMax": 12,
+      "graphOpenRegressionPercentMax": 10
+    },
+    "interaction": {
+      "pointerTransientP95MsMax": 1,
+      "pointerVisibleP95MsMax": 32,
+      "movementRevisionCount": 0,
+      "releaseRevisionCount": 1
+    },
+    "seek": {
+      "p95MsMax": 100,
+      "maxMs": 250,
+      "repetitions": 6,
+      "targetErrorSamplesAfter100MsMax": 1
+    },
+    "finalRender": {
+      "width": 1920,
+      "height": 1080,
+      "fps": 60,
+      "video": "H.264",
+      "audio": "AAC",
+      "quality": 2,
+      "encodedFpsMin": 5,
+      "wallClockMediaDurationMultipleMax": 12
+    },
+    "lifecycle": {
+      "cycles": 6,
+      "forcedGcHeapGrowthMiBMax": 16,
+      "finalDisplayP95InitialRatioMax": 1.1,
+      "monotonicResourceGrowthAllowed": false
+    },
+    "mediaSanity": {
+      "blackOrClippedWhiteSecondsThreshold": 0.5,
+      "freezeSecondsThreshold": 1,
+      "silenceDbfsThreshold": -60,
+      "silenceSecondsThreshold": 1,
+      "exceptionPolicy": "Only treatment-approved exact intervals may pass."
+    },
+    "decodedEquivalence": {
+      "ssimMin": 0.995,
+      "normalizedMeanAbsoluteErrorMax": 0.006,
+      "avDriftFramesMax": 1
+    },
+    "stressFrames": [
+      {
+        "localFrame": 1605,
+        "intendedSimultaneousLayerCount": 8,
+        "note": "Middle transition maximum; haze absent."
+      },
+      {
+        "localFrame": 2655,
+        "intendedSimultaneousLayerCount": 7,
+        "note": "Primary peak; tunnel and idol absent."
+      }
+    ]
+  },
+  "risks": [
+    {
+      "id": "risk-capability-sampler",
+      "mitigation": "Human Stage remains primary; every secondary layer has a unique act role and explicit review contribution."
+    },
+    {
+      "id": "risk-overdraw-and-independent-three-cost",
+      "mitigation": "Bound active ranges, name stress frames, measure before approval, and remove redundant contribution rather than lower quality silently."
+    },
+    {
+      "id": "risk-temporal-jumps",
+      "mitigation": "Keep absolute-time rates fixed and reject raw variable-rate graph bindings."
+    },
+    {
+      "id": "risk-white-clipping",
+      "mitigation": "Disable internal Stage strobes/blinders and confine peak white to exact short Manual strobe ranges."
+    },
+    {
+      "id": "risk-model-material",
+      "mitigation": "Retain male-cheer missing-normal-map warning as a visual review target; do not claim clean asset provenance."
+    },
+    {
+      "id": "risk-host-parity",
+      "mitigation": "Use existing full-fidelity browser-bundle evidence until GAP-03 closes; never claim current local CLI renders advanced Three layers."
+    }
+  ],
+  "forbiddenLeakage": [
+    "No flagship frame numbers or act names inside reusable components or runtime evaluators.",
+    "No production-only React store, transport field, hidden compositor branch, copied registry, or CLI special case.",
+    "No generic model/facial/speech/root-motion system without a named criterion and authorized asset need.",
+    "No automated wording that converts proposed aesthetic judgment into approval."
+  ],
+  "humanBoundary": {
+    "gate": "Gate 1",
+    "automatedEvidenceCanProve": [
+      "identity and range consistency",
+      "capability/asset/node/preset existence",
+      "host limitations",
+      "reference/type/coverage completeness",
+      "document/manifest derivation"
+    ],
+    "humanOnly": [
+      "track/window approval",
+      "musical and emotional truth",
+      "aesthetic distinctness",
+      "palette/material/camera taste",
+      "layer legibility and nonredundancy",
+      "performer value and grounding",
+      "exclusion approval",
+      "gap value"
+    ],
+    "authority": "No automated check approves the treatment. Gate 1 must explicitly approve or correct it before aesthetic implementation."
+  }
+}

@@ -1,6 +1,6 @@
 # Current State
 
-Last reconciled: 2026-09-04.
+Last reconciled: 2026-09-05.
 
 ## Product Direction
 
@@ -117,9 +117,17 @@ beats, ten phrases, 69 transients, inherited energy observations, deterministic
 peak and lower-energy opportunities, and linked macro/phrase/detail production
 intent. It preserves detector observation samples separately from nearest 60
 fps scheduling frames, labels clipped edge bins, and makes no false silence or
-musicological claims. The map remains proposed evidence—not approved direction—
-until Gate 1. `P1-05` is the next dependency-ready treatment checkpoint after
-P1-04 closes.
+musicological claims. `P1-05` has now converted those exact inputs into the
+evidence-bound [Human Signal production treatment](./plans/v2/goal-five-flagship-production-treatment.md):
+five acts, nine meaningfully distinct layers, seven responsibility-scoped
+graphs, all four authorized Stage performers, an explicit compositor/camera
+contract, 15 still targets, six motion-review windows, exact performance
+budgets, and three smallest reusable gaps. The treatment deliberately uses
+independent Three programs as compositor inputs, includes Curve Spectrum as
+complementary 2D language, and excludes only unsupported raster/image/video
+inputs. It remains a proposal—not approved direction—until the product owner
+reviews the music, emotional arc, creative coherence, exclusions, and gap value
+at Gate 1. No aesthetic implementation begins before that decision.
 
 ## Canonical Architecture
 

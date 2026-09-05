@@ -33,6 +33,8 @@ If it names no active goal, completed plans must not be treated as active scope.
 The active implementation contract is:
 
 - [Goal Five: Flagship Autonomous Production And Creative-System Maturation](./plans/v2/flagship-autonomous-production-and-creative-system-maturation.md)
+- [Goal Five flagship production treatment: Human Signal](./plans/v2/goal-five-flagship-production-treatment.md)
+  is the evidence-bound five-act creative proposal pending Gate 1 human review.
 - [Goal Five Autonomous Sensory Feedback Operating System](./plans/v2/goal-five-autonomous-sensory-feedback-operating-system.md)
   is the approved subordinate readiness and execution contract; it is not a
   second product goal. Its implementation and three supervised calibrations are

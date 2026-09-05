@@ -2849,3 +2849,32 @@
   quantization, edge, tie, silence, reference, and tamper tests
 - recorded the human-readable review in
   `docs/parity/evidence/2026-09-05-goal-five-frame-exact-musical-map-review.md`
+
+## 2026-09-05 — Goal Five flagship production treatment authored
+
+- completed `P1-05` from the exact P1-01 through P1-04 evidence identities
+  without beginning aesthetic implementation or adding product semantics
+- proposed **Human Signal**, a human-led 48-second production with five acts,
+  nine distinct compositor layers, seven responsibility-scoped graphs, all four
+  authorized Stage performers, and three-timescale reactivity
+- made Stage Scene the sole primary camera narrative while describing Light
+  Tunnel, Morph Shapes, and Particle System honestly as independent Three
+  programs joined in compositor space rather than a false shared world
+- included procedural spatial 3D, model-backed animation, shaders, particles,
+  complementary Curve Spectrum graphics, camera, graphs, and compositor breadth;
+  excluded standalone raster/image/video only through exact P1-01 evidence and
+  left that exclusion for Gate 1 approval
+- constrained absolute-time rates to fixed values, preserved model/material and
+  host-fidelity risks, and declared exact transition, restraint, peak, release,
+  layer-stress, performance, media-sanity, and decoded-equivalence targets as
+  targets rather than passes
+- bounded the remaining reusable work to portable macro direction, graph-driven
+  compositor modulation, and shared full-fidelity Studio/product-CLI host
+  composition with explicit canonical and forbidden owners
+- generated the machine manifest and human treatment from one authored blueprint
+  and added drift, substitution, authorability, model, host, graph, type,
+  temporal-safety, breadth, exclusion, review, stress-count, performance-claim,
+  and human-boundary rejection tests
+- kept Gate 1 ownership of music, emotional truth, distinctness, palette,
+  material, camera, layer legibility, performer value, exclusions, and gap value
+  explicitly human-owned
