@@ -1,12 +1,28 @@
 # Goal Five: Flagship Autonomous Production And Creative-System Maturation
 
-Status: active in Phase 1 under the approved autonomous operating contract.
+Status: active under the approved autonomous engine-completion program.
 
 Planned: 2026-08-13.
 
 Branch: `codex/viz-engine-v2`.
 
 Pinned V1 parity reference: `e806fbc10980615588b52ff574bc923c6f00f35e`.
+
+## 2026-09-06 Delegated-Authority Amendment
+
+The product owner approved the exact Human Signal Gate 1 packet, authorized
+Phase 2, and delegated future reversible decisions inside the documented local
+engine horizon. The
+[Autonomous Engine Completion Program](./goal-five-autonomous-engine-completion-program.md)
+is now the execution truth. It supersedes this document's older requirement for
+human approval at Gates 2 through 5: those gates remain valuable review shapes,
+but are now independent evidence-backed agent calibrations.
+
+Human direction remains required only before the hosted platform, production
+Magnify integration, monetization/commercial-policy, external-action, material
+north-star-change, intentional-regression, or unsafe-user-work boundary. This
+amendment does not weaken any product, parity, performance, architecture,
+portability, determinism, or creative-quality requirement below.
 
 ## Resume Marker
 
@@ -15,13 +31,13 @@ and evidence before editing after a compaction or new task.
 
 ```text
 Baseline commit: b2b23b577feda29ef7eca9dcbf35a4e8c1162781
-Current phase: Phase 1 — capability, authorized-input, music-window, and treatment audit
-Current checkpoint: P1-06 is complete; Gate 1 remains pending explicit product-owner judgment
+Current phase: autonomous engine completion; Phase 1 and Gate 1 are complete
+Current checkpoint: G1-01 handoff complete; EC-01 is the next dependency-ready item
 Last completed checkpoint: canonical program state owns the latest terminal item and evidence identities
 Last certified commit: f9c32f9dbb3be3391eb23a35540c3c01d9173dce
 Last full green gate: autonomous readiness CAL-03 at f9c32f9
-Next safe checkpoint: no autonomous implementation checkpoint; only the product owner may authorize and claim G1-01 through an explicit Gate 1 successor decision
-Awaiting human gate: Gate 1 treatment approval through docs/parity/evidence/2026-09-06-goal-five-gate-one-decision-request.md
+Next safe checkpoint: EC-01 delegated-review contract reconciliation
+Awaiting human gate: none inside the delegated engine horizon
 Known blockers: none; work remains on VizEngine V2 with only exact verified fast-forward push authority to its same-named origin branch and no merge, PR, deployment, publication, purchase, production-system access, or other external mutation authority
 Relevant evidence: docs/parity/evidence/2026-09-04-goal-five-authorized-input-audit.md; docs/parity/evidence/2026-09-04-goal-five-capability-boundary-review.md; docs/parity/evidence/2026-09-04-goal-five-music-window-comparison.md; docs/parity/evidence/2026-09-05-goal-five-frame-exact-musical-map-review.md; docs/plans/v2/goal-five-flagship-production-treatment.md; docs/parity/evidence/2026-09-06-goal-five-gate-one-decision-request.md
 ```

@@ -2895,3 +2895,23 @@
 - added deterministic drift, substitution, reference-classification,
   false-output, planned-observation, document-derivation, queue-identity,
   uniqueness, pending-state, and work-item-scope rejection checks
+
+## 2026-09-06 — Human Signal approved and autonomous engine horizon delegated
+
+- recorded the product owner's explicit approval of the exact content-addressed
+  Human Signal Gate 1 packet and authorization of Phase 2
+- delegated all reversible local creative, architecture, editor, renderer,
+  dependency, tooling, validation, file/asset, and export decisions inside the
+  documented engine horizon; retained human authority only for the hosted
+  platform or production integration, monetization/commercial policy, external
+  mutation, material north-star change, intentional regression, or unsafe user
+  work
+- created one finite 27-checkpoint autonomous engine-completion program spanning
+  the whole-production skeleton, shared live session, renderer breadth,
+  reusable visualization capabilities, agent control, file/asset/export flows,
+  flagship refinement, performance, parity, consolidation, final media, and
+  evidence-only handoff
+- converted former Gates 2 through 5 into independent evidence-backed agent
+  calibrations without weakening the 46-criterion terminal contract
+- switched the tracked active-program pointer in the same reviewed Gate 1
+  handoff checkpoint; `EC-01` is next and no Phase 2 implementation was started

@@ -13,6 +13,18 @@ This document is subordinate to Goal Five. It is not a second active product
 plan, a replacement roadmap, or permission to expand Goal Five into the full
 future vision.
 
+## 2026-09-06 Authority Amendment
+
+The product owner approved Human Signal, authorized Phase 2, and delegated all
+reversible local decisions inside the documented engine horizon. The
+[Autonomous Engine Completion Program](./goal-five-autonomous-engine-completion-program.md)
+supersedes this document wherever it describes Gates 2 through 5, periodic
+creative approval, or subjective acceptance as human-blocking. Those reviews
+remain mandatory evidence-backed calibrations, but the agent may decide and
+continue. The human boundary is now platform/production integration,
+monetization or commercial policy, external mutation, material north-star
+change, intentional regression, or unsafe ambiguous user work.
+
 ## Purpose
 
 Establish a durable development operating system in which an agent can improve

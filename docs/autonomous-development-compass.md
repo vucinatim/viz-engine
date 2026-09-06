@@ -76,22 +76,26 @@ For production work, confirm that:
 - the project remains readable and editable in the editor
 - reusable improvements are promoted to the proper capability or tooling layer
 - final media and the portable project are both deliverables
-- major aesthetic checkpoints receive human calibration
+- major aesthetic checkpoints receive independent, evidence-backed calibration;
+  human feedback may override the result but is not required inside the
+  delegated engine horizon
 
 ## Stop And Escalate
 
 Stop for human direction when work requires:
 
-- a product-vision or major UX decision
+- beginning the hosted platform, monetization, commercial packaging, or
+  production Magnify integration horizon
+- a material product-vision or product-identity change
 - accepting feature, quality, or performance loss
-- selecting between materially different scene or architecture paradigms
-- a major speculative abstraction or infrastructure commitment
-- licensing, publication, deployment, billing, or external-system authority
-- subjective final creative approval at a declared calibration point
+- licensing policy, publication, deployment, billing, purchase, or
+  external-system authority
 - mixing ambiguous user work that cannot be safely isolated
 
 Ordinary failures, difficult debugging, and a first implementation that needs a
-cleaner refactor are not reasons to stop.
+cleaner refactor are not reasons to stop. Neither is a reversible creative,
+architecture, dependency, renderer, tooling, file, asset, export, or UX choice
+that remains inside the documented engine vision and parity floor.
 
 ## Long-Running Execution Rule
 

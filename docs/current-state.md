@@ -1,6 +1,6 @@
 # Current State
 
-Last reconciled: 2026-09-05.
+Last reconciled: 2026-09-06.
 
 ## Product Direction
 
@@ -26,11 +26,12 @@ preservation target.
 Goals One through Four are complete and certified.
 
 [Goal Five: Flagship Autonomous Production And Creative-System Maturation](./plans/v2/flagship-autonomous-production-and-creative-system-maturation.md)
-is active in Phase 1 after explicit `ACT-01` approval and the reviewed
-active-program handoff. Gate 0 approved its assumptions, repository input audit,
-provisional performance envelope, human gates, local checkpoint commits, and
-external-action boundaries. Its immutable planning baseline is
-`b2b23b577feda29ef7eca9dcbf35a4e8c1162781`.
+is active under the
+[Autonomous Engine Completion Program](./plans/v2/goal-five-autonomous-engine-completion-program.md).
+The product owner approved the exact Human Signal Gate 1 packet and Phase 2 on
+2026-09-06, and delegated all reversible local engine-horizon decisions.
+Former Gates 2 through 5 are mandatory evidence-backed autonomous calibration
+milestones rather than blocking human approvals.
 
 Goal Five uses one 45–60 second, multi-act, multi-layer, multi-component, and
 multi-graph flagship as a forcing function for reusable creative-system
@@ -57,11 +58,12 @@ content-addressed historical evidence, canonical staged checks, a 46-criterion
 sensory map, append-only human decisions, read-only specialist role contracts,
 and identity-bound review packets. `OS-01` through `OS-06` and `CAL-01` through
 `CAL-03` are complete with immutable evidence, independent review, staged
-validation, clean terminal commits, and released ownership. `ACT-01` is approved,
-and the active pointer selects the immutable
-`goal-five-phase-1-treatment` program. Host schedule state remains app-owned and
-must be verified through Codex Scheduled rather than inferred from repository
-files.
+validation, clean terminal commits, and released ownership. `ACT-01` and Gate 1
+are approved, and the active pointer selects the immutable
+`goal-five-engine-completion` program. `EC-01` is the next dependency-ready
+item; no Phase 2 implementation has begun. Host schedule state remains
+app-owned and must be verified through Codex Scheduled rather than inferred
+from repository files.
 
 The exact authorized cadence is owned by the
 [checkpoint runbook](./plans/v2/autonomous-checkpoint-runbook.md): four
@@ -83,10 +85,11 @@ activation metrics are captured, the 46-criterion terminal-proof contract is
 executable, and the uncontended complete repository gate is green. Its
 [certification evidence](./parity/evidence/2026-08-14-goal-five-phase-0-certification-freeze.md)
 keeps the original non-green activation run and repaired audio observation
-explicit. Phase 1's autonomous work is complete and its exact
+explicit. Phase 1's autonomous work and Gate 1 are complete. The product owner
+approved the exact
 [Gate 1 decision request](./parity/evidence/2026-09-06-goal-five-gate-one-decision-request.md)
-is pending explicit product-owner judgment. No Phase 2 implementation is
-authorized while that request remains pending. `P1-01` has
+and authorized Phase 2 without beginning it in the handoff checkpoint. `P1-01`
+has
 pinned and classified all 82 relevant or plausibly confusable repository inputs
 at `9fdc0712c0e1e67ef7ebbaf5ed4e1c192e005a9c`: 14 source-music candidates,
 four source Stage models, ten shader capability sources, prior production
@@ -110,8 +113,8 @@ second production windows across the full tracks, and retained three diverse
 exact candidates per source. Its provisional recommendation is the 48-second
 `HipHop — 808 Rap` window at 2.25–50.25 seconds, with exact sample and 60 fps
 frame coordinates, transparent score components, and explicit
-section/phrase/beat uncertainty. Intended audio, emotional fit, musical
-correction, and treatment approval remain human-owned at Gate 1. `P1-04` has
+section/phrase/beat uncertainty. Gate 1 accepted the intended audio, emotional
+fit, musical correction, and treatment direction. `P1-04` has
 now transformed that exact recommended interval into one content-addressed,
 deterministic proposed timing map: five gapless acts, four bounded transitions,
 all five section hypotheses including the explicit near-edge exclusion, all 82
@@ -127,13 +130,11 @@ contract, 15 still targets, six motion-review windows, exact performance
 budgets, and three smallest reusable gaps. The treatment deliberately uses
 independent Three programs as compositor inputs, includes Curve Spectrum as
 complementary 2D language, and excludes only unsupported raster/image/video
-inputs. It remains a proposal—not approved direction—until the product owner
-reviews the music, emotional arc, creative coherence, exclusions, and gap value
-at Gate 1. No aesthetic implementation begins before that decision.
-`P1-06` binds the exact P1-01 through P1-05 evidence and two explicitly bounded
-prior-production visual references in one deterministic Gate 1 packet. It also
-owns the sole pending program-scoped human request, with `G1-01` blocked and no
-autonomous safe implementation item while the decision is pending.
+inputs. Gate 1 approved that treatment, its exclusions, and its three proposed
+reusable gaps. `P1-06` binds the exact P1-01 through P1-05 evidence and two
+explicitly bounded prior-production visual references in one deterministic Gate
+1 packet. The recorded product-owner decision resolves that request and hands
+execution to the autonomous engine-completion program.
 
 ## Canonical Architecture
 

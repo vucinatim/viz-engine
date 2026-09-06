@@ -33,17 +33,21 @@ If it names no active goal, completed plans must not be treated as active scope.
 The active implementation contract is:
 
 - [Goal Five: Flagship Autonomous Production And Creative-System Maturation](./plans/v2/flagship-autonomous-production-and-creative-system-maturation.md)
+- [Goal Five Autonomous Engine Completion Program](./plans/v2/goal-five-autonomous-engine-completion-program.md)
+  is the active finite multi-week execution contract. It delegates all
+  reversible local engine decisions and ends at a polished flagship, complete
+  editable project, reusable capability library, and full product evidence.
 - [Goal Five flagship production treatment: Human Signal](./plans/v2/goal-five-flagship-production-treatment.md)
-  is the evidence-bound five-act creative proposal pending Gate 1 human review.
+  is the approved evidence-bound five-act creative direction.
 - [Gate 1 Human Signal decision request](./parity/evidence/2026-09-06-goal-five-gate-one-decision-request.md)
   binds the complete Phase 1 evidence and prior-production visual references;
-  it is pending explicit product-owner judgment and does not authorize Phase 2.
+  the product owner approved it and authorized Phase 2 on 2026-09-06.
 - [Goal Five Autonomous Sensory Feedback Operating System](./plans/v2/goal-five-autonomous-sensory-feedback-operating-system.md)
   is the approved subordinate readiness and execution contract; it is not a
   second product goal. Its implementation and three supervised calibrations are
   complete, `ACT-01` is approved for V2 branch development, and the tracked
-  active program now owns bounded Phase 1 execution under the exact push and
-  external-action boundary in the checkpoint runbook.
+  active program now owns autonomous engine-completion execution under the
+  exact push and external-action boundary in the checkpoint runbook.
 
 Gate 0 is approved at planning baseline
 `b2b23b577feda29ef7eca9dcbf35a4e8c1162781`. Recover its current phase,

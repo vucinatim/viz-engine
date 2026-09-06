@@ -67,7 +67,13 @@ Autonomous work must preserve all of these:
 ## Autonomous Authority
 
 Within an active goal, Codex may proceed without asking for each step when the
-work is local, reversible, and directly advances the named goal.
+work is local, reversible, and directly advances the named goal. The product
+owner's 2026-09-06 Human Signal decision explicitly extends this authority
+through the complete documented local engine horizon. Reversible creative,
+architecture, dependency, implementation-language, editor, renderer, tooling,
+validation, asset/file, and export decisions inside that horizon are agent
+decisions; uncertainty in those areas is a reason to gather evidence, not a
+human gate.
 
 That includes:
 
@@ -83,16 +89,19 @@ That includes:
 - recording completed milestones in `docs/work-ledger.md`
 - creating small local commits only when the worktree scope is understood and
   the commit cannot accidentally absorb unrelated user work
+- fast-forward pushing an exact completed and reviewed checkpoint to the
+  active program's same-named non-`main`/non-`master` target branch
 
-Codex must stop and ask before:
+Codex must stop and ask before crossing the delegated engine horizon by:
 
-- changing the product vision or approved editor design
+- beginning the hosted platform, commercial product, monetization, licensing
+  policy, paid-service commitment, or production Magnify integration horizon
+- materially changing the compounding vision or approved product identity
 - moving the pinned parity baseline
 - accepting a known capability regression
-- introducing a major dependency or infrastructure commitment
-- changing public compatibility, licensing, pricing, hosting, or cloud scope
-- pushing, opening a pull request, publishing, deploying, or changing external
-  systems unless the goal explicitly authorizes it
+- publishing, deploying, merging, opening or merging a pull request, releasing,
+  purchasing, or changing production/external systems unless separately
+  authorized
 - discarding, overwriting, or ambiguously mixing existing user changes
 
 When a technically clean path conflicts with the documented product direction,
@@ -263,13 +272,14 @@ Continue autonomously through ordinary implementation failures:
 
 Stop and request direction when:
 
-- product intent has two materially different plausible interpretations
-- meeting a goal requires an unapproved regression or redesign
+- product intent would require a material change to the documented north star
+- meeting a goal requires an intentional regression
 - a required external credential, authority, or service is unavailable
 - existing user changes overlap so heavily that safe isolation is impossible
 - the same external blocker persists and no meaningful local work remains
 
-Do not stop merely because a slice is difficult or the first attempt failed.
+Do not stop merely because a slice is difficult, the first attempt failed, or
+two reversible local approaches require evidence-backed judgment.
 
 ## Goal Completion Contract
 

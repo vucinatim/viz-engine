@@ -9,9 +9,10 @@ checkpoint. It is subordinate to the
 the
 [autonomous sensory feedback operating system](./goal-five-autonomous-sensory-feedback-operating-system.md),
 and the tracked active-program pointer at
-`tools/repo/programs/active-program.json`. The pointer selects the immutable
-Phase 1 Goal Five program. Later gate-bounded successors are selected only in a
-reviewed local handoff commit after their exact human gate approves them.
+`tools/repo/programs/active-program.json`. After the approved Gate 1 handoff,
+the pointer selects the immutable autonomous engine-completion program. That
+program contains no routine human checkpoints: former Gates 2 through 5 are
+evidence-backed autonomous calibration milestones.
 
 ## Authority Boundary
 
@@ -43,6 +44,13 @@ from an earlier inferred preference. It may be called only while carrying an
 explicit, contemporaneous human instruction naming the decision. At an
 unresolved human checkpoint the correct autonomous action is to emit the
 review packet and exit without mutation.
+
+The 2026-09-06 Human Signal decision delegates all reversible local decisions
+inside the documented engine horizon. A run must not create a human checkpoint
+for creative refinement, architecture, dependencies, editor UX, renderers,
+tools, tests, files/assets, exports, or implementation-language choices it can
+resolve with evidence. It stops only at the external, commercial, platform,
+material north-star, intentional-regression, or unsafe-user-work boundary.
 
 ## Recovery Before Reading Operational State
 
@@ -148,14 +156,28 @@ editing, keep one primary conceptual axis, preserve the V1 UX/performance floor
 and canonical V2 project/session/runtime boundaries, and build only
 end-state-compatible code.
 
+Proceed autonomously through every reversible local creative, architecture,
+dependency, editor, renderer, tooling, validation, asset/file, export, and
+implementation-language decision inside the active engine-completion program.
+Use evidence and bounded experiments to resolve uncertainty; do not invent a
+human gate for those decisions. Stop only before hosted-platform or production
+Magnify work, monetization or commercial policy, an external mutation, a
+material north-star change, an intentional regression, or unsafe overlap with
+ambiguous user work.
+
+The pre-delegation certification matrix and sensory documents retain historical
+human-only mappings until `EC-01` reconciles them. `EC-01` must complete before
+any engine implementation item; no later checkpoint may interpret that
+transitional language as a reason to wait for human approval.
+
 Remain quiet: no visible applications, no audio, no reused server, and one
 heavy process at a time. Use normal development tools freely within this
 authority; repository CLIs are canonical only for the state they own. Never
 merge, open or merge a PR, force-push, tag, deploy, publish, purchase, touch
 production systems, or mutate another external system. Never invoke `human
 resolve` without an explicit contemporaneous human instruction naming that
-decision. At a human gate, unsafe state, live owner, empty ready queue, or
-unresolved product ambiguity, make no speculative mutation and exit truthfully.
+decision. At the documented horizon boundary, unsafe state, live owner, or
+empty ready queue, make no speculative mutation and exit truthfully.
 
 Use the sensory adequacy gate, focused feedback, diff-scoped canonicalization,
 independent read-only review, and the required staged check. Complete only with
