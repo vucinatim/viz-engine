@@ -83,8 +83,10 @@ activation metrics are captured, the 46-criterion terminal-proof contract is
 executable, and the uncontended complete repository gate is green. Its
 [certification evidence](./parity/evidence/2026-08-14-goal-five-phase-0-certification-freeze.md)
 keeps the original non-green activation run and repaired audio observation
-explicit. The active implementation phase is the bounded capability, authorized
-asset, and music-window audit ending at Gate 1 treatment approval. `P1-01` has
+explicit. Phase 1's autonomous work is complete and its exact
+[Gate 1 decision request](./parity/evidence/2026-09-06-goal-five-gate-one-decision-request.md)
+is pending explicit product-owner judgment. No Phase 2 implementation is
+authorized while that request remains pending. `P1-01` has
 pinned and classified all 82 relevant or plausibly confusable repository inputs
 at `9fdc0712c0e1e67ef7ebbaf5ed4e1c192e005a9c`: 14 source-music candidates,
 four source Stage models, ten shader capability sources, prior production
@@ -128,6 +130,10 @@ complementary 2D language, and excludes only unsupported raster/image/video
 inputs. It remains a proposal—not approved direction—until the product owner
 reviews the music, emotional arc, creative coherence, exclusions, and gap value
 at Gate 1. No aesthetic implementation begins before that decision.
+`P1-06` binds the exact P1-01 through P1-05 evidence and two explicitly bounded
+prior-production visual references in one deterministic Gate 1 packet. It also
+owns the sole pending program-scoped human request, with `G1-01` blocked and no
+autonomous safe implementation item while the decision is pending.
 
 ## Canonical Architecture
 

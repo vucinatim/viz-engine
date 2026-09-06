@@ -1,0 +1,451 @@
+{
+  "schemaVersion": 1,
+  "kind": "viz-engine-goal-five-gate-one-treatment-review",
+  "programId": "goal-five-phase-1-treatment",
+  "workItemId": "P1-06",
+  "gate": "Gate 1",
+  "status": "pending-explicit-product-owner-decision",
+  "sourceBaselineCommit": "6255e7b23369118427753c4c7d5d3f21d1027b70",
+  "generatedBy": {
+    "path": "tools/foundation/author-goal-five-gate-one-review.ts",
+    "contentIdentity": "sha256:9f8c7f925e4a62caadc57b8362289a4edc4083549d1f94f0a075ba8096a6c6b5"
+  },
+  "evidence": [
+    {
+      "checkpoint": "P1-01",
+      "role": "authorized-input inventory",
+      "artifact": "docs/parity/evidence/artifacts/2026-09-04-goal-five-authorized-input-inventory.json",
+      "artifactIdentity": "sha256:d16b54aafac465326d867e2931647f49c90c07b9785c8d692642d69dd22c705d",
+      "review": "docs/parity/evidence/2026-09-04-goal-five-authorized-input-audit.md",
+      "reviewIdentity": "sha256:b33ce4ae3489d688c7359179ed3b58ad615c8a21e0fa868e82a2a39e8d7a47e7"
+    },
+    {
+      "checkpoint": "P1-02",
+      "role": "capability and observation audit",
+      "artifact": "docs/parity/evidence/artifacts/2026-09-04-goal-five-capability-catalog.json",
+      "artifactIdentity": "sha256:b1fcf990b8d45f4524f4051e16a5823dd46744f87db7b9c8b0f35b31606bff1e",
+      "review": "docs/parity/evidence/2026-09-04-goal-five-capability-boundary-review.md",
+      "reviewIdentity": "sha256:d0dad181201ddf6f35017b664b19f1d0538f27c31198ef1c30fdef50e47a34b3"
+    },
+    {
+      "checkpoint": "P1-03",
+      "role": "exact source-audio analysis and candidate windows",
+      "artifact": "docs/parity/evidence/artifacts/2026-09-04-goal-five-music-window-analysis.json",
+      "artifactIdentity": "sha256:e94ef2932f0ddd28f730711111e14d6d35ff952bc3328905f1e89dd6bb6657cc",
+      "review": "docs/parity/evidence/2026-09-04-goal-five-music-window-comparison.md",
+      "reviewIdentity": "sha256:13a33d40431d8e1982dc0cb5645ccc660d69e4e4479a69cb1013cfbcb99b1e5e"
+    },
+    {
+      "checkpoint": "P1-04",
+      "role": "frame-exact proposed musical map",
+      "artifact": "docs/parity/evidence/artifacts/2026-09-05-goal-five-frame-exact-musical-map.json",
+      "artifactIdentity": "sha256:164395d23891a091d9374c48d3462c9b30ee8ac4aac4ac4c6dfe68f700568a55",
+      "review": "docs/parity/evidence/2026-09-05-goal-five-frame-exact-musical-map-review.md",
+      "reviewIdentity": "sha256:c0a624ff615b1262b641b3d99b19d318d622ca736feaad647a2d445b6799b812"
+    },
+    {
+      "checkpoint": "P1-05",
+      "role": "proposed flagship production treatment",
+      "artifact": "docs/parity/evidence/artifacts/2026-09-05-goal-five-production-treatment-manifest.json",
+      "artifactIdentity": "sha256:cf65ee4f7dab2cc36d5a502fbc3ae37cd60e08a2d72a2e73df175100e86723a2",
+      "review": "docs/plans/v2/goal-five-flagship-production-treatment.md",
+      "reviewIdentity": "sha256:f5ebffe3fb683f62f497a31e3860b0efd93164fb924cae15752444adcb827c9a"
+    }
+  ],
+  "proposal": {
+    "title": "Human Signal",
+    "treatmentStatus": "proposed-pending-gate-1",
+    "music": {
+      "trackId": "hiphop-808-rap",
+      "windowId": "hiphop-808-rap-f135-d2880",
+      "sourcePath": "public/music/[HipHop] 808 Rap.mp3",
+      "sourceContentIdentity": "sha256:f3c72436ec15e5e5c4fafb11be8f0085dd2b64f58c848b349085a7de7931341d",
+      "decodedPcmContentIdentity": "sha256:d6f3d8415fa600a6a189838c0d61b800c326f7aa03a2a2d678191f2436e10fbb",
+      "durationSeconds": 48,
+      "timelineFps": 60,
+      "sampleRate": 48000,
+      "local": {
+        "frameStart": 0,
+        "frameEndExclusive": 2880,
+        "sampleStart": 0,
+        "sampleEndExclusive": 2304000
+      },
+      "source": {
+        "frameStart": 135,
+        "frameEndExclusive": 3015,
+        "sampleStart": 108000,
+        "sampleEndExclusive": 2412000
+      },
+      "futureMaterialization": {
+        "status": "planned-not-created",
+        "derivedAudio": "Create a content-pinned 48-second production audio asset through existing asset/action owners after Gate 1.",
+        "bake": "Create the standard audio-feature artifact through the existing bake/session owners after Gate 1."
+      }
+    },
+    "acts": [
+      {
+        "id": "act-1-threshold-and-restraint",
+        "title": "Threshold and restraint",
+        "range": {
+          "localFrameStart": 0,
+          "localFrameEndExclusive": 405
+        }
+      },
+      {
+        "id": "act-2-first-full-statement",
+        "title": "First full statement",
+        "range": {
+          "localFrameStart": 405,
+          "localFrameEndExclusive": 1125
+        }
+      },
+      {
+        "id": "act-3-contrast-and-rebuild",
+        "title": "Contrast and rebuild",
+        "range": {
+          "localFrameStart": 1125,
+          "localFrameEndExclusive": 1605
+        }
+      },
+      {
+        "id": "act-4-suspended-evolution",
+        "title": "Suspended evolution",
+        "range": {
+          "localFrameStart": 1605,
+          "localFrameEndExclusive": 2205
+        }
+      },
+      {
+        "id": "act-5-final-statement-and-release",
+        "title": "Final statement and release",
+        "range": {
+          "localFrameStart": 2205,
+          "localFrameEndExclusive": 2880
+        }
+      }
+    ],
+    "composition": {
+      "layers": [
+        {
+          "id": "layer-void-field",
+          "componentId": "fullscreen-shader",
+          "role": "Persistent void and perspective-grid foundation; never competes with the performers."
+        },
+        {
+          "id": "layer-grain-veil",
+          "componentId": "noise-shader",
+          "role": "Low-opacity texture that binds otherwise independent compositor worlds."
+        },
+        {
+          "id": "layer-human-stage",
+          "componentId": "stage-scene",
+          "role": "Primary human narrative, venue, lighting, and sole 48-second camera arc."
+        },
+        {
+          "id": "layer-signal-tunnel",
+          "componentId": "light-tunnel",
+          "role": "Temporary procedural spatial architecture for the fracture and rebuild."
+        },
+        {
+          "id": "layer-signal-idol",
+          "componentId": "morph-shapes",
+          "role": "Singular procedural totem that carries the suspended evolution."
+        },
+        {
+          "id": "layer-atmospheric-haze",
+          "componentId": "particle-system",
+          "role": "Slow continuous depth and atmosphere, deliberately absent during the heaviest middle transition."
+        },
+        {
+          "id": "layer-impact-sparks",
+          "componentId": "particle-system",
+          "role": "Short-lived, high-velocity transient punctuation distinct from atmospheric haze."
+        },
+        {
+          "id": "layer-signal-horizon",
+          "componentId": "curve-spectrum",
+          "role": "Complementary two-dimensional music trace and horizon line."
+        },
+        {
+          "id": "layer-peak-flash",
+          "componentId": "strobe-light",
+          "role": "Bounded exposure punctuation only at authored transitions and the primary energy peak."
+        }
+      ],
+      "graphIds": [
+        "graph-stage-performance",
+        "graph-world-field",
+        "graph-signal-architecture",
+        "graph-atmosphere",
+        "graph-signal-horizon",
+        "graph-score-direction",
+        "graph-compositor-choreography"
+      ],
+      "modelPaths": [
+        "public/models/stage/female-dj.fbx",
+        "public/models/stage/female-dancer.fbx",
+        "public/models/stage/male-dancer.fbx",
+        "public/models/stage/male-cheer.fbx"
+      ]
+    },
+    "gaps": [
+      {
+        "id": "GAP-01",
+        "title": "Portable macro direction and named cue contract",
+        "smallestReusableChange": "Add portable named frame ranges, range-local progress, and cue values to contracts/actions/runtime/editor/CLI inspection; consume them as ordinary graph inputs.",
+        "canonicalOwners": [
+          "@viz-engine/contracts",
+          "@viz-engine/actions",
+          "@viz-engine/runtime",
+          "@viz-engine/editor-session",
+          "@viz-engine/dev-cli",
+          "Studio composition root"
+        ]
+      },
+      {
+        "id": "GAP-02",
+        "title": "Graph-driven compositor opacity and transform modulation",
+        "smallestReusableChange": "Resolve graph-driven opacity and transform values in the canonical compositor plan with actions, editor authoring, session inspection, and render parity.",
+        "canonicalOwners": [
+          "@viz-engine/contracts",
+          "@viz-engine/runtime",
+          "@viz-engine/renderer-three",
+          "@viz-engine/actions",
+          "@viz-engine/editor-session"
+        ]
+      },
+      {
+        "id": "GAP-03",
+        "title": "Canonical full-fidelity product CLI host composition",
+        "smallestReusableChange": "Extract one explicit capability/renderer composition root shared by Studio and product CLI so advanced Three components are never silently omitted.",
+        "canonicalOwners": [
+          "@viz-engine/components-core",
+          "renderer attachments",
+          "Studio composition root",
+          "@viz-engine/renderer-three",
+          "@viz-engine/dev-cli"
+        ]
+      }
+    ],
+    "reviewPlan": {
+      "stillFrames": [
+        {
+          "localFrame": 60,
+          "purpose": "Opening identity and human silhouette"
+        },
+        {
+          "localFrame": 255,
+          "purpose": "Primary lower-energy restraint opportunity"
+        },
+        {
+          "localFrame": 375,
+          "purpose": "Transition 1 pre"
+        },
+        {
+          "localFrame": 435,
+          "purpose": "Transition 1 post / full-system arrival"
+        },
+        {
+          "localFrame": 780,
+          "purpose": "Act 2 stable statement"
+        },
+        {
+          "localFrame": 1095,
+          "purpose": "Transition 2 pre"
+        },
+        {
+          "localFrame": 1155,
+          "purpose": "Transition 2 post / tunnel fracture"
+        },
+        {
+          "localFrame": 1395,
+          "purpose": "Act 3 rebuild"
+        },
+        {
+          "localFrame": 1575,
+          "purpose": "Transition 3 pre"
+        },
+        {
+          "localFrame": 1635,
+          "purpose": "Transition 3 post / idol handoff"
+        },
+        {
+          "localFrame": 1905,
+          "purpose": "Act 4 suspended evolution"
+        },
+        {
+          "localFrame": 2175,
+          "purpose": "Transition 4 pre"
+        },
+        {
+          "localFrame": 2235,
+          "purpose": "Transition 4 post / final statement"
+        },
+        {
+          "localFrame": 2655,
+          "purpose": "Primary energy peak and maximum intended layer stress"
+        },
+        {
+          "localFrame": 2835,
+          "purpose": "Authored release and ending legibility"
+        }
+      ],
+      "motionWindows": [
+        {
+          "id": "transition-1",
+          "range": {
+            "localFrameStart": 360,
+            "localFrameEndExclusive": 450
+          }
+        },
+        {
+          "id": "transition-2",
+          "range": {
+            "localFrameStart": 1080,
+            "localFrameEndExclusive": 1170
+          }
+        },
+        {
+          "id": "transition-3",
+          "range": {
+            "localFrameStart": 1560,
+            "localFrameEndExclusive": 1650
+          }
+        },
+        {
+          "id": "transition-4",
+          "range": {
+            "localFrameStart": 2160,
+            "localFrameEndExclusive": 2250
+          }
+        },
+        {
+          "id": "primary-peak-context",
+          "range": {
+            "localFrameStart": 2580,
+            "localFrameEndExclusive": 2730
+          }
+        },
+        {
+          "id": "release",
+          "range": {
+            "localFrameStart": 2745,
+            "localFrameEndExclusive": 2880
+          }
+        }
+      ],
+      "phaseTwoStrategy": "First materialize a low-detail full-window skeleton; then raise Act 5 [2205,2880) as the 11.25-second representative-quality prototype because it contains transition 4, the primary peak, and release.",
+      "humanQuestions": [
+        "Is this the intended track and exact window?",
+        "Does the five-act emotional arc feel musically true?",
+        "Is Human Signal distinct and aesthetically coherent rather than a capability sampler?",
+        "Are palette, material language, fixed Panoramic Sweep, and layer hierarchy right?",
+        "Are all four performers worth retaining and visually grounded?",
+        "Is the raster/image/video exclusion acceptable?",
+        "Are GAP-01 through GAP-03 worth implementing as defined?"
+      ]
+    }
+  },
+  "alternatives": [
+    {
+      "id": "alternative-stage-only",
+      "disposition": "rejected",
+      "reason": "Preserves model quality but repeats Afterlight and cannot prove multi-layer/compositor breadth."
+    },
+    {
+      "id": "alternative-procedural-monolith",
+      "disposition": "rejected",
+      "reason": "Could look coherent but repeats Signal Cathedral and creates production-local component leakage."
+    },
+    {
+      "id": "alternative-shared-three-world",
+      "disposition": "rejected",
+      "reason": "Falsely assumes existing independent Three programs share a camera, depth, and occlusion contract."
+    },
+    {
+      "id": "alternative-human-signal",
+      "disposition": "preferred-pending-gate-1",
+      "reason": "Uses existing reusable breadth while keeping human performers primary and gaps small and canonical."
+    }
+  ],
+  "assumptionsRequiringHumanJudgment": [
+    "The exact 48-second HipHop 808 Rap window is the right creative source, not merely the strongest automated candidate.",
+    "The five-act map expresses the perceived musical and emotional structure well enough to direct production.",
+    "A human-led stage plus independent compositor-space procedural worlds is coherent rather than a capability sampler.",
+    "The ultraviolet, cyan, amber, and near-black palette; luminous material language; and one Stage-owned camera arc are the right taste direction.",
+    "All four existing performer models add value and can be grounded, framed, and lit to the required quality.",
+    "Excluding standalone raster/image/video for this treatment is creatively acceptable.",
+    "GAP-01 through GAP-03 are the smallest worthwhile reusable changes before materializing the production."
+  ],
+  "unresolvedHumanJudgments": [
+    "Is this the intended track and exact window?",
+    "Does the five-act emotional arc feel musically true?",
+    "Is Human Signal distinct and aesthetically coherent rather than a capability sampler?",
+    "Are palette, material language, fixed Panoramic Sweep, and layer hierarchy right?",
+    "Are all four performers worth retaining and visually grounded?",
+    "Is the raster/image/video exclusion acceptable?",
+    "Are GAP-01 through GAP-03 worth implementing as defined?"
+  ],
+  "visualReferences": [
+    {
+      "id": "afterlight-human-stage-baseline",
+      "path": "public/productions/afterlight-assembly/renders/afterlight-assembly-contact-sheet.jpeg",
+      "contentIdentity": "sha256:fad1dc12d81894b6b39d34c75d5b9e95f00c12a8361289255fcc80cae7a1fcce",
+      "dimensions": {
+        "width": 2584,
+        "height": 728
+      },
+      "priorProduction": "afterlight-assembly",
+      "demonstrates": "Existing model-backed Stage Scene quality, human anchors, venue lighting, and cinematic camera range.",
+      "doesNotDemonstrate": "Human Signal composition, selected music, timing, graph behavior, layer interaction, performance, or final quality.",
+      "classification": "prior-production-existing-capability-reference"
+    },
+    {
+      "id": "signal-cathedral-procedural-language",
+      "path": "public/productions/signal-cathedral/renders/signal-cathedral-final-contact-sheet.jpg",
+      "contentIdentity": "sha256:852419d591a4139b31f5e43071f3512d3b1dee028932b23701d389cb4c5ff372",
+      "dimensions": {
+        "width": 2572,
+        "height": 724
+      },
+      "priorProduction": "signal-cathedral",
+      "demonstrates": "Existing procedural spatial, luminous material, negative-space, and palette vocabulary.",
+      "doesNotDemonstrate": "Human Signal composition, selected music, timing, graph behavior, layer interaction, performance, or final quality.",
+      "classification": "prior-production-existing-capability-reference"
+    }
+  ],
+  "visualEvidenceBoundary": {
+    "currentHumanSignalOutputs": [],
+    "statement": "No Human Signal frame, project, or prototype exists yet. The references are prior-production capability evidence only; planned P1-05 still frames and motion windows are review targets, not observed renders.",
+    "falseClaimsRejected": [
+      "The references do not prove the proposed nine-layer composition.",
+      "The references do not prove timing, reactivity, performance, gaps, or final quality.",
+      "The independent Three programs are not one shared spatial world."
+    ]
+  },
+  "humanRequest": {
+    "question": "Do you approve the exact Human Signal treatment and authorize its Phase 2 successor, or do you request one bounded Phase 1 treatment revision with the required changes stated exactly?",
+    "whyAutomationIsInsufficient": "Automated evidence can prove identities, ranges, capability references, derivation, and queue scope, but cannot judge musical truth, emotional coherence, visual taste, performer value, or whether the proposed reusable gaps are worth building.",
+    "recommendation": "Approve the exact Human Signal treatment and authorize Phase 2 from the content-addressed P1-01 through P1-06 evidence.",
+    "alternatives": [
+      "Request one bounded Phase 1 treatment revision and state the exact musical, visual, scope, or gap changes required.",
+      "Do not select the Stage-only, procedural-monolith, or falsely shared-Three-world directions; they fail the accepted breadth or architecture constraints."
+    ],
+    "safeWhileWaiting": [
+      "Read-only inspection, product-owner discussion, and correction of demonstrably incorrect evidence only."
+    ],
+    "prohibitedWhileWaiting": [
+      "Do not activate Phase 2 or begin deep aesthetic implementation.",
+      "Do not add production-local components or build GAP-01 through GAP-03.",
+      "Do not resolve this human decision autonomously or treat silence, discussion, or elapsed time as approval."
+    ],
+    "blockedWorkItemIds": ["G1-01"],
+    "safeWorkItemIds": []
+  },
+  "decisionContract": {
+    "pending": "G1-01 remains blocked and no Phase 2 work is authorized while this request is pending.",
+    "accepted": "Only an explicit product-owner instruction may approve the exact treatment and authorize the Phase 2 successor.",
+    "boundedRevision": "The product owner may request exact bounded changes; continuation then requires the separately governed successor mechanism in G1-01.",
+    "nonSelection": "Rejection or changes_requested is a terminal safe stop until a separately designed and reviewed authority mechanism exists."
+  }
+}

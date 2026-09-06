@@ -16,14 +16,14 @@ and evidence before editing after a compaction or new task.
 ```text
 Baseline commit: b2b23b577feda29ef7eca9dcbf35a4e8c1162781
 Current phase: Phase 1 — capability, authorized-input, music-window, and treatment audit
-Current checkpoint: recover the exact item from `program status`; P1-05 authors the evidence-bound flagship production treatment after terminal P1-04 closure
+Current checkpoint: P1-06 is complete; Gate 1 remains pending explicit product-owner judgment
 Last completed checkpoint: canonical program state owns the latest terminal item and evidence identities
 Last certified commit: f9c32f9dbb3be3391eb23a35540c3c01d9173dce
 Last full green gate: autonomous readiness CAL-03 at f9c32f9
-Next safe checkpoint: resolve through `program next`; P1-06 assembles the P1-01 through P1-05 evidence into the Gate 1 review packet without beginning Phase 2 implementation
-Awaiting human gate: Gate 1 treatment approval after P1-06 assembles and queues the review packet
+Next safe checkpoint: no autonomous implementation checkpoint; only the product owner may authorize and claim G1-01 through an explicit Gate 1 successor decision
+Awaiting human gate: Gate 1 treatment approval through docs/parity/evidence/2026-09-06-goal-five-gate-one-decision-request.md
 Known blockers: none; work remains on VizEngine V2 with only exact verified fast-forward push authority to its same-named origin branch and no merge, PR, deployment, publication, purchase, production-system access, or other external mutation authority
-Relevant evidence: docs/parity/evidence/2026-09-04-goal-five-authorized-input-audit.md; docs/parity/evidence/2026-09-04-goal-five-capability-boundary-review.md; docs/parity/evidence/2026-09-04-goal-five-music-window-comparison.md; docs/parity/evidence/2026-09-05-goal-five-frame-exact-musical-map-review.md; docs/plans/v2/goal-five-flagship-production-treatment.md
+Relevant evidence: docs/parity/evidence/2026-09-04-goal-five-authorized-input-audit.md; docs/parity/evidence/2026-09-04-goal-five-capability-boundary-review.md; docs/parity/evidence/2026-09-04-goal-five-music-window-comparison.md; docs/parity/evidence/2026-09-05-goal-five-frame-exact-musical-map-review.md; docs/plans/v2/goal-five-flagship-production-treatment.md; docs/parity/evidence/2026-09-06-goal-five-gate-one-decision-request.md
 ```
 
 ## Governing Authority

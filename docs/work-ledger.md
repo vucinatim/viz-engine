@@ -2878,3 +2878,20 @@
 - kept Gate 1 ownership of music, emotional truth, distinctness, palette,
   material, camera, layer legibility, performer value, exclusions, and gap value
   explicitly human-owned
+
+## 2026-09-06 — Goal Five Gate 1 treatment review queued
+
+- completed `P1-06` with one deterministic packet binding the exact P1-01
+  through P1-05 artifacts and reviews by content identity
+- reduced visual evidence to two truthful prior-production references:
+  Afterlight Assembly for the model-backed human-stage baseline and Signal
+  Cathedral for existing procedural spatial/material vocabulary
+- stated explicitly that no Human Signal frame, project, or prototype exists;
+  planned review frames remain targets rather than observed evidence
+- bound the exact recommended treatment, alternatives, assumptions, unresolved
+  creative judgments, three reusable gaps, and safe/prohibited waiting boundary
+- enqueued exactly one pending program-scoped human request with `G1-01` as the
+  sole blocked item and no autonomous Phase 2 authority
+- added deterministic drift, substitution, reference-classification,
+  false-output, planned-observation, document-derivation, queue-identity,
+  uniqueness, pending-state, and work-item-scope rejection checks
