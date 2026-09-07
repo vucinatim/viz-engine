@@ -24,6 +24,7 @@ export interface VizThreeImageResourceStats {
 export interface VizThreeImageResourceManager {
   reconcile(layers: VizThreeCompositorLayer[], renderPlan: VizRenderPlan): void;
   getStats(): VizThreeImageResourceStats;
+  whenReady(): Promise<void>;
   dispose(): void;
 }
 
@@ -55,7 +56,8 @@ export const createVizThreeImageResourceManager = ({
   loader?: TextureLoader | null;
 }): VizThreeImageResourceManager => {
   const textures = new Map<string, Texture>();
-  const pending = new Set<string>();
+  const pending = new Map<string, { promise: Promise<void>; settle(): void }>();
+  const failures = new Set<string>();
   let currentLayers: VizThreeCompositorLayer[] = [];
   let currentAssets: ReadonlyMap<string, VizMaterializedImageAsset> = new Map();
   let currentUris = new Set<string>();
@@ -90,28 +92,36 @@ export const createVizThreeImageResourceManager = ({
           }
           return;
         }
-        if (pending.has(uri)) {
+        if (pending.has(uri) || failures.has(uri)) {
           return;
         }
 
-        pending.add(uri);
+        let settle!: () => void;
+        const promise = new Promise<void>((resolve) => {
+          settle = resolve;
+        });
+        pending.set(uri, { promise, settle });
         loader.load(
           uri,
           (texture) => {
             if (disposed || !currentUris.has(uri)) {
               pending.delete(uri);
+              settle();
               texture.dispose();
               return;
             }
             texture.colorSpace = SRGBColorSpace;
             textures.set(uri, texture);
             pending.delete(uri);
+            settle();
             hydrate();
             onReady();
           },
           undefined,
           () => {
             pending.delete(uri);
+            if (!disposed && currentUris.has(uri)) failures.add(uri);
+            settle();
           },
         );
       });
@@ -141,7 +151,20 @@ export const createVizThreeImageResourceManager = ({
           textures.delete(uri);
         }
       }
+      for (const uri of failures) {
+        if (!currentUris.has(uri)) failures.delete(uri);
+      }
       hydrate();
+    },
+    async whenReady() {
+      for (;;) {
+        if (disposed) throw new Error('Image resources are disposed.');
+        const failed = [...failures].find((uri) => currentUris.has(uri));
+        if (failed) throw new Error(`Could not load render image: ${failed}`);
+        const active = [...pending].filter(([uri]) => currentUris.has(uri));
+        if (active.length === 0) return;
+        await Promise.all(active.map(([, load]) => load.promise));
+      }
     },
     getStats: () => ({
       cachedTextures: textures.size,
@@ -149,7 +172,9 @@ export const createVizThreeImageResourceManager = ({
     }),
     dispose() {
       disposed = true;
+      for (const load of pending.values()) load.settle();
       pending.clear();
+      failures.clear();
       for (const texture of textures.values()) {
         texture.dispose();
       }

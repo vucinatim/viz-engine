@@ -13,10 +13,10 @@ export {
   updateVizThreePortableNodeObject,
   type VizImageMeshUserData,
 } from './portable-nodes.js';
-export * from './preview-controller.js';
 export * from './programs/post-processing.js';
 export * from './programs/registry.js';
 export type {
   VizThreeProgramFactory,
   VizThreeProgramInstance,
 } from './programs/types.js';
+export * from './render-host.js';

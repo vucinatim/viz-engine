@@ -8,7 +8,7 @@ import type {
   VizLayerRenderPlanEntry,
   VizRenderPlan,
 } from '@viz-engine/contracts';
-import type { VizThreePreviewResourceStats } from '@viz-engine/renderer-three';
+import type { VizThreeResourceStats } from '@viz-engine/renderer-three';
 
 export interface LayerData {
   id: string;
@@ -32,8 +32,7 @@ export interface LayerRuntimePreviewAttachment {
   }) => LayerRuntimePreviewRenderResult | void;
   invokeLayerAction?: (layerId: string, actionId: string) => boolean;
   requiresContinuousRendering?: () => boolean;
-  whenReady?: () => Promise<void>;
-  getResourceStats?: () => VizThreePreviewResourceStats | null;
+  getResourceStats?: () => VizThreeResourceStats | null;
 }
 
 export interface LayerRuntimePreviewRenderStats {

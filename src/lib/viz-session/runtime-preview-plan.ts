@@ -358,7 +358,6 @@ const getRuntimeSession = (
   const session = createVizRuntimeSession({
     project: createSessionProject(options),
     mode,
-    seed: 'editor-runtime-preview',
     resolvedAssets: [...resolvedAssets.values()],
     resolvedArtifacts: options.resolvedArtifacts ?? [],
     evaluationStartFrame: resetsUnavailableLiveHistory

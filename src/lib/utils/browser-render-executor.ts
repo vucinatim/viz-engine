@@ -12,11 +12,14 @@ import type {
   VizRenderExecutorResult,
   VizRenderSource,
 } from '@viz-engine/render';
-import { captureCanvasToBlob } from './fast-frame-capture';
+import { vizThreeBrowserBackendIdentity } from '@viz-engine/renderer-three';
+import { retainVizBrowserRenderSource } from './browser-render-source';
+import { captureCanvasToBlob } from './canvas-encoding';
 
-export const VIZ_BROWSER_WEBGL_RENDER_EXECUTOR_ID = 'browser-webgl';
+export const VIZ_BROWSER_WEBGL_RENDER_EXECUTOR_ID =
+  vizThreeBrowserBackendIdentity.id;
 export const VIZ_BROWSER_WEBGL_RENDER_EXECUTOR_VERSION =
-  'viz-render.browser-webgl.v1';
+  vizThreeBrowserBackendIdentity.version;
 
 export interface VizBrowserFrameCaptureInput {
   request: VizRenderRequest;
@@ -28,7 +31,9 @@ export interface VizBrowserFrameCaptureInput {
 }
 
 export interface CreateVizBrowserRenderExecutorOptions {
-  captureFrame(input: VizBrowserFrameCaptureInput): Promise<HTMLCanvasElement>;
+  openCaptureSession(
+    context: VizRenderExecutionContext,
+  ): Promise<VizBrowserFrameCaptureSession>;
   encodeVideo?: (input: {
     frames: Blob[];
     audioUrl: string | null;
@@ -46,6 +51,17 @@ export interface CreateVizBrowserRenderExecutorOptions {
   ) => string | null;
   createObjectUrl?: (blob: Blob) => string;
 }
+
+export interface VizBrowserFrameCaptureSession {
+  captureFrame(input: VizBrowserFrameCaptureInput): Promise<HTMLCanvasElement>;
+  dispose(): void;
+}
+
+type ExecutionOptions = Omit<
+  CreateVizBrowserRenderExecutorOptions,
+  'openCaptureSession'
+> &
+  VizBrowserFrameCaptureSession;
 
 interface CapturedFrame {
   frame: number;
@@ -242,7 +258,7 @@ const createOutput = async ({
 const captureFrames = async (
   frames: readonly number[],
   context: VizRenderExecutionContext,
-  options: CreateVizBrowserRenderExecutorOptions,
+  options: ExecutionOptions,
 ): Promise<CapturedFrame[]> => {
   const captured: CapturedFrame[] = [];
   let previousPixels: Uint8ClampedArray | undefined;
@@ -288,7 +304,7 @@ const captureFrames = async (
 
 const executeImageRender = async (
   context: VizRenderExecutionContext,
-  options: CreateVizBrowserRenderExecutorOptions,
+  options: ExecutionOptions,
 ): Promise<VizRenderExecutorResult> => {
   const { request } = context;
   if (request.kind !== 'still' && request.kind !== 'contact-sheet') {
@@ -369,7 +385,7 @@ const executeImageRender = async (
 
 const executeVideoRender = async (
   context: VizRenderExecutionContext,
-  options: CreateVizBrowserRenderExecutorOptions,
+  options: ExecutionOptions,
 ): Promise<VizRenderExecutorResult> => {
   const { request, source, signal, onProgress } = context;
   if (request.kind !== 'clip' && request.kind !== 'video') {
@@ -495,14 +511,30 @@ export const createVizBrowserRenderExecutor = (
 ): VizRenderExecutor => ({
   id: VIZ_BROWSER_WEBGL_RENDER_EXECUTOR_ID,
   version: VIZ_BROWSER_WEBGL_RENDER_EXECUTOR_VERSION,
-  rendererIdentity: 'viz-renderer-three.browser-compositor.v1',
+  rendererIdentity: 'viz-renderer-three.render-host.v1',
   supports: (request) =>
     ((request.kind === 'still' || request.kind === 'contact-sheet') &&
       request.format !== 'svg') ||
     ((request.kind === 'clip' || request.kind === 'video') &&
       options.encodeVideo !== undefined),
-  execute: (context) =>
-    context.request.kind === 'still' || context.request.kind === 'contact-sheet'
-      ? executeImageRender(context, options)
-      : executeVideoRender(context, options),
+  execute: async (context) => {
+    const retained = await retainVizBrowserRenderSource(
+      context.source,
+      context.signal,
+    );
+    let session: VizBrowserFrameCaptureSession | undefined;
+    try {
+      const executionContext = { ...context, source: retained.source };
+      session = await options.openCaptureSession(executionContext);
+      context.signal.throwIfAborted();
+      const executionOptions = { ...options, ...session };
+      return await (context.request.kind === 'still' ||
+      context.request.kind === 'contact-sheet'
+        ? executeImageRender(executionContext, executionOptions)
+        : executeVideoRender(executionContext, executionOptions));
+    } finally {
+      session?.dispose();
+      retained.dispose();
+    }
+  },
 });

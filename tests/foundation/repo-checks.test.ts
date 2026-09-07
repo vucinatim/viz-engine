@@ -15,6 +15,7 @@ import { describe, expect, it } from 'vitest';
 import {
   getChangedFiles,
   planChecks,
+  planRepositoryChecks,
   runChecks,
 } from '../../tools/repo/lib/checks';
 import { resolveOperationalDirectory } from '../../tools/repo/lib/paths';
@@ -320,4 +321,38 @@ describe('staged repository checks', () => {
       rmSync(fixture.root, { recursive: true, force: true });
     }
   }, 20_000);
+});
+
+it('keeps deleted files in structural and related-test evidence without formatting or linting absent files', () => {
+  const plan = planChecks(
+    'focused',
+    ['src/removed.ts', 'src/kept.ts'],
+    ['src/removed.ts'],
+  );
+  expect(plan.changedFiles).toContain('src/removed.ts');
+  expect(plan.deletedFiles).toEqual(['src/removed.ts']);
+  for (const id of ['format-changed', 'lint-changed']) {
+    const command = plan.commands.find((entry) => entry.id === id)!;
+    expect(command.arguments).toContain('src/kept.ts');
+    expect(command.arguments).not.toContain('src/removed.ts');
+  }
+  expect(
+    plan.commands.find((entry) => entry.id === 'related-tests')!.arguments,
+  ).toContain('src/removed.ts');
+});
+
+it('discovers the same deletion-aware plan for display and execution', () => {
+  const root = mkdtempSync(resolve(tmpdir(), 'viz-plan-deletions-'));
+  try {
+    writeFileSync(resolve(root, 'kept.ts'), 'export {};\n');
+    const changed = ['removed.ts', 'kept.ts'];
+    const displayed = planRepositoryChecks('focused', changed, root);
+    expect(displayed).toEqual(planChecks('focused', changed, ['removed.ts']));
+    expect(
+      displayed.commands.find((command) => command.id === 'format-changed')!
+        .arguments,
+    ).not.toContain('removed.ts');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });

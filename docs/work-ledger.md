@@ -2933,3 +2933,23 @@
 - recorded the contract, validation scope, reviews and honest limitations in
   [EC-01 evidence](./parity/evidence/2026-09-07-goal-five-delegated-review-reconciliation.md);
   canonical program state binds the exact checkpoint check and terminal commit
+
+## 2026-09-07 — shared render foundation (RH-01)
+
+- Recorded the approved modern graphics direction and activated an immutable
+  successor queue: RH-01/RH-02/RH-03 precede the preserved EC-02–EC-27 work.
+  The predecessor and completed EC-01 evidence remain unchanged.
+- Replaced preview-named GPU ownership with the shared Three render host;
+  browser export now owns detached exact-resolution rendering, resource readiness,
+  asset URLs and disposal. Removed editor DOM capture, export readiness bridges
+  and transport suppression. Node SVG uses the same offline evaluator/default
+  seed; preview uses the canonical runtime default seed.
+- Added failure cleanup for partial compositor allocation and failed image loads.
+  Fixed deleted-file planning so removal remains in structural/related evidence
+  without asking formatter/linter to open absent files.
+- A real Chromium/DPR-2 detached-canvas observation passed at 257x131 and 513x263;
+  a two-pixel pattern rejected preview upscaling. Focused scene/ownership tests
+  and checkpoint validation are recorded in the RH-01 evidence packet at closure.
+- Streaming encoding, full decoded-media equivalence/audio synchronization,
+  production coverage, and quiet-host performance remain RH-02/RH-03. WebGPU
+  implementation is a gated roadmap, not claimed delivered by RH-01.

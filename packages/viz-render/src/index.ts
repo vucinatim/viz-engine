@@ -397,7 +397,9 @@ export const createVizRenderJobService = ({
 
     let source: VizRenderSource;
     try {
-      source = await sourceResolver.resolve(initial.request, controller.signal);
+      source = clone(
+        await sourceResolver.resolve(initial.request, controller.signal),
+      );
     } catch (error) {
       if (controller.signal.aborted) {
         finishCancelled(jobId);
@@ -608,3 +610,5 @@ export const createVizRenderJobService = ({
     },
   };
 };
+
+export { createVizRenderFrameSession } from './frame-session.js';

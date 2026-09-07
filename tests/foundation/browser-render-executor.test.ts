@@ -1,5 +1,5 @@
 import { createVizBrowserVideoFrameSchedule } from '@/lib/utils/browser-render-executor';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 describe('browser render frame scheduling', () => {
   it.each([
@@ -31,4 +31,47 @@ describe('browser render frame scheduling', () => {
       ).toEqual(expected);
     },
   );
+});
+
+describe('browser render execution lifetime', () => {
+  it('disposes the capture session when a frame fails', async () => {
+    const { createVizBrowserRenderExecutor } =
+      await import('@/lib/utils/browser-render-executor');
+    const { createTestProject } = await import('./viz-session-test-utils');
+    const dispose = vi.fn();
+    const executor = createVizBrowserRenderExecutor({
+      openCaptureSession: async () => ({
+        captureFrame: async () => {
+          throw new Error('resource failure');
+        },
+        dispose,
+      }),
+    });
+    const project = createTestProject();
+    await expect(
+      executor.execute({
+        request: {
+          schemaVersion: 1,
+          kind: 'still',
+          source: { projectId: project.projectId },
+          executorId: executor.id,
+          intent: 'preview',
+          outputLabel: 'lifecycle',
+          quality: 'draft',
+          frame: 0,
+          format: 'png',
+          viewport: { width: 320, height: 180 },
+        },
+        source: {
+          project,
+          resolvedAssets: [],
+          resolvedArtifacts: [],
+          contentIdentity: 'test',
+        },
+        signal: new AbortController().signal,
+        onProgress() {},
+      }),
+    ).rejects.toThrow('resource failure');
+    expect(dispose).toHaveBeenCalledOnce();
+  });
 });

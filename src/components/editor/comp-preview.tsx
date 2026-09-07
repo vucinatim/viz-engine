@@ -8,8 +8,8 @@ import {
 } from '@/lib/utils/synthetic-audio';
 import { studioThreeProgramRegistry } from '@/lib/viz-capabilities';
 import {
-  createVizThreePreviewController,
-  type VizThreePreviewController,
+  createVizThreeRenderHost,
+  type VizThreeRenderHost,
 } from '@viz-engine/renderer-three';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -35,7 +35,7 @@ const CompPreview = ({
   const [audioLoaded, setAudioLoaded] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
 
-  const runtimeControllerRef = useRef<VizThreePreviewController | null>(null);
+  const runtimeControllerRef = useRef<VizThreeRenderHost | null>(null);
 
   const syntheticAnalyzer = useRef(createSyntheticAnalyzer());
 
@@ -95,7 +95,7 @@ const CompPreview = ({
         if (runtimeControllerRef.current) {
           runtimeControllerRef.current.update(runtimeRenderPlan);
         } else {
-          runtimeControllerRef.current = createVizThreePreviewController({
+          runtimeControllerRef.current = createVizThreeRenderHost({
             canvas: canvasRef.current,
             renderPlan: runtimeRenderPlan,
             programRegistry: studioThreeProgramRegistry,

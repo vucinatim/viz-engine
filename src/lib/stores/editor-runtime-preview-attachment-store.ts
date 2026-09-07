@@ -7,7 +7,7 @@ import type {
   VizSessionRuntimePreviewFrame,
 } from '@/lib/viz-session/types';
 import type { VizRenderPlan } from '@viz-engine/contracts';
-import type { VizThreePreviewResourceStats } from '@viz-engine/renderer-three';
+import type { VizThreeResourceStats } from '@viz-engine/renderer-three';
 import { create } from 'zustand';
 
 interface EditorRuntimePreviewAttachmentStore {
@@ -49,8 +49,7 @@ interface EditorRuntimePreviewAttachmentStore {
     hasLiveOverrides: boolean,
   ) => string[];
   requiresContinuousRendering: () => boolean;
-  whenRuntimeResourcesReady: () => Promise<void>;
-  inspectRuntimeResources: () => VizThreePreviewResourceStats | null;
+  inspectRuntimeResources: () => VizThreeResourceStats | null;
   reset: () => void;
 }
 
@@ -212,9 +211,6 @@ const useEditorRuntimePreviewAttachmentStore =
     },
     requiresContinuousRendering: () =>
       get().previewAttachment?.requiresContinuousRendering?.() ?? false,
-    whenRuntimeResourcesReady: async () => {
-      await (get().previewAttachment?.whenReady?.() ?? Promise.resolve());
-    },
     inspectRuntimeResources: () =>
       get().previewAttachment?.getResourceStats?.() ?? null,
     reset: () =>
@@ -226,79 +222,5 @@ const useEditorRuntimePreviewAttachmentStore =
         compositeMirrorCanvases: [],
       }),
   }));
-
-export const waitForEditorRuntimePreviewAttachments = (
-  layerIds: readonly string[],
-  options: {
-    signal?: AbortSignal;
-    timeoutMilliseconds?: number;
-  } = {},
-): Promise<void> => {
-  const expectedLayerIds = [...new Set(layerIds)];
-  if (expectedLayerIds.length === 0) {
-    return Promise.resolve();
-  }
-  const missingLayerIds = () => {
-    const state = useEditorRuntimePreviewAttachmentStore.getState();
-    return state.previewAttachment === null
-      ? expectedLayerIds
-      : expectedLayerIds.filter(
-          (layerId) => !state.previewLayerIds.has(layerId),
-        );
-  };
-  if (missingLayerIds().length === 0) {
-    return Promise.resolve();
-  }
-
-  return new Promise<void>((resolve, reject) => {
-    const timeoutMilliseconds = options.timeoutMilliseconds ?? 5_000;
-    let settled = false;
-    let unsubscribe: () => void = () => undefined;
-    const cleanup = () => {
-      unsubscribe();
-      clearTimeout(timeout);
-      options.signal?.removeEventListener('abort', handleAbort);
-    };
-    const finish = (outcome: { ok: true } | { ok: false; error: Error }) => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      cleanup();
-      if (outcome.ok) {
-        resolve();
-      } else {
-        reject(outcome.error);
-      }
-    };
-    const handleAbort = () => {
-      finish({
-        ok: false,
-        error: new Error(
-          'Waiting for editor render attachments was cancelled.',
-        ),
-      });
-    };
-    const timeout = setTimeout(() => {
-      finish({
-        ok: false,
-        error: new Error(
-          `Editor render attachments did not mount within ${timeoutMilliseconds}ms: ${missingLayerIds().join(', ')}.`,
-        ),
-      });
-    }, timeoutMilliseconds);
-    unsubscribe = useEditorRuntimePreviewAttachmentStore.subscribe(() => {
-      if (missingLayerIds().length === 0) {
-        finish({ ok: true });
-      }
-    });
-    options.signal?.addEventListener('abort', handleAbort, {
-      once: true,
-    });
-    if (options.signal?.aborted) {
-      handleAbort();
-    }
-  });
-};
 
 export default useEditorRuntimePreviewAttachmentStore;

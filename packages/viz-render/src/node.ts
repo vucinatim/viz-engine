@@ -11,8 +11,6 @@ import {
   renderVizRenderPlanToSvgMarkup,
 } from '@viz-engine/renderer-svg';
 import {
-  createVizRenderPlan,
-  createVizRuntimeSession,
   sampleProjectAudioFrameSnapshot,
   type VizNodeRegistry,
 } from '@viz-engine/runtime';
@@ -20,15 +18,15 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { createVizRenderFrameSession } from './frame-session.js';
 import type {
   VizRenderExecutionContext,
   VizRenderExecutor,
   VizRenderExecutorResult,
-  VizRenderSource,
 } from './index.js';
 
 export const VIZ_NODE_SVG_RENDER_EXECUTOR_ID = 'node-svg';
-export const VIZ_NODE_SVG_RENDER_EXECUTOR_VERSION = 'viz-render.node-svg.v1';
+export const VIZ_NODE_SVG_RENDER_EXECUTOR_VERSION = 'viz-render.node-svg.v2';
 
 export interface CreateVizNodeSvgRenderExecutorOptions {
   outputDirectory: string;
@@ -90,50 +88,25 @@ const toPerformance = (
   };
 };
 
-const createRenderPlanForFrame = (
-  request: VizRenderRequest,
-  source: VizRenderSource,
-  frame: number,
-  componentRegistry: VizComponentRegistry,
-  nodeRegistry: VizNodeRegistry,
-  seed: string,
-): VizRenderPlan => {
-  const project = {
-    ...source.project,
-    viewport: {
-      width: request.viewport.width,
-      height: request.viewport.height,
-      ...(request.viewport.backgroundColor === undefined
-        ? source.project.viewport.backgroundColor === undefined
-          ? {}
-          : {
-              backgroundColor: source.project.viewport.backgroundColor,
-            }
-        : { backgroundColor: request.viewport.backgroundColor }),
-    },
-  };
-  const session = createVizRuntimeSession({
-    project,
-    mode: 'render',
-    resolvedAssets: source.resolvedAssets,
-    resolvedArtifacts: source.resolvedArtifacts,
-    seed,
-  });
-  return createVizRenderPlan({
-    session,
-    frame,
-    registry: componentRegistry,
-    nodeRegistry,
-    runtimeInputProvider: (requestedFrame) => {
+const createFrameSession = (
+  context: VizRenderExecutionContext,
+  options: CreateVizNodeSvgRenderExecutorOptions,
+) =>
+  createVizRenderFrameSession({
+    source: context.source,
+    request: context.request,
+    registry: options.componentRegistry,
+    nodeRegistry: options.nodeRegistry,
+    ...(options.seed === undefined ? {} : { seed: options.seed }),
+    runtimeInputProvider: (frame) => {
       const audio = sampleProjectAudioFrameSnapshot(
-        project,
-        source.resolvedArtifacts,
-        requestedFrame,
+        context.source.project,
+        context.source.resolvedArtifacts,
+        frame,
       );
-      return audio === undefined ? {} : { audio };
+      return audio === undefined ? undefined : { audio };
     },
   });
-};
 
 const assertPlanSucceeded = (frame: number, plan: VizRenderPlan): void => {
   if (plan.issues.length === 0) {
@@ -178,7 +151,7 @@ const renderStill = (
   context: VizRenderExecutionContext,
   options: CreateVizNodeSvgRenderExecutorOptions,
 ): VizRenderExecutorResult => {
-  const { request, source, signal, onProgress } = context;
+  const { request, signal, onProgress } = context;
   if (request.kind !== 'still') {
     throw new Error('Expected a still render request.');
   }
@@ -186,14 +159,7 @@ const renderStill = (
     throw new Error('Render cancelled.');
   }
   const start = performance.now();
-  const plan = createRenderPlanForFrame(
-    request,
-    source,
-    request.frame,
-    options.componentRegistry,
-    options.nodeRegistry,
-    options.seed ?? 'node-svg-render',
-  );
+  const plan = createFrameSession(context, options).evaluate(request.frame);
   assertPlanSucceeded(request.frame, plan);
   const markup = renderVizRenderPlanToSvgMarkup(plan);
   const duration = performance.now() - start;
@@ -224,7 +190,7 @@ const renderContactSheet = (
   context: VizRenderExecutionContext,
   options: CreateVizNodeSvgRenderExecutorOptions,
 ): VizRenderExecutorResult => {
-  const { request, source, signal, onProgress } = context;
+  const { request, signal, onProgress } = context;
   if (request.kind !== 'contact-sheet') {
     throw new Error('Expected a contact-sheet render request.');
   }
@@ -240,19 +206,13 @@ const renderContactSheet = (
   const cells: string[] = [];
   const diagnostics: VizRenderDiagnostic[] = [];
 
+  const evaluation = createFrameSession(context, options);
   request.frames.forEach((frame, index) => {
     if (signal.aborted) {
       throw new Error('Render cancelled.');
     }
     const start = performance.now();
-    const plan = createRenderPlanForFrame(
-      request,
-      source,
-      frame,
-      options.componentRegistry,
-      options.nodeRegistry,
-      options.seed ?? 'node-svg-render',
-    );
+    const plan = evaluation.evaluate(frame);
     assertPlanSucceeded(frame, plan);
     frameDurations.push(performance.now() - start);
     const column = index % columns;

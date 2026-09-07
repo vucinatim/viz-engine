@@ -786,6 +786,98 @@ describe('Viz Three renderer proof', () => {
     manager.dispose();
   });
 
+  it('waits for image readiness and rejects failed loads instead of capturing missing textures', async () => {
+    const plan = createPortablePlan([
+      {
+        layerId: 'image',
+        node: {
+          kind: 'image',
+          assetId: 'image',
+          x: 0,
+          y: 0,
+          width: 320,
+          height: 180,
+        },
+      },
+    ]);
+    plan.materializedAssets = [
+      {
+        id: 'image',
+        kind: 'image',
+        source: 'local',
+        imageSourceUri: 'blob:image',
+      },
+    ];
+    let fail!: () => void;
+    const loader = {
+      load(
+        _uri: string,
+        _loaded: (texture: Texture) => void,
+        _progress: unknown,
+        failed: () => void,
+      ) {
+        fail = failed;
+        return new Texture();
+      },
+    } as TextureLoader;
+    const manager = createVizThreeImageResourceManager({
+      onReady: vi.fn(),
+      loader,
+    });
+    const graph = createVizThreeCompositorGraph(plan);
+    manager.reconcile(graph.layers, plan);
+    const done = vi.fn();
+    const ready = manager.whenReady().then(done);
+    await Promise.resolve();
+    expect(done).not.toHaveBeenCalled();
+    fail();
+    await expect(ready).rejects.toThrow('Could not load render image');
+    manager.dispose();
+    disposeVizThreeCompositorGraph(graph);
+  });
+
+  it('disposes previously allocated layers when a later program factory fails', () => {
+    const disposed = vi.fn();
+    const registry = createVizThreeProgramRegistry([
+      {
+        capabilityPack: { id: 'test/failure', version: '1' },
+        programs: [
+          {
+            id: 'test/failure/v1',
+            implementationVersion: '1',
+            factory: ({ node }) => {
+              if (node.parameters.fail) throw new Error('factory failed');
+              return {
+                programId: node.programId,
+                scene: new Scene(),
+                camera: new OrthographicCamera(),
+                root: new Group(),
+                update() {},
+                resize() {},
+                render() {},
+                dispose: disposed,
+              };
+            },
+          },
+        ],
+      },
+    ]);
+    const plan = createPortablePlan(
+      [false, true].map((fail, index) => ({
+        layerId: `layer-${index}`,
+        node: {
+          kind: 'three-program' as const,
+          programId: 'test/failure/v1',
+          parameters: { fail },
+        },
+      })),
+    );
+    expect(() =>
+      createVizThreeCompositorGraph(plan, undefined, undefined, registry),
+    ).toThrow('factory failed');
+    expect(disposed).toHaveBeenCalledOnce();
+  });
+
   it('updates persistent shader programs without rebuilding their material or geometry', () => {
     const createShaderPlan = (strength: number): VizRenderPlan => ({
       frameContext: {

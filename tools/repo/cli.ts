@@ -6,7 +6,7 @@ import {
   canonicalizeChangedFiles,
   checkStages,
   getChangedFiles,
-  planChecks,
+  planRepositoryChecks,
   runChecks,
 } from './lib/checks';
 import {
@@ -359,7 +359,7 @@ const runChecksCommand = () => {
   }
   const changedFiles = getChangedFiles(option('--base') ?? 'HEAD');
   if (subcommand === 'plan')
-    return print(planChecks(stage as never, changedFiles));
+    return print(planRepositoryChecks(stage as never, changedFiles));
   if (subcommand === 'run') {
     const result = runChecks({
       stage: stage as never,

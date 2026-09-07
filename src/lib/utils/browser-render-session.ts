@@ -1,0 +1,148 @@
+import type { VizRuntimeAudioFrameSnapshot } from '@viz-engine/contracts';
+import {
+  createVizRenderFrameSession,
+  type VizRenderExecutionContext,
+} from '@viz-engine/render';
+import {
+  createVizThreeRenderHost,
+  type VizThreeProgramRegistry,
+  type VizThreeRenderHost,
+} from '@viz-engine/renderer-three';
+import {
+  resolveVizProjectAudioAsset,
+  sampleProjectAudioFrameSnapshot,
+  type VizComponentRegistry,
+  type VizNodeRegistry,
+} from '@viz-engine/runtime';
+import {
+  bakeBrowserAudioFeatures,
+  loadAndDecodeBrowserAudio,
+  sampleBrowserAudioBakeFrame,
+  type BrowserAudioBake,
+} from './browser-audio-bake';
+import type { VizBrowserFrameCaptureSession } from './browser-render-executor';
+
+const waitForResources = (promise: Promise<void>, signal: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    signal.throwIfAborted();
+    const abort = () => reject(signal.reason);
+    signal.addEventListener('abort', abort, { once: true });
+    promise
+      .then(resolve, reject)
+      .finally(() => signal.removeEventListener('abort', abort));
+  });
+
+/** One job owns one detached GPU canvas, runtime history, and resource lifetime. */
+export const openVizBrowserRenderSession = async (
+  { source, request, signal }: VizRenderExecutionContext,
+  registries: {
+    componentRegistry: VizComponentRegistry;
+    nodeRegistry: VizNodeRegistry;
+    programRegistry: VizThreeProgramRegistry;
+  },
+): Promise<VizBrowserFrameCaptureSession> => {
+  signal.throwIfAborted();
+  const project = source.project;
+  const fps = project.timeline.fps;
+  const audioAsset = resolveVizProjectAudioAsset(
+    project,
+    source.resolvedAssets,
+  );
+  let bake: BrowserAudioBake | undefined;
+  if (
+    audioAsset &&
+    !sampleProjectAudioFrameSnapshot(project, source.resolvedArtifacts, 0)
+  ) {
+    const loaded = await loadAndDecodeBrowserAudio(
+      audioAsset.resolved.uri,
+      signal,
+    );
+    signal.throwIfAborted();
+    // Bake from timeline origin at timeline FPS, so cold seeks and skipped export
+    // frames reconstruct the same temporal history as sequential evaluation.
+    bake = await bakeBrowserAudioFeatures(
+      loaded.audioBuffer,
+      loaded.sourceContentIdentity,
+      {
+        fps,
+        shouldCancel: () => signal.aborted,
+      },
+    );
+  }
+  signal.throwIfAborted();
+  const silence: VizRuntimeAudioFrameSnapshot = {
+    frequencyData: new Uint8Array(0),
+    timeDomainData: new Uint8Array(0),
+    sampleRate: project.timeline.sampleRate ?? 44100,
+    fftSize: 2048,
+    minDecibels: -90,
+    maxDecibels: -10,
+    provenance: 'baked',
+  };
+  const evaluation = createVizRenderFrameSession({
+    source,
+    request,
+    registry: registries.componentRegistry,
+    nodeRegistry: registries.nodeRegistry,
+    runtimeInputProvider: (frame) => ({
+      audio:
+        sampleProjectAudioFrameSnapshot(
+          project,
+          source.resolvedArtifacts,
+          frame,
+        ) ?? (bake ? sampleBrowserAudioBakeFrame(bake, frame) : silence),
+    }),
+  });
+  const canvas = document.createElement('canvas');
+  let host: VizThreeRenderHost | undefined;
+  let disposed = false;
+  const dispose = () => {
+    if (disposed) return;
+    disposed = true;
+    signal.removeEventListener('abort', dispose);
+    host?.dispose();
+    host = undefined;
+    bake = undefined;
+    canvas.width = 0;
+    canvas.height = 0;
+  };
+  signal.addEventListener('abort', dispose, { once: true });
+  return {
+    async captureFrame({ frame }) {
+      signal.throwIfAborted();
+      if (disposed) throw new Error('Render session is disposed.');
+      const plan = evaluation.evaluate(frame);
+      if (plan.issues.length > 0) {
+        throw new Error(plan.issues.map((issue) => issue.message).join('\n'));
+      }
+      if (host) host.update(plan);
+      else
+        host = createVizThreeRenderHost({
+          canvas,
+          renderPlan: plan,
+          programRegistry: registries.programRegistry,
+          releaseContextOnDispose: true,
+        });
+      await waitForResources(host.whenReady(), signal);
+      signal.throwIfAborted();
+      const failed = host
+        .getModelResourceDiagnostics()
+        .filter((entry) => entry.status === 'failed');
+      if (failed.length)
+        throw new Error(
+          `Render model loading failed: ${JSON.stringify(failed)}`,
+        );
+      host.render();
+      // Copy immediately after submission, before yielding the drawing buffer.
+      // This is a same-size transfer, never DOM composition or preview scaling.
+      const output = document.createElement('canvas');
+      output.width = request.viewport.width;
+      output.height = request.viewport.height;
+      const context = output.getContext('2d');
+      if (!context) throw new Error('Could not create render output canvas.');
+      context.drawImage(canvas, 0, 0);
+      return output;
+    },
+    dispose,
+  };
+};

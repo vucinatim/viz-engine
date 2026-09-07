@@ -6,7 +6,6 @@ import {
 import { subscribeEditorRuntimePreviewInvalidation } from '@/lib/editor-runtime-preview-invalidation';
 import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
-import useExportStore from '@/lib/stores/export-store';
 import { transportPresentationClock } from '@/lib/transport-presentation-clock';
 import {
   createVizSessionRuntimePreviewFrame,
@@ -19,7 +18,6 @@ import { useEffect, useRef } from 'react';
 
 const EditorRuntimePreviewDriver = () => {
   const audioElementRef = useAudioEngineStore((state) => state.audioElementRef);
-  const isExporting = useExportStore((state) => state.isExporting);
   const rafIdRef = useRef<number | null>(null);
   const lastFrameTimeRef = useRef(
     typeof performance !== 'undefined' ? performance.now() : Date.now(),
@@ -27,14 +25,6 @@ const EditorRuntimePreviewDriver = () => {
   const nextFrameDeadlineRef = useRef(lastFrameTimeRef.current);
 
   useEffect(() => {
-    if (isExporting) {
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current);
-        rafIdRef.current = null;
-      }
-      return;
-    }
-
     lastFrameTimeRef.current =
       typeof performance !== 'undefined' ? performance.now() : Date.now();
     nextFrameDeadlineRef.current = lastFrameTimeRef.current;
@@ -177,7 +167,7 @@ const EditorRuntimePreviewDriver = () => {
         rafIdRef.current = null;
       }
     };
-  }, [audioElementRef, isExporting]);
+  }, [audioElementRef]);
 
   return null;
 };

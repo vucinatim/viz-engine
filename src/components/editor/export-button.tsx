@@ -1,10 +1,6 @@
 import { Button } from '@/components/ui/button';
 import useExportStore from '@/lib/stores/export-store';
-import {
-  useVizSessionSelector,
-  vizControl,
-  vizSessionActions,
-} from '@/lib/viz-session';
+import { useVizSessionSelector, vizControl } from '@/lib/viz-session';
 import type { VizRenderJobRecord } from '@viz-engine/contracts';
 import { Check, Download, Loader2 } from 'lucide-react';
 import { useRef, useState } from 'react';
@@ -70,7 +66,6 @@ const ExportButton = () => {
     const snapshot = vizControl.getSnapshot();
     const settings = exportStore.settings;
     const totalFrames = Math.ceil(settings.duration * settings.fps);
-    const wasPlaying = snapshot.transport.isPlaying;
     const startedAt = Date.now();
     let wakeLock: WakeLockSentinel | null = null;
     let elapsedTimer: ReturnType<typeof setInterval> | undefined;
@@ -93,7 +88,6 @@ const ExportButton = () => {
       message: 'Starting canonical video render job',
       details: `${settings.width}×${settings.height} @ ${settings.fps} FPS, ${settings.quality} quality, ${settings.format}`,
     });
-    if (wasPlaying) vizSessionActions.preview.pause();
 
     try {
       if ('wakeLock' in navigator) {
@@ -250,7 +244,6 @@ const ExportButton = () => {
       unsubscribe();
       if (elapsedTimer) clearInterval(elapsedTimer);
       if (wakeLock) await wakeLock.release();
-      if (wasPlaying) vizSessionActions.preview.play();
     }
   };
 

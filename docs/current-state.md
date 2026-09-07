@@ -59,22 +59,26 @@ sensory map, append-only human decisions, read-only specialist role contracts,
 and identity-bound review packets. `OS-01` through `OS-06` and `CAL-01` through
 `CAL-03` are complete with immutable evidence, independent review, staged
 validation, clean terminal commits, and released ownership. `ACT-01` and Gate 1
-are approved, and the active pointer selects the immutable
-`goal-five-engine-completion` program. `EC-01` reconciles the certification matrix
-and sensory mappings through the
-[delegated review contract](./parity/goal-five-delegated-review.md): 12 independent
-review criteria, one preserved Gate 1 human criterion, 32 planned harnesses and
-one ready command. All 46 product criteria remain pending. No Phase 2 engine
-implementation has begun; `EC-02` is next after EC-01 closure. Host schedule state
-remains
-app-owned and must be verified through Codex Scheduled rather than inferred
-from repository files.
+are approved. EC-01 closed at `5e74191135098d79eab0bb1ff02b20056cb77add`.
+The user then prioritized shared independent rendering and streaming export.
+The active pointer now selects `goal-five-render-foundation`: RH-01 establishes
+shared render ownership, RH-02 replaces sequence buffering with streaming, and
+RH-03 proves integrated media behavior before the preserved EC-02 through EC-27
+production work resumes. The predecessor definition and EC-01 evidence remain
+immutable. All 46 Goal Five product criteria remain pending; these renderer
+checkpoints do not imply flagship certification.
 
-The exact authorized cadence is owned by the
-[checkpoint runbook](./plans/v2/autonomous-checkpoint-runbook.md), as amended
-by the product owner on 2026-09-06: daily 01:00–08:00 in `Europe/Ljubljana`,
-15-minute opportunities through 07:45, one checkpoint per wake, wind-down by
-07:30 and development stop by 08:00. Later wakes refuse a live writer.
+The current [rendering strategy](./visions/rendering-performance-and-deployment-strategy.md)
+records WebGPU/TSL, WebCodecs, workers, profiling and conditional WASM/native
+migration gates. RH-01 is in implementation; streaming and integrated media
+proof are still pending.
+
+The user's 2026-09-07 cadence amendment is one daily 01:00 wake in the same
+Codex task, working successively until 08:00 Europe/Ljubljana. Check the actual
+clock and checkpoint recoverable progress. Do not refuse useful work because
+an estimate exceeds the remaining window; no 07:30 cutoff or one-item-per-wake
+limit applies. Host schedule state remains app-owned. A later wake still
+respects an existing writer lease. The checkpoint runbook carries this amendment.
 
 The canonical machine entrypoint for that readiness work is:
 

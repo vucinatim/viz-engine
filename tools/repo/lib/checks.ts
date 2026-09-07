@@ -63,7 +63,19 @@ export const getChangedFiles = (base = 'HEAD', root = repositoryRoot) => {
 export const planChecks = (
   stage: CheckStage,
   changedFiles = getChangedFiles(),
-) => canonicalCheckPlan(stage, changedFiles);
+  deletedFiles: string[] = [],
+) => canonicalCheckPlan(stage, changedFiles, deletedFiles);
+
+export const planRepositoryChecks = (
+  stage: CheckStage,
+  changedFiles = getChangedFiles(),
+  root = repositoryRoot,
+) =>
+  planChecks(
+    stage,
+    changedFiles,
+    changedFiles.filter((file) => !existsSync(resolve(root, file))),
+  );
 
 export const runChecks = (options: {
   stage: CheckStage;
@@ -74,10 +86,8 @@ export const runChecks = (options: {
 }) => {
   const root = options.root ?? repositoryRoot;
   const startedAt = new Date();
-  const plan = planChecks(
-    options.stage,
-    options.changedFiles ?? getChangedFiles('HEAD', root),
-  );
+  const changedFiles = options.changedFiles ?? getChangedFiles('HEAD', root);
+  const plan = planRepositoryChecks(options.stage, changedFiles, root);
   const startingRepository = readRepositoryIdentity(root);
   const leaseIdentity = (lease: ReturnType<typeof readLease>) =>
     lease
@@ -298,7 +308,9 @@ export const canonicalizeChangedFiles = (
   mode: 'check' | 'apply',
   changedFiles = getChangedFiles(),
 ) => {
-  const files = changedFiles.filter((file) => isPrettierFile(file));
+  const files = changedFiles.filter(
+    (file) => isPrettierFile(file) && existsSync(resolve(repositoryRoot, file)),
+  );
   if (files.length === 0) return { mode, files: [], status: 'passed' as const };
   const result = spawnSync(
     'pnpm',

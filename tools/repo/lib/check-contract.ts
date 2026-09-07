@@ -17,6 +17,7 @@ export interface CheckCommand {
 export interface CheckPlan {
   stage: CheckStage;
   changedFiles: string[];
+  deletedFiles?: string[];
   commands: CheckCommand[];
 }
 
@@ -71,11 +72,15 @@ const fastCommands = (): CheckCommand[] => [
 export const canonicalCheckPlan = (
   stage: CheckStage,
   changedFiles: string[],
+  deletedFiles: string[] = [],
 ): CheckPlan => {
   if (!checkStages.includes(stage))
     throw new Error(`Unknown check stage ${stage}.`);
-  const prettierFiles = changedFiles.filter(isPrettierFile);
-  const eslintFiles = changedFiles.filter((file) =>
+  const presentFiles = changedFiles.filter(
+    (file) => !deletedFiles.includes(file),
+  );
+  const prettierFiles = presentFiles.filter(isPrettierFile);
+  const eslintFiles = presentFiles.filter((file) =>
     eslintExtensions.has(extname(file)),
   );
   const repoChanged = repositoryContractChanged(changedFiles);
@@ -210,5 +215,10 @@ export const canonicalCheckPlan = (
       ),
     );
   }
-  return { stage, changedFiles, commands };
+  return {
+    stage,
+    changedFiles,
+    ...(deletedFiles.length ? { deletedFiles } : {}),
+    commands,
+  };
 };

@@ -11,10 +11,10 @@ import type {
 } from '@/lib/viz-session/types';
 import type { VizRenderPlan } from '@viz-engine/contracts';
 import {
-  createVizThreePreviewController,
-  type VizThreePreviewCameraPose,
-  type VizThreePreviewController,
+  createVizThreeRenderHost,
+  type VizThreeCameraPose,
   type VizThreeProgramRegistry,
+  type VizThreeRenderHost,
 } from '@viz-engine/renderer-three';
 import * as THREE from 'three';
 
@@ -35,9 +35,8 @@ export interface EditorRuntimePreviewAttachment {
   updateLayers: (layers: LayerData[]) => void;
   invokeLayerAction: (layerId: string, actionId: string) => boolean;
   requiresContinuousRendering: () => boolean;
-  whenReady: () => Promise<void>;
   getResourceStats: () => ReturnType<
-    VizThreePreviewController['getResourceStats']
+    VizThreeRenderHost['getResourceStats']
   > | null;
   destroy: () => void;
 }
@@ -74,12 +73,12 @@ export const createEditorRuntimePreviewAttachment = ({
   programRegistry,
 }: CreateEditorRuntimePreviewAttachmentOptions): EditorRuntimePreviewAttachment => {
   let currentLayers = new Map(layers.map((layer) => [layer.id, layer]));
-  let runtimePreviewController: VizThreePreviewController | null = null;
+  let runtimePreviewController: VizThreeRenderHost | null = null;
   let mirrorCursor = 0;
   let playbackRenderCount = 0;
   let staticMirrorFrame: number | null = null;
   let staticMirrorGeneration = 0;
-  let flyCameraPose: VizThreePreviewCameraPose | null = null;
+  let flyCameraPose: VizThreeCameraPose | null = null;
   let flyCameraLayerId: string | null = null;
   let flyCameraActive = false;
   const lastConfigValuesByLayerId = new Map(
@@ -365,7 +364,7 @@ export const createEditorRuntimePreviewAttachment = ({
       if (runtimePreviewController) {
         runtimePreviewController.update(renderPlan);
       } else {
-        runtimePreviewController = createVizThreePreviewController({
+        runtimePreviewController = createVizThreeRenderHost({
           canvas,
           renderPlan,
           preserveDrawingBuffer: true,
@@ -442,7 +441,6 @@ export const createEditorRuntimePreviewAttachment = ({
       return true;
     },
     requiresContinuousRendering: () => flyCameraActive,
-    whenReady: () => runtimePreviewController?.whenReady() ?? Promise.resolve(),
     getResourceStats: () =>
       runtimePreviewController?.getResourceStats() ?? null,
     destroy: () => {

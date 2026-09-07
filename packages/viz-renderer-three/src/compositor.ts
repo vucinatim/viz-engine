@@ -150,39 +150,45 @@ const createCompositorLayer = (
   compositeMaterial.map = renderTarget.texture;
   compositeMaterial.needsUpdate = true;
 
-  if (layer.node?.kind === 'three-program') {
-    const programInstance = createVizThreeProgramInstance({
-      node: layer.node,
-      width,
-      height,
-      materializedAssets,
-      modelResources,
-      invalidate,
-      programRegistry,
-    });
+  try {
+    if (layer.node?.kind === 'three-program') {
+      const programInstance = createVizThreeProgramInstance({
+        node: layer.node,
+        width,
+        height,
+        materializedAssets,
+        modelResources,
+        invalidate,
+        programRegistry,
+      });
+      return {
+        layer,
+        contentScene: programInstance.scene,
+        contentCamera: programInstance.camera,
+        contentRoot: programInstance.root,
+        compositeSurface,
+        renderTarget,
+        programInstance,
+      };
+    }
+
+    const contentScene = new Scene();
+    const contentCamera = createVizThreeOrthoCamera(width, height);
+    const contentRoot = createLayerContentRoot(layer, width, height);
+    contentScene.add(contentRoot);
     return {
       layer,
-      contentScene: programInstance.scene,
-      contentCamera: programInstance.camera,
-      contentRoot: programInstance.root,
+      contentScene,
+      contentCamera,
+      contentRoot,
       compositeSurface,
       renderTarget,
-      programInstance,
     };
+  } catch (error) {
+    renderTarget.dispose();
+    disposeVizThreeObject(compositeSurface);
+    throw error;
   }
-
-  const contentScene = new Scene();
-  const contentCamera = createVizThreeOrthoCamera(width, height);
-  const contentRoot = createLayerContentRoot(layer, width, height);
-  contentScene.add(contentRoot);
-  return {
-    layer,
-    contentScene,
-    contentCamera,
-    contentRoot,
-    compositeSurface,
-    renderTarget,
-  };
 };
 
 export const createVizThreeCompositorGraph = (
@@ -206,19 +212,28 @@ export const createVizThreeCompositorGraph = (
   );
   const modelResources =
     providedModelResources ?? createVizThreeModelResourceManager();
-  const layers = renderPlan.layers
-    .filter((layer) => Boolean(layer.node))
-    .map((layer) =>
-      createCompositorLayer(
-        layer,
-        renderPlan.viewport.width,
-        renderPlan.viewport.height,
-        materializedAssets,
-        modelResources,
-        invalidate,
-        programRegistry,
-      ),
-    );
+  const layers: VizThreeCompositorLayer[] = [];
+  try {
+    for (const layer of renderPlan.layers.filter((entry) =>
+      Boolean(entry.node),
+    )) {
+      layers.push(
+        createCompositorLayer(
+          layer,
+          renderPlan.viewport.width,
+          renderPlan.viewport.height,
+          materializedAssets,
+          modelResources,
+          invalidate,
+          programRegistry,
+        ),
+      );
+    }
+  } catch (error) {
+    for (const layer of layers) disposeLayer(layer);
+    if (!providedModelResources) modelResources.dispose();
+    throw error;
+  }
   for (const layer of layers) {
     compositeRoot.add(layer.compositeSurface);
   }

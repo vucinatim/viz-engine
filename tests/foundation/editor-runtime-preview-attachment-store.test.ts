@@ -192,25 +192,4 @@ describe('Editor runtime preview attachment store', () => {
       false,
     );
   });
-
-  it('waits for every registered runtime resource boundary', async () => {
-    const store = useEditorRuntimePreviewAttachmentStore.getState();
-    const ready = vi.fn();
-
-    store.registerPreviewAttachment(
-      {
-        getViewport: () => ({ width: 1, height: 1 }),
-        render: vi.fn(),
-        whenReady: async () => {
-          await Promise.resolve();
-          ready();
-        },
-      },
-      ['layer-a', 'layer-b'],
-    );
-
-    await store.whenRuntimeResourcesReady();
-
-    expect(ready).toHaveBeenCalledOnce();
-  });
 });

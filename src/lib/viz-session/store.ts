@@ -42,8 +42,6 @@ const runtimeComponentRegistry = studioComponentRegistry;
 const { audioFeatureBakeJobs, renderJobs } = createStudioBrowserJobServices({
   getHost: () => vizSessionHost,
   getProjectState: () => getProjectState(),
-  renderRuntimePreviewFrame: (frame, audio) =>
-    vizSessionActions.preview.renderRuntimePreviewFrame(frame, audio),
 });
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value));

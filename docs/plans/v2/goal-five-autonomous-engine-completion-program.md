@@ -174,13 +174,14 @@ and stops cleanly before another wake.
 
 ## Scheduling Contract
 
-The product owner's 2026-09-06 instruction authorizes daily 01:00–08:00 in
-`Europe/Ljubljana`, with scheduled opportunities every 15 minutes through 07:45.
-Each wake claims at most one checkpoint; an active run may continue across later
-opportunities, which exit without mutation while its lease is valid. Check time
-at major boundaries, begin winding down by 07:30 and stop development by 08:00.
-Preserve incomplete work through the runbook's exact recoverable block procedure
-and release ownership; never discard work to meet the clock.
+The product owner's 2026-09-07 amendment supersedes the earlier 15-minute
+standalone-job schedule: one daily 01:00 wake resumes the same task and works
+successively until 08:00 `Europe/Ljubljana`. Each checkpoint has its own claim,
+evidence, commit and release. An active run may then claim the next ready item.
+Check the actual clock; estimates are advisory and must not block useful partial
+progress. Preserve unfinished work through the exact recovery procedure at
+08:00. Other wakes respect a valid writer lease. The render-foundation successor
+inserts RH-01 through RH-03 before the remaining EC work.
 
 Runs remain headless and muted. They notify only for a checkpoint failure that
 needs attention, completed engine horizon, external/monetization boundary, or

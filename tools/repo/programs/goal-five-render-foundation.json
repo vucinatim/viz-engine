@@ -1,0 +1,1241 @@
+{
+  "schemaVersion": 2,
+  "id": "goal-five-render-foundation",
+  "title": "Shared Render Foundation and Goal Five Completion",
+  "targetBranch": "codex/viz-engine-v2",
+  "parentGoal": "docs/plans/v2/flagship-autonomous-production-and-creative-system-maturation.md",
+  "executionPlan": "docs/visions/rendering-performance-and-deployment-strategy.md",
+  "criteriaContract": "docs/parity/goal-five-certification-matrix.json",
+  "gates": [
+    {
+      "id": "render-foundation",
+      "title": "Independent rendering and streaming export",
+      "wave": 0
+    },
+    {
+      "id": "authority-skeleton",
+      "title": "Delegated authority and whole-production skeleton",
+      "wave": 1
+    },
+    {
+      "id": "direction-compositor",
+      "title": "Canonical direction and compositor semantics",
+      "wave": 2
+    },
+    {
+      "id": "capability-renderers",
+      "title": "Renderer and visual-capability breadth",
+      "wave": 3
+    },
+    {
+      "id": "agent-files-exports",
+      "title": "Agent control, files, assets, and exports",
+      "wave": 4
+    },
+    {
+      "id": "production-refinement",
+      "title": "Complete production and autonomous creative refinement",
+      "wave": 5
+    },
+    {
+      "id": "performance-parity",
+      "title": "Performance, parity, and lifecycle hardening",
+      "wave": 6
+    },
+    {
+      "id": "candidate-handoff",
+      "title": "Consolidated candidate, final media, and engine handoff",
+      "wave": 7
+    }
+  ],
+  "workItems": [
+    {
+      "id": "RH-01",
+      "gate": "render-foundation",
+      "lane": "shared-rendering",
+      "priority": 1,
+      "title": "Establish editor-independent exact-resolution render ownership and modernization plan",
+      "authority": "autonomous",
+      "dependsOn": [],
+      "estimate": {
+        "agentHoursMin": 0.25,
+        "agentHoursMax": 4
+      },
+      "acceptance": [
+        "The current rendering strategy documents WebGPU/TSL, capability negotiation, WebCodecs, workers, profiling and conditional WASM/native evaluation with explicit migration gates.",
+        "Preview and export share canonical Three rendering and runtime evaluation contracts; export owns an exact-resolution resource lifecycle without editor DOM capture or live UI inputs.",
+        "Obsolete render/capture ownership is removed, scoped regression tests pass, and remaining streaming/browser proof is explicitly tracked."
+      ],
+      "evidenceLanes": [
+        "project-semantic",
+        "runtime-temporal",
+        "visual-composition",
+        "performance-lifecycle",
+        "code-architecture"
+      ],
+      "affectedCriteria": [],
+      "evidenceRequirements": [
+        {
+          "id": "render-evidence",
+          "kind": "document",
+          "description": "Exact implementation scope, observations, limitations and independent review"
+        },
+        {
+          "id": "render-check",
+          "kind": "command",
+          "checkStage": "checkpoint",
+          "description": "Passing staged validation for the implemented boundary"
+        }
+      ]
+    },
+    {
+      "id": "RH-02",
+      "gate": "render-foundation",
+      "lane": "shared-rendering",
+      "priority": 2,
+      "title": "Stream video frames through a bounded encoder and output lifecycle",
+      "authority": "autonomous",
+      "dependsOn": ["RH-01"],
+      "estimate": {
+        "agentHoursMin": 0.25,
+        "agentHoursMax": 4
+      },
+      "acceptance": [
+        "Video export consumes frames incrementally with backpressure and deterministic timestamps instead of retaining an intermediate JPEG sequence.",
+        "Audio clipping, codec/container capability reporting, cancellation and cleanup preserve supported product behavior.",
+        "Timing covers complete export wall time and accurately distinguishes overlapping stage costs and retained output memory."
+      ],
+      "evidenceLanes": [
+        "project-semantic",
+        "runtime-temporal",
+        "visual-composition",
+        "performance-lifecycle",
+        "code-architecture"
+      ],
+      "affectedCriteria": [],
+      "evidenceRequirements": [
+        {
+          "id": "render-evidence",
+          "kind": "document",
+          "description": "Exact implementation scope, observations, limitations and independent review"
+        },
+        {
+          "id": "render-check",
+          "kind": "command",
+          "checkStage": "checkpoint",
+          "description": "Passing staged validation for the implemented boundary"
+        }
+      ]
+    },
+    {
+      "id": "RH-03",
+      "gate": "render-foundation",
+      "lane": "shared-rendering",
+      "priority": 3,
+      "title": "Validate independent rendering and streaming media end to end",
+      "authority": "autonomous",
+      "dependsOn": ["RH-02"],
+      "estimate": {
+        "agentHoursMin": 0.25,
+        "agentHoursMax": 4
+      },
+      "acceptance": [
+        "Browser evidence rejects preview upscaling, live-editor contamination, shifted audio/video and unbounded frame production.",
+        "Exact identities, resource cleanup, real media decode and production coverage are recorded at integration scope.",
+        "Performance measurements are recorded only in an adequate quiet environment; unmeasured performance is not represented as certified."
+      ],
+      "evidenceLanes": [
+        "project-semantic",
+        "runtime-temporal",
+        "visual-composition",
+        "performance-lifecycle",
+        "code-architecture"
+      ],
+      "affectedCriteria": [],
+      "evidenceRequirements": [
+        {
+          "id": "render-evidence",
+          "kind": "document",
+          "description": "Exact implementation scope, observations, limitations and independent review"
+        },
+        {
+          "id": "render-check",
+          "kind": "command",
+          "checkStage": "integration",
+          "description": "Passing staged validation for the implemented boundary"
+        }
+      ]
+    },
+    {
+      "id": "EC-02",
+      "gate": "authority-skeleton",
+      "lane": "production-ownership",
+      "priority": 5,
+      "title": "Establish the canonical Human Signal production package and identity manifest",
+      "authority": "autonomous",
+      "dependsOn": ["RH-03"],
+      "estimate": {
+        "agentHoursMin": 3,
+        "agentHoursMax": 6
+      },
+      "acceptance": [
+        "One production package owns the Human Signal project factory, score, graphs, trusted capabilities, source/derived assets, and production tests.",
+        "Generic engine packages do not import or recognize the flagship, and no example or Studio glue becomes a second production owner.",
+        "The execution manifest binds the Gate 1 treatment, exact source window, package versions, capability registry, assets, artifacts, and render settings."
+      ],
+      "evidenceLanes": ["project-semantic", "code-architecture"],
+      "affectedCriteria": [
+        "identity.complete-execution-manifest",
+        "reusable.production-core-boundary",
+        "evidence.assets-artifacts-bundle-manifest"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "production-identity",
+          "kind": "artifact",
+          "description": "Content-addressed Human Signal ownership and execution manifest"
+        },
+        {
+          "id": "production-package-check",
+          "kind": "command",
+          "checkStage": "checkpoint",
+          "description": "Passing production-package and dependency-boundary checks"
+        }
+      ]
+    },
+    {
+      "id": "EC-03",
+      "gate": "authority-skeleton",
+      "lane": "audio-window-bake",
+      "priority": 6,
+      "title": "Materialize the exact production audio window and deterministic bake",
+      "authority": "autonomous",
+      "dependsOn": ["EC-02"],
+      "estimate": {
+        "agentHoursMin": 3,
+        "agentHoursMax": 6
+      },
+      "acceptance": [
+        "The exact approved source sample range produces a versioned deterministic audio derivative and standard feature artifact with provenance.",
+        "Preview, direct seek, still, video, and reopened bundle sample the same features at the same frames.",
+        "Decode, bake, progress, cancellation, missing-artifact, and cleanup paths produce typed diagnostics without hidden browser truth."
+      ],
+      "evidenceLanes": [
+        "audio-musical-intent",
+        "runtime-temporal",
+        "portability-reproducibility"
+      ],
+      "affectedCriteria": [
+        "determinism.repeated-decoded-media",
+        "production.visual-audio-sanity",
+        "evidence.assets-artifacts-bundle-manifest"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "audio-bake-manifest",
+          "kind": "artifact",
+          "description": "Content-addressed approved-window audio and bake manifest"
+        },
+        {
+          "id": "audio-bake-check",
+          "kind": "command",
+          "checkStage": "integration",
+          "description": "Passing deterministic audio materialization and cross-path checks"
+        }
+      ]
+    },
+    {
+      "id": "EC-04",
+      "gate": "authority-skeleton",
+      "lane": "whole-production-skeleton",
+      "priority": 7,
+      "title": "Materialize the complete low-detail five-act Human Signal skeleton",
+      "authority": "autonomous",
+      "dependsOn": ["EC-03"],
+      "estimate": {
+        "agentHoursMin": 4,
+        "agentHoursMax": 7
+      },
+      "acceptance": [
+        "The canonical project spans all 2880 frames, five acts, four transitions, nine responsibility-scoped layers, seven graphs, and four performer models.",
+        "Every planned layer has a visible or inspectable contribution and every graph output has a named consumer without count-only structures.",
+        "The low-detail project validates, evaluates, saves, bundles, reopens, and seeks deterministically without claiming final visual quality."
+      ],
+      "evidenceLanes": [
+        "project-semantic",
+        "runtime-temporal",
+        "visual-composition"
+      ],
+      "affectedCriteria": [
+        "production.duration-acts-transitions",
+        "production.honest-breadth",
+        "workflow.headless-canonical-operations"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "skeleton-project",
+          "kind": "artifact",
+          "description": "Content-addressed canonical low-detail Human Signal project and structure report"
+        },
+        {
+          "id": "skeleton-check",
+          "kind": "command",
+          "checkStage": "integration",
+          "description": "Passing whole-production structure, seek, bundle, and reopen checks"
+        }
+      ]
+    },
+    {
+      "id": "EC-05",
+      "gate": "authority-skeleton",
+      "lane": "shared-live-session",
+      "priority": 8,
+      "title": "Prove headless authoring and same-session live editor observation",
+      "authority": "autonomous",
+      "dependsOn": ["EC-04"],
+      "estimate": {
+        "agentHoursMin": 3,
+        "agentHoursMax": 6
+      },
+      "acceptance": [
+        "Agent, CLI, Studio, and host mutations use the same typed action and VizSession contracts with attributable history.",
+        "A headless change appears live in an attached editor session without reload, UI imitation, shadow state, or broad frame-rate React updates.",
+        "Continuous values remain immediate and smooth while one durable revision is committed at gesture end."
+      ],
+      "evidenceLanes": [
+        "editor-parity",
+        "project-semantic",
+        "runtime-temporal"
+      ],
+      "affectedCriteria": [
+        "workflow.shared-editor-session",
+        "workflow.agent-history-attribution",
+        "workflow.continuous-human-edit",
+        "workflow.no-agent-shadow-semantics"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "shared-session-proof",
+          "kind": "artifact",
+          "description": "Content-addressed headless-to-live-editor session and history proof"
+        },
+        {
+          "id": "shared-session-check",
+          "kind": "command",
+          "checkStage": "integration",
+          "description": "Passing shared-session browser, history, responsiveness, and ownership gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-06",
+      "gate": "authority-skeleton",
+      "lane": "representative-quality-slice",
+      "priority": 9,
+      "title": "Build and autonomously calibrate one representative quality slice",
+      "authority": "autonomous",
+      "dependsOn": ["EC-05"],
+      "estimate": {
+        "agentHoursMin": 5,
+        "agentHoursMax": 9
+      },
+      "acceptance": [
+        "One treatment-declared 8–12 second passage reaches a representative bar for models, procedural depth, lighting, camera, compositing, and musical response.",
+        "Exact stills and motion are independently inspected and compared against the full skeleton, prior productions, and declared visual language.",
+        "The calibration records defects and revises the treatment realization without treating one favorable frame as production approval."
+      ],
+      "evidenceLanes": [
+        "visual-composition",
+        "motion-continuity",
+        "creative-human"
+      ],
+      "affectedCriteria": [
+        "production.final-creative-coherence",
+        "production.compositor-camera-hierarchy",
+        "evidence.visual-review-packet"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "quality-slice-review",
+          "kind": "artifact",
+          "description": "Content-addressed representative still, motion, comparison, and critique packet"
+        },
+        {
+          "id": "quality-slice-check",
+          "kind": "command",
+          "checkStage": "certification",
+          "description": "Passing representative-slice render, visual, motion, bundle, and browser gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-07",
+      "gate": "direction-compositor",
+      "lane": "macro-direction-contract",
+      "priority": 10,
+      "title": "Implement the portable macro-direction contract",
+      "authority": "autonomous",
+      "dependsOn": ["EC-06"],
+      "estimate": {
+        "agentHoursMin": 4,
+        "agentHoursMax": 8
+      },
+      "acceptance": [
+        "Named frame-exact acts, cues, progress, and directorial signals have one portable project owner and deterministic runtime meaning.",
+        "Validation, actions, history, inspection, editor authoring, CLI operations, bundles, and runtime evaluation move together.",
+        "The change creates no second transport, hidden sequencer, component-private cue system, or compatibility field model."
+      ],
+      "evidenceLanes": [
+        "project-semantic",
+        "runtime-temporal",
+        "code-architecture"
+      ],
+      "affectedCriteria": [
+        "production.duration-acts-transitions",
+        "production.macro-phrase-detail-reactivity",
+        "determinism.evaluation-paths"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "direction-contract",
+          "kind": "document",
+          "description": "Content-addressed portable macro-direction contract and ownership review"
+        },
+        {
+          "id": "direction-check",
+          "kind": "command",
+          "checkStage": "integration",
+          "description": "Passing schema, action, runtime, editor, bundle, and temporal checks"
+        }
+      ]
+    },
+    {
+      "id": "EC-08",
+      "gate": "direction-compositor",
+      "lane": "compositor-modulation",
+      "priority": 11,
+      "title": "Implement graph-driven compositor modulation",
+      "authority": "autonomous",
+      "dependsOn": ["EC-07"],
+      "estimate": {
+        "agentHoursMin": 4,
+        "agentHoursMax": 8
+      },
+      "acceptance": [
+        "Typed graph outputs may drive canonical layer opacity and transform values with deterministic preview, seek, still, and video equivalence.",
+        "Runtime inspection exposes base, graph contribution, and resolved compositor values without moving composition ownership into components or React.",
+        "History and live gestures preserve immediate feedback and one release revision; obsolete production encodings are deleted."
+      ],
+      "evidenceLanes": [
+        "runtime-temporal",
+        "visual-composition",
+        "editor-parity"
+      ],
+      "affectedCriteria": [
+        "production.compositor-camera-hierarchy",
+        "workflow.continuous-human-edit",
+        "editor.live-values-and-diagnostics"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "compositor-modulation-proof",
+          "kind": "artifact",
+          "description": "Content-addressed resolved-compositor and cross-path equivalence proof"
+        },
+        {
+          "id": "compositor-modulation-check",
+          "kind": "command",
+          "checkStage": "integration",
+          "description": "Passing compositor runtime, editor, visual, and interaction gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-09",
+      "gate": "direction-compositor",
+      "lane": "two-act-integration",
+      "priority": 12,
+      "title": "Connect two complete acts through one canonical transition",
+      "authority": "autonomous",
+      "dependsOn": ["EC-08"],
+      "estimate": {
+        "agentHoursMin": 4,
+        "agentHoursMax": 7
+      },
+      "acceptance": [
+        "Two complete Human Signal acts and their transition use the canonical score, graphs, compositor, camera, audio, and render paths.",
+        "Direct seek, sequential playback, reopened project, still, and video agree through the entire transition.",
+        "Independent motion review finds no phase reset, model pop, camera discontinuity, exposure discontinuity, or hidden production-only semantics."
+      ],
+      "evidenceLanes": [
+        "runtime-temporal",
+        "motion-continuity",
+        "portability-reproducibility"
+      ],
+      "affectedCriteria": [
+        "determinism.preview-still-video-adapter",
+        "production.visual-audio-sanity",
+        "production.compositor-camera-hierarchy"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "two-act-review",
+          "kind": "artifact",
+          "description": "Content-addressed two-act transition frames, clip, semantics, and issue report"
+        },
+        {
+          "id": "two-act-check",
+          "kind": "command",
+          "checkStage": "certification",
+          "description": "Passing two-act cross-path determinism and motion-continuity gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-10",
+      "gate": "capability-renderers",
+      "lane": "model-animation-system",
+      "priority": 13,
+      "title": "Harden model-backed characters, grounding, animation, and lifecycle",
+      "authority": "autonomous",
+      "dependsOn": ["EC-09"],
+      "estimate": {
+        "agentHoursMin": 5,
+        "agentHoursMax": 9
+      },
+      "acceptance": [
+        "All four authorized performers load through the canonical asset/model system with explicit clips, transforms, grounding, materials, and diagnostics.",
+        "Animation phase, direct seeking, sequential playback, resource leases, disposal, and multi-instance behavior remain deterministic and bounded.",
+        "Representative motion review proves performers are readable, correctly grounded, and visually valuable rather than merely present."
+      ],
+      "evidenceLanes": [
+        "visual-composition",
+        "motion-continuity",
+        "performance-lifecycle"
+      ],
+      "affectedCriteria": [
+        "production.model-backed-authored-animation",
+        "performance.retained-resource-lifecycle",
+        "production.final-creative-coherence"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "model-animation-review",
+          "kind": "artifact",
+          "description": "Content-addressed model, grounding, animation, material, and lifecycle review"
+        },
+        {
+          "id": "model-animation-check",
+          "kind": "command",
+          "checkStage": "integration",
+          "description": "Passing model visual, temporal, asset, and resource-lifecycle gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-11",
+      "gate": "capability-renderers",
+      "lane": "procedural-spatial-system",
+      "priority": 14,
+      "title": "Integrate reusable procedural spatial 3D and camera behavior",
+      "authority": "autonomous",
+      "dependsOn": ["EC-10"],
+      "estimate": {
+        "agentHoursMin": 4,
+        "agentHoursMax": 8
+      },
+      "acceptance": [
+        "Procedural spatial components provide distinct background and middle-distance roles through stable capability contracts.",
+        "Camera ownership remains explicit and independent Three programs are composited honestly without a false shared world.",
+        "Visual, motion, bounds, seek, lifecycle, and full-fidelity host evidence reject decorative or effectively invisible contributions."
+      ],
+      "evidenceLanes": [
+        "visual-composition",
+        "motion-continuity",
+        "code-architecture"
+      ],
+      "affectedCriteria": [
+        "production.procedural-spatial-3d",
+        "production.compositor-camera-hierarchy",
+        "reusable.promotion-evidence"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "procedural-spatial-review",
+          "kind": "artifact",
+          "description": "Content-addressed spatial contribution, camera, lifecycle, and host-fidelity review"
+        },
+        {
+          "id": "procedural-spatial-check",
+          "kind": "command",
+          "checkStage": "checkpoint",
+          "description": "Passing procedural 3D visual, motion, runtime, and host gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-12",
+      "gate": "capability-renderers",
+      "lane": "shader-particle-instancing",
+      "priority": 15,
+      "title": "Integrate shader, particle, and instanced visual systems",
+      "authority": "autonomous",
+      "dependsOn": ["EC-11"],
+      "estimate": {
+        "agentHoursMin": 5,
+        "agentHoursMax": 9
+      },
+      "acceptance": [
+        "Shader, haze, impact-particle, strobe, and instanced roles are distinct, bounded, deterministic, and schema-authorable.",
+        "Temporal semantics avoid raw feature-to-rate discontinuity and preserve exact seek/playback/render equivalence.",
+        "Allocation, GPU resources, disposal, compositing, transparency, and peak-density behavior pass isolated and combined evidence."
+      ],
+      "evidenceLanes": [
+        "runtime-temporal",
+        "visual-composition",
+        "performance-lifecycle"
+      ],
+      "affectedCriteria": [
+        "production.shader-particle-instancing",
+        "determinism.evaluation-paths",
+        "performance.retained-resource-lifecycle"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "shader-particle-review",
+          "kind": "artifact",
+          "description": "Content-addressed isolated and combined shader, particle, instancing, and lifecycle evidence"
+        },
+        {
+          "id": "shader-particle-check",
+          "kind": "command",
+          "checkStage": "integration",
+          "description": "Passing shader, particle, transparency, temporal, and lifecycle gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-13",
+      "gate": "capability-renderers",
+      "lane": "complementary-2d-library",
+      "priority": 16,
+      "title": "Build the reusable complementary 2D visualization capability set",
+      "authority": "autonomous",
+      "dependsOn": ["EC-12"],
+      "estimate": {
+        "agentHoursMin": 4,
+        "agentHoursMax": 8
+      },
+      "acceptance": [
+        "Curve, spectrum, graphic, typography, or equivalent 2D capabilities form a coherent reusable palette with typed settings and graph inputs.",
+        "Each promoted capability has two meaningful consumers or a stable-contract fixture and remains independent of Human Signal score and palette.",
+        "The editor, SVG/browser renderers, bundle, inspection, and headless authoring surfaces agree without duplicate component semantics."
+      ],
+      "evidenceLanes": [
+        "visual-composition",
+        "project-semantic",
+        "code-architecture"
+      ],
+      "affectedCriteria": [
+        "production.complementary-media",
+        "reusable.promotion-evidence",
+        "reusable.canonical-authoring-and-feedback"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "visualization-library-review",
+          "kind": "artifact",
+          "description": "Content-addressed capability, consumer, visual, and authoring review"
+        },
+        {
+          "id": "visualization-library-check",
+          "kind": "command",
+          "checkStage": "integration",
+          "description": "Passing 2D capability, renderer, editor, CLI, and promotion checks"
+        }
+      ]
+    },
+    {
+      "id": "EC-14",
+      "gate": "capability-renderers",
+      "lane": "renderer-architecture",
+      "priority": 17,
+      "title": "Establish the renderer and compute profiling boundary",
+      "authority": "autonomous",
+      "dependsOn": ["EC-13"],
+      "estimate": {
+        "agentHoursMin": 5,
+        "agentHoursMax": 10
+      },
+      "acceptance": [
+        "Exact component and representative two-act profiles identify provisional CPU, GPU, allocation, serialization, worker, and transfer bottlenecks without pretending the final workload exists.",
+        "Any worker, WebAssembly, Rust, retained-renderer, or backend option names a measured stable boundary and remains provisional until full-flagship evidence supports selection.",
+        "Source, built packages, browser preview, still, video, and fallback paths remain deterministic and capability-honest."
+      ],
+      "evidenceLanes": [
+        "performance-lifecycle",
+        "code-architecture",
+        "portability-reproducibility"
+      ],
+      "affectedCriteria": [
+        "performance.full-flagship-playback",
+        "performance.final-render-throughput",
+        "determinism.preview-still-video-adapter"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "renderer-architecture-report",
+          "kind": "document",
+          "description": "Content-addressed provisional measurements, ownership, candidate-boundary, and fallback analysis"
+        },
+        {
+          "id": "renderer-architecture-check",
+          "kind": "command",
+          "checkStage": "certification",
+          "description": "Passing provisional renderer measurement, determinism, build, and boundary gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-15",
+      "gate": "agent-files-exports",
+      "lane": "multi-graph-direction",
+      "priority": 18,
+      "title": "Scale multi-graph musical direction and inspection",
+      "authority": "autonomous",
+      "dependsOn": ["EC-14"],
+      "estimate": {
+        "agentHoursMin": 4,
+        "agentHoursMax": 8
+      },
+      "acceptance": [
+        "Seven responsibility-separated graphs express macro, phrase, and detail intent without a second evaluator or production graph dialect.",
+        "Usage, output, consumer, inactive, invalid, cost, and resolved-value inspection remains accurate while graphs are open and closed.",
+        "Layouts, labels, presets, direct manipulation, history, and live value presentation stay responsive and understandable at full scale."
+      ],
+      "evidenceLanes": [
+        "audio-musical-intent",
+        "editor-parity",
+        "performance-lifecycle"
+      ],
+      "affectedCriteria": [
+        "production.macro-phrase-detail-reactivity",
+        "editor.live-values-and-diagnostics",
+        "performance.graph-open-interaction"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "multi-graph-report",
+          "kind": "artifact",
+          "description": "Content-addressed graph responsibility, usage, cost, layout, and live-value report"
+        },
+        {
+          "id": "multi-graph-check",
+          "kind": "command",
+          "checkStage": "integration",
+          "description": "Passing multi-graph semantic, editor, interaction, and performance gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-16",
+      "gate": "agent-files-exports",
+      "lane": "agent-control-feedback",
+      "priority": 19,
+      "title": "Complete the canonical agent authoring and sensory control surface",
+      "authority": "autonomous",
+      "dependsOn": ["EC-15"],
+      "estimate": {
+        "agentHoursMin": 5,
+        "agentHoursMax": 9
+      },
+      "acceptance": [
+        "Agents can create, inspect, mutate, compare, render, diagnose, undo, redo, and review the same live project through stable canonical operations.",
+        "Every added sensor answers a named criterion or observed failure and reports exact identities, environments, tolerances, limitations, and false-pass rejection.",
+        "Product CLI, editor, host control, and built-package behavior agree; production-only scripts duplicating canonical operations are removed."
+      ],
+      "evidenceLanes": [
+        "project-semantic",
+        "code-architecture",
+        "portability-reproducibility"
+      ],
+      "affectedCriteria": [
+        "workflow.headless-canonical-operations",
+        "workflow.no-agent-shadow-semantics",
+        "reusable.canonical-authoring-and-feedback",
+        "evidence.system-reports"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "agent-control-report",
+          "kind": "artifact",
+          "description": "Content-addressed action, inspection, feedback, source-built, and live-session coverage report"
+        },
+        {
+          "id": "agent-control-check",
+          "kind": "command",
+          "checkStage": "integration",
+          "description": "Passing canonical agent workflow and source-built parity gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-17",
+      "gate": "agent-files-exports",
+      "lane": "file-asset-bundle",
+      "priority": 20,
+      "title": "Complete file, asset, artifact, and portable bundle workflows",
+      "authority": "autonomous",
+      "dependsOn": ["EC-16"],
+      "estimate": {
+        "agentHoursMin": 5,
+        "agentHoursMax": 9
+      },
+      "acceptance": [
+        "Open, save, import, export, asset resolution, derivation, cache, artifact, and bundle lifecycles have one explicit typed ownership model.",
+        "The full project reopens offline in a clean profile with all approved built-ins and bundled inputs, then remains editable and rerenderable.",
+        "Missing, corrupt, stale, cancelled, duplicated, and unavailable resources fail with actionable diagnostics and no partial canonical mutation."
+      ],
+      "evidenceLanes": [
+        "portability-reproducibility",
+        "project-semantic",
+        "editor-parity"
+      ],
+      "affectedCriteria": [
+        "portability.clean-bundle-roundtrip",
+        "evidence.assets-artifacts-bundle-manifest",
+        "editor.complete-flagship-workflows"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "file-asset-bundle-report",
+          "kind": "artifact",
+          "description": "Content-addressed full-project file, asset, artifact, and clean-room bundle report"
+        },
+        {
+          "id": "file-asset-bundle-check",
+          "kind": "command",
+          "checkStage": "integration",
+          "description": "Passing file lifecycle, corruption, cancellation, offline reopen, and rerender gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-18",
+      "gate": "agent-files-exports",
+      "lane": "render-export-system",
+      "priority": 21,
+      "title": "Complete deterministic still, sequence, and video export workflows",
+      "authority": "autonomous",
+      "dependsOn": ["EC-17"],
+      "estimate": {
+        "agentHoursMin": 5,
+        "agentHoursMax": 10
+      },
+      "acceptance": [
+        "Canonical render jobs support stills, frame ranges, review clips, and final video with progress, cancellation, retry identity, and bounded cleanup.",
+        "Preview, still, sequence, video, and adapter output share runtime meaning and preserve alpha, blend, camera, audio, duration, and synchronization contracts.",
+        "Editor and agent workflows expose the same jobs and diagnostics without making Remotion, FFmpeg, browser UI, or a provider the architecture."
+      ],
+      "evidenceLanes": [
+        "runtime-temporal",
+        "portability-reproducibility",
+        "editor-parity"
+      ],
+      "affectedCriteria": [
+        "determinism.preview-still-video-adapter",
+        "evidence.final-video-and-probe",
+        "editor.complete-flagship-workflows"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "render-export-report",
+          "kind": "artifact",
+          "description": "Content-addressed cross-path render, export, media, cancellation, and cleanup report"
+        },
+        {
+          "id": "render-export-check",
+          "kind": "command",
+          "checkStage": "certification",
+          "description": "Passing render job, media, editor, adapter, and lifecycle gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-19",
+      "gate": "production-refinement",
+      "lane": "full-production-direction",
+      "priority": 22,
+      "title": "Complete all Human Signal acts, transitions, and musical direction",
+      "authority": "autonomous",
+      "dependsOn": ["EC-18"],
+      "estimate": {
+        "agentHoursMin": 7,
+        "agentHoursMax": 12
+      },
+      "acceptance": [
+        "All five acts, four transitions, entrances, exits, camera trajectory, palette progression, density arc, peak, restraint, and release are complete.",
+        "Macro, phrase, and detail reactivity remain intentional, bounded, inspectable, and musically legible without arbitrary vibration.",
+        "A full-duration rough cut, 12–16-frame contact sheet, and every transition/peak clip receive independent visual, motion, and structure critique."
+      ],
+      "evidenceLanes": [
+        "audio-musical-intent",
+        "visual-composition",
+        "motion-continuity"
+      ],
+      "affectedCriteria": [
+        "production.duration-acts-transitions",
+        "production.macro-phrase-detail-reactivity",
+        "production.final-creative-coherence",
+        "evidence.visual-review-packet"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "rough-cut-review",
+          "kind": "artifact",
+          "description": "Content-addressed full rough cut, contact sheet, clips, and independent critique"
+        },
+        {
+          "id": "full-direction-check",
+          "kind": "command",
+          "checkStage": "integration",
+          "description": "Passing full-duration structure, media, visual, motion, and semantic gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-20",
+      "gate": "production-refinement",
+      "lane": "motion-visual-refinement",
+      "priority": 23,
+      "title": "Refine motion, grounding, lighting, hierarchy, and reactive clarity",
+      "authority": "autonomous",
+      "dependsOn": ["EC-19"],
+      "estimate": {
+        "agentHoursMin": 7,
+        "agentHoursMax": 12
+      },
+      "acceptance": [
+        "Every representative frame and motion window passes iterative review for grounding, animation, continuity, exposure, contrast, hierarchy, density, particles, and camera quality.",
+        "Visual refinement preserves project legibility, deterministic semantics, and performance visibility rather than hiding defects in opaque production code.",
+        "Known defects are corrected and re-reviewed until no unresolved issue contradicts the professional-quality claim."
+      ],
+      "evidenceLanes": [
+        "visual-composition",
+        "motion-continuity",
+        "creative-human"
+      ],
+      "affectedCriteria": [
+        "production.model-backed-authored-animation",
+        "production.final-creative-coherence",
+        "editor.project-legibility"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "refinement-review",
+          "kind": "artifact",
+          "description": "Content-addressed iterative still, motion, issue, correction, and project-legibility review"
+        },
+        {
+          "id": "refinement-check",
+          "kind": "command",
+          "checkStage": "certification",
+          "description": "Passing full-duration visual, motion, editor, and deterministic refinement gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-21",
+      "gate": "performance-parity",
+      "lane": "playback-interaction-performance",
+      "priority": 24,
+      "title": "Meet full-flagship playback and graph-open interaction budgets",
+      "authority": "autonomous",
+      "dependsOn": ["EC-20"],
+      "estimate": {
+        "agentHoursMin": 6,
+        "agentHoursMax": 11
+      },
+      "acceptance": [
+        "The exact full composition meets graph-closed and graph-open display, runtime planning, CPU, long-frame, and long-task budgets at quality 2.",
+        "Continuous graph and parameter editing meets transient, visible, revision, undo, and redo budgets without memo-everything or broad React data flow.",
+        "The final renderer and compute architecture is selected from full-workload evidence, including any justified worker, WebAssembly, or Rust boundary, and obsolete candidates are deleted.",
+        "Optimizations repair measured canonical owners and retain all content, visual quality, diagnostics, and deterministic behavior."
+      ],
+      "evidenceLanes": [
+        "performance-lifecycle",
+        "editor-parity",
+        "runtime-temporal"
+      ],
+      "affectedCriteria": [
+        "performance.full-flagship-playback",
+        "performance.graph-open-interaction",
+        "workflow.continuous-human-edit"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "playback-interaction-report",
+          "kind": "artifact",
+          "description": "Content-addressed exact-workload playback, graph-open, interaction, and profile report"
+        },
+        {
+          "id": "playback-interaction-check",
+          "kind": "command",
+          "checkStage": "integration",
+          "description": "Passing full flagship playback and interaction performance gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-22",
+      "gate": "performance-parity",
+      "lane": "seek-render-endurance",
+      "priority": 25,
+      "title": "Meet seek, render-throughput, and six-cycle lifecycle budgets",
+      "authority": "autonomous",
+      "dependsOn": ["EC-21"],
+      "estimate": {
+        "agentHoursMin": 6,
+        "agentHoursMax": 11
+      },
+      "acceptance": [
+        "Cold and warm seeks across every act, cue, transition, and review frame meet correctness and latency budgets.",
+        "The full 1080p quality-2 render meets throughput and media bounds with no content reduction or synchronization drift.",
+        "Six edit, playback, model, render, save, reopen, and disposal cycles return heap, subscriptions, canvases, audio, and renderer resources to steady state."
+      ],
+      "evidenceLanes": [
+        "performance-lifecycle",
+        "runtime-temporal",
+        "portability-reproducibility"
+      ],
+      "affectedCriteria": [
+        "performance.seek-and-act-boundaries",
+        "performance.six-cycle-endurance",
+        "performance.retained-resource-lifecycle",
+        "performance.final-render-throughput"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "seek-render-endurance-report",
+          "kind": "artifact",
+          "description": "Content-addressed seek, final-render, media, heap, and resource-lifecycle report"
+        },
+        {
+          "id": "seek-render-endurance-check",
+          "kind": "command",
+          "checkStage": "integration",
+          "description": "Passing seek, render-throughput, media, and six-cycle endurance gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-23",
+      "gate": "performance-parity",
+      "lane": "editor-parity-regression",
+      "priority": 26,
+      "title": "Recertify the complete editor parity and regression floor",
+      "authority": "autonomous",
+      "dependsOn": ["EC-22"],
+      "estimate": {
+        "agentHoursMin": 5,
+        "agentHoursMax": 9
+      },
+      "acceptance": [
+        "All 42 V1 parity workflows remain verified across behavior, appearance, interaction, failure handling, and performance dimensions.",
+        "Signal Cathedral, Afterlight Assembly, and the exact Light Tunnel performance workload remain green.",
+        "The full flagship editor remains responsive, intuitive, organized, fully featured, and free of unexpected console, page, runtime, resource, and graph issues."
+      ],
+      "evidenceLanes": [
+        "editor-parity",
+        "performance-lifecycle",
+        "visual-composition"
+      ],
+      "affectedCriteria": [
+        "editor.parity-floor",
+        "performance.light-tunnel-regression",
+        "repository.previous-productions",
+        "repository.browser-classification"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "parity-regression-report",
+          "kind": "artifact",
+          "description": "Content-addressed V1 parity, previous-production, Light Tunnel, console, and product review"
+        },
+        {
+          "id": "parity-regression-check",
+          "kind": "command",
+          "checkStage": "certification",
+          "description": "Passing complete browser, parity, regression, and performance gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-24",
+      "gate": "candidate-handoff",
+      "lane": "consolidation-cleanup",
+      "priority": 27,
+      "title": "Consolidate architecture and delete temporary or duplicate paths",
+      "authority": "autonomous",
+      "dependsOn": ["EC-23"],
+      "estimate": {
+        "agentHoursMin": 5,
+        "agentHoursMax": 10
+      },
+      "acceptance": [
+        "Temporary scaffolding, compatibility paths, duplicate owners, unused settings, dead code, debug artifacts, and production-only tool duplicates are removed.",
+        "Package boundaries, public types, comments, docs, tests, and dependency direction describe the final engine rather than its migration history.",
+        "An independent canonicalization review finds no material simplification, ownership, deletion, type-safety, or developer-experience defect."
+      ],
+      "evidenceLanes": ["code-architecture", "project-semantic"],
+      "affectedCriteria": [
+        "reusable.cleanup-and-deletion",
+        "reusable.production-core-boundary",
+        "reusable.promotion-evidence",
+        "repository.focused-and-failure-tests"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "consolidation-review",
+          "kind": "document",
+          "description": "Content-addressed final ownership, deletion, API, dependency, and source-minimization review"
+        },
+        {
+          "id": "consolidation-check",
+          "kind": "command",
+          "checkStage": "integration",
+          "description": "Passing architecture, tests, types, builds, and canonicalization gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-25",
+      "gate": "candidate-handoff",
+      "lane": "candidate-certification",
+      "priority": 28,
+      "title": "Freeze the clean engine and flagship candidate",
+      "authority": "autonomous",
+      "dependsOn": ["EC-24"],
+      "estimate": {
+        "agentHoursMin": 5,
+        "agentHoursMax": 9
+      },
+      "acceptance": [
+        "One clean candidate commit passes every automatable Goal Five criterion and the uninterrupted complete repository gate.",
+        "Implementation, project, capability, asset, artifact, dependency, environment, and test identities are frozen and reproducible.",
+        "Independent architecture, product, visual, motion, performance, portability, and acceptance reviews report no unresolved candidate blocker."
+      ],
+      "evidenceLanes": [
+        "code-architecture",
+        "performance-lifecycle",
+        "portability-reproducibility",
+        "creative-human"
+      ],
+      "affectedCriteria": [
+        "repository.uninterrupted-complete-gate",
+        "evidence.system-reports",
+        "evidence.candidate-and-evidence-commits"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "candidate-manifest",
+          "kind": "artifact",
+          "description": "Content-addressed clean candidate identity, criteria, review, and reproducibility manifest"
+        },
+        {
+          "id": "candidate-certification-check",
+          "kind": "command",
+          "checkStage": "certification",
+          "description": "Passing uninterrupted complete repository and Goal Five certification gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-26",
+      "gate": "candidate-handoff",
+      "lane": "final-media-portability",
+      "priority": 29,
+      "title": "Generate and verify final media, review evidence, and editable project",
+      "authority": "autonomous",
+      "dependsOn": ["EC-25"],
+      "estimate": {
+        "agentHoursMin": 6,
+        "agentHoursMax": 11
+      },
+      "acceptance": [
+        "The frozen candidate generates the exact full-duration 1080p H.264/AAC video, intended audio, still set, contact sheet, transition clips, and media probes.",
+        "A clean offline profile opens the portable bundle, exposes the complete understandable project, performs an edit, saves, reopens, and rerenders equivalent representative frames.",
+        "Automated media diagnostics plus independent full-duration visual, motion, audio-map, and project-legibility review find no unexplained defect."
+      ],
+      "evidenceLanes": [
+        "visual-composition",
+        "motion-continuity",
+        "portability-reproducibility",
+        "creative-human"
+      ],
+      "affectedCriteria": [
+        "evidence.visual-review-packet",
+        "evidence.final-video-and-probe",
+        "portability.clean-bundle-roundtrip",
+        "editor.project-legibility"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "final-media-review",
+          "kind": "artifact",
+          "description": "Content-addressed final media, stills, clips, probes, clean-room project, and independent review packet"
+        },
+        {
+          "id": "final-media-check",
+          "kind": "command",
+          "checkStage": "certification",
+          "description": "Passing final media, clean-room portability, deterministic rerender, and creative-review gate"
+        }
+      ]
+    },
+    {
+      "id": "EC-27",
+      "gate": "candidate-handoff",
+      "lane": "engine-completion-handoff",
+      "priority": 30,
+      "title": "Record the evidence-only engine completion handoff",
+      "authority": "autonomous",
+      "dependsOn": ["EC-26"],
+      "estimate": {
+        "agentHoursMin": 3,
+        "agentHoursMax": 6
+      },
+      "acceptance": [
+        "A documentation-only evidence commit binds the candidate, final media, editable project, all 46 criteria, performance results, independent reviews, and known limitations.",
+        "The handoff demonstrates the polished flagship in the live editor and through agent controls, and names no unresolved engine defect that contradicts completion.",
+        "The next requested human decision concerns only a separately governed platform, hosting, integration, licensing, or monetization horizon; no such work begins automatically."
+      ],
+      "evidenceLanes": [
+        "project-semantic",
+        "visual-composition",
+        "performance-lifecycle",
+        "portability-reproducibility",
+        "code-architecture",
+        "creative-human"
+      ],
+      "affectedCriteria": [
+        "evidence.system-reports",
+        "evidence.human-calibration-decisions",
+        "evidence.candidate-and-evidence-commits"
+      ],
+      "evidenceRequirements": [
+        {
+          "id": "engine-completion-evidence",
+          "kind": "document",
+          "description": "Content-addressed terminal engine-completion evidence and next-horizon handoff"
+        },
+        {
+          "id": "engine-completion-check",
+          "kind": "command",
+          "checkStage": "checkpoint",
+          "description": "Passing terminal evidence-only diff, identity, documentation, and contract gate"
+        }
+      ]
+    }
+  ]
+}

@@ -10,7 +10,7 @@ the
 [autonomous sensory feedback operating system](./goal-five-autonomous-sensory-feedback-operating-system.md),
 and the tracked active-program pointer at
 `tools/repo/programs/active-program.json`. After the approved Gate 1 handoff,
-the pointer selects the immutable autonomous engine-completion program. That
+the pointer selects the immutable render-foundation successor program. That
 program contains no routine human checkpoints: former Gates 2 through 5 are
 evidence-backed autonomous calibration milestones.
 
@@ -229,17 +229,17 @@ No default-program mutation may run between the pointer-switch commit and the
 old lease's completion. Recovery in that interval must use the exact recorded
 readiness-program identity; it must never infer ownership from the new pointer.
 
-The product owner's 2026-09-06 instruction authorizes development daily from
-01:00–08:00 in `Europe/Ljubljana`, replacing the former four-window cadence.
-Scheduled opportunities occur every 15 minutes from 01:00 through 07:45. Check
-local time before beginning and at major boundaries; do not begin development
-outside the window. Select one checkpoint with enough time for implementation,
-review, validation and cleanup. Begin winding down by 07:30 and stop development
-by 08:00.
+The product owner's 2026-09-07 amendment authorizes one daily 01:00 wake in
+the same Codex task, working successively until 08:00 `Europe/Ljubljana`.
+Check actual local time at major boundaries. Claims remain sequential and each
+checkpoint retains its own exact evidence, commit and lease release, but a run
+may claim the next dependency-ready item after closure. Do not reject useful
+work because an advisory estimate exceeds the remaining window. There is no
+07:30 wind-down cutoff or one-checkpoint-per-wake limit.
 
-A run may continue its one claimed checkpoint across later opportunities; those
-wakes exit read-only while its lease is valid. Never start a second checkpoint
-in one wake or borrow another run's identity. If time is insufficient, preserve
-every change, checkpoint/block with an exact recovery condition, release
-ownership and stop scoped processes. The clock never authorizes discarding work
-or claiming incomplete work complete. Host schedule state remains app-owned.
+At 08:00 preserve incomplete work through the exact checkpoint/block recovery
+procedure, release ownership and stop scoped processes. A later wake still
+exits read-only when another valid writer owns the lease. Never borrow another
+run's identity, discard work for the clock, or report incomplete work complete.
+Explicit daytime user requests are separately authorized interactive work.
+Host schedule state remains app-owned.

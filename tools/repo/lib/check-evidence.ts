@@ -152,8 +152,24 @@ const validatePlan = (
     throw new Error(`${label} has a malformed check plan.`);
   }
   if (
+    plan.deletedFiles !== undefined &&
+    (!Array.isArray(plan.deletedFiles) ||
+      new Set(plan.deletedFiles).size !== plan.deletedFiles.length ||
+      plan.deletedFiles.some(
+        (path) =>
+          !plan.changedFiles.includes(path) ||
+          !record.changedFiles.some(
+            (file) => file.path === path && file.sha256 === null,
+          ),
+      ))
+  )
+    throw new Error(`${label} has invalid deleted-file evidence.`);
+  if (
     enforceCanonicalPlan &&
-    !same(canonicalCheckPlan(record.stage, plan.changedFiles), plan)
+    !same(
+      canonicalCheckPlan(record.stage, plan.changedFiles, plan.deletedFiles),
+      plan,
+    )
   ) {
     throw new Error(`${label} does not contain the canonical check plan.`);
   }
