@@ -3,6 +3,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import {
+  delegatedReviewCriteria,
+  validateDelegatedReview,
+} from './goal-five-delegated-review.mjs';
+
 const repositoryRoot = resolve(
   dirname(fileURLToPath(import.meta.url)),
   '../..',
@@ -21,7 +26,7 @@ const VALID_STATUSES = new Set([
   'approved-exclusion',
 ]);
 const VALID_OBLIGATIONS = new Set(['mandatory', 'gate1-excludable']);
-const VALID_HARNESSES = new Set(['ready', 'planned', 'human']);
+const VALID_HARNESSES = new Set(['ready', 'planned', 'review', 'human']);
 const REQUIRED_CATEGORIES = new Set([
   'flagship-production',
   'canonical-workflow',
@@ -202,11 +207,56 @@ for (const [id, criterion] of criteria) {
   if (hasCommand === hasWorkflow) {
     fail(`criterion ${id} must define exactly one command or review workflow`);
   }
-  if (evaluation.harness === 'human' && !hasWorkflow) {
-    fail(`criterion ${id} human evaluation requires a review workflow`);
+  const isReview = ['human', 'review'].includes(evaluation.harness);
+  if (isReview && !hasWorkflow) {
+    fail(`criterion ${id} review evaluation requires a review workflow`);
   }
-  if (evaluation.harness !== 'human' && !hasCommand) {
+  if (!isReview && !hasCommand) {
     fail(`criterion ${id} automated evaluation requires an exact command`);
+  }
+
+  if (
+    evaluation.harness === 'human' &&
+    id !== 'evidence.treatment-and-musical-map'
+  ) {
+    fail(`criterion ${id} cannot introduce a post-treatment human gate`);
+  }
+  if (
+    id === 'evidence.treatment-and-musical-map' &&
+    (evaluation.harness !== 'human' ||
+      evaluation.evaluator !== 'human-creative-director' ||
+      criterion.decisionRule !== 'human-approval')
+  ) {
+    fail('Gate 1 must retain explicit human authority');
+  }
+  if (
+    delegatedReviewCriteria.has(id) &&
+    (evaluation.harness !== 'review' ||
+      evaluation.kind !== delegatedReviewCriteria.get(id))
+  ) {
+    fail(`criterion ${id} must retain independent delegated review`);
+  }
+  if (evaluation.harness === 'review') {
+    const architecture = evaluation.kind === 'architecture-review';
+    if (
+      (!architecture && evaluation.kind !== 'creative-review') ||
+      evaluation.evaluator !==
+        (architecture ? 'architecture-review' : 'delegated-creative-review') ||
+      criterion.decisionRule !==
+        (architecture ? 'architecture-invariants' : 'delegated-acceptance')
+    ) {
+      fail(`criterion ${id} has inconsistent delegated review ownership`);
+    }
+    const gates =
+      id === 'evidence.human-calibration-decisions' ? [2, 3, 4, 5] : [5];
+    if (JSON.stringify(evaluation.reviewGates) !== JSON.stringify(gates)) {
+      fail(`criterion ${id} must preserve required calibration gates`);
+    }
+  } else if (
+    evaluation.kind === 'creative-review' ||
+    evaluation.kind === 'architecture-review'
+  ) {
+    fail(`criterion ${id} must use the delegated review harness`);
   }
 
   if (!Array.isArray(criterion.artifacts) || criterion.artifacts.length === 0) {
@@ -236,6 +286,33 @@ for (const [id, criterion] of criteria) {
     if (criterion.evidence.length === 0) {
       fail(`criterion ${id} approved exclusion requires human evidence`);
     }
+  }
+
+  if (
+    evaluation.harness === 'review' &&
+    (criterion.status === 'passed' || criterion.reviewEvidence)
+  ) {
+    requireFullSha(matrix.identity.candidateCommit, 'identity.candidateCommit');
+    validateDelegatedReview({
+      root: repositoryRoot,
+      criterion,
+      candidateCommit: matrix.identity.candidateCommit,
+      isAncestor: (commit, candidate) => {
+        try {
+          execFileSync(
+            'git',
+            ['merge-base', '--is-ancestor', commit, candidate],
+            {
+              cwd: repositoryRoot,
+              stdio: 'ignore',
+            },
+          );
+          return true;
+        } catch {
+          return false;
+        }
+      },
+    });
   }
 
   if (finalMode) {

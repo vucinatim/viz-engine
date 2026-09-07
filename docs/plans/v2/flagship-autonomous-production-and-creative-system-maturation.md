@@ -14,9 +14,9 @@ The product owner approved the exact Human Signal Gate 1 packet, authorized
 Phase 2, and delegated future reversible decisions inside the documented local
 engine horizon. The
 [Autonomous Engine Completion Program](./goal-five-autonomous-engine-completion-program.md)
-is now the execution truth. It supersedes this document's older requirement for
-human approval at Gates 2 through 5: those gates remain valuable review shapes,
-but are now independent evidence-backed agent calibrations.
+is now the execution truth. Gates 2 through 5 follow the
+[delegated review contract](../../parity/goal-five-delegated-review.md) as
+independent evidence-backed agent calibrations.
 
 Human direction remains required only before the hosted platform, production
 Magnify integration, monetization/commercial-policy, external-action, material
@@ -32,11 +32,11 @@ and evidence before editing after a compaction or new task.
 ```text
 Baseline commit: b2b23b577feda29ef7eca9dcbf35a4e8c1162781
 Current phase: autonomous engine completion; Phase 1 and Gate 1 are complete
-Current checkpoint: G1-01 handoff complete; EC-01 is the next dependency-ready item
+Current checkpoint: EC-01 delegated-review contract reconciled; see canonical lifecycle for closure evidence
 Last completed checkpoint: canonical program state owns the latest terminal item and evidence identities
 Last certified commit: f9c32f9dbb3be3391eb23a35540c3c01d9173dce
 Last full green gate: autonomous readiness CAL-03 at f9c32f9
-Next safe checkpoint: EC-01 delegated-review contract reconciliation
+Next safe checkpoint: EC-02 canonical Human Signal production package after EC-01 closure
 Awaiting human gate: none inside the delegated engine horizon
 Known blockers: none; work remains on VizEngine V2 with only exact verified fast-forward push authority to its same-named origin branch and no merge, PR, deployment, publication, purchase, production-system access, or other external mutation authority
 Relevant evidence: docs/parity/evidence/2026-09-04-goal-five-authorized-input-audit.md; docs/parity/evidence/2026-09-04-goal-five-capability-boundary-review.md; docs/parity/evidence/2026-09-04-goal-five-music-window-comparison.md; docs/parity/evidence/2026-09-05-goal-five-frame-exact-musical-map-review.md; docs/plans/v2/goal-five-flagship-production-treatment.md; docs/parity/evidence/2026-09-06-goal-five-gate-one-decision-request.md
@@ -121,11 +121,11 @@ own eventual hash:
 1. Candidate commit `C` contains the exact implementation, project, capability,
    assets/artifact identities, and tests that pass every behavioral gate.
 2. Evidence commit `E` is documentation-only and records `C`, its artifacts,
-   validation, measurements, and human approvals.
+   validation, measurements, the preserved Gate 1 decision and delegated reviews.
 
 Goal Five is complete at `E` only when the certification record shows every
 mandatory production, canonical workflow, determinism, realtime performance,
-parity, architecture, portability, documentation, and human creative-approval
+parity, architecture, portability, documentation, and delegated creative-review
 criterion as passed for `C`. Only documentation validation is required on `E`.
 
 Until then, continue checkpoint by checkpoint or pause at a declared human
@@ -174,9 +174,9 @@ Gate 0 must confirm or amend these assumptions before implementation begins:
    portable project bundles remain data-only.
 6. Model-backed performers and authored animation remain part of the visual
    quality floor.
-7. Human creative approval, not an invented numeric aesthetic score, remains
-   the final subjective quality gate.
-8. The human will be available for the declared creative calibrations.
+7. Independent evidence-backed agent judgment under the approved delegation
+   remains the final subjective quality gate; numeric scores cannot replace it.
+8. Gates 2–5 require independent review, not routine product-owner availability.
 9. Final media is at least 1920 × 1080 H.264/AAC at a deliberately selected
    cadence.
 10. Local commits are allowed when coherent and safe. The exact verified
@@ -642,7 +642,7 @@ absorbed.
 - use the real slice to validate or revise proposed direction and composition
   contracts
 - measure the slice before expanding
-- obtain Gate 2 provisional visual-language approval
+- complete Gate 2 independent provisional visual-language calibration
 
 ### Phase 3: Direction and compositor substrate
 
@@ -676,7 +676,7 @@ absorbed.
   progression, compositional rhythm, and musical escalation
 - inspect declared representative frames and motion windows
 - produce a full rough-cut proxy and complete contact sheet
-- obtain Gate 3 structure approval before expensive final polish
+- complete Gate 3 independent structure calibration before expensive final polish
 
 ### Phase 7: Motion and visual refinement
 
@@ -684,7 +684,7 @@ absorbed.
   exposure, hierarchy, density, particle behavior, and graph response
 - inspect every transition and peak passage in motion
 - run full-duration continuity, bounds, issue, and media sanity checks
-- obtain Gate 4 motion and visual lock
+- complete Gate 4 independent motion and visual lock
 
 ### Phase 8: Performance and UX hardening
 
@@ -716,10 +716,10 @@ absorbed.
 - reopen the portable bundle in the frozen clean-environment protocol
 - rerender representative frames and compare semantic output
 - inspect the complete final video with intended audio
-- obtain Gate 5 final human creative acceptance
+- obtain Gate 5 independent delegated creative acceptance
 - create documentation-only evidence commit `E` recording `C`, artifacts,
   validation, measurements, and approvals
-- mark Goal Five complete at `E` only after every matrix item and human gate
+- mark Goal Five complete at `E` only after every matrix item and required calibration
   passes for `C`
 
 Any implementation, project, capability, asset, or test change after `C`
@@ -727,7 +727,7 @@ invalidates the candidate. Return to the appropriate earlier phase, create a
 new `C`, regenerate the affected evidence, and repeat Gate 5. Commit `E` may
 change only certification and status documentation.
 
-## Human Calibration Gates
+## Treatment Authority and Delegated Calibration
 
 ### Gate 0: Activation authority
 
@@ -758,7 +758,7 @@ After the music, asset, and capability audit, review:
 Agents may audit and prepare alternatives before Gate 1. They may not deeply
 polish an unapproved aesthetic direction.
 
-### Gate 2: Provisional visual language
+### Gate 2: Delegated provisional visual language
 
 Review the whole-production skeleton and one representative quality prototype
 for:
@@ -773,7 +773,7 @@ Approval authorizes expansion of this visual language while leaving it
 provisional. The full work, not one unusually favorable act, locks direction
 at Gate 3.
 
-### Gate 3: Full structure
+### Gate 3: Delegated full structure
 
 Review the complete rough cut, one representative frame per act, every
 transition, and macro camera/composition trajectory.
@@ -788,7 +788,7 @@ Approve or redirect:
 
 Approval locks the visual direction and macro structure for final polish.
 
-### Gate 4: Motion and visual lock
+### Gate 4: Delegated motion and visual lock
 
 Review the complete contact sheet and clips spanning every transition and peak
 passage for:
@@ -799,16 +799,15 @@ passage for:
 - exposure, contrast, hierarchy, and density
 - macro, phrase, and detail musical response
 
-### Gate 5: Final creative acceptance
+### Gate 5: Delegated final creative acceptance
 
 Review the exact candidate final video and reopened editable project.
 
-Automated evidence may not manufacture this approval. Requested aesthetic
-changes are ordinary Goal Five work rather than goal failure.
-
-While awaiting a creative gate, agents may perform independent tests, cleanup,
-documentation, inspection tooling, and evidence work. They may not continue
-expensive aesthetic divergence beyond the gate.
+Independent reviewers inspect the actual artifacts under the
+[delegated review contract](../../parity/goal-five-delegated-review.md). Automated
+scores cannot manufacture approval. Requested aesthetic changes are ordinary
+Goal Five work. Refine failed calibration evidence before expanding beyond its
+accepted scope; no routine human gate is introduced.
 
 ## Multi-Agent Operating Model
 
@@ -926,12 +925,12 @@ The Phase 0 criteria matrix is stricter than checkpoint prose. Every mandatory
 row must include:
 
 - a stable criterion ID and exact requirement
-- the command, browser journey, render workflow, or human review that evaluates
+- the command, browser journey, render workflow, or independent review that evaluates
   it
 - the pinned machine, browser, viewport, DPR, quality, execution mode, and
   source revision that matter to the result
 - exact frames, times, act boundaries, gestures, cycles, or observation window
-- an equality rule, numeric budget, perceptual tolerance, or explicitly human
+- an equality rule, numeric budget, perceptual tolerance, or explicit review
   decision rule
 - durable raw and summarized artifact locations
 - the evaluator responsible for the decision
@@ -987,7 +986,7 @@ complete:
 - deliberately selected stills
 - contact sheet covering every act and transition
 - motion proxy with intended audio
-- human review and explicit decision
+- independent artifact inspection and explicit delegated judgment
 
 ### Tier 5: Final certification
 
@@ -999,7 +998,7 @@ complete:
 - deterministic random-access and repeated-render evidence
 - portable bundle roundtrip from a clean environment
 - final 1080p video and media probe
-- final human creative approval
+- final independent delegated creative acceptance
 - exact clean candidate commit `C` plus documentation-only evidence commit `E`
 
 An isolated rerun helps diagnose a flaky aggregate test. It is not a final
@@ -1159,8 +1158,10 @@ Goal Five must not introduce:
 
 ## Explicit Deferrals
 
-Unless measured flagship evidence proves a direct blocker and the human
-explicitly expands scope, Goal Five excludes:
+The hosted platform, production integration and commercial policy remain
+separate horizons requiring explicit authority. Other topics below are deferred
+unless measured full-workload evidence proves a named engine-horizon blocker;
+reversible local decisions then remain delegated:
 
 - Viz Cloud, auth, billing, collaboration, and hosted execution
 - Magnify production integration
@@ -1179,8 +1180,8 @@ explicitly expands scope, Goal Five excludes:
 - exact cross-driver pixel identity
 - broad dependency modernization or another line-count program
 
-These remain legitimate final-vision directions rather than hidden Goal Five
-backlog.
+No item becomes backlog merely because it appears here. The active engine
+program and demonstrated stable ownership determine bounded local scope.
 
 ## Failure And Stop Rules
 
@@ -1202,22 +1203,19 @@ Use these recovery rules:
 - interrupted run: preserve artifacts and diff, kill child processes, and
   leave an exact resume marker
 
-Stop and request human direction for:
+Stop and request human direction only for the documented boundary:
 
-- product-vision or material UX changes
-- accepted feature, quality, or performance degradation
-- a major scene-language or architecture paradigm choice
-- large dependency or infrastructure commitment
-- licensing, publication, deployment, billing, cloud, or external-system action
-- a major quality-versus-performance trade
-- a declared creative calibration
+- a material product-vision or product-identity change
+- intentional feature, parity, quality or performance regression
+- the hosted-platform, production Magnify or commercial/monetization horizon
+- licensing policy, paid commitments or external actions without authority
 - ambiguous user work that cannot be safely isolated
 
-When human input is required, mark the checkpoint `awaiting-human`, present no
-more than three concrete options with tradeoffs, yield without falsely marking
-the goal complete or blocked, and stop only the affected decision path. A
-scheduled worker treats `awaiting-human` as read-only and should be disabled in
-the scheduler UI until the decision is recorded.
+At that boundary, prepare exact evidence and request one concrete decision.
+Use the canonical typed block and recovery procedure, release ownership, and
+stop the affected work. A later wake obeys preflight. Do not route ordinary
+creative, architecture, dependency, renderer, tooling or UX uncertainty to the
+human queue.
 
 ## Artifact Deliverables
 
@@ -1240,7 +1238,7 @@ Goal Five must produce:
 - graph, compositor, model, and runtime inspection evidence
 - agent activity and production-friction report
 - reusable-capability promotion report
-- human calibration decisions
+- preserved Gate 1 decision and independent Gates 2–5 calibration records
 - human-readable final certification
 - machine-readable certification with immutable identities and hashes
 
@@ -1264,7 +1262,7 @@ commands, probes, and durable review artifacts must remain.
   intentional black, white, silence, hold, or discontinuity intervals pass
   only their frozen treatment-specific criteria
 - macro, phrase, and detail response all visibly present
-- final human approval of one coherent work
+- final independent acceptance of one coherent work
 
 ### Canonical human-agent workflow
 
@@ -1351,8 +1349,9 @@ the sole implementation program. Govern every decision by the complete
 compounding vision. Continue through bounded, validated checkpoints across
 turns and compactions. Stop only when the complete certification matrix passes
 for one exact clean candidate commit C and documentation-only evidence commit
-E records explicit final human creative approval. Yield only at declared human
-gates or a genuine documented blocker without falsely completing the goal.
+E records explicit independent delegated creative acceptance. Yield only at the
+documented human stop boundary or a genuine blocker without falsely completing
+the goal.
 ```
 
 The detailed contract belongs in this committed document rather than in an

@@ -184,7 +184,8 @@ describe('staged repository checks', () => {
       total: 46,
       ready: 1,
       planned: 32,
-      human: 13,
+      review: 12,
+      human: 1,
     });
     expect(
       result.criteria.every(({ evidenceLanes }) => evidenceLanes.length > 0),

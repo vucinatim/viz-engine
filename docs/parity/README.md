@@ -24,7 +24,8 @@ Goal Five has a separate terminal-proof contract:
 
 Its planning validator also runs through `pnpm check:foundation`. Final mode is
 deliberately stricter and remains red until every flagship criterion, harness,
-artifact, candidate identity, and human gate is genuinely complete.
+artifact, candidate identity, preserved Gate 1 decision, and delegated calibration
+is complete.
 
 Browser comparison records live in [evidence](./evidence/). Start with:
 

@@ -12,7 +12,8 @@
   "references": [
     "docs/visions/viz-engine-compounding-vision.md",
     "docs/plans/v2/flagship-autonomous-production-and-creative-system-maturation.md",
-    "docs/parity/v1-v2-parity-matrix.json"
+    "docs/parity/v1-v2-parity-matrix.json",
+    "docs/parity/goal-five-delegated-review.md"
   ],
   "environments": [
     {
@@ -82,15 +83,26 @@
       "isolation": "Candidate build, pinned manifest, fixed 60 fps, intended audio, fresh output root"
     },
     {
-      "id": "human-review",
+      "id": "delegated-review",
       "machine": "Apple M1 Pro review workstation",
       "os": "macOS 26.5.2 (25F84)",
-      "browser": "Candidate Chromium editor plus native playback of final H.264/AAC media",
+      "browser": "Pinned headless Chromium editor and decoded candidate H.264/AAC media",
       "viewport": "1920x1080 source viewed at native or fit-preserving scale",
       "dpr": 1,
       "quality": 2,
-      "executionMode": "interactive-review",
-      "isolation": "Intended audio enabled; exact candidate artifacts; reviewer decision recorded verbatim"
+      "executionMode": "headless-muted-review",
+      "isolation": "Exact candidate artifacts; silent intended-audio analysis; independent inspection and judgment recorded"
+    },
+    {
+      "id": "gate-one-record",
+      "machine": "Recorded product-owner decision",
+      "os": "Historical approval context",
+      "browser": "No live browser required",
+      "viewport": "Approved treatment packet",
+      "dpr": 1,
+      "quality": 2,
+      "executionMode": "historical-authority-audit",
+      "isolation": "Preserve immutable proposal bytes and append-only decision provenance"
     }
   ],
   "evaluators": [
@@ -111,13 +123,18 @@
     },
     {
       "id": "architecture-review",
-      "kind": "human-technical",
-      "owner": "Goal Five lead"
+      "kind": "independent-agent-technical",
+      "owner": "Read-only canonicalizer and acceptance checker, independent of builder"
     },
     {
       "id": "human-creative-director",
       "kind": "human-creative",
-      "owner": "Product owner"
+      "owner": "Product owner, historical Gate 1 only"
+    },
+    {
+      "id": "delegated-creative-review",
+      "kind": "independent-agent-creative",
+      "owner": "Independent visual reviewer and acceptance checker under the 2026-09-06 delegation"
     }
   ],
   "observations": [
@@ -162,8 +179,8 @@
       "definition": "One bundle validate/open/edit/save/reopen/rerender workflow in a fresh network-disabled profile with empty task-specific caches."
     },
     {
-      "id": "human-gates",
-      "definition": "Gate 1 treatment, Gate 2 provisional language, Gate 3 structure, Gate 4 motion/visual lock, and Gate 5 final video plus editable-project review."
+      "id": "calibration-milestones",
+      "definition": "Preserved exact Gate 1 decision plus independent evidence-backed Gates 2 through 5 under docs/parity/goal-five-delegated-review.md. Review scope and artifact identity remain explicit."
     }
   ],
   "decisionRules": [
@@ -226,6 +243,10 @@
     {
       "id": "immutable-candidate-evidence",
       "definition": "Candidate C is a clean immutable commit containing all behavior; evidence E is a later documentation-only commit identifying C, artifacts, results, and approvals; any behavioral change after C invalidates C."
+    },
+    {
+      "id": "delegated-acceptance",
+      "definition": "Independent reviewers explicitly inspect the prescribed exact stills, motion, silent intended-audio evidence and reopened project where applicable, record criterion-specific rationale, defects and uncertainty, and accept only with no unresolved blockers. Source presence, a favorable frame, numeric scores alone, generated but uninspected motion, and self-only review fail."
     }
   ],
   "criteria": [
@@ -276,15 +297,16 @@
       "category": "flagship-production",
       "obligation": "gate1-excludable",
       "requirement": "Model-backed 3D and authored animation make a visible, deterministic, grounded contribution with declared clip and asset identities.",
-      "environment": "human-review",
+      "environment": "delegated-review",
       "sourceRevision": "candidateCommit",
       "observation": "review-frame-set",
-      "decisionRule": "human-approval",
+      "decisionRule": "delegated-acceptance",
       "evaluation": {
-        "kind": "human-review",
-        "harness": "human",
-        "workflow": "Review model-backed passages, direct seeks, and transition clips at Gates 2-5; inspect grounding, animation readability, identity, and continuity.",
-        "evaluator": "human-creative-director"
+        "kind": "creative-review",
+        "harness": "review",
+        "workflow": "Review model-backed passages, direct seeks, and transition clips at Gates 2-5; inspect grounding, animation readability, identity, and continuity. Apply the typed inspection and independence contract in docs/parity/goal-five-delegated-review.md; Gates 2\u20135 are delegated calibrations.",
+        "evaluator": "delegated-creative-review",
+        "reviewGates": [5]
       },
       "artifacts": [".artifacts/goal-five/review/model-backed-review.json"],
       "status": "pending",
@@ -295,15 +317,16 @@
       "category": "flagship-production",
       "obligation": "gate1-excludable",
       "requirement": "A procedural or spatial 3D system has a distinct visible responsibility and deterministic runtime behavior.",
-      "environment": "human-review",
+      "environment": "delegated-review",
       "sourceRevision": "candidateCommit",
       "observation": "review-frame-set",
-      "decisionRule": "human-approval",
+      "decisionRule": "delegated-acceptance",
       "evaluation": {
-        "kind": "human-review",
-        "harness": "human",
-        "workflow": "Review declared procedural/spatial passages and isolated contribution evidence at Gates 2-5.",
-        "evaluator": "human-creative-director"
+        "kind": "creative-review",
+        "harness": "review",
+        "workflow": "Review declared procedural/spatial passages and isolated contribution evidence at Gates 2-5. Apply the typed inspection and independence contract in docs/parity/goal-five-delegated-review.md; Gates 2\u20135 are delegated calibrations.",
+        "evaluator": "delegated-creative-review",
+        "reviewGates": [5]
       },
       "artifacts": [
         ".artifacts/goal-five/review/procedural-spatial-review.json"
@@ -316,15 +339,16 @@
       "category": "flagship-production",
       "obligation": "gate1-excludable",
       "requirement": "Shader-driven and bounded particle or instanced contributions are visible, deterministic, resource-bounded, and creatively nonredundant.",
-      "environment": "human-review",
+      "environment": "delegated-review",
       "sourceRevision": "candidateCommit",
       "observation": "review-frame-set",
-      "decisionRule": "human-approval",
+      "decisionRule": "delegated-acceptance",
       "evaluation": {
-        "kind": "human-review",
-        "harness": "human",
-        "workflow": "Review isolated and composited shader/particle passages plus lifecycle evidence at Gates 2-5.",
-        "evaluator": "human-creative-director"
+        "kind": "creative-review",
+        "harness": "review",
+        "workflow": "Review isolated and composited shader/particle passages plus lifecycle evidence at Gates 2-5. Apply the typed inspection and independence contract in docs/parity/goal-five-delegated-review.md; Gates 2\u20135 are delegated calibrations.",
+        "evaluator": "delegated-creative-review",
+        "reviewGates": [5]
       },
       "artifacts": [".artifacts/goal-five/review/shader-particle-review.json"],
       "status": "pending",
@@ -335,15 +359,16 @@
       "category": "flagship-production",
       "obligation": "gate1-excludable",
       "requirement": "A complementary 2D, SVG, image, video, graphic, or typography contribution has a meaningful compositional role.",
-      "environment": "human-review",
+      "environment": "delegated-review",
       "sourceRevision": "candidateCommit",
       "observation": "review-frame-set",
-      "decisionRule": "human-approval",
+      "decisionRule": "delegated-acceptance",
       "evaluation": {
-        "kind": "human-review",
-        "harness": "human",
-        "workflow": "Review the declared complementary-media role in representative stills and motion at Gates 2-5.",
-        "evaluator": "human-creative-director"
+        "kind": "creative-review",
+        "harness": "review",
+        "workflow": "Review the declared complementary-media role in representative stills and motion at Gates 2-5. Apply the typed inspection and independence contract in docs/parity/goal-five-delegated-review.md; Gates 2\u20135 are delegated calibrations.",
+        "evaluator": "delegated-creative-review",
+        "reviewGates": [5]
       },
       "artifacts": [
         ".artifacts/goal-five/review/complementary-media-review.json"
@@ -356,15 +381,16 @@
       "category": "flagship-production",
       "obligation": "mandatory",
       "requirement": "Compositor ordering, opacity, transforms, blends, directed camera behavior, foreground/mid/background hierarchy, density, negative space, and transitions form one legible composition.",
-      "environment": "human-review",
+      "environment": "delegated-review",
       "sourceRevision": "candidateCommit",
-      "observation": "human-gates",
-      "decisionRule": "human-approval",
+      "observation": "calibration-milestones",
+      "decisionRule": "delegated-acceptance",
       "evaluation": {
-        "kind": "human-review",
-        "harness": "human",
-        "workflow": "Inspect one frame per act, every transition clip, camera trajectory, and full motion proxy at Gates 2-5.",
-        "evaluator": "human-creative-director"
+        "kind": "creative-review",
+        "harness": "review",
+        "workflow": "Inspect one frame per act, every transition clip, camera trajectory, and full motion proxy at Gates 2-5. Apply the typed inspection and independence contract in docs/parity/goal-five-delegated-review.md; Gates 2\u20135 are delegated calibrations.",
+        "evaluator": "delegated-creative-review",
+        "reviewGates": [5]
       },
       "artifacts": [
         ".artifacts/goal-five/review/compositor-camera-hierarchy.json"
@@ -377,15 +403,16 @@
       "category": "flagship-production",
       "obligation": "mandatory",
       "requirement": "Macro, phrase, and detail reactivity are intentionally authored; each major graph output names its musical/directorial intent and rate/phase semantics remain distinct.",
-      "environment": "human-review",
+      "environment": "delegated-review",
       "sourceRevision": "candidateCommit",
       "observation": "whole-production-structure",
-      "decisionRule": "human-approval",
+      "decisionRule": "delegated-acceptance",
       "evaluation": {
-        "kind": "human-review",
-        "harness": "human",
-        "workflow": "Review musical map, graph-output intent report, full proxy, and peak/transition clips at Gates 1-5.",
-        "evaluator": "human-creative-director"
+        "kind": "creative-review",
+        "harness": "review",
+        "workflow": "Review musical map, graph-output intent report, full proxy, and peak/transition clips at Gates 1-5. Apply the typed inspection and independence contract in docs/parity/goal-five-delegated-review.md; Gates 2\u20135 are delegated calibrations.",
+        "evaluator": "delegated-creative-review",
+        "reviewGates": [5]
       },
       "artifacts": [".artifacts/goal-five/review/reactivity-timescales.json"],
       "status": "pending",
@@ -415,15 +442,16 @@
       "category": "flagship-production",
       "obligation": "mandatory",
       "requirement": "The exact final video is explicitly approved as one coherent, polished work with a recognizable identity distinct from Signal Cathedral and Afterlight Assembly.",
-      "environment": "human-review",
+      "environment": "delegated-review",
       "sourceRevision": "candidateCommit",
-      "observation": "human-gates",
-      "decisionRule": "human-approval",
+      "observation": "calibration-milestones",
+      "decisionRule": "delegated-acceptance",
       "evaluation": {
-        "kind": "human-review",
-        "harness": "human",
-        "workflow": "Watch the complete exact candidate video with intended audio and inspect the reopened editable project at Gate 5.",
-        "evaluator": "human-creative-director"
+        "kind": "creative-review",
+        "harness": "review",
+        "workflow": "Inspect the complete exact candidate video silently, its intended-audio analysis and musical map, and the reopened editable project at Gate 5. Apply docs/parity/goal-five-delegated-review.md.",
+        "evaluator": "delegated-creative-review",
+        "reviewGates": [5]
       },
       "artifacts": ["docs/parity/evidence/goal-five-final-certification.md"],
       "status": "pending",
@@ -516,9 +544,10 @@
       "decisionRule": "architecture-invariants",
       "evaluation": {
         "kind": "architecture-review",
-        "harness": "human",
-        "workflow": "Review package dependencies, public control operations, production package imports, and full candidate diff.",
-        "evaluator": "architecture-review"
+        "harness": "review",
+        "workflow": "Review package dependencies, public control operations, production package imports, and full candidate diff. Apply the typed inspection and independence contract in docs/parity/goal-five-delegated-review.md; Gates 2\u20135 are delegated calibrations.",
+        "evaluator": "architecture-review",
+        "reviewGates": [5]
       },
       "artifacts": ["docs/parity/evidence/goal-five-final-certification.md"],
       "status": "pending",
@@ -664,15 +693,16 @@
       "category": "editor-product",
       "obligation": "mandatory",
       "requirement": "Layer, graph, output, asset, artifact, and component responsibilities are understandable in the editor without source archaeology.",
-      "environment": "human-review",
+      "environment": "delegated-review",
       "sourceRevision": "candidateCommit",
-      "observation": "human-gates",
-      "decisionRule": "human-approval",
+      "observation": "calibration-milestones",
+      "decisionRule": "delegated-acceptance",
       "evaluation": {
-        "kind": "human-review",
-        "harness": "human",
-        "workflow": "Inspect the complete reopened project structure at Gates 3 and 5 without consulting source code.",
-        "evaluator": "human-creative-director"
+        "kind": "creative-review",
+        "harness": "review",
+        "workflow": "Inspect the complete reopened project structure at Gates 3 and 5 without consulting source code. Apply the typed inspection and independence contract in docs/parity/goal-five-delegated-review.md; Gates 2\u20135 are delegated calibrations.",
+        "evaluator": "delegated-creative-review",
+        "reviewGates": [5]
       },
       "artifacts": [".artifacts/goal-five/review/project-legibility.json"],
       "status": "pending",
@@ -841,9 +871,10 @@
       "decisionRule": "architecture-invariants",
       "evaluation": {
         "kind": "architecture-review",
-        "harness": "human",
-        "workflow": "Review the promotion report, dependency graph, consumers, fixtures, and governing contracts for every promoted capability.",
-        "evaluator": "architecture-review"
+        "harness": "review",
+        "workflow": "Review the promotion report, dependency graph, consumers, fixtures, and governing contracts for every promoted capability. Apply the typed inspection and independence contract in docs/parity/goal-five-delegated-review.md; Gates 2\u20135 are delegated calibrations.",
+        "evaluator": "architecture-review",
+        "reviewGates": [5]
       },
       "artifacts": [".artifacts/goal-five/reports/reusable-promotion.json"],
       "status": "pending",
@@ -898,9 +929,10 @@
       "decisionRule": "architecture-invariants",
       "evaluation": {
         "kind": "architecture-review",
-        "harness": "human",
-        "workflow": "Review the complete candidate diff, source tree, package boundaries, generated artifacts, comments, and deletion opportunities.",
-        "evaluator": "architecture-review"
+        "harness": "review",
+        "workflow": "Review the complete candidate diff, source tree, package boundaries, generated artifacts, comments, and deletion opportunities. Apply the typed inspection and independence contract in docs/parity/goal-five-delegated-review.md; Gates 2\u20135 are delegated calibrations.",
+        "evaluator": "architecture-review",
+        "reviewGates": [5]
       },
       "artifacts": [".artifacts/goal-five/reports/candidate-diff-review.json"],
       "status": "pending",
@@ -991,14 +1023,14 @@
       "category": "artifact-evidence",
       "obligation": "mandatory",
       "requirement": "The approved treatment records track/window provenance, frame-exact sections, phrases, events, energy, contrast, camera/composition cues, 4-6 act arc, visual language, roles, review frames, targets, risks, exclusions, and non-goals.",
-      "environment": "human-review",
+      "environment": "gate-one-record",
       "sourceRevision": "candidateCommit",
-      "observation": "human-gates",
+      "observation": "calibration-milestones",
       "decisionRule": "human-approval",
       "evaluation": {
         "kind": "human-review",
         "harness": "human",
-        "workflow": "Review and explicitly approve the complete treatment and musical map at Gate 1.",
+        "workflow": "Audit the exact approved Gate 1 packet and append-only decision identified in the delegated-review contract. Preserve the historical proposal bytes; never infer or manufacture human approval.",
         "evaluator": "human-creative-director"
       },
       "artifacts": ["docs/plans/v2/goal-five-flagship-production-treatment.md"],
@@ -1085,16 +1117,17 @@
       "id": "evidence.human-calibration-decisions",
       "category": "artifact-evidence",
       "obligation": "mandatory",
-      "requirement": "Gate 1 through Gate 5 decisions identify exact reviewed artifacts, approval or requested changes, reviewer, date, and resulting candidate identity where applicable.",
-      "environment": "human-review",
+      "requirement": "The preserved human Gate 1 decision and delegated Gates 2\u20135 judgments bind exact artifacts, independent reviewers, dates, defects, uncertainty, refinement outcomes, and implementation identities.",
+      "environment": "delegated-review",
       "sourceRevision": "candidateCommit",
-      "observation": "human-gates",
-      "decisionRule": "human-approval",
+      "observation": "calibration-milestones",
+      "decisionRule": "delegated-acceptance",
       "evaluation": {
-        "kind": "human-review",
-        "harness": "human",
-        "workflow": "Record each explicit human calibration decision against immutable artifact identities in the final certification evidence.",
-        "evaluator": "human-creative-director"
+        "kind": "creative-review",
+        "harness": "review",
+        "workflow": "Audit the historical Gate 1 decision and independent Gates 2\u20135 review records under docs/parity/goal-five-delegated-review.md. Never label delegated decisions as human approval.",
+        "evaluator": "delegated-creative-review",
+        "reviewGates": [2, 3, 4, 5]
       },
       "artifacts": ["docs/parity/evidence/goal-five-final-certification.md"],
       "status": "pending",

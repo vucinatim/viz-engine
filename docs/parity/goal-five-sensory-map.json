@@ -41,7 +41,7 @@
     },
     {
       "id": "creative-human",
-      "owner": "treatment-bound self-critique and explicit immutable human decisions"
+      "owner": "independent treatment-bound delegated calibration; preserved Gate 1 human authority and explicit next-horizon decisions"
     }
   ],
   "categoryMappings": {
@@ -77,6 +77,11 @@
     "temporal discontinuity",
     "renderer resource leak",
     "pointer-rate durable revisions",
-    "stale server or wrong project identity"
+    "stale server or wrong project identity",
+    "favorable-frame selection without prescribed coverage",
+    "source presence without rendered contribution inspection",
+    "numeric-score-only creative approval",
+    "generated but uninspected motion",
+    "self-only review or stale artifact identity"
   ]
 }

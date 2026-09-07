@@ -150,8 +150,9 @@ canonical V2 substrate, behavior-preserving consolidation and minimization,
 productions, and exact Light Tunnel 60 FPS performance certification.
 
 [Goal Five](docs/plans/v2/flagship-autonomous-production-and-creative-system-maturation.md)
-is active in its bounded Phase 1 capability, authorized-input, music-window,
-and treatment audit. Its autonomous operating model, sole-writer control plane,
+has completed Phase 1 and the exact Human Signal Gate 1 approval. The active
+engine-completion program delegates reversible local work and uses independent
+evidence-backed calibration for Gates 2–5. Its autonomous operating model, sole-writer control plane,
 sensory map, failure rehearsal, three supervised calibrations, and human
 `ACT-01` authorization are complete. Goal Five remains the sole implementation
 program: an ambitious

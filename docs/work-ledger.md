@@ -2915,3 +2915,21 @@
   calibrations without weakening the 46-criterion terminal contract
 - switched the tracked active-program pointer in the same reviewed Gate 1
   handoff checkpoint; `EC-01` is next and no Phase 2 implementation was started
+
+## 2026-09-07 — EC-01 delegated creative review reconciled
+
+- preserved the exact approved Human Signal Gate 1 inputs and existing human
+  decision while moving twelve creative/architecture criteria to explicit
+  independent delegated review; all 46 product criteria remain pending
+- added typed evidence admission for exact candidate/project/artifact identity,
+  independent reviewer coverage, prescribed stills and motion, silent audio
+  analysis, project inspection, defects and uncertainty
+- retained the existing canonical execution manifest and frozen numeric proof
+  rules; no runtime, project, renderer or editor implementation changed
+- reconciled active authority and nightly scheduling prose with the product
+  owner's delegation and 01:00–08:00 instruction
+- corrected independent reviewer findings for pooled coverage, string-valued
+  frames, a competing manifest shape and stale audio-review authority wording
+- recorded the contract, validation scope, reviews and honest limitations in
+  [EC-01 evidence](./parity/evidence/2026-09-07-goal-five-delegated-review-reconciliation.md);
+  canonical program state binds the exact checkpoint check and terminal commit

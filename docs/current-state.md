@@ -1,6 +1,6 @@
 # Current State
 
-Last reconciled: 2026-09-06.
+Last reconciled: 2026-09-07.
 
 ## Product Direction
 
@@ -60,15 +60,21 @@ and identity-bound review packets. `OS-01` through `OS-06` and `CAL-01` through
 `CAL-03` are complete with immutable evidence, independent review, staged
 validation, clean terminal commits, and released ownership. `ACT-01` and Gate 1
 are approved, and the active pointer selects the immutable
-`goal-five-engine-completion` program. `EC-01` is the next dependency-ready
-item; no Phase 2 implementation has begun. Host schedule state remains
+`goal-five-engine-completion` program. `EC-01` reconciles the certification matrix
+and sensory mappings through the
+[delegated review contract](./parity/goal-five-delegated-review.md): 12 independent
+review criteria, one preserved Gate 1 human criterion, 32 planned harnesses and
+one ready command. All 46 product criteria remain pending. No Phase 2 engine
+implementation has begun; `EC-02` is next after EC-01 closure. Host schedule state
+remains
 app-owned and must be verified through Codex Scheduled rather than inferred
 from repository files.
 
 The exact authorized cadence is owned by the
-[checkpoint runbook](./plans/v2/autonomous-checkpoint-runbook.md): four
-night-centered capacity windows, at most one checkpoint per wake, planned
-cleanup gaps, and exact sole-writer refusal on overrun.
+[checkpoint runbook](./plans/v2/autonomous-checkpoint-runbook.md), as amended
+by the product owner on 2026-09-06: daily 01:00–08:00 in `Europe/Ljubljana`,
+15-minute opportunities through 07:45, one checkpoint per wake, wind-down by
+07:30 and development stop by 08:00. Later wakes refuse a live writer.
 
 The canonical machine entrypoint for that readiness work is:
 

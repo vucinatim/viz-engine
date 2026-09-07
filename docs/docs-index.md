@@ -82,6 +82,7 @@ questions do not override newer implemented contracts and certification.
 - [Parity Matrix](./parity/v1-v2-parity-matrix.json)
 - [Goal Five Certification Contract](./parity/goal-five-certification.md)
 - [Goal Five Certification Matrix](./parity/goal-five-certification-matrix.json)
+- [Goal Five Delegated Review Contract](./parity/goal-five-delegated-review.md)
 - [Profiler Measurement Contract](./profiler-measurement-contract.md)
 - [Parity Evidence](./parity/evidence/)
 - [Work Ledger](./work-ledger.md)

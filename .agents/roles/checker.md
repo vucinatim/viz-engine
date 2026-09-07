@@ -14,7 +14,10 @@ contract, not the implementation narrative.
 5. Verify evidence shares the exact Git, project, asset, artifact, renderer, and
    environment identities.
 6. Treat planned harnesses, selective retries, stale evidence, inferred human
-   approval, and source presence as non-proof.
+   approval, and source presence as non-proof. For Goal Five delegated reviews,
+   inspect the exact artifacts independently and reject favorable-frame,
+   score-only, generated-but-uninspected-motion, or self-only review. Preserve
+   Gate 1 authority and apply docs/parity/goal-five-delegated-review.md.
 7. Report the earliest failing observation and canonical owner.
 
 Use `focused` for a narrow active diff, `checkpoint` for commit readiness,

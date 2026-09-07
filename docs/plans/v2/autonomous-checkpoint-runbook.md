@@ -165,10 +165,10 @@ Magnify work, monetization or commercial policy, an external mutation, a
 material north-star change, an intentional regression, or unsafe overlap with
 ambiguous user work.
 
-The pre-delegation certification matrix and sensory documents retain historical
-human-only mappings until `EC-01` reconciles them. `EC-01` must complete before
-any engine implementation item; no later checkpoint may interpret that
-transitional language as a reason to wait for human approval.
+The certification matrix and sensory map distinguish delegated independent
+review from the preserved Gate 1 human decision. Apply the typed inspection
+contract in docs/parity/goal-five-delegated-review.md. `EC-01` must complete
+before any engine implementation item.
 
 Remain quiet: no visible applications, no audio, no reused server, and one
 heavy process at a time. Use normal development tools freely within this
@@ -229,10 +229,17 @@ No default-program mutation may run between the pointer-switch commit and the
 old lease's completion. Recovery in that interval must use the exact recorded
 readiness-program identity; it must never infer ownership from the new pointer.
 
-The authorized capacity is four nominal night-centered wakes with
-planned cleanup gaps, at most one checkpoint per wake, and approximately twelve
-hours of available daily capacity. The reviewed proposal starts wakes at 20:00,
-23:15, 02:30, and 05:45 in `Europe/Ljubljana`; each nominally has three hours of
-capacity followed by a 15-minute buffer. These are capacity windows, not hard
-runtime cutoffs or work quotas: no ready work means a clean no-op exit, and a
-later wake refuses mutation if an overrun still owns the lease.
+The product owner's 2026-09-06 instruction authorizes development daily from
+01:00–08:00 in `Europe/Ljubljana`, replacing the former four-window cadence.
+Scheduled opportunities occur every 15 minutes from 01:00 through 07:45. Check
+local time before beginning and at major boundaries; do not begin development
+outside the window. Select one checkpoint with enough time for implementation,
+review, validation and cleanup. Begin winding down by 07:30 and stop development
+by 08:00.
+
+A run may continue its one claimed checkpoint across later opportunities; those
+wakes exit read-only while its lease is valid. Never start a second checkpoint
+in one wake or borrow another run's identity. If time is insufficient, preserve
+every change, checkpoint/block with an exact recovery condition, release
+ownership and stop scoped processes. The clock never authorizes discarding work
+or claiming incomplete work complete. Host schedule state remains app-owned.

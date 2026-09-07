@@ -55,8 +55,10 @@ It should not become:
     replacement.
 12. Replace the architecture underneath the editor, not the product-quality
     editing posture itself.
-13. Do not redesign the editor shell, color system, button language, panel
-    structure, or node-editor posture unless explicitly approved.
+13. Preserve the editor shell, color system, button language, panel structure
+    and node-editor quality floor. Reversible improvements within that product
+    identity are delegated; material identity changes or intentional regressions
+    require explicit approval.
 14. Treat agent operability as a state/action/runtime integration problem, not
     as a reason to simplify or replace the editor UX.
 15. Do not accept new long-lived transitional ownership layers once a cleaner

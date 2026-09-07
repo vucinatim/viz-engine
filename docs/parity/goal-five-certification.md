@@ -9,7 +9,7 @@ itself to favorable results. The matrix maps every completion requirement to:
 - one stable criterion ID
 - one pinned environment and source-revision role
 - one exact observation set
-- one numeric, semantic, structural, diagnostic, or human decision rule
+- one numeric, semantic, structural, diagnostic, or explicit review decision rule
 - one exact command or review workflow
 - one named evaluator
 - one durable artifact location
@@ -73,5 +73,8 @@ complete rerun of every affected criterion.
 
 Planned commands are not claims that their harnesses exist. Each must become a
 real canonical evaluator before its criterion can pass, and final mode enforces
-that transition. Human criteria can pass only through explicit recorded review;
-automated aesthetic scores are not substitutes.
+that transition. Gate 1 remains an explicit recorded human decision. The 12 delegated criteria
+use the `review` harness and the [delegated review contract](./goal-five-delegated-review.md);
+passed status requires identity-bound independent inspection receipts. Automated
+aesthetic scores are not substitutes for that judgment. All 46 criteria remain
+pending until their own evidence is admitted.

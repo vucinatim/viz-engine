@@ -18,10 +18,9 @@ future vision.
 The product owner approved Human Signal, authorized Phase 2, and delegated all
 reversible local decisions inside the documented engine horizon. The
 [Autonomous Engine Completion Program](./goal-five-autonomous-engine-completion-program.md)
-supersedes this document wherever it describes Gates 2 through 5, periodic
-creative approval, or subjective acceptance as human-blocking. Those reviews
-remain mandatory evidence-backed calibrations, but the agent may decide and
-continue. The human boundary is now platform/production integration,
+and the [delegated review contract](../../parity/goal-five-delegated-review.md)
+define Gates 2 through 5 as mandatory independent agent calibrations. The human
+boundary is now platform/production integration,
 monetization or commercial policy, external mutation, material north-star
 change, intentional regression, or unsafe ambiguous user work.
 
@@ -56,7 +55,7 @@ Authority remains deliberately separated:
 1. The [compounding vision](../../visions/viz-engine-compounding-vision.md)
    owns product direction.
 2. The [Goal Five contract](./flagship-autonomous-production-and-creative-system-maturation.md)
-   owns the bounded campaign, phases, human gates, and completion condition.
+   owns the bounded campaign, phases, calibrations, and completion condition.
 3. The [Goal Five certification matrix](../../parity/goal-five-certification-matrix.json)
    owns terminal proof requirements.
 4. The tracked machine execution definition owns immutable work-item identity,
@@ -92,12 +91,13 @@ This proposal assumes:
    certification targets.
 8. Unattended runs remain headless, muted, resource-bounded, and free of visible
    application control.
-9. The human will review one consolidated packet approximately every two or
-   three days and attend the declared Goal Five creative gates.
-10. Subjective aesthetic approval remains human. The agent may prepare and
-    critique evidence but may not manufacture approval.
-11. Recurring execution targets twelve hours of night-centered capacity, with
-    exact wake times calibrated only after the first three supervised runs.
+9. Independent reviewers inspect consolidated evidence at each declared
+   calibration. Routine progress does not require human availability.
+10. Subjective judgment inside the engine horizon is delegated. Independent
+    inspection and critique are mandatory; neither scores nor source presence
+    may manufacture a pass.
+11. Recurring execution follows the runbook's authorized nightly window and
+    exact writer/recovery discipline.
 12. The autonomous checkout is exclusively writer-owned while a valid lease is
     held; concurrent human edits use a separate worktree.
 
@@ -189,8 +189,9 @@ Before implementing a meaningful product slice, answer:
 10. Which part, if any, still requires human judgment?
 
 If the relevant result cannot be observed reliably, the first checkpoint is the
-smallest reusable observation improvement. If the missing observation is purely
-subjective, prepare a human decision packet instead of inventing a metric.
+smallest reusable observation improvement. Subjective judgments use independent
+artifact inspection under the delegated review contract. Request a human decision
+only when the documented authority boundary is crossed.
 
 ## Observation And Evidence Lanes
 
@@ -255,8 +256,10 @@ Likely maturation:
 - frame-exact musical-map export and runtime sampling report
 - declared-intent mapping from major graph outputs to musical evidence
 
-Automated signal analysis supports hearing; it does not replace human listening
-and emotional judgment at creative gates.
+Silent signal analysis supports delegated musical judgment during unattended
+runs. Reviewers inspect exact motion, intended-audio analysis and musical-map
+evidence; they must not claim to have listened audibly. Numeric analysis alone
+cannot establish emotional coherence.
 
 ### 4. Visual composition
 
@@ -390,7 +393,7 @@ Likely maturation:
 - deletion/duplication review in every checkpoint packet
 - dependency and public-surface diffs for cross-package changes
 
-### 10. Creative and human judgment
+### 10. Creative judgment and human authority
 
 Questions:
 
@@ -400,8 +403,10 @@ Questions:
   effects convincing?
 - Does the editor still feel like the intended product?
 
-The agent may produce a structured self-critique and compare the result against
-the approved treatment. Only the human may approve Gates 1 through 5.
+The builder produces structured critique against the approved treatment.
+Independent visual and acceptance reviewers inspect the exact artifacts and
+record delegated Gates 2–5 judgments. The historical Gate 1 decision remains
+human-owned; it is not recreated or inferred by agents.
 
 ## Evidence Confidence Model
 
@@ -416,9 +421,10 @@ For every checkpoint, record the applicable lanes as:
 - `invalid-or-stale`
 - `not-applicable` with a reason
 
-A checkpoint is complete only when every applicable non-human lane passes for
-the same implementation identity and every required human lane contains an
-explicit decision.
+A checkpoint is complete only when every applicable automated or independent
+review lane passes for the claimed identity and scope. `human-required` applies
+only at the documented authority boundary; the stable `creative-human` lane
+includes delegated creative review and does not itself create a human gate.
 
 Evidence becomes stale when its project, commit, capability, asset, artifact,
 renderer, environment, or decision-rule identity changes.
@@ -573,19 +579,21 @@ into a completed checkpoint.
 
 ## Operational Cadence
 
-Authorized initial cadence after the completed readiness rehearsals:
+Authorized cadence from the product owner's 2026-09-06 instruction:
 
-- four nominal night-centered wake windows per day, with the exact authorized
-  cadence owned by the checkpoint runbook and its host-side activation state
-- approximately three hours of capacity per window, targeting twelve hours of
-  daily autonomous capacity rather than mandatory activity
-- an explicit cleanup buffer between windows; a later wake exits harmlessly if
-  an earlier run still owns the lease
+- daily 01:00–08:00 in `Europe/Ljubljana`, with scheduled opportunities every
+  15 minutes from 01:00 through 07:45
+- one claimed checkpoint per wake; a continuing run may span opportunities
+- begin winding down by 07:30 and stop development by 08:00; preserve incomplete
+  work with the exact typed recovery condition and release ownership
+- a later wake exits harmlessly if an earlier run still owns the lease
 - one heavy process at a time
 - full repository gates only at integration milestones
-- headed performance and intended-audio review only during coordinated human
-  time
-- one consolidated human review packet every 48–72 hours
+- visible headed performance work or audible listening only during separately
+  coordinated human time; silent intended-audio analysis and headless review
+  remain part of unattended calibration
+- independent review packets at calibration milestones; notify the human only
+  for meaningful failures needing attention, completion or required decisions
 
 The three exact-prompt runs before activation are supervised calibration runs.
 Review their scope choice, diffs, evidence, cleanup, and machine-state
@@ -615,9 +623,9 @@ Unattended work must:
 - clean up servers, browsers, encoders, temporary artifacts, and leases
 - preserve failed evidence when it explains a real defect
 
-## Human Review Packet
+## Calibration Review Packet
 
-Every 48–72 hours, or at a declared creative gate, produce one concise packet:
+At each declared creative calibration, produce one concise packet:
 
 - current phase, checkpoint, commit, project revision, and execution identity
 - completed and currently ready work items
@@ -627,16 +635,18 @@ Every 48–72 hours, or at a declared creative gate, produce one concise packet:
 - code and architecture diff summary, including deletions and new public surface
 - failed or stale evidence and what invalidated it
 - agent self-critique: strongest result, weakest result, and next hypothesis
-- exact human validations required, each with artifact, question, recommendation,
-  alternatives, and consequence of delay
+- independent review decisions and any actual human authority boundary, with
+  exact artifact, question and consequence of delay
 
 Do not interrupt the human with small implementation questions that can be
-resolved safely inside the existing contracts. Batch subjective and product
-decisions into the nearest packet or declared gate.
+resolved safely inside the existing contracts. Resolve subjective engine
+choices through independent critique and bounded experiments. Human packets
+are reserved for the stated stop boundary.
 
 ## Human-Validation Queue
 
-When the agent cannot honestly close an observation, add a typed item containing:
+When the next action crosses the documented human boundary, add a typed item
+containing:
 
 - exact question
 - why automation is insufficient
@@ -647,15 +657,14 @@ When the agent cannot honestly close an observation, add a typed item containing
 
 Examples include:
 
-- track and window selection
-- emotional arc and visual-language approval
-- whether a visible UX change is genuinely better than V1
-- whether a motion passage feels intentional rather than merely valid
-- final audiovisual quality
-- licensing or external-asset authority
+- beginning the hosted platform or production Magnify integration
+- monetization, commercial packaging, licensing or paid commitments
+- material north-star changes or intentional regressions
+- unavailable external authority or unsafe ambiguous user-work overlap
 
-The existence of human judgment is not a tooling failure. Pretending it is
-automatable would be one.
+A missing observation calls for the smallest reusable evidence improvement.
+Delegated taste judgments still require independent actual inspection, not an
+invented objective score. Neither situation alone requires human approval.
 
 Human resolutions are append-only operational decision records. The CLI records
 provenance but cannot cryptographically distinguish a human from a local
@@ -666,9 +675,9 @@ technical identity attestation.
 
 ## Multi-Week Program
 
-Calendar estimates assume up to twelve hours of night-centered capacity on most
-days. Gates, evidence, and dependency readiness govern progress; elapsed time
-never proves completion.
+Calendar estimates are sequencing guidance, not completion dates. Available
+capacity is the daily seven-hour authorized nightly window. Gates, evidence and
+dependency readiness govern progress; elapsed time never proves completion.
 
 ### Bootstrap: two to four days
 
@@ -745,7 +754,7 @@ never proves completion.
 - freeze exact clean candidate commit `C`
 - generate final stills, contact sheet, transition clips, probes, and 1080p
   H.264/AAC video from `C`
-- obtain final human approval of both video and editable project
+- obtain final independent acceptance of both video and editable project
 - create documentation-only evidence commit `E`
 - complete Goal Five only when all 46 criteria pass for the immutable identities
 
@@ -754,7 +763,7 @@ never proves completion.
 Use only for real findings such as:
 
 - a canonical architecture redesign exposed by production scale
-- visual quality changes requested at a human gate
+- visual quality changes requested during independent calibration
 - full-flagship performance or lifecycle failures
 - nondeterminism or portability faults
 - invalidated candidate evidence
@@ -841,11 +850,10 @@ Approved defaults are:
 
 1. **Checkout ownership:** reserve this checkout for the autonomous loop during
    scheduled windows; use a separate human worktree for concurrent edits.
-2. **Cadence:** four night-centered windows targeting twelve hours of available
-   capacity; calibrate exact times after three supervised runs and pause
-   automatically at human gates.
-3. **Days:** begin on weekdays for the first three calibration runs, then allow
-   weekends only after cleanup and resource behavior are proven.
+2. **Cadence:** daily 01:00–08:00 in `Europe/Ljubljana`, with opportunities
+   every 15 minutes through 07:45, one checkpoint per wake, wind-down at 07:30
+   and a hard development stop at 08:00.
+3. **Days:** every day under the 2026-09-06 authorization.
 4. **External authority:** local files, tests, browser checks, renders, local
    commits, and a post-completion fast-forward push of the exact reviewed
    terminal commit to the same-named `origin` V2 target branch. No force push,
@@ -853,8 +861,9 @@ Approved defaults are:
    external mutation.
 5. **Asset authority:** repository-authorized inputs only until Gate 1 requests a
    specific expansion.
-6. **Notifications:** report completed checkpoints, failures that invalidate the
-   baseline, and human decisions; suppress routine no-op noise.
+6. **Notifications:** report meaningful failures needing attention, completed
+   engine horizon and required human decisions; suppress routine progress and
+   no-op noise.
 
 Implement and manually run `OS-01` through `OS-06`, then complete the three
 supervised calibration runs, before creating the recurring schedule. The exact
@@ -878,4 +887,4 @@ This operating-system proposal is complete when:
 - the supporting plan can be archived without removing the operating surfaces
 
 Goal Five itself remains complete only at candidate `C` plus documentation-only
-evidence commit `E` with explicit final human approval.
+evidence commit `E` with explicit independent delegated creative acceptance.

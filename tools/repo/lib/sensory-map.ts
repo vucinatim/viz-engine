@@ -30,7 +30,7 @@ interface CertificationCriterion {
   decisionRule: string;
   evaluation: {
     kind: string;
-    harness: 'ready' | 'planned' | 'human';
+    harness: 'ready' | 'planned' | 'review' | 'human';
     command?: string;
     workflow?: string;
   };
@@ -100,7 +100,11 @@ export const readAndValidateSensoryMap = (path = defaultSensoryMapPath) => {
         `Criterion ${criterion.id} maps to an unknown evidence lane.`,
       );
     }
-    if (!['ready', 'planned', 'human'].includes(criterion.evaluation.harness)) {
+    if (
+      !['ready', 'planned', 'review', 'human'].includes(
+        criterion.evaluation.harness,
+      )
+    ) {
       throw new Error(
         `Criterion ${criterion.id} has an invalid harness state.`,
       );
@@ -167,6 +171,8 @@ export const readAndValidateSensoryMap = (path = defaultSensoryMapPath) => {
       planned: mappedCriteria.filter(
         (entry) => entry.organ.status === 'planned',
       ).length,
+      review: mappedCriteria.filter((entry) => entry.organ.status === 'review')
+        .length,
       human: mappedCriteria.filter((entry) => entry.organ.status === 'human')
         .length,
     },

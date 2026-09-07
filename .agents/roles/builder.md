@@ -19,5 +19,8 @@ VizEngine architecture.
 9. Commit only a coherent passing checkpoint, complete or block the item, and
    release all processes and ownership.
 
-The builder never marks human judgment passed, weakens a gate, fills time with
-speculative work, or pushes/deploys without explicit authority.
+The builder never invents human approval, weakens a gate, fills time with
+speculative work, or pushes/deploys without explicit authority. Gates 2–5 are
+independent delegated reviews under the Goal Five review contract; the builder
+obtains critique and records the resulting judgment without impersonating a
+human decision.

@@ -82,8 +82,9 @@ an external or commercial action.
 
 ## Autonomous Calibration
 
-Former Gates 2 through 5 are now internal calibration milestones rather than
-blocking human approvals. Each calibration must combine:
+Former Gates 2 through 5 are independent calibration milestones under the
+[typed delegated review contract](../../parity/goal-five-delegated-review.md).
+Each calibration must combine:
 
 - deterministic and structural validation
 - representative still and motion inspection
@@ -173,10 +174,13 @@ and stops cleanly before another wake.
 
 ## Scheduling Contract
 
-Use four night-centered capacity windows in `Europe/Ljubljana`: 20:00, 23:15,
-02:30, and 05:45. Each wake may use roughly three hours and must yield after one
-checkpoint. The writer lease prevents overlap, and a later wake exits quietly
-when an earlier one is still active.
+The product owner's 2026-09-06 instruction authorizes daily 01:00–08:00 in
+`Europe/Ljubljana`, with scheduled opportunities every 15 minutes through 07:45.
+Each wake claims at most one checkpoint; an active run may continue across later
+opportunities, which exit without mutation while its lease is valid. Check time
+at major boundaries, begin winding down by 07:30 and stop development by 08:00.
+Preserve incomplete work through the runbook's exact recoverable block procedure
+and release ownership; never discard work to meet the clock.
 
 Runs remain headless and muted. They notify only for a checkpoint failure that
 needs attention, completed engine horizon, external/monetization boundary, or

@@ -432,8 +432,9 @@ Preserve by default:
 - smooth playback, immediate editing, and long-session stability
 
 Parity includes visual, interaction, functional, and performance dimensions.
-A material visible difference requires explicit human approval and a recorded
-`approved-change`; it may not be smuggled in as architecture cleanup.
+An intentional parity regression or material product-identity change requires
+explicit human approval and a recorded `approved-change`. Reversible improvements
+inside the documented editor experience are delegated, with full parity proof.
 
 The 42-row parity matrix is currently verified for its pinned reference and
 certified Chromium/fixed-device evidence. That is a strong release floor, not
@@ -442,7 +443,7 @@ or future flagship workload.
 
 Types and unit tests do not certify product quality by themselves. Relevant
 work must also use real browser workflows, deterministic outputs, diagnostics,
-performance measurements, lifecycle checks, and human visual judgment.
+performance measurements, lifecycle checks, and independent visual judgment.
 
 ## Agentic Creative Quality
 
@@ -464,8 +465,11 @@ Automated checks can detect blank, frozen, clipped, invalid, missing-resource,
 unstable, silent, or nondeterministic results. They cannot fully define whether
 a production is genuinely good.
 
-Human calibration remains required at major aesthetic milestones until a
-future product decision establishes a stronger acceptance model.
+The product owner's 2026-09-06 Human Signal decision establishes independent,
+evidence-backed agent calibration for reversible local engine work. Gate 1
+remains the exact human-approved treatment; Gates 2–5 require the
+[delegated review contract](../parity/goal-five-delegated-review.md). This changes
+review authority, not the creative quality bar or product identity.
 
 ## Product Forms And Boundaries
 
@@ -557,11 +561,10 @@ hardening it into engine core.
 Autonomous work must stop for explicit human direction when it would:
 
 - change this product vision
-- materially redesign or weaken the editor experience
+- materially change the editor product identity or weaken its experience
 - accept a known quality, capability, or performance regression
-- choose between materially different scene, UX, or product paradigms
 - expand cloud, licensing, publication, or external-system authority
-- make a major quality-versus-performance trade
+- intentionally reduce quality or performance to make a tradeoff
 
 ## Rejected Interpretations
 
@@ -588,7 +591,9 @@ This synthesis currently assumes:
 
 1. Music-reactive visual creation remains the product center of gravity.
 2. The pinned V1 parity matrix remains the minimum preserved-product floor.
-3. Material UX divergence requires explicit human approval.
+3. The V1 product floor is preserved. Reversible UX improvements inside that
+   floor are delegated; material product-identity changes or intentional
+   regressions require explicit human approval.
 4. External model assets and authored animation remain legally and practically
    usable as first-class creative inputs.
 5. Trusted local capability source is acceptable while portable bundles remain
@@ -601,8 +606,9 @@ This synthesis currently assumes:
    external session host.
 9. The current browser-backed video executor is acceptable behind the render
    job contract until deployment evidence requires another executor.
-10. Human creative calibration remains necessary at major aesthetic
-    checkpoints.
+10. Independent evidence-backed creative calibration is mandatory. The
+    2026-09-06 delegation assigns reversible engine-horizon judgment to agents;
+    only the documented human boundary requires a new product-owner decision.
 11. Cloud and provider choices may change without changing project, runtime,
     asset, artifact, or job semantics.
 12. The current agent loop is real and useful, but not yet the effortless
