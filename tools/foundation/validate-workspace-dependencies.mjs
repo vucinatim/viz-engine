@@ -27,6 +27,7 @@ const tiers = new Map([
   ['@viz-engine/editor-session', 2],
   ['@viz-engine/editor-control', 3],
   ['@viz-engine/project-bundle', 3],
+  ['@viz-engine/production-human-signal', 3],
   ['@viz-engine/dev-cli', 4],
 ]);
 
@@ -79,6 +80,14 @@ for (const [packageName, { directory, manifest }] of packages) {
         `${packageName} declares unknown workspace dependency "${dependencyName}".`,
       );
       continue;
+    }
+    if (
+      dependencyName.startsWith('@viz-engine/production-') &&
+      !packageName.startsWith('@viz-engine/production-')
+    ) {
+      issues.push(
+        `${packageName} imports production owner ${dependencyName}; reusable packages cannot depend on productions.`,
+      );
     }
     const dependencyTier = tiers.get(dependencyName);
     if (

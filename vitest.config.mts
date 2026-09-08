@@ -70,6 +70,13 @@ export default defineConfig({
       '@viz-engine/editor-control': packageEntry('viz-editor-control'),
       '@viz-engine/nodes-core': packageEntry('viz-nodes-core'),
       '@viz-engine/rhythm-core': packageEntry('rhythm-core'),
+      '@viz-engine/production-human-signal/node': path.resolve(
+        repoRoot,
+        'packages/viz-production-human-signal/src/node.ts',
+      ),
+      '@viz-engine/production-human-signal': packageEntry(
+        'viz-production-human-signal',
+      ),
       '@viz-engine/production-signal-cathedral': packageEntry(
         'viz-production-signal-cathedral',
       ),
@@ -82,7 +89,7 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/**/*.test.ts', 'packages/*/tests/**/*.test.ts'],
     pool: 'threads',
     coverage: {
       reporter: ['text', 'html'],

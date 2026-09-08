@@ -27,7 +27,7 @@ import {
   type WebGLRenderTarget,
   type WebGLRenderer,
 } from 'three';
-import helvetikerRegular from 'three/examples/fonts/helvetiker_regular.typeface.json';
+import helvetikerRegular from 'three/examples/fonts/helvetiker_regular.typeface.json' with { type: 'json' };
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import {
   FontLoader,

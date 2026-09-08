@@ -1,0 +1,38 @@
+{
+  "name": "@viz-engine/production-human-signal",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "default": "./dist/node.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@viz-engine/contracts": "workspace:*",
+    "@viz-engine/components-core": "workspace:*",
+    "@viz-engine/nodes-core": "workspace:*",
+    "@viz-engine/runtime": "workspace:*",
+    "@viz-engine/renderer-three": "workspace:*",
+    "@viz-engine/project-bundle": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "vitest": "^3.2.4"
+  }
+}

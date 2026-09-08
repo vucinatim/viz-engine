@@ -2993,3 +2993,24 @@
   Git process per file. Batched terminal tree/blob reads preserve exact evidence
   checks and remove that cost; binary, duplicate-object and deletion controls
   accompany the fix. The original failed checkpoint remains in evidence.
+
+## 2026-09-08 — Human Signal production ownership
+
+- Established `@viz-engine/production-human-signal` as the single owner of
+  project construction, approved score and graph requirements, source/derived
+  asset recipes, current trusted capabilities and package-local tests.
+- Bound the exact Gate 1 treatment, decision reference and source sample window
+  into canonical execution metadata; delegated file identities to the existing
+  bundle owner. Verified source and copied model hashes independently.
+- Kept source music outside executable audio refs because the canonical runtime
+  automatically selects the first audio asset. Confirmed no foundation audio is
+  selected and retained exact clip/bake work for EC-03.
+- Recorded nine baseline layer records, five initial enabled layers and zero
+  executable graphs truthfully. Documented the EC-04/EC-07/EC-08 dependency
+  inversion without adding hidden production runtime semantics.
+- Fixed the Three font JSON import's missing Node type attribute, discovered
+  by a plain Node built-consumer probe. Added that production-owned smoke to
+  integration so source-loader success cannot hide a broken package export.
+- Recorded package validation and independent-review controls in
+  `docs/parity/evidence/2026-09-08-human-signal-ownership.md`; exact staged closure
+  and immutable artifacts belong to the active execution program.

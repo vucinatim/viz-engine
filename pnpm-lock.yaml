@@ -374,6 +374,34 @@ importers:
         specifier: workspace:*
         version: link:../viz-contracts
 
+  packages/viz-production-human-signal:
+    dependencies:
+      '@viz-engine/components-core':
+        specifier: workspace:*
+        version: link:../viz-components-core
+      '@viz-engine/contracts':
+        specifier: workspace:*
+        version: link:../viz-contracts
+      '@viz-engine/nodes-core':
+        specifier: workspace:*
+        version: link:../viz-nodes-core
+      '@viz-engine/project-bundle':
+        specifier: workspace:*
+        version: link:../viz-project-bundle
+      '@viz-engine/renderer-three':
+        specifier: workspace:*
+        version: link:../viz-renderer-three
+      '@viz-engine/runtime':
+        specifier: workspace:*
+        version: link:../viz-runtime
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.12.7
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/node@20.12.7)(jsdom@29.1.1(@noble/hashes@2.0.1))(lightningcss@1.32.0)(terser@5.31.1)
+
   packages/viz-production-signal-cathedral:
     dependencies:
       '@viz-engine/components-core':

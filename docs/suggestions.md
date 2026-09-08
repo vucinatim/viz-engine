@@ -152,3 +152,12 @@ already requirements of the active goal.
   sample coordinates, exact endpoints and feature-bake identity. Web Audio's
   offline render cannot be immediately canceled; rejected jobs prevent late
   encoder/output creation while the native conversion may finish internally.
+
+## Human Signal execution ordering
+
+- Resolve the EC-04 → EC-07/EC-08 dependency inversion before closing the
+  seven-graph skeleton. The treatment's score-direction and compositor graphs
+  require GAP-01/GAP-02 consumers owned by those later engine items. Keep their
+  authored requirements explicit; no dummy graph, hidden frame evaluator, or
+  production-specific compositor branch may satisfy the count. See
+  [production ownership contract](./plans/v2/human-signal-production-ownership-contract.md).

@@ -80,6 +80,15 @@ its exact integration closure is recorded by the active program and
 Quiet-host hardware throughput and long-duration endurance remain unmeasured;
 no real-time performance certification is implied.
 
+Human Signal now has one production package and a content-bound ownership
+foundation. Its nine baseline layer records and seven graph requirements are
+explicitly distinct from the future playable skeleton: only five initial layers
+are enabled and no graphs or audio playback are installed. Four approved model
+files are bundled; exact-window audio and bake remain planned. See
+[ownership evidence](./parity/evidence/2026-09-08-human-signal-ownership.md).
+The EC-04 seven-consumer requirement depends on cue/compositor features currently
+scheduled as EC-07/EC-08; resolve that ordering before skeleton closure.
+
 The user's 2026-09-07 cadence amendment is one daily 01:00 wake in the same
 Codex task, working successively until 08:00 Europe/Ljubljana. Check the actual
 clock and checkpoint recoverable progress. Do not refuse useful work because

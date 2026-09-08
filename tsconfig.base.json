@@ -57,7 +57,15 @@
         "packages/viz-production-afterlight-assembly/src/index.ts"
       ],
       "@viz-engine/renderer-svg": ["packages/viz-renderer-svg/src/index.ts"],
-      "@viz-engine/renderer-three": ["packages/viz-renderer-three/src/index.ts"]
+      "@viz-engine/renderer-three": [
+        "packages/viz-renderer-three/src/index.ts"
+      ],
+      "@viz-engine/production-human-signal": [
+        "packages/viz-production-human-signal/src/index.ts"
+      ],
+      "@viz-engine/production-human-signal/node": [
+        "packages/viz-production-human-signal/src/node.ts"
+      ]
     }
   }
 }
