@@ -2,14 +2,10 @@ import { mirrorToCanvases } from '@/lib/comp-utils/mirror-to-canvases';
 import editorControl from '@/lib/editor-control';
 import type {
   LayerData,
-  LayerRuntimePreviewRenderResult,
+  LayerRuntimePreviewAttachment,
 } from '@/lib/editor-layer-types';
 import { invalidateEditorRuntimePreview } from '@/lib/editor-runtime-preview-invalidation';
-import type {
-  VizSessionRuntimePreviewAudioFrameData,
-  VizSessionRuntimePreviewFrame,
-} from '@/lib/viz-session/types';
-import type { VizRenderPlan } from '@viz-engine/contracts';
+import { awaitAbortable } from '@/lib/utils/await-abortable';
 import {
   createVizThreeRenderHost,
   type VizThreeCameraPose,
@@ -20,18 +16,8 @@ import * as THREE from 'three';
 
 const PLAYBACK_MIRROR_INTERVAL_FRAMES = 3;
 
-export interface EditorRuntimePreviewAttachment {
-  getViewport: () => {
-    width: number;
-    height: number;
-  };
+export interface EditorRuntimePreviewAttachment extends LayerRuntimePreviewAttachment {
   resize: (displayWidth: number, displayHeight: number) => void;
-  render: (input: {
-    frame: VizSessionRuntimePreviewFrame;
-    audioFrameData: VizSessionRuntimePreviewAudioFrameData;
-    renderPlan: VizRenderPlan;
-    hasLiveOverrides: boolean;
-  }) => LayerRuntimePreviewRenderResult;
   updateLayers: (layers: LayerData[]) => void;
   invokeLayerAction: (layerId: string, actionId: string) => boolean;
   requiresContinuousRendering: () => boolean;
@@ -74,6 +60,13 @@ export const createEditorRuntimePreviewAttachment = ({
 }: CreateEditorRuntimePreviewAttachmentOptions): EditorRuntimePreviewAttachment => {
   let currentLayers = new Map(layers.map((layer) => [layer.id, layer]));
   let runtimePreviewController: VizThreeRenderHost | null = null;
+  let readiness = new AbortController();
+  const invalidateReadiness = () => {
+    readiness.abort(
+      new Error('Preview frame changed while waiting for resources.'),
+    );
+    readiness = new AbortController();
+  };
   let mirrorCursor = 0;
   let playbackRenderCount = 0;
   let staticMirrorFrame: number | null = null;
@@ -331,6 +324,14 @@ export const createEditorRuntimePreviewAttachment = ({
   };
 
   return {
+    async whenReady() {
+      const controller = runtimePreviewController;
+      const signal = readiness.signal;
+      if (!controller)
+        throw new Error('Preview has no submitted render frame.');
+      await awaitAbortable(() => controller.whenReady(), signal);
+      signal.throwIfAborted();
+    },
     getViewport: () => ({
       width: Math.max(canvas.width, 1),
       height: Math.max(canvas.height, 1),
@@ -340,6 +341,7 @@ export const createEditorRuntimePreviewAttachment = ({
         return;
       }
 
+      invalidateReadiness();
       applyCanvasResolution(
         canvas,
         displayWidth,
@@ -350,6 +352,7 @@ export const createEditorRuntimePreviewAttachment = ({
       invalidateEditorRuntimePreview();
     },
     render: ({ frame, renderPlan, hasLiveOverrides }) => {
+      invalidateReadiness();
       for (const layerPlan of renderPlan.layers) {
         lastConfigValuesByLayerId.set(
           layerPlan.layerId,
@@ -444,6 +447,7 @@ export const createEditorRuntimePreviewAttachment = ({
     getResourceStats: () =>
       runtimePreviewController?.getResourceStats() ?? null,
     destroy: () => {
+      invalidateReadiness();
       deactivateFlyCamera();
       removeFlyListeners();
       cancelStaticMirrorSweep();

@@ -54,6 +54,7 @@ describe('Editor runtime preview attachment store', () => {
 
     attachmentStore.registerPreviewAttachment(
       {
+        whenReady: async () => {},
         getViewport: () => ({ width: 640, height: 360 }),
         render: renderLayerA,
       },
@@ -109,6 +110,7 @@ describe('Editor runtime preview attachment store', () => {
   it('prunes only layer-scoped browser entries', () => {
     const store = useEditorRuntimePreviewAttachmentStore.getState();
     const attachment = {
+      whenReady: async () => {},
       getViewport: () => ({ width: 1, height: 1 }),
       render: vi.fn(),
     };
@@ -133,6 +135,7 @@ describe('Editor runtime preview attachment store', () => {
     const renderDebug = vi.fn();
     store.registerPreviewAttachment(
       {
+        whenReady: async () => {},
         getViewport: () => ({ width: 640, height: 360 }),
         render,
       },
@@ -172,6 +175,7 @@ describe('Editor runtime preview attachment store', () => {
 
     store.registerPreviewAttachment(
       {
+        whenReady: async () => {},
         getViewport: () => ({ width: 1, height: 1 }),
         render: vi.fn(),
         invokeLayerAction: (layerId, actionId) => {
@@ -192,4 +196,55 @@ describe('Editor runtime preview attachment store', () => {
       false,
     );
   });
+});
+
+describe('mounted preview resource readiness', () => {
+  beforeEach(() => useEditorRuntimePreviewAttachmentStore.getState().reset());
+  it('rejects missing attachments and propagates resource failures', async () => {
+    const store = useEditorRuntimePreviewAttachmentStore.getState();
+    await expect(store.whenPreviewReady()).rejects.toThrow(
+      'No runtime preview',
+    );
+    store.registerPreviewAttachment(
+      {
+        getViewport: () => ({ width: 1, height: 1 }),
+        render() {},
+        whenReady: async () => {
+          throw new Error('texture failed');
+        },
+      },
+      [],
+    );
+    await expect(store.whenPreviewReady()).rejects.toThrow('texture failed');
+  });
+  it.each(['replace', 'unmount', 'reregister', 'reset'] as const)(
+    'rejects %s while a resource is pending',
+    async (action) => {
+      let release!: () => void;
+      const pending = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      const attachment = {
+        getViewport: () => ({ width: 1, height: 1 }),
+        render() {},
+        whenReady: () => pending,
+      };
+      const store = useEditorRuntimePreviewAttachmentStore.getState();
+      store.registerPreviewAttachment(attachment, []);
+      const ready = store.whenPreviewReady();
+      if (action === 'replace')
+        store.registerPreviewAttachment(
+          { ...attachment, whenReady: async () => {} },
+          [],
+        );
+      else if (action === 'reset') store.reset();
+      else {
+        store.unregisterPreviewAttachment(attachment);
+        if (action === 'reregister')
+          store.registerPreviewAttachment(attachment, []);
+      }
+      await expect(ready).rejects.toThrow('attachment changed');
+      release();
+    },
+  );
 });

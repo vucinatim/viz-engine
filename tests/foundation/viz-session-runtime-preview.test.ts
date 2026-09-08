@@ -12,6 +12,7 @@ import {
 import { createTestProject } from './viz-session-test-utils';
 
 const createAttachment = (render = vi.fn()) => ({
+  whenReady: async () => {},
   getViewport: () => ({ width: 640, height: 360 }),
   render,
 });

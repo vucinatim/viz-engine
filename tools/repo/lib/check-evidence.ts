@@ -361,56 +361,113 @@ const validateTerminalBinding = (
     [
       'diff',
       '--name-only',
+      '-z',
       '--diff-filter=ACMRD',
       `${expected.startingHead}..${expected.terminalHead}`,
     ],
     { cwd: root, encoding: 'utf8' },
   )
-    .trim()
-    .split('\n')
+    .split('\0')
     .filter(Boolean)
     .sort();
   if (
     committedFiles.join('\0') !==
     [...record.plan.changedFiles].sort().join('\0')
-  ) {
+  )
     throw new Error(`${label} does not cover the terminal commit diff.`);
+
+  // Resolve paths once at the terminal commit, including trees so replacing a
+  // supposedly deleted file with a directory cannot pass as an absent path.
+  const tree = execFileSync(
+    'git',
+    [
+      '--literal-pathspecs',
+      'ls-tree',
+      '-r',
+      '-t',
+      '-l',
+      '-z',
+      '--full-tree',
+      expected.terminalHead,
+      '--',
+      ...record.changedFiles.map((file) => file.path),
+    ],
+    { cwd: root, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 },
+  );
+  const entries = new Map<string, { id: string; type: string; size: number }>();
+  for (const line of tree.split('\0').filter(Boolean)) {
+    const separator = line.indexOf('\t');
+    const [, type, id, size] = line.slice(0, separator).trim().split(/\s+/u);
+    if (separator < 0 || !id || !type)
+      throw new Error(`${label} has invalid terminal tree metadata.`);
+    entries.set(line.slice(separator + 1), { id, type, size: Number(size) });
   }
-  record.changedFiles.forEach((file) => {
-    const commitPath = `${expected.terminalHead}:${file.path}`;
+  const blobs = new Map<string, number>();
+  for (const file of record.changedFiles) {
+    const entry = entries.get(file.path);
     if (file.sha256 === null) {
-      try {
-        execFileSync('git', ['cat-file', '-e', commitPath], {
-          cwd: root,
-          stdio: 'ignore',
-        });
-      } catch {
-        return;
-      }
-      throw new Error(`${label} expected ${file.path} to be deleted.`);
+      if (entry)
+        throw new Error(`${label} expected ${file.path} to be deleted.`);
+    } else {
+      if (!entry || entry.type !== 'blob')
+        throw new Error(`${label} terminal commit lacks ${file.path}.`);
+      if (!Number.isSafeInteger(entry.size) || entry.size < 0)
+        throw new Error(
+          `${label} has invalid committed byte length for ${file.path}.`,
+        );
+      blobs.set(entry.id, entry.size);
     }
-    let committed: Buffer;
-    try {
-      const byteLength = Number(
-        execFileSync('git', ['cat-file', '-s', commitPath], {
-          cwd: root,
-          encoding: 'utf8',
-        }).trim(),
+  }
+  const hashes = new Map<string, string>();
+  // Bound aggregate buffering while keeping process count independent of file
+  // count for ordinary checkpoints. A single large blob uses its exact size.
+  let batch: [string, number][] = [],
+    batchBytes = 0;
+  const flush = () => {
+    if (!batch.length) return;
+    const maxBuffer = batchBytes + batch.length * 256;
+    if (!Number.isSafeInteger(maxBuffer))
+      throw new Error(`${label} terminal evidence is too large.`);
+    const bytes = execFileSync('git', ['cat-file', '--batch'], {
+      cwd: root,
+      input: batch.map(([id]) => id).join('\n') + '\n',
+      maxBuffer,
+    });
+    let offset = 0;
+    for (const [id, size] of batch) {
+      const newline = bytes.indexOf(10, offset);
+      if (
+        newline < offset ||
+        bytes.toString('ascii', offset, newline) !== `${id} blob ${size}`
+      )
+        throw new Error(`${label} has invalid terminal blob metadata.`);
+      const start = newline + 1,
+        end = start + size;
+      if (end >= bytes.length || bytes[end] !== 10)
+        throw new Error(`${label} has incomplete terminal blob content.`);
+      hashes.set(
+        id,
+        createHash('sha256').update(bytes.subarray(start, end)).digest('hex'),
       );
-      if (!Number.isSafeInteger(byteLength) || byteLength < 0) {
-        throw new Error(`Invalid committed byte length for ${file.path}.`);
-      }
-      committed = execFileSync('git', ['show', commitPath], {
-        cwd: root,
-        maxBuffer: byteLength + 64 * 1024,
-      });
-    } catch {
-      throw new Error(`${label} terminal commit lacks ${file.path}.`);
+      offset = end + 1;
     }
-    if (createHash('sha256').update(committed).digest('hex') !== file.sha256) {
+    if (offset !== bytes.length)
+      throw new Error(`${label} has unexpected terminal blob content.`);
+    batch = [];
+    batchBytes = 0;
+  };
+  for (const entry of blobs) {
+    if (batch.length && batchBytes + entry[1] > 8 * 1024 * 1024) flush();
+    batch.push(entry);
+    batchBytes += entry[1];
+  }
+  flush();
+  for (const file of record.changedFiles)
+    if (
+      file.sha256 !== null &&
+      hashes.get(entries.get(file.path)!.id) !== file.sha256
+    )
       throw new Error(`${label} terminal content differs for ${file.path}.`);
-    }
-  });
 };
 
 export const validateCheckEvidenceRecord = (

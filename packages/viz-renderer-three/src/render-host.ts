@@ -127,6 +127,16 @@ export const createVizThreeRenderHost = ({
     const assertActive = () => {
       if (disposed) throw new Error('Render host is disposed.');
     };
+    let notifyReadinessChange!: () => void;
+    let readinessChange = new Promise<void>((resolve) => {
+      notifyReadinessChange = resolve;
+    });
+    const invalidateReadiness = () => {
+      notifyReadinessChange();
+      readinessChange = new Promise<void>((resolve) => {
+        notifyReadinessChange = resolve;
+      });
+    };
     let currentRenderPlan = renderPlan;
     let render = () => undefined;
     const modelResources = createVizThreeModelResourceManager();
@@ -235,6 +245,7 @@ export const createVizThreeRenderHost = ({
     return {
       update(nextRenderPlan) {
         assertActive();
+        invalidateReadiness();
         const dimensionsChanged =
           currentRenderPlan.viewport.width !== nextRenderPlan.viewport.width ||
           currentRenderPlan.viewport.height !== nextRenderPlan.viewport.height;
@@ -269,7 +280,11 @@ export const createVizThreeRenderHost = ({
         hydrate();
         render();
       },
-      resize,
+      resize(width, height) {
+        assertActive();
+        invalidateReadiness();
+        resize(width, height);
+      },
       render,
       presentLayer(layerId) {
         const selectedLayer = compositorGraph.layers.find(
@@ -310,21 +325,32 @@ export const createVizThreeRenderHost = ({
         }
       },
       async whenReady() {
-        for (;;) {
-          assertActive();
-          const graph = compositorGraph;
-          await Promise.all([
+        assertActive();
+        const graph = compositorGraph;
+        const changed = readinessChange;
+        await Promise.race([
+          changed,
+          Promise.all([
             imageResources.whenReady(),
             ...graph.layers.map(
               (layer) =>
                 layer.programInstance?.whenReady?.() ?? Promise.resolve(),
             ),
-          ]);
-          assertActive();
-          if (graph === compositorGraph) {
-            return;
-          }
-        }
+          ]),
+        ]);
+        assertActive();
+        if (changed !== readinessChange || graph !== compositorGraph)
+          throw new Error('Render plan changed while waiting for resources.');
+        const failed = modelResources
+          .getDiagnostics()
+          .filter(
+            (resource) =>
+              resource.references > 0 && resource.status === 'failed',
+          );
+        if (failed.length)
+          throw new Error(
+            `Render model loading failed: ${JSON.stringify(failed)}`,
+          );
       },
       getModelResourceDiagnostics() {
         return modelResources.getDiagnostics();
@@ -367,6 +393,7 @@ export const createVizThreeRenderHost = ({
       dispose() {
         if (disposed) return;
         disposed = true;
+        invalidateReadiness();
         disposeVizThreeCompositorGraph(compositorGraph);
         blendCompositor.dispose();
         imageResources.dispose();

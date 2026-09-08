@@ -145,3 +145,10 @@ already requirements of the active goal.
   measures contention; preserve the same host and explicit transfer lifetimes.
   Nonfragmented MP4 packet-table storage and per-frame diagnostics need an
   explicit large-duration policy if those measured costs become material.
+- Opus encoding explicitly converts non-48-kHz source clips through Web Audio
+  because native 44.1-kHz Opus conversion can omit its priming tail. This retains
+  one additional clip-sized PCM buffer; a measured future worker/audio pipeline
+  may replace it with a quality-qualified streaming converter. Preserve source
+  sample coordinates, exact endpoints and feature-bake identity. Web Audio's
+  offline render cannot be immediately canceled; rejected jobs prevent late
+  encoder/output creation while the native conversion may finish internally.

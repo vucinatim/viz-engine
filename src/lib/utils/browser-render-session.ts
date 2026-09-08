@@ -10,6 +10,7 @@ import {
   type VizComponentRegistry,
   type VizNodeRegistry,
 } from '@viz-engine/runtime';
+import { awaitAbortable } from './await-abortable';
 import {
   bakeBrowserAudioFeatures,
   sampleBrowserAudioBakeFrame,
@@ -19,16 +20,6 @@ import type {
   VizBrowserFrameCaptureSession,
   VizBrowserRenderContext,
 } from './browser-render-executor';
-
-const waitForResources = (promise: Promise<void>, signal: AbortSignal) =>
-  new Promise<void>((resolve, reject) => {
-    signal.throwIfAborted();
-    const abort = () => reject(signal.reason);
-    signal.addEventListener('abort', abort, { once: true });
-    promise
-      .then(resolve, reject)
-      .finally(() => signal.removeEventListener('abort', abort));
-  });
 
 /** One job owns one detached GPU canvas, runtime history, and resource lifetime. */
 export const openVizBrowserRenderSession = async (
@@ -117,15 +108,8 @@ export const openVizBrowserRenderSession = async (
           programRegistry: registries.programRegistry,
           releaseContextOnDispose: true,
         });
-      await waitForResources(host.whenReady(), signal);
+      await awaitAbortable(() => host!.whenReady(), signal);
       signal.throwIfAborted();
-      const failed = host
-        .getModelResourceDiagnostics()
-        .filter((entry) => entry.status === 'failed');
-      if (failed.length)
-        throw new Error(
-          `Render model loading failed: ${JSON.stringify(failed)}`,
-        );
       host.render();
       return canvas;
     },

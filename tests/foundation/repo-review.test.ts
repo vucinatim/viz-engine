@@ -12,6 +12,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { canonicalCheckPlan } from '../../tools/repo/lib/check-contract';
+import { validateCheckEvidenceRecord } from '../../tools/repo/lib/check-evidence';
 import { resolveOperationalDirectory } from '../../tools/repo/lib/paths';
 import { readExecutionProgram } from '../../tools/repo/lib/program';
 import { readRepositoryIdentity } from '../../tools/repo/lib/repository-state';
@@ -68,6 +69,7 @@ describe('repository review packets', () => {
         cwd: root,
       });
       writeFileSync(resolve(root, '.gitignore'), '.artifacts/\n');
+      writeFileSync(resolve(root, 'obsolete'), 'old');
       execFileSync('git', ['add', '.'], { cwd: root });
       execFileSync('git', ['commit', '-m', 'seed'], { cwd: root });
       const startingHead = execFileSync('git', ['rev-parse', 'HEAD'], {
@@ -75,6 +77,13 @@ describe('repository review packets', () => {
         encoding: 'utf8',
       }).trim();
       writeFileSync(resolve(root, 'checkpoint.md'), 'accepted checkpoint\n');
+      rmSync(resolve(root, 'obsolete'));
+      const binary = Buffer.from(
+        Array.from({ length: 65536 }, (_, i) => i % 256),
+      );
+      writeFileSync(resolve(root, 'binary a.bin'), binary);
+      writeFileSync(resolve(root, 'binary\nb.bin'), binary);
+      execFileSync('git', ['add', '-A'], { cwd: root });
       const lease = {
         id: 'lease-1',
         owner: 'test-owner',
@@ -83,7 +92,12 @@ describe('repository review packets', () => {
       };
       const record = passingCheckEvidenceFixture({
         root,
-        plan: canonicalCheckPlan('checkpoint', ['checkpoint.md']),
+        plan: canonicalCheckPlan('checkpoint', [
+          'checkpoint.md',
+          'obsolete',
+          'binary a.bin',
+          'binary\nb.bin',
+        ]),
         programDefinitionHash: 'd'.repeat(64),
         lease,
       });
@@ -130,6 +144,53 @@ describe('repository review packets', () => {
           root,
         ).classification,
       ).toBe('stale');
+      const wrong = structuredClone(record);
+      wrong.changedFiles.find((file) => file.path === 'binary a.bin')!.sha256 =
+        '0'.repeat(64);
+      expect(() =>
+        validateCheckEvidenceRecord(wrong, 'binary mismatch', root, {
+          startingHead,
+          terminalHead,
+        }),
+      ).toThrow('terminal content differs for binary a.bin');
+      mkdirSync(resolve(root, 'obsolete'));
+      writeFileSync(resolve(root, 'obsolete/child'), 'replacement directory');
+      execFileSync('git', ['add', '-A'], { cwd: root });
+      execFileSync('git', ['commit', '-m', 'replace deleted path with tree'], {
+        cwd: root,
+      });
+      const replacedHead = execFileSync('git', ['rev-parse', 'HEAD'], {
+        cwd: root,
+        encoding: 'utf8',
+      }).trim();
+      const replaced = structuredClone(record);
+      replaced.plan = canonicalCheckPlan('checkpoint', [
+        ...record.plan.changedFiles,
+        'obsolete/child',
+      ]);
+      replaced.planHash = createHash('sha256')
+        .update(JSON.stringify(replaced.plan))
+        .digest('hex');
+      replaced.changedFiles = [
+        ...record.changedFiles,
+        {
+          path: 'obsolete/child',
+          sha256: createHash('sha256')
+            .update('replacement directory')
+            .digest('hex'),
+          baseBlob: null,
+        },
+      ].sort(
+        (a, b) =>
+          replaced.plan.changedFiles.indexOf(a.path) -
+          replaced.plan.changedFiles.indexOf(b.path),
+      );
+      expect(() =>
+        validateCheckEvidenceRecord(replaced, 'tree replacement', root, {
+          startingHead,
+          terminalHead: replacedHead,
+        }),
+      ).toThrow('expected obsolete to be deleted');
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

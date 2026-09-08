@@ -20,6 +20,8 @@ export interface LayerData {
 }
 
 export interface LayerRuntimePreviewAttachment {
+  /** Readiness of the last submitted frame; replacement or failure rejects. */
+  whenReady(): Promise<void>;
   getViewport: () => {
     width: number;
     height: number;

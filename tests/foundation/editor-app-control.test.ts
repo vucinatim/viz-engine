@@ -151,6 +151,7 @@ describe('Local editor control facade', () => {
     const attachmentStore = useEditorRuntimePreviewAttachmentStore.getState();
     attachmentStore.registerPreviewAttachment(
       {
+        whenReady: async () => {},
         getViewport: () => ({ width: 640, height: 360 }),
         render: vi.fn(),
       },

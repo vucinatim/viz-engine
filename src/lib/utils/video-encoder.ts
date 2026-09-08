@@ -21,6 +21,7 @@ import {
   canEncodeAudio,
   canEncodeVideo,
 } from 'mediabunny';
+import { resampleBrowserAudioClip } from './browser-audio-resample';
 import type { VizBrowserRenderAudio } from './browser-render-audio';
 import { openVizBrowserRenderOutput } from './browser-render-output';
 
@@ -180,7 +181,27 @@ export const openVizStreamingVideoEncoder = async ({
     throw new Error(
       'Video requested audio, but no canonical resolved audio asset is available.',
     );
-  const pcm = loaded?.audioBuffer;
+  let sourcePcm = loaded?.audioBuffer;
+  // Opus has a 48 kHz coded timeline. Normalize explicitly: native 44.1 kHz
+  // conversion can flush without the samples needed to cover codec pre-skip.
+  // Keep feature-bake PCM independent of the selected output codec.
+  const convertsPcm =
+    sourcePcm !== undefined &&
+    audioCodec === 'opus' &&
+    sourcePcm.sampleRate !== 48000;
+  let pcm = convertsPcm
+    ? await resampleBrowserAudioClip(
+        sourcePcm!,
+        {
+          sampleRate: 48000,
+          startSample: Math.round(
+            (request.startFrame / sourceFps) * sourcePcm!.sampleRate,
+          ),
+          sampleCount: Math.round((request.frameCount / request.fps) * 48000),
+        },
+        signal,
+      )
+    : sourcePcm;
   if (pcm && audioCodec === 'aac') {
     const { registerAacEncoder } = await import('@mediabunny/aac-encoder');
     registerAacEncoder();
@@ -276,9 +297,10 @@ export const openVizStreamingVideoEncoder = async ({
   const totalSamples = pcm
     ? Math.round((request.frameCount / request.fps) * pcm.sampleRate)
     : 0;
-  const startSample = pcm
-    ? Math.round((request.startFrame / sourceFps) * pcm.sampleRate)
-    : 0;
+  const startSample =
+    pcm && !convertsPcm
+      ? Math.round((request.startFrame / sourceFps) * pcm.sampleRate)
+      : 0;
   let disposal: Promise<void> | undefined;
   let finalization: Promise<unknown> | undefined;
   const dispose = () =>
@@ -289,6 +311,8 @@ export const openVizStreamingVideoEncoder = async ({
         output.state === 'finalized' ? Promise.resolve() : output.cancel(),
       ]);
       await finalization?.catch(() => undefined);
+      pcm = undefined;
+      sourcePcm = undefined;
       const failure = cleanup.find((entry) => entry.status === 'rejected');
       if (failure?.status === 'rejected' && !signal.aborted)
         throw failure.reason;
@@ -394,6 +418,18 @@ export const openVizStreamingVideoEncoder = async ({
               ...(pcm
                 ? {
                     sampleRate: pcm.sampleRate,
+                    sourceSampleRate: sourcePcm!.sampleRate,
+                    sourceClipStartSample: Math.round(
+                      (request.startFrame / sourceFps) * sourcePcm!.sampleRate,
+                    ),
+                    sourceSampleCount: sourcePcm!.length,
+                    convertedSampleCount: pcm.length,
+                    additionalPcmBytes:
+                      pcm === sourcePcm
+                        ? 0
+                        : pcm.length * pcm.numberOfChannels * 4,
+                    sampleRateConversion:
+                      pcm === sourcePcm ? 'none' : 'web-audio.offline-render',
                     sourceStartSample: startSample,
                     intendedSampleCount: totalSamples,
                     ...(firstAacSample === undefined

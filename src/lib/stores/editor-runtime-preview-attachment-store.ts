@@ -2,6 +2,7 @@ import type {
   LayerRuntimeDebugAttachment,
   LayerRuntimePreviewAttachment,
 } from '@/lib/editor-layer-types';
+import { awaitAbortable } from '@/lib/utils/await-abortable';
 import type {
   VizSessionRuntimePreviewAudioFrameData,
   VizSessionRuntimePreviewFrame,
@@ -37,6 +38,7 @@ interface EditorRuntimePreviewAttachmentStore {
     attachment: LayerRuntimeDebugAttachment,
   ) => void;
   pruneLayerEntries: (activeLayerIds: string[]) => void;
+  whenPreviewReady(): Promise<void>;
   getPreviewViewport: () => {
     width: number;
     height: number;
@@ -61,6 +63,16 @@ const filterActiveLayerEntries = <T>(
     Object.entries(entries).filter(([layerId]) => activeLayerIds.has(layerId)),
   );
 
+let readiness = new AbortController();
+const invalidateReadiness = () => {
+  readiness.abort(
+    new Error(
+      'Runtime preview attachment changed while waiting for resources.',
+    ),
+  );
+  readiness = new AbortController();
+};
+
 const useEditorRuntimePreviewAttachmentStore =
   create<EditorRuntimePreviewAttachmentStore>((set, get) => ({
     previewAttachment: null,
@@ -68,11 +80,13 @@ const useEditorRuntimePreviewAttachmentStore =
     debugAttachments: new Map(),
     mirrorCanvasesByLayerId: {},
     compositeMirrorCanvases: [],
-    registerPreviewAttachment: (attachment, layerIds) =>
+    registerPreviewAttachment: (attachment, layerIds) => {
+      invalidateReadiness();
       set({
         previewAttachment: attachment,
         previewLayerIds: new Set(layerIds),
-      }),
+      });
+    },
     updatePreviewLayerIds: (layerIds) =>
       set({ previewLayerIds: new Set(layerIds) }),
     unregisterPreviewAttachment: (attachment) =>
@@ -81,6 +95,7 @@ const useEditorRuntimePreviewAttachmentStore =
           return state;
         }
 
+        invalidateReadiness();
         return {
           previewAttachment: null,
           previewLayerIds: new Set(),
@@ -183,6 +198,18 @@ const useEditorRuntimePreviewAttachmentStore =
         get().previewAttachment?.invokeLayerAction?.(layerId, actionId) ?? false
       );
     },
+    async whenPreviewReady() {
+      const attachment = get().previewAttachment;
+      if (!attachment)
+        throw new Error('No runtime preview attachment is mounted.');
+      const signal = readiness.signal;
+      await awaitAbortable(() => attachment.whenReady(), signal);
+      signal.throwIfAborted();
+      if (attachment !== get().previewAttachment)
+        throw new Error(
+          'Runtime preview attachment changed while waiting for resources.',
+        );
+    },
     renderRuntimePlan: (
       frame,
       audioFrameData,
@@ -213,14 +240,16 @@ const useEditorRuntimePreviewAttachmentStore =
       get().previewAttachment?.requiresContinuousRendering?.() ?? false,
     inspectRuntimeResources: () =>
       get().previewAttachment?.getResourceStats?.() ?? null,
-    reset: () =>
+    reset: () => {
+      invalidateReadiness();
       set({
         previewAttachment: null,
         previewLayerIds: new Set(),
         debugAttachments: new Map(),
         mirrorCanvasesByLayerId: {},
         compositeMirrorCanvases: [],
-      }),
+      });
+    },
   }));
 
 export default useEditorRuntimePreviewAttachmentStore;

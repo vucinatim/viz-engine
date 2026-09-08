@@ -2971,3 +2971,25 @@
 - RH-03 production parity, editor isolation and quiet-host performance remain
   pending. Successful output retention and upstream patch maintenance are
   explicit follow-ups in suggestions; WebGPU remains the gated modern roadmap.
+
+## 2026-09-08 — integrated render validation (RH-03)
+
+- Compared real Studio preview and detached export for both production bundles
+  at origin, nonzero seek and return seek. Real in-flight clip exports remain
+  unchanged while editor content, transport and preview resolution change;
+  a subsequent export proves those edits are observable.
+- Added last-frame resource readiness to the editor attachment. Shared-host
+  model failures now have one owner; obsolete waits reject on replacement,
+  resize and disposal without leaving a retry loop behind.
+- Actual 44.1-kHz executor audio exposed native Opus resampler tail loss. Added
+  explicit codec-owned 48-kHz clip conversion while preserving bake PCM, with
+  exact sample counts, three decoded A/V events, stereo/tail controls and
+  no-late-export cancellation proof. Additional conversion memory is reported.
+- The exact integration and browser evidence accompany canonical closure.
+  Software-GPU functional results do not certify hardware throughput, long
+  endurance or creative quality. Modern graphics migration remains the gated
+  strategy; conversion and successful-artifact lifetime limits remain recorded.
+- The first checkpoint exposed review-packet validation scaling through one
+  Git process per file. Batched terminal tree/blob reads preserve exact evidence
+  checks and remove that cost; binary, duplicate-object and deletion controls
+  accompany the fix. The original failed checkpoint remains in evidence.
