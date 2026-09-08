@@ -70,8 +70,11 @@ checkpoints do not imply flagship certification.
 
 The current [rendering strategy](./visions/rendering-performance-and-deployment-strategy.md)
 records WebGPU/TSL, WebCodecs, workers, profiling and conditional WASM/native
-migration gates. RH-01 is in implementation; streaming and integrated media
-proof are still pending.
+migration gates. RH-01 completed at `ffe08d38ee3d92ee75295f01c99f51a17fe6b53c`.
+RH-02 implements incremental frame handoff, positional temporary output,
+encoder-reported AAC presentation timing and cancellation, with its exact staged
+closure recorded by the active program. RH-03 integrated production parity,
+export isolation and quiet-host performance proof remain pending.
 
 The user's 2026-09-07 cadence amendment is one daily 01:00 wake in the same
 Codex task, working successively until 08:00 Europe/Ljubljana. Check the actual

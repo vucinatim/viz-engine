@@ -32,6 +32,8 @@ export interface VizRenderSourceResolver {
 }
 
 export interface VizRenderExecutorResult {
+  /** Release materialized outputs if the service rejects or cancels the handoff. */
+  releaseOutputs?(): void;
   outputs: VizRenderSuccess['outputs'];
   diagnostics: VizRenderDiagnostic[];
   performance: VizRenderPerformanceFeedback;
@@ -364,6 +366,7 @@ export const createVizRenderJobService = ({
       return;
     }
 
+    const started = performance.now();
     update(jobId, {
       status: 'validating',
       startedAt: timestamp(),
@@ -461,6 +464,7 @@ export const createVizRenderJobService = ({
     });
 
     try {
+      const executorStarted = performance.now();
       const execution = await executor.execute({
         request: initial.request,
         source,
@@ -472,6 +476,7 @@ export const createVizRenderJobService = ({
         },
       });
       if (controller.signal.aborted) {
+        execution.releaseOutputs?.();
         finishCancelled(jobId);
         return;
       }
@@ -499,7 +504,11 @@ export const createVizRenderJobService = ({
         },
         outputs: execution.outputs,
         diagnostics: execution.diagnostics,
-        performance: execution.performance,
+        performance: {
+          ...execution.performance,
+          executorElapsedMilliseconds: performance.now() - executorStarted,
+          totalElapsedMilliseconds: performance.now() - started,
+        },
         ...(execution.mediaProbe === undefined
           ? {}
           : { mediaProbe: execution.mediaProbe }),

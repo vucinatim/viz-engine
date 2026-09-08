@@ -1,7 +1,7 @@
 import { createVizBrowserAudioBakeSourceResolver } from '@/lib/utils/browser-audio-bake';
 import { createVizBrowserRenderExecutor } from '@/lib/utils/browser-render-executor';
 import { openVizBrowserRenderSession } from '@/lib/utils/browser-render-session';
-import { encodeVideoWithProbe } from '@/lib/utils/video-encoder';
+import { openVizStreamingVideoEncoder } from '@/lib/utils/video-encoder';
 import {
   studioComponentRegistry,
   studioNodeRegistry,
@@ -10,7 +10,6 @@ import {
 import { createVizAudioFeatureBakeJobService } from '@viz-engine/bake';
 import type { VizSessionHost } from '@viz-engine/editor-control';
 import { createVizRenderJobService } from '@viz-engine/render';
-import { resolveVizProjectAudioAsset } from '@viz-engine/runtime';
 import { createStudioRenderSource } from './render-source';
 import type { VizSessionProjectState } from './types';
 
@@ -60,37 +59,16 @@ export const createStudioBrowserJobServices = ({
     },
     executors: [
       createVizBrowserRenderExecutor({
-        encodeVideo: async ({
-          frames,
-          audioUrl,
-          request,
-          source,
-          signal,
-          onProgress,
-        }) =>
-          encodeVideoWithProbe(
-            frames,
-            audioUrl,
-            {
-              fps: request.fps,
-              width: request.viewport.width,
-              height: request.viewport.height,
-              format: request.format,
-              quality:
-                request.quality === 'high'
-                  ? 'high'
-                  : request.quality === 'standard'
-                    ? 'medium'
-                    : 'low',
-              audioStartTime: request.startFrame / source.project.timeline.fps,
-              audioDuration: request.frameCount / request.fps,
-            },
-            (percentage) => onProgress(percentage / 100),
-            { signal },
-          ),
-        resolveAudioUrl: (source) =>
-          resolveVizProjectAudioAsset(source.project, source.resolvedAssets)
-            ?.resolved.uri ?? null,
+        openVideoEncoder: ({ request, source, signal, audio }) => {
+          if (request.kind !== 'video' && request.kind !== 'clip')
+            throw new Error('Expected a video request.');
+          return openVizStreamingVideoEncoder({
+            request,
+            sourceFps: source.project.timeline.fps,
+            signal,
+            audio,
+          });
+        },
         openCaptureSession: (context) =>
           openVizBrowserRenderSession(context, {
             componentRegistry: studioComponentRegistry,

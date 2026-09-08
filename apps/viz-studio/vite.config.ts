@@ -111,9 +111,6 @@ export default defineConfig({
     createVizControlBridgePlugin(),
   ],
   publicDir: publicRoot,
-  optimizeDeps: {
-    exclude: ['@ffmpeg/ffmpeg'],
-  },
   build: {
     chunkSizeWarningLimit: 650,
     rollupOptions: {
@@ -183,7 +180,11 @@ export default defineConfig({
             return 'vendor-editor';
           }
 
-          if (id.includes('/@ffmpeg/') || id.includes('/jszip/')) {
+          if (
+            id.includes('/mediabunny/') ||
+            id.includes('/@mediabunny/') ||
+            id.includes('/jszip/')
+          ) {
             return 'vendor-export';
           }
 

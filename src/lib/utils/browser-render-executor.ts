@@ -1,5 +1,4 @@
 import type {
-  VizMediaProbe,
   VizRenderFrameVisualMetric,
   VizRenderOutputArtifact,
   VizRenderPerformanceFeedback,
@@ -13,8 +12,14 @@ import type {
   VizRenderSource,
 } from '@viz-engine/render';
 import { vizThreeBrowserBackendIdentity } from '@viz-engine/renderer-three';
+import {
+  createVizBrowserRenderAudio,
+  type VizBrowserRenderAudio,
+} from './browser-render-audio';
+import { hashVizRenderBlob } from './browser-render-output';
 import { retainVizBrowserRenderSource } from './browser-render-source';
 import { captureCanvasToBlob } from './canvas-encoding';
+import type { VizStreamingVideoEncoder } from './video-encoder';
 
 export const VIZ_BROWSER_WEBGL_RENDER_EXECUTOR_ID =
   vizThreeBrowserBackendIdentity.id;
@@ -30,45 +35,29 @@ export interface VizBrowserFrameCaptureInput {
   signal: AbortSignal;
 }
 
+export interface VizBrowserRenderContext extends VizRenderExecutionContext {
+  audio: VizBrowserRenderAudio;
+}
+
 export interface CreateVizBrowserRenderExecutorOptions {
   openCaptureSession(
-    context: VizRenderExecutionContext,
+    context: VizBrowserRenderContext,
   ): Promise<VizBrowserFrameCaptureSession>;
-  encodeVideo?: (input: {
-    frames: Blob[];
-    audioUrl: string | null;
-    request: Extract<VizRenderRequest, { kind: 'clip' | 'video' }>;
-    source: VizRenderSource;
-    signal: AbortSignal;
-    onProgress(progress: number): void;
-  }) => Promise<{
-    blob: Blob;
-    probe: VizMediaProbe;
-  }>;
-  resolveAudioUrl?: (
-    source: VizRenderSource,
-    request: Extract<VizRenderRequest, { kind: 'clip' | 'video' }>,
-  ) => string | null;
+  openVideoEncoder?: (
+    context: VizBrowserRenderContext,
+  ) => Promise<VizStreamingVideoEncoder>;
   createObjectUrl?: (blob: Blob) => string;
+  revokeObjectUrl?: (url: string) => void;
 }
 
 export interface VizBrowserFrameCaptureSession {
+  /** Borrowed canvas: valid until next capture or disposal; caller must not resize it. */
   captureFrame(input: VizBrowserFrameCaptureInput): Promise<HTMLCanvasElement>;
   dispose(): void;
 }
 
-type ExecutionOptions = Omit<
-  CreateVizBrowserRenderExecutorOptions,
-  'openCaptureSession'
-> &
+type ExecutionOptions = CreateVizBrowserRenderExecutorOptions &
   VizBrowserFrameCaptureSession;
-
-interface CapturedFrame {
-  frame: number;
-  canvas: HTMLCanvasElement;
-  durationMilliseconds: number;
-  metric: VizRenderFrameVisualMetric;
-}
 
 interface CapturedFrameFeedback {
   frame: number;
@@ -97,8 +86,10 @@ const createPerformance = (
     averageRenderMilliseconds:
       durations.length === 0 ? 0 : total / durations.length,
     p95RenderMilliseconds: percentile95(durations),
-    maximumRenderMilliseconds:
-      durations.length === 0 ? 0 : Math.max(...durations),
+    maximumRenderMilliseconds: durations.reduce(
+      (maximum, duration) => Math.max(maximum, duration),
+      0,
+    ),
   };
 };
 
@@ -184,16 +175,6 @@ const createVisualFeedback = (
   }),
 });
 
-const sha256 = async (blob: Blob): Promise<string> => {
-  const digest = await crypto.subtle.digest(
-    'SHA-256',
-    await blob.arrayBuffer(),
-  );
-  return [...new Uint8Array(digest)]
-    .map((value) => value.toString(16).padStart(2, '0'))
-    .join('');
-};
-
 const mimeTypeFor = (format: VizRenderRequest['format']): string =>
   format === 'png'
     ? 'image/png'
@@ -217,6 +198,7 @@ const createOutput = async ({
   height,
   frameCount,
   createObjectUrl,
+  signal,
 }: {
   request: VizRenderRequest;
   blob: Blob;
@@ -224,8 +206,10 @@ const createOutput = async ({
   height: number;
   frameCount: number;
   createObjectUrl(blob: Blob): string;
+  signal: AbortSignal;
 }): Promise<VizRenderOutputArtifact> => {
-  const hash = await sha256(blob);
+  const hash = await hashVizRenderBlob(blob, signal);
+  signal.throwIfAborted();
   const isImage = request.kind === 'still' || request.kind === 'contact-sheet';
   return {
     id: `render-output-${hash.slice(0, 20)}`,
@@ -255,256 +239,220 @@ const createOutput = async ({
   };
 };
 
-const captureFrames = async (
-  frames: readonly number[],
+const captureFrame = async (
   context: VizRenderExecutionContext,
   options: ExecutionOptions,
-): Promise<CapturedFrame[]> => {
-  const captured: CapturedFrame[] = [];
-  let previousPixels: Uint8ClampedArray | undefined;
-
-  for (let index = 0; index < frames.length; index += 1) {
-    if (context.signal.aborted) {
-      throw new Error('Render cancelled.');
-    }
-    const frame = frames[index]!;
-    const startedAt = performance.now();
-    const canvas = await options.captureFrame({
-      request: context.request,
-      source: context.source,
-      frame,
-      sequenceIndex: index,
-      firstFrame: index === 0,
-      signal: context.signal,
-    });
-    const durationMilliseconds = performance.now() - startedAt;
-    const pixels = sampleCanvasPixels(canvas);
-    captured.push({
-      frame,
-      canvas,
-      durationMilliseconds,
-      metric: createVisualMetric(frame, pixels, previousPixels),
-    });
-    previousPixels = pixels;
-    context.onProgress({
-      stage: 'rendering',
-      completed: index + 1,
-      total: frames.length,
-      progress: (index + 1) / frames.length,
-      message: `Captured frame ${frame}.`,
-    });
-    if ((index + 1) % 4 === 0 && index + 1 < frames.length) {
-      await new Promise<void>((resolve) => {
-        setTimeout(resolve, 0);
-      });
-    }
-  }
-  return captured;
+  frame: number,
+  sequenceIndex: number,
+  previousPixels: Uint8ClampedArray | undefined,
+) => {
+  context.signal.throwIfAborted();
+  const started = performance.now();
+  const canvas = await options.captureFrame({
+    request: context.request,
+    source: context.source,
+    frame,
+    sequenceIndex,
+    firstFrame: sequenceIndex === 0,
+    signal: context.signal,
+  });
+  context.signal.throwIfAborted();
+  const durationMilliseconds = performance.now() - started;
+  const analysisStarted = performance.now();
+  const pixels = sampleCanvasPixels(canvas);
+  const feedback = {
+    frame,
+    durationMilliseconds,
+    metric: createVisualMetric(frame, pixels, previousPixels),
+  };
+  return {
+    canvas,
+    pixels,
+    feedback,
+    analysisMilliseconds: performance.now() - analysisStarted,
+  };
 };
 
 const executeImageRender = async (
   context: VizRenderExecutionContext,
   options: ExecutionOptions,
 ): Promise<VizRenderExecutorResult> => {
-  const { request } = context;
-  if (request.kind !== 'still' && request.kind !== 'contact-sheet') {
-    throw new Error(`Browser image executor does not support ${request.kind}.`);
-  }
-  if (request.format === 'svg') {
+  const { request, signal } = context;
+  if (request.kind !== 'still' && request.kind !== 'contact-sheet')
+    throw new Error('Expected an image request.');
+  if (request.format === 'svg')
     throw new Error('Browser WebGL executor cannot encode SVG output.');
-  }
-
   const frames = request.kind === 'still' ? [request.frame] : request.frames;
-  const captured = await captureFrames(frames, context, options);
-  const format = request.format;
-  const quality = request.imageQuality ?? qualityFor(request.quality);
-  let outputCanvas: HTMLCanvasElement;
-
-  if (request.kind === 'still') {
-    outputCanvas = captured[0]!.canvas;
-  } else {
-    const columns = Math.min(
-      captured.length,
-      request.columns ?? Math.ceil(Math.sqrt(captured.length)),
+  const columns =
+    request.kind === 'still'
+      ? 1
+      : Math.min(
+          frames.length,
+          request.columns ?? Math.ceil(Math.sqrt(frames.length)),
+        );
+  const gap = request.kind === 'still' ? 0 : (request.gap ?? 8);
+  const width = columns * request.viewport.width + (columns - 1) * gap;
+  const rows = Math.ceil(frames.length / columns);
+  const height = rows * request.viewport.height + (rows - 1) * gap;
+  if (width > 16_384 || height > 16_384)
+    throw new Error(
+      `Contact sheet ${width}x${height} exceeds the 16384px browser canvas limit.`,
     );
-    const rows = Math.ceil(captured.length / columns);
-    const gap = request.gap ?? 8;
-    const width = columns * request.viewport.width + (columns - 1) * gap;
-    const height = rows * request.viewport.height + (rows - 1) * gap;
-    if (width > 16_384 || height > 16_384) {
-      throw new Error(
-        `Contact sheet ${width}x${height} exceeds the 16384px browser canvas limit.`,
+  // Composite each borrowed frame before the next render overwrites it.
+  const outputCanvas = document.createElement('canvas');
+  outputCanvas.width = width;
+  outputCanvas.height = height;
+  const outputContext = outputCanvas.getContext('2d');
+  if (!outputContext) throw new Error('Could not create image output canvas.');
+  const captured: CapturedFrameFeedback[] = [];
+  let previousPixels: Uint8ClampedArray | undefined;
+  let analysisMilliseconds = 0;
+  try {
+    if (request.kind === 'contact-sheet') {
+      outputContext.fillStyle = request.viewport.backgroundColor ?? '#000000';
+      outputContext.fillRect(0, 0, width, height);
+    }
+    for (let index = 0; index < frames.length; index++) {
+      const result = await captureFrame(
+        context,
+        options,
+        frames[index]!,
+        index,
+        previousPixels,
       );
-    }
-    outputCanvas = document.createElement('canvas');
-    outputCanvas.width = width;
-    outputCanvas.height = height;
-    const outputContext = outputCanvas.getContext('2d');
-    if (!outputContext) {
-      throw new Error('Could not create contact-sheet canvas.');
-    }
-    outputContext.fillStyle = request.viewport.backgroundColor ?? '#000000';
-    outputContext.fillRect(0, 0, width, height);
-    captured.forEach(({ canvas }, index) => {
-      const column = index % columns;
-      const row = Math.floor(index / columns);
+      captured.push(result.feedback);
+      previousPixels = result.pixels;
+      analysisMilliseconds += result.analysisMilliseconds;
       outputContext.drawImage(
-        canvas,
-        column * (request.viewport.width + gap),
-        row * (request.viewport.height + gap),
+        result.canvas,
+        (index % columns) * (request.viewport.width + gap),
+        Math.floor(index / columns) * (request.viewport.height + gap),
         request.viewport.width,
         request.viewport.height,
       );
+      context.onProgress({
+        stage: 'rendering',
+        completed: index + 1,
+        total: frames.length,
+        progress: (0.9 * (index + 1)) / frames.length,
+        message: `Rendered frame ${frames[index]}.`,
+      });
+    }
+    signal.throwIfAborted();
+    const blob = await captureCanvasToBlob(outputCanvas, {
+      format: request.format,
+      quality: request.imageQuality ?? qualityFor(request.quality),
     });
+    const output = await createOutput({
+      request,
+      blob,
+      width,
+      height,
+      frameCount: frames.length,
+      signal,
+      createObjectUrl: options.createObjectUrl ?? URL.createObjectURL.bind(URL),
+    });
+    return {
+      outputs: [output],
+      diagnostics: [],
+      performance: {
+        ...createPerformance(
+          captured.map((entry) => entry.durationMilliseconds),
+        ),
+        analysisMilliseconds,
+        retainedOutputBytes: blob.size,
+      },
+      visualFeedback: createVisualFeedback(captured),
+    };
+  } finally {
+    outputCanvas.width = 0;
+    outputCanvas.height = 0;
   }
-
-  const blob = await captureCanvasToBlob(outputCanvas, {
-    format,
-    quality,
-  });
-  const createObjectUrl =
-    options.createObjectUrl ?? URL.createObjectURL.bind(URL);
-  const output = await createOutput({
-    request,
-    blob,
-    width: outputCanvas.width,
-    height: outputCanvas.height,
-    frameCount: captured.length,
-    createObjectUrl,
-  });
-
-  return {
-    outputs: [output],
-    diagnostics: [],
-    performance: createPerformance(
-      captured.map((entry) => entry.durationMilliseconds),
-    ),
-    visualFeedback: createVisualFeedback(captured),
-  };
 };
+
+export const vizBrowserVideoSourceFrame = (
+  startFrame: number,
+  index: number,
+  sourceFps: number,
+  outputFps: number,
+): number => startFrame + Math.round((index * sourceFps) / outputFps);
 
 const executeVideoRender = async (
   context: VizRenderExecutionContext,
   options: ExecutionOptions,
+  encoder: VizStreamingVideoEncoder,
 ): Promise<VizRenderExecutorResult> => {
   const { request, source, signal, onProgress } = context;
-  if (request.kind !== 'clip' && request.kind !== 'video') {
-    throw new Error('Expected a clip or video request.');
-  }
-  if (!options.encodeVideo) {
-    throw new Error('Browser video encoding is not available in this host.');
-  }
-  const frames = createVizBrowserVideoFrameSchedule(
-    request.startFrame,
-    request.frameCount,
-    source.project.timeline.fps,
-    request.fps,
-  );
+  if (request.kind !== 'clip' && request.kind !== 'video')
+    throw new Error('Expected a video request.');
   const captured: CapturedFrameFeedback[] = [];
-  const frameBlobs: Blob[] = [];
   let previousPixels: Uint8ClampedArray | undefined;
-  for (let index = 0; index < frames.length; index += 1) {
-    if (signal.aborted) {
-      throw new Error('Render cancelled.');
-    }
-    const frame = frames[index]!;
-    const startedAt = performance.now();
-    const canvas = await options.captureFrame({
-      request,
-      source,
-      frame,
-      sequenceIndex: index,
-      firstFrame: index === 0,
-      signal,
-    });
-    const durationMilliseconds = performance.now() - startedAt;
-    const pixels = sampleCanvasPixels(canvas);
-    captured.push({
-      frame,
-      durationMilliseconds,
-      metric: createVisualMetric(frame, pixels, previousPixels),
-    });
-    previousPixels = pixels;
-    frameBlobs.push(
-      await captureCanvasToBlob(canvas, {
-        format: 'jpeg',
-        quality: qualityFor(request.quality),
-      }),
+  let analysisMilliseconds = 0;
+  let encodeMilliseconds = 0;
+  for (let index = 0; index < request.frameCount; index++) {
+    const frame = vizBrowserVideoSourceFrame(
+      request.startFrame,
+      index,
+      source.project.timeline.fps,
+      request.fps,
     );
-    canvas.width = 0;
-    canvas.height = 0;
+    const result = await captureFrame(
+      context,
+      options,
+      frame,
+      index,
+      previousPixels,
+    );
+    captured.push(result.feedback);
+    previousPixels = result.pixels;
+    analysisMilliseconds += result.analysisMilliseconds;
+    const encodeStarted = performance.now();
+    await encoder.addFrame(result.canvas, index);
+    encodeMilliseconds += performance.now() - encodeStarted;
+    signal.throwIfAborted();
     onProgress({
-      stage: 'rendering',
+      stage: 'encoding',
       completed: index + 1,
-      total: frames.length,
-      progress: (index + 1) / frames.length,
-      message: `Captured and prepared frame ${frame}.`,
+      total: request.frameCount,
+      progress: (0.9 * (index + 1)) / request.frameCount,
+      message: `Rendered and submitted frame ${index + 1} of ${request.frameCount}.`,
     });
-    if ((index + 1) % 4 === 0 && index + 1 < frames.length) {
-      await new Promise<void>((resolve) => setTimeout(resolve, 0));
-    }
   }
-  const audioUrl = request.includeAudio
-    ? (options.resolveAudioUrl?.(source, request) ?? null)
-    : null;
-  if (request.includeAudio && audioUrl === null) {
-    throw new Error(
-      'Video requested audio, but no canonical resolved audio asset is available.',
-    );
-  }
-  const encodeStartedAt = performance.now();
-  const encoded = await options.encodeVideo({
-    frames: frameBlobs,
-    audioUrl,
-    request,
-    source,
-    signal,
-    onProgress: (progress) => {
-      onProgress({
-        stage: 'encoding',
-        completed: Math.round(progress * request.frameCount),
-        total: request.frameCount,
-        progress,
-        message: `Encoding video ${Math.round(progress * 100)}%.`,
-      });
-    },
+  onProgress({
+    stage: 'encoding',
+    completed: request.frameCount,
+    total: request.frameCount,
+    progress: 0.9,
+    message: 'Finalizing media and validating output…',
   });
-  const encodeMilliseconds = performance.now() - encodeStartedAt;
-  if (signal.aborted) {
-    throw new Error('Render cancelled.');
-  }
-  const createObjectUrl =
-    options.createObjectUrl ?? URL.createObjectURL.bind(URL);
+  const finalizationStarted = performance.now();
+  const encoded = await encoder.finalize();
+  signal.throwIfAborted();
   const output = await createOutput({
     request,
     blob: encoded.blob,
     width: request.viewport.width,
     height: request.viewport.height,
     frameCount: request.frameCount,
-    createObjectUrl,
+    signal,
+    createObjectUrl: options.createObjectUrl ?? URL.createObjectURL.bind(URL),
   });
+  const outputFinalizationMilliseconds =
+    performance.now() - finalizationStarted;
   return {
     outputs: [output],
-    diagnostics: [],
+    diagnostics: encoded.diagnostics,
     performance: {
       ...createPerformance(captured.map((entry) => entry.durationMilliseconds)),
+      analysisMilliseconds,
       encodeMilliseconds,
+      outputFinalizationMilliseconds,
+      retainedOutputBytes: encoded.blob.size,
     },
     mediaProbe: encoded.probe,
     visualFeedback: createVisualFeedback(captured),
   };
 };
-
-export const createVizBrowserVideoFrameSchedule = (
-  startFrame: number,
-  outputFrameCount: number,
-  sourceFps: number,
-  outputFps: number,
-): number[] =>
-  Array.from(
-    { length: outputFrameCount },
-    (_, index) => startFrame + Math.round((index * sourceFps) / outputFps),
-  );
 
 export const createVizBrowserRenderExecutor = (
   options: CreateVizBrowserRenderExecutorOptions,
@@ -516,25 +464,80 @@ export const createVizBrowserRenderExecutor = (
     ((request.kind === 'still' || request.kind === 'contact-sheet') &&
       request.format !== 'svg') ||
     ((request.kind === 'clip' || request.kind === 'video') &&
-      options.encodeVideo !== undefined),
+      options.openVideoEncoder !== undefined),
   execute: async (context) => {
+    const started = performance.now();
     const retained = await retainVizBrowserRenderSource(
       context.source,
       context.signal,
     );
+    const audio = createVizBrowserRenderAudio({
+      ...context,
+      source: retained.source,
+    });
     let session: VizBrowserFrameCaptureSession | undefined;
+    let encoder: VizStreamingVideoEncoder | undefined;
+    let result: VizRenderExecutorResult | undefined;
+    let failure: unknown;
+    const outputUrls: string[] = [];
     try {
-      const executionContext = { ...context, source: retained.source };
+      const executionContext = { ...context, source: retained.source, audio };
+      const video =
+        context.request.kind === 'clip' || context.request.kind === 'video';
+      if (video) {
+        if (!options.openVideoEncoder)
+          throw new Error(
+            'Browser video encoding is not available in this host.',
+          );
+        encoder = await options.openVideoEncoder(executionContext);
+      }
+      context.signal.throwIfAborted();
       session = await options.openCaptureSession(executionContext);
       context.signal.throwIfAborted();
-      const executionOptions = { ...options, ...session };
-      return await (context.request.kind === 'still' ||
-      context.request.kind === 'contact-sheet'
-        ? executeImageRender(executionContext, executionOptions)
-        : executeVideoRender(executionContext, executionOptions));
-    } finally {
-      session?.dispose();
-      retained.dispose();
+      const setupMilliseconds = performance.now() - started;
+      const executionOptions = {
+        ...options,
+        ...session,
+        createObjectUrl: (blob: Blob) => {
+          const url = (
+            options.createObjectUrl ?? URL.createObjectURL.bind(URL)
+          )(blob);
+          outputUrls.push(url);
+          return url;
+        },
+      };
+      result = await (encoder
+        ? executeVideoRender(executionContext, executionOptions, encoder)
+        : executeImageRender(executionContext, executionOptions));
+      result.performance.setupMilliseconds = setupMilliseconds;
+      result.performance.decodedAudioBytes = audio.decodedBytes();
+    } catch (error) {
+      failure = error;
     }
+    const cleanup = await Promise.allSettled([
+      Promise.resolve().then(() => encoder?.dispose()),
+      Promise.resolve().then(() => session?.dispose()),
+      Promise.resolve().then(() => audio.dispose()),
+      Promise.resolve().then(() => retained.dispose()),
+    ]);
+    const cleanupFailure = cleanup.find((entry) => entry.status === 'rejected');
+    failure ??= context.signal.aborted
+      ? context.signal.reason
+      : cleanupFailure?.status === 'rejected'
+        ? cleanupFailure.reason
+        : undefined;
+    if (failure !== undefined || !result) {
+      for (const uri of outputUrls)
+        (options.revokeObjectUrl ?? URL.revokeObjectURL.bind(URL))(uri);
+      throw failure ?? new Error('Render execution did not produce a result.');
+    }
+    let outputsReleased = false;
+    result.releaseOutputs = () => {
+      if (outputsReleased) return;
+      outputsReleased = true;
+      for (const uri of outputUrls)
+        (options.revokeObjectUrl ?? URL.revokeObjectURL.bind(URL))(uri);
+    };
+    return result;
   },
 });

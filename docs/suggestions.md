@@ -130,3 +130,18 @@ already requirements of the active goal.
   attachment seam when doing so reduces coupling without adding indirection.
 - Prefer deletion of superseded adapter code immediately after its final
   preserved-editor caller moves to a canonical subscription or action.
+
+## Render artifact lifecycle and codec maintenance
+
+- Successful browser job history retains output Blob URLs. Define an explicit
+  artifact retention/release operation with truthful availability metadata,
+  cancellation-safe ownership transfer and UI/control consumers before adding
+  long unattended export batches. Rejected executor handoffs now release their
+  outputs; this does not define a retention policy for successful artifacts.
+- Maintain the pinned codec/muxer changes in `patches/README.md` until equivalent
+  upstream APIs pass the independent timing and failure tests. Native AAC needs
+  trustworthy priming provenance before replacing the current AAC worker.
+- Move eligible render/media orchestration off the main thread after RH-03
+  measures contention; preserve the same host and explicit transfer lifetimes.
+  Nonfragmented MP4 packet-table storage and per-frame diagnostics need an
+  explicit large-duration policy if those measured costs become material.

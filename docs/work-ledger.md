@@ -2953,3 +2953,21 @@
 - Streaming encoding, full decoded-media equivalence/audio synchronization,
   production coverage, and quiet-host performance remain RH-02/RH-03. WebGPU
   implementation is a gated roadmap, not claimed delivered by RH-01.
+
+## 2026-09-08 — streaming export (RH-02)
+
+- Replaced retained JPEG sequences and the general FFmpeg.wasm video runner with
+  one awaited borrowed-canvas handoff, native video/Opus encoding, interleaved
+  audio blocks and positional OPFS output. Shared decoding supplies feature
+  baking and encoded audio; clip endpoints pad explicit silence when necessary.
+- Real encoding exposed missing AAC priming/presentation semantics and worker
+  close failures in the dependency. Maintained patches preserve authentic sample
+  coordinates, exact MP4 edits and forced codec closure. No platform delay guess
+  or silent codec substitution is used.
+- Added independent media decoding, tiny/aligned/unaligned timing and negative
+  controls, worker fault injection, blocked IO, alpha/contact-sheet regression,
+  output handoff cleanup and full-job wall-time observations. The exact staged
+  closure and final browser report are bound in the active program evidence.
+- RH-03 production parity, editor isolation and quiet-host performance remain
+  pending. Successful output retention and upstream patch maintenance are
+  explicit follow-ups in suggestions; WebGPU remains the gated modern roadmap.

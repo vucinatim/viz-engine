@@ -8,7 +8,7 @@ import {
   type VizRenderExecutor,
   type VizRenderSource,
 } from '@viz-engine/render';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 const request: VizRenderRequest = {
   schemaVersion: 1,
@@ -204,4 +204,87 @@ describe('Viz render job service', () => {
     expect(completed.result).toBeUndefined();
     expect(completed.cancelRequestedAt).toBeTypeOf('string');
   });
+});
+
+it('measures the complete job wall time separately from overlapping executor stages', async () => {
+  let time = 0;
+  const clock = vi.spyOn(performance, 'now').mockImplementation(() => time);
+  try {
+    const service = createVizRenderJobService({
+      sourceResolver: {
+        resolve: async () => {
+          time += 15;
+          return source;
+        },
+      },
+      executors: [
+        {
+          id: 'test-executor',
+          version: 'timing',
+          rendererIdentity: 'test',
+          supports: () => true,
+          execute: async () => {
+            time += 40;
+            return {
+              outputs: [output],
+              diagnostics: [],
+              performance: {
+                evaluatedFrameCount: 1,
+                renderedFrameCount: 1,
+                totalRenderMilliseconds: 30,
+                averageRenderMilliseconds: 30,
+                p95RenderMilliseconds: 30,
+                maximumRenderMilliseconds: 30,
+                encodeMilliseconds: 25,
+              },
+            };
+          },
+        },
+      ],
+    });
+    const completed = await service.wait(service.start(request).id);
+    expect(completed.result?.performance.totalElapsedMilliseconds).toBe(55);
+    expect(completed.result?.performance.executorElapsedMilliseconds).toBe(40);
+    expect(completed.result?.performance.encodeMilliseconds).toBe(25);
+  } finally {
+    clock.mockRestore();
+  }
+});
+
+it('releases output ownership if cancellation wins the executor-to-service handoff', async () => {
+  const releaseOutputs = vi.fn();
+  const service = createVizRenderJobService({
+    sourceResolver: { resolve: async () => source },
+    executors: [
+      {
+        id: 'test-executor',
+        version: 'handoff',
+        rendererIdentity: 'test',
+        supports: () => true,
+        execute: async () => {
+          cancel();
+          return {
+            outputs: [output],
+            releaseOutputs,
+            diagnostics: [],
+            performance: {
+              evaluatedFrameCount: 1,
+              renderedFrameCount: 1,
+              totalRenderMilliseconds: 1,
+              averageRenderMilliseconds: 1,
+              p95RenderMilliseconds: 1,
+              maximumRenderMilliseconds: 1,
+            },
+          };
+        },
+      },
+    ],
+  });
+  const job = service.start(request);
+  const cancel = () => {
+    service.cancel(job.id);
+  };
+  const completed = await service.wait(job.id);
+  expect(completed.status).toBe('cancelled');
+  expect(releaseOutputs).toHaveBeenCalledOnce();
 });

@@ -1,131 +1,233 @@
 import {
-  buildVideoEncodingCommand,
+  createVizRenderAudioBlock,
   estimateVideoSize,
-  parseEncodedVideoProbe,
 } from '@/lib/utils/video-encoder';
 import { describe, expect, it } from 'vitest';
 
-describe('video encoder contract', () => {
-  it('builds an MP4 command with trimmed audio and fast-start metadata', () => {
-    expect(
-      buildVideoEncodingCommand(
-        {
-          audioDuration: 5,
-          audioStartTime: 12,
-          format: 'mp4',
-          fps: 30,
-          height: 720,
-          quality: 'medium',
-          width: 1280,
-        },
-        true,
-      ),
-    ).toEqual([
-      '-framerate',
-      '30',
-      '-pattern_type',
-      'glob',
-      '-i',
-      'frame*.jpg',
-      '-ss',
-      '12',
-      '-t',
-      '5',
-      '-i',
-      'audio.mp3',
-      '-c:v',
-      'libx264',
-      '-preset',
-      'faster',
-      '-crf',
-      '22',
-      '-tune',
-      'film',
-      '-c:a',
-      'aac',
-      '-shortest',
-      '-pix_fmt',
-      'yuv420p',
-      '-movflags',
-      '+faststart',
-      'output.mp4',
+describe('streaming audio coordinates', () => {
+  const channels = [
+    new Float32Array([1, 2, 3, 4, 5]),
+    new Float32Array([6, 7, 8, 9, 10]),
+  ];
+  const audio = {
+    length: 5,
+    numberOfChannels: 2,
+    getChannelData: (index: number) => channels[index]!,
+  } as AudioBuffer;
+  it('clips absolute samples, preserves planar channel order and pads the requested tail', () => {
+    expect([...createVizRenderAudioBlock(audio, 1, 2, 4)]).toEqual([
+      4, 5, 0, 0, 9, 10, 0, 0,
+    ]);
+    expect([...createVizRenderAudioBlock(audio, 8, 0, 2)]).toEqual([
+      0, 0, 0, 0,
     ]);
   });
-
-  it('keeps MP4-only flags out of WebM exports', () => {
-    const command = buildVideoEncodingCommand(
-      {
-        format: 'webm',
-        fps: 60,
-        height: 1080,
-        quality: 'high',
-        width: 1920,
-      },
-      false,
-    );
-
-    expect(command).toContain('libvpx-vp9');
-    expect(command).toContain('output.webm');
-    expect(command).not.toContain('-movflags');
-    expect(command).not.toContain('-shortest');
-    expect(command).not.toContain('audio.mp3');
+  it('keeps partial blocks contiguous without accumulating timestamp rounding', () => {
+    const first = createVizRenderAudioBlock(audio, 1, 0, 2);
+    const last = createVizRenderAudioBlock(audio, 1, 2, 1);
+    expect([...first]).toEqual([2, 3, 7, 8]);
+    expect([...last]).toEqual([4, 9]);
   });
-
   it('estimates equal-duration exports consistently at different frame rates', () => {
     expect(estimateVideoSize(300, 1920, 1080, 'high', 30)).toBe(
       estimateVideoSize(600, 1920, 1080, 'high', 60),
     );
   });
+});
 
-  it('authoritatively parses FFprobe media structure', () => {
+describe('maintained MP4 presentation contract', () => {
+  it('rejects incompatible modes and non-callable mapping before output creation', async () => {
+    const { Mp4OutputFormat } = await import('mediabunny');
+    for (const fastStart of [
+      'fragmented',
+      'reserve',
+      'in-memory',
+      undefined,
+    ] as const) {
+      expect(
+        () =>
+          new Mp4OutputFormat({
+            fastStart,
+            getTrackPresentationWindow: () => undefined,
+          }),
+      ).toThrow('fastStart: false');
+    }
     expect(
-      parseEncodedVideoProbe(
-        {
-          format: {
-            format_name: 'mov,mp4,m4a,3gp,3g2,mj2',
-            duration: '2.000000',
-          },
-          streams: [
-            {
-              codec_type: 'video',
-              codec_name: 'h264',
-              width: 640,
-              height: 360,
-              r_frame_rate: '30/1',
-              duration: '2.000000',
-            },
-            {
-              codec_type: 'audio',
-              codec_name: 'aac',
-              sample_rate: '48000',
-              channels: 2,
-              duration: '2.000000',
-            },
-          ],
-        },
-        123_456,
-      ),
-    ).toEqual({
-      container: 'mov,mp4,m4a,3gp,3g2,mj2',
-      durationSeconds: 2,
-      byteLength: 123_456,
-      streams: [
-        {
-          kind: 'video',
-          codec: 'h264',
-          durationSeconds: 2,
-          width: 640,
-          height: 360,
-          frameRate: 30,
-        },
-        {
-          kind: 'audio',
-          codec: 'aac',
-          durationSeconds: 2,
-          sampleRate: 48_000,
-          channelCount: 2,
-        },
-      ],
-    });
+      () =>
+        new Mp4OutputFormat({
+          fastStart: false,
+          getTrackPresentationWindow: 1 as never,
+        }),
+    ).toThrow('requires a function');
   });
+  it.each([
+    { start: -1, duration: 0.001 },
+    { start: NaN, duration: 0.001 },
+    { start: 0, duration: 0 },
+    { start: 0, duration: Infinity },
+    { start: 0, duration: 10 },
+  ])(
+    'rejects invalid or out-of-media presentation window $start / $duration',
+    async (window) => {
+      const {
+        AudioSample,
+        AudioSampleSource,
+        BufferTarget,
+        MovOutputFormat,
+        Output,
+      } = await import('mediabunny');
+      const output = new Output({
+        format: new MovOutputFormat({
+          fastStart: false,
+          getTrackPresentationWindow: () => window,
+        }),
+        target: new BufferTarget(),
+      });
+      const source = new AudioSampleSource({ codec: 'pcm-s16' });
+      output.addAudioTrack(source);
+      await output.start();
+      const sample = new AudioSample({
+        data: new Float32Array(128),
+        sampleRate: 48_000,
+        numberOfChannels: 1,
+        format: 'f32-planar',
+        timestamp: 0,
+      });
+      try {
+        await source.add(sample);
+      } finally {
+        sample.close();
+      }
+      await expect(output.finalize()).rejects.toThrow(
+        'inside the coded media interval',
+      );
+      await output.cancel();
+    },
+  );
+});
+
+describe('maintained muxer cancellation contract', () => {
+  it('cannot report success when canceled during asynchronous final publication', async () => {
+    const {
+      AudioSample,
+      AudioSampleSource,
+      BufferTarget,
+      MovOutputFormat,
+      Output,
+    } = await import('mediabunny');
+    let releaseFinalization!: () => void;
+    let enteredFinalization!: () => void;
+    const held = new Promise<void>((resolve) => {
+      releaseFinalization = resolve;
+    });
+    const entered = new Promise<void>((resolve) => {
+      enteredFinalization = resolve;
+    });
+    const output = new Output({
+      format: new MovOutputFormat(),
+      target: new BufferTarget(),
+      onFinalize: async () => {
+        enteredFinalization();
+        await held;
+      },
+    });
+    const source = new AudioSampleSource({ codec: 'pcm-s16' });
+    output.addAudioTrack(source);
+    await output.start();
+    const sample = new AudioSample({
+      data: new Float32Array(128),
+      sampleRate: 48_000,
+      numberOfChannels: 1,
+      format: 'f32-planar',
+      timestamp: 0,
+    });
+    try {
+      await source.add(sample);
+    } finally {
+      sample.close();
+    }
+    const finishing = output.finalize();
+    await entered;
+    const rejection = expect(finishing).rejects.toThrow(
+      'Output canceled during finalization.',
+    );
+    const canceled = output.cancel();
+    expect(output.state).toBe('canceled');
+    releaseFinalization();
+    await rejection;
+    await canceled;
+    expect(output.state).toBe('canceled');
+  });
+});
+
+describe('maintained Opus presentation contract', () => {
+  it('rejects a non-callable presentation endpoint before output creation', async () => {
+    const { WebMOutputFormat } = await import('mediabunny');
+    expect(
+      () => new WebMOutputFormat({ getTrackPresentationEnd: 1 as never }),
+    ).toThrow('requires a function');
+  });
+  it.each([
+    { end: 0, codec: 'opus', header: true, error: 'positive finite Opus' },
+    { end: -1, codec: 'opus', header: true, error: 'positive finite Opus' },
+    { end: NaN, codec: 'opus', header: true, error: 'positive finite Opus' },
+    {
+      end: Infinity,
+      codec: 'opus',
+      header: true,
+      error: 'positive finite Opus',
+    },
+    {
+      end: 0.01,
+      codec: 'pcm-s16',
+      header: false,
+      error: 'positive finite Opus',
+    },
+    { end: 0.01, codec: 'opus', header: false, error: 'identification header' },
+    { end: 1, codec: 'opus', header: true, error: 'does not cover' },
+  ] as const)(
+    'rejects invalid endpoint/header/coverage $end / $codec / $header',
+    async ({ end, codec, header, error }) => {
+      const {
+        Output,
+        MkvOutputFormat,
+        BufferTarget,
+        EncodedAudioPacketSource,
+        EncodedPacket,
+      } = await import('mediabunny');
+      const output = new Output({
+        format: new MkvOutputFormat({ getTrackPresentationEnd: () => end }),
+        target: new BufferTarget(),
+      });
+      const source = new EncodedAudioPacketSource(codec);
+      output.addAudioTrack(source);
+      await output.start();
+      const description = new Uint8Array([
+        79, 112, 117, 115, 72, 101, 97, 100, 1, 1, 56, 1, 128, 187, 0, 0, 0, 0,
+        0,
+      ]);
+      await expect(
+        (async () => {
+          await source.add(
+            new EncodedPacket(
+              new Uint8Array([0xf8, 0xff, 0xfe]),
+              'key',
+              0,
+              0.02,
+            ),
+            {
+              decoderConfig: {
+                codec: codec === 'opus' ? 'opus' : 'pcm-s16',
+                sampleRate: 48000,
+                numberOfChannels: 1,
+                ...(header ? { description } : {}),
+              },
+            },
+          );
+          await output.finalize();
+        })(),
+      ).rejects.toThrow(error);
+      await output.cancel();
+    },
+  );
 });

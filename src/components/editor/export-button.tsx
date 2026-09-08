@@ -200,9 +200,11 @@ const ExportButton = () => {
         const { performance, mediaProbe, diagnostics } = completed.result!;
         exportStore.addLog({
           type: 'perf',
-          message: 'Render performance',
+          message: 'Export performance',
           details: `${performance.averageRenderMilliseconds.toFixed(1)} ms/frame average, ${performance.p95RenderMilliseconds.toFixed(1)} ms p95`,
-          duration: performance.totalRenderMilliseconds,
+          duration:
+            performance.totalElapsedMilliseconds ??
+            performance.totalRenderMilliseconds,
         });
         if (mediaProbe) {
           exportStore.addLog({

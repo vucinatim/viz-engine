@@ -82,10 +82,9 @@
     "@dnd-kit/modifiers": "^7.0.0",
     "@dnd-kit/sortable": "^8.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@ffmpeg/core": "0.12.10",
-    "@ffmpeg/ffmpeg": "^0.12.15",
-    "@ffmpeg/util": "^0.12.2",
     "@hookform/resolvers": "^3.3.4",
+    "@mediabunny/aac-encoder": "1.55.7",
+    "@noble/hashes": "2.0.1",
     "@radix-ui/react-collapsible": "^1.0.3",
     "@radix-ui/react-context-menu": "^2.1.5",
     "@radix-ui/react-dialog": "^1.0.5",
@@ -109,6 +108,7 @@
     "d3-selection": "^3.0.0",
     "jszip": "^3.10.1",
     "lucide-react": "^0.373.0",
+    "mediabunny": "1.55.7",
     "react": "^18",
     "react-dom": "^18",
     "react-dropzone": "^14.2.3",
@@ -145,5 +145,11 @@
     "typescript": "^5.4.5",
     "typescript-eslint": "^8.0.0",
     "vitest": "^3.2.4"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "mediabunny@1.55.7": "patches/mediabunny@1.55.7.patch",
+      "@mediabunny/aac-encoder@1.55.7": "patches/@mediabunny__aac-encoder@1.55.7.patch"
+    }
   }
 }

@@ -13,7 +13,13 @@ vi.mock('@viz-engine/renderer-three', async (importOriginal) => ({
   createVizThreeRenderHost: mocked.create,
 }));
 beforeEach(() => {
-  vi.stubGlobal('document', { createElement: () => ({ width: 0, height: 0 }) });
+  vi.stubGlobal('document', {
+    createElement: () => ({
+      width: 0,
+      height: 0,
+      getContext: () => ({ fillRect() {} }),
+    }),
+  });
   vi.stubGlobal(
     'fetch',
     vi.fn(async () => new Response(new Blob(['asset']))),

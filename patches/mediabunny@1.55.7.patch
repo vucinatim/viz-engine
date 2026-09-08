@@ -1,0 +1,1671 @@
+diff --git a/dist/bundles/mediabunny.cjs b/dist/bundles/mediabunny.cjs
+index dce5065..f160216 100644
+--- a/dist/bundles/mediabunny.cjs
++++ b/dist/bundles/mediabunny.cjs
+@@ -8424,2 +8424,7 @@ var Mediabunny = (() => {
+-      const track = this.internalTrack;
++      const track = this.internalTrack;
++        // tkhd describes the presented interval; mdhd includes coded priming and padding.
++        if (track.durationInMovieTimescale > 0 && track.demuxer.movieTimescale > 0) {
++            return track.durationInMovieTimescale / track.demuxer.movieTimescale;
++        }
++
+-      if (track.durationInMediaTimescale <= 0) {
++      if (track.durationInMediaTimescale <= 0) {
+@@ -22994,3 +22999,3 @@ var Mediabunny = (() => {
+-      width = 1280,
++      width = 1280,
+-      height = 720,
++      height = 720, frameRate,
+-      quality,
++      quality,
+@@ -23018,3 +23023,4 @@ var Mediabunny = (() => {
+-    }
++    }
+-    validateVideoEncodingAdditionalOptions(codec, restOptions);
++    if (frameRate !== void 0 && (!Number.isFinite(frameRate) || frameRate <= 0)) throw new TypeError("frameRate must be a finite positive number.");
++validateVideoEncodingAdditionalOptions(codec, restOptions);
+-    const resolvedQuality = resolveQuality(quality, bitrate) ?? new Quality("medium");
++    const resolvedQuality = resolveQuality(quality, bitrate) ?? new Quality("medium");
+@@ -23027,3 +23033,3 @@ var Mediabunny = (() => {
+-        quality: resolvedQuality,
++        quality: resolvedQuality,
+-        framerate: void 0,
++        framerate: frameRate,
+-        ...restOptions,
++        ...restOptions,
+@@ -28594,2 +28600,17 @@ var Mediabunny = (() => {
+-  var moov = (muxer) => {
++  var moov = (muxer) => {
++    if (muxer.formatOptions.getTrackPresentationWindow) {
++        if (muxer.formatOptions.fastStart !== false) throw new Error('Presentation windows require fastStart: false.');
++        for (const trackData of muxer.trackDatas) {
++            const window = muxer.formatOptions.getTrackPresentationWindow(trackData.track);
++            if (window !== undefined) {
++                if (!Number.isFinite(window.start) || window.start < 0 ||
++                    !Number.isFinite(window.duration) || window.duration <= 0 ||
++                    window.start + window.duration > presentationSpan(trackData) + 1 / trackData.timescale) {
++                    throw new Error('Presentation window must lie inside the coded media interval.');
++                }
++                trackData.presentationWindow = { ...window };
++            }
++        }
++    }
++
+-    return box("moov", void 0, [
++    return box("moov", void 0, [
+@@ -28604,3 +28625,3 @@ var Mediabunny = (() => {
+-      0,
++      0,
+-      ...trackDatas.map((trackData) => intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE) + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE))
++      ...trackDatas.map((trackData) => (trackData.presentationWindow ? intoTimescale(trackData.presentationWindow.duration, GLOBAL_TIMESCALE) : intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE) + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE)))
+-    );
++    );
+@@ -28654,3 +28675,3 @@ var Mediabunny = (() => {
+-    const trackMetadata = getTrackMetadata(trackData);
++    const trackMetadata = getTrackMetadata(trackData);
+-    const needsEditList = trackData.startTimestampOffset !== null && trackData.startTimestampOffset > 0;
++    const needsEditList = trackData.presentationWindow !== undefined || (trackData.startTimestampOffset !== null && trackData.startTimestampOffset > 0);
+-    return box("trak", void 0, [
++    return box("trak", void 0, [
+@@ -28668,3 +28689,3 @@ var Mediabunny = (() => {
+-  var tkhd = (trackData, creationTime) => {
++  var tkhd = (trackData, creationTime) => {
+-    const durationInGlobalTimescale = intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE) + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE);
++    const durationInGlobalTimescale = (trackData.presentationWindow ? intoTimescale(trackData.presentationWindow.duration, GLOBAL_TIMESCALE) : intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE) + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE));
+-    const needsU64 = !isU32(creationTime) || !isU32(durationInGlobalTimescale);
++    const needsU64 = !isU32(creationTime) || !isU32(durationInGlobalTimescale);
+@@ -28713,2 +28734,10 @@ var Mediabunny = (() => {
+-  var edts = (trackData, offset) => {
++  var edts = (trackData, offset) => {
++    if (trackData.presentationWindow) {
++        const duration = intoTimescale(trackData.presentationWindow.duration, GLOBAL_TIMESCALE);
++        const mediaTime = intoTimescale(trackData.presentationWindow.start, trackData.timescale);
++        return box('edts', undefined, [fullBox('elst', 1, 0, [
++            ...u32(1), ...u64(duration), ...i64(mediaTime), ...fixed_16_16(1),
++        ])]);
++    }
++
+-    const startOffset = intoTimescale(offset, GLOBAL_TIMESCALE);
++    const startOffset = intoTimescale(offset, GLOBAL_TIMESCALE);
+@@ -30519,3 +30548,5 @@ var Mediabunny = (() => {
+-    async _close() {
++    async _close() {
+-      return this._streamWriter?.close();
++      const writer = this._streamWriter;
++        this._streamWriter = null;
++        try { await writer?.close(); } finally { writer?.releaseLock(); }
+-    }
++    }
+@@ -30707,3 +30738,3 @@ var Mediabunny = (() => {
+-  // src/isobmff/isobmff-muxer.ts
++  // src/isobmff/isobmff-muxer.ts
+-  var GLOBAL_TIMESCALE = 57600;
++  var GLOBAL_TIMESCALE = 28224000;
+-  var TIMESTAMP_OFFSET = 2082844800;
++  var TIMESTAMP_OFFSET = 2082844800;
+@@ -31974,6 +32005,12 @@ var Mediabunny = (() => {
+-            const header = parseOpusIdentificationHeader(bytes2);
++            const header = parseOpusIdentificationHeader(bytes2);
+-            seekPreRollNs = Math.round(1e9 * (header.preSkip / OPUS_SAMPLE_RATE));
++            trackData.codecDelaySeconds = header.preSkip / OPUS_SAMPLE_RATE;
+-          }
++          }
+-        }
++        }
+-        tracksElement.data.push({ id: 174 /* TrackEntry */, data: [
++        const presentationEnd = this.format._options.getTrackPresentationEnd?.(trackData.track);
++            if (presentationEnd !== undefined) {
++                if (trackData.type !== 'audio' || trackData.track.source._codec !== 'opus' || !Number.isFinite(presentationEnd) || presentationEnd <= 0) throw new Error('Presentation end requires a positive finite Opus track interval.');
++                if (trackData.codecDelaySeconds === undefined) throw new Error('Opus presentation requires an identification header with pre-skip.');
++                trackData.presentationEnd = presentationEnd;
++            }
++            tracksElement.data.push({ id: 174 /* TrackEntry */, data: [
+-          { id: 215 /* TrackNumber */, data: trackData.track.id },
++          { id: 215 /* TrackNumber */, data: trackData.track.id },
+@@ -31991,3 +32028,3 @@ var Mediabunny = (() => {
+-          trackData.codecPrivate ? { id: 25506 /* CodecPrivate */, data: toUint8Array(trackData.codecPrivate) } : null,
++          trackData.codecPrivate ? { id: 25506 /* CodecPrivate */, data: toUint8Array(trackData.codecPrivate) } : null,
+-          { id: 22186 /* CodecDelay */, data: 0 },
++          { id: 22186 /* CodecDelay */, data: Math.round(1e9 * (trackData.codecDelaySeconds ?? 0)) },
+-          { id: 22203 /* SeekPreRoll */, data: seekPreRollNs },
++          { id: 22203 /* SeekPreRoll */, data: seekPreRollNs },
+@@ -32612,3 +32649,11 @@ ${cue.notes ?? ""}`;
+-      }
++      }
+-      const msTimestamp = Math.round(1e3 * chunk.timestamp);
++      const codecDelay = trackData.codecDelaySeconds ?? 0;
++        const presentationStart = chunk.timestamp - codecDelay;
++        const codedEnd = presentationStart + chunk.duration;
++        trackData.codedEnd = Math.max(trackData.codedEnd ?? 0, codedEnd);
++        const requestedEnd = trackData.presentationEnd;
++        if (requestedEnd !== undefined && presentationStart >= requestedEnd) throw new Error('Opus packet lies beyond the requested presentation interval.');
++        const discardPaddingNs = requestedEnd === undefined ? 0 : Math.max(0, Math.round(1e9 * (codedEnd - requestedEnd)));
++        const presentationEnd = Math.min(codedEnd, requestedEnd ?? Infinity);
++        const msTimestamp = Math.round(1e3 * chunk.timestamp);
+-      const keyFrameQueuedEverywhere = this.trackDatas.every((otherTrackData) => {
++      const keyFrameQueuedEverywhere = this.trackDatas.every((otherTrackData) => {
+@@ -32644,3 +32689,3 @@ ${cue.notes ?? ""}`;
+-      const msDuration = Math.round(1e3 * chunk.duration);
++      const msDuration = Math.round(1e3 * chunk.duration);
+-      const needsBlockGroup = !!chunk.additions || trackData.type === "subtitle";
++      const needsBlockGroup = discardPaddingNs > 0 || !!chunk.additions || trackData.type === "subtitle";
+-      if (!needsBlockGroup) {
++      if (!needsBlockGroup) {
+@@ -32654,2 +32699,3 @@ ${cue.notes ?? ""}`;
+-        const blockGroup = { id: 160 /* BlockGroup */, data: [
++        const blockGroup = { id: 160 /* BlockGroup */, data: [
++                discardPaddingNs > 0 ? { id: 0x75a2 /* DiscardPadding */, data: new EBMLSignedInt(discardPaddingNs) } : null,
+-          { id: 161 /* Block */, data: [
++          { id: 161 /* Block */, data: [
+@@ -32673,4 +32719,4 @@ ${cue.notes ?? ""}`;
+-      }
++      }
+-      this.startTimestamp = Math.min(this.startTimestamp, msTimestamp);
+-      this.endTimestamp = Math.max(this.endTimestamp, msTimestamp + msDuration);
++      this.startTimestamp = Math.min(this.startTimestamp, Math.max(0, 1000 * presentationStart));
++      this.endTimestamp = Math.max(this.endTimestamp, 1000 * presentationEnd);
+-      trackData.lastWrittenMsTimestamp = msTimestamp;
++      trackData.lastWrittenMsTimestamp = msTimestamp;
+@@ -32764,2 +32810,5 @@ ${cue.notes ?? ""}`;
+-      await this.interleaveChunks(true);
++      await this.interleaveChunks(true);
++        for (const trackData of this.trackDatas) {
++            if (trackData.presentationEnd !== undefined && (trackData.codedEnd ?? 0) + 1 / OPUS_SAMPLE_RATE < trackData.presentationEnd) throw new Error('Opus coded media does not cover the requested presentation interval.');
++        }
+-      if (this.currentCluster) {
++      if (this.currentCluster) {
+@@ -34541,2 +34590,9 @@ ${cue.notes ?? ""}`;
+-    async _flushOrWaitForOngoingClose(forceClose) {
++    async _flushOrWaitForOngoingClose(forceClose) {
++        if (forceClose) {
++            await this._flushAndClose(true);
++            this._closed = true;
++            await this._closingPromise?.catch(() => undefined);
++            return;
++        }
++
+-      return this._closingPromise ??= (async () => {
++      return this._closingPromise ??= (async () => {
+@@ -34636,2 +34692,3 @@ ${cue.notes ?? ""}`;
+-      this.closed = false;
++      this.closed = false;
++ this.forceClosed = promiseWithResolvers();
+-    }
++    }
+@@ -35105,2 +35162,3 @@ ${cue.notes ?? ""}`;
+-        this.encoderInitialized = true;
++        this.encoderInitialized = true;
++ if (this.closed) { await this.flushAndClose(true); throw new Error('Encoder closed during initialization.'); }
+-      })();
++      })();
+@@ -35108,2 +35166,3 @@ ${cue.notes ?? ""}`;
+-    async flushAndClose(forceClose) {
++    async flushAndClose(forceClose) {
++ if (forceClose) this.forceClosed.resolve();
+-      try {
++      try {
+@@ -35132,3 +35191,4 @@ ${cue.notes ?? ""}`;
+-        if (this.customEncoder) {
++        if (this.customEncoder) {
+-          await this.customEncoderCallSerializer.call(() => this.customEncoder.close()).catch((error) => this.setError(error));
++          if (!forceClose) await this.customEncoderCallSerializer.currentPromise.catch(() => undefined);
++ await Promise.resolve(this.customEncoder.close()).catch((error) => this.setError(error));
+-        } else if (this.encoder) {
++        } else if (this.encoder) {
+@@ -35750,2 +35810,3 @@ ${cue.notes ?? ""}`;
+-      this.closed = false;
++      this.closed = false;
++ this.forceClosed = promiseWithResolvers();
+-    }
++    }
+@@ -35910,3 +35971,3 @@ ${cue.notes ?? ""}`;
+-          if (this.encoder.encodeQueueSize >= 4) {
++          if (this.encoder.encodeQueueSize >= 4) {
+-            await new Promise((resolve) => this.encoder.addEventListener("dequeue", resolve, { once: true }));
++            await Promise.race([this.forceClosed.promise, new Promise((resolve) => this.encoder.addEventListener("dequeue", resolve, { once: true }))]);
+-          }
++          }
+@@ -36067,2 +36128,3 @@ ${cue.notes ?? ""}`;
+-        this.encoderInitialized = true;
++        this.encoderInitialized = true;
++ if (this.closed) { await this.flushAndClose(true); throw new Error('Encoder closed during initialization.'); }
+-      })();
++      })();
+@@ -36165,2 +36227,3 @@ ${cue.notes ?? ""}`;
+-    async flushAndClose(forceClose) {
++    async flushAndClose(forceClose) {
++ if (forceClose) this.forceClosed.resolve();
+-      try {
++      try {
+@@ -36184,3 +36247,4 @@ ${cue.notes ?? ""}`;
+-        if (this.customEncoder) {
++        if (this.customEncoder) {
+-          await this.customEncoderCallSerializer.call(() => this.customEncoder.close()).catch((error) => this.setError(error));
++          if (!forceClose) await this.customEncoderCallSerializer.currentPromise.catch(() => undefined);
++ await Promise.resolve(this.customEncoder.close()).catch((error) => this.setError(error));
+-        } else if (this.encoder && this.encoder.state !== "closed") {
++        } else if (this.encoder && this.encoder.state !== "closed") {
+@@ -37951,3 +38015,4 @@ ${cue.notes ?? ""}`;
+-      }
++      }
+-      if (options.appendOnly !== void 0 && typeof options.appendOnly !== "boolean") {
++      if (options.getTrackPresentationEnd !== undefined && typeof options.getTrackPresentationEnd !== 'function') throw new TypeError('getTrackPresentationEnd requires a function.');
++        if (options.appendOnly !== void 0 && typeof options.appendOnly !== "boolean") {
+-        throw new TypeError("options.appendOnly, when provided, must be a boolean.");
++        throw new TypeError("options.appendOnly, when provided, must be a boolean.");
+@@ -38962,3 +39027,3 @@ ${cue.notes ?? ""}`;
+-        return this._cancelPromise;
++        return this._cancelPromise;
+-      } else if (this.state === "finalizing" || this.state === "finalized") {
++      } else if (this.state === "finalized") {
+-        if (this.state === "finalized") {
++        if (this.state === "finalized") {
+@@ -38970,7 +39035,8 @@ ${cue.notes ?? ""}`;
+-        this.state = "canceled";
++        this.state = "canceled";
++            await Promise.all(this.tracks.map(track => track.source._flushOrWaitForOngoingClose(true)));
++
+-        const release = await this._mutex.acquire();
++        const release = await this._mutex.acquire();
+-        try {
++        try {
+-          const promises = this.tracks.map((x) => x.source._flushOrWaitForOngoingClose(true));
+-          await Promise.all(promises);
+-          await Promise.all([...this._unfinalizedTargets].map((target) => target._close()));
++
++          await Promise.all([...this._unfinalizedTargets].map(target => target._close().catch(() => undefined)));
+-          this._unfinalizedTargets.clear();
++          this._unfinalizedTargets.clear();
+@@ -39002,3 +39068,4 @@ ${cue.notes ?? ""}`;
+-          await Promise.all(promises);
++          await Promise.all(promises);
+-          await this._muxer.finalize();
++          if (this.state === 'canceled') throw new Error('Output canceled during finalization.');
++ await this._muxer.finalize();
+-          if (this._rootWriterPromise) {
++          if (this._rootWriterPromise) {
+@@ -39013,3 +39080,4 @@ ${cue.notes ?? ""}`;
+-          }
++          }
+-          this.state = "finalized";
++          if (this.state === "canceled") throw new Error("Output canceled during finalization.");
++this.state = "finalized";
+-        } finally {
++        } finally {
+diff --git a/dist/bundles/mediabunny.mjs b/dist/bundles/mediabunny.mjs
+index 4687701..a1760a1 100644
+--- a/dist/bundles/mediabunny.mjs
++++ b/dist/bundles/mediabunny.mjs
+@@ -8267,2 +8267,7 @@ var IsobmffTrackBacking = class {
+-    const track = this.internalTrack;
++    const track = this.internalTrack;
++        // tkhd describes the presented interval; mdhd includes coded priming and padding.
++        if (track.durationInMovieTimescale > 0 && track.demuxer.movieTimescale > 0) {
++            return track.durationInMovieTimescale / track.demuxer.movieTimescale;
++        }
++
+-    if (track.durationInMediaTimescale <= 0) {
++    if (track.durationInMediaTimescale <= 0) {
+@@ -22837,3 +22842,3 @@ var canEncodeVideo = async (codec, options = {}) => {
+-    width = 1280,
++    width = 1280,
+-    height = 720,
++    height = 720, frameRate,
+-    quality,
++    quality,
+@@ -22861,3 +22866,4 @@ var canEncodeVideo = async (codec, options = {}) => {
+-  }
++  }
+-  validateVideoEncodingAdditionalOptions(codec, restOptions);
++  if (frameRate !== void 0 && (!Number.isFinite(frameRate) || frameRate <= 0)) throw new TypeError("frameRate must be a finite positive number.");
++validateVideoEncodingAdditionalOptions(codec, restOptions);
+-  const resolvedQuality = resolveQuality(quality, bitrate) ?? new Quality("medium");
++  const resolvedQuality = resolveQuality(quality, bitrate) ?? new Quality("medium");
+@@ -22870,3 +22876,3 @@ var canEncodeVideo = async (codec, options = {}) => {
+-      quality: resolvedQuality,
++      quality: resolvedQuality,
+-      framerate: void 0,
++      framerate: frameRate,
+-      ...restOptions,
++      ...restOptions,
+@@ -28437,2 +28443,17 @@ var free = (size) => ({ type: "free", size });
+-var moov = (muxer) => {
++var moov = (muxer) => {
++    if (muxer.formatOptions.getTrackPresentationWindow) {
++        if (muxer.formatOptions.fastStart !== false) throw new Error('Presentation windows require fastStart: false.');
++        for (const trackData of muxer.trackDatas) {
++            const window = muxer.formatOptions.getTrackPresentationWindow(trackData.track);
++            if (window !== undefined) {
++                if (!Number.isFinite(window.start) || window.start < 0 ||
++                    !Number.isFinite(window.duration) || window.duration <= 0 ||
++                    window.start + window.duration > presentationSpan(trackData) + 1 / trackData.timescale) {
++                    throw new Error('Presentation window must lie inside the coded media interval.');
++                }
++                trackData.presentationWindow = { ...window };
++            }
++        }
++    }
++
+-  return box("moov", void 0, [
++  return box("moov", void 0, [
+@@ -28447,3 +28468,3 @@ var mvhd = (creationTime, trackDatas) => {
+-    0,
++    0,
+-    ...trackDatas.map((trackData) => intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE) + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE))
++    ...trackDatas.map((trackData) => (trackData.presentationWindow ? intoTimescale(trackData.presentationWindow.duration, GLOBAL_TIMESCALE) : intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE) + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE)))
+-  );
++  );
+@@ -28497,3 +28518,3 @@ var trak = (trackData, creationTime) => {
+-  const trackMetadata = getTrackMetadata(trackData);
++  const trackMetadata = getTrackMetadata(trackData);
+-  const needsEditList = trackData.startTimestampOffset !== null && trackData.startTimestampOffset > 0;
++  const needsEditList = trackData.presentationWindow !== undefined || (trackData.startTimestampOffset !== null && trackData.startTimestampOffset > 0);
+-  return box("trak", void 0, [
++  return box("trak", void 0, [
+@@ -28511,3 +28532,3 @@ var trak = (trackData, creationTime) => {
+-var tkhd = (trackData, creationTime) => {
++var tkhd = (trackData, creationTime) => {
+-  const durationInGlobalTimescale = intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE) + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE);
++  const durationInGlobalTimescale = (trackData.presentationWindow ? intoTimescale(trackData.presentationWindow.duration, GLOBAL_TIMESCALE) : intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE) + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE));
+-  const needsU64 = !isU32(creationTime) || !isU32(durationInGlobalTimescale);
++  const needsU64 = !isU32(creationTime) || !isU32(durationInGlobalTimescale);
+@@ -28556,2 +28577,10 @@ var tkhd = (trackData, creationTime) => {
+-var edts = (trackData, offset) => {
++var edts = (trackData, offset) => {
++    if (trackData.presentationWindow) {
++        const duration = intoTimescale(trackData.presentationWindow.duration, GLOBAL_TIMESCALE);
++        const mediaTime = intoTimescale(trackData.presentationWindow.start, trackData.timescale);
++        return box('edts', undefined, [fullBox('elst', 1, 0, [
++            ...u32(1), ...u64(duration), ...i64(mediaTime), ...fixed_16_16(1),
++        ])]);
++    }
++
+-  const startOffset = intoTimescale(offset, GLOBAL_TIMESCALE);
++  const startOffset = intoTimescale(offset, GLOBAL_TIMESCALE);
+@@ -30362,3 +30391,5 @@ var StreamTarget = class extends Target {
+-  async _close() {
++  async _close() {
+-    return this._streamWriter?.close();
++    const writer = this._streamWriter;
++        this._streamWriter = null;
++        try { await writer?.close(); } finally { writer?.releaseLock(); }
+-  }
++  }
+@@ -30550,3 +30581,3 @@ var PathedTarget = class {
+-// src/isobmff/isobmff-muxer.ts
++// src/isobmff/isobmff-muxer.ts
+-var GLOBAL_TIMESCALE = 57600;
++var GLOBAL_TIMESCALE = 28224000;
+-var TIMESTAMP_OFFSET = 2082844800;
++var TIMESTAMP_OFFSET = 2082844800;
+@@ -31817,6 +31848,12 @@ var MatroskaMuxer = class extends Muxer {
+-          const header = parseOpusIdentificationHeader(bytes2);
++          const header = parseOpusIdentificationHeader(bytes2);
+-          seekPreRollNs = Math.round(1e9 * (header.preSkip / OPUS_SAMPLE_RATE));
++          trackData.codecDelaySeconds = header.preSkip / OPUS_SAMPLE_RATE;
+-        }
++        }
+-      }
++      }
+-      tracksElement.data.push({ id: 174 /* TrackEntry */, data: [
++      const presentationEnd = this.format._options.getTrackPresentationEnd?.(trackData.track);
++            if (presentationEnd !== undefined) {
++                if (trackData.type !== 'audio' || trackData.track.source._codec !== 'opus' || !Number.isFinite(presentationEnd) || presentationEnd <= 0) throw new Error('Presentation end requires a positive finite Opus track interval.');
++                if (trackData.codecDelaySeconds === undefined) throw new Error('Opus presentation requires an identification header with pre-skip.');
++                trackData.presentationEnd = presentationEnd;
++            }
++            tracksElement.data.push({ id: 174 /* TrackEntry */, data: [
+-        { id: 215 /* TrackNumber */, data: trackData.track.id },
++        { id: 215 /* TrackNumber */, data: trackData.track.id },
+@@ -31834,3 +31871,3 @@ var MatroskaMuxer = class extends Muxer {
+-        trackData.codecPrivate ? { id: 25506 /* CodecPrivate */, data: toUint8Array(trackData.codecPrivate) } : null,
++        trackData.codecPrivate ? { id: 25506 /* CodecPrivate */, data: toUint8Array(trackData.codecPrivate) } : null,
+-        { id: 22186 /* CodecDelay */, data: 0 },
++        { id: 22186 /* CodecDelay */, data: Math.round(1e9 * (trackData.codecDelaySeconds ?? 0)) },
+-        { id: 22203 /* SeekPreRoll */, data: seekPreRollNs },
++        { id: 22203 /* SeekPreRoll */, data: seekPreRollNs },
+@@ -32455,3 +32492,11 @@ ${cue.notes ?? ""}`;
+-    }
++    }
+-    const msTimestamp = Math.round(1e3 * chunk.timestamp);
++    const codecDelay = trackData.codecDelaySeconds ?? 0;
++        const presentationStart = chunk.timestamp - codecDelay;
++        const codedEnd = presentationStart + chunk.duration;
++        trackData.codedEnd = Math.max(trackData.codedEnd ?? 0, codedEnd);
++        const requestedEnd = trackData.presentationEnd;
++        if (requestedEnd !== undefined && presentationStart >= requestedEnd) throw new Error('Opus packet lies beyond the requested presentation interval.');
++        const discardPaddingNs = requestedEnd === undefined ? 0 : Math.max(0, Math.round(1e9 * (codedEnd - requestedEnd)));
++        const presentationEnd = Math.min(codedEnd, requestedEnd ?? Infinity);
++        const msTimestamp = Math.round(1e3 * chunk.timestamp);
+-    const keyFrameQueuedEverywhere = this.trackDatas.every((otherTrackData) => {
++    const keyFrameQueuedEverywhere = this.trackDatas.every((otherTrackData) => {
+@@ -32487,3 +32532,3 @@ ${cue.notes ?? ""}`;
+-    const msDuration = Math.round(1e3 * chunk.duration);
++    const msDuration = Math.round(1e3 * chunk.duration);
+-    const needsBlockGroup = !!chunk.additions || trackData.type === "subtitle";
++    const needsBlockGroup = discardPaddingNs > 0 || !!chunk.additions || trackData.type === "subtitle";
+-    if (!needsBlockGroup) {
++    if (!needsBlockGroup) {
+@@ -32497,2 +32542,3 @@ ${cue.notes ?? ""}`;
+-      const blockGroup = { id: 160 /* BlockGroup */, data: [
++      const blockGroup = { id: 160 /* BlockGroup */, data: [
++                discardPaddingNs > 0 ? { id: 0x75a2 /* DiscardPadding */, data: new EBMLSignedInt(discardPaddingNs) } : null,
+-        { id: 161 /* Block */, data: [
++        { id: 161 /* Block */, data: [
+@@ -32516,4 +32562,4 @@ ${cue.notes ?? ""}`;
+-    }
++    }
+-    this.startTimestamp = Math.min(this.startTimestamp, msTimestamp);
+-    this.endTimestamp = Math.max(this.endTimestamp, msTimestamp + msDuration);
++    this.startTimestamp = Math.min(this.startTimestamp, Math.max(0, 1000 * presentationStart));
++    this.endTimestamp = Math.max(this.endTimestamp, 1000 * presentationEnd);
+-    trackData.lastWrittenMsTimestamp = msTimestamp;
++    trackData.lastWrittenMsTimestamp = msTimestamp;
+@@ -32607,2 +32653,5 @@ ${cue.notes ?? ""}`;
+-    await this.interleaveChunks(true);
++    await this.interleaveChunks(true);
++        for (const trackData of this.trackDatas) {
++            if (trackData.presentationEnd !== undefined && (trackData.codedEnd ?? 0) + 1 / OPUS_SAMPLE_RATE < trackData.presentationEnd) throw new Error('Opus coded media does not cover the requested presentation interval.');
++        }
+-    if (this.currentCluster) {
++    if (this.currentCluster) {
+@@ -34384,2 +34433,9 @@ var MediaSource = class {
+-  async _flushOrWaitForOngoingClose(forceClose) {
++  async _flushOrWaitForOngoingClose(forceClose) {
++        if (forceClose) {
++            await this._flushAndClose(true);
++            this._closed = true;
++            await this._closingPromise?.catch(() => undefined);
++            return;
++        }
++
+-    return this._closingPromise ??= (async () => {
++    return this._closingPromise ??= (async () => {
+@@ -34479,2 +34535,3 @@ var VideoEncoderWrapper = class {
+-    this.closed = false;
++    this.closed = false;
++ this.forceClosed = promiseWithResolvers();
+-  }
++  }
+@@ -34948,2 +35005,3 @@ var VideoEncoderWrapper = class {
+-      this.encoderInitialized = true;
++      this.encoderInitialized = true;
++ if (this.closed) { await this.flushAndClose(true); throw new Error('Encoder closed during initialization.'); }
+-    })();
++    })();
+@@ -34951,2 +35009,3 @@ var VideoEncoderWrapper = class {
+-  async flushAndClose(forceClose) {
++  async flushAndClose(forceClose) {
++ if (forceClose) this.forceClosed.resolve();
+-    try {
++    try {
+@@ -34975,3 +35034,4 @@ var VideoEncoderWrapper = class {
+-      if (this.customEncoder) {
++      if (this.customEncoder) {
+-        await this.customEncoderCallSerializer.call(() => this.customEncoder.close()).catch((error) => this.setError(error));
++        if (!forceClose) await this.customEncoderCallSerializer.currentPromise.catch(() => undefined);
++ await Promise.resolve(this.customEncoder.close()).catch((error) => this.setError(error));
+-      } else if (this.encoder) {
++      } else if (this.encoder) {
+@@ -35593,2 +35653,3 @@ var AudioEncoderWrapper = class {
+-    this.closed = false;
++    this.closed = false;
++ this.forceClosed = promiseWithResolvers();
+-  }
++  }
+@@ -35753,3 +35814,3 @@ var AudioEncoderWrapper = class {
+-        if (this.encoder.encodeQueueSize >= 4) {
++        if (this.encoder.encodeQueueSize >= 4) {
+-          await new Promise((resolve) => this.encoder.addEventListener("dequeue", resolve, { once: true }));
++          await Promise.race([this.forceClosed.promise, new Promise((resolve) => this.encoder.addEventListener("dequeue", resolve, { once: true }))]);
+-        }
++        }
+@@ -35910,2 +35971,3 @@ var AudioEncoderWrapper = class {
+-      this.encoderInitialized = true;
++      this.encoderInitialized = true;
++ if (this.closed) { await this.flushAndClose(true); throw new Error('Encoder closed during initialization.'); }
+-    })();
++    })();
+@@ -36008,2 +36070,3 @@ var AudioEncoderWrapper = class {
+-  async flushAndClose(forceClose) {
++  async flushAndClose(forceClose) {
++ if (forceClose) this.forceClosed.resolve();
+-    try {
++    try {
+@@ -36027,3 +36090,4 @@ var AudioEncoderWrapper = class {
+-      if (this.customEncoder) {
++      if (this.customEncoder) {
+-        await this.customEncoderCallSerializer.call(() => this.customEncoder.close()).catch((error) => this.setError(error));
++        if (!forceClose) await this.customEncoderCallSerializer.currentPromise.catch(() => undefined);
++ await Promise.resolve(this.customEncoder.close()).catch((error) => this.setError(error));
+-      } else if (this.encoder && this.encoder.state !== "closed") {
++      } else if (this.encoder && this.encoder.state !== "closed") {
+@@ -37794,3 +37858,4 @@ var MkvOutputFormat2 = class extends OutputFormat {
+-    }
++    }
+-    if (options.appendOnly !== void 0 && typeof options.appendOnly !== "boolean") {
++    if (options.getTrackPresentationEnd !== undefined && typeof options.getTrackPresentationEnd !== 'function') throw new TypeError('getTrackPresentationEnd requires a function.');
++        if (options.appendOnly !== void 0 && typeof options.appendOnly !== "boolean") {
+-      throw new TypeError("options.appendOnly, when provided, must be a boolean.");
++      throw new TypeError("options.appendOnly, when provided, must be a boolean.");
+@@ -38805,3 +38870,3 @@ var Output = class extends EventEmitter {
+-      return this._cancelPromise;
++      return this._cancelPromise;
+-    } else if (this.state === "finalizing" || this.state === "finalized") {
++    } else if (this.state === "finalized") {
+-      if (this.state === "finalized") {
++      if (this.state === "finalized") {
+@@ -38813,7 +38878,8 @@ var Output = class extends EventEmitter {
+-      this.state = "canceled";
++      this.state = "canceled";
++            await Promise.all(this.tracks.map(track => track.source._flushOrWaitForOngoingClose(true)));
++
+-      const release = await this._mutex.acquire();
++      const release = await this._mutex.acquire();
+-      try {
++      try {
+-        const promises = this.tracks.map((x) => x.source._flushOrWaitForOngoingClose(true));
+-        await Promise.all(promises);
+-        await Promise.all([...this._unfinalizedTargets].map((target) => target._close()));
++
++        await Promise.all([...this._unfinalizedTargets].map(target => target._close().catch(() => undefined)));
+-        this._unfinalizedTargets.clear();
++        this._unfinalizedTargets.clear();
+@@ -38845,3 +38911,4 @@ var Output = class extends EventEmitter {
+-        await Promise.all(promises);
++        await Promise.all(promises);
+-        await this._muxer.finalize();
++        if (this.state === 'canceled') throw new Error('Output canceled during finalization.');
++ await this._muxer.finalize();
+-        if (this._rootWriterPromise) {
++        if (this._rootWriterPromise) {
+@@ -38856,3 +38923,4 @@ var Output = class extends EventEmitter {
+-        }
++        }
+-        this.state = "finalized";
++        if (this.state === "canceled") throw new Error("Output canceled during finalization.");
++this.state = "finalized";
+-      } finally {
++      } finally {
+diff --git a/dist/bundles/mediabunny.node.cjs b/dist/bundles/mediabunny.node.cjs
+index 3150034..667b1c6 100644
+--- a/dist/bundles/mediabunny.node.cjs
++++ b/dist/bundles/mediabunny.node.cjs
+@@ -8421,2 +8421,7 @@ var Mediabunny = (() => {
+-      const track = this.internalTrack;
++      const track = this.internalTrack;
++        // tkhd describes the presented interval; mdhd includes coded priming and padding.
++        if (track.durationInMovieTimescale > 0 && track.demuxer.movieTimescale > 0) {
++            return track.durationInMovieTimescale / track.demuxer.movieTimescale;
++        }
++
+-      if (track.durationInMediaTimescale <= 0) {
++      if (track.durationInMediaTimescale <= 0) {
+@@ -22997,3 +23002,3 @@ var Mediabunny = (() => {
+-      width = 1280,
++      width = 1280,
+-      height = 720,
++      height = 720, frameRate,
+-      quality,
++      quality,
+@@ -23021,3 +23026,4 @@ var Mediabunny = (() => {
+-    }
++    }
+-    validateVideoEncodingAdditionalOptions(codec, restOptions);
++    if (frameRate !== void 0 && (!Number.isFinite(frameRate) || frameRate <= 0)) throw new TypeError("frameRate must be a finite positive number.");
++validateVideoEncodingAdditionalOptions(codec, restOptions);
+-    const resolvedQuality = resolveQuality(quality, bitrate) ?? new Quality("medium");
++    const resolvedQuality = resolveQuality(quality, bitrate) ?? new Quality("medium");
+@@ -23030,3 +23036,3 @@ var Mediabunny = (() => {
+-        quality: resolvedQuality,
++        quality: resolvedQuality,
+-        framerate: void 0,
++        framerate: frameRate,
+-        ...restOptions,
++        ...restOptions,
+@@ -28597,2 +28603,17 @@ var Mediabunny = (() => {
+-  var moov = (muxer) => {
++  var moov = (muxer) => {
++    if (muxer.formatOptions.getTrackPresentationWindow) {
++        if (muxer.formatOptions.fastStart !== false) throw new Error('Presentation windows require fastStart: false.');
++        for (const trackData of muxer.trackDatas) {
++            const window = muxer.formatOptions.getTrackPresentationWindow(trackData.track);
++            if (window !== undefined) {
++                if (!Number.isFinite(window.start) || window.start < 0 ||
++                    !Number.isFinite(window.duration) || window.duration <= 0 ||
++                    window.start + window.duration > presentationSpan(trackData) + 1 / trackData.timescale) {
++                    throw new Error('Presentation window must lie inside the coded media interval.');
++                }
++                trackData.presentationWindow = { ...window };
++            }
++        }
++    }
++
+-    return box("moov", void 0, [
++    return box("moov", void 0, [
+@@ -28607,3 +28628,3 @@ var Mediabunny = (() => {
+-      0,
++      0,
+-      ...trackDatas.map((trackData) => intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE) + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE))
++      ...trackDatas.map((trackData) => (trackData.presentationWindow ? intoTimescale(trackData.presentationWindow.duration, GLOBAL_TIMESCALE) : intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE) + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE)))
+-    );
++    );
+@@ -28657,3 +28678,3 @@ var Mediabunny = (() => {
+-    const trackMetadata = getTrackMetadata(trackData);
++    const trackMetadata = getTrackMetadata(trackData);
+-    const needsEditList = trackData.startTimestampOffset !== null && trackData.startTimestampOffset > 0;
++    const needsEditList = trackData.presentationWindow !== undefined || (trackData.startTimestampOffset !== null && trackData.startTimestampOffset > 0);
+-    return box("trak", void 0, [
++    return box("trak", void 0, [
+@@ -28671,3 +28692,3 @@ var Mediabunny = (() => {
+-  var tkhd = (trackData, creationTime) => {
++  var tkhd = (trackData, creationTime) => {
+-    const durationInGlobalTimescale = intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE) + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE);
++    const durationInGlobalTimescale = (trackData.presentationWindow ? intoTimescale(trackData.presentationWindow.duration, GLOBAL_TIMESCALE) : intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE) + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE));
+-    const needsU64 = !isU32(creationTime) || !isU32(durationInGlobalTimescale);
++    const needsU64 = !isU32(creationTime) || !isU32(durationInGlobalTimescale);
+@@ -28716,2 +28737,10 @@ var Mediabunny = (() => {
+-  var edts = (trackData, offset) => {
++  var edts = (trackData, offset) => {
++    if (trackData.presentationWindow) {
++        const duration = intoTimescale(trackData.presentationWindow.duration, GLOBAL_TIMESCALE);
++        const mediaTime = intoTimescale(trackData.presentationWindow.start, trackData.timescale);
++        return box('edts', undefined, [fullBox('elst', 1, 0, [
++            ...u32(1), ...u64(duration), ...i64(mediaTime), ...fixed_16_16(1),
++        ])]);
++    }
++
+-    const startOffset = intoTimescale(offset, GLOBAL_TIMESCALE);
++    const startOffset = intoTimescale(offset, GLOBAL_TIMESCALE);
+@@ -30521,3 +30550,5 @@ var Mediabunny = (() => {
+-    async _close() {
++    async _close() {
+-      return this._streamWriter?.close();
++      const writer = this._streamWriter;
++        this._streamWriter = null;
++        try { await writer?.close(); } finally { writer?.releaseLock(); }
+-    }
++    }
+@@ -30709,3 +30740,3 @@ var Mediabunny = (() => {
+-  // src/isobmff/isobmff-muxer.ts
++  // src/isobmff/isobmff-muxer.ts
+-  var GLOBAL_TIMESCALE = 57600;
++  var GLOBAL_TIMESCALE = 28224000;
+-  var TIMESTAMP_OFFSET = 2082844800;
++  var TIMESTAMP_OFFSET = 2082844800;
+@@ -31976,6 +32007,12 @@ var Mediabunny = (() => {
+-            const header = parseOpusIdentificationHeader(bytes2);
++            const header = parseOpusIdentificationHeader(bytes2);
+-            seekPreRollNs = Math.round(1e9 * (header.preSkip / OPUS_SAMPLE_RATE));
++            trackData.codecDelaySeconds = header.preSkip / OPUS_SAMPLE_RATE;
+-          }
++          }
+-        }
++        }
+-        tracksElement.data.push({ id: 174 /* TrackEntry */, data: [
++        const presentationEnd = this.format._options.getTrackPresentationEnd?.(trackData.track);
++            if (presentationEnd !== undefined) {
++                if (trackData.type !== 'audio' || trackData.track.source._codec !== 'opus' || !Number.isFinite(presentationEnd) || presentationEnd <= 0) throw new Error('Presentation end requires a positive finite Opus track interval.');
++                if (trackData.codecDelaySeconds === undefined) throw new Error('Opus presentation requires an identification header with pre-skip.');
++                trackData.presentationEnd = presentationEnd;
++            }
++            tracksElement.data.push({ id: 174 /* TrackEntry */, data: [
+-          { id: 215 /* TrackNumber */, data: trackData.track.id },
++          { id: 215 /* TrackNumber */, data: trackData.track.id },
+@@ -31993,3 +32030,3 @@ var Mediabunny = (() => {
+-          trackData.codecPrivate ? { id: 25506 /* CodecPrivate */, data: toUint8Array(trackData.codecPrivate) } : null,
++          trackData.codecPrivate ? { id: 25506 /* CodecPrivate */, data: toUint8Array(trackData.codecPrivate) } : null,
+-          { id: 22186 /* CodecDelay */, data: 0 },
++          { id: 22186 /* CodecDelay */, data: Math.round(1e9 * (trackData.codecDelaySeconds ?? 0)) },
+-          { id: 22203 /* SeekPreRoll */, data: seekPreRollNs },
++          { id: 22203 /* SeekPreRoll */, data: seekPreRollNs },
+@@ -32614,3 +32651,11 @@ ${cue.notes ?? ""}`;
+-      }
++      }
+-      const msTimestamp = Math.round(1e3 * chunk.timestamp);
++      const codecDelay = trackData.codecDelaySeconds ?? 0;
++        const presentationStart = chunk.timestamp - codecDelay;
++        const codedEnd = presentationStart + chunk.duration;
++        trackData.codedEnd = Math.max(trackData.codedEnd ?? 0, codedEnd);
++        const requestedEnd = trackData.presentationEnd;
++        if (requestedEnd !== undefined && presentationStart >= requestedEnd) throw new Error('Opus packet lies beyond the requested presentation interval.');
++        const discardPaddingNs = requestedEnd === undefined ? 0 : Math.max(0, Math.round(1e9 * (codedEnd - requestedEnd)));
++        const presentationEnd = Math.min(codedEnd, requestedEnd ?? Infinity);
++        const msTimestamp = Math.round(1e3 * chunk.timestamp);
+-      const keyFrameQueuedEverywhere = this.trackDatas.every((otherTrackData) => {
++      const keyFrameQueuedEverywhere = this.trackDatas.every((otherTrackData) => {
+@@ -32646,3 +32691,3 @@ ${cue.notes ?? ""}`;
+-      const msDuration = Math.round(1e3 * chunk.duration);
++      const msDuration = Math.round(1e3 * chunk.duration);
+-      const needsBlockGroup = !!chunk.additions || trackData.type === "subtitle";
++      const needsBlockGroup = discardPaddingNs > 0 || !!chunk.additions || trackData.type === "subtitle";
+-      if (!needsBlockGroup) {
++      if (!needsBlockGroup) {
+@@ -32656,2 +32701,3 @@ ${cue.notes ?? ""}`;
+-        const blockGroup = { id: 160 /* BlockGroup */, data: [
++        const blockGroup = { id: 160 /* BlockGroup */, data: [
++                discardPaddingNs > 0 ? { id: 0x75a2 /* DiscardPadding */, data: new EBMLSignedInt(discardPaddingNs) } : null,
+-          { id: 161 /* Block */, data: [
++          { id: 161 /* Block */, data: [
+@@ -32675,4 +32721,4 @@ ${cue.notes ?? ""}`;
+-      }
++      }
+-      this.startTimestamp = Math.min(this.startTimestamp, msTimestamp);
+-      this.endTimestamp = Math.max(this.endTimestamp, msTimestamp + msDuration);
++      this.startTimestamp = Math.min(this.startTimestamp, Math.max(0, 1000 * presentationStart));
++      this.endTimestamp = Math.max(this.endTimestamp, 1000 * presentationEnd);
+-      trackData.lastWrittenMsTimestamp = msTimestamp;
++      trackData.lastWrittenMsTimestamp = msTimestamp;
+@@ -32766,2 +32812,5 @@ ${cue.notes ?? ""}`;
+-      await this.interleaveChunks(true);
++      await this.interleaveChunks(true);
++        for (const trackData of this.trackDatas) {
++            if (trackData.presentationEnd !== undefined && (trackData.codedEnd ?? 0) + 1 / OPUS_SAMPLE_RATE < trackData.presentationEnd) throw new Error('Opus coded media does not cover the requested presentation interval.');
++        }
+-      if (this.currentCluster) {
++      if (this.currentCluster) {
+@@ -34543,2 +34592,9 @@ ${cue.notes ?? ""}`;
+-    async _flushOrWaitForOngoingClose(forceClose) {
++    async _flushOrWaitForOngoingClose(forceClose) {
++        if (forceClose) {
++            await this._flushAndClose(true);
++            this._closed = true;
++            await this._closingPromise?.catch(() => undefined);
++            return;
++        }
++
+-      return this._closingPromise ??= (async () => {
++      return this._closingPromise ??= (async () => {
+@@ -34638,2 +34694,3 @@ ${cue.notes ?? ""}`;
+-      this.closed = false;
++      this.closed = false;
++ this.forceClosed = promiseWithResolvers();
+-    }
++    }
+@@ -35107,2 +35164,3 @@ ${cue.notes ?? ""}`;
+-        this.encoderInitialized = true;
++        this.encoderInitialized = true;
++ if (this.closed) { await this.flushAndClose(true); throw new Error('Encoder closed during initialization.'); }
+-      })();
++      })();
+@@ -35110,2 +35168,3 @@ ${cue.notes ?? ""}`;
+-    async flushAndClose(forceClose) {
++    async flushAndClose(forceClose) {
++ if (forceClose) this.forceClosed.resolve();
+-      try {
++      try {
+@@ -35134,3 +35193,4 @@ ${cue.notes ?? ""}`;
+-        if (this.customEncoder) {
++        if (this.customEncoder) {
+-          await this.customEncoderCallSerializer.call(() => this.customEncoder.close()).catch((error) => this.setError(error));
++          if (!forceClose) await this.customEncoderCallSerializer.currentPromise.catch(() => undefined);
++ await Promise.resolve(this.customEncoder.close()).catch((error) => this.setError(error));
+-        } else if (this.encoder) {
++        } else if (this.encoder) {
+@@ -35752,2 +35812,3 @@ ${cue.notes ?? ""}`;
+-      this.closed = false;
++      this.closed = false;
++ this.forceClosed = promiseWithResolvers();
+-    }
++    }
+@@ -35912,3 +35973,3 @@ ${cue.notes ?? ""}`;
+-          if (this.encoder.encodeQueueSize >= 4) {
++          if (this.encoder.encodeQueueSize >= 4) {
+-            await new Promise((resolve) => this.encoder.addEventListener("dequeue", resolve, { once: true }));
++            await Promise.race([this.forceClosed.promise, new Promise((resolve) => this.encoder.addEventListener("dequeue", resolve, { once: true }))]);
+-          }
++          }
+@@ -36069,2 +36130,3 @@ ${cue.notes ?? ""}`;
+-        this.encoderInitialized = true;
++        this.encoderInitialized = true;
++ if (this.closed) { await this.flushAndClose(true); throw new Error('Encoder closed during initialization.'); }
+-      })();
++      })();
+@@ -36167,2 +36229,3 @@ ${cue.notes ?? ""}`;
+-    async flushAndClose(forceClose) {
++    async flushAndClose(forceClose) {
++ if (forceClose) this.forceClosed.resolve();
+-      try {
++      try {
+@@ -36186,3 +36249,4 @@ ${cue.notes ?? ""}`;
+-        if (this.customEncoder) {
++        if (this.customEncoder) {
+-          await this.customEncoderCallSerializer.call(() => this.customEncoder.close()).catch((error) => this.setError(error));
++          if (!forceClose) await this.customEncoderCallSerializer.currentPromise.catch(() => undefined);
++ await Promise.resolve(this.customEncoder.close()).catch((error) => this.setError(error));
+-        } else if (this.encoder && this.encoder.state !== "closed") {
++        } else if (this.encoder && this.encoder.state !== "closed") {
+@@ -37953,3 +38017,4 @@ ${cue.notes ?? ""}`;
+-      }
++      }
+-      if (options.appendOnly !== void 0 && typeof options.appendOnly !== "boolean") {
++      if (options.getTrackPresentationEnd !== undefined && typeof options.getTrackPresentationEnd !== 'function') throw new TypeError('getTrackPresentationEnd requires a function.');
++        if (options.appendOnly !== void 0 && typeof options.appendOnly !== "boolean") {
+-        throw new TypeError("options.appendOnly, when provided, must be a boolean.");
++        throw new TypeError("options.appendOnly, when provided, must be a boolean.");
+@@ -38964,3 +39029,3 @@ ${cue.notes ?? ""}`;
+-        return this._cancelPromise;
++        return this._cancelPromise;
+-      } else if (this.state === "finalizing" || this.state === "finalized") {
++      } else if (this.state === "finalized") {
+-        if (this.state === "finalized") {
++        if (this.state === "finalized") {
+@@ -38972,7 +39037,8 @@ ${cue.notes ?? ""}`;
+-        this.state = "canceled";
++        this.state = "canceled";
++            await Promise.all(this.tracks.map(track => track.source._flushOrWaitForOngoingClose(true)));
++
+-        const release = await this._mutex.acquire();
++        const release = await this._mutex.acquire();
+-        try {
++        try {
+-          const promises = this.tracks.map((x) => x.source._flushOrWaitForOngoingClose(true));
+-          await Promise.all(promises);
+-          await Promise.all([...this._unfinalizedTargets].map((target) => target._close()));
++
++          await Promise.all([...this._unfinalizedTargets].map(target => target._close().catch(() => undefined)));
+-          this._unfinalizedTargets.clear();
++          this._unfinalizedTargets.clear();
+@@ -39004,3 +39070,4 @@ ${cue.notes ?? ""}`;
+-          await Promise.all(promises);
++          await Promise.all(promises);
+-          await this._muxer.finalize();
++          if (this.state === 'canceled') throw new Error('Output canceled during finalization.');
++ await this._muxer.finalize();
+-          if (this._rootWriterPromise) {
++          if (this._rootWriterPromise) {
+@@ -39015,3 +39082,4 @@ ${cue.notes ?? ""}`;
+-          }
++          }
+-          this.state = "finalized";
++          if (this.state === "canceled") throw new Error("Output canceled during finalization.");
++this.state = "finalized";
+-        } finally {
++        } finally {
+diff --git a/dist/mediabunny.d.ts b/dist/mediabunny.d.ts
+index f0667c1..eaeb4fb 100644
+--- a/dist/mediabunny.d.ts
++++ b/dist/mediabunny.d.ts
+@@ -719,2 +719,3 @@ export declare const canEncodeVideo: (codec: VideoCodec, options?: {
+-    height?: number;
++    height?: number;
++    frameRate?: number;
+-    quality?: Quality;
++    quality?: Quality;
+@@ -2857,2 +2858,7 @@ export declare abstract class IsobmffOutputFormat extends OutputFormat {
+-export declare type IsobmffOutputFormatOptions = {
++export declare type IsobmffOutputFormatOptions = {
++    /** Finalized track presentation interval in coded-media seconds. Requires fastStart: false.
++     * Keeps decoder priming packets while an edit list selects the intended presentation.
++     * Called exactly once per track when final metadata is written. */
++    getTrackPresentationWindow?: (track: OutputTrack) => { start: number; duration: number } | undefined;
++
+-    /**
++    /**
+@@ -3248,2 +3254,4 @@ export declare class MkvOutputFormat extends OutputFormat {
+-export declare type MkvOutputFormatOptions = {
++export declare type MkvOutputFormatOptions = {
++    /** Exact presentation end for an Opus track, in seconds from output origin. */
++    getTrackPresentationEnd?: (track: OutputTrack) => number | undefined;
+-    /**
++    /**
+diff --git a/dist/modules/src/encode.d.ts b/dist/modules/src/encode.d.ts
+index e639db5..b5ce374 100644
+--- a/dist/modules/src/encode.d.ts
++++ b/dist/modules/src/encode.d.ts
+@@ -411,2 +411,3 @@ export declare const canEncodeVideo: (codec: VideoCodec, options?: {
+-    height?: number;
++    height?: number;
++    frameRate?: number;
+-    quality?: Quality;
++    quality?: Quality;
+diff --git a/dist/modules/src/encode.js b/dist/modules/src/encode.js
+index 3e35806..b899768 100644
+--- a/dist/modules/src/encode.js
++++ b/dist/modules/src/encode.js
+@@ -530,3 +530,3 @@ export const canEncodeVideo = async (codec, options = {}) => {
+-    // eslint-disable-next-line @typescript-eslint/no-deprecated
++    // eslint-disable-next-line @typescript-eslint/no-deprecated
+-    bitrate, ...restOptions } = options;
++    bitrate, frameRate, ...restOptions } = options;
+-    if (!VIDEO_CODECS.includes(codec)) {
++    if (!VIDEO_CODECS.includes(codec)) {
+@@ -549,3 +549,4 @@ export const canEncodeVideo = async (codec, options = {}) => {
+-    }
++    }
+-    validateVideoEncodingAdditionalOptions(codec, restOptions);
++    if (frameRate !== undefined && (!Number.isFinite(frameRate) || frameRate <= 0)) throw new TypeError("frameRate must be a finite positive number.");
++validateVideoEncodingAdditionalOptions(codec, restOptions);
+-    const resolvedQuality = resolveQuality(quality, bitrate) ?? new Quality('medium');
++    const resolvedQuality = resolveQuality(quality, bitrate) ?? new Quality('medium');
+@@ -558,3 +559,3 @@ export const canEncodeVideo = async (codec, options = {}) => {
+-            quality: resolvedQuality,
++            quality: resolvedQuality,
+-            framerate: undefined,
++            framerate: frameRate,
+-            ...restOptions,
++            ...restOptions,
+diff --git a/dist/modules/src/isobmff/isobmff-boxes.js b/dist/modules/src/isobmff/isobmff-boxes.js
+index 0543400..65d914b 100644
+--- a/dist/modules/src/isobmff/isobmff-boxes.js
++++ b/dist/modules/src/isobmff/isobmff-boxes.js
+@@ -286,2 +286,17 @@ export const free = (size) => ({ type: 'free', size });
+-export const moov = (muxer) => {
++export const moov = (muxer) => {
++    if (muxer.formatOptions.getTrackPresentationWindow) {
++        if (muxer.formatOptions.fastStart !== false) throw new Error('Presentation windows require fastStart: false.');
++        for (const trackData of muxer.trackDatas) {
++            const window = muxer.formatOptions.getTrackPresentationWindow(trackData.track);
++            if (window !== undefined) {
++                if (!Number.isFinite(window.start) || window.start < 0 ||
++                    !Number.isFinite(window.duration) || window.duration <= 0 ||
++                    window.start + window.duration > presentationSpan(trackData) + 1 / trackData.timescale) {
++                    throw new Error('Presentation window must lie inside the coded media interval.');
++                }
++                trackData.presentationWindow = { ...window };
++            }
++        }
++    }
++
+-    return box('moov', undefined, [
++    return box('moov', undefined, [
+@@ -296,4 +311,3 @@ export const mvhd = (creationTime, trackDatas) => {
+-    const duration = Math.max(0, ...trackDatas
++    const duration = Math.max(0, ...trackDatas
+-        .map(trackData => (intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE)
+-        + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE))));
++        .map(trackData => ((trackData.presentationWindow ? intoTimescale(trackData.presentationWindow.duration, GLOBAL_TIMESCALE) : intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE) + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE)))));
+-    const nextTrackId = Math.max(0, ...trackDatas.map(x => x.track.id)) + 1;
++    const nextTrackId = Math.max(0, ...trackDatas.map(x => x.track.id)) + 1;
+@@ -342,3 +356,3 @@ export const trak = (trackData, creationTime) => {
+-    const trackMetadata = getTrackMetadata(trackData);
++    const trackMetadata = getTrackMetadata(trackData);
+-    const needsEditList = trackData.startTimestampOffset !== null && trackData.startTimestampOffset > 0;
++    const needsEditList = trackData.presentationWindow !== undefined || (trackData.startTimestampOffset !== null && trackData.startTimestampOffset > 0);
+-    return box('trak', undefined, [
++    return box('trak', undefined, [
+@@ -358,4 +372,3 @@ export const trak = (trackData, creationTime) => {
+-export const tkhd = (trackData, creationTime) => {
++export const tkhd = (trackData, creationTime) => {
+-    const durationInGlobalTimescale = intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE)
+-        + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE);
++    const durationInGlobalTimescale = (trackData.presentationWindow ? intoTimescale(trackData.presentationWindow.duration, GLOBAL_TIMESCALE) : intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE) + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE));
+-    const needsU64 = !isU32(creationTime) || !isU32(durationInGlobalTimescale);
++    const needsU64 = !isU32(creationTime) || !isU32(durationInGlobalTimescale);
+@@ -402,2 +415,10 @@ export const tkhd = (trackData, creationTime) => {
+-export const edts = (trackData, offset) => {
++export const edts = (trackData, offset) => {
++    if (trackData.presentationWindow) {
++        const duration = intoTimescale(trackData.presentationWindow.duration, GLOBAL_TIMESCALE);
++        const mediaTime = intoTimescale(trackData.presentationWindow.start, trackData.timescale);
++        return box('edts', undefined, [fullBox('elst', 1, 0, [
++            ...u32(1), ...u64(duration), ...i64(mediaTime), ...fixed_16_16(1),
++        ])]);
++    }
++
+-    const startOffset = intoTimescale(offset, GLOBAL_TIMESCALE);
++    const startOffset = intoTimescale(offset, GLOBAL_TIMESCALE);
+diff --git a/dist/modules/src/isobmff/isobmff-demuxer.js b/dist/modules/src/isobmff/isobmff-demuxer.js
+index 03c4563..306821a 100644
+--- a/dist/modules/src/isobmff/isobmff-demuxer.js
++++ b/dist/modules/src/isobmff/isobmff-demuxer.js
+@@ -2451,2 +2451,7 @@ class IsobmffTrackBacking {
+-        const track = this.internalTrack;
++        const track = this.internalTrack;
++        // tkhd describes the presented interval; mdhd includes coded priming and padding.
++        if (track.durationInMovieTimescale > 0 && track.demuxer.movieTimescale > 0) {
++            return track.durationInMovieTimescale / track.demuxer.movieTimescale;
++        }
++
+-        if (track.durationInMediaTimescale <= 0) {
++        if (track.durationInMediaTimescale <= 0) {
+diff --git a/dist/modules/src/isobmff/isobmff-muxer.js b/dist/modules/src/isobmff/isobmff-muxer.js
+index abadfb0..8372ef7 100644
+--- a/dist/modules/src/isobmff/isobmff-muxer.js
++++ b/dist/modules/src/isobmff/isobmff-muxer.js
+@@ -21,3 +21,3 @@ import { buildIsobmffMimeType } from './isobmff-misc.js';
+-import { MAX_BOX_HEADER_SIZE, MIN_BOX_HEADER_SIZE } from './isobmff-reader.js';
++import { MAX_BOX_HEADER_SIZE, MIN_BOX_HEADER_SIZE } from './isobmff-reader.js';
+-export const GLOBAL_TIMESCALE = 57600; // LCM of a bunch of common frame rates (24, 25, 30, 60, 144, ...)
++export const GLOBAL_TIMESCALE = 28224000; // LCM of common video frame rates and every supported AAC sample rate; sample-exact edits.
+-const TIMESTAMP_OFFSET = 2_082_844_800; // Seconds between Jan 1 1904 and Jan 1 1970
++const TIMESTAMP_OFFSET = 2_082_844_800; // Seconds between Jan 1 1904 and Jan 1 1970
+diff --git a/dist/modules/src/matroska/matroska-muxer.js b/dist/modules/src/matroska/matroska-muxer.js
+index 03d478f..3d8205d 100644
+--- a/dist/modules/src/matroska/matroska-muxer.js
++++ b/dist/modules/src/matroska/matroska-muxer.js
+@@ -193,5 +193,11 @@ export class MatroskaMuxer extends Muxer {
+-                    // Use the preSkip value from the header
++                    // Use the preSkip value from the header
+-                    seekPreRollNs = Math.round(1e9 * (header.preSkip / OPUS_SAMPLE_RATE));
++                    trackData.codecDelaySeconds = header.preSkip / OPUS_SAMPLE_RATE;
+-                }
++                }
+-            }
++            }
++            const presentationEnd = this.format._options.getTrackPresentationEnd?.(trackData.track);
++            if (presentationEnd !== undefined) {
++                if (trackData.type !== 'audio' || trackData.track.source._codec !== 'opus' || !Number.isFinite(presentationEnd) || presentationEnd <= 0) throw new Error('Presentation end requires a positive finite Opus track interval.');
++                if (trackData.codecDelaySeconds === undefined) throw new Error('Opus presentation requires an identification header with pre-skip.');
++                trackData.presentationEnd = presentationEnd;
++            }
+-            tracksElement.data.push({ id: EBMLId.TrackEntry, data: [
++            tracksElement.data.push({ id: EBMLId.TrackEntry, data: [
+@@ -224,3 +230,3 @@ export class MatroskaMuxer extends Muxer {
+-                        : null,
++                        : null,
+-                    { id: EBMLId.CodecDelay, data: 0 },
++                    { id: EBMLId.CodecDelay, data: Math.round(1e9 * (trackData.codecDelaySeconds ?? 0)) },
+-                    { id: EBMLId.SeekPreRoll, data: seekPreRollNs },
++                    { id: EBMLId.SeekPreRoll, data: seekPreRollNs },
+@@ -895,2 +901,10 @@ export class MatroskaMuxer extends Muxer {
+-        }
++        }
++        const codecDelay = trackData.codecDelaySeconds ?? 0;
++        const presentationStart = chunk.timestamp - codecDelay;
++        const codedEnd = presentationStart + chunk.duration;
++        trackData.codedEnd = Math.max(trackData.codedEnd ?? 0, codedEnd);
++        const requestedEnd = trackData.presentationEnd;
++        if (requestedEnd !== undefined && presentationStart >= requestedEnd) throw new Error('Opus packet lies beyond the requested presentation interval.');
++        const discardPaddingNs = requestedEnd === undefined ? 0 : Math.max(0, Math.round(1e9 * (codedEnd - requestedEnd)));
++        const presentationEnd = Math.min(codedEnd, requestedEnd ?? Infinity);
+-        const msTimestamp = Math.round(1000 * chunk.timestamp);
++        const msTimestamp = Math.round(1000 * chunk.timestamp);
+@@ -942,3 +956,3 @@ export class MatroskaMuxer extends Muxer {
+-        // Subtitle cues need an explicit BlockDuration (a SimpleBlock has none)
++        // Subtitle cues need an explicit BlockDuration (a SimpleBlock has none)
+-        const needsBlockGroup = !!chunk.additions || trackData.type === 'subtitle';
++        const needsBlockGroup = discardPaddingNs > 0 || !!chunk.additions || trackData.type === 'subtitle';
+-        if (!needsBlockGroup) {
++        if (!needsBlockGroup) {
+@@ -954,2 +968,3 @@ export class MatroskaMuxer extends Muxer {
+-            const blockGroup = { id: EBMLId.BlockGroup, data: [
++            const blockGroup = { id: EBMLId.BlockGroup, data: [
++                discardPaddingNs > 0 ? { id: 0x75a2 /* DiscardPadding */, data: new EBMLSignedInt(discardPaddingNs) } : null,
+-                    { id: EBMLId.Block, data: [
++                    { id: EBMLId.Block, data: [
+@@ -976,4 +991,4 @@ export class MatroskaMuxer extends Muxer {
+-        }
++        }
+-        this.startTimestamp = Math.min(this.startTimestamp, msTimestamp);
+-        this.endTimestamp = Math.max(this.endTimestamp, msTimestamp + msDuration);
++        this.startTimestamp = Math.min(this.startTimestamp, Math.max(0, 1000 * presentationStart));
++        this.endTimestamp = Math.max(this.endTimestamp, 1000 * presentationEnd);
+-        trackData.lastWrittenMsTimestamp = msTimestamp;
++        trackData.lastWrittenMsTimestamp = msTimestamp;
+@@ -1072,2 +1087,5 @@ export class MatroskaMuxer extends Muxer {
+-        await this.interleaveChunks(true);
++        await this.interleaveChunks(true);
++        for (const trackData of this.trackDatas) {
++            if (trackData.presentationEnd !== undefined && (trackData.codedEnd ?? 0) + 1 / OPUS_SAMPLE_RATE < trackData.presentationEnd) throw new Error('Opus coded media does not cover the requested presentation interval.');
++        }
+-        if (this.currentCluster) {
++        if (this.currentCluster) {
+diff --git a/dist/modules/src/media-source.js b/dist/modules/src/media-source.js
+index e6c3b19..fa120c9 100644
+--- a/dist/modules/src/media-source.js
++++ b/dist/modules/src/media-source.js
+@@ -135,2 +135,9 @@ export class MediaSource {
+-    async _flushOrWaitForOngoingClose(forceClose) {
++    async _flushOrWaitForOngoingClose(forceClose) {
++        if (forceClose) {
++            await this._flushAndClose(true);
++            this._closed = true;
++            await this._closingPromise?.catch(() => undefined);
++            return;
++        }
++
+-        return this._closingPromise ??= (async () => {
++        return this._closingPromise ??= (async () => {
+@@ -246,2 +253,3 @@ class VideoEncoderWrapper {
+-        this.closed = false;
++        this.closed = false;
++ this.forceClosed = promiseWithResolvers();
+-    }
++    }
+@@ -537,3 +545,3 @@ class VideoEncoderWrapper {
+-                    if (this.encoder.encodeQueueSize >= 4) {
++                    if (this.encoder.encodeQueueSize >= 4) {
+-                        await new Promise(resolve => this.encoder.addEventListener('dequeue', resolve, { once: true }));
++                        await Promise.race([this.forceClosed.promise, new Promise(resolve => this.encoder.addEventListener('dequeue', resolve, { once: true }))]);
+-                    }
++                    }
+@@ -794,2 +802,3 @@ class VideoEncoderWrapper {
+-            this.encoderInitialized = true;
++            this.encoderInitialized = true;
++ if (this.closed) { await this.flushAndClose(true); throw new Error('Encoder closed during initialization.'); }
+-        })();
++        })();
+@@ -797,2 +806,3 @@ class VideoEncoderWrapper {
+-    async flushAndClose(forceClose) {
++    async flushAndClose(forceClose) {
++ if (forceClose) this.forceClosed.resolve();
+-        try {
++        try {
+@@ -829,4 +839,4 @@ class VideoEncoderWrapper {
+-            if (this.customEncoder) {
++            if (this.customEncoder) {
+-                await this.customEncoderCallSerializer.call(() => this.customEncoder.close())
+-                    .catch((error) => this.setError(error));
++                if (!forceClose) await this.customEncoderCallSerializer.currentPromise.catch(() => undefined);
++ await Promise.resolve(this.customEncoder.close()).catch((error) => this.setError(error));
+-            }
++            }
+@@ -1529,2 +1539,3 @@ class AudioEncoderWrapper {
+-        this.closed = false;
++        this.closed = false;
++ this.forceClosed = promiseWithResolvers();
+-    }
++    }
+@@ -1711,3 +1722,3 @@ class AudioEncoderWrapper {
+-                if (this.encoder.encodeQueueSize >= 4) {
++                if (this.encoder.encodeQueueSize >= 4) {
+-                    await new Promise(resolve => this.encoder.addEventListener('dequeue', resolve, { once: true }));
++                    await Promise.race([this.forceClosed.promise, new Promise(resolve => this.encoder.addEventListener('dequeue', resolve, { once: true }))]);
+-                }
++                }
+@@ -1879,2 +1890,3 @@ class AudioEncoderWrapper {
+-            this.encoderInitialized = true;
++            this.encoderInitialized = true;
++ if (this.closed) { await this.flushAndClose(true); throw new Error('Encoder closed during initialization.'); }
+-        })();
++        })();
+@@ -1981,2 +1993,3 @@ class AudioEncoderWrapper {
+-    async flushAndClose(forceClose) {
++    async flushAndClose(forceClose) {
++ if (forceClose) this.forceClosed.resolve();
+-        try {
++        try {
+@@ -2005,4 +2018,4 @@ class AudioEncoderWrapper {
+-            if (this.customEncoder) {
++            if (this.customEncoder) {
+-                await this.customEncoderCallSerializer.call(() => this.customEncoder.close())
+-                    .catch((error) => this.setError(error));
++                if (!forceClose) await this.customEncoderCallSerializer.currentPromise.catch(() => undefined);
++ await Promise.resolve(this.customEncoder.close()).catch((error) => this.setError(error));
+-            }
++            }
+diff --git a/dist/modules/src/output-format.d.ts b/dist/modules/src/output-format.d.ts
+index e9f76bb..92788ef 100644
+--- a/dist/modules/src/output-format.d.ts
++++ b/dist/modules/src/output-format.d.ts
+@@ -70,2 +70,7 @@ export declare abstract class OutputFormat {
+-export type IsobmffOutputFormatOptions = {
++export type IsobmffOutputFormatOptions = {
++    /** Finalized track presentation interval in coded-media seconds. Requires fastStart: false.
++     * Keeps decoder priming packets while an edit list selects the intended presentation.
++     * Called exactly once per track when final metadata is written. */
++    getTrackPresentationWindow?: (track: OutputTrack) => { start: number; duration: number } | undefined;
++
+-    /**
++    /**
+@@ -213,2 +218,4 @@ export declare class MovOutputFormat extends IsobmffOutputFormat {
+-export type MkvOutputFormatOptions = {
++export type MkvOutputFormatOptions = {
++    /** Exact presentation end for an Opus track, in seconds from output origin. */
++    getTrackPresentationEnd?: (track: OutputTrack) => number | undefined;
+-    /**
++    /**
+diff --git a/dist/modules/src/output-format.js b/dist/modules/src/output-format.js
+index 7d0b220..d1fafc9 100644
+--- a/dist/modules/src/output-format.js
++++ b/dist/modules/src/output-format.js
+@@ -69,3 +69,4 @@ export class IsobmffOutputFormat extends OutputFormat {
+-        }
++        }
+-        if (options.onFtyp !== undefined && typeof options.onFtyp !== 'function') {
++        if (options.getTrackPresentationWindow !== undefined && (typeof options.getTrackPresentationWindow !== 'function' || options.fastStart !== false)) { throw new TypeError('getTrackPresentationWindow requires a function and fastStart: false.'); }
++if (options.onFtyp !== undefined && typeof options.onFtyp !== 'function') {
+-            throw new TypeError('options.onFtyp, when provided, must be a function.');
++            throw new TypeError('options.onFtyp, when provided, must be a function.');
+@@ -247,2 +248,3 @@ export class MkvOutputFormat extends OutputFormat {
+-        }
++        }
++        if (options.getTrackPresentationEnd !== undefined && typeof options.getTrackPresentationEnd !== 'function') throw new TypeError('getTrackPresentationEnd requires a function.');
+-        if (options.appendOnly !== undefined && typeof options.appendOnly !== 'boolean') {
++        if (options.appendOnly !== undefined && typeof options.appendOnly !== 'boolean') {
+diff --git a/dist/modules/src/output.js b/dist/modules/src/output.js
+index 66ca953..f65be75 100644
+--- a/dist/modules/src/output.js
++++ b/dist/modules/src/output.js
+@@ -592,3 +592,3 @@ export class Output extends EventEmitter {
+-        }
++        }
+-        else if (this.state === 'finalizing' || this.state === 'finalized') {
++        else if (this.state === 'finalized') {
+-            // Don't wanna warn when finalizing since that shows a warning when finalization fails and then cancel
++            // Don't wanna warn when finalizing since that shows a warning when finalization fails and then cancel
+@@ -602,7 +602,8 @@ export class Output extends EventEmitter {
+-            this.state = 'canceled';
++            this.state = 'canceled';
++            await Promise.all(this.tracks.map(track => track.source._flushOrWaitForOngoingClose(true)));
++
+-            const release = await this._mutex.acquire();
++            const release = await this._mutex.acquire();
+-            try {
++            try {
+-                const promises = this.tracks.map(x => x.source._flushOrWaitForOngoingClose(true)); // Force close
+-                await Promise.all(promises);
+-                await Promise.all([...this._unfinalizedTargets].map(target => target._close()));
++
++                await Promise.all([...this._unfinalizedTargets].map(target => target._close().catch(() => undefined)));
+-                this._unfinalizedTargets.clear();
++                this._unfinalizedTargets.clear();
+@@ -635,3 +636,4 @@ export class Output extends EventEmitter {
+-                await Promise.all(promises);
++                await Promise.all(promises);
+-                await this._muxer.finalize();
++                if (this.state === 'canceled') throw new Error('Output canceled during finalization.');
++ await this._muxer.finalize();
+-                if (this._rootWriterPromise) {
++                if (this._rootWriterPromise) {
+@@ -646,3 +648,4 @@ export class Output extends EventEmitter {
+-                }
++                }
+-                this.state = 'finalized';
++                if (this.state === 'canceled') throw new Error('Output canceled during finalization.');
++this.state = 'finalized';
+-            }
++            }
+diff --git a/dist/modules/src/target.js b/dist/modules/src/target.js
+index 93fc047..b3abb2f 100644
+--- a/dist/modules/src/target.js
++++ b/dist/modules/src/target.js
+@@ -402,3 +402,5 @@ export class StreamTarget extends Target {
+-    async _close() {
++    async _close() {
+-        return this._streamWriter?.close();
++        const writer = this._streamWriter;
++        this._streamWriter = null;
++        try { await writer?.close(); } finally { writer?.releaseLock(); }
+-    }
++    }
+diff --git a/src/encode.ts b/src/encode.ts
+index a30fd9f..ae9e912 100644
+--- a/src/encode.ts
++++ b/src/encode.ts
+@@ -1040,2 +1040,3 @@ export const canEncodeVideo = async (
+-		height?: number;
++		height?: number;
++		frameRate?: number;
+-		quality?: Quality;
++		quality?: Quality;
+@@ -1048,2 +1049,3 @@ export const canEncodeVideo = async (
+-		height = 720,
++		height = 720,
++		frameRate,
+-		quality,
++		quality,
+@@ -1072,3 +1074,4 @@ export const canEncodeVideo = async (
+-	}
++	}
+-	validateVideoEncodingAdditionalOptions(codec, restOptions);
++	if (frameRate !== undefined && (!Number.isFinite(frameRate) || frameRate <= 0)) throw new TypeError("frameRate must be a finite positive number.");
++validateVideoEncodingAdditionalOptions(codec, restOptions);
+-
++
+@@ -1083,3 +1086,3 @@ export const canEncodeVideo = async (
+-			quality: resolvedQuality,
++			quality: resolvedQuality,
+-			framerate: undefined,
++			framerate: frameRate,
+-			...restOptions,
++			...restOptions,
+diff --git a/src/isobmff/isobmff-boxes.ts b/src/isobmff/isobmff-boxes.ts
+index ae07a7c..a6771d7 100644
+--- a/src/isobmff/isobmff-boxes.ts
++++ b/src/isobmff/isobmff-boxes.ts
+@@ -387,2 +387,17 @@ export const free = (size: number): Box => ({ type: 'free', size });
+-export const moov = (muxer: IsobmffMuxer) => {
++export const moov = (muxer: IsobmffMuxer) => {
++    if (muxer.formatOptions.getTrackPresentationWindow) {
++        if (muxer.formatOptions.fastStart !== false) throw new Error('Presentation windows require fastStart: false.');
++        for (const trackData of muxer.trackDatas) {
++            const window = muxer.formatOptions.getTrackPresentationWindow(trackData.track);
++            if (window !== undefined) {
++                if (!Number.isFinite(window.start) || window.start < 0 ||
++                    !Number.isFinite(window.duration) || window.duration <= 0 ||
++                    window.start + window.duration > presentationSpan(trackData) + 1 / trackData.timescale) {
++                    throw new Error('Presentation window must lie inside the coded media interval.');
++                }
++                trackData.presentationWindow = { ...window };
++            }
++        }
++    }
++
+-	return box('moov', undefined, [
++	return box('moov', undefined, [
+@@ -404,4 +419,3 @@ export const mvhd = (
+-			.map(trackData => (
++			.map(trackData => (
+-				intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE)
+-				+ intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE)
++				(trackData.presentationWindow ? intoTimescale(trackData.presentationWindow.duration, GLOBAL_TIMESCALE) : intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE) + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE))
+-			)),
++			)),
+@@ -461,3 +475,3 @@ export const trak = (trackData: IsobmffTrackData, creationTime: number) => {
+-	const trackMetadata = getTrackMetadata(trackData);
++	const trackMetadata = getTrackMetadata(trackData);
+-	const needsEditList = trackData.startTimestampOffset !== null && trackData.startTimestampOffset > 0;
++	const needsEditList = trackData.presentationWindow !== undefined || (trackData.startTimestampOffset !== null && trackData.startTimestampOffset > 0);
+-
++
+@@ -482,4 +496,3 @@ export const tkhd = (
+-) => {
++) => {
+-	const durationInGlobalTimescale = intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE)
+-		+ intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE);
++	const durationInGlobalTimescale = (trackData.presentationWindow ? intoTimescale(trackData.presentationWindow.duration, GLOBAL_TIMESCALE) : intoTimescale(presentationSpan(trackData), GLOBAL_TIMESCALE) + intoTimescale(trackData.startTimestampOffset ?? 0, GLOBAL_TIMESCALE));
+-
++
+@@ -531,2 +544,10 @@ export const tkhd = (
+-export const edts = (trackData: IsobmffTrackData, offset: number) => {
++export const edts = (trackData: IsobmffTrackData, offset: number) => {
++    if (trackData.presentationWindow) {
++        const duration = intoTimescale(trackData.presentationWindow.duration, GLOBAL_TIMESCALE);
++        const mediaTime = intoTimescale(trackData.presentationWindow.start, trackData.timescale);
++        return box('edts', undefined, [fullBox('elst', 1, 0, [
++            ...u32(1), ...u64(duration), ...i64(mediaTime), ...fixed_16_16(1),
++        ])]);
++    }
++
+-	const startOffset = intoTimescale(offset, GLOBAL_TIMESCALE);
++	const startOffset = intoTimescale(offset, GLOBAL_TIMESCALE);
+diff --git a/src/isobmff/isobmff-demuxer.ts b/src/isobmff/isobmff-demuxer.ts
+index 5fa279a..317689e 100644
+--- a/src/isobmff/isobmff-demuxer.ts
++++ b/src/isobmff/isobmff-demuxer.ts
+@@ -2921,2 +2921,7 @@ abstract class IsobmffTrackBacking implements InputTrackBacking {
+-		const track = this.internalTrack;
++		const track = this.internalTrack;
++        // tkhd describes the presented interval; mdhd includes coded priming and padding.
++        if (track.durationInMovieTimescale > 0 && track.demuxer.movieTimescale > 0) {
++            return track.durationInMovieTimescale / track.demuxer.movieTimescale;
++        }
++
+-		if (track.durationInMediaTimescale <= 0) {
++		if (track.durationInMediaTimescale <= 0) {
+diff --git a/src/isobmff/isobmff-muxer.ts b/src/isobmff/isobmff-muxer.ts
+index 1e3006c..4e2aa4f 100644
+--- a/src/isobmff/isobmff-muxer.ts
++++ b/src/isobmff/isobmff-muxer.ts
+@@ -54,3 +54,3 @@ import { MAX_BOX_HEADER_SIZE, MIN_BOX_HEADER_SIZE } from './isobmff-reader';
+-
++
+-export const GLOBAL_TIMESCALE = 57600; // LCM of a bunch of common frame rates (24, 25, 30, 60, 144, ...)
++export const GLOBAL_TIMESCALE = 28224000; // LCM of common video frame rates and every supported AAC sample rate; sample-exact edits.
+-const TIMESTAMP_OFFSET = 2_082_844_800; // Seconds between Jan 1 1904 and Jan 1 1970
++const TIMESTAMP_OFFSET = 2_082_844_800; // Seconds between Jan 1 1904 and Jan 1 1970
+@@ -80,2 +80,3 @@ type Chunk = {
+-export type IsobmffTrackData = {
++export type IsobmffTrackData = {
++ presentationWindow?: { start: number; duration: number };
+-	muxer: IsobmffMuxer;
++	muxer: IsobmffMuxer;
+diff --git a/src/matroska/matroska-muxer.ts b/src/matroska/matroska-muxer.ts
+index 01b2dde..f44afd2 100644
+--- a/src/matroska/matroska-muxer.ts
++++ b/src/matroska/matroska-muxer.ts
+@@ -87,2 +87,5 @@ type InternalMediaChunk = {
+-type MatroskaTrackData = {
++type MatroskaTrackData = {
++    codecDelaySeconds?: number;
++    presentationEnd?: number;
++    codedEnd?: number;
+-	chunkQueue: InternalMediaChunk[];
++	chunkQueue: InternalMediaChunk[];
+@@ -334,3 +337,3 @@ export class MatroskaMuxer extends Muxer {
+-					// Use the preSkip value from the header
++					// Use the preSkip value from the header
+-					seekPreRollNs = Math.round(1e9 * (header.preSkip / OPUS_SAMPLE_RATE));
++					trackData.codecDelaySeconds = header.preSkip / OPUS_SAMPLE_RATE;
+-				}
++				}
+@@ -338,3 +341,9 @@ export class MatroskaMuxer extends Muxer {
+-
++
+-			tracksElement.data.push({ id: EBMLId.TrackEntry, data: [
++			const presentationEnd = this.format._options.getTrackPresentationEnd?.(trackData.track);
++            if (presentationEnd !== undefined) {
++                if (trackData.type !== 'audio' || trackData.track.source._codec !== 'opus' || !Number.isFinite(presentationEnd) || presentationEnd <= 0) throw new Error('Presentation end requires a positive finite Opus track interval.');
++                if (trackData.codecDelaySeconds === undefined) throw new Error('Opus presentation requires an identification header with pre-skip.');
++                trackData.presentationEnd = presentationEnd;
++            }
++            tracksElement.data.push({ id: EBMLId.TrackEntry, data: [
+-				{ id: EBMLId.TrackNumber, data: trackData.track.id },
++				{ id: EBMLId.TrackNumber, data: trackData.track.id },
+@@ -366,3 +375,3 @@ export class MatroskaMuxer extends Muxer {
+-					: null,
++					: null,
+-				{ id: EBMLId.CodecDelay, data: 0 },
++				{ id: EBMLId.CodecDelay, data: Math.round(1e9 * (trackData.codecDelaySeconds ?? 0)) },
+-				{ id: EBMLId.SeekPreRoll, data: seekPreRollNs },
++				{ id: EBMLId.SeekPreRoll, data: seekPreRollNs },
+@@ -1146,3 +1155,11 @@ export class MatroskaMuxer extends Muxer {
+-
++
+-		const msTimestamp = Math.round(1000 * chunk.timestamp);
++		const codecDelay = trackData.codecDelaySeconds ?? 0;
++        const presentationStart = chunk.timestamp - codecDelay;
++        const codedEnd = presentationStart + chunk.duration;
++        trackData.codedEnd = Math.max(trackData.codedEnd ?? 0, codedEnd);
++        const requestedEnd = trackData.presentationEnd;
++        if (requestedEnd !== undefined && presentationStart >= requestedEnd) throw new Error('Opus packet lies beyond the requested presentation interval.');
++        const discardPaddingNs = requestedEnd === undefined ? 0 : Math.max(0, Math.round(1e9 * (codedEnd - requestedEnd)));
++        const presentationEnd = Math.min(codedEnd, requestedEnd ?? Infinity);
++        const msTimestamp = Math.round(1000 * chunk.timestamp);
+-
++
+@@ -1205,3 +1222,3 @@ export class MatroskaMuxer extends Muxer {
+-		// Subtitle cues need an explicit BlockDuration (a SimpleBlock has none)
++		// Subtitle cues need an explicit BlockDuration (a SimpleBlock has none)
+-		const needsBlockGroup = !!chunk.additions || trackData.type === 'subtitle';
++		const needsBlockGroup = discardPaddingNs > 0 || !!chunk.additions || trackData.type === 'subtitle';
+-
++
+@@ -1218,2 +1235,3 @@ export class MatroskaMuxer extends Muxer {
+-			const blockGroup = { id: EBMLId.BlockGroup, data: [
++			const blockGroup = { id: EBMLId.BlockGroup, data: [
++                discardPaddingNs > 0 ? { id: 0x75a2 /* DiscardPadding */, data: new EBMLSignedInt(discardPaddingNs) } : null,
+-				{ id: EBMLId.Block, data: [
++				{ id: EBMLId.Block, data: [
+@@ -1241,4 +1259,4 @@ export class MatroskaMuxer extends Muxer {
+-
++
+-		this.startTimestamp = Math.min(this.startTimestamp, msTimestamp);
+-		this.endTimestamp = Math.max(this.endTimestamp, msTimestamp + msDuration);
++		this.startTimestamp = Math.min(this.startTimestamp, Math.max(0, 1000 * presentationStart));
++		this.endTimestamp = Math.max(this.endTimestamp, 1000 * presentationEnd);
+-		trackData.lastWrittenMsTimestamp = msTimestamp;
++		trackData.lastWrittenMsTimestamp = msTimestamp;
+@@ -1362,2 +1380,5 @@ export class MatroskaMuxer extends Muxer {
+-		await this.interleaveChunks(true);
++		await this.interleaveChunks(true);
++        for (const trackData of this.trackDatas) {
++            if (trackData.presentationEnd !== undefined && (trackData.codedEnd ?? 0) + 1 / OPUS_SAMPLE_RATE < trackData.presentationEnd) throw new Error('Opus coded media does not cover the requested presentation interval.');
++        }
+-
++
+diff --git a/src/media-source.ts b/src/media-source.ts
+index 5260e12..7113713 100644
+--- a/src/media-source.ts
++++ b/src/media-source.ts
+@@ -153,2 +153,9 @@ export abstract class MediaSource {
+-	async _flushOrWaitForOngoingClose(forceClose: boolean) {
++	async _flushOrWaitForOngoingClose(forceClose: boolean) {
++        if (forceClose) {
++            await this._flushAndClose(true);
++            this._closed = true;
++            await this._closingPromise?.catch(() => undefined);
++            return;
++        }
++
+-		return this._closingPromise ??= (async () => {
++		return this._closingPromise ??= (async () => {
+@@ -288,2 +295,3 @@ class VideoEncoderWrapper {
+-	private closed = false;
++	private closed = false;
++ private forceClosed = promiseWithResolvers<void>();
+-
++
+@@ -618,5 +626,3 @@ class VideoEncoderWrapper {
+-					if (this.encoder.encodeQueueSize >= 4) {
++					if (this.encoder.encodeQueueSize >= 4) {
+-						await new Promise(resolve =>
+-							this.encoder!.addEventListener('dequeue', resolve, { once: true }),
+-						);
++						await Promise.race([this.forceClosed.promise, new Promise(resolve => this.encoder!.addEventListener('dequeue', resolve, { once: true }))]);
+-					}
++					}
+@@ -937,2 +943,3 @@ class VideoEncoderWrapper {
+-			this.encoderInitialized = true;
++			this.encoderInitialized = true;
++ if (this.closed) { await this.flushAndClose(true); throw new Error('Encoder closed during initialization.'); }
+-		})();
++		})();
+@@ -941,2 +948,3 @@ class VideoEncoderWrapper {
+-	async flushAndClose(forceClose: boolean) {
++	async flushAndClose(forceClose: boolean) {
++ if (forceClose) this.forceClosed.resolve();
+-		try {
++		try {
+@@ -977,4 +985,4 @@ class VideoEncoderWrapper {
+-			if (this.customEncoder) {
++			if (this.customEncoder) {
+-				await this.customEncoderCallSerializer.call(() => this.customEncoder!.close())
+-					.catch((error: unknown) => this.setError(error));
++				if (!forceClose) await this.customEncoderCallSerializer.currentPromise.catch(() => undefined);
++ await Promise.resolve(this.customEncoder!.close()).catch((error: unknown) => this.setError(error));
+-			} else if (this.encoder) {
++			} else if (this.encoder) {
+@@ -1862,2 +1870,3 @@ class AudioEncoderWrapper {
+-	private closed = false;
++	private closed = false;
++ private forceClosed = promiseWithResolvers<void>();
+-
++
+@@ -2078,3 +2087,3 @@ class AudioEncoderWrapper {
+-				if (this.encoder.encodeQueueSize >= 4) {
++				if (this.encoder.encodeQueueSize >= 4) {
+-					await new Promise(resolve => this.encoder!.addEventListener('dequeue', resolve, { once: true }));
++					await Promise.race([this.forceClosed.promise, new Promise(resolve => this.encoder!.addEventListener('dequeue', resolve, { once: true }))]);
+-				}
++				}
+@@ -2295,2 +2304,3 @@ class AudioEncoderWrapper {
+-			this.encoderInitialized = true;
++			this.encoderInitialized = true;
++ if (this.closed) { await this.flushAndClose(true); throw new Error('Encoder closed during initialization.'); }
+-		})();
++		})();
+@@ -2392,2 +2402,3 @@ class AudioEncoderWrapper {
+-	async flushAndClose(forceClose: boolean) {
++	async flushAndClose(forceClose: boolean) {
++ if (forceClose) this.forceClosed.resolve();
+-		try {
++		try {
+@@ -2418,4 +2429,4 @@ class AudioEncoderWrapper {
+-			if (this.customEncoder) {
++			if (this.customEncoder) {
+-				await this.customEncoderCallSerializer.call(() => this.customEncoder!.close())
+-					.catch((error: unknown) => this.setError(error));
++				if (!forceClose) await this.customEncoderCallSerializer.currentPromise.catch(() => undefined);
++ await Promise.resolve(this.customEncoder!.close()).catch((error: unknown) => this.setError(error));
+-			} else if (this.encoder && this.encoder.state !== 'closed') {
++			} else if (this.encoder && this.encoder.state !== 'closed') {
+diff --git a/src/output-format.ts b/src/output-format.ts
+index 5304fab..a85ebd8 100644
+--- a/src/output-format.ts
++++ b/src/output-format.ts
+@@ -124,2 +124,7 @@ export abstract class OutputFormat {
+-export type IsobmffOutputFormatOptions = {
++export type IsobmffOutputFormatOptions = {
++    /** Finalized track presentation interval in coded-media seconds. Requires fastStart: false.
++     * Keeps decoder priming packets while an edit list selects the intended presentation.
++     * Called exactly once per track when final metadata is written. */
++    getTrackPresentationWindow?: (track: OutputTrack) => { start: number; duration: number } | undefined;
++
+-	/**
++	/**
+@@ -235,3 +240,4 @@ export abstract class IsobmffOutputFormat extends OutputFormat {
+-		}
++		}
+-		if (options.onFtyp !== undefined && typeof options.onFtyp !== 'function') {
++		if (options.getTrackPresentationWindow !== undefined && (typeof options.getTrackPresentationWindow !== 'function' || options.fastStart !== false)) { throw new TypeError('getTrackPresentationWindow requires a function and fastStart: false.'); }
++if (options.onFtyp !== undefined && typeof options.onFtyp !== 'function') {
+-			throw new TypeError('options.onFtyp, when provided, must be a function.');
++			throw new TypeError('options.onFtyp, when provided, must be a function.');
+@@ -453,2 +459,4 @@ export class MovOutputFormat extends IsobmffOutputFormat {
+-export type MkvOutputFormatOptions = {
++export type MkvOutputFormatOptions = {
++    /** Exact presentation end for an Opus track, in seconds from output origin. */
++    getTrackPresentationEnd?: (track: OutputTrack) => number | undefined;
+-	/**
++	/**
+@@ -511,3 +519,4 @@ export class MkvOutputFormat extends OutputFormat {
+-		}
++		}
+-		if (options.appendOnly !== undefined && typeof options.appendOnly !== 'boolean') {
++		if (options.getTrackPresentationEnd !== undefined && typeof options.getTrackPresentationEnd !== 'function') throw new TypeError('getTrackPresentationEnd requires a function.');
++        if (options.appendOnly !== undefined && typeof options.appendOnly !== 'boolean') {
+-			throw new TypeError('options.appendOnly, when provided, must be a boolean.');
++			throw new TypeError('options.appendOnly, when provided, must be a boolean.');
+diff --git a/src/output.ts b/src/output.ts
+index 5a22d36..92c2673 100644
+--- a/src/output.ts
++++ b/src/output.ts
+@@ -921,3 +921,3 @@ export class Output<
+-			return this._cancelPromise;
++			return this._cancelPromise;
+-		} else if (this.state === 'finalizing' || this.state === 'finalized') {
++		} else if (this.state === 'finalized') {
+-			// Don't wanna warn when finalizing since that shows a warning when finalization fails and then cancel
++			// Don't wanna warn when finalizing since that shows a warning when finalization fails and then cancel
+@@ -933,2 +933,4 @@ export class Output<
+-			this.state = 'canceled';
++			this.state = 'canceled';
++            await Promise.all(this.tracks.map(track => track.source._flushOrWaitForOngoingClose(true)));
++
+-
++
+@@ -937,6 +939,5 @@ export class Output<
+-			try {
++			try {
+-				const promises = this.tracks.map(x => x.source._flushOrWaitForOngoingClose(true)); // Force close
+-				await Promise.all(promises);
+-
++
+-				await Promise.all([...this._unfinalizedTargets].map(target => target._close()));
++
++				await Promise.all([...this._unfinalizedTargets].map(target => target._close().catch(() => undefined)));
+-				this._unfinalizedTargets.clear();
++				this._unfinalizedTargets.clear();
+@@ -973,3 +974,4 @@ export class Output<
+-
++
+-				await this._muxer.finalize();
++				if (this.state === 'canceled') throw new Error('Output canceled during finalization.');
++ await this._muxer.finalize();
+-
++
+@@ -987,3 +989,4 @@ export class Output<
+-
++
+-				this.state = 'finalized';
++				if (this.state === 'canceled') throw new Error('Output canceled during finalization.');
++this.state = 'finalized';
+-			} finally {
++			} finally {
+diff --git a/src/target.ts b/src/target.ts
+index 4f78707..286befc 100644
+--- a/src/target.ts
++++ b/src/target.ts
+@@ -589,3 +589,5 @@ export class StreamTarget extends Target {
+-	async _close() {
++	async _close() {
+-		return this._streamWriter?.close();
++		const writer = this._streamWriter;
++        this._streamWriter = null;
++        try { await writer?.close(); } finally { writer?.releaseLock(); }
+-	}
++	}

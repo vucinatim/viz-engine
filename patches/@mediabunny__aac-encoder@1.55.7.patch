@@ -1,0 +1,155 @@
+diff --git a/dist/bundles/mediabunny-aac-encoder.mjs b/dist/bundles/mediabunny-aac-encoder.mjs
+index f88938b..35a3b79 100644
+--- a/dist/bundles/mediabunny-aac-encoder.mjs
++++ b/dist/bundles/mediabunny-aac-encoder.mjs
+@@ -3305,2 +3305,3 @@ var AacEncoder = class extends CustomAudioEncoder {
+-    this.worker = null;
++    this.worker = null;
++ this.closed = false;
+-    this.nextMessageId = 0;
++    this.nextMessageId = 0;
+@@ -3326,5 +3327,7 @@ var AacEncoder = class extends CustomAudioEncoder {
+-    this.worker = await Worker2();
++    this.worker = await Worker2();
++ if (this.closed) { this.worker.terminate(); throw new Error('AAC encoder closed.'); }
+-    const onMessage = (data) => {
++    const onMessage = (data) => {
+-      const pending = this.pendingMessages.get(data.id);
++      const pending = this.pendingMessages.get(data.id);
+-      assert(pending !== void 0);
++      if (!pending && this.closed) return;
++ assert(pending !== void 0);
+-      this.pendingMessages.delete(data.id);
++      this.pendingMessages.delete(data.id);
+@@ -3338,2 +3341,5 @@ var AacEncoder = class extends CustomAudioEncoder {
+-      this.worker.addEventListener("message", (event) => onMessage(event.data));
++      this.worker.addEventListener("message", (event) => onMessage(event.data));
++      const fail = () => { this.close(); this.onError(new Error('AAC worker failed.')); };
++      this.worker.addEventListener('error', fail);
++      this.worker.addEventListener('messageerror', fail);
+-    } else {
++    } else {
+@@ -3341,2 +3347,3 @@ var AacEncoder = class extends CustomAudioEncoder {
+-      nodeWorker.on("message", onMessage);
++      nodeWorker.on("message", onMessage);
++ nodeWorker.on("error", () => { this.close(); this.onError(new Error("AAC worker failed.")); });
+-    }
++    }
+@@ -3420,3 +3427,7 @@ var AacEncoder = class extends CustomAudioEncoder {
+-  close() {
++  close() {
++ if (this.closed) return;
++ this.closed = true;
+-    this.worker?.terminate();
++    this.worker?.terminate();
++    for (const pending of this.pendingMessages.values()) pending.reject(new Error('AAC encoder closed.'));
++    this.pendingMessages.clear();
+-  }
++  }
+@@ -3468,3 +3479,3 @@ var AacEncoder = class extends CustomAudioEncoder {
+-        packet,
++        packet,
+-        this.chunkMetadata
++        { ...this.chunkMetadata, aacTiming: { packetStartSample: p.pts, packetSampleCount: p.duration } }
+-      );
++      );
+@@ -3475,3 +3486,4 @@ var AacEncoder = class extends CustomAudioEncoder {
+-    return new Promise((resolve, reject) => {
++    return new Promise((resolve, reject) => {
+-      const id = this.nextMessageId++;
++      if (this.closed) { reject(new Error('AAC encoder closed.')); return; }
++ const id = this.nextMessageId++;
+-      this.pendingMessages.set(id, {
++      this.pendingMessages.set(id, {
+diff --git a/dist/modules/src/index.d.ts b/dist/modules/src/index.d.ts
+index ca51924..0167923 100644
+--- a/dist/modules/src/index.d.ts
++++ b/dist/modules/src/index.d.ts
+@@ -8,2 +8,6 @@
+-export { registerAacEncoder } from './encoder';
++export { registerAacEncoder } from './encoder';
+-//# sourceMappingURL=index.d.ts.map
+\ No newline at end of file
++//# sourceMappingURL=index.d.ts.map
++/** Authentic encoder sample coordinates; packet timestamp remains the nonnegative coded timeline. */
++export interface AacEncoderPacketMetadata extends EncodedAudioChunkMetadata {
++    aacTiming: { packetStartSample: number; packetSampleCount: number };
++}
+diff --git a/src/encoder.ts b/src/encoder.ts
+index 7b80e5f..836beec 100644
+--- a/src/encoder.ts
++++ b/src/encoder.ts
+@@ -32,2 +32,3 @@ class AacEncoder extends CustomAudioEncoder {
+-	private worker: Worker | null = null;
++	private worker: Worker | null = null;
++ private closed = false;
+-	private nextMessageId = 0;
++	private nextMessageId = 0;
+@@ -64,2 +65,3 @@ class AacEncoder extends CustomAudioEncoder {
+-		this.worker = (await createWorker()) as Worker;
++		this.worker = (await createWorker()) as Worker;
++ if (this.closed) { this.worker.terminate(); throw new Error('AAC encoder closed.'); }
+-
++
+@@ -67,3 +69,4 @@ class AacEncoder extends CustomAudioEncoder {
+-			const pending = this.pendingMessages.get(data.id);
++			const pending = this.pendingMessages.get(data.id);
+-			assert(pending !== undefined);
++			if (!pending && this.closed) return;
++ assert(pending !== undefined);
+-
++
+@@ -79,2 +82,5 @@ class AacEncoder extends CustomAudioEncoder {
+-			this.worker.addEventListener('message', event => onMessage(event.data as WorkerResponse));
++			this.worker.addEventListener('message', event => onMessage(event.data as WorkerResponse));
++            const fail = () => { this.close(); this.onError(new Error('AAC worker failed.')); };
++            this.worker.addEventListener('error', fail);
++            this.worker.addEventListener('messageerror', fail);
+-		} else {
++		} else {
+@@ -84,2 +90,3 @@ class AacEncoder extends CustomAudioEncoder {
+-			nodeWorker.on('message', onMessage);
++			nodeWorker.on('message', onMessage);
++ nodeWorker.on('error', () => { this.close(); this.onError(new Error('AAC worker failed.')); });
+-		}
++		}
+@@ -186,3 +193,7 @@ class AacEncoder extends CustomAudioEncoder {
+-	close() {
++	close() {
++ if (this.closed) return;
++ this.closed = true;
+-		this.worker?.terminate();
++		this.worker?.terminate();
++        for (const pending of this.pendingMessages.values()) pending.reject(new Error('AAC encoder closed.'));
++        this.pendingMessages.clear();
+-	}
++	}
+@@ -249,4 +260,4 @@ class AacEncoder extends CustomAudioEncoder {
+-				packet,
++				packet,
+-				this.chunkMetadata,
+-			);
++				{ ...this.chunkMetadata, aacTiming: { packetStartSample: p.pts, packetSampleCount: p.duration } } as EncodedAudioChunkMetadata,
++            );
+-
++
+@@ -261,3 +272,4 @@ class AacEncoder extends CustomAudioEncoder {
+-		return new Promise<WorkerResponseData & { type: T }>((resolve, reject) => {
++		return new Promise<WorkerResponseData & { type: T }>((resolve, reject) => {
+-			const id = this.nextMessageId++;
++			if (this.closed) { reject(new Error('AAC encoder closed.')); return; }
++ const id = this.nextMessageId++;
+-			this.pendingMessages.set(id, {
++			this.pendingMessages.set(id, {
+diff --git a/src/index.ts b/src/index.ts
+index f1c0d5b..088bae5 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -22 +22,6 @@ if ((globalThis as Record<symbol, unknown>)[AAC_ENCODER_LOADED_SYMBOL]) {
+-export { registerAacEncoder } from './encoder';
++export { registerAacEncoder } from './encoder';
++
++/** Authentic encoder sample coordinates; packet timestamp remains the nonnegative coded timeline. */
++export interface AacEncoderPacketMetadata extends EncodedAudioChunkMetadata {
++    aacTiming: { packetStartSample: number; packetSampleCount: number };
++}

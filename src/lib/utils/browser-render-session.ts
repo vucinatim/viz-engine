@@ -1,26 +1,24 @@
 import type { VizRuntimeAudioFrameSnapshot } from '@viz-engine/contracts';
-import {
-  createVizRenderFrameSession,
-  type VizRenderExecutionContext,
-} from '@viz-engine/render';
+import { createVizRenderFrameSession } from '@viz-engine/render';
 import {
   createVizThreeRenderHost,
   type VizThreeProgramRegistry,
   type VizThreeRenderHost,
 } from '@viz-engine/renderer-three';
 import {
-  resolveVizProjectAudioAsset,
   sampleProjectAudioFrameSnapshot,
   type VizComponentRegistry,
   type VizNodeRegistry,
 } from '@viz-engine/runtime';
 import {
   bakeBrowserAudioFeatures,
-  loadAndDecodeBrowserAudio,
   sampleBrowserAudioBakeFrame,
   type BrowserAudioBake,
 } from './browser-audio-bake';
-import type { VizBrowserFrameCaptureSession } from './browser-render-executor';
+import type {
+  VizBrowserFrameCaptureSession,
+  VizBrowserRenderContext,
+} from './browser-render-executor';
 
 const waitForResources = (promise: Promise<void>, signal: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
@@ -34,7 +32,7 @@ const waitForResources = (promise: Promise<void>, signal: AbortSignal) =>
 
 /** One job owns one detached GPU canvas, runtime history, and resource lifetime. */
 export const openVizBrowserRenderSession = async (
-  { source, request, signal }: VizRenderExecutionContext,
+  { source, request, signal, audio }: VizBrowserRenderContext,
   registries: {
     componentRegistry: VizComponentRegistry;
     nodeRegistry: VizNodeRegistry;
@@ -44,19 +42,15 @@ export const openVizBrowserRenderSession = async (
   signal.throwIfAborted();
   const project = source.project;
   const fps = project.timeline.fps;
-  const audioAsset = resolveVizProjectAudioAsset(
-    project,
-    source.resolvedAssets,
-  );
   let bake: BrowserAudioBake | undefined;
-  if (
-    audioAsset &&
-    !sampleProjectAudioFrameSnapshot(project, source.resolvedArtifacts, 0)
-  ) {
-    const loaded = await loadAndDecodeBrowserAudio(
-      audioAsset.resolved.uri,
-      signal,
-    );
+  const loaded = !sampleProjectAudioFrameSnapshot(
+    project,
+    source.resolvedArtifacts,
+    0,
+  )
+    ? await audio.load()
+    : undefined;
+  if (loaded) {
     signal.throwIfAborted();
     // Bake from timeline origin at timeline FPS, so cold seeks and skipped export
     // frames reconstruct the same temporal history as sequential evaluation.
@@ -133,15 +127,7 @@ export const openVizBrowserRenderSession = async (
           `Render model loading failed: ${JSON.stringify(failed)}`,
         );
       host.render();
-      // Copy immediately after submission, before yielding the drawing buffer.
-      // This is a same-size transfer, never DOM composition or preview scaling.
-      const output = document.createElement('canvas');
-      output.width = request.viewport.width;
-      output.height = request.viewport.height;
-      const context = output.getContext('2d');
-      if (!context) throw new Error('Could not create render output canvas.');
-      context.drawImage(canvas, 0, 0);
-      return output;
+      return canvas;
     },
     dispose,
   };

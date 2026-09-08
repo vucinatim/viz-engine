@@ -66,6 +66,27 @@ insufficient time for an entire large item is not a reason to avoid useful work.
 The user authorized ordinary implementation on the busy host for this session;
 that authorization does not make noisy throughput numbers certification evidence.
 
+## Streaming attachment implementation
+
+RH-02 removes intermediate JPEGs and the general FFmpeg.wasm video runner.
+Native WebCodecs encodes H.264/VP9 video and Opus audio. A pinned libavcodec AAC
+worker preserves authentic encoder sample timing; maintained muxer changes map
+that coded interval into exact MP4 presentation edits. This is a codec attachment,
+not scene/runtime ownership. Native AAC may replace it only when equivalent
+priming metadata and independent alignment evidence exist.
+
+Frames and audio blocks advance together under awaited backpressure. Positional
+OPFS storage owns temporary bytes; completed artifacts retain browser Blob
+storage and are hashed incrementally after header rewrites. Nonfragmented MP4
+keeps packet-table metadata, decoded audio/bakes remain retained per job, and
+successful output artifacts remain retained by job history. These are explicit
+remaining storage costs, not constant-memory claims. The job service measures
+complete wall time separately from capture, analysis, handoff and finalization.
+
+See [implementation contract](../plans/v2/streaming-export-implementation-contract.md)
+and [maintained media changes](../../patches/README.md). RH-03 still owns full
+production and performance certification.
+
 ## Modern graphics roadmap
 
 Modern capability support is a product direction, with explicit capability tests

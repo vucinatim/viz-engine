@@ -137,7 +137,17 @@ export interface VizRenderPerformanceFeedback {
   averageRenderMilliseconds: number;
   p95RenderMilliseconds: number;
   maximumRenderMilliseconds: number;
+  /** Time awaiting encoder handoffs; encoding also overlaps rendering. Not additive CPU time. */
   encodeMilliseconds?: number;
+  /** Complete job wall time, including validation, source resolution and executor cleanup. */
+  totalElapsedMilliseconds?: number;
+  executorElapsedMilliseconds?: number;
+  setupMilliseconds?: number;
+  analysisMilliseconds?: number;
+  outputFinalizationMilliseconds?: number;
+  /** Known retained storage, not an estimate of process/GPU peak resident memory. */
+  retainedOutputBytes?: number;
+  decodedAudioBytes?: number;
   peakResidentBytes?: number;
 }
 
