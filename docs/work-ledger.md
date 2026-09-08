@@ -3034,3 +3034,17 @@
   closure. See `docs/parity/evidence/2026-09-08-human-signal-audio.md`. Seven-graph
   composition, score/compositor work, hardware throughput and final creative
   certification remain separate; no complete Goal Five criterion is implied.
+
+## 2026-09-08 — production dependency handoff (ORDER-01)
+
+- Preserved the completed shared-render, streaming, integration, production-owner
+  and exact-audio checkpoint identities in their immutable predecessor program.
+- Activated a successor that implements EC-07/EC-08 before EC-04's real graph
+  consumers, then EC-05/EC-06 and EC-09 onward. Every remaining EC acceptance and
+  evidence requirement is unchanged; no pending item is reported complete.
+- Reconciled the active pointer, execution plan, current state, ownership contract
+  and runbook. Removed superseded one-item-per-wake wording from the current
+  prompt so it directly reflects the authorized same-task 01:00–08:00 cadence.
+- Exact predecessor preservation and readiness controls accompany the canonical
+  handoff checkpoint. Product implementation and creative certification are not
+  claimed by this planning change.

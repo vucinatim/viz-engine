@@ -101,31 +101,43 @@ evidence-backed agent judgment under the product owner's delegated authority.
 
 ## Program Shape
 
-The machine program at
-`tools/repo/programs/goal-five-engine-completion.json` is the execution truth.
-It contains one dependency graph from policy alignment through final handoff.
-Each scheduled wake claims at most one item, creates at most one coherent commit,
-and stops cleanly before another wake.
+The tracked pointer selects
+`tools/repo/programs/goal-five-production-foundation.json`. Its `ORDER-01`
+handoff preserves completed policy, render, production-ownership and exact-audio
+evidence in the immutable predecessor programs. Remaining EC acceptance and
+evidence requirements are unchanged. See the
+[dependency handoff](./production-foundation-dependency-handoff.md).
 
-### Wave 1: delegated proof and whole-production skeleton
+Each claim owns one coherent checkpoint and commit. The same nightly task may
+close, release and claim successive items until 08:00 Europe/Ljubljana.
 
-- reconcile human-only certification language with delegated review
-- materialize the exact audio window, bake, project, production package, and
-  low-detail five-act skeleton
-- prove canonical headless authoring and same-session editor visibility
-- build and evaluate one representative quality slice without losing the full
-  production structure
+### Wave 0: dependency-correct program handoff
 
-### Wave 2: canonical direction and compositor semantics
+- bind predecessor terminal commits and immutable evidence without replaying
+  completed work or copying lifecycle success into the successor
+- activate the exact dependency order before implementation resumes
+
+### Wave 1: canonical direction and compositor semantics
 
 - implement the smallest portable macro-direction contract
 - implement graph-driven compositor modulation through canonical layer values
 - carry schema, validation, actions, history, runtime, inspection, editor, CLI,
   bundle, and deterministic semantics together
-- connect two complete acts through a real transition and delete temporary
+
+### Wave 2: whole-production skeleton and representative quality
+
+- build the low-detail five-act skeleton on the completed production/audio
+  foundation and the reusable score/compositor consumers
+- prove canonical headless authoring and same-session editor visibility
+- build and evaluate one representative quality slice without losing the full
+  production structure
+
+### Wave 3: transition integration
+
+- connect two complete acts through a real transition and delete obsolete
   encodings
 
-### Wave 3: renderer and capability breadth
+### Wave 4: renderer and capability breadth
 
 - harden native models, grounding, animation, material, and lifecycle behavior
 - integrate procedural 3D, shaders, particles, instancing, complementary 2D,
@@ -135,7 +147,7 @@ and stops cleanly before another wake.
   WebAssembly, Rust, or another local implementation without prematurely
   selecting a backend from an incomplete workload
 
-### Wave 4: multi-graph, agent control, files, and exports
+### Wave 5: multi-graph, agent control, files, and exports
 
 - scale responsibility-separated graphs and directorial signals
 - complete agent-readable usage, cost, issue, comparison, and live-session tools
@@ -143,7 +155,7 @@ and stops cleanly before another wake.
 - complete asset/file management, portable bundles, deterministic renders, video
   exports, cancellation, progress, diagnostics, and clean resource disposal
 
-### Wave 5: complete production and autonomous creative refinement
+### Wave 6: complete production and autonomous creative refinement
 
 - finish every act, transition, entrance, exit, camera move, palette progression,
   density change, and three-timescale musical response
@@ -153,7 +165,7 @@ and stops cleanly before another wake.
   quality claim
 - ensure the editor project remains understandable and fully editable
 
-### Wave 6: performance, parity, and lifecycle hardening
+### Wave 7: performance, parity, and lifecycle hardening
 
 - measure before optimizing under the exact full composition, then finalize the
   renderer and compute architecture from that evidence
@@ -162,7 +174,7 @@ and stops cleanly before another wake.
 - preserve or improve the 42-row V1 experience and Light Tunnel floor
 - fix bottlenecks only at their canonical owners and remove obsolete paths
 
-### Wave 7: consolidation, candidate, and final evidence
+### Wave 8: consolidation, candidate, and final evidence
 
 - remove temporary scaffolding, duplicate truth, dead code, debug artifacts, and
   production-specific engine leakage
@@ -180,8 +192,9 @@ successively until 08:00 `Europe/Ljubljana`. Each checkpoint has its own claim,
 evidence, commit and release. An active run may then claim the next ready item.
 Check the actual clock; estimates are advisory and must not block useful partial
 progress. Preserve unfinished work through the exact recovery procedure at
-08:00. Other wakes respect a valid writer lease. The render-foundation successor
-inserts RH-01 through RH-03 before the remaining EC work.
+08:00. Other wakes respect a valid writer lease. The render-foundation predecessor
+completed RH-01 through RH-03 and EC-02/EC-03. The active production-foundation
+successor orders EC-07 → EC-08 → EC-04 → EC-05 → EC-06 → EC-09 onward.
 
 Runs remain headless and muted. They notify only for a checkpoint failure that
 needs attention, completed engine horizon, external/monetization boundary, or

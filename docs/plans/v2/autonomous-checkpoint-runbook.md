@@ -10,7 +10,7 @@ the
 [autonomous sensory feedback operating system](./goal-five-autonomous-sensory-feedback-operating-system.md),
 and the tracked active-program pointer at
 `tools/repo/programs/active-program.json`. After the approved Gate 1 handoff,
-the pointer selects the immutable render-foundation successor program. That
+the pointer selects the immutable production-foundation successor program. That
 program contains no routine human checkpoints: former Gates 2 through 5 are
 evidence-backed autonomous calibration milestones.
 
@@ -129,8 +129,10 @@ unblocking. An approved decision must be supplied as exact program-scoped
     non-force Git push of the literal terminal commit and verify the remote ref
     afterward. On divergence or failure, stop without merge, rebase, force, or
     history rewriting.
-13. Start no second item in the same scheduled wake. A later wake must recover
-    from repository truth afresh.
+13. While the authorized night window remains open, re-read preflight and claim
+    the next dependency-ready item. At 08:00 preserve and release any unfinished
+    work through the exact recovery procedure. A later wake starts from repository
+    truth afresh.
 
 Completion accepts exactly one commit descended directly from the claim's
 starting commit. Check evidence is admitted against the current canonical plan,
@@ -146,7 +148,8 @@ review packet and verifies that release before stopping.
 ## Exact Scheduled Prompt
 
 ```text
-Advance VizEngine by at most one dependency-ready autonomous checkpoint using
+Advance VizEngine through successive dependency-ready autonomous checkpoints
+from 01:00 until 08:00 Europe/Ljubljana in this same task, using
 docs/plans/v2/autonomous-checkpoint-runbook.md as the exact operating contract.
 Begin with `pnpm --silent run repo -- run preflight --json` against the tracked
 active program and obey its
@@ -167,8 +170,8 @@ ambiguous user work.
 
 The certification matrix and sensory map distinguish delegated independent
 review from the preserved Gate 1 human decision. Apply the typed inspection
-contract in docs/parity/goal-five-delegated-review.md. `EC-01` must complete
-before any engine implementation item.
+contract in docs/parity/goal-five-delegated-review.md. Preserve the completed
+EC-01 authority decision and predecessor evidence; do not replay it in a successor.
 
 Remain quiet: no visible applications, no audio, no reused server, and one
 heavy process at a time. Use normal development tools freely within this
@@ -188,8 +191,11 @@ non-force Git push to advance the same-named `origin` branch to the literal
 verified terminal commit when it matches the active program's declared non-main
 target; verify the remote ref. On divergence or failure, never merge, rebase,
 force, or rewrite history. Report the checkpoint, evidence, push result,
-remaining uncertainty, and next dependency-ready item. Do not start a second
-item in this wake.
+remaining uncertainty, and next dependency-ready item when meaningful. Re-read
+preflight and continue with the next ready item while the night window remains
+open. Check the actual clock; advisory estimates never justify refusing useful
+work. At 08:00 checkpoint and block unfinished work with an exact recovery
+condition, release ownership and stop scoped processes.
 ```
 
 ## Calibration And Activation

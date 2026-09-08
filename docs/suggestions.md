@@ -155,9 +155,8 @@ already requirements of the active goal.
 
 ## Human Signal execution ordering
 
-- Resolve the EC-04 → EC-07/EC-08 dependency inversion before closing the
-  seven-graph skeleton. The treatment's score-direction and compositor graphs
-  require GAP-01/GAP-02 consumers owned by those later engine items. Keep their
-  authored requirements explicit; no dummy graph, hidden frame evaluator, or
-  production-specific compositor branch may satisfy the count. See
-  [production ownership contract](./plans/v2/human-signal-production-ownership-contract.md).
+- Resolved by the production-foundation program handoff: EC-07/EC-08 now precede
+  EC-04's seven-graph skeleton. The reusable GAP-01/GAP-02 consumers still require
+  implementation; no dummy graph, hidden frame evaluator or production-specific
+  compositor branch may satisfy the count. See the
+  [dependency handoff](./plans/v2/production-foundation-dependency-handoff.md).

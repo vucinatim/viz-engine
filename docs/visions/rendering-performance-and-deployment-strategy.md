@@ -30,9 +30,13 @@ exact fixtures/devices, not every scene or production.
 
 ## Production-valid delivery
 
-The active immutable execution definition is
+The immutable render-foundation definition is
 `tools/repo/programs/goal-five-render-foundation.json`.
-It inserts RH-01 through RH-03 ahead of the remaining EC-02 through EC-27 work.
+It inserted RH-01 through RH-03 before EC-02 through EC-27. RH-01 through RH-03
+and EC-02/EC-03 are complete. The active
+`tools/repo/programs/goal-five-production-foundation.json` preserves those exact
+closures and moves the reusable EC-07/EC-08 prerequisites ahead of EC-04. See the
+[dependency handoff](../plans/v2/production-foundation-dependency-handoff.md).
 The predecessor definition and completed EC-01 evidence remain unchanged:
 `goal-five-engine-completion`, definition
 `adaa07fc59302c2e70ea389e1838c9b3a161129d31e2a410555066739fdad259`,

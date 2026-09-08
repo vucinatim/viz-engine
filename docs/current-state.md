@@ -61,10 +61,10 @@ and identity-bound review packets. `OS-01` through `OS-06` and `CAL-01` through
 validation, clean terminal commits, and released ownership. `ACT-01` and Gate 1
 are approved. EC-01 closed at `5e74191135098d79eab0bb1ff02b20056cb77add`.
 The user then prioritized shared independent rendering and streaming export.
-The active pointer now selects `goal-five-render-foundation`: RH-01 establishes
-shared render ownership, RH-02 replaces sequence buffering with streaming, and
-RH-03 proves integrated media behavior before the preserved EC-02 through EC-27
-production work resumes. The predecessor definition and EC-01 evidence remain
+The `goal-five-render-foundation` predecessor delivered shared render ownership
+in RH-01, replaced sequence buffering with streaming in RH-02, and proved
+integrated media behavior in RH-03 before production work resumed. The
+predecessor definitions and EC-01 evidence remain
 immutable. All 46 Goal Five product criteria remain pending; these renderer
 checkpoints do not imply flagship certification.
 
@@ -73,9 +73,9 @@ records WebGPU/TSL, WebCodecs, workers, profiling and conditional WASM/native
 migration gates. RH-01 completed at `ffe08d38ee3d92ee75295f01c99f51a17fe6b53c`.
 RH-02 implements incremental frame handoff, positional temporary output,
 encoder-reported AAC presentation timing and cancellation, with its exact staged
-closure recorded by the active program. RH-03 establishes integrated production
+closure recorded by the render-foundation program. RH-03 establishes integrated production
 parity, export isolation, decoded A/V alignment and readiness lifecycle evidence;
-its exact integration closure is recorded by the active program and
+its exact integration closure is recorded by that predecessor and
 [render integration evidence](./parity/evidence/2026-09-08-render-integration.md).
 Quiet-host hardware throughput and long-duration endurance remain unmeasured;
 no real-time performance certification is implied.
@@ -88,8 +88,12 @@ Its nine baseline layer records and seven graph requirements remain distinct
 from the future playable skeleton: five initial layers are enabled and zero
 graphs are implemented. See [ownership evidence](./parity/evidence/2026-09-08-human-signal-ownership.md)
 and [audio evidence](./parity/evidence/2026-09-08-human-signal-audio.md).
-The EC-04 seven-consumer requirement depends on cue/compositor features currently
-scheduled as EC-07/EC-08; resolve that ordering before skeleton closure.
+EC-03 closed at `ced1617b977d41b94e18da2fe7f974d302b0bafe` with 491 tests across
+90 files, complete integration and 17 browser tests. The active pointer now
+selects `goal-five-production-foundation`. Its handoff preserves all predecessor
+evidence and orders EC-07/EC-08 before EC-04's seven real graph consumers, followed
+by EC-05, EC-06 and EC-09 onward. No acceptance requirement was reduced. See the
+[dependency handoff](./plans/v2/production-foundation-dependency-handoff.md).
 
 The user's 2026-09-07 cadence amendment is one daily 01:00 wake in the same
 Codex task, working successively until 08:00 Europe/Ljubljana. Check the actual

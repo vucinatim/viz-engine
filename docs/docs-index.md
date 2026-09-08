@@ -37,6 +37,9 @@ The active implementation contract is:
   is the active finite multi-week execution contract. It delegates all
   reversible local engine decisions and ends at a polished flagship, complete
   editable project, reusable capability library, and full product evidence.
+- [Production Foundation Dependency Handoff](./plans/v2/production-foundation-dependency-handoff.md)
+  preserves completed render/audio evidence and orders reusable score and
+  compositor implementation before the complete production skeleton.
 - [Goal Five flagship production treatment: Human Signal](./plans/v2/goal-five-flagship-production-treatment.md)
   is the approved evidence-bound five-act creative direction.
 - [Gate 1 Human Signal decision request](./parity/evidence/2026-09-06-goal-five-gate-one-decision-request.md)

@@ -55,11 +55,13 @@ its exact PCM and cross-path evidence. Human
 judgment remains necessary for realized musical truth, composition, performer
 value and final quality; the existing Gate 1 decision approves direction only.
 
-## Dependency issue
+## Dependency order
 
 EC-04 asks for seven executable graphs and actual named consumers, but the
 approved treatment explicitly assigns score and compositor graph consumers to
-GAP-01 and GAP-02. Their reusable implementation items EC-07/EC-08 currently
-follow EC-04. Resolve that ordering through the authorized execution-program
-mechanism before claiming EC-04. Static baseline records cannot satisfy that
-acceptance, and the production package must not implement hidden substitutes.
+GAP-01 and GAP-02. The production-foundation successor now places their reusable
+implementation items EC-07/EC-08 before EC-04, preserving every item's original
+acceptance. Static baseline records cannot satisfy the skeleton acceptance,
+and the production package must not implement hidden substitutes. The
+[handoff](./production-foundation-dependency-handoff.md) preserves predecessor
+closure evidence and records the corrected order.
