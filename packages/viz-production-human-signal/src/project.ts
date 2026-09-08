@@ -12,6 +12,7 @@ import {
 import {
   createHumanSignalAudioRecipe,
   createHumanSignalModelAssets,
+  type HumanSignalAudioMaterialization,
 } from './assets.js';
 import { createHumanSignalDirection } from './direction.js';
 import {
@@ -49,12 +50,11 @@ export const createHumanSignalProductionMetadata = () => ({
   ...humanSignalProductionIdentity,
   provenance: structuredClone(humanSignalProvenance),
   realization: {
-    status: 'ownership-foundation',
+    status: 'audio-foundation',
     composition: 'static-initial-layer-selection',
-    audio: 'source-provenance-outside-project-assets',
+    audio: 'exact-derivative-and-portable-standard-bake',
     implementedGraphs: 0,
     remaining: [
-      'exact-audio-derivative-and-bake',
       'component-reactivity-graphs',
       'portable-macro-direction',
       'graph-driven-compositor',
@@ -77,7 +77,9 @@ export const createHumanSignalProductionMetadata = () => ({
 });
 
 /** Canonical authored foundation; no local timeline/cue evaluator lives here. */
-export const createHumanSignalProject = (): VizProjectDocument => {
+export const createHumanSignalProject = (
+  audio: HumanSignalAudioMaterialization,
+): VizProjectDocument => {
   const direction = createHumanSignalDirection();
   const registry = createCoreComponentRegistry();
   return {
@@ -87,6 +89,7 @@ export const createHumanSignalProject = (): VizProjectDocument => {
     timeline: {
       fps: direction.music.timelineFps,
       durationInFrames: direction.music.local.frameEndExclusive,
+      sampleRate: direction.music.sampleRate,
     },
     viewport: { width: 1920, height: 1080, backgroundColor: '#05060B' },
     layerOrder: direction.layers.map((layer) => layer.id),
@@ -140,8 +143,12 @@ export const createHumanSignalProject = (): VizProjectDocument => {
           : {}),
       };
     }),
-    assetRefs: createHumanSignalModelAssets(),
-    artifactRefs: [],
+    assetRefs: [
+      structuredClone(audio.asset),
+      ...createHumanSignalModelAssets(),
+      structuredClone(audio.sourceAsset),
+    ],
+    artifactRefs: [structuredClone(audio.artifact)],
     graphs: [],
     metadata: createHumanSignalProductionMetadata(),
   };

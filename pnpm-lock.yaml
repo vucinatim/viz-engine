@@ -257,6 +257,9 @@ importers:
 
   packages/viz-bake:
     dependencies:
+      '@noble/hashes':
+        specifier: 2.0.1
+        version: 2.0.1
       '@viz-engine/contracts':
         specifier: workspace:*
         version: link:../viz-contracts
@@ -376,6 +379,9 @@ importers:
 
   packages/viz-production-human-signal:
     dependencies:
+      '@viz-engine/bake':
+        specifier: workspace:*
+        version: link:../viz-bake
       '@viz-engine/components-core':
         specifier: workspace:*
         version: link:../viz-components-core

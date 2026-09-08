@@ -29,7 +29,8 @@
     "@viz-engine/nodes-core": "workspace:*",
     "@viz-engine/runtime": "workspace:*",
     "@viz-engine/renderer-three": "workspace:*",
-    "@viz-engine/project-bundle": "workspace:*"
+    "@viz-engine/project-bundle": "workspace:*",
+    "@viz-engine/bake": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20",

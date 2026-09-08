@@ -16,6 +16,8 @@ export interface VizResolvedProjectAudioAsset {
  * identifies the track that drives the project's baked reactivity. Projects
  * without a baked timeline fall back to their first declared audio reference.
  * Resolved assets that are not declared by the project are never selected.
+ * Missing resources return undefined so editors can open unresolved documents;
+ * consumers that require audio enforce that requirement at execution time.
  */
 export const resolveVizProjectAudioAsset = (
   project: VizProjectDocument,
@@ -30,11 +32,11 @@ export const resolveVizProjectAudioAsset = (
       artifact.sourceAssetId !== undefined,
   )?.sourceAssetId;
   const ref =
-    audioRefs.find((asset) => asset.id === bakedSourceAssetId) ?? audioRefs[0];
+    bakedSourceAssetId === undefined
+      ? audioRefs[0]
+      : audioRefs.find((asset) => asset.id === bakedSourceAssetId);
 
-  if (!ref) {
-    return undefined;
-  }
+  if (!ref) return undefined;
 
   const resolved = resolvedAssets.find(
     (asset) => asset.id === ref.id && asset.kind === 'audio',

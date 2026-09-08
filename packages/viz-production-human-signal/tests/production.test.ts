@@ -41,10 +41,13 @@ import * as directionModule from '../src/direction.js';
 const root = process.cwd();
 const temporary = mkdtempSync(resolve(tmpdir(), 'viz-human-signal-'));
 const bundleDirectory = resolve(temporary, 'bundle');
-let written: ReturnType<typeof writeHumanSignalBundle>;
-beforeAll(() => {
-  written = writeHumanSignalBundle({ repositoryRoot: root, bundleDirectory });
-});
+let written: Awaited<ReturnType<typeof writeHumanSignalBundle>>;
+beforeAll(async () => {
+  written = await writeHumanSignalBundle({
+    repositoryRoot: root,
+    bundleDirectory,
+  });
+}, 60_000);
 afterEach(() => vi.restoreAllMocks());
 afterAll(() => rmSync(temporary, { recursive: true, force: true }));
 
@@ -52,11 +55,15 @@ const readBundle = () => loadLocalVizProjectBundle(bundleDirectory);
 
 describe('Human Signal production ownership', () => {
   it('creates independent canonical baseline data without claiming the later skeleton', () => {
-    const first = createHumanSignalProject();
-    const second = createHumanSignalProject();
+    const first = createHumanSignalProject(written.audio);
+    const second = createHumanSignalProject(written.audio);
     expect(first).toEqual(second);
     expect(validateProjectDocument(first)).toEqual({ ok: true, issues: [] });
-    expect(first.timeline).toEqual({ fps: 60, durationInFrames: 2880 });
+    expect(first.timeline).toEqual({
+      fps: 60,
+      durationInFrames: 2880,
+      sampleRate: 48000,
+    });
     expect(first.layers).toHaveLength(9);
     expect(
       first.layers.filter((layer) => layer.enabled).map((layer) => layer.id),
@@ -68,14 +75,14 @@ describe('Human Signal production ownership', () => {
       'layer-signal-horizon',
     ]);
     expect(first.graphs).toEqual([]);
-    expect(first.artifactRefs).toEqual([]);
+    expect(first.artifactRefs).toHaveLength(1);
     expect(first.metadata).toMatchObject({
       realization: {
-        status: 'ownership-foundation',
-        audio: 'source-provenance-outside-project-assets',
+        status: 'audio-foundation',
+        audio: 'exact-derivative-and-portable-standard-bake',
         implementedGraphs: 0,
       },
-      audioRecipe: { status: 'planned-not-created' },
+      audioRecipe: { version: 'human-signal.audio-recipe.v1' },
     });
     expect(
       first.layers
@@ -91,7 +98,7 @@ describe('Human Signal production ownership', () => {
     (
       first.metadata!.direction as ReturnType<typeof createHumanSignalDirection>
     ).acts[0]!.title = 'changed';
-    expect(createHumanSignalProject()).toEqual(second);
+    expect(createHumanSignalProject(written.audio)).toEqual(second);
   });
 
   it('binds the exact approved score, source coordinates and pending recipes', () => {
@@ -166,7 +173,9 @@ describe('Human Signal production ownership', () => {
     expect(execution.renderer.backend).toEqual(vizThreeBrowserBackendIdentity);
     const used = [
       ...new Set(
-        createHumanSignalProject().layers.map((layer) => layer.componentId),
+        createHumanSignalProject(written.audio).layers.map(
+          (layer) => layer.componentId,
+        ),
       ),
     ].sort();
     expect(execution.components).toEqual(
@@ -213,24 +222,26 @@ describe('Human Signal production ownership', () => {
     ).toThrow('absent from the execution registry');
   });
 
-  it('round-trips real model bytes with no invented audio derivative or bake', () => {
+  it('round-trips real model, source, exact derivative and standard bake bytes', () => {
     const bundle = readBundle();
     expect(bundle.issues).toEqual([]);
-    expect(bundle.project).toEqual(createHumanSignalProject());
+    expect(bundle.project).toEqual(createHumanSignalProject(written.audio));
     expect(
       resolveVizProjectAudioAsset(bundle.project, bundle.resolvedAssets),
-    ).toBeUndefined();
+    ).toMatchObject({ ref: { id: written.audio.asset.id } });
     expect(
       bundle.project.assetRefs?.some((asset) => asset.kind === 'audio'),
-    ).toBe(false);
+    ).toBe(true);
     expect(bundle.executionManifest).toEqual(written.executionManifest);
-    expect(bundle.executionManifest!.assets).toHaveLength(4);
-    expect(bundle.executionManifest!.artifacts).toEqual([]);
-    expect(bundle.executionManifest!.bakes).toEqual([]);
+    expect(bundle.executionManifest!.assets).toHaveLength(6);
+    expect(bundle.executionManifest!.artifacts).toHaveLength(1);
+    expect(bundle.executionManifest!.bakes).toHaveLength(1);
     const approvedIdentities = [
+      written.derivation.derivative.contentIdentity,
       ...createHumanSignalDirection().models.map(
         (model) => model.contentIdentity,
       ),
+      createHumanSignalDirection().music.sourceContentIdentity,
     ];
     expect(
       bundle.executionManifest!.assets.map((asset) => asset.contentIdentity),
@@ -239,36 +250,36 @@ describe('Human Signal production ownership', () => {
     expect(JSON.stringify(bundle.executionManifest)).not.toContain(root);
   });
 
-  it('rejects a model registration redirected to another approved performer', () => {
+  it('rejects a model registration redirected to another approved performer', async () => {
     const asset = STAGE_MODEL_ASSET_DEFINITIONS[0]!.asset;
     const original = asset.originalFileName!;
     try {
       asset.originalFileName =
         STAGE_MODEL_ASSET_DEFINITIONS[1]!.asset.originalFileName!;
-      expect(() =>
+      await expect(
         writeHumanSignalBundle({
           repositoryRoot: root,
           bundleDirectory: resolve(temporary, 'redirected-model'),
         }),
-      ).toThrow('model registry identity differs from approved source');
+      ).rejects.toThrow('model registry identity differs from approved source');
     } finally {
       asset.originalFileName = original;
     }
   });
 
-  it('rejects paired filename/hash redirection that duplicates one performer and omits another', () => {
+  it('rejects paired filename/hash redirection that duplicates one performer and omits another', async () => {
     const asset = STAGE_MODEL_ASSET_DEFINITIONS[0]!.asset;
     const original = structuredClone(asset);
     const other = STAGE_MODEL_ASSET_DEFINITIONS[1]!.asset;
     try {
       asset.originalFileName = other.originalFileName!;
       asset.metadata = structuredClone(other.metadata!);
-      expect(() =>
+      await expect(
         writeHumanSignalBundle({
           repositoryRoot: root,
           bundleDirectory: resolve(temporary, 'duplicate-performer'),
         }),
-      ).toThrow(
+      ).rejects.toThrow(
         'model assignments must cover every approved performer exactly once',
       );
     } finally {
@@ -276,26 +287,29 @@ describe('Human Signal production ownership', () => {
     }
   });
 
-  it('rejects a self-consistent bundle whose source changes at the writer handoff', () => {
-    const write = bundleModule.writeLocalVizProjectBundle;
-    vi.spyOn(bundleModule, 'writeLocalVizProjectBundle').mockImplementation(
-      (options) =>
-        write({
-          ...options,
-          resolvedAssets: options.resolvedAssets.map((asset, index) =>
-            index === 0
-              ? { ...asset, bytes: new Uint8Array([1, 2, 3]).buffer }
-              : asset,
-          ),
-        }),
+  it('rejects a self-consistent bundle whose source changes at the writer handoff', async () => {
+    const write = bundleModule.writeExclusiveLocalVizProjectBundle;
+    vi.spyOn(
+      bundleModule,
+      'writeExclusiveLocalVizProjectBundle',
+    ).mockImplementation((options) =>
+      write({
+        ...options,
+        resolvedAssets: options.resolvedAssets.map((asset, index) =>
+          index === 0
+            ? { ...asset, bytes: new Uint8Array([1, 2, 3]).buffer }
+            : asset,
+        ),
+      }),
     );
     const output = resolve(temporary, 'changed-source');
-    expect(() =>
+    await expect(
       writeHumanSignalBundle({ repositoryRoot: root, bundleDirectory: output }),
-    ).toThrow('bundled assets differ from the approved source identities');
-    // The generic bundle is internally valid: the production provenance check
-    // must reject it for a stronger reason than a corrupt/missing output file.
-    expect(loadLocalVizProjectBundle(output).issues).toEqual([]);
+    ).rejects.toThrow(
+      'bundled assets differ from the approved source identities',
+    );
+    // The self-consistent but unapproved prepared bundle must never be published.
+    expect(() => loadLocalVizProjectBundle(output)).toThrow();
   });
 
   it('rejects changed asset and project bytes after materialization', () => {
@@ -317,5 +331,23 @@ describe('Human Signal production ownership', () => {
       }
     }
     expect(readBundle().issues).toEqual([]);
+  });
+  it('rejects a missing declared derivative instead of playing the original source', () => {
+    const bundle = readBundle();
+    const project = structuredClone(bundle.project);
+    project.assetRefs = project.assetRefs!.filter(
+      (asset) => asset.id !== written.audio.asset.id,
+    );
+    expect(
+      resolveVizProjectAudioAsset(project, bundle.resolvedAssets),
+    ).toBeUndefined();
+    expect(
+      resolveVizProjectAudioAsset(
+        bundle.project,
+        bundle.resolvedAssets.filter(
+          (asset) => asset.id !== written.audio.asset.id,
+        ),
+      ),
+    ).toBeUndefined();
   });
 });

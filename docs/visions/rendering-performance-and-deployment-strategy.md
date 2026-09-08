@@ -84,8 +84,19 @@ remaining storage costs, not constant-memory claims. The job service measures
 complete wall time separately from capture, analysis, handoff and finalization.
 
 See [implementation contract](../plans/v2/streaming-export-implementation-contract.md)
-and [maintained media changes](../../patches/README.md). RH-03 still owns full
-production and performance certification.
+and [maintained media changes](../../patches/README.md). RH-03 completed scoped
+production parity, isolation, decoded A/V and lifecycle proof. Quiet-host
+hardware throughput and full-duration performance certification remain separate
+future evidence; software rendering does not establish those results.
+
+The Human Signal audio checkpoint advances the browser backend identity to
+`viz-render.browser-webgl.v5`. Video quality and file-size estimates share a
+bits-per-pixel-per-frame policy, including FPS. High-quality AAC uses 320 kbps
+(standard 192, draft 128), with larger files as the explicit quality tradeoff.
+Export decoding follows the project's declared sample rate, defaulting to
+44.1 kHz when absent. Human Signal declares 48 kHz and supplies a materialized
+48-kHz bake. The standalone browser bake still defaults to 44.1 kHz; this is
+not a claim that every browser decode path uses the production sample rate.
 
 ## Modern graphics roadmap
 

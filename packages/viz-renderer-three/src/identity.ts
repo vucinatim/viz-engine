@@ -5,5 +5,5 @@ export const vizThreeRendererPackageIdentity = {
 
 export const vizThreeBrowserBackendIdentity = {
   id: 'browser-webgl',
-  version: 'viz-render.browser-webgl.v4',
+  version: 'viz-render.browser-webgl.v5',
 } as const;

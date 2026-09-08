@@ -28,9 +28,13 @@ describe('streaming audio coordinates', () => {
     expect([...first]).toEqual([2, 3, 7, 8]);
     expect([...last]).toEqual([4, 9]);
   });
-  it('estimates equal-duration exports consistently at different frame rates', () => {
-    expect(estimateVideoSize(300, 1920, 1080, 'high', 30)).toBe(
-      estimateVideoSize(600, 1920, 1080, 'high', 60),
+  it('budgets more bytes for more frames while preserving per-frame quality', () => {
+    expect(estimateVideoSize(600, 1920, 1080, 'high', 60)).toBeCloseTo(
+      2 * estimateVideoSize(300, 1920, 1080, 'high', 30),
+      1,
+    );
+    expect(estimateVideoSize(300, 1920, 1080, 'high', 60)).toBe(
+      estimateVideoSize(300, 1920, 1080, 'high', 30),
     );
   });
 });

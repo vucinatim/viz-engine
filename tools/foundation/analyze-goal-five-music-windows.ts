@@ -1,3 +1,4 @@
+import { createVizAudioPcmIdentityAsync } from '@viz-engine/bake';
 import { decodeVizAudioFileToPcm } from '@viz-engine/bake/node';
 import {
   analyzeStandardAudioFrames,
@@ -7,6 +8,7 @@ import {
   type AudioSignal,
   type StandardAudioFrameAnalysisResult,
 } from '@viz-engine/rhythm-core';
+import { deepStrictEqual } from 'node:assert';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -1557,12 +1559,62 @@ const validatePinnedArtifact = (): MusicWindowArtifact => {
   }
   const artifact = JSON.parse(bytes.toString('utf8')) as MusicWindowArtifact;
   assertArtifactShape(artifact);
-  if (!historicalOnlyMode) {
-    validateAlgorithmSourceIdentities(
-      artifact.determinism.algorithmSourceIdentities,
-    );
-  }
   return artifact;
+};
+
+/** Current decoder qualification is distinct from immutable historical ranking evidence. */
+export const reproduceMusicWindowPcm = async (
+  tracks: MusicWindowArtifact['tracks'],
+) => {
+  const observations = [];
+  for (const track of tracks) {
+    const decoded = await decodeVizAudioFileToPcm(
+      resolve(repositoryRoot, track.source.path),
+    );
+    const pcm = await createVizAudioPcmIdentityAsync(decoded.pcm);
+    deepStrictEqual(
+      {
+        source: decoded.sourceContentIdentity,
+        pcm: pcm.contentIdentity,
+        sampleRate: pcm.sampleRate,
+        channelCount: pcm.channelCount,
+        sampleCount: pcm.sampleCount,
+      },
+      {
+        source: track.source.contentIdentity,
+        pcm: track.decode.pcm.contentIdentity,
+        sampleRate: track.decode.decodedSampleRate,
+        channelCount: track.decode.decodedChannelCount,
+        sampleCount: track.decode.decodedSampleCount,
+      },
+      `Current canonical decoder differs from the historical PCM for ${track.source.path}.`,
+    );
+    observations.push({
+      source: track.source.path,
+      decoderIdentity: decoded.metadata.decoderIdentity,
+      pcm,
+    });
+  }
+  return observations;
+};
+
+export const assertRecomputedMusicWindowObservations = (
+  historical: MusicWindowArtifact,
+  current: MusicWindowArtifact,
+): void => {
+  deepStrictEqual(
+    {
+      ...current,
+      determinism: {
+        ...current.determinism,
+        environment: historical.determinism.environment,
+        algorithmSourceIdentities:
+          historical.determinism.algorithmSourceIdentities,
+      },
+    },
+    historical,
+    'Recomputed music-window observations differ from the pinned artifact.',
+  );
 };
 
 const main = async (): Promise<void> => {
@@ -1576,6 +1628,7 @@ const main = async (): Promise<void> => {
     return;
   }
   const artifact = validatePinnedArtifact();
+  const currentSources = readAlgorithmSourceIdentities();
   if (!historicalOnlyMode) {
     const { candidates, bytes } = readInventory();
     validateCurrentSourceIdentities(candidates);
@@ -1584,19 +1637,20 @@ const main = async (): Promise<void> => {
     ) {
       throw new Error('Music-window analysis inventory identity drifted.');
     }
+    const observations = await reproduceMusicWindowPcm(artifact.tracks);
+    validateAlgorithmSourceIdentities(currentSources);
+    process.stdout.write(
+      `Current canonical decoder reproduces all ${observations.length} historical track PCM identities exactly; current implementation ${contentIdentity(JSON.stringify(currentSources))}; ${[...new Set(observations.map((entry) => entry.decoderIdentity))].join(', ')}.\n`,
+    );
   }
   if (recomputeMode) {
     const recomputed = await createArtifact();
-    const expected = await formatArtifact(recomputed);
-    const actual = readFileSync(artifactPath, 'utf8');
-    if (actual !== expected) {
-      throw new Error(
-        'Recomputed music-window analysis differs from the pinned artifact.',
-      );
-    }
+    // Provenance may change; every musical observation and algorithm/configuration identity must agree exactly.
+    assertRecomputedMusicWindowObservations(artifact, recomputed);
+    validateAlgorithmSourceIdentities(currentSources);
   }
   process.stdout.write(
-    `Validated Goal Five music-window analysis (${artifact.summary.analyzedTrackCount} tracks, ${artifact.summary.candidateWindowCount} retained windows, provisional ${artifact.recommendation.provisionalWindowId}).\n`,
+    `Validated immutable historical Goal Five music-window analysis (${artifact.summary.analyzedTrackCount} tracks, ${artifact.summary.candidateWindowCount} retained windows, provisional ${artifact.recommendation.provisionalWindowId}).\n`,
   );
 };
 

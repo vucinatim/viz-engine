@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@viz-engine/contracts": "workspace:*",
-    "@viz-engine/rhythm-core": "workspace:*"
+    "@viz-engine/rhythm-core": "workspace:*",
+    "@noble/hashes": "2.0.1"
   }
 }

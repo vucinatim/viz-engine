@@ -56,14 +56,9 @@
           "assetId": "asset-image-cover"
         }
       },
-      "requiredAssetIds": [
-        "asset-image-cover"
-      ],
+      "requiredAssetIds": ["asset-image-cover"],
       "renderPolicy": {
-        "supportedModes": [
-          "live",
-          "render"
-        ],
+        "supportedModes": ["live", "render"],
         "preferredRendererFamily": "three"
       }
     },
@@ -91,17 +86,10 @@
           "output": "barsLoudness"
         }
       },
-      "requiredAssetIds": [
-        "asset-audio-main"
-      ],
-      "requiredArtifactIds": [
-        "artifact-audio-standard-main"
-      ],
+      "requiredAssetIds": ["asset-audio-main"],
+      "requiredArtifactIds": ["artifact-audio-authored-main"],
       "renderPolicy": {
-        "supportedModes": [
-          "live",
-          "render"
-        ],
+        "supportedModes": ["live", "render"],
         "preferredRendererFamily": "three"
       }
     },
@@ -123,9 +111,7 @@
           "output": "bloomIntensity"
         }
       },
-      "requiredArtifactIds": [
-        "artifact-audio-standard-main"
-      ]
+      "requiredArtifactIds": ["artifact-audio-authored-main"]
     }
   ],
   "assetRefs": [
@@ -152,9 +138,9 @@
   ],
   "artifactRefs": [
     {
-      "id": "artifact-audio-standard-main",
+      "id": "artifact-audio-authored-main",
       "kind": "audio-feature-timeline",
-      "label": "Main Song Standard Features",
+      "label": "Authored Scalar Feature Fixture",
       "sourceAssetId": "asset-audio-main"
     }
   ],
@@ -165,17 +151,17 @@
       "inputs": {
         "bassSource": {
           "kind": "artifact-feature",
-          "artifactId": "artifact-audio-standard-main",
+          "artifactId": "artifact-audio-authored-main",
           "feature": "bass-energy"
         },
         "loudnessSource": {
           "kind": "artifact-feature",
-          "artifactId": "artifact-audio-standard-main",
+          "artifactId": "artifact-audio-authored-main",
           "feature": "loudness"
         },
         "fluxSource": {
           "kind": "artifact-feature",
-          "artifactId": "artifact-audio-standard-main",
+          "artifactId": "artifact-audio-authored-main",
           "feature": "spectral-flux"
         }
       },

@@ -53,7 +53,7 @@ describe('Viz bundle corruption validation', () => {
     try {
       unlinkSync(join(bundleDirectory, 'assets/asset-image-cover.svg'));
       unlinkSync(
-        join(bundleDirectory, 'baked/artifact-audio-standard-main.json'),
+        join(bundleDirectory, 'baked/artifact-audio-authored-main.json'),
       );
 
       const loaded = loadLocalVizProjectBundle(bundleDirectory);
@@ -86,7 +86,7 @@ describe('Viz bundle corruption validation', () => {
       manifest.artifactEntries.push({
         artifactId: 'artifact-orphan-entry',
         kind: 'analysis-payload',
-        path: 'baked/artifact-audio-standard-main.json',
+        path: 'baked/artifact-audio-authored-main.json',
       });
 
       writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -117,7 +117,7 @@ describe('Viz bundle corruption validation', () => {
         (entry) => entry.assetId !== 'asset-image-cover',
       );
       manifest.artifactEntries = manifest.artifactEntries.filter(
-        (entry) => entry.artifactId !== 'artifact-audio-standard-main',
+        (entry) => entry.artifactId !== 'artifact-audio-authored-main',
       );
 
       writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);

@@ -1,5 +1,9 @@
 import { STAGE_MODEL_ASSET_DEFINITIONS } from '@viz-engine/components-core';
-import type { VizAssetRef } from '@viz-engine/contracts';
+import type {
+  VizArtifactRef,
+  VizAssetRef,
+  VizDerivedAssetRef,
+} from '@viz-engine/contracts';
 import { createHumanSignalDirection } from './direction.js';
 
 export const HUMAN_SIGNAL_SOURCE_AUDIO_ID = 'asset-human-signal-source-audio';
@@ -14,10 +18,10 @@ export const createHumanSignalModelAssets = (): VizAssetRef[] =>
 export const createHumanSignalAudioRecipe = () => {
   const { music } = createHumanSignalDirection();
   return {
-    status: 'planned-not-created' as const,
+    version: 'human-signal.audio-recipe.v1' as const,
     sourceAssetId: HUMAN_SIGNAL_SOURCE_AUDIO_ID,
     sourcePath: music.sourcePath,
-    sourceDisposition: 'verified-input-not-bundled' as const,
+    sourceDisposition: 'bundled-lineage' as const,
     sourceContentIdentity: music.sourceContentIdentity,
     approvedDecodedPcmContentIdentity: music.decodedPcmContentIdentity,
     sampleRate: music.sampleRate,
@@ -35,3 +39,10 @@ export const createHumanSignalAudioRecipe = () => {
     timelineFps: music.timelineFps,
   };
 };
+
+/** Materialized references only; sample processing belongs to @viz-engine/bake. */
+export interface HumanSignalAudioMaterialization {
+  sourceAsset: VizAssetRef;
+  asset: VizDerivedAssetRef;
+  artifact: VizArtifactRef;
+}

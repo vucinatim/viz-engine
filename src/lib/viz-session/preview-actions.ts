@@ -2,6 +2,7 @@ import useAudioEngineStore from '@/lib/stores/audio-engine-store';
 import useEditorRuntimePreviewAttachmentStore from '@/lib/stores/editor-runtime-preview-attachment-store';
 import type { VizProjectAction } from '@viz-engine/contracts';
 import type { VizSessionHost } from '@viz-engine/editor-control';
+import { sampleProjectAudioFrameSnapshot } from '@viz-engine/runtime';
 
 import { runtimeInspection } from './runtime-inspection';
 import {
@@ -115,8 +116,14 @@ export const createStudioPreviewActions = ({
     try {
       const attachmentStore = useEditorRuntimePreviewAttachmentStore.getState();
       const projectState = getProjectState();
+      const resources = getResources();
       const analyzer = useAudioEngineStore.getState().audioAnalyzer;
       const audioFrameData =
+        sampleProjectAudioFrameSnapshot(
+          projectState.workingProject,
+          resources.resolvedArtifacts,
+          frame.currentFrame,
+        ) ??
         providedAudioFrameData ??
         (() => {
           const frequencyData = new Uint8Array(
@@ -138,7 +145,6 @@ export const createStudioPreviewActions = ({
         width: projectState.workingProject.viewport.width,
         height: projectState.workingProject.viewport.height,
       };
-      const resources = getResources();
       const layerValues = host.getLiveLayerValues();
       const graphValues = host.getLiveGraphValues();
       const hasLiveOverrides =

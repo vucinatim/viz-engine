@@ -77,6 +77,7 @@ export interface VizAudioFeatureTimelineArtifact extends VizArtifactRef {
   profile: VizAudioFeatureProfile;
   sourceWindow: VizAudioSourceWindow;
   frameAlignment: VizAudioFrameAlignment;
+  /** Required with packedFrames for the standard profile; specialized scalar-only timelines may omit both. */
   analysis?: VizAudioAnalysisIdentity;
   featureSeries: VizAudioFeatureSeries[];
   packedFrames?: VizPackedAudioFrames;
@@ -102,15 +103,10 @@ export const encodeVizUint8Base64 = (bytes: Uint8Array): string => {
 };
 
 export const decodeVizUint8Base64 = (encoded: string): Uint8Array => {
-  if (
-    encoded.length % 4 !== 0 ||
-    !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(
-      encoded,
-    )
-  ) {
+  const invalid = () => {
     throw new Error('Invalid canonical uint8 base64 payload.');
-  }
-
+  };
+  if (encoded.length % 4 !== 0) invalid();
   const padding = encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0;
   const bytes = new Uint8Array((encoded.length / 4) * 3 - padding);
   let outputIndex = 0;
@@ -126,6 +122,18 @@ export const decodeVizUint8Base64 = (encoded: string): Uint8Array => {
       encoded[index + 3] === '='
         ? 0
         : BASE64_ALPHABET.indexOf(encoded[index + 3]!);
+    const last = index + 4 === encoded.length;
+    if (
+      first < 0 ||
+      second < 0 ||
+      third < 0 ||
+      fourth < 0 ||
+      ((!last || padding < 2) && encoded[index + 2] === '=') ||
+      ((!last || padding < 1) && encoded[index + 3] === '=') ||
+      (last && padding === 2 && (second & 15) !== 0) ||
+      (last && padding === 1 && (third & 3) !== 0)
+    )
+      invalid();
     const combined = (first << 18) | (second << 12) | (third << 6) | fourth;
 
     bytes[outputIndex++] = (combined >> 16) & 255;

@@ -30,7 +30,7 @@ const run = () => {
         inputKey: 'flux',
         source: {
           kind: 'artifact-feature',
-          artifactId: 'artifact-audio-standard-main',
+          artifactId: 'artifact-audio-authored-main',
           feature: 'spectral-flux',
         },
       },

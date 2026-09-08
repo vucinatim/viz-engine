@@ -124,8 +124,12 @@ export const sampleBrowserAudioBakeFrame = (
 
 export const loadAndDecodeBrowserAudio = async (
   audioUrl: string,
-  signal?: AbortSignal,
+  {
+    signal,
+    sampleRate = 44100,
+  }: { signal?: AbortSignal; sampleRate?: number } = {},
 ): Promise<LoadedBrowserAudio> => {
+  signal?.throwIfAborted();
   const response = await fetch(audioUrl, {
     ...(signal === undefined ? {} : { signal }),
   });
@@ -137,7 +141,7 @@ export const loadAndDecodeBrowserAudio = async (
   const sourceBytes = await response.arrayBuffer();
   const [sourceContentIdentity, audioBuffer] = await Promise.all([
     createSourceContentIdentity(sourceBytes),
-    new OfflineAudioContext(2, 44100, 44100).decodeAudioData(
+    new OfflineAudioContext(2, sampleRate, sampleRate).decodeAudioData(
       sourceBytes.slice(0),
     ),
   ]);
@@ -154,7 +158,7 @@ export const createVizBrowserAudioBakeSourceResolver = (
 ): VizAudioBakeSourceResolver => ({
   async resolve(request, signal) {
     const audioUrl = await resolveAudioUrl(request);
-    const loaded = await loadAndDecodeBrowserAudio(audioUrl, signal);
+    const loaded = await loadAndDecodeBrowserAudio(audioUrl, { signal });
     if (signal.aborted) {
       throw new DOMException('Audio decode was cancelled.', 'AbortError');
     }

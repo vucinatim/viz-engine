@@ -37,14 +37,20 @@ export interface VizStreamingVideoEncoder {
   dispose(): Promise<void>;
 }
 
+// Preserve a per-frame fidelity budget as frame rate changes; dense visual scenes
+// need more than a resolution-only bitrate at 60 fps. Size estimates use this same policy.
 const bitrateFor = (
   width: number,
   height: number,
   quality: 'high' | 'medium' | 'low',
+  fps: number,
 ) =>
   Math.max(
     64_000,
-    width * height * (quality === 'high' ? 8 : quality === 'medium' ? 4 : 2),
+    width *
+      height *
+      fps *
+      (quality === 'high' ? 0.8 : quality === 'medium' ? 0.2 : 0.1),
   );
 
 export const estimateVideoSize = (
@@ -55,7 +61,7 @@ export const estimateVideoSize = (
   fps = 60,
 ): number =>
   Math.round(
-    ((bitrateFor(width, height, quality) * (frameCount / fps)) /
+    ((bitrateFor(width, height, quality, fps) * (frameCount / fps)) /
       8 /
       1_000_000) *
       100,
@@ -161,6 +167,7 @@ export const openVizStreamingVideoEncoder = async ({
         : request.quality === 'standard'
           ? 'medium'
           : 'low',
+      request.fps,
     ),
   });
   if (
@@ -206,7 +213,14 @@ export const openVizStreamingVideoEncoder = async ({
     const { registerAacEncoder } = await import('@mediabunny/aac-encoder');
     registerAacEncoder();
   }
-  const audioQuality = new Quality({ bitrate: 192_000 });
+  const audioQuality = new Quality({
+    bitrate:
+      request.quality === 'high'
+        ? 320_000
+        : request.quality === 'standard'
+          ? 192_000
+          : 128_000,
+  });
   if (
     pcm &&
     !(await canEncodeAudio(audioCodec, {

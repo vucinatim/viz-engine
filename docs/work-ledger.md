@@ -3014,3 +3014,23 @@
 - Recorded package validation and independent-review controls in
   `docs/parity/evidence/2026-09-08-human-signal-ownership.md`; exact staged closure
   and immutable artifacts belong to the active execution program.
+
+## 2026-09-08 — Human Signal exact audio (EC-03)
+
+- Materialized the approved 48-kHz source sample window as a lossless derivative
+  and portable standard bake through canonical owners. Repeated bundles and
+  every source-slice sample, packed frame and scalar feature match exactly.
+- Bound actual PCM and decoder identities into bake execution; added strict
+  sample bounds, source snapshots, cancellation settlement and generic exclusive
+  bundle publication with rollback. Missing declared artifacts fail explicitly.
+- Corrected ordinary paused preview to consume the bake before live/frozen input
+  policy. Real production preview, seeks, still and decoded video share the same
+  audio features. Video and AAC quality corrections retain failed observations
+  and document the larger-file tradeoff; export preserves declared sample rate.
+- Reclassified the existing synthetic scalar-only example as specialized instead
+  of weakening the standard artifact contract. Historical music evidence stays
+  immutable, with current-decoder PCM reproduction and exact observation checks.
+- Exact staged checks, independent review and media evidence accompany program
+  closure. See `docs/parity/evidence/2026-09-08-human-signal-audio.md`. Seven-graph
+  composition, score/compositor work, hardware throughput and final creative
+  certification remain separate; no complete Goal Five criterion is implied.

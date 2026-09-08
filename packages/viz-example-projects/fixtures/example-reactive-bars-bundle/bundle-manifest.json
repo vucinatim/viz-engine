@@ -22,11 +22,11 @@
   ],
   "artifactEntries": [
     {
-      "artifactId": "artifact-audio-standard-main",
+      "artifactId": "artifact-audio-authored-main",
       "kind": "audio-feature-timeline",
-      "path": "baked/audio-standard-main.json",
+      "path": "baked/audio-authored-main.json",
       "metadata": {
-        "profile": "standard"
+        "profile": "specialized"
       }
     }
   ],

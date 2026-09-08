@@ -1,15 +1,19 @@
+import { createVizAudioPcmIdentity } from '@viz-engine/bake';
+import * as bakeNode from '@viz-engine/bake/node';
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   analyzeCompleteDecodedTrack,
+  assertRecomputedMusicWindowObservations,
   createExactClippingObservation,
   detectStructuralLandmarks,
   detectTransientLandmarks,
   observeDecodedPcm,
   readAlgorithmSourceIdentities,
+  reproduceMusicWindowPcm,
   scoreWindowMetrics,
   selectAuthorizedMusicCandidates,
   selectDiverseCandidateWindows,
@@ -103,6 +107,7 @@ const candidate = (
 });
 
 afterEach(() => {
+  vi.restoreAllMocks();
   temporaryDirectories
     .splice(0)
     .forEach((directory) =>
@@ -114,7 +119,9 @@ describe('Goal Five music-window observation', () => {
   it('accepts the exact immutable analysis and rejects semantic tampering', () => {
     const exact = runHistoricalValidation(artifactPath);
     expect(exact.status).toBe(0);
-    expect(exact.stdout).toContain('Validated Goal Five music-window analysis');
+    expect(exact.stdout).toContain(
+      'Validated immutable historical Goal Five music-window analysis',
+    );
 
     const directory = mkdtempSync(resolve(tmpdir(), 'viz-music-analysis-'));
     temporaryDirectories.push(directory);
@@ -309,5 +316,81 @@ describe('Goal Five music-window observation', () => {
     expect(strongScore.total).toBeGreaterThan(weakScore.total);
     expect(weakScore.silencePenalty).toBe(1);
     expect(weakScore.clippingPenalty).toBe(1);
+  });
+  it('rejects decoder sample/layout drift independently of an unchanged source file identity', async () => {
+    const historical = JSON.parse(readFileSync(artifactPath, 'utf8'));
+    const track = structuredClone(historical.tracks[0]);
+    const pcm = {
+      sampleRate: 8000,
+      channels: [new Float32Array([0, 0.25, -0.5])],
+    };
+    const identity = createVizAudioPcmIdentity(pcm);
+    Object.assign(track.decode, {
+      decodedSampleRate: 8000,
+      decodedChannelCount: 1,
+      decodedSampleCount: 3,
+      pcm: { ...track.decode.pcm, contentIdentity: identity.contentIdentity },
+    });
+    const decoded = {
+      filePath: track.source.path,
+      sourceContentIdentity: track.source.contentIdentity,
+      pcm,
+      metadata: {
+        sourceSampleRate: 8000,
+        sourceChannelCount: 1,
+        decodedSampleRate: 8000,
+        decodedChannelCount: 1 as const,
+        decodedSampleCount: 3,
+        decoderIdentity: 'controlled-current-decoder',
+      },
+    };
+    const mock = vi
+      .spyOn(bakeNode, 'decodeVizAudioFileToPcm')
+      .mockResolvedValue(decoded);
+    await expect(reproduceMusicWindowPcm([track])).resolves.toHaveLength(1);
+    for (const changed of [
+      { ...pcm, channels: [new Float32Array([0, 0.250001, -0.5])] },
+      { ...pcm, sampleRate: 16000 },
+      { ...pcm, channels: [pcm.channels[0]!, pcm.channels[0]!] },
+    ]) {
+      mock.mockResolvedValue({ ...decoded, pcm: changed });
+      await expect(reproduceMusicWindowPcm([track])).rejects.toThrow(
+        'differs from the historical PCM',
+      );
+    }
+  });
+
+  it('normalizes only historical provenance while rejecting musical and algorithm drift', () => {
+    const historical = JSON.parse(readFileSync(artifactPath, 'utf8'));
+    const current = structuredClone(historical);
+    current.determinism.environment.node = 'different-runtime';
+    current.determinism.algorithmSourceIdentities = [];
+    expect(() =>
+      assertRecomputedMusicWindowObservations(historical, current),
+    ).not.toThrow();
+    const mutations = [
+      (value: typeof current) => {
+        value.tracks[0].candidateWindows[0].score += 0.000001;
+      },
+      (value: typeof current) => {
+        value.tracks[0].candidateWindows[0].source.startSample += 1;
+      },
+      (value: typeof current) => {
+        value.analysisVersion += '-changed';
+      },
+      (value: typeof current) => {
+        value.determinism.config.fftSize *= 2;
+      },
+      (value: typeof current) => {
+        value.determinism.algorithmIdentities.push('changed');
+      },
+    ];
+    for (const mutate of mutations) {
+      const changed = structuredClone(current);
+      mutate(changed);
+      expect(() =>
+        assertRecomputedMusicWindowObservations(historical, changed),
+      ).toThrow('observations differ');
+    }
   });
 });

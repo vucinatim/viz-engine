@@ -47,13 +47,14 @@ const exampleAudioPlaceholderBytes = new TextEncoder().encode(
   'viz-engine-audio-placeholder',
 ).buffer;
 
+// Deliberately authored scalar data for graph/contract examples, not a decoded standard bake.
 export const exampleAudioTimelineArtifact: VizAudioFeatureTimelineArtifact = {
   schemaVersion: 1,
-  id: 'artifact-audio-standard-main',
+  id: 'artifact-audio-authored-main',
   kind: 'audio-feature-timeline',
-  label: 'Main Song Standard Features',
+  label: 'Authored Scalar Feature Fixture',
   sourceAssetId: 'asset-audio-main',
-  profile: 'standard',
+  profile: 'specialized',
   sourceWindow: {
     startSample: 0,
     sampleCount: frameCount * 1470,
@@ -409,7 +410,7 @@ export const exampleResolvedArtifacts: VizResolvedArtifact[] = [
   {
     id: exampleAudioTimelineArtifact.id,
     kind: exampleAudioTimelineArtifact.kind,
-    uri: 'memory://artifacts/audio-standard-main.json',
+    uri: 'memory://artifacts/audio-authored-main.json',
     payload: exampleAudioTimelineArtifact,
     metadata: {
       profile: exampleAudioTimelineArtifact.profile,

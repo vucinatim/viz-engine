@@ -21,7 +21,8 @@ import {
   readFileSync,
   writeFileSync,
 } from 'node:fs';
-import { basename, extname, resolve } from 'node:path';
+import { mkdir, mkdtemp, rename, rm } from 'node:fs/promises';
+import { basename, dirname, extname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   VIZ_AUDIO_ARTIFACT_CONTAINER_ENCODING,
@@ -947,4 +948,95 @@ export const writeLocalVizProjectBundle = ({
     ...(executionManifest === undefined ? {} : { executionManifest }),
     issues,
   };
+};
+
+export class VizBundlePublicationError extends Error {
+  constructor(
+    readonly code:
+      | 'bundle-write-failed'
+      | 'bundle-validation-failed'
+      | 'bundle-publication-failed',
+    message: string,
+  ) {
+    super(message);
+    this.name = 'VizBundlePublicationError';
+  }
+}
+
+/** Publish a validated complete bundle to a new destination, with no partial success. */
+export const writeExclusiveLocalVizProjectBundle = async (
+  options: WriteLocalVizProjectBundleOptions & {
+    signal?: AbortSignal;
+    /** Read-only observation of the staged bundle; must not mutate its files/resources. */
+    validatePrepared?: (
+      bundle: LoadedLocalVizProjectBundle,
+    ) => void | Promise<void>;
+  },
+): Promise<WrittenLocalVizProjectBundle> => {
+  const destination = resolve(
+    normalizeBundleDirectoryInput(options.bundleDirectory),
+  );
+  options.signal?.throwIfAborted();
+  await mkdir(dirname(destination), { recursive: true });
+  const workspace = await mkdtemp(
+    resolve(dirname(destination), '.viz-bundle-'),
+  );
+  let ownsDestination = false;
+  let written: WrittenLocalVizProjectBundle | undefined;
+  let failure: unknown;
+  try {
+    options.signal?.throwIfAborted();
+    const preparedDirectory = resolve(workspace, 'bundle');
+    written = writeLocalVizProjectBundle({
+      ...options,
+      bundleDirectory: preparedDirectory,
+    });
+    if (written.issues.length)
+      throw new VizBundlePublicationError(
+        'bundle-write-failed',
+        JSON.stringify(written.issues),
+      );
+    const prepared = loadLocalVizProjectBundle(preparedDirectory);
+    if (prepared.issues.length)
+      throw new VizBundlePublicationError(
+        'bundle-validation-failed',
+        JSON.stringify(prepared.issues),
+      );
+    await options.validatePrepared?.(prepared);
+    options.signal?.throwIfAborted();
+    // Reserve exclusively. rename can replace only the empty directory we own.
+    await mkdir(destination);
+    ownsDestination = true;
+    options.signal?.throwIfAborted();
+    await rename(preparedDirectory, destination);
+  } catch (error) {
+    failure = error;
+  }
+  const cleanupErrors: unknown[] = [];
+  try {
+    await rm(workspace, { recursive: true, force: true });
+  } catch (error) {
+    cleanupErrors.push(error);
+  }
+  if (failure || cleanupErrors.length || options.signal?.aborted) {
+    if (ownsDestination) {
+      try {
+        await rm(destination, { recursive: true, force: true });
+      } catch (error) {
+        cleanupErrors.push(error);
+      }
+    }
+    if (cleanupErrors.length)
+      throw new VizBundlePublicationError(
+        'bundle-publication-failed',
+        [failure, ...cleanupErrors].filter(Boolean).map(String).join('; '),
+      );
+    options.signal?.throwIfAborted();
+    if (failure instanceof Error && 'code' in failure) throw failure;
+    throw new VizBundlePublicationError(
+      'bundle-publication-failed',
+      String(failure),
+    );
+  }
+  return { ...written!, bundleDirectory: destination };
 };

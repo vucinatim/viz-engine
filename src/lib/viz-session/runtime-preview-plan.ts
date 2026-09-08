@@ -405,6 +405,10 @@ const createFrameInputValues = ({
   isPlaying,
 }: CreateRuntimePreviewPlanOptions): VizRuntimeFrameInputValues => {
   const runtimeAudio = toRuntimeAudioSnapshot(audioFrameData);
+  if (runtimeAudio.provenance === 'baked') {
+    frozenAudioByLayerId.clear();
+    return {};
+  }
   const activeLayerIds = new Set(project.layers.map((layer) => layer.id));
 
   for (const layerId of frozenAudioByLayerId.keys()) {
@@ -444,6 +448,12 @@ const createFrameInputValues = ({
 export const createVizSessionRuntimePreviewPlan = (
   options: CreateRuntimePreviewPlanOptions,
 ): VizRenderPlan => {
+  const baked = sampleProjectAudioFrameSnapshot(
+    options.project,
+    options.resolvedArtifacts ?? [],
+    options.frame.currentFrame,
+  );
+  if (baked) options = { ...options, audioFrameData: baked };
   const session = getRuntimeSession(options);
 
   const plan = createVizRenderPlan({

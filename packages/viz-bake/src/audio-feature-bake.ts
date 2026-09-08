@@ -1,3 +1,5 @@
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
 import {
   encodeVizUint8Base64,
   type VizAudioFeatureProfile,
@@ -14,9 +16,17 @@ import {
   type StandardAudioFrameAnalysisOptions,
   type StandardAudioFrameAnalysisResult,
 } from '@viz-engine/rhythm-core';
+import {
+  VizAudioPcmError,
+  createVizAudioPcmIdentity,
+  createVizAudioPcmIdentityAsync,
+  validateVizAudioPcmShape,
+  validateVizAudioSampleWindow,
+  type VizAudioPcmSource,
+} from './audio-pcm.js';
 
 export const VIZ_AUDIO_FEATURE_BAKE_VERSION =
-  'viz-bake.audio-feature-timeline.v1' as const;
+  'viz-bake.audio-feature-timeline.v2' as const;
 
 export interface VizBakeRequest {
   kind: 'audio-feature-timeline';
@@ -30,13 +40,9 @@ export interface VizBakePlan {
   requests: VizBakeRequest[];
 }
 
-export interface VizAudioPcmSource {
-  sampleRate: number;
-  channels: readonly Float32Array[];
-}
-
 export interface VizAudioFeatureBakeRequest extends VizBakeRequest {
   sourceContentIdentity: string;
+  decoderIdentity?: string;
   artifactId?: string;
   artifactLabel?: string;
   artifactUri?: string;
@@ -125,29 +131,12 @@ const validateExecutionInput = (
       message: `Audio feature profile "${request.profile}" is not implemented by the standard audio bake pipeline.`,
     });
   }
-  if (
-    !isPositiveFinite(pcm.sampleRate) ||
-    (pcm.channels.length !== 1 && pcm.channels.length !== 2) ||
-    pcm.channels.some(
-      (channel) =>
-        !(channel instanceof Float32Array) ||
-        channel.length !== pcm.channels[0]?.length,
-    )
-  ) {
+  try {
+    validateVizAudioPcmShape(pcm);
+  } catch (error) {
     issues.push({
       code: 'invalid-pcm',
-      message:
-        'PCM input requires a positive sample rate and one or two equally sized Float32Array channels.',
-    });
-  }
-  if (
-    pcm.channels.some((channel) =>
-      channel.some((sample) => !Number.isFinite(sample)),
-    )
-  ) {
-    issues.push({
-      code: 'invalid-pcm',
-      message: 'PCM input channels may contain only finite samples.',
+      message: error instanceof Error ? error.message : 'Invalid PCM.',
     });
   }
   const fftSize = request.fftSize ?? 2048;
@@ -176,6 +165,7 @@ const validateExecutionInput = (
     });
   }
   for (const [label, value] of [
+    ['decoderIdentity', request.decoderIdentity],
     ['artifactId', request.artifactId],
     ['artifactLabel', request.artifactLabel],
     ['artifactUri', request.artifactUri],
@@ -210,23 +200,47 @@ const validateExecutionInput = (
     });
   }
 
+  if (issues.length === 0) {
+    try {
+      resolveBakeSampleWindow(request, pcm);
+    } catch (error) {
+      issues.push({
+        code: 'invalid-request',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Invalid source sample window.',
+      });
+    }
+  }
   return issues;
 };
 
-const fnv1a = (value: string): string => {
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return (hash >>> 0).toString(16).padStart(8, '0');
+const resolveBakeSampleWindow = (
+  request: VizAudioFeatureBakeRequest,
+  pcm: VizAudioPcmSource,
+) => {
+  const startSample = Math.floor(
+    (request.sourceWindow?.startSeconds ?? 0) * pcm.sampleRate,
+  );
+  const endSampleExclusive =
+    request.sourceWindow?.durationSeconds === undefined
+      ? pcm.channels[0]!.length
+      : startSample +
+        Math.floor(request.sourceWindow.durationSeconds * pcm.sampleRate);
+  const window = { startSample, endSampleExclusive };
+  validateVizAudioSampleWindow(pcm, window);
+  return window;
 };
 
 const createExecutionDescriptor = (
   request: VizAudioFeatureBakeRequest,
   pcm: VizAudioPcmSource,
+  pcmIdentity: ReturnType<typeof createVizAudioPcmIdentity>,
 ) => ({
   bakeVersion: VIZ_AUDIO_FEATURE_BAKE_VERSION,
+  decodedPcm: pcmIdentity,
+  decoderIdentity: request.decoderIdentity ?? 'caller-provided-pcm',
   sourceAssetId: request.sourceAssetId,
   sourceContentIdentity: request.sourceContentIdentity,
   profile: request.profile,
@@ -239,10 +253,7 @@ const createExecutionDescriptor = (
   waveformSampleCount: request.fftSize ?? 2048,
   minDecibels: request.minDecibels ?? -90,
   maxDecibels: request.maxDecibels ?? -10,
-  sourceWindow: {
-    startSeconds: request.sourceWindow?.startSeconds ?? 0,
-    durationSeconds: request.sourceWindow?.durationSeconds ?? null,
-  },
+  sourceWindow: resolveBakeSampleWindow(request, pcm),
 });
 
 const getMinMax = (values: Float32Array): { min: number; max: number } => {
@@ -286,19 +297,11 @@ const createAnalysisOptions = (
   pcm: VizAudioPcmSource,
   options: ExecuteVizAudioFeatureBakeOptions = {},
 ): StandardAudioFrameAnalysisOptions => {
-  const totalSamples = pcm.channels[0]!.length;
-  const startSample = Math.min(
-    totalSamples,
-    Math.floor((request.sourceWindow?.startSeconds ?? 0) * pcm.sampleRate),
+  const { startSample, endSampleExclusive } = resolveBakeSampleWindow(
+    request,
+    pcm,
   );
-  const requestedSampleCount =
-    request.sourceWindow?.durationSeconds === undefined
-      ? totalSamples - startSample
-      : Math.floor(request.sourceWindow.durationSeconds * pcm.sampleRate);
-  const sampleCount = Math.min(
-    totalSamples - startSample,
-    requestedSampleCount,
-  );
+  const sampleCount = endSampleExclusive - startSample;
   return {
     sampleRate: pcm.sampleRate,
     fps: request.fps,
@@ -325,20 +328,19 @@ const createAnalysisOptions = (
 };
 
 const createExecutionIdentity = (
-  request: VizAudioFeatureBakeRequest,
-  pcm: VizAudioPcmSource,
+  descriptor: ReturnType<typeof createExecutionDescriptor>,
 ): string =>
-  `${VIZ_AUDIO_FEATURE_BAKE_VERSION}:${fnv1a(
-    JSON.stringify(createExecutionDescriptor(request, pcm)),
-  )}`;
+  `${VIZ_AUDIO_FEATURE_BAKE_VERSION}:sha256:${bytesToHex(sha256(new TextEncoder().encode(JSON.stringify(descriptor))))}`;
 
 const createSuccessfulResult = (
   request: VizAudioFeatureBakeRequest,
   executionIdentity: string,
   analysis: StandardAudioFrameAnalysisResult,
+  descriptor: ReturnType<typeof createExecutionDescriptor>,
 ): VizAudioFeatureBakeResult => {
   const artifactId =
-    request.artifactId ?? `artifact-audio-features-${fnv1a(executionIdentity)}`;
+    request.artifactId ??
+    `artifact-audio-features-${executionIdentity.split(':').at(-1)}`;
   const artifact: VizAudioFeatureTimelineArtifact = {
     schemaVersion: 1,
     id: artifactId,
@@ -387,6 +389,7 @@ const createSuccessfulResult = (
     metadata: {
       executionIdentity,
       bakeVersion: VIZ_AUDIO_FEATURE_BAKE_VERSION,
+      executionDescriptor: descriptor,
     },
   };
   const resolvedArtifact: VizResolvedArtifact = {
@@ -418,24 +421,30 @@ const createSuccessfulResult = (
 };
 
 const createExecutionFailure = (
-  executionIdentity: string,
+  executionIdentity: string | undefined,
   error: unknown,
 ): VizAudioFeatureBakeResult => {
-  if (error instanceof StandardAudioFrameAnalysisCancelledError) {
+  if (
+    error instanceof StandardAudioFrameAnalysisCancelledError ||
+    (error instanceof VizAudioPcmError && error.code === 'cancelled')
+  ) {
     return {
       ok: false,
       status: 'cancelled',
-      executionIdentity,
+      ...(executionIdentity ? { executionIdentity } : {}),
       issues: [{ code: 'cancelled', message: error.message }],
     };
   }
   return {
     ok: false,
     status: 'failed',
-    executionIdentity,
+    ...(executionIdentity ? { executionIdentity } : {}),
     issues: [
       {
-        code: 'execution-failed',
+        code:
+          error instanceof VizAudioPcmError && error.code === 'invalid-pcm'
+            ? 'invalid-pcm'
+            : 'execution-failed',
         message:
           error instanceof Error ? error.message : 'Audio feature bake failed.',
       },
@@ -462,13 +471,26 @@ export const executeVizAudioFeatureBake = (
   if (validationFailure) {
     return validationFailure;
   }
-  const executionIdentity = createExecutionIdentity(request, pcm);
+  let executionIdentity: string | undefined;
   try {
+    const descriptor = createExecutionDescriptor(
+      request,
+      pcm,
+      createVizAudioPcmIdentity(pcm, options.shouldCancel),
+    );
+    executionIdentity = createExecutionIdentity(descriptor);
     const analysis = analyzeStandardAudioFrames(
       toAudioSignal(pcm),
       createAnalysisOptions(request, pcm, options),
     );
-    return createSuccessfulResult(request, executionIdentity, analysis);
+    if (options.shouldCancel?.())
+      throw new VizAudioPcmError('cancelled', 'Audio bake was cancelled.');
+    return createSuccessfulResult(
+      request,
+      executionIdentity,
+      analysis,
+      descriptor,
+    );
   } catch (error) {
     return createExecutionFailure(executionIdentity, error);
   }
@@ -483,8 +505,17 @@ export const executeVizAudioFeatureBakeAsync = async (
   if (validationFailure) {
     return validationFailure;
   }
-  const executionIdentity = createExecutionIdentity(request, pcm);
+  let executionIdentity: string | undefined;
   try {
+    const descriptor = createExecutionDescriptor(
+      request,
+      pcm,
+      await createVizAudioPcmIdentityAsync(pcm, {
+        ...(options.shouldCancel ? { shouldCancel: options.shouldCancel } : {}),
+        ...(options.yieldToHost ? { yieldToHost: options.yieldToHost } : {}),
+      }),
+    );
+    executionIdentity = createExecutionIdentity(descriptor);
     const analysis = await analyzeStandardAudioFramesAsync(toAudioSignal(pcm), {
       ...createAnalysisOptions(request, pcm, options),
       ...(options.yieldEveryFrames === undefined
@@ -494,7 +525,14 @@ export const executeVizAudioFeatureBakeAsync = async (
         ? {}
         : { yieldToHost: options.yieldToHost }),
     });
-    return createSuccessfulResult(request, executionIdentity, analysis);
+    if (options.shouldCancel?.())
+      throw new VizAudioPcmError('cancelled', 'Audio bake was cancelled.');
+    return createSuccessfulResult(
+      request,
+      executionIdentity,
+      analysis,
+      descriptor,
+    );
   } catch (error) {
     return createExecutionFailure(executionIdentity, error);
   }

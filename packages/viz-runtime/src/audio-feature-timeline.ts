@@ -128,6 +128,9 @@ export const isVizAudioFeatureTimelineArtifact = (
   const isValid =
     candidate.schemaVersion === 1 &&
     candidate.kind === 'audio-feature-timeline' &&
+    (candidate.profile !== 'standard' ||
+      (candidate.analysis !== undefined &&
+        candidate.packedFrames !== undefined)) &&
     (candidate.profile === 'standard' ||
       candidate.profile === 'extended' ||
       candidate.profile === 'specialized') &&
@@ -160,6 +163,9 @@ export const isVizAudioFeatureTimelineArtifact = (
       isAudioAnalysisIdentity(candidate.analysis)) &&
     (packedFrames === undefined ||
       (candidate.analysis !== undefined &&
+        typeof packedFrames === 'object' &&
+        packedFrames !== null &&
+        !Array.isArray(packedFrames) &&
         isPackedFrameSeries(packedFrames.frequency, frameCount as number) &&
         isPackedFrameSeries(packedFrames.timeDomain, frameCount as number) &&
         (candidate.profile !== 'standard' ||
@@ -326,30 +332,58 @@ export const sampleAudioFrameSnapshot = (
   };
 };
 
+export class VizProjectAudioArtifactError extends Error {
+  constructor(
+    readonly code: 'audio-artifact-missing' | 'audio-artifact-invalid',
+    readonly artifactId: string,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'VizProjectAudioArtifactError';
+  }
+}
+
 export const sampleProjectAudioFrameSnapshot = (
   project: VizProjectDocument,
   resolvedArtifacts: readonly VizResolvedArtifact[],
   frame: number,
 ): VizRuntimeAudioFrameSnapshot | undefined => {
-  for (const artifactRef of project.artifactRefs ?? []) {
-    if (artifactRef.kind !== 'audio-feature-timeline') {
-      continue;
-    }
-    const resolved = resolvedArtifacts.find(
-      (artifact) => artifact.id === artifactRef.id,
-    );
-    const artifact = getAudioFeatureTimelineArtifact(resolved);
-    if (!artifact) {
-      continue;
-    }
+  // Resolve every declared timeline before sampling: an absent dependency is a
+  // broken project, never permission to substitute live audio or a new bake.
+  const timelines = (project.artifactRefs ?? [])
+    .filter((ref) => ref.kind === 'audio-feature-timeline')
+    .map((ref) => {
+      const resolved = resolvedArtifacts.find(
+        (artifact) => artifact.id === ref.id,
+      );
+      if (!resolved)
+        throw new VizProjectAudioArtifactError(
+          'audio-artifact-missing',
+          ref.id,
+          `Declared audio artifact "${ref.id}" is missing.`,
+        );
+      const artifact = getAudioFeatureTimelineArtifact(resolved);
+      if (
+        !artifact ||
+        resolved.kind !== ref.kind ||
+        artifact.id !== ref.id ||
+        (ref.sourceAssetId !== undefined &&
+          artifact.sourceAssetId !== ref.sourceAssetId)
+      )
+        throw new VizProjectAudioArtifactError(
+          'audio-artifact-invalid',
+          ref.id,
+          `Declared audio artifact "${ref.id}" is invalid or bound to a different source.`,
+        );
+      return artifact;
+    });
+  for (const artifact of timelines) {
     const snapshot = sampleAudioFrameSnapshot(
       artifact,
       frame,
       project.timeline.fps,
     );
-    if (snapshot) {
-      return snapshot;
-    }
+    if (snapshot) return snapshot;
   }
   return undefined;
 };

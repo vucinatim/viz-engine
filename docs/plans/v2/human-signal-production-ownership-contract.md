@@ -21,11 +21,16 @@ treatment, musical map, historical capability catalog and Gate 1 packet before
 writing. The current runtime/component/node/renderer registrations own current
 execution capability identities. Historical availability claims are provenance
 only. Production metadata binds the exact approval reference, source window,
-score, pending audio/bake recipes and requested render settings.
+score, versioned audio/bake recipes and requested render settings.
 
-Actual bundle entries contain four materialized model files. Full-source music
-is verified input provenance outside executable project asset references; local frame zero must eventually map to source sample 108000. No zero-offset source playback, fabricated derivative hashes, silence
-artifacts, or production-local frame evaluator may bridge EC-03/04/07/08.
+EC-02 established four materialized model files without executable audio. EC-03
+replaces that foundation factory with a required audio materialization contract.
+Current bundles include those models, the exact derivative, the original source
+as bundled lineage, and the canonical bake. Local frame zero maps to source
+sample 108000. The artifact's source reference selects the derivative even if
+asset ordering changes; a missing derivative never selects the original track.
+No fabricated hashes, silence artifacts or production-local frame evaluator may
+bridge the remaining skeleton, score and compositor work.
 The current highest named render quality `high` represents treatment quality 2;
 this records requested quality, not measured visual/performance qualification.
 
@@ -35,15 +40,18 @@ Evidence lanes: project-semantic and code-architecture, on the exact claimed
 branch/commit/diff. Node package tests compare the approved projection, exact
 60-fps frame/sample endpoints, current registries, repeatable independent
 factory data, and a bundle written/reopened through canonical owners. The canonical audio
-resolver must return no audio until the approved clip is materialized. Copied
+resolver returns no audio if the declared derivative is unresolved, allowing
+editor import while leaving required-audio enforcement to execution. Copied
 asset identities must equal their approved source identities, rejecting a
 self-consistent bundle made from changed bytes at the writer handoff. Changed
 source bytes and one-frame/one-sample coordinate controls must fail. Corrupted
 project/asset bytes must fail generic execution identity validation. Structural
 dependency checks forbid reusable package imports of production packages.
 
-All hashes and integer coordinates require exact equality. No browser render,
-audio listening, or performance result is claimed by this checkpoint. Human
+All hashes and integer coordinates require exact equality. EC-02 did not claim
+browser rendering, audio listening or performance. EC-03's distinct
+[audio observation contract](./human-signal-audio-observation-contract.md) owns
+its exact PCM and cross-path evidence. Human
 judgment remains necessary for realized musical truth, composition, performer
 value and final quality; the existing Gate 1 decision approves direction only.
 

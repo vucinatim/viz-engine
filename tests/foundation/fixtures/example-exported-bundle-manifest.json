@@ -22,9 +22,9 @@
   ],
   "artifactEntries": [
     {
-      "artifactId": "artifact-audio-standard-main",
+      "artifactId": "artifact-audio-authored-main",
       "kind": "audio-feature-timeline",
-      "path": "baked/artifact-audio-standard-main.json"
+      "path": "baked/artifact-audio-authored-main.json"
     }
   ]
 }

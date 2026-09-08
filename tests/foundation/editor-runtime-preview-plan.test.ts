@@ -1,3 +1,5 @@
+import { executeVizAudioFeatureBake } from '@viz-engine/bake';
+import { sampleProjectAudioFrameSnapshot } from '@viz-engine/runtime';
 import { describe, expect, it } from 'vitest';
 
 import { CompDefinitionMap } from '@/components/comps';
@@ -359,7 +361,7 @@ describe('Editor runtime preview planning', () => {
       kind: 'audio-feature-timeline',
       label: 'Preview resource fixture',
       sourceAssetId: SIGNAL_CATHEDRAL_AUDIO_ASSET_ID,
-      profile: 'standard',
+      profile: 'specialized',
       sourceWindow: {
         startSample: 0,
         sampleCount: 576_000,
@@ -630,5 +632,71 @@ describe('Editor runtime preview planning', () => {
       assetId: 'custom-dj',
     });
     expect(normalized.assetRefs).toHaveLength(4);
+  });
+  it('uses baked frame bytes during ordinary live-to-paused seeking without caller audio injection', () => {
+    resetVizSessionRuntimePreviewPlanCache();
+    const project = createTestProject(
+      CompDefinitionMap.get('Curve Spectrum')!,
+      'baked-spectrum',
+    );
+    const pcm = {
+      sampleRate: 8000,
+      channels: [
+        Float32Array.from(
+          { length: 8000 },
+          (_, i) => Math.sin(i / (i < 4000 ? 6 : 17)) * (i < 4000 ? 0.2 : 0.8),
+        ),
+      ],
+    };
+    const bake = executeVizAudioFeatureBake(
+      {
+        kind: 'audio-feature-timeline',
+        sourceAssetId: 'audio',
+        sourceContentIdentity: 'test',
+        profile: 'standard',
+        fps: 60,
+        fftSize: 256,
+      },
+      pcm,
+    );
+    if (!bake.ok) throw new Error('Fixture bake failed.');
+    project.artifactRefs = [bake.artifact];
+    const resources = [bake.resolvedArtifact];
+    const observations = [];
+    for (const [frameNumber, isPlaying] of [
+      [0, true],
+      [40, false],
+      [10, false],
+      [40, false],
+    ] as const) {
+      const plan = createVizSessionRuntimePreviewPlan({
+        project,
+        projectRevision: 900,
+        resolvedArtifacts: resources,
+        resourceRevision: 900,
+        frame: createVizSessionRuntimePreviewFrame({
+          currentFrame: frameNumber,
+          time: frameNumber / 60,
+          dt: 1 / 60,
+          fps: 60,
+          mode: 'live',
+        }),
+        viewport: { width: 640, height: 360 },
+        audioFrameData,
+        isPlaying,
+      });
+      const expected = sampleProjectAudioFrameSnapshot(
+        project,
+        resources,
+        frameNumber,
+      )!;
+      expect(plan.layers[0]?.resolvedInputs.spectrum?.value).toEqual(
+        expected.frequencyData,
+      );
+      expect(plan.issues).toEqual([]);
+      observations.push([...expected.frequencyData]);
+    }
+    expect(observations[0]).not.toEqual(observations[1]);
+    expect(observations[1]).toEqual(observations[3]);
   });
 });

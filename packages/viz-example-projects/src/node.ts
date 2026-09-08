@@ -36,7 +36,7 @@ export const exampleProjectBundleManifest: VizProjectBundleManifest = {
     {
       artifactId: exampleAudioTimelineArtifact.id,
       kind: exampleAudioTimelineArtifact.kind,
-      path: 'baked/audio-standard-main.json',
+      path: 'baked/audio-authored-main.json',
       metadata: {
         profile: exampleAudioTimelineArtifact.profile,
       },

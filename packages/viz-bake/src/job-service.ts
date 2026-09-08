@@ -8,12 +8,12 @@ import {
   executeVizAudioFeatureBakeAsync,
   type VizAudioFeatureBakeRequest,
   type VizAudioFeatureBakeResult,
-  type VizAudioPcmSource,
 } from './audio-feature-bake.js';
+import type { VizAudioPcmSource } from './audio-pcm.js';
 
 export type VizAudioFeatureBakeJobRequest = Omit<
   VizAudioFeatureBakeRequest,
-  'sourceContentIdentity'
+  'sourceContentIdentity' | 'decoderIdentity'
 > & {
   expectedSourceContentIdentity?: string;
 };
@@ -200,7 +200,11 @@ export const createVizAudioFeatureBakeJobService = ({
       }
       fail(
         jobId,
-        'source-resolution-failed',
+        error instanceof Error &&
+          'code' in error &&
+          typeof error.code === 'string'
+          ? error.code
+          : 'source-resolution-failed',
         error instanceof Error
           ? error.message
           : 'Audio source resolution failed.',
@@ -239,6 +243,7 @@ export const createVizAudioFeatureBakeJobService = ({
       {
         ...initial.request,
         sourceContentIdentity: source.sourceContentIdentity,
+        decoderIdentity: source.decoderIdentity ?? 'caller-provided-pcm',
       },
       source.pcm,
       {
@@ -272,6 +277,10 @@ export const createVizAudioFeatureBakeJobService = ({
       },
     );
 
+    if (controller.signal.aborted) {
+      completeCancelled(jobId);
+      return;
+    }
     if (!result.ok) {
       if (result.status === 'cancelled' || controller.signal.aborted) {
         completeCancelled(jobId, result.issues[0]?.message);

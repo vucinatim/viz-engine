@@ -10,22 +10,25 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repositoryRoot = fileURLToPath(new URL('../../..', import.meta.url));
-const bundleDirectory = mkdtempSync(
-  resolve(tmpdir(), 'viz-human-signal-built-'),
-);
+const workspace = mkdtempSync(resolve(tmpdir(), 'viz-human-signal-built-'));
+const bundleDirectory = resolve(workspace, 'bundle');
 try {
-  const written = writeHumanSignalBundle({ repositoryRoot, bundleDirectory });
+  const written = await writeHumanSignalBundle({
+    repositoryRoot,
+    bundleDirectory,
+  });
   const reopened = loadLocalVizProjectBundle(bundleDirectory);
   deepStrictEqual(reopened.issues, []);
-  deepStrictEqual(reopened.project, createHumanSignalProject());
+  deepStrictEqual(reopened.project, createHumanSignalProject(written.audio));
   deepStrictEqual(reopened.executionManifest, written.executionManifest);
   strictEqual(
-    resolveVizProjectAudioAsset(reopened.project, reopened.resolvedAssets),
-    undefined,
+    resolveVizProjectAudioAsset(reopened.project, reopened.resolvedAssets)?.ref
+      .id,
+    written.audio.asset.id,
   );
   console.log(
     'Human Signal built package exports, materialization and reopen pass in plain Node.',
   );
 } finally {
-  rmSync(bundleDirectory, { recursive: true, force: true });
+  rmSync(workspace, { recursive: true, force: true });
 }

@@ -46,7 +46,7 @@ const audioArtifact: VizAudioFeatureTimelineArtifact = {
   kind: 'audio-feature-timeline',
   label: 'Signal Cathedral Test Features',
   sourceAssetId: SIGNAL_CATHEDRAL_AUDIO_ASSET_ID,
-  profile: 'standard',
+  profile: 'specialized',
   sourceWindow: {
     startSample: 0,
     sampleCount: 576_000,

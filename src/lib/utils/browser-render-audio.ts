@@ -29,10 +29,10 @@ export const createVizBrowserRenderAudio = ({
           source.resolvedAssets,
         );
         if (!asset) return undefined;
-        const loaded = await loadAndDecodeBrowserAudio(
-          asset.resolved.uri,
+        const loaded = await loadAndDecodeBrowserAudio(asset.resolved.uri, {
           signal,
-        );
+          sampleRate: source.project.timeline.sampleRate ?? 44100,
+        });
         signal.throwIfAborted();
         if (disposed) throw new Error('Render audio is disposed.');
         bytes =

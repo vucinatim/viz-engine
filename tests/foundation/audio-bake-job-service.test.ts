@@ -121,4 +121,45 @@ describe('audio bake job service', () => {
       failure: { code: 'source-identity-mismatch' },
     });
   });
+  it('cancels on final analysis progress without publishing an artifact and recovers on the next job', async () => {
+    const service = createVizAudioFeatureBakeJobService({
+      sourceResolver: {
+        async resolve() {
+          return { pcm, sourceContentIdentity: 'sha256:source' };
+        },
+      },
+    });
+    const unsubscribe = service.subscribe(({ job }) => {
+      if (
+        job.status === 'running' &&
+        job.progress?.stage === 'analyzing' &&
+        job.progress.total > 0 &&
+        job.progress.completed === job.progress.total
+      )
+        service.cancel(job.id);
+    });
+    const cancelled = await service.wait(service.start(request).id);
+    expect(cancelled.status).toBe('cancelled');
+    expect(cancelled.result).toBeUndefined();
+    unsubscribe();
+    expect((await service.wait(service.start(request).id)).status).toBe(
+      'succeeded',
+    );
+  });
+
+  it('preserves typed decoder errors in the public job failure', async () => {
+    const service = createVizAudioFeatureBakeJobService({
+      sourceResolver: {
+        async resolve() {
+          throw Object.assign(new Error('decode unavailable'), {
+            code: 'decode-failed',
+          });
+        },
+      },
+    });
+    expect(await service.wait(service.start(request).id)).toMatchObject({
+      status: 'failed',
+      failure: { code: 'decode-failed' },
+    });
+  });
 });

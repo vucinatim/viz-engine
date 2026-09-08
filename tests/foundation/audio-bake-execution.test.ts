@@ -223,4 +223,71 @@ describe('canonical audio bake execution', () => {
       issues: [{ code: 'cancelled' }],
     });
   });
+  it('binds actual PCM and decoder provenance instead of trusting equal file labels', () => {
+    const pcm = { sampleRate: 8000, channels: [createPulseSignal()] };
+    const first = executeVizAudioFeatureBake(
+      { ...request, decoderIdentity: 'decoder-a' },
+      pcm,
+    );
+    pcm.channels[0]![100] = 0.75;
+    const changed = executeVizAudioFeatureBake(
+      { ...request, decoderIdentity: 'decoder-a' },
+      pcm,
+    );
+    const otherDecoder = executeVizAudioFeatureBake(
+      { ...request, decoderIdentity: 'decoder-b' },
+      pcm,
+    );
+    expect(first.ok && changed.ok && otherDecoder.ok).toBe(true);
+    if (!first.ok || !changed.ok || !otherDecoder.ok)
+      throw new Error('Expected successful identity probes.');
+    expect(first.executionIdentity).not.toBe(changed.executionIdentity);
+    expect(changed.executionIdentity).not.toBe(otherDecoder.executionIdentity);
+    expect(changed.artifact.metadata).toMatchObject({
+      executionDescriptor: {
+        decoderIdentity: 'decoder-a',
+        decodedPcm: { sampleRate: 8000, channelCount: 1, sampleCount: 4000 },
+      },
+    });
+  });
+
+  it('rejects source windows extending outside PCM instead of silently truncating', () => {
+    const result = executeVizAudioFeatureBake(
+      {
+        ...request,
+        sourceWindow: { startSeconds: 0.25, durationSeconds: 0.5 },
+      },
+      { sampleRate: 8000, channels: [createPulseSignal()] },
+    );
+    expect(result).toMatchObject({
+      ok: false,
+      status: 'failed',
+      issues: [{ code: 'invalid-request' }],
+    });
+  });
+
+  it('decodes production-sized canonical base64 without a recursive expression and rejects malformed padding', () => {
+    const source = Uint8Array.from(
+      { length: 8 * 1024 * 1024 },
+      (_, i) => i % 251,
+    );
+    expect(
+      Buffer.compare(
+        Buffer.from(
+          decodeVizUint8Base64(Buffer.from(source).toString('base64')),
+        ),
+        Buffer.from(source),
+      ),
+    ).toBe(0);
+    for (const invalid of [
+      '=AAA',
+      'AA=A',
+      'AA==AAAA',
+      'AB==',
+      'AAB=',
+      'AAA?',
+      'AA\n=',
+    ])
+      expect(() => decodeVizUint8Base64(invalid)).toThrow('Invalid canonical');
+  });
 });
