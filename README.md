@@ -1,3 +1,17 @@
+# VizEngine — historical source
+
+Active development continues as **Vizmaxxer**, part of
+[Maxxer Studio](https://github.com/vucinatim/maxxer-studio), under
+`products/vizmaxxer`. The Studio repository is currently private.
+
+This repository preserves the previously published source and history. Its
+historical setup and contribution instructions below are no longer the active
+development entrypoint. Existing notices and third-party rights are unchanged.
+
+---
+
+## Historical project README
+
 # VizEngine
 
 **A Node-Based Web Editor for Customizable Audio-Driven Animations**
